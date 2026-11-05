@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { query } from "./db";
-import { brevoEngagement, mailersendEngagement, storeEngagement, resumoEngajamento } from "./mail/engajamento";
+import { brevoEngagement, mailersendEngagement, sendpulseEngagement, sendpulseWebhookToEngaj, storeEngagement, resumoEngajamento } from "./mail/engajamento";
 
 const fake = (resp: (u: string) => unknown): typeof fetch => (async (u: any) => ({ ok: true, status: 200, json: async () => resp(String(u)) })) as any;
 
@@ -49,4 +49,25 @@ test("webhooks: SES, Brevo e MailerSend viram entrega/abertura/clique", () => {
   assert.equal(brevoWebhookToEngaj({ event: "request", email: "c@x.com" }).length, 0);
   assert.equal(mailersendWebhookToEngaj({ type: "activity.delivered", data: { email: { recipient: { email: "D@x.com" } }, created_at: "2026-11-05T10:00:00Z" } })[0].email, "d@x.com");
   assert.equal(mailersendWebhookToEngaj({ type: "activity.sent", data: { email: { recipient: { email: "d@x.com" } } } }).length, 0);
+});
+
+test("SendPulse (API): só código 2xx vira entregue", async () => {
+  const ev = await sendpulseEngagement("t", 30, fake(() => [
+    { recipient: "A@x.com", smtp_answer_code: 250, send_date: "2026-11-05 12:00:00" },
+    { recipient: "b@x.com", smtp_answer_code: 550, send_date: "2026-11-05 12:01:00" },
+    { recipient: "c@x.com", smtp_answer_code: 451, send_date: "2026-11-05 12:02:00" },
+  ]));
+  assert.deepEqual(ev.map((e) => e.kind + ":" + e.email), ["delivered:a@x.com"]);
+  assert.equal(ev[0].ts, "2026-11-05T12:00:00.000Z");
+});
+
+test("SendPulse (webhook): entregue, aberto e clique; ignora o resto", () => {
+  const k = (b: any) => sendpulseWebhookToEngaj(b).map((e) => e.kind + ":" + e.email);
+  assert.deepEqual(k({ event: "delivered", email: "A@x.com", timestamp: 1793884728 }), ["delivered:a@x.com"]);
+  assert.deepEqual(k({ event: "opened", email: "a@x.com" }), ["opened:a@x.com"]);
+  assert.deepEqual(k({ event: "clicked", email: "a@x.com" }), ["clicked:a@x.com"]);
+  assert.deepEqual(k({ event: "undelivered", email: "a@x.com" }), []);
+  assert.deepEqual(k({ event: "hard_bounced", email: "a@x.com" }), []);
+  assert.deepEqual(k({ event: "opened" }), []);
+  assert.equal(sendpulseWebhookToEngaj({ event: "delivered", email: "a@x.com", timestamp: 1793884728 })[0].ts, new Date(1793884728 * 1000).toISOString());
 });

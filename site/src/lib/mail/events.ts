@@ -108,7 +108,7 @@ export function providerCreds(): Creds {
   };
 }
 
-async function spToken(idsecret: string, f: F): Promise<string> {
+export async function spToken(idsecret: string, f: F): Promise<string> {
   const [id, secret] = idsecret.split("\n");
   const r = await f("https://api.sendpulse.com/oauth/access_token", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ grant_type: "client_credentials", client_id: id, client_secret: secret }), signal: AbortSignal.timeout(15_000) });
   const j = (await r.json().catch(() => ({}))) as { access_token?: string };

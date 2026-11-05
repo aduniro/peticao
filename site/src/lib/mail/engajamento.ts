@@ -1,5 +1,5 @@
 import { query } from "../db";
-import { providerCreds } from "./events";
+import { providerCreds, spToken } from "./events";
 
 /**
  * Engajamento dos e-mails (entregue / aberto / clicado) vindo das APIs dos provedores. Tabela própria (mail_engagement), sem relação com devoluções.
@@ -42,6 +42,23 @@ export async function mailersendEngagement(token: string, days: number, f: F = f
   return out;
 }
 
+/** SendPulse (API): cada e-mail aceito pelo servidor de destino (código SMTP 2xx) vale como "entregue". Abertura e clique só chegam por webhook. */
+export async function sendpulseEngagement(token: string, days: number, f: F = fetch): Promise<Engaj[]> {
+  const out: Engaj[] = [];
+  const dia = (d: Date) => d.toISOString().slice(0, 10);
+  const from = dia(new Date(Date.now() - Math.min(days, 90) * 86400_000)), to = dia(new Date(Date.now() + 86400_000));
+  for (let off = 0; off < 20_000; off += 100) {
+    const list = await jget(f, `https://api.sendpulse.com/smtp/emails?limit=100&offset=${off}&from=${from}&to=${to}`, { Authorization: `Bearer ${token}` });
+    if (!Array.isArray(list)) break;
+    for (const e of list) {
+      const code = Number(e.smtp_answer_code);
+      if (e.recipient && code >= 200 && code < 300) out.push({ provider: "sendpulse", email: String(e.recipient).toLowerCase(), kind: "delivered", ts: iso(String(e.send_date).replace(" ", "T") + "Z") });
+    }
+    if (list.length < 100) break;
+  }
+  return out;
+}
+
 const COL = { delivered: "delivered_at", opened: "opened_at", clicked: "clicked_at" } as const;
 /** Grava mantendo o primeiro horário de cada tipo (nunca regride nem apaga). */
 export async function storeEngagement(list: Engaj[]): Promise<number> {
@@ -60,6 +77,7 @@ export async function syncEngajamento(days = 30, f: F = fetch, creds = providerC
   const run = async (nome: string, fn: () => Promise<Engaj[]>) => { try { const ev = await fn(); await storeEngagement(ev); rep[nome] = { ok: true, eventos: ev.length }; } catch (e) { rep[nome] = { ok: false, erro: e instanceof Error ? e.message : String(e) }; } };
   if (creds.brevo) await run("brevo", () => brevoEngagement(creds.brevo!, days, f));
   if (creds.mailersend) await run("mailersend", () => mailersendEngagement(creds.mailersend!, days, f));
+  if (creds.sendpulse) await run("sendpulse", async () => sendpulseEngagement(await spToken(creds.sendpulse!, f), days, f));
   return rep;
 }
 
@@ -107,4 +125,14 @@ export function mailersendWebhookToEngaj(b: any): Engaj[] {
   const email = String(b?.data?.email?.recipient?.email ?? b?.data?.recipient?.email ?? "").toLowerCase(); if (!email) return [];
   const m: Record<string, Engaj["kind"]> = { "activity.delivered": "delivered", "activity.opened": "opened", "activity.clicked": "clicked" };
   const k = m[String(b?.type ?? "")]; return k ? [{ provider: "mailersend", email, kind: k, ts: iso(b?.data?.created_at ?? b?.created_at) }] : [];
+}
+
+/** SendPulse (webhook SMTP): nomes de evento conforme a documentação (delivered, opened, clicked, hard_bounced, soft_bounced, spam...), tolerante a variações. */
+export const sendpulseTipo = (b: any): string => String(b?.event ?? b?.type ?? b?.event_type ?? b?.status ?? "").toLowerCase().trim();
+export const sendpulseEmail = (b: any): string => String(b?.email ?? b?.recipient ?? b?.to ?? "").toLowerCase().trim();
+export function sendpulseWebhookToEngaj(b: any): Engaj[] {
+  const email = sendpulseEmail(b); if (!email) return [];
+  const t = sendpulseTipo(b);
+  const k: Engaj["kind"] | null = /^(delivered|delivery)$/.test(t) ? "delivered" : /(^|_)(opened|open)$/.test(t) ? "opened" : /click/.test(t) ? "clicked" : null;
+  return k ? [{ provider: "sendpulse", email, kind: k, ts: iso(b?.timestamp ?? b?.date ?? b?.created_at ?? b?.send_date) }] : [];
 }
