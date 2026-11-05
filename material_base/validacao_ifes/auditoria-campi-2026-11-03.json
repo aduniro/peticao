@@ -1,0 +1,367 @@
+[
+ {
+  "sigla": "IFAM",
+  "faltantes": [
+   {
+    "municipio": "Manicoré",
+    "uf": "AM",
+    "ibge": 1302702,
+    "regiao": "AL",
+    "status": "em implantacao; funcionamento autorizado pela Portaria MEC 591/2026 (06/07/2026); obras/aulas nao confirmadas",
+    "fonte": "https://jornaldebrasilia.com.br/noticias/economia/mec-autoriza-funcionamento-de-24-novos-campi-de-institutos-federais/"
+   },
+   {
+    "municipio": "Santo Antônio do Içá",
+    "uf": "AM",
+    "ibge": 1303700,
+    "regiao": "ambos",
+    "status": "em implantacao; funcionamento autorizado pela Portaria MEC 591/2026 (06/07/2026); obras/aulas nao confirmadas",
+    "fonte": "https://jornaldebrasilia.com.br/noticias/economia/mec-autoriza-funcionamento-de-24-novos-campi-de-institutos-federais/"
+   }
+  ],
+  "observacoes": "Os 15 municipios ja cadastrados batem com a rede (Manaus, Tefe, Tabatinga, Labrea etc.). Portal oficial portal.ifam.edu.br retornou 403; lista conferida por noticias. Faltam apenas os 2 campi novos."
+ },
+ {
+  "sigla": "IFPA",
+  "faltantes": [
+   {
+    "municipio": "Alenquer",
+    "uf": "PA",
+    "ibge": 1500404,
+    "regiao": "AL",
+    "status": "em implantacao; funcionamento autorizado pela Portaria MEC 591/2026 (06/07/2026); obras/aulas nao confirmadas",
+    "fonte": "https://jornaldebrasilia.com.br/noticias/economia/mec-autoriza-funcionamento-de-24-novos-campi-de-institutos-federais/"
+   },
+   {
+    "municipio": "Barcarena",
+    "uf": "PA",
+    "ibge": 1501303,
+    "regiao": "AL",
+    "status": "em implantacao; funcionamento autorizado pela Portaria MEC 591/2026 (06/07/2026); obras/aulas nao confirmadas",
+    "fonte": "https://jornaldebrasilia.com.br/noticias/economia/mec-autoriza-funcionamento-de-24-novos-campi-de-institutos-federais/"
+   },
+   {
+    "municipio": "Redenção",
+    "uf": "PA",
+    "ibge": 1506138,
+    "regiao": "AL",
+    "status": "em implantacao; funcionamento autorizado pela Portaria MEC 591/2026 (06/07/2026); obras/aulas nao confirmadas",
+    "fonte": "https://jornaldebrasilia.com.br/noticias/economia/mec-autoriza-funcionamento-de-24-novos-campi-de-institutos-federais/"
+   },
+   {
+    "municipio": "Tailândia",
+    "uf": "PA",
+    "ibge": 1507953,
+    "regiao": "AL",
+    "status": "em implantacao; funcionamento autorizado pela Portaria MEC 591/2026 (06/07/2026); obras/aulas nao confirmadas",
+    "fonte": "https://jornaldebrasilia.com.br/noticias/economia/mec-autoriza-funcionamento-de-24-novos-campi-de-institutos-federais/"
+   },
+   {
+    "municipio": "Viseu",
+    "uf": "PA",
+    "ibge": 1508308,
+    "regiao": "AL",
+    "status": "em implantacao; funcionamento autorizado pela Portaria MEC 591/2026 (06/07/2026); obras/aulas nao confirmadas",
+    "fonte": "https://jornaldebrasilia.com.br/noticias/economia/mec-autoriza-funcionamento-de-24-novos-campi-de-institutos-federais/"
+   }
+  ],
+  "observacoes": "Lista oficial ifpa.edu.br/campi (19 unidades) coincide com os 17 municipios cadastrados. Alenquer esta tambem em FF segundo regiao.json (flag ambos). Barcarena teria iniciado ofertas em 2026 (noticia O Liberal/Dol, nao oficial)."
+ },
+ {
+  "sigla": "IFRR",
+  "faltantes": [
+   {
+    "municipio": "Bonfim",
+    "uf": "RR",
+    "ibge": 1400159,
+    "regiao": "ambos",
+    "status": "em funcionamento (Campus Avancado Bonfim, Av. Tuxaua de Faria)",
+    "fonte": "https://bonfim.ifrr.edu.br/pdi/pdi-2019-2023/participacao-social/arquivos/capitulo-1-perfil-institucional"
+   },
+   {
+    "municipio": "Rorainópolis",
+    "uf": "RR",
+    "ibge": 1400472,
+    "regiao": "ambos",
+    "status": "anunciado (Novo PAC, Nota Tecnica 47/2024); sem confirmacao de autorizacao de funcionamento ou inicio de aulas",
+    "fonte": "https://www.gov.br/mec/pt-br/100-novos-ifs/SEI_4759581_Nota_Tecnica_Conjunta_47.pdf"
+   }
+  ],
+  "observacoes": "IFRR tem Amajari, Boa Vista (Centro e Zona Oeste, mesmo municipio), Novo Paraiso (Caracaraí) e Bonfim; site oficial ifrr.edu.br/campus fora do ar (ECONNREFUSED). Bonfim e a lacuna real."
+ },
+ {
+  "sigla": "IFAC",
+  "faltantes": [
+   {
+    "municipio": "Feijó",
+    "uf": "AC",
+    "ibge": 1200302,
+    "regiao": "ambos",
+    "status": "anunciado (Novo PAC, Nota Tecnica 47/2024); sem confirmacao de autorizacao de funcionamento ou inicio de aulas",
+    "fonte": "https://www.gov.br/mec/pt-br/100-novos-ifs/SEI_4759581_Nota_Tecnica_Conjunta_47.pdf"
+   }
+  ],
+  "observacoes": "Lista oficial ifac.edu.br/campi: 6 unidades em 5 municipios (inclui Baixada do Sol, avancado em Rio Branco), todos cadastrados."
+ },
+ {
+  "sigla": "IFRO",
+  "faltantes": [],
+  "observacoes": "portal.ifro.edu.br/campi: 11 unidades em 10 municipios (Porto Velho tem Calama e Zona Norte), todos cadastrados (inclui Buritis e Sao Miguel do Guapore). Nenhuma falta."
+ },
+ {
+  "sigla": "IFAP",
+  "faltantes": [],
+  "observacoes": "portal2017.ifap.edu.br/campi lista 6 unidades (Pedra Branca = centro de referencia); cadastro tem 8 municipios (inclui Mazagao e Tartarugalzinho, este ultimo tambem no Novo PAC). Nenhuma falta."
+ },
+ {
+  "sigla": "IFTO",
+  "faltantes": [],
+  "observacoes": "ifto.edu.br lista 12 campi, todos cadastrados. Tocantinopolis ja existe."
+ },
+ {
+  "sigla": "IFMA",
+  "faltantes": [
+   {
+    "municipio": "Colinas",
+    "uf": "MA",
+    "ibge": 2103505,
+    "regiao": "AL",
+    "status": "anunciado (Novo PAC, Nota Tecnica 47/2024); sem confirmacao de autorizacao de funcionamento ou inicio de aulas",
+    "fonte": "https://www.gov.br/mec/pt-br/100-novos-ifs/SEI_4759581_Nota_Tecnica_Conjunta_47.pdf"
+   },
+   {
+    "municipio": "Balsas",
+    "uf": "MA",
+    "ibge": 2101400,
+    "regiao": "AL",
+    "status": "anunciado (Novo PAC, Nota Tecnica 47/2024); sem confirmacao de autorizacao de funcionamento ou inicio de aulas",
+    "fonte": "https://www.gov.br/mec/pt-br/100-novos-ifs/SEI_4759581_Nota_Tecnica_Conjunta_47.pdf"
+   },
+   {
+    "municipio": "Amarante do Maranhão",
+    "uf": "MA",
+    "ibge": 2100600,
+    "regiao": "AL",
+    "status": "anunciado (Novo PAC, Nota Tecnica 47/2024); sem confirmacao de autorizacao de funcionamento ou inicio de aulas",
+    "fonte": "https://www.gov.br/mec/pt-br/100-novos-ifs/SEI_4759581_Nota_Tecnica_Conjunta_47.pdf"
+   }
+  ],
+  "observacoes": "portal.ifma.edu.br/campus: 29 campi; nao cadastrados Araioses, Barreirinhas, Caxias, Coelho Neto, Sao Joao dos Patos e Timon, mas ficam FORA da AL (conferido em regiao.json). Chapadinha (novo) tambem fora da AL."
+ },
+ {
+  "sigla": "IFMT",
+  "faltantes": [
+   {
+    "municipio": "Água Boa",
+    "uf": "MT",
+    "ibge": 5100201,
+    "regiao": "AL",
+    "status": "anunciado (Novo PAC, Nota Tecnica 47/2024); sem confirmacao de autorizacao de funcionamento ou inicio de aulas",
+    "fonte": "https://www.gov.br/mec/pt-br/100-novos-ifs/SEI_4759581_Nota_Tecnica_Conjunta_47.pdf"
+   },
+   {
+    "municipio": "Canarana",
+    "uf": "MT",
+    "ibge": 5102702,
+    "regiao": "AL",
+    "status": "anunciado (Novo PAC, Nota Tecnica 47/2024); sem confirmacao de autorizacao de funcionamento ou inicio de aulas",
+    "fonte": "https://www.gov.br/mec/pt-br/100-novos-ifs/SEI_4759581_Nota_Tecnica_Conjunta_47.pdf"
+   },
+   {
+    "municipio": "Colniza",
+    "uf": "MT",
+    "ibge": 5103254,
+    "regiao": "AL",
+    "status": "em implantacao; PII 2025 do IFMT e concurso/vestibular 2026 citam Colniza (processo seletivo previsto 30/08/2026)",
+    "fonte": "https://www.gov.br/mec/pt-br/100-novos-ifs/SEI_4759581_Nota_Tecnica_Conjunta_47.pdf"
+   }
+  ],
+  "observacoes": "Wikipedia/PII IFMT: demais campi ja cadastrados (inclui Campo Verde, Jaciara, Tangara da Serra, Guarantã do Norte). Site oficial nao consultado diretamente."
+ },
+ {
+  "sigla": "IFMS",
+  "faltantes": [],
+  "observacoes": "ifms.edu.br/campi: 12 unidades; as de FF (Amambai, Aquidauana, Corumbá, Dourados, Jardim, Naviraí, Ponta Porã) estao cadastradas; Campo Grande, Coxim, Nova Andradina, Tres Lagoas e Paranaiba ficam fora de AL/FF. Nenhuma falta."
+ },
+ {
+  "sigla": "IFPR",
+  "faltantes": [],
+  "observacoes": "ifpr.edu.br/campi: 28 campi; todos os que estao em FF ja cadastrados. Novos Araucaria, Maringa, Cianorte, Cambe ficam fora da regiao; Toledo ja cadastrado."
+ },
+ {
+  "sigla": "IFSC",
+  "faltantes": [],
+  "observacoes": "Lista (Wikipedia, apoio; site oficial /campi 404): 22 campi; os 5 do oeste (Chapeco, Sao Carlos, SLO, SMO, Xanxere) ja cadastrados; demais fora de FF."
+ },
+ {
+  "sigla": "IFC",
+  "faltantes": [],
+  "observacoes": "Fonte oficial bloqueada (ifc.edu.br redireciona para Radware/perfdrive); nao contornado. Cadastro tem Abelardo Luz e Concordia (FF). Novos Campos Novos e Mafra (Portaria 591/2026) ficam fora de FF. Nao confirmei a lista completa do IFC; nenhuma falta conhecida na regiao."
+ },
+ {
+  "sigla": "IFRS",
+  "faltantes": [],
+  "observacoes": "Lista oficial ifrs.edu.br/campi nao obtida completa (pagina parcial). Cadastro tem Erechim, Rio Grande e Sertao (FF). Gramado (novo) fora de FF. Nao confirmei lista integral."
+ },
+ {
+  "sigla": "IFFar",
+  "faltantes": [],
+  "observacoes": "iffarroupilha.edu.br: 15 unidades; todas em FF ja cadastradas (inclui CR Sao Gabriel, Santiago, Sao Luiz Gonzaga); Julio de Castilhos fora de FF. Santiago (Centro de Referencia -> campus, Portaria 268/2026) e Sao Luiz Gonzaga (Portaria 267/2026, aulas 2o sem/2026) ja cadastrados (https://www.jornaldocomercio.com/jornal-cidades/2026/03/1242723-mec-autoriza-novos-campi-do-if-em-santiago-e-sao-luiz-gonzaga.html). Caçapava do Sul: campus novo autorizado (Portaria 591/2026), municipio ja cadastrado."
+ },
+ {
+  "sigla": "IFSul",
+  "faltantes": [],
+  "observacoes": "ifsul.edu.br/campus: 14 campi; em FF: Bage, Jaguarao, Pelotas (2), Santana do Livramento, todos cadastrados. Novos Rosario do Sul e Triunfo (Portaria 591/2026): nao verifiquei se estao em FF (Rosario do Sul nao conferido)."
+ },
+ {
+  "sigla": "UFAM",
+  "faltantes": [
+   {
+    "municipio": "São Gabriel da Cachoeira",
+    "uf": "AM",
+    "ibge": 1303809,
+    "regiao": "ambos",
+    "status": "credenciado em 26/11/2025; instalacao provisoria, cursos via Sisu 2026",
+    "fonte": "https://agenciagov.ebc.com.br/noticias/202511/mec-credencia-dez-novos-campi-de-universidades-federais"
+   }
+  ],
+  "observacoes": "Campi cadastrados (Manaus, Parintins, Itacoatiara, Coari, Humaita, Benjamin Constant) conferem com o conhecimento publico; nao li pagina oficial da UFAM."
+ },
+ {
+  "sigla": "UFOPA",
+  "faltantes": [
+   {
+    "municipio": "Rurópolis",
+    "uf": "PA",
+    "ibge": 1506195,
+    "regiao": "AL",
+    "status": "credenciado em 26/11/2025; cursos previstos 2026; licitacao de obras prevista 15/10/2026",
+    "fonte": "https://agenciagov.ebc.com.br/noticias/202511/mec-credencia-dez-novos-campi-de-universidades-federais"
+   }
+  ],
+  "observacoes": ""
+ },
+ {
+  "sigla": "UFMT",
+  "faltantes": [
+   {
+    "municipio": "Lucas do Rio Verde",
+    "uf": "MT",
+    "ibge": 5105259,
+    "regiao": "AL",
+    "status": "credenciado em 26/11/2025; cursos previstos 2026",
+    "fonte": "https://agenciagov.ebc.com.br/noticias/202511/mec-credencia-dez-novos-campi-de-universidades-federais"
+   }
+  ],
+  "observacoes": ""
+ },
+ {
+  "sigla": "UFPA",
+  "faltantes": [
+   {
+    "municipio": "Capanema",
+    "uf": "PA",
+    "ibge": 1502202,
+    "regiao": "AL",
+    "status": "credenciado em 26/11/2025 (campus UFPA Capanema; um PPC da UFPA indica campus criado em 1992, interpretacao nao confirmada). Municipio ja cadastrado para UFRA",
+    "fonte": "https://agenciagov.ebc.com.br/noticias/202511/mec-credencia-dez-novos-campi-de-universidades-federais"
+   }
+  ],
+  "observacoes": ""
+ },
+ {
+  "sigla": "UNIFESSPA",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFRA",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFR",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UNIR",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFAC",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFRR",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UNIFAP",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFT",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFNT",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFMA",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFGD",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFMS",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UNILA",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UNIPAMPA",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "FURG",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFPEL",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFSM",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UFFS",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ },
+ {
+  "sigla": "UTFPR",
+  "faltantes": [],
+  "observacoes": "Nenhum campus faltante identificado; nao encontrei anuncio de campus novo na regiao nas fontes consultadas (paginas oficiais das universidades nao foram lidas individualmente; verificacao baseada em conhecimento publico e noticias MEC)."
+ }
+]

@@ -1,0 +1,278 @@
+#!/usr/bin/env python3
+"""Backup, fresh recovery of both cohorts, and verified downloads. No app changes.
+
+Run ./atualizar-cpfs.py from your own terminal. Rerun the same command to resume
+after a disconnected terminal. Secrets remain in the VPS. Python >= 3.11.
+"""
+import argparse
+import ast
+import base64
+import datetime
+import fcntl
+import hashlib
+import io
+import json
+import os
+from pathlib import Path
+import secrets
+import shlex
+import sqlite3
+import subprocess
+import sys
+import tarfile
+import time
+import zipfile
+from urllib.parse import quote
+
+PAYLOAD = '__BUNDLE__'
+DESTINATION = Path('/mnt/dev/cpfs')
+STATE = DESTINATION / '.atualizacao-em-andamento.json'
+REMOTE = '/root/peticao-recovery'
+HOST = 'peticao-root'
+HERE = Path(__file__).resolve().parent
+
+
+def sha(path):
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def save(path, content):
+    temporary = path.with_name(path.name + '.tmp')
+    with temporary.open('wb') as stream:
+        stream.write(content)
+    temporary.chmod(0o600)
+    os.replace(temporary, path)
+
+
+def persist(state):
+    save(STATE, json.dumps(state, indent=2).encode())
+
+
+def run(command, capture=False):
+    result = subprocess.run(command, text=True, capture_output=capture)
+    if result.returncode:
+        # Commands contain file paths and action names only, never credentials.
+        if capture and result.stderr:
+            print(result.stderr.strip(), file=sys.stderr)
+        raise RuntimeError('Comando falhou; execução interrompida, sem novas tentativas automáticas')
+    return result.stdout if capture else ''
+
+
+def ssh(*arguments, capture=False):
+    return run(['ssh', '-o', 'ConnectTimeout=15', HOST, shlex.join(arguments)], capture)
+
+
+def bundle():
+    with zipfile.ZipFile(io.BytesIO(base64.b64decode(PAYLOAD))) as archive:
+        result = {}
+        for name in archive.namelist():
+            if '/' in name or not name.endswith('.py'):
+                raise RuntimeError('Pacote interno inválido')
+            text = archive.read(name).decode()
+            ast.parse(text, filename=name)
+            result[name] = text
+        if set(result) != {'recover_cpfs.py', 'recover_pending_cpfs.py', 'export_full.py', 'cycle_worker.py'}:
+            raise RuntimeError('Pacote interno incompleto')
+        return result
+
+
+def local_backup(destination):
+    destination.mkdir(parents=True, exist_ok=True, mode=0o700)
+    records = []
+    for label, root in [('peticao', HERE), ('cpfs', DESTINATION)]:
+        for source in sorted(root.iterdir()):
+            if source.suffix not in ('.sqlite', '.csv') or not source.is_file():
+                continue
+            if source.is_symlink():
+                raise RuntimeError('Link simbólico recusado no backup')
+            target = destination / label / source.name
+            target.parent.mkdir(exist_ok=True, mode=0o700)
+            if not target.exists():
+                if source.suffix == '.sqlite':
+                    temporary = target.with_name(target.name + '.tmp')
+                    temporary.unlink(missing_ok=True)
+                    src = sqlite3.connect('file:' + quote(str(source), safe='/') + '?mode=ro', uri=True)
+                    dst = sqlite3.connect(temporary)
+                    try:
+                        src.backup(dst)
+                        if dst.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
+                            raise RuntimeError('Backup SQLite inválido')
+                    finally:
+                        dst.close()
+                        src.close()
+                    temporary.chmod(0o600)
+                    os.replace(temporary, target)
+                else:
+                    before = source.stat()
+                    save(target, source.read_bytes())
+                    after = source.stat()
+                    if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns) or sha(source) != sha(target):
+                        raise RuntimeError('CSV mudou durante o backup')
+            records.append({'file': str(target.relative_to(destination)), 'sha256': sha(target), 'bytes': target.stat().st_size})
+    save(destination / 'manifest.json', json.dumps(records, indent=2).encode())
+    print(f'Backup local validado: {len(records)} arquivos.', flush=True)
+
+
+def unpack_verified(archive_path, destination):
+    destination.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with tarfile.open(archive_path, 'r:gz') as archive:
+        members = archive.getmembers()
+        names = [m.name for m in members]
+        if len(names) != len(set(names)):
+            raise RuntimeError('Pacote com nomes duplicados')
+        for member in members:
+            path = Path(member.name)
+            if not member.isfile() or path.is_absolute() or '..' in path.parts:
+                raise RuntimeError('Caminho inseguro no pacote')
+        manifest = json.load(archive.extractfile('manifest.json'))
+        expected = {r['file'] for r in manifest}
+        if set(names) != expected | {'manifest.json'} or len(expected) != len(manifest):
+            raise RuntimeError('Manifesto divergente')
+        # Verify every member before extracting any of the result files.
+        for record in manifest:
+            data = archive.extractfile(record['file']).read()
+            if len(data) != record['bytes'] or hashlib.sha256(data).hexdigest() != record['sha256']:
+                raise RuntimeError('Checksum divergente no download')
+        for name in names:
+            target = destination / name
+            if any(p.is_symlink() for p in [destination, *target.parents]):
+                raise RuntimeError('Link simbólico no destino')
+            target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            data = archive.extractfile(name).read()
+            if target.exists():
+                if target.is_symlink() or target.read_bytes() != data:
+                    raise RuntimeError('Destino existente diferente; preservado')
+            else:
+                with target.open('xb') as stream:
+                    stream.write(data)
+                target.chmod(0o600)
+            if target.suffix == '.sqlite':
+                with sqlite3.connect('file:' + quote(str(target), safe='/') + '?mode=ro', uri=True) as conn:
+                    if conn.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
+                        raise RuntimeError('SQLite baixado inválido')
+    return manifest
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check', action='store_true', help='Check embedded code without network or file writes')
+    args = parser.parse_args()
+    scripts = bundle()
+    if args.check:
+        print('OK: pacote autossuficiente, quatro scripts válidos; nenhum acesso à rede ou a dados.')
+        return
+    os.umask(0o077)
+    DESTINATION.mkdir(parents=True, exist_ok=True, mode=0o700)
+    lock = os.open(DESTINATION / '.atualizacao.lock', os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        execute(scripts)
+    finally:
+        os.close(lock)
+
+
+def execute(scripts):
+    (DESTINATION / 'backups').mkdir(exist_ok=True, mode=0o700)
+    state = json.loads(STATE.read_text()) if STATE.exists() else {}
+    if not state or state.get('phase') in ('complete', 'partial'):
+        stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        state = {'id': stamp + '-' + secrets.token_hex(3), 'phase': 'preparing'}
+        persist(state)
+    identifier = state['id']
+    if any(c not in '0123456789abcdefTZ-' for c in identifier):
+        raise RuntimeError('Identificador inválido no estado local')
+    backups = DESTINATION / 'backups' / identifier
+    staging = DESTINATION / '.execucoes' / identifier
+    staging.mkdir(parents=True, exist_ok=True, mode=0o700)
+    job = REMOTE + '/jobs/' + identifier
+    print(f'Execução: {identifier}. Originais serão preservados.', flush=True)
+    if not state.get('local_backup'):
+        local_backup(backups / 'local')
+        state['local_backup'] = True
+        persist(state)
+    print('Verificando SSH. Uma autenticação Tailscale pode ser solicitada.', flush=True)
+    if ssh('id', '-u', capture=True).strip() != '0':
+        raise RuntimeError('O acesso SSH não é root')
+    if not state.get('uploaded'):
+        ssh('install', '-d', '-m', '700', job)
+        paths = []
+        for name, content in scripts.items():
+            path = staging / name
+            save(path, content.encode())
+            paths.append(str(path))
+        run(['scp', *paths, HOST + ':' + job + '/'])
+        state['uploaded'] = True
+        persist(state)
+    worker = job + '/cycle_worker.py'
+    if not state.get('remote_backup'):
+        print('Preservando os bancos e CSVs anteriores da VPS...', flush=True)
+        ssh('python3', worker, 'backup', identifier)
+        archive = backups / 'backup-vps.tar.gz'
+        run(['scp', HOST + ':' + REMOTE + '/backups/' + identifier + '/backup-vps.tar.gz', str(archive)])
+        unpack_verified(archive, backups / 'vps')
+        state['remote_backup'] = True
+        persist(state)
+        print(f'Backups locais e da VPS verificados em {backups}', flush=True)
+    unit = 'cpf-cycle-' + identifier
+    status = json.loads(ssh('python3', worker, 'status', identifier, capture=True))
+    if not status.get('active') and status['phase'] not in ('complete', 'partial'):
+        print('Iniciando/retomando recuperações em arquivos novos, com limite de meio núcleo de CPU.', flush=True)
+        ssh('python3', worker, 'launch', identifier)
+    while True:
+        status = json.loads(ssh('python3', worker, 'status', identifier, capture=True))
+        for group in ('confirmadas', 'pendentes'):
+            if group in status:
+                data = status[group]
+                print(f"{group}: {data['recuperados']}/{data['total']} CPFs recuperados; restantes: {data['restantes']}", flush=True)
+        if status['phase'] in ('complete', 'partial'):
+            break
+        if status['phase'] == 'failed' or not status.get('active'):
+            raise RuntimeError('Processo remoto inativo ou com falha. Os checkpoints foram preservados; execute novamente para retomar')
+        print('Busca em andamento. Pode levar horas; Ctrl+C fecha o acompanhamento. O serviço continua na VPS.', flush=True)
+        time.sleep(30)
+    print('Baixando resultados e verificando SHA-256 e integridade SQLite...', flush=True)
+    archive = staging / 'resultados.tar.gz'
+    run(['scp', HOST + ':' + REMOTE + '/runs/' + identifier + '/resultados.tar.gz', str(archive)])
+    extracted = staging / 'resultados'
+    manifest = unpack_verified(archive, extracted)
+    expected = {name + suffix for name in ('assinaturas-confirmadas', 'assinaturas-pendentes') for suffix in ('.sqlite',)}
+    expected.update(prefix + group + '.csv' for prefix in ('cpfs-', 'nomes-cpfs-', 'dados-completos-') for group in ('confirmadas', 'pendentes'))
+    if {r['file'] for r in manifest} != expected:
+        raise RuntimeError('Arquivos de resultado incompletos')
+    local_manifest = []
+    for record in manifest:
+        source = extracted / record['file']
+        target = DESTINATION / (source.stem + '-' + identifier + source.suffix)
+        if target.exists():
+            if target.is_symlink() or sha(target) != record['sha256']:
+                raise RuntimeError('Resultado existente diferente; preservado')
+        else:
+            with target.open('xb') as out, source.open('rb') as src:
+                for block in iter(lambda: src.read(1024 * 1024), b''):
+                    out.write(block)
+            target.chmod(0o600)
+        if sha(target) != record['sha256']:
+            raise RuntimeError('Resultado local com checksum divergente')
+        local_manifest.append(dict(record, remote_file=record['file'], file=target.name))
+        print('Salvo: ' + str(target), flush=True)
+    save(DESTINATION / ('manifest-' + identifier + '.json'), json.dumps(local_manifest, indent=2).encode())
+    state['phase'] = status['phase']
+    state['groups'] = status.get('groups', [])
+    persist(state)
+    if state['phase'] == 'complete':
+        print('CONCLUÍDO: backups verificados; duas recuperações completas; bancos e CSVs baixados. Aplicação não alterada.', flush=True)
+    else:
+        print('RESULTADO PARCIAL: bancos e CSVs baixados, mas ainda há CPFs sem correspondência. Confira as contagens.', flush=True)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('\nAcompanhamento fechado. Execute o mesmo arquivo para retomar; um serviço já iniciado continua na VPS.')
+        sys.exit(130)
+    except Exception as exc:
+        print(f'Execução interrompida ({type(exc).__name__}): {exc}', file=sys.stderr)
+        print('Originais preservados. Execute novamente para retomar. Não envie bancos, CSVs ou segredos à conversa.', file=sys.stderr)
+        sys.exit(1)

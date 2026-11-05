@@ -1,0 +1,32 @@
+# Segredos e dados pessoais — NUNCA versionar
+secrets/
+preview-state/
+.env
+.env.*
+**/.env*
+*.sqlite
+*cpfs*.csv
+nomes-*.csv
+atualizar-cpfs.py
+assinaturas-recuperadas*
+outputs/
+*.lock#
+.~lock.*
+**/*.enc
+**/keys.env
+# Gerados / pesados
+.cache/
+site/node_modules/
+site/.next/
+site/.next-dev/
+site/.pgdata/
+site/data/
+site/geo-data/
+site/*.tsbuildinfo
+**/node_modules/
+# Imagens soltas da raiz (rascunhos)
+Imagem do ChatGPT*.png
+exemplo-etapa1/
+exemplo-mailersend/
+layouts-email-pos-confirmacao/
+*.log

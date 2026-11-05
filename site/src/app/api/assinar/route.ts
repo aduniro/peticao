@@ -1,0 +1,26 @@
+import { NextRequest, NextResponse } from "next/server";
+import { handleSign } from "@/lib/sign-flow";
+import { rateLimit } from "@/lib/ratelimit";
+import { clientIp } from "@/lib/net";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(req: NextRequest) {
+  const ip = clientIp(req.headers);
+  if (!rateLimit(`sign:${ip}`, 30, 10 * 60_000)) {
+    return NextResponse.json({ error: "Muitas tentativas. Tente novamente em alguns minutos." }, { status: 429 });
+  }
+  let body: any;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Requisição inválida." }, { status: 400 });
+  }
+  const r = await handleSign(body, {
+    ip,
+    userAgent: req.headers.get("user-agent") ?? undefined,
+    visitorId: req.cookies.get("vid")?.value,
+    refCode: req.cookies.get("ref")?.value,
+  });
+  return NextResponse.json(r.json, { status: r.status });
+}

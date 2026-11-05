@@ -1,0 +1,40 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { query } from "./db";
+import { brevoEngagement, mailersendEngagement, storeEngagement, resumoEngajamento } from "./mail/engajamento";
+
+const fake = (resp: (u: string) => unknown): typeof fetch => (async (u: any) => ({ ok: true, status: 200, json: async () => resp(String(u)) })) as any;
+
+test("Brevo: converte entregue/aberto/clique e pagina", async () => {
+  const ev = await brevoEngagement("k", 30, fake((u) => ({ events: /event=opened/.test(u) ? [{ email: "A@x.com", date: "2026-11-01T10:00:00Z" }] : /event=clicks/.test(u) ? [] : [{ email: "a@x.com", date: "2026-11-01T09:00:00Z" }, { email: "b@x.com", date: "2026-11-01T09:00:00Z" }] })));
+  assert.deepEqual(ev.map((e) => e.kind + ":" + e.email), ["delivered:a@x.com", "delivered:b@x.com", "opened:a@x.com"]);
+});
+
+test("MailerSend: usa o tipo do evento", async () => {
+  const ev = await mailersendEngagement("t", 30, fake((u) => /domains/.test(u) ? { data: [{ id: "d1" }] } : { data: [{ type: "opened", created_at: "2026-11-01T10:00:00Z", email: { recipient: { email: "C@x.com" } } }, { type: "sent", created_at: "2026-11-01T10:00:00Z", email: { recipient: { email: "z@x.com" } } }] }));
+  assert.deepEqual(ev.map((e) => e.kind + ":" + e.email), ["opened:c@x.com"]);
+});
+
+test("resumo: melhor sinal por pendente; mantém o primeiro horário", async () => {
+  const { hmac } = await import("./security");
+  const dom = "@eng-teste.example", criada = "2026-11-02T10:00:00.000Z";
+  const limpa = async () => { await query("DELETE FROM mail_engagement WHERE email LIKE $1", ["%" + dom]); await query("DELETE FROM signatures WHERE email LIKE $1", ["%" + dom]); await query("DELETE FROM mail_events WHERE email LIKE $1", ["%" + dom]); };
+  await limpa();
+  try {
+    const mk = async (n: string) => query("INSERT INTO signatures(name,email,email_hash,category,text_version,consent_at,status,created_at,token_hash,token_expires_at) VALUES($1,$2,$3,'apoiador','v',$4,'pending',$4,$5,'2099-01-01T00:00:00Z')", [`P ${n}`, n + dom, hmac("eng" + n), criada, "tk" + n]);
+    const antes = await resumoEngajamento();
+    for (const n of ["clique", "abriu", "entregue", "devolvido", "nada"]) await mk(n);
+    const t = (k: string, kind: "delivered" | "opened" | "clicked", ts = "2026-11-01T09:00:00Z") => ({ provider: "brevo", email: k + dom, kind, ts });
+    await storeEngagement([t("clique", "delivered"), t("clique", "opened"), t("clique", "clicked"), t("abriu", "delivered"), t("abriu", "opened"), t("entregue", "delivered"), t("entregue", "delivered", "2026-11-02T09:00:00Z")]);
+    await query("INSERT INTO mail_events(ts,provider,type,email,reason) VALUES(now(),'brevo','hard_bounce',$1,'x')", ["devolvido" + dom]);
+    const d = await resumoEngajamento();
+    assert.equal(d.pendentes - antes.pendentes, 5);
+    assert.equal(d.clicou - antes.clicou, 1);
+    assert.equal(d.abriu - antes.abriu, 1);
+    assert.equal(d.entregueSemAbrir - antes.entregueSemAbrir, 1);
+    assert.equal(d.devolvido - antes.devolvido, 1);
+    assert.equal(d.semRegistro - antes.semRegistro, 1);
+    const e = (await query<any>("SELECT delivered_at FROM mail_engagement WHERE email=$1", ["entregue" + dom])).rows[0];
+    assert.equal(new Date(e.delivered_at).toISOString(), "2026-11-01T09:00:00.000Z");
+  } finally { await limpa(); }
+});

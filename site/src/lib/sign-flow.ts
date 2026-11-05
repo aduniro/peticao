@@ -1,0 +1,184 @@
+import { validate, submit, EmailUndeliverableError, type Meta } from "./signatures";
+import { needsIdentity, identityMode, verifyCpfName, makeTicket, checkTicket, verifyIdentity, type IdentityMethod, MAX_FAILED } from "./identity";
+import { checkMx } from "./email-check";
+import { checkWithReacher } from "./reacher";
+import { emailDomain, institutionalKind, notePendingDomain, type DomainKind } from "./institutional";
+import { defaultProvider, type CpfProvider } from "./cpf-check";
+import { MailBlockedError } from "./mail/guard";
+import { verifyTurnstile, turnstileEnabled } from "./turnstile";
+import { rateLimit } from "./ratelimit";
+import { validateUniversityEmail, type Probe } from "./university-check";
+import { whatsappAtivo } from "./whatsapp/provider";
+import { normalizarTelefone } from "./whatsapp/telefone";
+import { isEmailBlacklisted, recordInvalidEmail, logRequest } from "./abuse";
+
+export type SignCtx = Meta & { ip: string };
+export type FlowResult = { status: number; json: Record<string, unknown> };
+
+import { suggestEmail } from "./email-typos";
+import { SERVER_REJECT, validateEmailField } from "./email-validate";
+const ASK = (json: Record<string, unknown>, status = 422): FlowResult => ({ status, json });
+const ROBOT = { error: "Não foi possível confirmar que você não é um robô. Recarregue a página e tente de novo.", errorCode: "robot" };
+
+/**
+ * Fluxo de assinatura.
+ *  - Brasil (servidor/apoiador): em até duas etapas. 1) formulário → se o e-mail NÃO for institucional, responde `identityRequired` + ticket
+ *    (nada é gravado, nenhum e-mail sai); 2) mesmo formulário + ticket + { method, value } → se os dados conferirem, grava e envia o e-mail.
+ *  - Estrangeiro: sem CPF e sem janela de identidade; o e-mail precisa ser de universidade real (lista aberta ou checagem pela internet).
+ *    Se falhar, nada é gravado e nenhum e-mail é enviado.
+ */
+/**
+ * O e-mail existe e a caixa não está cheia? (Reacher local.) Só roda DEPOIS do antirrobô, para um robô não usar a sua VPS como sonda de SMTP
+ * nem tirar proveito do "existe/não existe" como oráculo. Só recusa com prova do SMTP; sem cota por IP/global ou com o serviço fora, deixa passar.
+ * Domínios institucionais já conferidos não são consultados.
+ */
+const slowDomains = new Map<string, number>();
+export const _clearSlowDomains = () => slowDomains.clear();
+async function emailExistsGate(input: { email: string }, ctx: SignCtx): Promise<FlowResult | null> {
+  // Vale também para e-mail institucional: é onde mais se erra a digitação (caixa inexistente). Só recusa com prova do SMTP (falha aberta).
+  if (!rateLimit(`reacher:${ctx.ip}`, 15, 60 * 60_000) || !rateLimit("reacher:global", 600, 60 * 60_000)) return null;
+  // Domínio que não responde à sonda (porta 25 fechada, lista cinza…): não seguramos cada pessoa por segundos; pula esse domínio por 30 min.
+  const dom = emailDomain(input.email) ?? "";
+  if ((slowDomains.get(dom) ?? 0) > Date.now()) return null;
+  const rv = await checkWithReacher(input.email, { timeoutMs: Number(process.env.REACHER_TIMEOUT_MS ?? 4000) });
+  if (rv.ok && rv.skipped === "indisponivel") { if (slowDomains.size > 500) slowDomains.clear(); slowDomains.set(dom, Date.now() + 30 * 60_000); }
+  if (rv.ok) return null;
+  if (rv.code === "email_not_found" || rv.code === "email_undeliverable" || rv.code === "email_invalid") return invalidEmail(input.email, ctx, rv.code); // caixa cheia e descartável não contam como inexistente
+  return ASK({ errors: { email: rv.code } });
+}
+
+/** E-mail que não existe: conta a tentativa (3 do mesmo e-mail → lista negra) e devolve o erro para a janela de aviso. O IP nunca é bloqueado por erro. */
+async function invalidEmail(email: string, ctx: SignCtx, code: string): Promise<FlowResult> {
+  await recordInvalidEmail(email, ctx.ip);
+  const suggest = suggestEmail(email, { semServidor: code === "email_undeliverable" });
+  return ASK({ errors: { email: code }, ...(suggest ? { suggest } : {}) });
+}
+
+
+export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider | null = defaultProvider(), probe?: Probe): Promise<FlowResult> {
+  if (typeof body?.website === "string" && body.website.length > 0) return { status: 200, json: { ok: true } }; // honeypot
+  const v = validate(body);
+  if (!v.ok) return ASK({ errors: v.errors });
+  const input = v.value;
+  // WhatsApp opcional: só existe quando o recurso está ligado e configurado; senão o campo é ignorado (o site age como se não existisse).
+  let wa: string | null = null;
+  if (whatsappAtivo() && String(body?.whatsapp?.numero ?? "").trim()) {
+    const tel = normalizarTelefone(body.whatsapp.ddi, body.whatsapp.numero);
+    if (!tel.ok) return ASK({ errors: { whatsapp: tel.code } });
+    if (body?.whatsappConsent !== true) return ASK({ errors: { whatsappConsent: "wa_consent_required" } });
+    wa = tel.e164;
+  }
+  // E-mail já na lista negra (inexistente, bounce ou reclamação): recusa sem gastar consulta e conta como tentativa inválida do IP.
+  if (await isEmailBlacklisted(input.email)) { await logRequest("email_blocked", ctx.ip, { email: input.email, detail: "tentativa com e-mail da lista negra" }); return invalidEmail(input.email, ctx, "email_not_found"); }
+
+
+  // Apoiador não usa e-mail institucional (órgão público/IFES da lista do site): quem tem um deve assinar pelo formulário de Servidor.
+  if (input.category === "apoiador") {
+    const k = await institutionalKind(input.email);
+    if (k && !SERVER_REJECT.has(k)) return ASK({ errors: { email: "apoiador_institutional_email" } });
+  }
+
+  // Servidor: só e-mail institucional de órgão público (governo, legislativo, judiciário, MP, IFES, federal/estadual/municipal ou domínio aprovado pela ADUNIR).
+  // Recusa provedores gratuitos, discentes, .edu.br genérico (pode ser faculdade privada) e domínio desconhecido; este vai para a fila de revisão.
+  if (input.category === "servidor") {
+    const kind = await institutionalKind(input.email);
+    if (!kind || SERVER_REJECT.has(kind)) {
+      const d = emailDomain(input.email);
+      if (d && (kind === null || kind === "ensino-edu-br") && rateLimit(`pend:${ctx.ip}`, 10, 60 * 60_000)) await notePendingDomain(d).catch(() => {}); // limite por IP: ninguém lota a fila de revisão
+      const v = await validateEmailField(input.email, "servidor"); // mesmo veredito do formulário: "e-mail institucional inválido" (com sugestão) ou "use e-mail de órgão público"
+      return ASK({ errors: { email: v.ok ? "server_email_not_institutional" : v.code }, ...(!v.ok && v.suggest ? { suggest: v.suggest } : {}) });
+    }
+  }
+  // Apoiador: domínio de provedor público digitado errado (gmial.com) ou sem servidor de e-mail → "e-mail inválido" com a sugestão
+  if (input.category === "apoiador") {
+    const v = await validateEmailField(input.email, "apoiador");
+    if (!v.ok && v.code === "email_provider_invalid") {
+      await recordInvalidEmail(input.email, ctx.ip); // conta como tentativa com e-mail inexistente (3 do mesmo e-mail → lista negra); o IP nunca é bloqueado
+      return ASK({ errors: { email: v.code }, ...(v.suggest ? { suggest: v.suggest } : {}) });
+    }
+  }
+
+  if ((await checkMx(input.email)) === "none") return invalidEmail(input.email, ctx, "email_undeliverable");
+
+  if (input.category === "estrangeiro") {
+    if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
+    if (!rateLimit(`uni:${ctx.ip}`, 20, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
+    const fdom = emailDomain(input.email) ?? "";
+    const reject = async (code: string, detail?: string) => { await logRequest("foreign_rejected", ctx.ip, { email: input.email, detail: `${fdom} | país ${input.country ?? "?"} | ${code}${detail ? ` (${detail})` : ""}`.slice(0, 200) }); };
+    // Domínio brasileiro (.br, órgão público, IFES ou discente) não é de universidade estrangeira: a pessoa deve usar o formulário de Servidor ou de Apoiador.
+    const fkind = await institutionalKind(input.email);
+    if (fdom.endsWith(".br") || (fkind !== null && fkind !== "universidade-estrangeira")) { await reject("foreign_brazilian_email"); return ASK({ errors: { email: "foreign_brazilian_email" } }); }
+    const gF = await emailExistsGate(input, ctx); if (gF) return gF;
+    const u = await validateUniversityEmail(input.email, input.country!, probe);
+    if (!u.ok) {
+      await reject(u.code, u.detail);
+      if (u.code === "domain_unavailable") return ASK({ error: "Não foi possível verificar o domínio agora. Tente novamente em alguns minutos.", errorCode: "domain_unavailable" }, 503);
+      return ASK({ errors: { email: u.code }, detail: u.detail });
+    }
+    try {
+      await submit(input, ctx, { identityMethod: "universidade_estrangeira", universityDomain: u.domain, domainCheck: u.check, whatsapp: wa });
+    } catch (e) {
+      if (e instanceof EmailUndeliverableError) return invalidEmail(input.email, ctx, "email_undeliverable");
+      if (e instanceof MailBlockedError) return ASK({ error: "Este endereço de e-mail não pode ser usado em ambiente de teste.", errorCode: "mail_blocked" });
+      console.error("assinar falhou", e);
+      return ASK({ error: "Não foi possível enviar o e-mail de confirmação. Tente novamente.", errorCode: "send_failed" }, 500);
+    }
+    return { status: 200, json: { ok: true } };
+  }
+
+  const identity = body?.identity as { method?: IdentityMethod; value?: string } | undefined;
+  const needs = await needsIdentity(input.email, provider);
+  let extra: { identityMethod?: string | null; nameCheck?: any } = {};
+
+  if (needs) {
+    if (!identity) {
+      if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
+      const gN = await emailExistsGate(input, ctx); if (gN) return gN; // antes de a pessoa gastar a janela de identidade (e a CPF Brasil)
+      return { status: 200, json: { identityRequired: true, ticket: makeTicket(input.cpf!, input.email), methods: ["mae", "nascimento"] } };
+    }
+    if (!checkTicket(body?.ticket, input.cpf!, input.email)) {
+      return ASK({ restart: true, error: "Sua sessão de confirmação expirou. Preencha e envie o formulário novamente.", errorCode: "ticket_expired" }, 400);
+    }
+    if (!rateLimit(`ident:${ctx.ip}`, 15, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
+
+    const r = await verifyIdentity({ cpf: input.cpf!, method: identity.method as IdentityMethod, value: String(identity.value ?? ""), declaredName: input.name, provider });
+    if (!r.ok) {
+      switch (r.reason) {
+        case "bad_input": return ASK({ identityError: "Confira o dado informado: digite o nome completo da mãe ou uma data de nascimento válida (dd/mm/aaaa).", identityCode: "bad_input" });
+        case "method_unavailable": return ASK({ identityError: "Não conseguimos conferir por este método para este CPF. Tente pelo outro método.", identityCode: "method_unavailable", methodUnavailable: identity.method });
+        case "mock_unknown": return ASK({ identityError: "Pré-visualização com dados de TESTE: este CPF não existe no ambiente de teste. Para experimentar a janela, use o CPF 529.982.247-25 (nascimento 15/08/1985; mãe: Ana Maria da Conceição). Para consultar CPFs reais, grave a chave com: npm run chave:cpf -- --preview e reinicie.", identityCode: "mock_unknown" });
+        case "locked": return ASK({ identityError: "Muitas tentativas incorretas para este CPF. Tente novamente em 24 horas.", identityCode: "locked", locked: true }, 429);
+        case "unavailable": return ASK({ error: "O serviço de verificação de identidade está indisponível no momento. Tente novamente em alguns minutos.", errorCode: "identity_unavailable" }, 503);
+        default: return ASK({ identityError: "Os dados não conferem.", identityCode: "mismatch", attemptsLeft: r.attemptsLeft ?? MAX_FAILED - 1 });
+      }
+    }
+    extra = { identityMethod: identity.method, nameCheck: r.nameCheck };
+  } else {
+    if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
+    const gS = await emailExistsGate(input, ctx); if (gS) return gS;
+    // CPF obrigatório também para servidor: o nome precisa conferir com o cadastro do CPF (sem nome da mãe nem nascimento: o e-mail institucional já é uma camada).
+    if (provider && identityMode(provider) === "required") {
+      if (!rateLimit(`cpfname:${ctx.ip}`, 30, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
+      const g = await verifyCpfName({ cpf: input.cpf!, declaredName: input.name, provider });
+      if (!g.ok) {
+        switch (g.reason) {
+          case "mismatch": return ASK({ errors: { name: "name_cpf_mismatch" } });
+          case "not_found": return ASK({ errors: { cpf: "cpf_not_found" } });
+          case "locked": return ASK({ errors: { cpf: "cpf_locked" } }, 429);
+          default: return ASK({ error: "Não conseguimos conferir o CPF agora. Tente de novo em alguns minutos.", errorCode: "cpf_check_unavailable" }, 503);
+        }
+      }
+      extra = { nameCheck: g.nameCheck };
+    }
+  }
+
+  try {
+    await submit(input, ctx, { ...extra, whatsapp: wa });
+  } catch (e) {
+    if (e instanceof EmailUndeliverableError) return invalidEmail(input.email, ctx, "email_undeliverable");
+    if (e instanceof MailBlockedError) return ASK({ error: "Este endereço de e-mail não pode ser usado em ambiente de teste.", errorCode: "mail_blocked" });
+    console.error("assinar falhou", e);
+    return ASK({ error: "Não foi possível enviar o e-mail de confirmação. Tente novamente.", errorCode: "send_failed" }, 500);
+  }
+  return { status: 200, json: { ok: true } };
+}

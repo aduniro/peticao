@@ -1,0 +1,40 @@
+# Hospedagem na VPS (Vultr, São Paulo, Debian 13)
+
+Estado em 2026-10-31: instância `peticao-sp` (`vhp-2c-4gb-amd`) em `216.128.169.215`, IPv6 `2001:19f0:b800:266e:5400:6ff:fefd:6233`.
+Firewall do Vultr (grupo `peticao-web`) já aplicado: **443 só dos IPs da Cloudflare** e **SSH (22) só do seu IP** (IPv4 e prefixo IPv6). Portas 80 e as demais estão fechadas.
+
+## Ordem (tudo no ZORIN; os scripts pedem a senha do sudo da VPS)
+1. `/mnt/dev/peticao/deploy/preparar.sh`: fixa o IPv6, instala Node 20, PostgreSQL, Caddy, ufw, fail2ban, atualizações automáticas, serviço e backup diário.
+2. `/mnt/dev/peticao/deploy/publicar.sh`: envia o código, `npm ci`, `next build` e reinicia. Use **a cada mudança no app** (testes → publicar → conferir).
+3. Teste por túnel (a 443 só abre para a Cloudflare, então de fora não há acesso direto):
+   `ssh -L 8080:127.0.0.1:8080 peticao` e abra `http://localhost:8080`.
+4. Segredos (na VPS, digitação oculta): `sudo bash peticao-stage/deploy/definir-segredo.sh CPF_BRASIL_API_KEY` (idem `TURNSTILE_SECRET_KEY`, `TURNSTILE_SITE_KEY`, `SMTP_URL` ou `BREVO_API_KEY` com `MAIL_PROVIDER`, `RECIPIENTS`…), depois `sudo systemctl restart peticao`.
+   - A senha do `/admin` foi gerada: leia com `sudo grep ADMIN_PASSWORD /etc/peticao/app.env` (só você vê).
+   - **Nunca troque `HASH_PEPPER`** depois do lançamento.
+   - Enquanto `MAIL_PROVIDER='dev'`, nenhum e-mail sai (as confirmações ficam numa pasta no servidor).
+
+## Cloudflare (painel; sem token por enquanto)
+1. Domínio na Cloudflare (ex.: `sancionaintegral.org`). **DNS → Records**, todos com a nuvem laranja (proxied):
+   - `A` `@` → `216.128.169.215`
+   - `AAAA` `@` → `2001:19f0:b800:266e:5400:6ff:fefd:6233`
+   - `CNAME` `www` → `@`
+   Registros de e-mail (MX, SPF, DKIM, DMARC) ficam **DNS only** (nuvem cinza).
+2. **SSL/TLS → Overview**: modo **Full (strict)**. **Edge Certificates**: *Always Use HTTPS* ligado, TLS mínimo 1.2.
+3. **SSL/TLS → Origin Server → Create Certificate** (hosts: `@` e `*.seudominio`). Copie o certificado e a chave **só para a VPS**:
+   `sudo mkdir -p /etc/caddy/certs && sudo nano /etc/caddy/certs/origin.pem` (cole o certificado) e `sudo nano /etc/caddy/certs/origin.key` (cole a chave). Não mande a chave por e-mail/mensageiro nem a cole aqui na conversa.
+4. Na VPS: `sudo bash peticao-stage/deploy/ativar-dominio.sh seudominio.org` (configura o Caddy, `APP_URL`, `ALLOWED_HOSTS` e `TRUST_CF_HEADER=1`).
+5. Opcional: *Security → WAF → Rate limiting* para `/api/assinar`; *Bot Fight Mode*.
+Quando você gerar o token da Cloudflare (`node /mnt/dev/peticao/tools/infra/chave.mjs cloudflare`), eu automatizo os registros DNS.
+
+## Firewall (Vultr) — comandos úteis (no Zorin)
+    V="node /mnt/dev/peticao/tools/infra/vultr.mjs"
+    $V firewall:listar
+    $V firewall:liberar-ssh c20a68b5-1c14-4a9d-9d85-c0160a053d08 <novo_ip>   # se o IP de casa mudar
+Se perder o SSH: console VNC do Vultr (usuário e senha do Debian; sem maiúsculas) ou desanexar o grupo no painel (Instance → Firewall).
+As faixas da Cloudflare mudam raramente; para atualizar, crie um grupo novo com `firewall:criar-site`, aplique e apague o antigo.
+
+## Diagnóstico
+    sudo systemctl status peticao caddy postgresql
+    sudo journalctl -u peticao -n 80 --no-pager
+    sudo ufw status verbose        sudo fail2ban-client status sshd
+    sudo /usr/local/bin/peticao-backup && ls -la /var/backups/peticao

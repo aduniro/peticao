@@ -1,0 +1,838 @@
+sigla_instituicao;nome_instituicao;tipo;campus;municipio;uf;ibge;fonte_url
+FURG;Universidade Federal do Rio Grande;U;Rio Grande;Rio Grande;RS;4315602;INEP Censo da Educação Superior (via ifes.json)
+FURG;Universidade Federal do Rio Grande;U;Santa Vitória do Palmar;Santa Vitória do Palmar;RS;4317301;INEP Censo da Educação Superior (via ifes.json)
+FURG;Universidade Federal do Rio Grande;U;Santo Antônio da Patrulha;Santo Antônio da Patrulha;RS;4317608;INEP Censo da Educação Superior (via ifes.json)
+FURG;Universidade Federal do Rio Grande;U;São Lourenço do Sul;São Lourenço do Sul;RS;4318804;INEP Censo da Educação Superior (via ifes.json)
+UFABC;Fundação Universidade Federal do Abc;U;Santo André;Santo André;SP;3547809;INEP Censo da Educação Superior (via ifes.json)
+UFABC;Fundação Universidade Federal do Abc;U;São Bernardo do Campo;São Bernardo do Campo;SP;3548708;INEP Censo da Educação Superior (via ifes.json)
+UFAC;Universidade Federal do Acre;U;Brasiléia;Brasiléia;AC;1200104;INEP Censo da Educação Superior (via ifes.json)
+UFAC;Universidade Federal do Acre;U;Cruzeiro do Sul;Cruzeiro do Sul;AC;1200203;INEP Censo da Educação Superior (via ifes.json)
+UFAC;Universidade Federal do Acre;U;Rio Branco;Rio Branco;AC;1200401;INEP Censo da Educação Superior (via ifes.json)
+UFAL;Universidade Federal de Alagoas;U;Arapiraca;Arapiraca;AL;2700300;INEP Censo da Educação Superior (via ifes.json)
+UFAL;Universidade Federal de Alagoas;U;Delmiro Gouveia;Delmiro Gouveia;AL;2702405;INEP Censo da Educação Superior (via ifes.json)
+UFAL;Universidade Federal de Alagoas;U;Maceió;Maceió;AL;2704302;INEP Censo da Educação Superior (via ifes.json)
+UFAL;Universidade Federal de Alagoas;U;Palmeira dos Índios;Palmeira dos Índios;AL;2706307;INEP Censo da Educação Superior (via ifes.json)
+UFAL;Universidade Federal de Alagoas;U;Penedo;Penedo;AL;2706703;INEP Censo da Educação Superior (via ifes.json)
+UFAL;Universidade Federal de Alagoas;U;Rio Largo;Rio Largo;AL;2707701;INEP Censo da Educação Superior (via ifes.json)
+UFAL;Universidade Federal de Alagoas;U;Santana do Ipanema;Santana do Ipanema;AL;2708006;INEP Censo da Educação Superior (via ifes.json)
+UFAL;Universidade Federal de Alagoas;U;Viçosa;Viçosa;AL;2709400;INEP Censo da Educação Superior (via ifes.json)
+UFAM;Universidade Federal do Amazonas;U;Benjamin Constant;Benjamin Constant;AM;1300607;INEP Censo da Educação Superior (via ifes.json)
+UFAM;Universidade Federal do Amazonas;U;Coari;Coari;AM;1301209;INEP Censo da Educação Superior (via ifes.json)
+UFAM;Universidade Federal do Amazonas;U;Humaitá;Humaitá;AM;1301704;INEP Censo da Educação Superior (via ifes.json)
+UFAM;Universidade Federal do Amazonas;U;Itacoatiara;Itacoatiara;AM;1301902;INEP Censo da Educação Superior (via ifes.json)
+UFAM;Universidade Federal do Amazonas;U;Manaus;Manaus;AM;1302603;INEP Censo da Educação Superior (via ifes.json)
+UFAM;Universidade Federal do Amazonas;U;Parintins;Parintins;AM;1303403;INEP Censo da Educação Superior (via ifes.json)
+UFAPE;Universidade Federal do Agreste de Pernambuco;U;Garanhuns;Garanhuns;PE;2606002;INEP Censo da Educação Superior (via ifes.json)
+UFBA;Universidade Federal da Bahia;U;Camaçari;Camaçari;BA;2905701;INEP Censo da Educação Superior (via ifes.json)
+UFBA;Universidade Federal da Bahia;U;Salvador;Salvador;BA;2927408;INEP Censo da Educação Superior (via ifes.json)
+UFBA;Universidade Federal da Bahia;U;Vitória da Conquista;Vitória da Conquista;BA;2933307;INEP Censo da Educação Superior (via ifes.json)
+UFC;Universidade Federal do Ceará;U;Crateús;Crateús;CE;2304103;INEP Censo da Educação Superior (via ifes.json)
+UFC;Universidade Federal do Ceará;U;Fortaleza;Fortaleza;CE;2304400;INEP Censo da Educação Superior (via ifes.json)
+UFC;Universidade Federal do Ceará;U;Itapajé;Itapajé;CE;2306306;INEP Censo da Educação Superior (via ifes.json)
+UFC;Universidade Federal do Ceará;U;Quixadá;Quixadá;CE;2311306;INEP Censo da Educação Superior (via ifes.json)
+UFC;Universidade Federal do Ceará;U;Russas;Russas;CE;2311801;INEP Censo da Educação Superior (via ifes.json)
+UFC;Universidade Federal do Ceará;U;Sobral;Sobral;CE;2312908;INEP Censo da Educação Superior (via ifes.json)
+UFCA;Universidade Federal do Cariri;U;Barbalha;Barbalha;CE;2301901;INEP Censo da Educação Superior (via ifes.json)
+UFCA;Universidade Federal do Cariri;U;Brejo Santo;Brejo Santo;CE;2302503;INEP Censo da Educação Superior (via ifes.json)
+UFCA;Universidade Federal do Cariri;U;Crato;Crato;CE;2304202;INEP Censo da Educação Superior (via ifes.json)
+UFCA;Universidade Federal do Cariri;U;Juazeiro do Norte;Juazeiro do Norte;CE;2307304;INEP Censo da Educação Superior (via ifes.json)
+UFCAT;Universidade Federal de Catalão;U;Catalão;Catalão;GO;5205109;INEP Censo da Educação Superior (via ifes.json)
+UFCG;Universidade Federal de Campina Grande;U;Cajazeiras;Cajazeiras;PB;2503704;INEP Censo da Educação Superior (via ifes.json)
+UFCG;Universidade Federal de Campina Grande;U;Campina Grande;Campina Grande;PB;2504009;INEP Censo da Educação Superior (via ifes.json)
+UFCG;Universidade Federal de Campina Grande;U;Cuité;Cuité;PB;2505105;INEP Censo da Educação Superior (via ifes.json)
+UFCG;Universidade Federal de Campina Grande;U;Patos;Patos;PB;2510808;INEP Censo da Educação Superior (via ifes.json)
+UFCG;Universidade Federal de Campina Grande;U;Pombal;Pombal;PB;2512101;INEP Censo da Educação Superior (via ifes.json)
+UFCG;Universidade Federal de Campina Grande;U;Sousa;Sousa;PB;2516201;INEP Censo da Educação Superior (via ifes.json)
+UFCG;Universidade Federal de Campina Grande;U;Sumé;Sumé;PB;2516300;INEP Censo da Educação Superior (via ifes.json)
+UFCSPA;Fundação Universidade Federal de Ciências da Saúde de Porto Alegre;U;Porto Alegre;Porto Alegre;RS;4314902;INEP Censo da Educação Superior (via ifes.json)
+UFDPAR;Universidade Federal do Delta do Parnaiba;U;Parnaíba;Parnaíba;PI;2207702;INEP Censo da Educação Superior (via ifes.json)
+UFERSA;Universidade Federal Rural do Semi-árido;U;Angicos;Angicos;RN;2400802;INEP Censo da Educação Superior (via ifes.json)
+UFERSA;Universidade Federal Rural do Semi-árido;U;Caraúbas;Caraúbas;RN;2402303;INEP Censo da Educação Superior (via ifes.json)
+UFERSA;Universidade Federal Rural do Semi-árido;U;Mossoró;Mossoró;RN;2408003;INEP Censo da Educação Superior (via ifes.json)
+UFERSA;Universidade Federal Rural do Semi-árido;U;Pau dos Ferros;Pau dos Ferros;RN;2409407;INEP Censo da Educação Superior (via ifes.json)
+UFES;Universidade Federal do Espírito Santo;U;Alegre;Alegre;ES;3200201;INEP Censo da Educação Superior (via ifes.json)
+UFES;Universidade Federal do Espírito Santo;U;São Mateus;São Mateus;ES;3204906;INEP Censo da Educação Superior (via ifes.json)
+UFES;Universidade Federal do Espírito Santo;U;Vitória;Vitória;ES;3205309;INEP Censo da Educação Superior (via ifes.json)
+UFF;Universidade Federal Fluminense;U;Angra dos Reis;Angra dos Reis;RJ;3300100;INEP Censo da Educação Superior (via ifes.json)
+UFF;Universidade Federal Fluminense;U;Campos dos Goytacazes;Campos dos Goytacazes;RJ;3301009;INEP Censo da Educação Superior (via ifes.json)
+UFF;Universidade Federal Fluminense;U;Macaé;Macaé;RJ;3302403;INEP Censo da Educação Superior (via ifes.json)
+UFF;Universidade Federal Fluminense;U;Niterói;Niterói;RJ;3303302;INEP Censo da Educação Superior (via ifes.json)
+UFF;Universidade Federal Fluminense;U;Nova Friburgo;Nova Friburgo;RJ;3303401;INEP Censo da Educação Superior (via ifes.json)
+UFF;Universidade Federal Fluminense;U;Petrópolis;Petrópolis;RJ;3303906;INEP Censo da Educação Superior (via ifes.json)
+UFF;Universidade Federal Fluminense;U;Rio das Ostras;Rio das Ostras;RJ;3304524;INEP Censo da Educação Superior (via ifes.json)
+UFF;Universidade Federal Fluminense;U;Santo Antônio de Pádua;Santo Antônio de Pádua;RJ;3304706;INEP Censo da Educação Superior (via ifes.json)
+UFF;Universidade Federal Fluminense;U;Volta Redonda;Volta Redonda;RJ;3306305;INEP Censo da Educação Superior (via ifes.json)
+UFFS;Universidade Federal da Fronteira Sul;U;Cerro Largo;Cerro Largo;RS;4305207;http://www.uffs.edu.br/uffs/home/
+UFFS;Universidade Federal da Fronteira Sul;U;Chapecó;Chapecó;SC;4204202;http://www.uffs.edu.br/uffs/home/
+UFFS;Universidade Federal da Fronteira Sul;U;Erechim;Erechim;RS;4307005;http://www.uffs.edu.br/uffs/home/
+UFFS;Universidade Federal da Fronteira Sul;U;Laranjeiras do Sul;Laranjeiras do Sul;PR;4113304;http://www.uffs.edu.br/uffs/home/
+UFFS;Universidade Federal da Fronteira Sul;U;Passo Fundo;Passo Fundo;RS;4314100;http://www.uffs.edu.br/uffs/home/
+UFFS;Universidade Federal da Fronteira Sul;U;Realeza;Realeza;PR;4121406;http://www.uffs.edu.br/uffs/home/
+UFG;Universidade Federal de Goiás;U;Aparecida de Goiânia;Aparecida de Goiânia;GO;5201405;INEP Censo da Educação Superior (via ifes.json)
+UFG;Universidade Federal de Goiás;U;Goiânia;Goiânia;GO;5208707;INEP Censo da Educação Superior (via ifes.json)
+UFG;Universidade Federal de Goiás;U;Goiás;Goiás;GO;5208905;INEP Censo da Educação Superior (via ifes.json)
+UFGD;Fundação Universidade Federal da Grande Dourados;U;Dourados;Dourados;MS;5003702;INEP Censo da Educação Superior (via ifes.json)
+UFJ;Universidade Federal de Jataí;U;Jataí;Jataí;GO;5211909;INEP Censo da Educação Superior (via ifes.json)
+UFJF;Universidade Federal de Juiz de Fora;U;Governador Valadares;Governador Valadares;MG;3127701;INEP Censo da Educação Superior (via ifes.json)
+UFJF;Universidade Federal de Juiz de Fora;U;Juiz de Fora;Juiz de Fora;MG;3136702;INEP Censo da Educação Superior (via ifes.json)
+UFLA;Universidade Federal de Lavras;U;Lavras;Lavras;MG;3138203;INEP Censo da Educação Superior (via ifes.json)
+UFLA;Universidade Federal de Lavras;U;São Sebastião do Paraíso;São Sebastião do Paraíso;MG;3164704;INEP Censo da Educação Superior (via ifes.json)
+UFMA;Universidade Federal do Maranhão;U;Bacabal;Bacabal;MA;2101202;INEP Censo da Educação Superior (via ifes.json)
+UFMA;Universidade Federal do Maranhão;U;Balsas;Balsas;MA;2101400;INEP Censo da Educação Superior (via ifes.json)
+UFMA;Universidade Federal do Maranhão;U;Chapadinha;Chapadinha;MA;2103208;INEP Censo da Educação Superior (via ifes.json)
+UFMA;Universidade Federal do Maranhão;U;Codó;Codó;MA;2103307;INEP Censo da Educação Superior (via ifes.json)
+UFMA;Universidade Federal do Maranhão;U;Grajaú;Grajaú;MA;2104800;INEP Censo da Educação Superior (via ifes.json)
+UFMA;Universidade Federal do Maranhão;U;Imperatriz;Imperatriz;MA;2105302;INEP Censo da Educação Superior (via ifes.json)
+UFMA;Universidade Federal do Maranhão;U;Pinheiro;Pinheiro;MA;2108603;INEP Censo da Educação Superior (via ifes.json)
+UFMA;Universidade Federal do Maranhão;U;São Bernardo;São Bernardo;MA;2110609;INEP Censo da Educação Superior (via ifes.json)
+UFMA;Universidade Federal do Maranhão;U;São Luís;São Luís;MA;2111300;INEP Censo da Educação Superior (via ifes.json)
+UFMG;Universidade Federal de Minas Gerais;U;Belo Horizonte;Belo Horizonte;MG;3106200;INEP Censo da Educação Superior (via ifes.json)
+UFMG;Universidade Federal de Minas Gerais;U;Montes Claros;Montes Claros;MG;3143302;INEP Censo da Educação Superior (via ifes.json)
+UFMS;Universidade Federal de Mato Grosso do Sul;U;Chapadão do Sul;Chapadão do Sul;MS;5002951;https://www.ufms.br/campus/
+UFMS;Universidade Federal de Mato Grosso do Sul;U;Paranaíba;Paranaíba;MS;5006309;https://www.ufms.br/campus/
+UFMS;Universidade Federal de Mato Grosso do Sul;U;Três Lagoas;Três Lagoas;MS;5008305;https://www.ufms.br/campus/
+UFMS;Universidade Federal de Mato Grosso do Sul;U;Campo Grande;Campo Grande;MS;5002704;https://www.ufms.br/campus/
+UFMS;Universidade Federal de Mato Grosso do Sul;U;Aquidauana;Aquidauana;MS;5001102;https://www.ufms.br/campus/
+UFMS;Universidade Federal de Mato Grosso do Sul;U;Coxim;Coxim;MS;5003306;https://www.ufms.br/campus/
+UFMS;Universidade Federal de Mato Grosso do Sul;U;Naviraí;Naviraí;MS;5005707;https://www.ufms.br/campus/
+UFMS;Universidade Federal de Mato Grosso do Sul;U;Nova Andradina;Nova Andradina;MS;5006200;https://www.ufms.br/campus/
+UFMS;Universidade Federal de Mato Grosso do Sul;U;Ponta Porã;Ponta Porã;MS;5006606;https://www.ufms.br/campus/
+UFMS;Universidade Federal de Mato Grosso do Sul;U;Corumbá;Corumbá;MS;5003207;https://www.ufms.br/campus/
+UFMT;Universidade Federal de Mato Grosso;U;Barra do Garças;Barra do Garças;MT;5101803;INEP Censo da Educação Superior (via ifes.json)
+UFMT;Universidade Federal de Mato Grosso;U;Cuiabá;Cuiabá;MT;5103403;INEP Censo da Educação Superior (via ifes.json)
+UFMT;Universidade Federal de Mato Grosso;U;Pontal do Araguaia;Pontal do Araguaia;MT;5106653;INEP Censo da Educação Superior (via ifes.json)
+UFMT;Universidade Federal de Mato Grosso;U;Sinop;Sinop;MT;5107909;INEP Censo da Educação Superior (via ifes.json)
+UFMT;Universidade Federal de Mato Grosso;U;Várzea Grande;Várzea Grande;MT;5108402;INEP Censo da Educação Superior (via ifes.json)
+UFNT;Universidade Federal do Norte do Tocantins;U;Araguaína;Araguaína;TO;1702109;INEP Censo da Educação Superior (via ifes.json)
+UFNT;Universidade Federal do Norte do Tocantins;U;Tocantinópolis;Tocantinópolis;TO;1721208;INEP Censo da Educação Superior (via ifes.json)
+UFOB;Universidade Federal do Oeste da Bahia;U;Barra;Barra;BA;2902708;INEP Censo da Educação Superior (via ifes.json)
+UFOB;Universidade Federal do Oeste da Bahia;U;Barreiras;Barreiras;BA;2903201;INEP Censo da Educação Superior (via ifes.json)
+UFOB;Universidade Federal do Oeste da Bahia;U;Bom Jesus da Lapa;Bom Jesus da Lapa;BA;2903904;INEP Censo da Educação Superior (via ifes.json)
+UFOB;Universidade Federal do Oeste da Bahia;U;Luís Eduardo Magalhães;Luís Eduardo Magalhães;BA;2919553;INEP Censo da Educação Superior (via ifes.json)
+UFOB;Universidade Federal do Oeste da Bahia;U;Santa Maria da Vitória;Santa Maria da Vitória;BA;2928109;INEP Censo da Educação Superior (via ifes.json)
+UFOP;Universidade Federal de Ouro Preto;U;João Monlevade;João Monlevade;MG;3136207;INEP Censo da Educação Superior (via ifes.json)
+UFOP;Universidade Federal de Ouro Preto;U;Mariana;Mariana;MG;3140001;INEP Censo da Educação Superior (via ifes.json)
+UFOP;Universidade Federal de Ouro Preto;U;Ouro Preto;Ouro Preto;MG;3146107;INEP Censo da Educação Superior (via ifes.json)
+UFOPA;Universidade Federal do Oeste do Pará;U;Alenquer;Alenquer;PA;1500404;INEP Censo da Educação Superior (via ifes.json)
+UFOPA;Universidade Federal do Oeste do Pará;U;Itaituba;Itaituba;PA;1503606;INEP Censo da Educação Superior (via ifes.json)
+UFOPA;Universidade Federal do Oeste do Pará;U;Juruti;Juruti;PA;1503903;INEP Censo da Educação Superior (via ifes.json)
+UFOPA;Universidade Federal do Oeste do Pará;U;Monte Alegre;Monte Alegre;PA;1504802;INEP Censo da Educação Superior (via ifes.json)
+UFOPA;Universidade Federal do Oeste do Pará;U;Óbidos;Óbidos;PA;1505106;INEP Censo da Educação Superior (via ifes.json)
+UFOPA;Universidade Federal do Oeste do Pará;U;Oriximiná;Oriximiná;PA;1505304;INEP Censo da Educação Superior (via ifes.json)
+UFOPA;Universidade Federal do Oeste do Pará;U;Santarém;Santarém;PA;1506807;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Abaetetuba;Abaetetuba;PA;1500107;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Altamira;Altamira;PA;1500602;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Ananindeua;Ananindeua;PA;1500800;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Belém;Belém;PA;1501402;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Bragança;Bragança;PA;1501709;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Breves;Breves;PA;1501808;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Cametá;Cametá;PA;1502103;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Castanhal;Castanhal;PA;1502400;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Salinópolis;Salinópolis;PA;1506203;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Soure;Soure;PA;1507904;INEP Censo da Educação Superior (via ifes.json)
+UFPA;Universidade Federal do Pará;U;Tucuruí;Tucuruí;PA;1508100;INEP Censo da Educação Superior (via ifes.json)
+UFPB;Universidade Federal da Paraíba;U;Areia;Areia;PB;2501104;INEP Censo da Educação Superior (via ifes.json)
+UFPB;Universidade Federal da Paraíba;U;Bananeiras;Bananeiras;PB;2501500;INEP Censo da Educação Superior (via ifes.json)
+UFPB;Universidade Federal da Paraíba;U;João Pessoa;João Pessoa;PB;2507507;INEP Censo da Educação Superior (via ifes.json)
+UFPB;Universidade Federal da Paraíba;U;Mamanguape;Mamanguape;PB;2508901;INEP Censo da Educação Superior (via ifes.json)
+UFPB;Universidade Federal da Paraíba;U;Rio Tinto;Rio Tinto;PB;2512903;INEP Censo da Educação Superior (via ifes.json)
+UFPB;Universidade Federal da Paraíba;U;Santa Rita;Santa Rita;PB;2513703;INEP Censo da Educação Superior (via ifes.json)
+UFPE;Universidade Federal de Pernambuco;U;Caruaru;Caruaru;PE;2604106;INEP Censo da Educação Superior (via ifes.json)
+UFPE;Universidade Federal de Pernambuco;U;Recife;Recife;PE;2611606;INEP Censo da Educação Superior (via ifes.json)
+UFPE;Universidade Federal de Pernambuco;U;Vitória de Santo Antão;Vitória de Santo Antão;PE;2616407;INEP Censo da Educação Superior (via ifes.json)
+UFPEL;Universidade Federal de Pelotas;U;Capão do Leão;Capão do Leão;RS;4304663;INEP Censo da Educação Superior (via ifes.json)
+UFPEL;Universidade Federal de Pelotas;U;Eldorado do Sul;Eldorado do Sul;RS;4306767;INEP Censo da Educação Superior (via ifes.json)
+UFPEL;Universidade Federal de Pelotas;U;Pelotas;Pelotas;RS;4314407;INEP Censo da Educação Superior (via ifes.json)
+UFPI;Universidade Federal do Piauí;U;Bom Jesus;Bom Jesus;PI;2201903;INEP Censo da Educação Superior (via ifes.json)
+UFPI;Universidade Federal do Piauí;U;Floriano;Floriano;PI;2203909;INEP Censo da Educação Superior (via ifes.json)
+UFPI;Universidade Federal do Piauí;U;Picos;Picos;PI;2208007;INEP Censo da Educação Superior (via ifes.json)
+UFPI;Universidade Federal do Piauí;U;Teresina;Teresina;PI;2211001;INEP Censo da Educação Superior (via ifes.json)
+UFPR;Universidade Federal do Paraná;U;Curitiba;Curitiba;PR;4106902;INEP Censo da Educação Superior (via ifes.json)
+UFPR;Universidade Federal do Paraná;U;Jandaia do Sul;Jandaia do Sul;PR;4112108;INEP Censo da Educação Superior (via ifes.json)
+UFPR;Universidade Federal do Paraná;U;Matinhos;Matinhos;PR;4115705;INEP Censo da Educação Superior (via ifes.json)
+UFPR;Universidade Federal do Paraná;U;Palotina;Palotina;PR;4117909;INEP Censo da Educação Superior (via ifes.json)
+UFPR;Universidade Federal do Paraná;U;Pontal do Paraná;Pontal do Paraná;PR;4119954;INEP Censo da Educação Superior (via ifes.json)
+UFPR;Universidade Federal do Paraná;U;Toledo;Toledo;PR;4127700;INEP Censo da Educação Superior (via ifes.json)
+UFR;Universidade Federal de Rondonópolis;U;Rondonópolis;Rondonópolis;MT;5107602;INEP Censo da Educação Superior (via ifes.json)
+UFRA;Universidade Federal Rural da Amazônia;U;Belém;Belém;PA;1501402;INEP Censo da Educação Superior (via ifes.json)
+UFRA;Universidade Federal Rural da Amazônia;U;Capanema;Capanema;PA;1502202;INEP Censo da Educação Superior (via ifes.json)
+UFRA;Universidade Federal Rural da Amazônia;U;Capitão Poço;Capitão Poço;PA;1502301;INEP Censo da Educação Superior (via ifes.json)
+UFRA;Universidade Federal Rural da Amazônia;U;Paragominas;Paragominas;PA;1505502;INEP Censo da Educação Superior (via ifes.json)
+UFRA;Universidade Federal Rural da Amazônia;U;Parauapebas;Parauapebas;PA;1505536;INEP Censo da Educação Superior (via ifes.json)
+UFRA;Universidade Federal Rural da Amazônia;U;Tomé-Açu;Tomé-Açu;PA;1508001;INEP Censo da Educação Superior (via ifes.json)
+UFRB;Universidade Federal do Recôncavo da Bahia;U;Amargosa;Amargosa;BA;2901007;INEP Censo da Educação Superior (via ifes.json)
+UFRB;Universidade Federal do Recôncavo da Bahia;U;Cachoeira;Cachoeira;BA;2904902;INEP Censo da Educação Superior (via ifes.json)
+UFRB;Universidade Federal do Recôncavo da Bahia;U;Cruz das Almas;Cruz das Almas;BA;2909802;INEP Censo da Educação Superior (via ifes.json)
+UFRB;Universidade Federal do Recôncavo da Bahia;U;Feira de Santana;Feira de Santana;BA;2910800;INEP Censo da Educação Superior (via ifes.json)
+UFRB;Universidade Federal do Recôncavo da Bahia;U;Santo Amaro;Santo Amaro;BA;2928604;INEP Censo da Educação Superior (via ifes.json)
+UFRB;Universidade Federal do Recôncavo da Bahia;U;Santo Antônio de Jesus;Santo Antônio de Jesus;BA;2928703;INEP Censo da Educação Superior (via ifes.json)
+UFRGS;Universidade Federal do Rio Grande do Sul;U;Imbé;Imbé;RS;4310330;INEP Censo da Educação Superior (via ifes.json)
+UFRGS;Universidade Federal do Rio Grande do Sul;U;Porto Alegre;Porto Alegre;RS;4314902;INEP Censo da Educação Superior (via ifes.json)
+UFRGS;Universidade Federal do Rio Grande do Sul;U;Tramandaí;Tramandaí;RS;4321600;INEP Censo da Educação Superior (via ifes.json)
+UFRJ;Universidade Federal do Rio de Janeiro;U;Duque de Caxias;Duque de Caxias;RJ;3301702;INEP Censo da Educação Superior (via ifes.json)
+UFRJ;Universidade Federal do Rio de Janeiro;U;Macaé;Macaé;RJ;3302403;INEP Censo da Educação Superior (via ifes.json)
+UFRJ;Universidade Federal do Rio de Janeiro;U;Rio de Janeiro;Rio de Janeiro;RJ;3304557;INEP Censo da Educação Superior (via ifes.json)
+UFRN;Universidade Federal do Rio Grande do Norte;U;Caicó;Caicó;RN;2402006;INEP Censo da Educação Superior (via ifes.json)
+UFRN;Universidade Federal do Rio Grande do Norte;U;Currais Novos;Currais Novos;RN;2403103;INEP Censo da Educação Superior (via ifes.json)
+UFRN;Universidade Federal do Rio Grande do Norte;U;Macaíba;Macaíba;RN;2407104;INEP Censo da Educação Superior (via ifes.json)
+UFRN;Universidade Federal do Rio Grande do Norte;U;Natal;Natal;RN;2408102;INEP Censo da Educação Superior (via ifes.json)
+UFRN;Universidade Federal do Rio Grande do Norte;U;Santa Cruz;Santa Cruz;RN;2411205;INEP Censo da Educação Superior (via ifes.json)
+UFRPE;Universidade Federal Rural de Pernambuco;U;Belo Jardim;Belo Jardim;PE;2601706;INEP Censo da Educação Superior (via ifes.json)
+UFRPE;Universidade Federal Rural de Pernambuco;U;Cabo de Santo Agostinho;Cabo de Santo Agostinho;PE;2602902;INEP Censo da Educação Superior (via ifes.json)
+UFRPE;Universidade Federal Rural de Pernambuco;U;Recife;Recife;PE;2611606;INEP Censo da Educação Superior (via ifes.json)
+UFRPE;Universidade Federal Rural de Pernambuco;U;Serra Talhada;Serra Talhada;PE;2613909;INEP Censo da Educação Superior (via ifes.json)
+UFRR;Universidade Federal de Roraima;U;Boa Vista;Boa Vista;RR;1400100;INEP Censo da Educação Superior (via ifes.json)
+UFRRJ;Universidade Federal Rural do Rio de Janeiro;U;Nova Iguaçu;Nova Iguaçu;RJ;3303500;INEP Censo da Educação Superior (via ifes.json)
+UFRRJ;Universidade Federal Rural do Rio de Janeiro;U;Seropédica;Seropédica;RJ;3305554;INEP Censo da Educação Superior (via ifes.json)
+UFRRJ;Universidade Federal Rural do Rio de Janeiro;U;Três Rios;Três Rios;RJ;3306008;INEP Censo da Educação Superior (via ifes.json)
+UFS;Universidade Federal de Sergipe;U;Aracaju;Aracaju;SE;2800308;INEP Censo da Educação Superior (via ifes.json)
+UFS;Universidade Federal de Sergipe;U;Itabaiana;Itabaiana;SE;2802908;INEP Censo da Educação Superior (via ifes.json)
+UFS;Universidade Federal de Sergipe;U;Lagarto;Lagarto;SE;2803500;INEP Censo da Educação Superior (via ifes.json)
+UFS;Universidade Federal de Sergipe;U;Laranjeiras;Laranjeiras;SE;2803609;INEP Censo da Educação Superior (via ifes.json)
+UFS;Universidade Federal de Sergipe;U;Nossa Senhora da Glória;Nossa Senhora da Glória;SE;2804508;INEP Censo da Educação Superior (via ifes.json)
+UFS;Universidade Federal de Sergipe;U;São Cristóvão;São Cristóvão;SE;2806701;INEP Censo da Educação Superior (via ifes.json)
+UFSB;Universidade Federal do Sul da Bahia;U;Itabuna;Itabuna;BA;2914802;INEP Censo da Educação Superior (via ifes.json)
+UFSB;Universidade Federal do Sul da Bahia;U;Porto Seguro;Porto Seguro;BA;2925303;INEP Censo da Educação Superior (via ifes.json)
+UFSB;Universidade Federal do Sul da Bahia;U;Teixeira de Freitas;Teixeira de Freitas;BA;2931350;INEP Censo da Educação Superior (via ifes.json)
+UFSC;Universidade Federal de Santa Catarina;U;Araranguá;Araranguá;SC;4201406;INEP Censo da Educação Superior (via ifes.json)
+UFSC;Universidade Federal de Santa Catarina;U;Blumenau;Blumenau;SC;4202404;INEP Censo da Educação Superior (via ifes.json)
+UFSC;Universidade Federal de Santa Catarina;U;Curitibanos;Curitibanos;SC;4204806;INEP Censo da Educação Superior (via ifes.json)
+UFSC;Universidade Federal de Santa Catarina;U;Florianópolis;Florianópolis;SC;4205407;INEP Censo da Educação Superior (via ifes.json)
+UFSC;Universidade Federal de Santa Catarina;U;Joinville;Joinville;SC;4209102;INEP Censo da Educação Superior (via ifes.json)
+UFSCAR;Universidade Federal de São Carlos;U;Araras;Araras;SP;3503307;INEP Censo da Educação Superior (via ifes.json)
+UFSCAR;Universidade Federal de São Carlos;U;Buri;Buri;SP;3508009;INEP Censo da Educação Superior (via ifes.json)
+UFSCAR;Universidade Federal de São Carlos;U;São Carlos;São Carlos;SP;3548906;INEP Censo da Educação Superior (via ifes.json)
+UFSCAR;Universidade Federal de São Carlos;U;Sorocaba;Sorocaba;SP;3552205;INEP Censo da Educação Superior (via ifes.json)
+UFSJ;Universidade Federal de São João Del Rei;U;Divinópolis;Divinópolis;MG;3122306;INEP Censo da Educação Superior (via ifes.json)
+UFSJ;Universidade Federal de São João Del Rei;U;Ouro Branco;Ouro Branco;MG;3145901;INEP Censo da Educação Superior (via ifes.json)
+UFSJ;Universidade Federal de São João Del Rei;U;São João del Rei;São João del Rei;MG;3162500;INEP Censo da Educação Superior (via ifes.json)
+UFSJ;Universidade Federal de São João Del Rei;U;Sete Lagoas;Sete Lagoas;MG;3167202;INEP Censo da Educação Superior (via ifes.json)
+UFSM;Universidade Federal de Santa Maria;U;Santa Maria;Santa Maria;RS;4316907;https://www.ufsm.br/
+UFSM;Universidade Federal de Santa Maria;U;Frederico Westphalen;Frederico Westphalen;RS;4308508;https://www.ufsm.br/
+UFSM;Universidade Federal de Santa Maria;U;Palmeira das Missões;Palmeira das Missões;RS;4313706;https://www.ufsm.br/
+UFSM;Universidade Federal de Santa Maria;U;Cachoeira do Sul;Cachoeira do Sul;RS;4303004;https://www.ufsm.br/
+UFT;Fundação Universidade Federal do Tocantins;U;Arraias;Arraias;TO;1702406;INEP Censo da Educação Superior (via ifes.json)
+UFT;Fundação Universidade Federal do Tocantins;U;Gurupi;Gurupi;TO;1709500;INEP Censo da Educação Superior (via ifes.json)
+UFT;Fundação Universidade Federal do Tocantins;U;Miracema do Tocantins;Miracema do Tocantins;TO;1713205;INEP Censo da Educação Superior (via ifes.json)
+UFT;Fundação Universidade Federal do Tocantins;U;Porto Nacional;Porto Nacional;TO;1718204;INEP Censo da Educação Superior (via ifes.json)
+UFT;Fundação Universidade Federal do Tocantins;U;Palmas;Palmas;TO;1721000;INEP Censo da Educação Superior (via ifes.json)
+UFTM;Universidade Federal do Triângulo Mineiro;U;Iturama;Iturama;MG;3134400;INEP Censo da Educação Superior (via ifes.json)
+UFTM;Universidade Federal do Triângulo Mineiro;U;Uberaba;Uberaba;MG;3170107;INEP Censo da Educação Superior (via ifes.json)
+UFU;Universidade Federal de Uberlândia;U;Ituiutaba;Ituiutaba;MG;3134202;INEP Censo da Educação Superior (via ifes.json)
+UFU;Universidade Federal de Uberlândia;U;Monte Carmelo;Monte Carmelo;MG;3143104;INEP Censo da Educação Superior (via ifes.json)
+UFU;Universidade Federal de Uberlândia;U;Patos de Minas;Patos de Minas;MG;3148004;INEP Censo da Educação Superior (via ifes.json)
+UFU;Universidade Federal de Uberlândia;U;Uberlândia;Uberlândia;MG;3170206;INEP Censo da Educação Superior (via ifes.json)
+UFV;Universidade Federal de Viçosa;U;Florestal;Florestal;MG;3126000;INEP Censo da Educação Superior (via ifes.json)
+UFV;Universidade Federal de Viçosa;U;Rio Paranaíba;Rio Paranaíba;MG;3155504;INEP Censo da Educação Superior (via ifes.json)
+UFV;Universidade Federal de Viçosa;U;Viçosa;Viçosa;MG;3171303;INEP Censo da Educação Superior (via ifes.json)
+UFVJM;Universidade Federal dos Vales do Jequitinhonha e Mucuri;U;Diamantina;Diamantina;MG;3121605;INEP Censo da Educação Superior (via ifes.json)
+UFVJM;Universidade Federal dos Vales do Jequitinhonha e Mucuri;U;Janaúba;Janaúba;MG;3135100;INEP Censo da Educação Superior (via ifes.json)
+UFVJM;Universidade Federal dos Vales do Jequitinhonha e Mucuri;U;Teófilo Otoni;Teófilo Otoni;MG;3168606;INEP Censo da Educação Superior (via ifes.json)
+UFVJM;Universidade Federal dos Vales do Jequitinhonha e Mucuri;U;Unaí;Unaí;MG;3170404;INEP Censo da Educação Superior (via ifes.json)
+UNB;Universidade de Brasília;U;Brasília;Brasília;DF;5300108;INEP Censo da Educação Superior (via ifes.json)
+UNIFAL-MG;Universidade Federal de Alfenas;U;Alfenas;Alfenas;MG;3101607;INEP Censo da Educação Superior (via ifes.json)
+UNIFAL-MG;Universidade Federal de Alfenas;U;Poços de Caldas;Poços de Caldas;MG;3151800;INEP Censo da Educação Superior (via ifes.json)
+UNIFAL-MG;Universidade Federal de Alfenas;U;Varginha;Varginha;MG;3170701;INEP Censo da Educação Superior (via ifes.json)
+UNIFAP;Universidade Federal do Amapá;U;Macapá;Macapá;AP;1600303;INEP Censo da Educação Superior (via ifes.json)
+UNIFAP;Universidade Federal do Amapá;U;Mazagão;Mazagão;AP;1600402;INEP Censo da Educação Superior (via ifes.json)
+UNIFAP;Universidade Federal do Amapá;U;Oiapoque;Oiapoque;AP;1600501;INEP Censo da Educação Superior (via ifes.json)
+UNIFAP;Universidade Federal do Amapá;U;Santana;Santana;AP;1600600;INEP Censo da Educação Superior (via ifes.json)
+UNIFEI;Universidade Federal de Itajubá - Unifei;U;Itabira;Itabira;MG;3131703;INEP Censo da Educação Superior (via ifes.json)
+UNIFEI;Universidade Federal de Itajubá - Unifei;U;Itajubá;Itajubá;MG;3132404;INEP Censo da Educação Superior (via ifes.json)
+UNIFESP;Universidade Federal de São Paulo;U;Diadema;Diadema;SP;3513801;INEP Censo da Educação Superior (via ifes.json)
+UNIFESP;Universidade Federal de São Paulo;U;Guarulhos;Guarulhos;SP;3518800;INEP Censo da Educação Superior (via ifes.json)
+UNIFESP;Universidade Federal de São Paulo;U;Osasco;Osasco;SP;3534401;INEP Censo da Educação Superior (via ifes.json)
+UNIFESP;Universidade Federal de São Paulo;U;Santos;Santos;SP;3548500;INEP Censo da Educação Superior (via ifes.json)
+UNIFESP;Universidade Federal de São Paulo;U;São José dos Campos;São José dos Campos;SP;3549904;INEP Censo da Educação Superior (via ifes.json)
+UNIFESP;Universidade Federal de São Paulo;U;São Paulo;São Paulo;SP;3550308;INEP Censo da Educação Superior (via ifes.json)
+UNIFESSPA;Universidade Federal do Sul e Sudeste do Pará;U;Marabá;Marabá;PA;1504208;INEP Censo da Educação Superior (via ifes.json)
+UNIFESSPA;Universidade Federal do Sul e Sudeste do Pará;U;Rondon do Pará;Rondon do Pará;PA;1506187;INEP Censo da Educação Superior (via ifes.json)
+UNIFESSPA;Universidade Federal do Sul e Sudeste do Pará;U;Santana do Araguaia;Santana do Araguaia;PA;1506708;INEP Censo da Educação Superior (via ifes.json)
+UNIFESSPA;Universidade Federal do Sul e Sudeste do Pará;U;São Félix do Xingu;São Félix do Xingu;PA;1507300;INEP Censo da Educação Superior (via ifes.json)
+UNIFESSPA;Universidade Federal do Sul e Sudeste do Pará;U;Xinguara;Xinguara;PA;1508407;INEP Censo da Educação Superior (via ifes.json)
+UNILA;Universidade Federal da Integração Latino-americana;U;Foz do Iguaçu;Foz do Iguaçu;PR;4108304;INEP Censo da Educação Superior (via ifes.json)
+UNILAB;Universidade da Integração Internacional da Lusofonia Afro-brasileira;U;Redenção;Redenção;CE;2311603;INEP Censo da Educação Superior (via ifes.json)
+UNILAB;Universidade da Integração Internacional da Lusofonia Afro-brasileira;U;São Francisco do Conde;São Francisco do Conde;BA;2929206;INEP Censo da Educação Superior (via ifes.json)
+UNIPAMPA;Fundação Universidade Federal do Pampa - Unipampa;U;Alegrete;Alegrete;RS;4300406;"https://unipampa.edu.br (campi) / PDI; confirmado também por busca"
+UNIPAMPA;Fundação Universidade Federal do Pampa - Unipampa;U;Bagé;Bagé;RS;4301602;"https://unipampa.edu.br (campi) / PDI; confirmado também por busca"
+UNIPAMPA;Fundação Universidade Federal do Pampa - Unipampa;U;Caçapava do Sul;Caçapava do Sul;RS;4302808;"https://unipampa.edu.br (campi) / PDI; confirmado também por busca"
+UNIPAMPA;Fundação Universidade Federal do Pampa - Unipampa;U;Dom Pedrito;Dom Pedrito;RS;4306601;"https://unipampa.edu.br (campi) / PDI; confirmado também por busca"
+UNIPAMPA;Fundação Universidade Federal do Pampa - Unipampa;U;Itaqui;Itaqui;RS;4310603;"https://unipampa.edu.br (campi) / PDI; confirmado também por busca"
+UNIPAMPA;Fundação Universidade Federal do Pampa - Unipampa;U;Jaguarão;Jaguarão;RS;4311007;"https://unipampa.edu.br (campi) / PDI; confirmado também por busca"
+UNIPAMPA;Fundação Universidade Federal do Pampa - Unipampa;U;Santana do Livramento;Santana do Livramento;RS;4317103;"https://unipampa.edu.br (campi) / PDI; confirmado também por busca"
+UNIPAMPA;Fundação Universidade Federal do Pampa - Unipampa;U;São Borja;São Borja;RS;4318002;"https://unipampa.edu.br (campi) / PDI; confirmado também por busca"
+UNIPAMPA;Fundação Universidade Federal do Pampa - Unipampa;U;São Gabriel;São Gabriel;RS;4318309;"https://unipampa.edu.br (campi) / PDI; confirmado também por busca"
+UNIPAMPA;Fundação Universidade Federal do Pampa - Unipampa;U;Uruguaiana;Uruguaiana;RS;4322400;"https://unipampa.edu.br (campi) / PDI; confirmado também por busca"
+UNIR;Fundação Universidade Federal de Rondônia;U;Ariquemes;Ariquemes;RO;1100023;INEP Censo da Educação Superior (via ifes.json)
+UNIR;Fundação Universidade Federal de Rondônia;U;Cacoal;Cacoal;RO;1100049;INEP Censo da Educação Superior (via ifes.json)
+UNIR;Fundação Universidade Federal de Rondônia;U;Guajará-Mirim;Guajará-Mirim;RO;1100106;INEP Censo da Educação Superior (via ifes.json)
+UNIR;Fundação Universidade Federal de Rondônia;U;Ji-Paraná;Ji-Paraná;RO;1100122;INEP Censo da Educação Superior (via ifes.json)
+UNIR;Fundação Universidade Federal de Rondônia;U;Porto Velho;Porto Velho;RO;1100205;INEP Censo da Educação Superior (via ifes.json)
+UNIR;Fundação Universidade Federal de Rondônia;U;Presidente Médici;Presidente Médici;RO;1100254;INEP Censo da Educação Superior (via ifes.json)
+UNIR;Fundação Universidade Federal de Rondônia;U;Rolim de Moura;Rolim de Moura;RO;1100288;INEP Censo da Educação Superior (via ifes.json)
+UNIR;Fundação Universidade Federal de Rondônia;U;Vilhena;Vilhena;RO;1100304;INEP Censo da Educação Superior (via ifes.json)
+UNIRIO;Universidade Federal do Estado do Rio de Janeiro;U;Rio de Janeiro;Rio de Janeiro;RJ;3304557;INEP Censo da Educação Superior (via ifes.json)
+UNIVASF;Fundação Universidade Federal do Vale do São Francisco;U;São Raimundo Nonato;São Raimundo Nonato;PI;2210607;INEP Censo da Educação Superior (via ifes.json)
+UNIVASF;Fundação Universidade Federal do Vale do São Francisco;U;Petrolina;Petrolina;PE;2611101;INEP Censo da Educação Superior (via ifes.json)
+UNIVASF;Fundação Universidade Federal do Vale do São Francisco;U;Salgueiro;Salgueiro;PE;2612208;INEP Censo da Educação Superior (via ifes.json)
+UNIVASF;Fundação Universidade Federal do Vale do São Francisco;U;Juazeiro;Juazeiro;BA;2918407;INEP Censo da Educação Superior (via ifes.json)
+UNIVASF;Fundação Universidade Federal do Vale do São Francisco;U;Paulo Afonso;Paulo Afonso;BA;2924009;INEP Censo da Educação Superior (via ifes.json)
+UNIVASF;Fundação Universidade Federal do Vale do São Francisco;U;Senhor do Bonfim;Senhor do Bonfim;BA;2930105;INEP Censo da Educação Superior (via ifes.json)
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Apucarana;Apucarana;PR;4101408;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Campo Mourão;Campo Mourão;PR;4104303;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Cornélio Procópio;Cornélio Procópio;PR;4106407;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Curitiba;Curitiba;PR;4106902;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Dois Vizinhos;Dois Vizinhos;PR;4107207;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Francisco Beltrão;Francisco Beltrão;PR;4108403;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Guarapuava;Guarapuava;PR;4109401;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Londrina;Londrina;PR;4113700;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Medianeira;Medianeira;PR;4115804;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Pato Branco;Pato Branco;PR;4118501;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Ponta Grossa;Ponta Grossa;PR;4119905;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Santa Helena;Santa Helena;PR;4123501;https://www.utfpr.edu.br/institucional/conheca-os-campi
+UTFPR;Universidade Tecnológica Federal do Paraná;U;Toledo;Toledo;PR;4127700;https://www.utfpr.edu.br/institucional/conheca-os-campi
+AMAN;Academia Militar das Agulhas Negras;O;Resende;Resende;RJ;3304201;INEP Censo da Educação Superior (via ifes.json)
+CEFET/MG;Centro Federal de Educação Tecnológica de Minas Gerais;CEFET;Araxá;Araxá;MG;3104007;INEP Censo da Educação Superior (via ifes.json)
+CEFET/MG;Centro Federal de Educação Tecnológica de Minas Gerais;CEFET;Belo Horizonte;Belo Horizonte;MG;3106200;INEP Censo da Educação Superior (via ifes.json)
+CEFET/MG;Centro Federal de Educação Tecnológica de Minas Gerais;CEFET;Contagem;Contagem;MG;3118601;INEP Censo da Educação Superior (via ifes.json)
+CEFET/MG;Centro Federal de Educação Tecnológica de Minas Gerais;CEFET;Curvelo;Curvelo;MG;3120904;INEP Censo da Educação Superior (via ifes.json)
+CEFET/MG;Centro Federal de Educação Tecnológica de Minas Gerais;CEFET;Divinópolis;Divinópolis;MG;3122306;INEP Censo da Educação Superior (via ifes.json)
+CEFET/MG;Centro Federal de Educação Tecnológica de Minas Gerais;CEFET;Leopoldina;Leopoldina;MG;3138401;INEP Censo da Educação Superior (via ifes.json)
+CEFET/MG;Centro Federal de Educação Tecnológica de Minas Gerais;CEFET;Nepomuceno;Nepomuceno;MG;3144607;INEP Censo da Educação Superior (via ifes.json)
+CEFET/MG;Centro Federal de Educação Tecnológica de Minas Gerais;CEFET;Timóteo;Timóteo;MG;3168705;INEP Censo da Educação Superior (via ifes.json)
+CEFET/MG;Centro Federal de Educação Tecnológica de Minas Gerais;CEFET;Varginha;Varginha;MG;3170701;INEP Censo da Educação Superior (via ifes.json)
+CEFET/RJ;Centro Federal de Educação Tecnológica Celso Suckow da Fonseca;CEFET;Angra dos Reis;Angra dos Reis;RJ;3300100;INEP Censo da Educação Superior (via ifes.json)
+CEFET/RJ;Centro Federal de Educação Tecnológica Celso Suckow da Fonseca;CEFET;Itaguaí;Itaguaí;RJ;3302007;INEP Censo da Educação Superior (via ifes.json)
+CEFET/RJ;Centro Federal de Educação Tecnológica Celso Suckow da Fonseca;CEFET;Nova Friburgo;Nova Friburgo;RJ;3303401;INEP Censo da Educação Superior (via ifes.json)
+CEFET/RJ;Centro Federal de Educação Tecnológica Celso Suckow da Fonseca;CEFET;Nova Iguaçu;Nova Iguaçu;RJ;3303500;INEP Censo da Educação Superior (via ifes.json)
+CEFET/RJ;Centro Federal de Educação Tecnológica Celso Suckow da Fonseca;CEFET;Petrópolis;Petrópolis;RJ;3303906;INEP Censo da Educação Superior (via ifes.json)
+CEFET/RJ;Centro Federal de Educação Tecnológica Celso Suckow da Fonseca;CEFET;Rio de Janeiro;Rio de Janeiro;RJ;3304557;INEP Censo da Educação Superior (via ifes.json)
+CEFET/RJ;Centro Federal de Educação Tecnológica Celso Suckow da Fonseca;CEFET;Valença;Valença;RJ;3306107;INEP Censo da Educação Superior (via ifes.json)
+CIAvEx;Centro de Instrução de Aviação do Exército;O;Taubaté;Taubaté;SP;3554102;INEP Censo da Educação Superior (via ifes.json)
+CP II;Colégio Pedro Ii;IF;Rio de Janeiro;Rio de Janeiro;RJ;3304557;INEP Censo da Educação Superior (via ifes.json)
+ENCE;Escola Nacional de Ciências Estatísticas;O;Rio de Janeiro;Rio de Janeiro;RJ;3304557;INEP Censo da Educação Superior (via ifes.json)
+ESA;Escola de Sargentos das Armas;O;Três Corações;Três Corações;MG;3169307;INEP Censo da Educação Superior (via ifes.json)
+EsEFEx;Escola de Educação Física do Exército;O;Rio de Janeiro;Rio de Janeiro;RJ;3304557;INEP Censo da Educação Superior (via ifes.json)
+EsSLog;Escola de Sargentos de Logística;O;Rio de Janeiro;Rio de Janeiro;RJ;3304557;INEP Censo da Educação Superior (via ifes.json)
+FACS - GHC;Faculdade de Ciências da Saúde do Grupo Hospitalar Conceição;O;Porto Alegre;Porto Alegre;RS;4314902;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Abelardo Luz;Abelardo Luz;SC;4200101;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Araquari;Araquari;SC;4201307;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Blumenau;Blumenau;SC;4202404;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Brusque;Brusque;SC;4202909;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Camboriú;Camboriú;SC;4203204;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Concórdia;Concórdia;SC;4204301;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Fraiburgo;Fraiburgo;SC;4205506;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Ibirama;Ibirama;SC;4206900;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Luzerna;Luzerna;SC;4210035;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Rio do Sul;Rio do Sul;SC;4214805;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Santa Rosa do Sul;Santa Rosa do Sul;SC;4215653;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;São Bento do Sul;São Bento do Sul;SC;4215802;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;São Francisco do Sul;São Francisco do Sul;SC;4216206;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Sombrio;Sombrio;SC;4217709;INEP Censo da Educação Superior (via ifes.json)
+IF Catarinense;Instituto Federal de Educação, Ciência e Tecnologia Catarinense;IF;Videira;Videira;SC;4219309;INEP Censo da Educação Superior (via ifes.json)
+IF Fluminense;Instituto Federal de Educação, Ciência e Tecnologia Fluminense;IF;Bom Jesus do Itabapoana;Bom Jesus do Itabapoana;RJ;3300605;INEP Censo da Educação Superior (via ifes.json)
+IF Fluminense;Instituto Federal de Educação, Ciência e Tecnologia Fluminense;IF;Cabo Frio;Cabo Frio;RJ;3300704;INEP Censo da Educação Superior (via ifes.json)
+IF Fluminense;Instituto Federal de Educação, Ciência e Tecnologia Fluminense;IF;Campos dos Goytacazes;Campos dos Goytacazes;RJ;3301009;INEP Censo da Educação Superior (via ifes.json)
+IF Fluminense;Instituto Federal de Educação, Ciência e Tecnologia Fluminense;IF;Itaperuna;Itaperuna;RJ;3302205;INEP Censo da Educação Superior (via ifes.json)
+IF Fluminense;Instituto Federal de Educação, Ciência e Tecnologia Fluminense;IF;Macaé;Macaé;RJ;3302403;INEP Censo da Educação Superior (via ifes.json)
+IF Fluminense;Instituto Federal de Educação, Ciência e Tecnologia Fluminense;IF;Santo Antônio de Pádua;Santo Antônio de Pádua;RJ;3304706;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Campos Belos;Campos Belos;GO;5204904;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Catalão;Catalão;GO;5205109;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Ceres;Ceres;GO;5205406;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Cristalina;Cristalina;GO;5206206;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Goiânia;Goiânia;GO;5208707;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Hidrolândia;Hidrolândia;GO;5209705;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Ipameri;Ipameri;GO;5210109;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Iporá;Iporá;GO;5210208;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Morrinhos;Morrinhos;GO;5213806;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Posse;Posse;GO;5218300;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Rio Verde;Rio Verde;GO;5218805;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Trindade;Trindade;GO;5221403;INEP Censo da Educação Superior (via ifes.json)
+IF Goiano;Instituto Federal de Educação, Ciência e Tecnologia Goiano;IF;Urutaí;Urutaí;GO;5221809;INEP Censo da Educação Superior (via ifes.json)
+IF SERTÃO-PE;Instituto Federal de Educação, Ciência e Tecnologia do Sertão Pernambucano;IF;Floresta;Floresta;PE;2605707;INEP Censo da Educação Superior (via ifes.json)
+IF SERTÃO-PE;Instituto Federal de Educação, Ciência e Tecnologia do Sertão Pernambucano;IF;Ouricuri;Ouricuri;PE;2609907;INEP Censo da Educação Superior (via ifes.json)
+IF SERTÃO-PE;Instituto Federal de Educação, Ciência e Tecnologia do Sertão Pernambucano;IF;Petrolina;Petrolina;PE;2611101;INEP Censo da Educação Superior (via ifes.json)
+IF SERTÃO-PE;Instituto Federal de Educação, Ciência e Tecnologia do Sertão Pernambucano;IF;Salgueiro;Salgueiro;PE;2612208;INEP Censo da Educação Superior (via ifes.json)
+IF SERTÃO-PE;Instituto Federal de Educação, Ciência e Tecnologia do Sertão Pernambucano;IF;Santa Maria da Boa Vista;Santa Maria da Boa Vista;PE;2612604;INEP Censo da Educação Superior (via ifes.json)
+IF SERTÃO-PE;Instituto Federal de Educação, Ciência e Tecnologia do Sertão Pernambucano;IF;Serra Talhada;Serra Talhada;PE;2613909;INEP Censo da Educação Superior (via ifes.json)
+IF SUL DE MINAS;Instituto Federal de Educação, Ciência e Tecnologia do Sul de Minas Gerais;IF;Carmo de Minas;Carmo de Minas;MG;3114105;INEP Censo da Educação Superior (via ifes.json)
+IF SUL DE MINAS;Instituto Federal de Educação, Ciência e Tecnologia do Sul de Minas Gerais;IF;Inconfidentes;Inconfidentes;MG;3130606;INEP Censo da Educação Superior (via ifes.json)
+IF SUL DE MINAS;Instituto Federal de Educação, Ciência e Tecnologia do Sul de Minas Gerais;IF;Machado;Machado;MG;3139003;INEP Censo da Educação Superior (via ifes.json)
+IF SUL DE MINAS;Instituto Federal de Educação, Ciência e Tecnologia do Sul de Minas Gerais;IF;Muzambinho;Muzambinho;MG;3144102;INEP Censo da Educação Superior (via ifes.json)
+IF SUL DE MINAS;Instituto Federal de Educação, Ciência e Tecnologia do Sul de Minas Gerais;IF;Passos;Passos;MG;3147907;INEP Censo da Educação Superior (via ifes.json)
+IF SUL DE MINAS;Instituto Federal de Educação, Ciência e Tecnologia do Sul de Minas Gerais;IF;Poços de Caldas;Poços de Caldas;MG;3151800;INEP Censo da Educação Superior (via ifes.json)
+IF SUL DE MINAS;Instituto Federal de Educação, Ciência e Tecnologia do Sul de Minas Gerais;IF;Pouso Alegre;Pouso Alegre;MG;3152501;INEP Censo da Educação Superior (via ifes.json)
+IFAC;Instituto Federal de Educação, Ciência e Tecnologia do Acre;IF;Rio Branco;Rio Branco;AC;1200401;https://www.ifac.edu.br/campi
+IFAC;Instituto Federal de Educação, Ciência e Tecnologia do Acre;IF;Xapuri;Xapuri;AC;1200708;https://www.ifac.edu.br/campi
+IFAC;Instituto Federal de Educação, Ciência e Tecnologia do Acre;IF;Sena Madureira;Sena Madureira;AC;1200500;https://www.ifac.edu.br/campi
+IFAC;Instituto Federal de Educação, Ciência e Tecnologia do Acre;IF;Tarauacá;Tarauacá;AC;1200609;https://www.ifac.edu.br/campi
+IFAC;Instituto Federal de Educação, Ciência e Tecnologia do Acre;IF;Cruzeiro do Sul;Cruzeiro do Sul;AC;1200203;https://www.ifac.edu.br/campi
+IFAL;Instituto Federal de Educação, Ciência e Tecnologia de Alagoas;IF;Arapiraca;Arapiraca;AL;2700300;INEP Censo da Educação Superior (via ifes.json)
+IFAL;Instituto Federal de Educação, Ciência e Tecnologia de Alagoas;IF;Maceió;Maceió;AL;2704302;INEP Censo da Educação Superior (via ifes.json)
+IFAL;Instituto Federal de Educação, Ciência e Tecnologia de Alagoas;IF;Maragogi;Maragogi;AL;2704500;INEP Censo da Educação Superior (via ifes.json)
+IFAL;Instituto Federal de Educação, Ciência e Tecnologia de Alagoas;IF;Marechal Deodoro;Marechal Deodoro;AL;2704708;INEP Censo da Educação Superior (via ifes.json)
+IFAL;Instituto Federal de Educação, Ciência e Tecnologia de Alagoas;IF;Palmeira dos Índios;Palmeira dos Índios;AL;2706307;INEP Censo da Educação Superior (via ifes.json)
+IFAL;Instituto Federal de Educação, Ciência e Tecnologia de Alagoas;IF;Penedo;Penedo;AL;2706703;INEP Censo da Educação Superior (via ifes.json)
+IFAL;Instituto Federal de Educação, Ciência e Tecnologia de Alagoas;IF;Piranhas;Piranhas;AL;2707107;INEP Censo da Educação Superior (via ifes.json)
+IFAL;Instituto Federal de Educação, Ciência e Tecnologia de Alagoas;IF;Satuba;Satuba;AL;2708907;INEP Censo da Educação Superior (via ifes.json)
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Coari;Coari;AM;1301209;INEP Censo da Educação Superior (via ifes.json)
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Itacoatiara;Itacoatiara;AM;1301902;INEP Censo da Educação Superior (via ifes.json)
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Manaus;Manaus;AM;1302603;INEP Censo da Educação Superior (via ifes.json)
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Maués;Maués;AM;1302900;INEP Censo da Educação Superior (via ifes.json)
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Parintins;Parintins;AM;1303403;INEP Censo da Educação Superior (via ifes.json)
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Presidente Figueiredo;Presidente Figueiredo;AM;1303536;INEP Censo da Educação Superior (via ifes.json)
+IFAP;Instituto Federal de Educação, Ciência e Tecnologia do Amapá;IF;Macapá;Macapá;AP;1600303;https://www.ifap.edu.br/campus/
+IFAP;Instituto Federal de Educação, Ciência e Tecnologia do Amapá;IF;Santana;Santana;AP;1600600;https://www.ifap.edu.br/campus/
+IFAP;Instituto Federal de Educação, Ciência e Tecnologia do Amapá;IF;Laranjal do Jari;Laranjal do Jari;AP;1600279;https://www.ifap.edu.br/campus/
+IFAP;Instituto Federal de Educação, Ciência e Tecnologia do Amapá;IF;Porto Grande;Porto Grande;AP;1600535;https://www.ifap.edu.br/campus/
+IFAP;Instituto Federal de Educação, Ciência e Tecnologia do Amapá;IF;Pedra Branca do Amapari;Pedra Branca do Amapari;AP;1600154;https://www.ifap.edu.br/campus/
+IFAP;Instituto Federal de Educação, Ciência e Tecnologia do Amapá;IF;Oiapoque;Oiapoque;AP;1600501;https://www.ifap.edu.br/campus/
+IFAP;Instituto Federal de Educação, Ciência e Tecnologia do Amapá;IF;Tartarugalzinho;Tartarugalzinho;AP;1600709;https://www.ifap.edu.br/campus/
+IFAP;Instituto Federal de Educação, Ciência e Tecnologia do Amapá;IF;Mazagão;Mazagão;AP;1600402;https://www.ifap.edu.br/campus/
+IFB;Instituto Federal de Educação, Ciencia e Tecnologia de Brasilia;IF;Brasília;Brasília;DF;5300108;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Barreiras;Barreiras;BA;2903201;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Brumado;Brumado;BA;2904605;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Camaçari;Camaçari;BA;2905701;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Eunápolis;Eunápolis;BA;2910727;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Feira de Santana;Feira de Santana;BA;2910800;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Irecê;Irecê;BA;2914604;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Jacobina;Jacobina;BA;2917508;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Jequié;Jequié;BA;2918001;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Lauro de Freitas;Lauro de Freitas;BA;2919207;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Paulo Afonso;Paulo Afonso;BA;2924009;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Porto Seguro;Porto Seguro;BA;2925303;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Salvador;Salvador;BA;2927408;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Santo Amaro;Santo Amaro;BA;2928604;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Santo Antônio de Jesus;Santo Antônio de Jesus;BA;2928703;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Simões Filho;Simões Filho;BA;2930709;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Valença;Valença;BA;2932903;INEP Censo da Educação Superior (via ifes.json)
+IFBA;Instituto Federal de Educação, Ciência e Tecnologia da Bahia;IF;Vitória da Conquista;Vitória da Conquista;BA;2933307;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Bom Jesus da Lapa;Bom Jesus da Lapa;BA;2903904;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Catu;Catu;BA;2907509;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Guanambi;Guanambi;BA;2911709;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Itapetinga;Itapetinga;BA;2916401;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Salvador;Salvador;BA;2927408;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Santa Inês;Santa Inês;BA;2927903;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Senhor do Bonfim;Senhor do Bonfim;BA;2930105;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Serrinha;Serrinha;BA;2930501;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Teixeira de Freitas;Teixeira de Freitas;BA;2931350;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Uruçuca;Uruçuca;BA;2932705;INEP Censo da Educação Superior (via ifes.json)
+IFBAIANO;Instituto Federal de Educação, Ciência e Tecnologia Baiano;IF;Valença;Valença;BA;2932903;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Acaraú;Acaraú;CE;2300200;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Acopiara;Acopiara;CE;2300309;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Aracati;Aracati;CE;2301109;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Baturité;Baturité;CE;2302107;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Boa Viagem;Boa Viagem;CE;2302404;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Camocim;Camocim;CE;2302602;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Canindé;Canindé;CE;2302800;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Caucaia;Caucaia;CE;2303709;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Cedro;Cedro;CE;2303808;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Crateús;Crateús;CE;2304103;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Crato;Crato;CE;2304202;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Fortaleza;Fortaleza;CE;2304400;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Horizonte;Horizonte;CE;2305233;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Iguatu;Iguatu;CE;2305506;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Itapipoca;Itapipoca;CE;2306405;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Jaguaribe;Jaguaribe;CE;2306900;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Jaguaruana;Jaguaruana;CE;2307007;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Juazeiro do Norte;Juazeiro do Norte;CE;2307304;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Limoeiro do Norte;Limoeiro do Norte;CE;2307601;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Maracanaú;Maracanaú;CE;2307650;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Maranguape;Maranguape;CE;2307700;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Morada Nova;Morada Nova;CE;2308708;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Paracuru;Paracuru;CE;2310209;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Quixadá;Quixadá;CE;2311306;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Sobral;Sobral;CE;2312908;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Tabuleiro do Norte;Tabuleiro do Norte;CE;2313104;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Tauá;Tauá;CE;2313302;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Tianguá;Tianguá;CE;2313401;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Ubajara;Ubajara;CE;2313609;INEP Censo da Educação Superior (via ifes.json)
+IFCE;Instituto Federal de Educação, Ciência e Tecnologia do Ceará;IF;Umirim;Umirim;CE;2313757;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Alegre;Alegre;ES;3200201;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Aracruz;Aracruz;ES;3200607;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Barra de São Francisco;Barra de São Francisco;ES;3200904;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Cachoeiro de Itapemirim;Cachoeiro de Itapemirim;ES;3201209;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Cariacica;Cariacica;ES;3201308;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Colatina;Colatina;ES;3201506;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Guarapari;Guarapari;ES;3202405;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Ibatiba;Ibatiba;ES;3202454;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Linhares;Linhares;ES;3203205;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Montanha;Montanha;ES;3203502;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Nova Venécia;Nova Venécia;ES;3203908;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Piúma;Piúma;ES;3204203;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Santa Maria de Jetibá;Santa Maria de Jetibá;ES;3204559;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Santa Teresa;Santa Teresa;ES;3204609;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;São Mateus;São Mateus;ES;3204906;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Serra;Serra;ES;3205002;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Venda Nova do Imigrante;Venda Nova do Imigrante;ES;3205069;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Viana;Viana;ES;3205101;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Vila Velha;Vila Velha;ES;3205200;INEP Censo da Educação Superior (via ifes.json)
+IFES;Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo;IF;Vitória;Vitória;ES;3205309;INEP Censo da Educação Superior (via ifes.json)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Alegrete;Alegrete;RS;4300406;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Caçapava do Sul;Caçapava do Sul;RS;4302808;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;São Gabriel;São Gabriel;RS;4318309;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Frederico Westphalen;Frederico Westphalen;RS;4308508;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Jaguari;Jaguari;RS;4311106;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Júlio de Castilhos;Júlio de Castilhos;RS;4311205;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Panambi;Panambi;RS;4313904;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Santa Rosa;Santa Rosa;RS;4317202;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Santiago;Santiago;RS;4317400;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Santo Augusto;Santo Augusto;RS;4317806;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Santo Ângelo;Santo Ângelo;RS;4317509;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;São Borja;São Borja;RS;4318002;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;São Luiz Gonzaga;São Luiz Gonzaga;RS;4318903;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;São Vicente do Sul;São Vicente do Sul;RS;4319802;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Uruguaiana;Uruguaiana;RS;4322400;https://iffarroupilha.edu.br (Unidades)
+IFFarroupilha;Instituto Federal de Educação, Ciência e Tecnologia Farroupilha;IF;Santa Maria (somente INEP);Santa Maria;RS;4316907;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Águas Lindas de Goiás;Águas Lindas de Goiás;GO;5200258;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Anápolis;Anápolis;GO;5201108;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Aparecida de Goiânia;Aparecida de Goiânia;GO;5201405;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Formosa;Formosa;GO;5208004;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Goiânia;Goiânia;GO;5208707;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Goiás;Goiás;GO;5208905;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Inhumas;Inhumas;GO;5210000;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Itumbiara;Itumbiara;GO;5211503;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Jataí;Jataí;GO;5211909;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Luziânia;Luziânia;GO;5212501;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Senador Canedo;Senador Canedo;GO;5220454;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Uruaçu;Uruaçu;GO;5221601;INEP Censo da Educação Superior (via ifes.json)
+IFG;Instituto Federal de Educação, Ciência e Tecnologia de Goiás;IF;Valparaíso de Goiás;Valparaíso de Goiás;GO;5221858;INEP Censo da Educação Superior (via ifes.json)
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Açailândia;Açailândia;MA;2100055;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Alcântara;Alcântara;MA;2100204;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Araioses;Araioses;MA;2100907;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Bacabal;Bacabal;MA;2101202;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Barra do Corda;Barra do Corda;MA;2101608;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Barreirinhas;Barreirinhas;MA;2101707;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Buriticupu;Buriticupu;MA;2102325;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Carolina;Carolina;MA;2102804;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Caxias;Caxias;MA;2103000;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Codó;Codó;MA;2103307;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Coelho Neto;Coelho Neto;MA;2103406;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Grajaú;Grajaú;MA;2104800;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Imperatriz;Imperatriz;MA;2105302;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Itapecuru Mirim;Itapecuru Mirim;MA;2105401;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Pedreiras;Pedreiras;MA;2108207;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Pinheiro;Pinheiro;MA;2108603;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Presidente Dutra;Presidente Dutra;MA;2109106;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Porto Franco;Porto Franco;MA;2109007;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Rosário;Rosário;MA;2109601;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Santa Inês;Santa Inês;MA;2109908;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;São José de Ribamar;São José de Ribamar;MA;2111201;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;São João dos Patos;São João dos Patos;MA;2111102;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;São Luís;São Luís;MA;2111300;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;São Raimundo das Mangabeiras;São Raimundo das Mangabeiras;MA;2111607;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Timon;Timon;MA;2112209;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Viana;Viana;MA;2112803;https://portal.ifma.edu.br/campus/
+IFMA;Instituto Federal de Educação, Ciência e Tecnologia do Maranhão;IF;Zé Doca;Zé Doca;MA;2114007;https://portal.ifma.edu.br/campus/
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Arcos;Arcos;MG;3104205;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Bambuí;Bambuí;MG;3105103;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Belo Horizonte;Belo Horizonte;MG;3106200;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Betim;Betim;MG;3106705;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Congonhas;Congonhas;MG;3118007;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Formiga;Formiga;MG;3126109;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Governador Valadares;Governador Valadares;MG;3127701;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Ibirité;Ibirité;MG;3129806;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Ipatinga;Ipatinga;MG;3131307;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Itabirito;Itabirito;MG;3131901;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Ouro Branco;Ouro Branco;MG;3145901;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Ouro Preto;Ouro Preto;MG;3146107;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Piumhi;Piumhi;MG;3151503;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Ponte Nova;Ponte Nova;MG;3152105;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Ribeirão das Neves;Ribeirão das Neves;MG;3154606;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Sabará;Sabará;MG;3156700;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;Santa Luzia;Santa Luzia;MG;3157807;INEP Censo da Educação Superior (via ifes.json)
+IFMG;Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais;IF;São João Evangelista;São João Evangelista;MG;3162807;INEP Censo da Educação Superior (via ifes.json)
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Amambai;Amambai;MS;5000609;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Aquidauana;Aquidauana;MS;5001102;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Campo Grande;Campo Grande;MS;5002704;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Corumbá;Corumbá;MS;5003207;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Coxim;Coxim;MS;5003306;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Dourados;Dourados;MS;5003702;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Jardim;Jardim;MS;5005004;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Naviraí;Naviraí;MS;5005707;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Nova Andradina;Nova Andradina;MS;5006200;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Paranaíba;Paranaíba;MS;5006309;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Ponta Porã;Ponta Porã;MS;5006606;https://www.ifms.edu.br/campi
+IFMS;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul;IF;Três Lagoas;Três Lagoas;MS;5008305;https://www.ifms.edu.br/campi
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Cuiabá;Cuiabá;MT;5103403;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Santo Antônio de Leverger;Santo Antônio de Leverger;MT;5107800;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Cáceres;Cáceres;MT;5102504;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Pontes e Lacerda;Pontes e Lacerda;MT;5106752;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Campo Novo do Parecis;Campo Novo do Parecis;MT;5102637;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Juína;Juína;MT;5105150;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Confresa;Confresa;MT;5103353;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Rondonópolis;Rondonópolis;MT;5107602;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Sorriso;Sorriso;MT;5107925;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Várzea Grande;Várzea Grande;MT;5108402;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Barra do Garças;Barra do Garças;MT;5101803;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Primavera do Leste;Primavera do Leste;MT;5107040;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Alta Floresta;Alta Floresta;MT;5100250;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Tangará da Serra;Tangará da Serra;MT;5107958;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Diamantino;Diamantino;MT;5103502;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Lucas do Rio Verde;Lucas do Rio Verde;MT;5105259;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Sinop;Sinop;MT;5107909;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Guarantã do Norte;Guarantã do Norte;MT;5104104;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Campo Verde;Campo Verde;MT;5102678;https://ifmt.edu.br/ (menu campi)
+IFMT;Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso;IF;Jaciara (somente INEP);Jaciara;MT;5104807;INEP Censo da Educação Superior (via ifes.json)
+IFNMG;Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais;IF;Almenara;Almenara;MG;3101706;INEP Censo da Educação Superior (via ifes.json)
+IFNMG;Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais;IF;Araçuaí;Araçuaí;MG;3103405;INEP Censo da Educação Superior (via ifes.json)
+IFNMG;Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais;IF;Arinos;Arinos;MG;3104502;INEP Censo da Educação Superior (via ifes.json)
+IFNMG;Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais;IF;Januária;Januária;MG;3135209;INEP Censo da Educação Superior (via ifes.json)
+IFNMG;Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais;IF;Montes Claros;Montes Claros;MG;3143302;INEP Censo da Educação Superior (via ifes.json)
+IFNMG;Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais;IF;Pirapora;Pirapora;MG;3151206;INEP Censo da Educação Superior (via ifes.json)
+IFNMG;Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais;IF;Porteirinha;Porteirinha;MG;3152204;INEP Censo da Educação Superior (via ifes.json)
+IFNMG;Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais;IF;Salinas;Salinas;MG;3157005;INEP Censo da Educação Superior (via ifes.json)
+IFNMG;Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais;IF;Teófilo Otoni;Teófilo Otoni;MG;3168606;INEP Censo da Educação Superior (via ifes.json)
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Abaetetuba;Abaetetuba;PA;1500107;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Altamira;Altamira;PA;1500602;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Ananindeua;Ananindeua;PA;1500800;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Belém;Belém;PA;1501402;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Bragança;Bragança;PA;1501709;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Breves;Breves;PA;1501808;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Cametá;Cametá;PA;1502103;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Castanhal;Castanhal;PA;1502400;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Conceição do Araguaia;Conceição do Araguaia;PA;1502707;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Itaituba;Itaituba;PA;1503606;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Marabá;Marabá;PA;1504208;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Óbidos;Óbidos;PA;1505106;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Paragominas;Paragominas;PA;1505502;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Parauapebas;Parauapebas;PA;1505536;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Santarém;Santarém;PA;1506807;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Tucuruí;Tucuruí;PA;1508100;https://ifpa.edu.br/nossos-campi
+IFPA;Instituto Federal de Educação, Ciência e Tecnologia do Pará;IF;Vigia;Vigia;PA;1508209;https://ifpa.edu.br/nossos-campi
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;Cabedelo;Cabedelo;PB;2503209;INEP Censo da Educação Superior (via ifes.json)
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;Cajazeiras;Cajazeiras;PB;2503704;INEP Censo da Educação Superior (via ifes.json)
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;Campina Grande;Campina Grande;PB;2504009;INEP Censo da Educação Superior (via ifes.json)
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;Esperança;Esperança;PB;2506004;INEP Censo da Educação Superior (via ifes.json)
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;Guarabira;Guarabira;PB;2506301;INEP Censo da Educação Superior (via ifes.json)
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;João Pessoa;João Pessoa;PB;2507507;INEP Censo da Educação Superior (via ifes.json)
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;Monteiro;Monteiro;PB;2509701;INEP Censo da Educação Superior (via ifes.json)
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;Patos;Patos;PB;2510808;INEP Censo da Educação Superior (via ifes.json)
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;Picuí;Picuí;PB;2511400;INEP Censo da Educação Superior (via ifes.json)
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;Princesa Isabel;Princesa Isabel;PB;2512309;INEP Censo da Educação Superior (via ifes.json)
+IFPB;Instituto Federal de Educação, Ciência e Tecnologia da Paraíba;IF;Sousa;Sousa;PB;2516201;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Abreu e Lima;Abreu e Lima;PE;2600054;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Afogados da Ingazeira;Afogados da Ingazeira;PE;2600104;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Barreiros;Barreiros;PE;2601409;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Belo Jardim;Belo Jardim;PE;2601706;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Cabo de Santo Agostinho;Cabo de Santo Agostinho;PE;2602902;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Caruaru;Caruaru;PE;2604106;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Garanhuns;Garanhuns;PE;2606002;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Igarassu;Igarassu;PE;2606804;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Ipojuca;Ipojuca;PE;2607208;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Jaboatão dos Guararapes;Jaboatão dos Guararapes;PE;2607901;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Olinda;Olinda;PE;2609600;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Palmares;Palmares;PE;2610004;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Paulista;Paulista;PE;2610707;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Pesqueira;Pesqueira;PE;2610905;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Recife;Recife;PE;2611606;INEP Censo da Educação Superior (via ifes.json)
+IFPE;Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco;IF;Vitória de Santo Antão;Vitória de Santo Antão;PE;2616407;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Angical do Piauí;Angical do Piauí;PI;2200608;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Campo Maior;Campo Maior;PI;2202208;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Cocal;Cocal;PI;2202703;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Corrente;Corrente;PI;2202901;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Floriano;Floriano;PI;2203909;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Oeiras;Oeiras;PI;2207009;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Parnaíba;Parnaíba;PI;2207702;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Paulistana;Paulistana;PI;2207801;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Pedro II;Pedro II;PI;2207900;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Picos;Picos;PI;2208007;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Piripiri;Piripiri;PI;2208403;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;São João do Piauí;São João do Piauí;PI;2210003;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;São Raimundo Nonato;São Raimundo Nonato;PI;2210607;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Teresina;Teresina;PI;2211001;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Uruçuí;Uruçuí;PI;2211209;INEP Censo da Educação Superior (via ifes.json)
+IFPI;Instituto Federal de Educação, Ciência e Tecnologia do Piauí;IF;Valença do Piauí;Valença do Piauí;PI;2211308;INEP Censo da Educação Superior (via ifes.json)
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Arapongas;Arapongas;PR;4101507;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Assis Chateaubriand;Assis Chateaubriand;PR;4102000;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Astorga;Astorga;PR;4102109;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Barracão;Barracão;PR;4102604;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Campo Largo;Campo Largo;PR;4104204;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Capanema;Capanema;PR;4104501;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Cascavel;Cascavel;PR;4104808;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Colombo;Colombo;PR;4105805;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Coronel Vivida;Coronel Vivida;PR;4106506;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Curitiba;Curitiba;PR;4106902;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Foz do Iguaçu;Foz do Iguaçu;PR;4108304;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Goioerê;Goioerê;PR;4108601;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Irati;Irati;PR;4110706;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Ivaiporã;Ivaiporã;PR;4111506;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Jacarezinho;Jacarezinho;PR;4111803;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Jaguariaíva;Jaguariaíva;PR;4112009;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Londrina;Londrina;PR;4113700;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Palmas;Palmas;PR;4117602;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Paranaguá;Paranaguá;PR;4118204;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Paranavaí;Paranavaí;PR;4118402;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Pinhais;Pinhais;PR;4119152;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Pitanga;Pitanga;PR;4119608;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Ponta Grossa;Ponta Grossa;PR;4119905;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Quedas do Iguaçu;Quedas do Iguaçu;PR;4120903;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Telêmaco Borba;Telêmaco Borba;PR;4127106;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Toledo;Toledo;PR;4127700;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;Umuarama;Umuarama;PR;4128104;https://ifpr.edu.br/conheca-os-campi/
+IFPR;Instituto Federal de Educação, Ciência e Tecnologia do Paraná;IF;União da Vitória;União da Vitória;PR;4128203;https://ifpr.edu.br/conheca-os-campi/
+IFRJ;Instituto Federal de Educação, Ciência e Tecnologia do Rio de Janeiro;IF;Arraial do Cabo;Arraial do Cabo;RJ;3300258;INEP Censo da Educação Superior (via ifes.json)
+IFRJ;Instituto Federal de Educação, Ciência e Tecnologia do Rio de Janeiro;IF;Duque de Caxias;Duque de Caxias;RJ;3301702;INEP Censo da Educação Superior (via ifes.json)
+IFRJ;Instituto Federal de Educação, Ciência e Tecnologia do Rio de Janeiro;IF;Engenheiro Paulo de Frontin;Engenheiro Paulo de Frontin;RJ;3301801;INEP Censo da Educação Superior (via ifes.json)
+IFRJ;Instituto Federal de Educação, Ciência e Tecnologia do Rio de Janeiro;IF;Nilópolis;Nilópolis;RJ;3303203;INEP Censo da Educação Superior (via ifes.json)
+IFRJ;Instituto Federal de Educação, Ciência e Tecnologia do Rio de Janeiro;IF;Paracambi;Paracambi;RJ;3303609;INEP Censo da Educação Superior (via ifes.json)
+IFRJ;Instituto Federal de Educação, Ciência e Tecnologia do Rio de Janeiro;IF;Pinheiral;Pinheiral;RJ;3303955;INEP Censo da Educação Superior (via ifes.json)
+IFRJ;Instituto Federal de Educação, Ciência e Tecnologia do Rio de Janeiro;IF;Rio de Janeiro;Rio de Janeiro;RJ;3304557;INEP Censo da Educação Superior (via ifes.json)
+IFRJ;Instituto Federal de Educação, Ciência e Tecnologia do Rio de Janeiro;IF;Volta Redonda;Volta Redonda;RJ;3306305;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Apodi;Apodi;RN;2401008;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Caicó;Caicó;RN;2402006;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Canguaretama;Canguaretama;RN;2402204;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Ceará-Mirim;Ceará-Mirim;RN;2402600;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Currais Novos;Currais Novos;RN;2403103;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Parnamirim;Parnamirim;RN;2403251;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Ipanguaçu;Ipanguaçu;RN;2404705;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;João Câmara;João Câmara;RN;2405801;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Macau;Macau;RN;2407203;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Mossoró;Mossoró;RN;2408003;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Natal;Natal;RN;2408102;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Nova Cruz;Nova Cruz;RN;2408300;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Pau dos Ferros;Pau dos Ferros;RN;2409407;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;Santa Cruz;Santa Cruz;RN;2411205;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;São Gonçalo do Amarante;São Gonçalo do Amarante;RN;2412005;INEP Censo da Educação Superior (via ifes.json)
+IFRN;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte;IF;São Paulo do Potengi;São Paulo do Potengi;RN;2412609;INEP Censo da Educação Superior (via ifes.json)
+IFRO;Instituto Federal de Educação Ciência e Tecnologia de Rondônia;IF;Ariquemes;Ariquemes;RO;1100023;https://portal.ifro.edu.br/
+IFRO;Instituto Federal de Educação Ciência e Tecnologia de Rondônia;IF;Buritis;Buritis;RO;1100452;https://portal.ifro.edu.br/
+IFRO;Instituto Federal de Educação Ciência e Tecnologia de Rondônia;IF;Cacoal;Cacoal;RO;1100049;https://portal.ifro.edu.br/
+IFRO;Instituto Federal de Educação Ciência e Tecnologia de Rondônia;IF;Colorado do Oeste;Colorado do Oeste;RO;1100064;https://portal.ifro.edu.br/
+IFRO;Instituto Federal de Educação Ciência e Tecnologia de Rondônia;IF;Guajará-Mirim;Guajará-Mirim;RO;1100106;https://portal.ifro.edu.br/
+IFRO;Instituto Federal de Educação Ciência e Tecnologia de Rondônia;IF;Jaru;Jaru;RO;1100114;https://portal.ifro.edu.br/
+IFRO;Instituto Federal de Educação Ciência e Tecnologia de Rondônia;IF;Ji-Paraná;Ji-Paraná;RO;1100122;https://portal.ifro.edu.br/
+IFRO;Instituto Federal de Educação Ciência e Tecnologia de Rondônia;IF;São Miguel do Guaporé;São Miguel do Guaporé;RO;1100320;https://portal.ifro.edu.br/
+IFRO;Instituto Federal de Educação Ciência e Tecnologia de Rondônia;IF;Porto Velho;Porto Velho;RO;1100205;https://portal.ifro.edu.br/
+IFRO;Instituto Federal de Educação Ciência e Tecnologia de Rondônia;IF;Vilhena;Vilhena;RO;1100304;https://portal.ifro.edu.br/
+IFRR;Instituto Federal de Educação, Ciência e Tecnologia de Roraima;IF;Amajari;Amajari;RR;1400027;INEP Censo da Educação Superior (via ifes.json)
+IFRR;Instituto Federal de Educação, Ciência e Tecnologia de Roraima;IF;Boa Vista;Boa Vista;RR;1400100;INEP Censo da Educação Superior (via ifes.json)
+IFRR;Instituto Federal de Educação, Ciência e Tecnologia de Roraima;IF;Caracaraí;Caracaraí;RR;1400209;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Alvorada;Alvorada;RS;4300604;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Bento Gonçalves;Bento Gonçalves;RS;4302105;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Canoas;Canoas;RS;4304606;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Caxias do Sul;Caxias do Sul;RS;4305108;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Erechim;Erechim;RS;4307005;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Farroupilha;Farroupilha;RS;4307906;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Feliz;Feliz;RS;4308102;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Ibirubá;Ibirubá;RS;4310009;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Osório;Osório;RS;4313508;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Porto Alegre;Porto Alegre;RS;4314902;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Rio Grande;Rio Grande;RS;4315602;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Rolante;Rolante;RS;4316006;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Sertão;Sertão;RS;4320503;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Vacaria;Vacaria;RS;4322509;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Veranópolis;Veranópolis;RS;4322806;INEP Censo da Educação Superior (via ifes.json)
+IFRS;Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul;IF;Viamão;Viamão;RS;4323002;INEP Censo da Educação Superior (via ifes.json)
+IFS;Instituto Federal de Educação, Ciência e Tecnologia de Sergipe;IF;Aracaju;Aracaju;SE;2800308;INEP Censo da Educação Superior (via ifes.json)
+IFS;Instituto Federal de Educação, Ciência e Tecnologia de Sergipe;IF;Estância;Estância;SE;2802106;INEP Censo da Educação Superior (via ifes.json)
+IFS;Instituto Federal de Educação, Ciência e Tecnologia de Sergipe;IF;Itabaiana;Itabaiana;SE;2802908;INEP Censo da Educação Superior (via ifes.json)
+IFS;Instituto Federal de Educação, Ciência e Tecnologia de Sergipe;IF;Lagarto;Lagarto;SE;2803500;INEP Censo da Educação Superior (via ifes.json)
+IFS;Instituto Federal de Educação, Ciência e Tecnologia de Sergipe;IF;Nossa Senhora da Glória;Nossa Senhora da Glória;SE;2804508;INEP Censo da Educação Superior (via ifes.json)
+IFS;Instituto Federal de Educação, Ciência e Tecnologia de Sergipe;IF;Propriá;Propriá;SE;2805703;INEP Censo da Educação Superior (via ifes.json)
+IFS;Instituto Federal de Educação, Ciência e Tecnologia de Sergipe;IF;São Cristóvão;São Cristóvão;SE;2806701;INEP Censo da Educação Superior (via ifes.json)
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Araranguá;Araranguá;SC;4201406;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Caçador;Caçador;SC;4203006;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Canoinhas;Canoinhas;SC;4203808;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Chapecó;Chapecó;SC;4204202;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Criciúma;Criciúma;SC;4204608;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Florianópolis;Florianópolis;SC;4205407;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Garopaba;Garopaba;SC;4205704;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Gaspar;Gaspar;SC;4205902;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Itajaí;Itajaí;SC;4208203;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Jaraguá do Sul;Jaraguá do Sul;SC;4208906;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Joinville;Joinville;SC;4209102;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Lages;Lages;SC;4209300;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Palhoça;Palhoça;SC;4211900;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;São Carlos;São Carlos;SC;4216008;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;São José;São José;SC;4216602;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;São Lourenço do Oeste;São Lourenço do Oeste;SC;4216909;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;São Miguel do Oeste;São Miguel do Oeste;SC;4217204;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Tijucas;Tijucas;SC;4218004;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Tubarão;Tubarão;SC;4218707;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Urupema;Urupema;SC;4218954;https://www.ifsc.edu.br/campusdoifsc
+IFSC;Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina;IF;Xanxerê;Xanxerê;SC;4219507;https://www.ifsc.edu.br/campusdoifsc
+IFSEMG;Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais;IF;Barbacena;Barbacena;MG;3105608;INEP Censo da Educação Superior (via ifes.json)
+IFSEMG;Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais;IF;Bom Sucesso;Bom Sucesso;MG;3108008;INEP Censo da Educação Superior (via ifes.json)
+IFSEMG;Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais;IF;Juiz de Fora;Juiz de Fora;MG;3136702;INEP Censo da Educação Superior (via ifes.json)
+IFSEMG;Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais;IF;Manhuaçu;Manhuaçu;MG;3139409;INEP Censo da Educação Superior (via ifes.json)
+IFSEMG;Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais;IF;Muriaé;Muriaé;MG;3143906;INEP Censo da Educação Superior (via ifes.json)
+IFSEMG;Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais;IF;Rio Pomba;Rio Pomba;MG;3155801;INEP Censo da Educação Superior (via ifes.json)
+IFSEMG;Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais;IF;Santos Dumont;Santos Dumont;MG;3160702;INEP Censo da Educação Superior (via ifes.json)
+IFSEMG;Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais;IF;São João del Rei;São João del Rei;MG;3162500;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Araraquara;Araraquara;SP;3503208;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Avaré;Avaré;SP;3504503;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Barretos;Barretos;SP;3505500;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Birigui;Birigui;SP;3506508;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Boituva;Boituva;SP;3507001;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Bragança Paulista;Bragança Paulista;SP;3507605;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Campinas;Campinas;SP;3509502;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Campos do Jordão;Campos do Jordão;SP;3509700;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Capivari;Capivari;SP;3510401;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Caraguatatuba;Caraguatatuba;SP;3510500;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Catanduva;Catanduva;SP;3511102;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Cubatão;Cubatão;SP;3513504;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Guarulhos;Guarulhos;SP;3518800;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Hortolândia;Hortolândia;SP;3519071;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Itapetininga;Itapetininga;SP;3522307;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Itaquaquecetuba;Itaquaquecetuba;SP;3523107;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Jacareí;Jacareí;SP;3524402;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Matão;Matão;SP;3529302;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Piracicaba;Piracicaba;SP;3538709;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Presidente Epitácio;Presidente Epitácio;SP;3541307;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Registro;Registro;SP;3542602;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Salto;Salto;SP;3545209;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;São Carlos;São Carlos;SP;3548906;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;São João da Boa Vista;São João da Boa Vista;SP;3549102;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;São José dos Campos;São José dos Campos;SP;3549904;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;São Paulo;São Paulo;SP;3550308;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;São Roque;São Roque;SP;3550605;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Sertãozinho;Sertãozinho;SP;3551702;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Sorocaba;Sorocaba;SP;3552205;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Suzano;Suzano;SP;3552502;INEP Censo da Educação Superior (via ifes.json)
+IFSP;Instituto Federal de Educação, Ciência e Tecnologia de São Paulo;IF;Votuporanga;Votuporanga;SP;3557105;INEP Censo da Educação Superior (via ifes.json)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Bagé;Bagé;RS;4301602;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Camaquã;Camaquã;RS;4303509;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Charqueadas;Charqueadas;RS;4305355;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Gravataí;Gravataí;RS;4309209;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Jaguarão;Jaguarão;RS;4311007;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Lajeado;Lajeado;RS;4311403;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Novo Hamburgo;Novo Hamburgo;RS;4313409;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Passo Fundo;Passo Fundo;RS;4314100;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Pelotas;Pelotas;RS;4314407;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Santana do Livramento;Santana do Livramento;RS;4317103;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Sapiranga;Sapiranga;RS;4319901;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Sapucaia do Sul;Sapucaia do Sul;RS;4320008;https://www.ifsul.edu.br (listagem de campi)
+IFSul;Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense;IF;Venâncio Aires;Venâncio Aires;RS;4322608;https://www.ifsul.edu.br (listagem de campi)
+IFTM;Instituto Federal de Educação, Ciência e Tecnologia do Triângulo Mineiro;IF;Ituiutaba;Ituiutaba;MG;3134202;INEP Censo da Educação Superior (via ifes.json)
+IFTM;Instituto Federal de Educação, Ciência e Tecnologia do Triângulo Mineiro;IF;Paracatu;Paracatu;MG;3147006;INEP Censo da Educação Superior (via ifes.json)
+IFTM;Instituto Federal de Educação, Ciência e Tecnologia do Triângulo Mineiro;IF;Patos de Minas;Patos de Minas;MG;3148004;INEP Censo da Educação Superior (via ifes.json)
+IFTM;Instituto Federal de Educação, Ciência e Tecnologia do Triângulo Mineiro;IF;Patrocínio;Patrocínio;MG;3148103;INEP Censo da Educação Superior (via ifes.json)
+IFTM;Instituto Federal de Educação, Ciência e Tecnologia do Triângulo Mineiro;IF;Uberaba;Uberaba;MG;3170107;INEP Censo da Educação Superior (via ifes.json)
+IFTM;Instituto Federal de Educação, Ciência e Tecnologia do Triângulo Mineiro;IF;Uberlândia;Uberlândia;MG;3170206;INEP Censo da Educação Superior (via ifes.json)
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Araguaína;Araguaína;TO;1702109;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Araguatins;Araguatins;TO;1702208;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Colinas do Tocantins;Colinas do Tocantins;TO;1705508;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Dianópolis;Dianópolis;TO;1707009;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Formoso do Araguaia;Formoso do Araguaia;TO;1708205;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Gurupi;Gurupi;TO;1709500;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Lagoa da Confusão;Lagoa da Confusão;TO;1711902;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Palmas;Palmas;TO;1721000;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Paraíso do Tocantins;Paraíso do Tocantins;TO;1716109;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Pedro Afonso;Pedro Afonso;TO;1716505;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Porto Nacional;Porto Nacional;TO;1718204;https://www.ifto.edu.br/
+IFTO;Instituto Federal de Educação, Ciência e Tecnologia do Tocantins;IF;Tocantinópolis;Tocantinópolis;TO;1721208;https://www.ifto.edu.br/
+IME;Instituto Militar de Engenharia;O;Rio de Janeiro;Rio de Janeiro;RJ;3304557;INEP Censo da Educação Superior (via ifes.json)
+INES;Instituto Nacional de Educação de Surdos;O;Rio de Janeiro;Rio de Janeiro;RJ;3304557;INEP Censo da Educação Superior (via ifes.json)
+ISCP;Instituto Superior de Ciencias Policiais;O;Brasília;Brasília;DF;5300108;INEP Censo da Educação Superior (via ifes.json)
+ITA;Instituto Tecnológico de Aeronáutica;O;São José dos Campos;São José dos Campos;SP;3549904;INEP Censo da Educação Superior (via ifes.json)
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Boca do Acre;Boca do Acre;AM;1300706;https://www2.ifam.edu.br/campus
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Eirunepé;Eirunepé;AM;1301407;https://www2.ifam.edu.br/campus
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Humaitá;Humaitá;AM;1301704;https://www2.ifam.edu.br/campus
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Iranduba;Iranduba;AM;1301852;https://www2.ifam.edu.br/campus
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Lábrea;Lábrea;AM;1302405;https://www2.ifam.edu.br/campus
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Manacapuru;Manacapuru;AM;1302504;https://www2.ifam.edu.br/campus
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;São Gabriel da Cachoeira;São Gabriel da Cachoeira;AM;1303809;https://www2.ifam.edu.br/campus
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Tabatinga;Tabatinga;AM;1304062;https://www2.ifam.edu.br/campus
+IFAM;Instituto Federal de Educação, Ciência e Tecnologia do Amazonas;IF;Tefé;Tefé;AM;1304203;https://www2.ifam.edu.br/campus
+IFRR;Instituto Federal de Educação, Ciência e Tecnologia de Roraima;IF;Bonfim;Bonfim;RR;1400159;https://bonfim.ifrr.edu.br/pdi/pdi-2019-2023/participacao-social/arquivos/capitulo-1-perfil-institucional
