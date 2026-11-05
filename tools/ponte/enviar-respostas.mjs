@@ -1,22 +1,21 @@
-// Envia as respostas de contato JÁ APROVADAS pelo dono (as prévias estão em .cache/respostas/previas/).
-// Uso: node /mnt/dev/peticao/tools/ponte/enviar-respostas.mjs [--leve] 7 9 12      (números dos casos; só envia os que o dono aprovou)
-//   --leve: versão sem o card de divulgação (só texto, assinatura e rodapé), para melhorar a chance de entrega.
-// Cada resposta sai do MailerSend em nome da campanha, com Reply-To e cópia oculta para o dono, e é registrada em .cache/respostas/enviados.json (nunca envia 2 vezes).
+// Envia as respostas de contato JÁ APROVADAS pelo dono. Cada caso sai em DOIS e-mails: (1) só texto (primeiro modelo) e (2) com o card de divulgação.
+// Uso: node /mnt/dev/peticao/tools/ponte/enviar-respostas.mjs 7 9 12 [--intervalo=60]   (números dos casos; só os que o dono aprovou)
+//   --intervalo=<s>: segundos entre os dois e-mails do mesmo caso (padrão 60; entre um caso e outro esperam-se 20 s).
+// Remetente "Campanha Sanção Integral · ADUNIR" (MailerSend), Reply-To e cópia oculta para o dono; registro em .cache/respostas/enviados.json: nunca envia 2 vezes.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { enviar } from "./enviar.mjs";
-const DIR = "/mnt/dev/peticao/.cache/respostas/";
+import { DIR, enviarCaso } from "./respostas-lib.mjs";
+
+const args = process.argv.slice(2);
+if (args.includes("--leve")) { console.log("A opção --leve foi removida: a versão simples é o e-mail só de texto (primeiro modelo), enviado automaticamente junto com o e-mail do card."); process.exit(1); }
+const pedidos = args.filter((a) => /^\d+$/.test(a)).map(Number);
+if (!pedidos.length) { console.log("Informe os números dos casos aprovados. Exemplo: node /mnt/dev/peticao/tools/ponte/enviar-respostas.mjs 7 9 12"); process.exit(1); }
+const intervalo = Number((args.find((a) => a.startsWith("--intervalo=")) ?? "").split("=")[1] ?? 60) * 1000;
 const REG = DIR + "enviados.json";
-const enviados = existsSync(REG) ? JSON.parse(readFileSync(REG, "utf8")) : {};
-const idx = JSON.parse(readFileSync(DIR + "previas/indice.json", "utf8"));
-const leve = process.argv.includes("--leve"); const sufixo = leve ? "-leve" : "";
-const pedidos = process.argv.slice(2).filter((a) => a !== "--leve").map(Number).filter(Boolean);
-if (!pedidos.length) { console.log("Informe os números dos casos aprovados. Exemplo: node enviar-respostas.mjs 7 12"); process.exit(1); }
-for (const n of pedidos) {
-  const c = idx.find((x) => x.n === n);
-  if (!c) { console.log(`caso ${n}: não existe`); continue; }
-  if (enviados[n]) { console.log(`caso ${n}: já enviado em ${enviados[n].em}; ignorado`); continue; }
-  const html = readFileSync(`${DIR}previas/caso-${n}${sufixo}.html`, "utf8"), texto = readFileSync(`${DIR}previas/caso-${n}${sufixo}.txt`, "utf8");
-  const r = await enviar({ assunto: c.assunto, html, texto, para: c.email, replyTo: "operator-1608598f41@example.invalid", bcc: "operator-1608598f41@example.invalid", deNome: "Campanha Sanção Integral · ADUNIR" });
-  console.log(`caso ${n} (${leve ? "leve" : "com card"}) → ${c.nome.split(" ")[0]} <${c.email}>:`, r.status, r.erro ?? "aceito pelo MailerSend");
-  if (r.status && r.status < 300) { enviados[n] = { para: c.email, em: new Date().toISOString(), id: r.id, versao: leve ? "leve" : "com card" }; writeFileSync(REG, JSON.stringify(enviados, null, 1)); }
+const registro = existsSync(REG) ? JSON.parse(readFileSync(REG, "utf8")) : {};
+const salvar = (r) => writeFileSync(REG, JSON.stringify(r, null, 1));
+for (const [i, n] of pedidos.entries()) {
+  if (i > 0) await new Promise((r) => setTimeout(r, 20_000));
+  try { const res = await enviarCaso(n, { enviar, registro, salvar, intervaloMs: intervalo }); if (!res.ok) console.log(`caso ${n}: parado; confira o erro acima e rode de novo (o que já saiu não é reenviado).`); }
+  catch (e) { console.log(`caso ${n}: ${e.message}`); }
 }
