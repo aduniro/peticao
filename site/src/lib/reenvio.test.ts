@@ -51,3 +51,12 @@ test("reenvio por falha: travado sem aprovação; com aprovação usa OUTRO serv
     assert.deepEqual((await provedoresUsados("dentro" + dom)).sort(), ["dev", "sendpulse"]); // "dev" = o próprio reenvio de teste; "sendpulse" = envio anterior
   } finally { await setSetting(CHAVES.ativo, ""); await limpa(); delete process.env.MAIL_OUTBOX_DIR; }
 });
+
+test("reenvio usa o mesmo remetente da confirmação original", async () => {
+  const { config } = await import("./config");
+  process.env.MAIL_FROM_SES_CONFIRMACAO = "X <confirmar@assinatura.exemplo>"; process.env.MAIL_FROM_SES = "Y <apex@exemplo>";
+  assert.equal(config.mailFromFor("ses", "reenvio"), "X <confirmar@assinatura.exemplo>");
+  assert.equal(config.mailFromFor("ses", "confirmacao"), "X <confirmar@assinatura.exemplo>");
+  assert.equal(config.mailFromFor("ses", "contato"), "Y <apex@exemplo>");
+  delete process.env.MAIL_FROM_SES_CONFIRMACAO; delete process.env.MAIL_FROM_SES;
+});

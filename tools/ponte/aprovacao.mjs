@@ -26,7 +26,7 @@ export function decidir(m, codigo) {
   const doDono = String(m.de).toLowerCase() === DONO && /dkim=pass/i.test(m.auth) && /header\.d=protonmail\.com/i.test(m.auth);
   if (!tem || !doDono) return null;
   const t = primeira.trim();
-  if (/^aprovad[oa]\b/i.test(t) || /^sim\b|^ok\b|^pode\b/i.test(t) && /aprov/i.test(t)) return { decisao: "aprovado", texto };
+  if (/^aprov(ado|ada|ar|a|o)\b/i.test(t) || (/^sim\b|^ok\b|^pode\b/i.test(t) && /aprov/i.test(t))) return { decisao: "aprovado", texto };
   if (/^cancel/i.test(t)) return { decisao: "cancelado", texto };
   if (/^modific/i.test(t) || /^altere|^ajuste/i.test(t)) return { decisao: "modificar", texto: texto.replace(/^modific\w*:?\s*/i, "") };
   return { decisao: "ambigua", texto };

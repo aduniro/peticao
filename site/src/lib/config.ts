@@ -48,8 +48,10 @@ export const config = {
    * Remetente por provedor e por TIPO de mensagem (cada tipo no seu subdomínio, para isolar a reputação):
    * MAIL_FROM_SES_CONFIRMACAO, MAIL_FROM_SES_CONFIRMADA… têm prioridade; depois MAIL_FROM_<PROVEDOR>; depois MAIL_FROM.
    */
-  mailFromFor: (provider: string, kind?: string) =>
-    (kind ? process.env[`MAIL_FROM_${provider.toUpperCase()}_${kind.toUpperCase()}`] : undefined) ?? process.env[`MAIL_FROM_${provider.toUpperCase()}`] ?? process.env.MAIL_FROM ?? "Sanção Integral do PLV 12/2026 <peticao@localhost>",
+  mailFromFor: (provider: string, kind0?: string) => {
+    const kind = kind0 === "reenvio" ? "confirmacao" : kind0; // o reenvio da confirmação sai com o MESMO remetente da confirmação original
+    return (kind ? process.env[`MAIL_FROM_${provider.toUpperCase()}_${kind.toUpperCase()}`] : undefined) ?? process.env[`MAIL_FROM_${provider.toUpperCase()}`] ?? process.env.MAIL_FROM ?? "Sanção Integral do PLV 12/2026 <peticao@localhost>";
+  },
   /** Endereço de resposta padrão dos e-mails (as respostas chegam a quem lê esta caixa). Vazio = sem Reply-To. */
   mailReplyTo: () => (process.env.MAIL_REPLY_TO ?? "").trim(),
   mailFrom: () => process.env.MAIL_FROM ?? "Sanção Integral do PLV 12/2026 <peticao@localhost>",
