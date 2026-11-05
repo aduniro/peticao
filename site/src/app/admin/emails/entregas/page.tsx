@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { brasilia } from "@/lib/time";
 import { listarEntregas, type Situacao } from "@/lib/mail/entregas";
 
@@ -9,7 +10,9 @@ const SIT: Record<Situacao, string> = { clicou: "Clicou", abriu: "Abriu", entreg
 type SP = { busca?: string; situacao?: string; cadastro?: string; categoria?: string; provedor?: string; pagina?: string };
 
 export default async function Entregas({ searchParams }: { searchParams: SP }) {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
   const pagina = Math.max(1, Number(searchParams.pagina) || 1);
   const f = { busca: searchParams.busca ?? "", situacao: searchParams.situacao ?? "", cadastro: searchParams.cadastro ?? "", categoria: searchParams.categoria ?? "", provedor: searchParams.provedor ?? "" };
   const r = await listarEntregas({ ...f, pagina, limite: 50 });

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { allReferrerStats, signersOf } from "@/lib/referrals";
 import { config } from "@/lib/config";
 
@@ -7,7 +8,9 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Indicações", robots: { index: false } };
 
 export default async function Indicacoes({ searchParams }: { searchParams: { msg?: string } }) {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "leitura")) redirect("/admin?erro=nivel");
   const rows = await allReferrerStats();
   const base = config.appUrl().replace(/\/$/, "");
   const withNames = await Promise.all(rows.filter((r) => r.signed + r.pending > 0).slice(0, 60).map(async (r) => [r.code, await signersOf(r.code)] as const));

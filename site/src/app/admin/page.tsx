@@ -1,4 +1,6 @@
-import { isAdmin } from "@/lib/admin";
+import { redirect } from "next/navigation";
+import { sessaoAdmin } from "@/lib/admin";
+import { temUsuarios, ROTULO_NIVEL, nivelOk } from "@/lib/admin-users";
 import Dashboard from "@/components/admin/Dashboard";
 import Painel from "@/components/admin/painel/Painel";
 import BarraLista from "@/components/admin/ui/BarraLista";
@@ -17,11 +19,12 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Admin", robots: { index: false } };
 
 export default async function Admin({ searchParams }: { searchParams: { erro?: string; msg?: string } }) {
-  if (!isAdmin()) {
+  const sessao = await sessaoAdmin();
+  if (!sessao) {
     return (
       <main className="narrow">
         <h1>Acesso restrito</h1>
-        <AdminLogin siteKey={turnstileEnabled() ? turnstileSiteKey() : null} erro={searchParams.erro} />
+        <AdminLogin siteKey={turnstileEnabled() ? turnstileSiteKey() : null} erro={searchParams.erro} msg={searchParams.msg} porUsuario={await temUsuarios()} />
       </main>
     );
   }
@@ -41,12 +44,14 @@ export default async function Admin({ searchParams }: { searchParams: { erro?: s
   const outbox = await outboxStats();
   const blackEmails = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason='invalid'")).rows[0].n;
   const suppressed = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason IN ('bounce','complaint')")).rows[0].n;
+  if (sessao.trocarSenha) redirect("/admin/conta");
   const provider = defaultProvider();
   const lastErr = await getSetting("cpf_provider_last_error", "");
   const itens = (l: { k: string; n: number }[]) => l.map((r) => ({ nome: r.k, valor: r.n }));
   const REG: Record<string, string> = { amazonia_legal: "Amazônia Legal", faixa_fronteira: "Faixa de Fronteira", ambos: "Ambas" };
   return (
     <main className="v2-pagina">
+      {searchParams.erro === "nivel" && <p className="box err" role="alert">O seu nível de acesso ({ROTULO_NIVEL[sessao.nivel]}) não permite abrir aquela página.</p>}
       <Painel />
       <div className="v2-secao">
         {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}

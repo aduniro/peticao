@@ -13,6 +13,7 @@
     "import:siorg": "node scripts/with-db.mjs tsx scripts/import-domains-siorg.ts",
     "import:emec": "node scripts/with-db.mjs tsx scripts/import-domains-emec.ts",
     "import:cnpj": "node scripts/with-db.mjs tsx scripts/import-domains-cnpj.ts",
+    "admin:dono": "node scripts/admin-dono.mjs",
     "chave:cpf": "node scripts/set-secret.mjs cpf",
     "chave:turnstile": "node scripts/set-secret.mjs turnstile",
     "cpf:diagnostico": "tsx scripts/cpf-diagnostico.ts",

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { readFileSync, statSync } from "node:fs";
-import { scryptSync, timingSafeEqual } from "node:crypto";
+import { verificarHash } from "./senha";
+import { sessaoPorToken, temUsuarios, type SessaoAdmin } from "./admin-users";
 import { config } from "./config";
 import { hmac, safeEqual } from "./security";
 import { lookupIp } from "./geo";
@@ -24,14 +25,6 @@ function storedHash(): string | null {
     cache = { path: f, mtime: st.mtimeMs, value: /^scrypt\$/.test(v) ? v : null };
     return cache.value;
   } catch { cache = null; return null; }
-}
-function verifyScrypt(p: string, stored: string): boolean {
-  const [, N, r, pp, salt, hash] = stored.split("$");
-  try {
-    const want = Buffer.from(hash, "hex");
-    const got = scryptSync(p, Buffer.from(salt, "hex"), want.length, { N: Number(N), r: Number(r), p: Number(pp), maxmem: 256 * 1024 * 1024 });
-    return want.length > 0 && timingSafeEqual(got, want);
-  } catch { return false; }
 }
 const SESSAO_MS = 4 * 3600_000;
 const assina = (exp: number) => hmac(`admin-session:${exp}:` + (storedHash() ?? config.adminPassword()));
@@ -57,14 +50,28 @@ export function tokenAdminValido(c: string | undefined, agora = Date.now()): boo
  */
 export const adminSemSenha = () => process.env.ADMIN_NO_PASSWORD === "1" && process.env.PREVIEW_MODE === "1";
 
-export function isAdmin(): boolean {
-  if (adminSemSenha()) return true;
-  return tokenAdminValido(cookies().get(ADMIN_COOKIE)?.value);
+/** Sessão que a pré-visualização usa quando o painel está sem senha (só com PREVIEW_MODE=1). */
+const SESSAO_PREVIEW: SessaoAdmin = { userId: 0, email: "preview@local", nome: "Pré-visualização", nivel: "total", sessaoId: null, legado: false, preview: true, stepupAte: null, trocarSenha: false };
+/** Sessão da senha única antiga: equivale ao dono (nível total), mas SÓ enquanto não existir nenhum usuário cadastrado. */
+const SESSAO_LEGADO: SessaoAdmin = { userId: 0, email: "senha-unica@local", nome: "Senha única", nivel: "total", sessaoId: null, legado: true, preview: false, stepupAte: null, trocarSenha: false };
+
+/**
+ * Quem está logado no painel, ou null. A fonte da verdade é o banco: usuário ativo, sessão não expirada e nível atual. Enquanto não existir
+ * nenhum usuário cadastrado vale a senha única antiga (transição); depois que existir o primeiro, ela deixa de valer.
+ * Substitui o antigo isAdmin() síncrono (removido de propósito, para ninguém voltar a conferir só o cookie).
+ */
+export async function sessaoDoCookie(c: string | undefined): Promise<SessaoAdmin | null> {
+  if (adminSemSenha()) return SESSAO_PREVIEW;
+  if (!c) return null;
+  if (await temUsuarios()) return sessaoPorToken(c);
+  return tokenAdminValido(c) ? SESSAO_LEGADO : null;
 }
+/** Páginas (servidor): lê o cookie do contexto da requisição. As rotas de API usam sessaoDoCookie(req.cookies.get(ADMIN_COOKIE)?.value). */
+export const sessaoAdmin = () => sessaoDoCookie(cookies().get(ADMIN_COOKIE)?.value);
 
 export function passwordOk(p: string) {
   const h = storedHash();
-  if (h) return verifyScrypt(p, h);
+  if (h) return verificarHash(p, h);
   return safeEqual(hmac("pw:" + p), hmac("pw:" + config.adminPassword()));
 }
 

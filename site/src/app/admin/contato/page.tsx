@@ -1,4 +1,5 @@
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { listContacts } from "@/lib/contact";
 import { redirect } from "next/navigation";
 import { brasilia } from "@/lib/time";
@@ -7,7 +8,9 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Mensagens de contato", robots: { index: false } };
 
 export default async function ContatoAdmin() {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
   const rows = await listContacts();
   return (
     <main>

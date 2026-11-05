@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { exigirNivel } from "@/lib/admin-api";
 import { query, audit } from "@/lib/db";
 import { hmac } from "@/lib/security";
 import { dedupEmail } from "@/lib/email-check";
@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 
 /** Tira da lista negra um e-mail marcado como inexistente (bounces e reclamações ficam: protegem a reputação do domínio) e zera as tentativas dele. */
 export async function POST(req: NextRequest) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(req, "edicao");
+  if (bloqueio) return bloqueio;
   const email = String((await req.formData()).get("email") ?? "").trim().toLowerCase().slice(0, 200);
   const url = new URL("/admin/emails", requestOrigin(req.headers));
   if (!email.includes("@")) url.searchParams.set("msg", "Informe um e-mail.");

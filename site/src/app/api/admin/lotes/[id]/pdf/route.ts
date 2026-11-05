@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { exigirNivel } from "@/lib/admin-api";
 import { query, audit } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(req, "total");
+  if (bloqueio) return bloqueio;
   const id = Number(params.id);
   const signed = req.nextUrl.searchParams.get("assinado") === "1";
   const r = await query<{ pdf: Buffer | null; seq: number }>(`SELECT ${signed ? "signed_pdf" : "pdf"} AS pdf, seq FROM batches WHERE id=$1`, [id]);

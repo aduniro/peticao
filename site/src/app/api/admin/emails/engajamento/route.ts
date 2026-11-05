@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { exigirNivel } from "@/lib/admin-api";
 import { syncEngajamento } from "@/lib/mail/engajamento";
 import { audit } from "@/lib/db";
 
@@ -8,7 +8,8 @@ export const maxDuration = 300;
 
 /** "Atualizar engajamento": busca entregas, aberturas e cliques nos provedores (Brevo, MailerSend). Não altera cadastros. */
 export async function POST(req: NextRequest) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(req, "edicao");
+  if (bloqueio) return bloqueio;
   const origin = req.headers.get("origin");
   if (origin) { try { if (new URL(origin).host !== (req.headers.get("x-forwarded-host") ?? req.headers.get("host"))) return new NextResponse("Origem não permitida", { status: 403 }); } catch { return new NextResponse("Origem inválida", { status: 403 }); } }
   const f = await req.formData().catch(() => null);
