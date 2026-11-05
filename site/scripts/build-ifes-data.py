@@ -39,11 +39,15 @@ for i in ies.values():
     if i["m"] in {int(k) for k in muns}: cities.add(i["m"])
     sigla = i["s"] or re.sub(r"[^A-Z]", "", "".join(w[0] for w in i["n"].upper().split() if w.lower() not in SMALL))
     out.append({"s": sigla, "n": i["n"], "k": i["k"], "u": i["u"], "m": i["m"], "c": sorted(cities)})
-# Campi que o Censo não traz (só ensino técnico, ou unidades novas) e que a ADUNIR pediu para constar. Sigla -> códigos IBGE do município.
-# 1302702 = Manicoré (AM), 1303700 = Santo Antônio do Içá (AM). Cada inclusão vem de pedido registrado (caixa de contato, 03/11/2026).
-CAMPI_EXTRAS = {"IFAM": [1302702, 1303700]}
-for x in out:
-    x["c"] = sorted(set(x["c"]) | set(CAMPI_EXTRAS.get(x["s"], [])))
+# Acréscimos que o Censo não traz (instituições novas; campi só de ensino técnico, em implantação ou autorizados), com fonte e situação,
+# mantidos em scripts/ifes-campi-extras.json (também aplicado ao ifes.json atual por scripts/aplicar-campi-extras.mjs).
+extras = json.load(open(root / "scripts/ifes-campi-extras.json", encoding="utf-8"))
+for i in extras.get("instituicoes", []):
+    if not any(x["s"] == i["s"] for x in out):
+        out.append({"s": i["s"], "n": i["n"], "k": i["k"], "u": i["u"], "m": i["m"], "c": sorted(i["c"])})
+for c in extras.get("campi", []):
+    for x in out:
+        if x["s"] == c["sigla"]: x["c"] = sorted(set(x["c"]) | {c["ibge"]})
 out.sort(key=lambda x: (x["k"] != "U", x["s"]))
 # siglas duplicadas: desambiguar com a UF
 seen = collections.Counter(x["s"] for x in out)

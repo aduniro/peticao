@@ -15,9 +15,9 @@ const load = <T,>(url: string): Promise<T> => {
 export type Geo = { muns: Mun[]; byId: Map<number, Mun>; al: Set<number>; ff: Set<number> };
 let geoP: Promise<Geo> | null = null;
 export function loadGeo(): Promise<Geo> {
-  geoP ??= Promise.all([load<[number, string, string][]>("/data/municipios.json"), load<{ al: string[]; ff: string[] }>("/data/regiao.json")]).then(([m, r]) => {
+  geoP ??= Promise.all([load<[number, string, string][]>("/data/municipios.json"), load<{ al: string[]; ff: string[]; ffExcecoes?: string[] }>("/data/regiao.json")]).then(([m, r]) => {
     const muns = m.map(([id, name, uf]) => ({ id, name, uf }));
-    return { muns, byId: new Map(muns.map((x) => [x.id, x])), al: new Set(r.al.map(Number)), ff: new Set(r.ff.map(Number)) };
+    return { muns, byId: new Map(muns.map((x) => [x.id, x])), al: new Set(r.al.map(Number)), ff: new Set([...r.ff, ...(r.ffExcecoes ?? [])].map(Number)) };
   }).catch((e) => { geoP = null; throw e; });
   return geoP;
 }

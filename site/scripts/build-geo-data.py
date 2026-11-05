@@ -41,7 +41,9 @@ for key, (remote, local) in FILES.items():
     bad = [c for c in codes if c not in valid]
     out[key] = [c for c in codes if c in valid]
     print(f"{key}: {len(codes)} códigos, {len(out[key])} existem na API do IBGE" + (f" (fora: {bad})" if bad else ""))
+# Exceções decididas pela ADUNIR: municípios tratados como faixa de fronteira mesmo fora das listas do IBGE (código IBGE -> justificativa).
+EXCECOES_FF = {"4310009": "Ibirubá (RS): consta da lista de 2010 do Ministério da Integração Nacional (Relação de Municípios em Faixa de Fronteira, CNPq AEX25), mas não das listas do IBGE (2018–2024), por cerca de 2 km. Tratado como faixa de fronteira até o MGI definir a relação final de localidades estratégicas (PLV 12/2026)."}
 (root / "public" / "data" / "regiao.json").write_text(json.dumps({
-    "al": out["al"], "ff": out["ff"],
-    "fonte": {"al": "IBGE, Municípios da Amazônia Legal 2024 (LC 124/2007)", "ff": "IBGE, Municípios da Faixa de Fronteira 2024 (Lei 6.634/1979)"},
+    "al": out["al"], "ff": out["ff"], "ffExcecoes": sorted(EXCECOES_FF),
+    "fonte": {"al": "IBGE, Municípios da Amazônia Legal 2024 (LC 124/2007)", "ff": "IBGE, Municípios da Faixa de Fronteira 2024 (Lei 6.634/1979)", "ffExcecoes": " | ".join(EXCECOES_FF.values())},
 }, separators=(",", ":")), encoding="utf-8")
