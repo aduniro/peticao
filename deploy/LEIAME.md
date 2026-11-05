@@ -38,3 +38,13 @@ As faixas da Cloudflare mudam raramente; para atualizar, crie um grupo novo com 
     sudo journalctl -u peticao -n 80 --no-pager
     sudo ufw status verbose        sudo fail2ban-client status sshd
     sudo /usr/local/bin/peticao-backup && ls -la /var/backups/peticao
+
+## Git na VPS (a partir de 2026-11-05)
+O projeto passa a ter git também na VPS. Ramos: `main` = v1 preservada; `producao` = o que está no ar; `admin-v2` = desenvolvimento do painel novo.
+Instalação (UMA vez, na sua máquina; o comando sai por e-mail):
+    scp /mnt/dev/peticao-parcial/deploy/20-git-vps.sh /mnt/dev/peticao-parcial/deploy/peticao-atualizar-stage.sh peticao-root:/root/ && ssh peticao-root 'bash /root/20-git-vps.sh'
+Fluxo de uma mudança:
+1. Commit no ramo `producao` (cópia isolada `/mnt/dev/peticao-parcial`, que espelha a produção).
+2. `git -C /mnt/dev/peticao-parcial push vps producao`: o gancho atualiza o `peticao-stage` (só avanço; histórico reescrito é recusado; o que não está no git, como `geo-data`, `data` e segredos, não é tocado).
+3. Deploy como sempre: `ssh peticao-root /usr/local/sbin/peticao-deploy`. O arquivo `VERSAO` do stage guarda o commit enviado.
+Modificar de dentro da VPS: clone de trabalho `/home/adunir/peticao` (`git pull`, editar, `git commit`, `git push origin producao`). O `rsync` antigo para o stage continua funcionando enquanto o git não for validado.

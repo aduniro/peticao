@@ -30,3 +30,7 @@ exemplo-etapa1/
 exemplo-mailersend/
 layouts-email-pos-confirmacao/
 *.log
+
+# Python compilado
+__pycache__/
+*.pyc
