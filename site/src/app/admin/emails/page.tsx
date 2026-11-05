@@ -52,7 +52,7 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
       </form>
 
       <h2>Os pendentes abriram os e-mails?</h2>
-      <p className="small">Situação de cada cadastro <strong>aguardando confirmação</strong>, pelo melhor sinal recebido dos provedores (Brevo e MailerSend). “Entregue e nunca aberto” é o sinal mais próximo de spam, mas não é prova: leitores que bloqueiam imagens não registram abertura. SES e SendPulse não informam abertura por esta via.</p>
+      <p className="small">Situação de cada cadastro <strong>aguardando confirmação</strong>, pelo melhor sinal recebido dos provedores (Brevo, MailerSend e SendPulse). “Entregue e nunca aberto” é o sinal mais próximo de spam, mas não é prova: leitores que bloqueiam imagens não registram abertura. No SendPulse, abertura e clique só chegam depois de cadastrado o webhook no painel deles; o SES só informa devoluções. <a href="/admin/emails/entregas">Ver a lista por pessoa (nome, contato e situação)</a>.</p>
       <table className="adm-table"><tbody>
         <tr><td>Aguardando confirmação</td><td><strong>{eng.pendentes}</strong></td></tr>
         <tr><td>Clicaram no e-mail (e não confirmaram)</td><td>{eng.clicou}</td></tr>
