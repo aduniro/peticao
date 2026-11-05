@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { exigirNivel } from "@/lib/admin-api";
 import { requestApprovalCode } from "@/lib/batches";
 import { rateLimit } from "@/lib/ratelimit";
 import { requestOrigin } from "@/lib/net";
@@ -7,7 +7,8 @@ import { requestOrigin } from "@/lib/net";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(req, "total");
+  if (bloqueio) return bloqueio;
   const url = new URL("/admin/lotes", requestOrigin(req.headers));
   if (!rateLimit(`codigo:${params.id}`, 5, 15 * 60_000)) url.searchParams.set("msg", "Aguarde antes de pedir outro código.");
   else {

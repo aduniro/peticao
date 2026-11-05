@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exigirAdmin } from "@/lib/admin-api";
+import { exigirNivel } from "@/lib/admin-api";
 import { facetas, parseFiltros, pontos, serieDiaria, totais } from "@/lib/assinaturas-explorar";
 import { monitorSummary, sinceOf, type Window } from "@/lib/monitor";
 
@@ -8,7 +8,7 @@ const JANELAS = new Set(["1h", "24h", "7d", "30d", "all"]);
 
 /** Dados do dashboard: KPIs, série por dia, rankings, estados (mapa coroplético), pontos de campi/cidades e funil de visitas. Mesmos filtros do explorador. */
 export async function GET(req: NextRequest) {
-  const bloqueio = exigirAdmin(req, 120);
+  const bloqueio = await exigirNivel(req, "leitura", 120);
   if (bloqueio) return bloqueio;
   const sp = req.nextUrl.searchParams;
   const f = parseFiltros(sp);

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { geoDbStatus } from "@/lib/geo";
 import MonitorClient from "@/components/MonitorClient";
 
@@ -7,7 +8,9 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Monitor de acessos", robots: { index: false } };
 
 export default async function Monitor() {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "leitura")) redirect("/admin?erro=nivel");
   const geo = await geoDbStatus();
   return (
     <main className="wide">

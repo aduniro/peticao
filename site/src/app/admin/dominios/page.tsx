@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { query } from "@/lib/db";
 import { KIND_LABELS } from "@/lib/institutional";
 
@@ -15,7 +16,9 @@ const KindSelect = ({ def = "ifes" }: { def?: string }) => (
 );
 
 export default async function Dominios({ searchParams }: { searchParams: { msg?: string } }) {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
   const rows = (await query<Row>("SELECT domain,kind,institution,source,status,seen_count,evidence_url FROM institutional_domains ORDER BY seen_count DESC, domain LIMIT 1500")).rows;
   const pend = rows.filter((r) => r.status === "pending"), appr = rows.filter((r) => r.status === "approved"), rej = rows.filter((r) => r.status === "rejected");
   const bySource = new Map<string, number>();

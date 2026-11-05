@@ -1,4 +1,5 @@
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { listBatches, sendingEnabled } from "@/lib/batches";
 import { config } from "@/lib/config";
 import { redirect } from "next/navigation";
@@ -8,7 +9,9 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Lotes", robots: { index: false } };
 
 export default async function Lotes({ searchParams }: { searchParams: { msg?: string } }) {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "total")) redirect("/admin?erro=nivel");
   const batches = await listBatches();
   const enabled = await sendingEnabled();
   return (

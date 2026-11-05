@@ -203,6 +203,37 @@ const SCHEMA_SQL = `
     signature_id INTEGER UNIQUE REFERENCES signatures(id) ON DELETE SET NULL,
     created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'utc','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
   );
+  CREATE TABLE IF NOT EXISTS admin_users (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    nome TEXT NOT NULL,
+    nivel TEXT NOT NULL CHECK (nivel IN ('leitura','edicao','exclusao','total')),
+    senha_hash TEXT NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT true,
+    trocar_senha BOOLEAN NOT NULL DEFAULT false,
+    falhas INTEGER NOT NULL DEFAULT 0,
+    bloqueado_ate TIMESTAMPTZ,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ultimo_acesso TIMESTAMPTZ
+  );
+  CREATE TABLE IF NOT EXISTS admin_sessions (
+    id SERIAL PRIMARY KEY,
+    token_hash TEXT NOT NULL UNIQUE,
+    user_id INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+    criada_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expira_em TIMESTAMPTZ NOT NULL,
+    stepup_ate TIMESTAMPTZ,
+    ip_hash TEXT
+  );
+  CREATE INDEX IF NOT EXISTS admin_sessions_user ON admin_sessions(user_id);
+  CREATE TABLE IF NOT EXISTS admin_reset (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    expira_em TIMESTAMPTZ NOT NULL,
+    usado BOOLEAN NOT NULL DEFAULT false,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
   CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,
     ts TEXT NOT NULL,

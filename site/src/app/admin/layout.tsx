@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
 import AdminShell from "@/components/admin/AdminShell";
 import "./admin.css";
 
@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: { default: "Painel", template: "%s ·
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#05382a" };
 
 /** Moldura do painel: menu lateral no computador, barra superior no tablet e abas inferiores no celular. Sem sessão, mostra só a tela de acesso. */
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  if (!isAdmin()) return <>{children}</>;
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  if (!(await sessaoAdmin())) return <>{children}</>;
   return <AdminShell>{children}</AdminShell>;
 }

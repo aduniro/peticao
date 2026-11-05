@@ -5,6 +5,7 @@ import { isProd } from "@/lib/config";
 import { clientIp, requestOrigin } from "@/lib/net";
 import { turnstileEnabled, verifyTurnstile } from "@/lib/turnstile";
 import { audit } from "@/lib/db";
+import { SESSAO_HORAS, abrirSessao, autenticar, temUsuarios } from "@/lib/admin-users";
 import { hmac } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,23 @@ export async function POST(req: NextRequest) {
     await espera(800);
     return volta("robo");
   }
+  if (await temUsuarios()) {
+    // Login por usuário: e-mail + senha conferidos no banco; a sessão é um token aleatório guardado (só o hash) com validade e revogável.
+    const r = await autenticar(String(form.get("email") ?? ""), String(form.get("password") ?? ""));
+    if (!r.ok) {
+      const global = rateLimit("admin:global-falhas", 20, 15 * 60_000);
+      await audit("admin_login_falha", null, { ip: hmac("ip:" + ip).slice(0, 12), motivo: r.motivo }).catch(() => {});
+      await espera(1200);
+      return volta(r.motivo === "bloqueado" ? "bloqueado" : global ? "2" : "limite");
+    }
+    const { token } = await abrirSessao(r.usuario.id, ip);
+    if (r.usuario.trocarSenha) url.pathname = "/admin/conta";
+    const res = NextResponse.redirect(url, 303);
+    res.cookies.set(ADMIN_COOKIE, token, { httpOnly: true, sameSite: "strict", secure: isProd, path: "/", maxAge: SESSAO_HORAS * 3600 });
+    await audit("admin_login_ok", null, { id: r.usuario.id, ip: hmac("ip:" + ip).slice(0, 12) }).catch(() => {});
+    return res;
+  }
+  // Transição: ainda não existe nenhum usuário, vale a senha única antiga.
   if (!passwordOk(String(form.get("password") ?? ""))) {
     const global = rateLimit("admin:global-falhas", 20, 15 * 60_000);
     await audit("admin_login_falha", null, { ip: hmac("ip:" + ip).slice(0, 12) }).catch(() => {});

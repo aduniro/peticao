@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { dispersionRows, summarize, type DispRow } from "@/lib/dispersion";
 import { brasilia } from "@/lib/time";
 import { KIND_LABELS } from "@/lib/institutional";
@@ -18,7 +19,9 @@ function Node({ r, kids, depth }: { r: DispRow; kids: Map<number, DispRow[]>; de
 }
 
 export default async function Dispersao() {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
   const rows = await dispersionRows();
   const s = summarize(rows);
   const kids = new Map<number, DispRow[]>();

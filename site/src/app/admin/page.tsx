@@ -1,4 +1,6 @@
-import { isAdmin } from "@/lib/admin";
+import { redirect } from "next/navigation";
+import { sessaoAdmin } from "@/lib/admin";
+import { temUsuarios, ROTULO_NIVEL, nivelOk } from "@/lib/admin-users";
 import Dashboard from "@/components/admin/Dashboard";
 import AdminLogin from "@/components/admin/AdminLogin";
 import { turnstileEnabled, turnstileSiteKey } from "@/lib/turnstile";
@@ -15,11 +17,12 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Admin", robots: { index: false } };
 
 export default async function Admin({ searchParams }: { searchParams: { erro?: string; msg?: string } }) {
-  if (!isAdmin()) {
+  const sessao = await sessaoAdmin();
+  if (!sessao) {
     return (
       <main className="narrow">
         <h1>Acesso restrito</h1>
-        <AdminLogin siteKey={turnstileEnabled() ? turnstileSiteKey() : null} erro={searchParams.erro} />
+        <AdminLogin siteKey={turnstileEnabled() ? turnstileSiteKey() : null} erro={searchParams.erro} msg={searchParams.msg} porUsuario={await temUsuarios()} />
       </main>
     );
   }
@@ -39,11 +42,14 @@ export default async function Admin({ searchParams }: { searchParams: { erro?: s
   const outbox = await outboxStats();
   const blackEmails = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason='invalid'")).rows[0].n;
   const suppressed = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason IN ('bounce','complaint')")).rows[0].n;
+  if (sessao.trocarSenha) redirect("/admin/conta");
   const provider = defaultProvider();
   const lastErr = await getSetting("cpf_provider_last_error", "");
   return (
     <main>
       <h1>Painel</h1>
+      <p className="small" data-testid="quem">Você está logado como <strong>{sessao.nome}</strong> ({sessao.email}) · nível <strong>{ROTULO_NIVEL[sessao.nivel]}</strong>{sessao.legado ? " (senha única de transição)" : ""}{sessao.userId ? <> · <a href="/admin/conta">Minha conta</a></> : null}{nivelOk(sessao.nivel, "total") && !sessao.legado ? <> · <a href="/admin/usuarios">Usuários</a></> : null}</p>
+      {searchParams.erro === "nivel" && <p className="box err" role="alert">O seu nível de acesso ({ROTULO_NIVEL[sessao.nivel]}) não permite abrir aquela página.</p>}
       <Dashboard />
       <h2>Resumo e ferramentas</h2>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}

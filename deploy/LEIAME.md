@@ -48,3 +48,13 @@ Fluxo de uma mudança:
 2. `git -C /mnt/dev/peticao-parcial push vps producao`: o gancho atualiza o `peticao-stage` (só avanço; histórico reescrito é recusado; o que não está no git, como `geo-data`, `data` e segredos, não é tocado).
 3. Deploy como sempre: `ssh peticao-root /usr/local/sbin/peticao-deploy`. O arquivo `VERSAO` do stage guarda o commit enviado.
 Modificar de dentro da VPS: clone de trabalho `/home/adunir/peticao` (`git pull`, editar, `git commit`, `git push origin producao`). O `rsync` antigo para o stage continua funcionando enquanto o git não for validado.
+
+## Login por usuário com 4 níveis (Etapa A; ainda NÃO publicado)
+Níveis (cada um inclui os de baixo): **leitura** (consultas e estatísticas) < **edição** (corrige cadastros, e-mails, domínios, filas; vê dados de contato) < **exclusão** (reservado) < **total** (lotes, envio ao Governo, WhatsApp, usuários).
+Transição segura: a senha única de hoje continua valendo ENQUANTO NÃO EXISTIR nenhum usuário. O primeiro usuário cadastrado desliga a senha única na hora; se o banco falhar, ela é negada (nunca liberada).
+Ordem na publicação (os comandos são sempre enviados por e-mail, com caminho completo):
+1. Deploy normal (`peticao-deploy`). As 3 tabelas novas (`admin_users`, `admin_sessions`, `admin_reset`) são criadas sozinhas, aditivas; nada muda para o público.
+2. Abrir o painel uma vez (para o site criar as tabelas) e então criar o dono, **na VPS, com a senha digitada sem eco**:
+   `ssh -t peticao-root 'cd /opt/peticao/app && node scripts/admin-dono.mjs operator-1608598f41@example.invalid "Nome do dono"'`
+3. A partir daí o painel pede e-mail e senha. O dono cadastra os demais em `/admin/usuarios` (cada pessoa recebe um convite por e-mail para criar a própria senha; nenhuma senha é enviada ou mostrada) e pode trocar a própria em `/admin/conta`. "Esqueci minha senha" em `/admin/esqueci`.
+Segurança: sessão guardada no banco (só o hash do token), 4 h, revogada ao sair, ao trocar a senha ou ao desativar o usuário; o nível vem sempre do banco; 5 senhas erradas bloqueiam a conta por 15 minutos; o painel nunca fica sem um usuário de nível total ativo. Um teste varre todas as rotas de `/api/admin` e as páginas do `/admin` e falha se alguma não exigir nível, ou se o antigo `isAdmin()` voltar.

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { exigirNivel } from "@/lib/admin-api";
 import { createLabelReferrer } from "@/lib/referrals";
 import { audit } from "@/lib/db";
 import { requestOrigin } from "@/lib/net";
@@ -7,7 +7,8 @@ import { requestOrigin } from "@/lib/net";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(req, "edicao");
+  if (bloqueio) return bloqueio;
   const f = await req.formData();
   const label = String(f.get("label") ?? "").trim();
   const url = new URL("/admin/indicacoes", requestOrigin(req.headers));

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exigirAdmin } from "@/lib/admin-api";
+import { exigirNivel } from "@/lib/admin-api";
 import { query, audit } from "@/lib/db";
 import { cifrar } from "@/lib/crypto-dados";
 import { normalizarTelefone } from "@/lib/whatsapp/telefone";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 /** Cadastro dos números remetentes do WhatsApp (cifrados). Só registra: o envio real depende de o recurso estar ligado e configurado. */
 export async function POST(req: NextRequest) {
-  const bloqueio = exigirAdmin(req, 60);
+  const bloqueio = await exigirNivel(req, "total", 60);
   if (bloqueio) return bloqueio;
   const f = await req.formData();
   const volta = (msg: string) => NextResponse.redirect(new URL(`/admin/whatsapp?msg=${encodeURIComponent(msg)}`, req.url), 303);
