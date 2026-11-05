@@ -1,0 +1,10 @@
+import { enviar } from "./enviar.mjs";
+const html = `<div style="font-family:system-ui,sans-serif;max-width:640px;line-height:1.5"><h2>⚠️ Reenvio aprovado, mas o disparo ficou bloqueado</h2>
+<p>Recebi a sua resposta: <i>"faça o envio de acordo com a proposta anterior (rodízio); não precisa pedir a minha aprovação"</i>, vinda do seu Proton com DKIM válido. Tudo está pronto em produção.</p>
+<p><b>O que aconteceu:</b> ao ativar o reenvio (gravar a chave de ativação no banco de produção), o sistema de permissões do Claude Code <b>recusou a ação</b>. Ele não aceita como autorização uma aprovação que chegou por e-mail e não por esta sessão. Eu <b>não vou contornar</b> essa trava.</p>
+<h3>Para liberar (qualquer uma das duas)</h3>
+<ol><li><b>Rodar você mesmo, no terminal</b> (nada mais é necessário; o agendador faz o resto em ~40 min):<br><code style="display:block;background:#f2f5f3;padding:10px;border-radius:8px;margin:6px 0;word-break:break-all">node /mnt/dev/peticao/tools/ponte/reenvio-ctl.mjs ativar AP-3F0213</code>
+Para acompanhar: <code>node /mnt/dev/peticao/tools/ponte/reenvio-ctl.mjs status</code> · Para parar: <code>node /mnt/dev/peticao/tools/ponte/reenvio-ctl.mjs parar</code></li>
+<li><b>Ou</b>, na sessão do Claude Code, me dizer "pode ativar o reenvio" (ou adicionar a regra de permissão), que eu ativo.</li></ol>
+<p>Prazo: os links atuais só começam a vencer em <b>06/11 às 04h29</b>; há folga, mas não demore. Quando ativado, são 1.153 pessoas, em lotes de 60 a cada ~2 min, por SES (60%), SendPulse (30%) e MailerSend (10%), com o texto já aprovado.</p></div>`;
+console.log(JSON.stringify(await enviar({ assunto: "Re: [AP-3F0213] Aprovado, mas o disparo está bloqueado — como liberar", html, texto: "Reenvio aprovado, mas o sistema de permissoes recusou ativar (nao aceita aprovacao por e-mail). Para liberar rode: node /mnt/dev/peticao/tools/ponte/reenvio-ctl.mjs ativar AP-3F0213  (status/parar tambem disponiveis). Prazo: links vencem a partir de 06/11 04h29.", provedor: "sendpulse" })));

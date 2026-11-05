@@ -5,7 +5,6 @@ import { brasilia } from "@/lib/time";
 import type { EventRow, Point, RequestPoint, RequestRow, Summary, VisitorRow } from "@/lib/monitor";
 import { REQ_COLORS } from "./req-colors";
 
-const VisitorMap = dynamic(() => import("./VisitorMap"), { ssr: false, loading: () => <div className="map" /> });
 const KIND: Record<string, string> = { sign_pending: "assinatura aguardando e-mail", sign_confirmed: "assinatura confirmada", email_invalid: "e-mail inexistente", email_blocked: "e-mail bloqueado", mail_queued: "e-mail na fila de reenvio", foreign_rejected: "estrangeiro recusado" };
 const WINDOWS: [string, string][] = [["1h", "Última hora"], ["24h", "24 horas"], ["7d", "7 dias"], ["30d", "30 dias"], ["all", "Tudo"]];
 const SIG: Record<string, string> = { confirmed: "assinou", pending: "aguardando confirmação" };
@@ -45,8 +44,8 @@ export default function MonitorClient() {
         <div><strong>{s?.signedVisitors ?? "…"}</strong><span>assinaram (inclui pendentes)</span></div>
         <div><strong>{s?.confirmedVisitors ?? "…"}</strong><span>confirmaram o e-mail</span></div>
       </div>
-      <VisitorMap points={data?.points ?? []} requests={data?.requestPoints ?? []} />
-      <p className="small">Fundo azul/verde: visitantes (verde = local com assinatura). Círculos coloridos: requisições por local ·{" "}
+      <p><a className="v2-btn v2-btn-primario" href={`/admin/mapa?camada=acessos&janela=${w}`}>Ver no mapa interativo →</a></p>
+      <p className="small">No mapa, os círculos coloridos mostram as requisições por local ·{" "}
         {([["confirmed", "assinatura confirmada"], ["pending", "aguardando confirmação do e-mail"], ["invalid", "e-mail inexistente"], ["blocked", "e-mail bloqueado"], ["queued", "e-mail na fila"]] as const).map(([k, l]) => <span key={k} className="legend"><i style={{ background: REQ_COLORS[k] }} />{l}</span>)}</p>
       <h2>Requisições de assinatura e segurança ({data?.requests.length ?? 0})</h2>
       <div className="table-scroll">
