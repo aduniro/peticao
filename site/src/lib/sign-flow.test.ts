@@ -188,13 +188,13 @@ test("e-mail com provedor digitado errado: recusa com o que está errado e como 
   } finally { _setMxResolverForTests(async () => "ok"); await dbmod._closeDbForTests(); }
 });
 
-test("campus fora da região (IFRS Ibirubá): grava o campus sem lotação na região; declarando a região continua recusado", async () => {
+test("campus fora da região (IFRS Porto Alegre): grava o campus sem lotação na região; declarando a região continua recusado; Ibirubá (exceção) vale como região", async () => {
   const dbmod = await import("./db");
   await dbmod._openForTests("t_flow_campus");
   const { handleSign } = await import("./sign-flow");
   const c = cpfFrom("200000030");
   const prov = mockProvider({ [c]: { nome: "BIA TESTE DOS SANTOS" } });
-  const base = { name: "Bia Teste dos Santos", email: "bia@ifrs.edu.br", cpf: c, category: "servidor", institution: "IFRS", role: "tae", campus: "Ibirubá", campusIbge: 4310009 };
+  const base = { name: "Bia Teste dos Santos", email: "bia@ifrs.edu.br", cpf: c, category: "servidor", institution: "IFRS", role: "tae", campus: "Porto Alegre", campusIbge: 4314902 };
   try {
     const dec = await handleSign(form({ ...base, regionDeclared: true }), { ip: "7.7.7.7" }, prov);
     assert.equal(dec.status, 422); assert.equal((dec.json as any).errors.region, "region_not_eligible");
@@ -202,12 +202,19 @@ test("campus fora da região (IFRS Ibirubá): grava o campus sem lotação na re
     const ok = await handleSign(form({ ...base, regionDeclared: false }), { ip: "7.7.7.7" }, prov);
     assert.equal(ok.status, 200, JSON.stringify(ok.json));
     const row = (await dbmod.query<any>("SELECT campus, campus_ibge, region_declared, region_validated, region_criteria FROM signatures WHERE email='bia@ifrs.edu.br'")).rows[0];
-    assert.equal(row.campus, "Ibirubá"); assert.equal(Number(row.campus_ibge), 4310009);
+    assert.equal(row.campus, "Porto Alegre"); assert.equal(Number(row.campus_ibge), 4314902);
     assert.equal(row.region_declared, false); assert.equal(row.region_validated, false); assert.equal(row.region_criteria, null);
     // campus ilegível sem declarar a região não barra a assinatura
     const c2 = cpfFrom("200000031");
     const prov2 = mockProvider({ [c2]: { nome: "CARLA TESTE LIMA" } });
     const nada = await handleSign(form({ ...base, name: "Carla Teste Lima", email: "carla@ifrs.edu.br", cpf: c2, campus: "x", campusIbge: 99999999, regionDeclared: false }), { ip: "7.7.7.8" }, prov2);
     assert.equal(nada.status, 200, JSON.stringify(nada.json));
+    // Ibirubá: exceção decidida pela ADUNIR; declarando a região, vale como faixa de fronteira
+    const c3 = cpfFrom("200000032");
+    const prov3 = mockProvider({ [c3]: { nome: "DANI TESTE ROCHA" } });
+    const ib = await handleSign(form({ ...base, name: "Dani Teste Rocha", email: "dani@ifrs.edu.br", cpf: c3, campus: "Ibirubá", campusIbge: 4310009, regionDeclared: true }), { ip: "7.7.7.9" }, prov3);
+    assert.equal(ib.status, 200, JSON.stringify(ib.json));
+    const r3 = (await dbmod.query<any>("SELECT campus, region_validated, region_criteria FROM signatures WHERE email='dani@ifrs.edu.br'")).rows[0];
+    assert.equal(r3.campus, "Ibirubá"); assert.equal(r3.region_validated, true); assert.equal(r3.region_criteria, "faixa_fronteira");
   } finally { await dbmod._closeDbForTests(); }
 });

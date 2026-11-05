@@ -6,6 +6,8 @@ test("municípios: contagens oficiais e UFs", () => {
   assert.equal(REGION_COUNTS.municipios, 5571);
   assert.equal(REGION_COUNTS.amazoniaLegal, 773);
   assert.equal(REGION_COUNTS.faixaFronteira, 588);
+  assert.equal(REGION_COUNTS.faixaFronteiraExcecoes, 1); // Ibirubá (RS), exceção decidida pela ADUNIR
+  assert.equal(regionOf(4310009).faixaFronteira, true);
   assert.equal(UFS.length, 27);
 });
 

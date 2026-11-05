@@ -22,7 +22,10 @@ const byName = new Map<string, Mun[]>();
 for (const m of MUNS) byName.set(squash(m.name), [...(byName.get(squash(m.name)) ?? []), m]);
 
 const AL = new Set((regiaoRaw as { al: string[] }).al.map(Number));
-const FF = new Set((regiaoRaw as { ff: string[] }).ff.map(Number));
+const FF_OFICIAL = (regiaoRaw as { ff: string[] }).ff.map(Number);
+/** Municípios que a ADUNIR decidiu tratar como faixa de fronteira mesmo fora da lista do IBGE (ex.: Ibirubá-RS); a justificativa está em regiao.json (fonte.ffExcecoes). */
+export const FF_EXCECOES: readonly number[] = ((regiaoRaw as { ffExcecoes?: string[] }).ffExcecoes ?? []).map(Number);
+const FF = new Set([...FF_OFICIAL, ...FF_EXCECOES]);
 
 export const municipalityById = (id: number | null | undefined) => (id ? byId.get(id) ?? null : null);
 
@@ -40,4 +43,4 @@ export function regionOf(ibge: number | null | undefined): Region {
 }
 export const regionCriteria = (r: Region): "ambos" | "amazonia_legal" | "faixa_fronteira" | null =>
   r.amazoniaLegal && r.faixaFronteira ? "ambos" : r.amazoniaLegal ? "amazonia_legal" : r.faixaFronteira ? "faixa_fronteira" : null;
-export const REGION_COUNTS = { municipios: MUNS.length, amazoniaLegal: AL.size, faixaFronteira: FF.size };
+export const REGION_COUNTS = { municipios: MUNS.length, amazoniaLegal: AL.size, faixaFronteira: FF_OFICIAL.length, faixaFronteiraExcecoes: FF_EXCECOES.length };
