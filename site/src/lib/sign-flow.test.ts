@@ -162,3 +162,52 @@ test("identidade: CPF fora dos dados de teste não gasta tentativa e orienta; li
   await dbmod._closeDbForTests();
   rmSync(out, { recursive: true, force: true });
 });
+
+test("e-mail com provedor digitado errado: recusa com o que está errado e como digitar; nada é gravado; domínio errado não vai à curadoria", async () => {
+  const dbmod = await import("./db");
+  await dbmod._openForTests("t_flow_politica");
+  const { handleSign } = await import("./sign-flow");
+  _setMxResolverForTests(async (d) => (d === "gmail.con" ? "none" : "ok"));
+  try {
+    for (const [errado, certo] of [["gmail.con", "gmail.com"], ["gmial.com", "gmail.com"], ["hotmial.com", "hotmail.com"]]) {
+      const r = await handleSign(form({ email: `maria@${errado}` }), { ip: "8.8.8.8" }, provider); // gmial/hotmial têm servidor de e-mail, mas são erro quase certo
+      assert.equal(r.status, 422, errado);
+      const j = r.json as any;
+      assert.equal(j.errors.email, "email_typo", errado);
+      assert.equal(j.suggest, `maria@${certo}`);
+      assert.equal(j.fix.problema, "provedor"); assert.equal(j.fix.errado, errado); assert.equal(j.fix.correto, certo); assert.equal(j.fix.exemplo, `maria@${certo}`);
+    }
+    // servidor com domínio institucional digitado errado: explica, sugere o certo e NÃO suja a fila de curadoria de domínios
+    const c = cpfFrom("200000020");
+    const s = await handleSign(form({ name: "Ana Souza", email: "ana@unir.bt", cpf: c, category: "servidor", institution: "UNIR", role: "docente", regionDeclared: true, campus: "Porto Velho", campusIbge: 1100205 }), { ip: "8.8.4.4" }, provider);
+    const js = s.json as any;
+    assert.equal(s.status, 422);
+    assert.equal(js.errors?.email, "email_institutional_invalid", JSON.stringify(js)); assert.equal(js.suggest, "ana@unir.br"); assert.equal(js.fix.correto, "unir.br");
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM institutional_domains WHERE domain='unir.bt'")).rows[0].n, 0);
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM signatures")).rows[0].n, 0);
+  } finally { _setMxResolverForTests(async () => "ok"); await dbmod._closeDbForTests(); }
+});
+
+test("campus fora da região (IFRS Ibirubá): grava o campus sem lotação na região; declarando a região continua recusado", async () => {
+  const dbmod = await import("./db");
+  await dbmod._openForTests("t_flow_campus");
+  const { handleSign } = await import("./sign-flow");
+  const c = cpfFrom("200000030");
+  const prov = mockProvider({ [c]: { nome: "BIA TESTE DOS SANTOS" } });
+  const base = { name: "Bia Teste dos Santos", email: "bia@ifrs.edu.br", cpf: c, category: "servidor", institution: "IFRS", role: "tae", campus: "Ibirubá", campusIbge: 4310009 };
+  try {
+    const dec = await handleSign(form({ ...base, regionDeclared: true }), { ip: "7.7.7.7" }, prov);
+    assert.equal(dec.status, 422); assert.equal((dec.json as any).errors.region, "region_not_eligible");
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM signatures")).rows[0].n, 0);
+    const ok = await handleSign(form({ ...base, regionDeclared: false }), { ip: "7.7.7.7" }, prov);
+    assert.equal(ok.status, 200, JSON.stringify(ok.json));
+    const row = (await dbmod.query<any>("SELECT campus, campus_ibge, region_declared, region_validated, region_criteria FROM signatures WHERE email='bia@ifrs.edu.br'")).rows[0];
+    assert.equal(row.campus, "Ibirubá"); assert.equal(Number(row.campus_ibge), 4310009);
+    assert.equal(row.region_declared, false); assert.equal(row.region_validated, false); assert.equal(row.region_criteria, null);
+    // campus ilegível sem declarar a região não barra a assinatura
+    const c2 = cpfFrom("200000031");
+    const prov2 = mockProvider({ [c2]: { nome: "CARLA TESTE LIMA" } });
+    const nada = await handleSign(form({ ...base, name: "Carla Teste Lima", email: "carla@ifrs.edu.br", cpf: c2, campus: "x", campusIbge: 99999999, regionDeclared: false }), { ip: "7.7.7.8" }, prov2);
+    assert.equal(nada.status, 200, JSON.stringify(nada.json));
+  } finally { await dbmod._closeDbForTests(); }
+});

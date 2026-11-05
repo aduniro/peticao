@@ -16,6 +16,8 @@ export type SignCtx = Meta & { ip: string };
 export type FlowResult = { status: number; json: Record<string, unknown> };
 
 import { suggestEmail } from "./email-typos";
+import { dominiosConhecidos } from "./email-sugestao";
+import { detalheDeSugestao, diagnosticar } from "./email-diagnostico";
 import { SERVER_REJECT, validateEmailField } from "./email-validate";
 const ASK = (json: Record<string, unknown>, status = 422): FlowResult => ({ status, json });
 const ROBOT = { error: "Não foi possível confirmar que você não é um robô. Recarregue a página e tente de novo.", errorCode: "robot" };
@@ -34,7 +36,7 @@ const ROBOT = { error: "Não foi possível confirmar que você não é um robô.
  */
 const slowDomains = new Map<string, number>();
 export const _clearSlowDomains = () => slowDomains.clear();
-async function emailExistsGate(input: { email: string }, ctx: SignCtx): Promise<FlowResult | null> {
+async function emailExistsGate(input: { email: string }, ctx: SignCtx, estrangeiro = false): Promise<FlowResult | null> {
   // Vale também para e-mail institucional: é onde mais se erra a digitação (caixa inexistente). Só recusa com prova do SMTP (falha aberta).
   if (!rateLimit(`reacher:${ctx.ip}`, 15, 60 * 60_000) || !rateLimit("reacher:global", 600, 60 * 60_000)) return null;
   // Domínio que não responde à sonda (porta 25 fechada, lista cinza…): não seguramos cada pessoa por segundos; pula esse domínio por 30 min.
@@ -43,15 +45,21 @@ async function emailExistsGate(input: { email: string }, ctx: SignCtx): Promise<
   const rv = await verificarEmail(input.email, { timeoutMs: Number(process.env.REACHER_TIMEOUT_MS ?? 4000) });
   if (rv.ok && rv.skipped === "indisponivel") { if (slowDomains.size > 500) slowDomains.clear(); slowDomains.set(dom, Date.now() + 30 * 60_000); }
   if (rv.ok) return null;
-  if (rv.code === "email_not_found" || rv.code === "email_undeliverable" || rv.code === "email_invalid") return invalidEmail(input.email, ctx, rv.code); // caixa cheia e descartável não contam como inexistente
+  if (rv.code === "email_not_found" || rv.code === "email_undeliverable" || rv.code === "email_invalid") return invalidEmail(input.email, ctx, rv.code, estrangeiro); // caixa cheia e descartável não contam como inexistente
   return ASK({ errors: { email: rv.code } });
 }
 
-/** E-mail que não existe: conta a tentativa (3 do mesmo e-mail → lista negra) e devolve o erro para a janela de aviso. O IP nunca é bloqueado por erro. */
-async function invalidEmail(email: string, ctx: SignCtx, code: string): Promise<FlowResult> {
+/**
+ * E-mail que não existe: conta a tentativa (3 do mesmo e-mail → lista negra) e devolve o erro para a janela de aviso, com a sugestão
+ * ("você quis dizer…?", a partir dos domínios do banco) e o detalhe do que está errado e de como digitar. O IP nunca é bloqueado por erro.
+ */
+async function invalidEmail(email: string, ctx: SignCtx, code: string, estrangeiro = false): Promise<FlowResult> {
   await recordInvalidEmail(email, ctx.ip);
-  const suggest = suggestEmail(email, { semServidor: code === "email_undeliverable" });
-  return ASK({ errors: { email: code }, ...(suggest ? { suggest } : {}) });
+  const kn = await dominiosConhecidos(estrangeiro).catch(() => undefined);
+  const diag = diagnosticar(email, kn ?? []);
+  const suggest = suggestEmail(email, { known: kn, semServidor: code === "email_undeliverable" }) ?? diag?.sugestao ?? null;
+  const detail = diag ?? (suggest ? detalheDeSugestao(email, suggest) : null);
+  return ASK({ errors: { email: code }, ...(suggest ? { suggest } : {}), ...(detail ? { fix: detail } : {}) });
 }
 
 
@@ -69,7 +77,7 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     wa = tel.e164;
   }
   // E-mail já na lista negra (inexistente, bounce ou reclamação): recusa sem gastar consulta e conta como tentativa inválida do IP.
-  if (await isEmailBlacklisted(input.email)) { await logRequest("email_blocked", ctx.ip, { email: input.email, detail: "tentativa com e-mail da lista negra" }); return invalidEmail(input.email, ctx, "email_not_found"); }
+  if (await isEmailBlacklisted(input.email)) { await logRequest("email_blocked", ctx.ip, { email: input.email, detail: "tentativa com e-mail da lista negra" }); return invalidEmail(input.email, ctx, "email_not_found", input.category === "estrangeiro"); }
 
 
   // Apoiador não usa e-mail institucional (órgão público/IFES da lista do site): quem tem um deve assinar pelo formulário de Servidor.
@@ -84,21 +92,22 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     const kind = await institutionalKind(input.email);
     if (!kind || SERVER_REJECT.has(kind)) {
       const d = emailDomain(input.email);
-      if (d && (kind === null || kind === "ensino-edu-br") && rateLimit(`pend:${ctx.ip}`, 10, 60 * 60_000)) await notePendingDomain(d).catch(() => {}); // limite por IP: ninguém lota a fila de revisão
       const v = await validateEmailField(input.email, "servidor"); // mesmo veredito do formulário: "e-mail institucional inválido" (com sugestão) ou "use e-mail de órgão público"
-      return ASK({ errors: { email: v.ok ? "server_email_not_institutional" : v.code }, ...(!v.ok && v.suggest ? { suggest: v.suggest } : {}) });
+      const provavelErro = !v.ok && !!v.suggest; // domínio com cara de erro de digitação não vai para a fila de curadoria (evita lixo como "ufpa.edu.bt")
+      if (d && !provavelErro && (kind === null || kind === "ensino-edu-br") && rateLimit(`pend:${ctx.ip}`, 10, 60 * 60_000)) await notePendingDomain(d).catch(() => {}); // limite por IP: ninguém lota a fila de revisão
+      return ASK({ errors: { email: v.ok ? "server_email_not_institutional" : v.code }, ...(!v.ok && v.suggest ? { suggest: v.suggest } : {}), ...(!v.ok && v.detail ? { fix: v.detail } : {}) });
     }
   }
   // Apoiador: domínio de provedor público digitado errado (gmial.com) ou sem servidor de e-mail → "e-mail inválido" com a sugestão
   if (input.category === "apoiador") {
     const v = await validateEmailField(input.email, "apoiador");
-    if (!v.ok && v.code === "email_provider_invalid") {
+    if (!v.ok && (v.code === "email_provider_invalid" || v.code === "email_typo")) {
       await recordInvalidEmail(input.email, ctx.ip); // conta como tentativa com e-mail inexistente (3 do mesmo e-mail → lista negra); o IP nunca é bloqueado
-      return ASK({ errors: { email: v.code }, ...(v.suggest ? { suggest: v.suggest } : {}) });
+      return ASK({ errors: { email: v.code }, ...(v.suggest ? { suggest: v.suggest } : {}), ...(v.detail ? { fix: v.detail } : {}) });
     }
   }
 
-  if ((await checkMx(input.email)) === "none") return invalidEmail(input.email, ctx, "email_undeliverable");
+  if ((await checkMx(input.email)) === "none") return invalidEmail(input.email, ctx, "email_undeliverable", input.category === "estrangeiro");
 
   if (input.category === "estrangeiro") {
     if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
@@ -108,7 +117,7 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     // Domínio brasileiro (.br, órgão público, IFES ou discente) não é de universidade estrangeira: a pessoa deve usar o formulário de Servidor ou de Apoiador.
     const fkind = await institutionalKind(input.email);
     if (fdom.endsWith(".br") || (fkind !== null && fkind !== "universidade-estrangeira")) { await reject("foreign_brazilian_email"); return ASK({ errors: { email: "foreign_brazilian_email" } }); }
-    const gF = await emailExistsGate(input, ctx); if (gF) return gF;
+    const gF = await emailExistsGate(input, ctx, true); if (gF) return gF;
     const u = await validateUniversityEmail(input.email, input.country!, probe);
     if (!u.ok) {
       await reject(u.code, u.detail);
@@ -118,7 +127,7 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     try {
       await submit(input, ctx, { identityMethod: "universidade_estrangeira", universityDomain: u.domain, domainCheck: u.check, whatsapp: wa });
     } catch (e) {
-      if (e instanceof EmailUndeliverableError) return invalidEmail(input.email, ctx, "email_undeliverable");
+      if (e instanceof EmailUndeliverableError) return invalidEmail(input.email, ctx, "email_undeliverable", input.category === "estrangeiro");
       if (e instanceof MailBlockedError) return ASK({ error: "Este endereço de e-mail não pode ser usado em ambiente de teste.", errorCode: "mail_blocked" });
       console.error("assinar falhou", e);
       return ASK({ error: "Não foi possível enviar o e-mail de confirmação. Tente novamente.", errorCode: "send_failed" }, 500);
@@ -175,7 +184,7 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
   try {
     await submit(input, ctx, { ...extra, whatsapp: wa });
   } catch (e) {
-    if (e instanceof EmailUndeliverableError) return invalidEmail(input.email, ctx, "email_undeliverable");
+    if (e instanceof EmailUndeliverableError) return invalidEmail(input.email, ctx, "email_undeliverable", false);
     if (e instanceof MailBlockedError) return ASK({ error: "Este endereço de e-mail não pode ser usado em ambiente de teste.", errorCode: "mail_blocked" });
     console.error("assinar falhou", e);
     return ASK({ error: "Não foi possível enviar o e-mail de confirmação. Tente novamente.", errorCode: "send_failed" }, 500);

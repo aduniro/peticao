@@ -63,7 +63,10 @@ export function classifyDomain(domain: string, approved: ApprovedDomain[]): { ki
 import { registrableDomain } from "./domain-extract";
 
 const g = globalThis as unknown as { __domCache?: { at: number; rows: ApprovedDomain[] } };
-export const _clearDomainCache = () => { g.__domCache = undefined; };
+export const _clearDomainCache = () => {
+  g.__domCache = undefined;
+  (globalThis as unknown as { __domSug?: unknown }).__domSug = undefined; // cache das sugestões "você quis dizer…" (email-sugestao.ts): domínio decidido à mão entra na hora
+};
 
 /** Regras de domínio vigentes (aprovados e rejeitados) — o nome histórico é mantido. */
 export async function approvedDomains(): Promise<ApprovedDomain[]> {

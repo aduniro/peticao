@@ -96,13 +96,15 @@ export function validate(raw: any): ValidationResult {
     // O cargo (docente ou técnico-administrativo) é obrigatório para todo servidor, esteja ou não lotado na região.
     if (raw?.role !== "docente" && raw?.role !== "tae") errors.role = "role_required";
     else v.role = raw.role;
-    const campusText = declared ? clean(raw?.campus, 120) : "";
-    const picked = declared ? Number(raw?.campusIbge) || null : null;
+    // O campus de quem não se declara lotado na região (ex.: IFRS Ibirubá, fora da faixa de fronteira) também é gravado, desde que conste na lista da instituição: aí é só informação, nunca vira "lotação na região".
+    const campusText = clean(raw?.campus, 120);
+    const picked = Number(raw?.campusIbge) || null;
     if (declared && !campusText && !picked) errors.campus = "campus_required";
     let placeIbge: number | null = ifes?.m ?? null; // sem campus informado, vale a sede da IFES
     if (campusText || picked) {
       const rc = resolveCampus(ifes, campusText, picked);
-      if (!rc) errors.campus = "campus_invalid";
+      if (!rc) { if (declared) errors.campus = "campus_invalid"; } // sem declaração de região o campus é opcional: valor ilegível é ignorado, não barra a assinatura
+      else if (!declared && !rc.listed) { /* sem declarar a região, só se grava campus que conste na lista da instituição; texto livre/outro município é ignorado */ }
       else { v.campus = rc.name; v.campusIbge = rc.ibge; v.campusListed = rc.listed; placeIbge = rc.ibge; }
     }
     // Checkbox "lotado na Amazônia Legal / faixa de fronteira": só vale para instituição federal da lista com sede ou campus na região (listas do IBGE)

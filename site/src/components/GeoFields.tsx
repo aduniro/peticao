@@ -72,7 +72,14 @@ export function IfesCampusFields({ s, set, errors }: { s: ServerState; set: (p: 
     const ids = [...new Set([s.ifes.m, ...s.ifes.c])].filter((id) => geo.al.has(id) || geo.ff.has(id));
     return ids.map((id) => geo.byId.get(id)).filter((m): m is Mun => !!m).sort((a, b) => a.name.localeCompare(b.name, "pt"));
   }, [geo, s.ifes]);
-  const campusOptions: Option[] = useMemo(() => rank(regionMuns, s.campus, (m) => m.name, 60).map((m) => ({ key: String(m.id), label: m.name, hint: m.uf })), [regionMuns, s.campus]);
+  // Todos os campi da instituição aparecem na lista; os que ficam fora da região vêm marcados e não contam como lotação na região (a assinatura vale do mesmo jeito).
+  const inRegion = (id: number) => !!geo && (geo.al.has(id) || geo.ff.has(id));
+  const allMuns: Mun[] = useMemo(() => {
+    if (!geo || !s.ifes) return [];
+    return [...new Set([s.ifes.m, ...s.ifes.c])].map((id) => geo.byId.get(id)).filter((m): m is Mun => !!m).sort((a, b) => a.name.localeCompare(b.name, "pt"));
+  }, [geo, s.ifes]);
+  const campusOptions: Option[] = useMemo(() => rank(allMuns, s.campus, (m) => m.name, 60).map((m) => ({ key: String(m.id), label: m.name, hint: inRegion(m.id) ? m.uf : `${m.uf} · ${t("f.campusOutside")}` })), [allMuns, s.campus, geo]); // eslint-disable-line react-hooks/exhaustive-deps
+  const campusOutside = !!s.campusIbge && !inRegion(s.campusIbge) && allMuns.some((m) => m.id === s.campusIbge);
   const eligible = !!s.ifes && regionMuns.length > 0;
   const mustRegion = !!geo && !!s.ifes && [...new Set([s.ifes.m, ...s.ifes.c])].every((id) => geo.al.has(id)); // todos os campi na Amazônia Legal: marcar é obrigatório
   useEffect(() => { if (geo && !eligible && s.region) set({ region: false, campus: "", campusIbge: null }); }, [eligible, geo]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -92,17 +99,18 @@ export function IfesCampusFields({ s, set, errors }: { s: ServerState; set: (p: 
           <option value="tae">{t("f.roleTae")}</option>
         </select><Err msg={errors.role} /></label>
       <div className={`region${eligible ? "" : " off"}`} data-tour="region">
-        <label className="check"><input type="checkbox" name="region" required={mustRegion} aria-required={mustRegion} checked={s.region} disabled={!eligible} onChange={(e) => set(e.target.checked ? { region: true } : { region: false, campus: "", campusIbge: null })} /> <span>{t("f.region")}<Help text={t("help.region")} /></span></label>
+        <label className="check"><input type="checkbox" name="region" required={mustRegion} aria-required={mustRegion} checked={s.region} disabled={!eligible} onChange={(e) => set(e.target.checked ? { region: true, ...(campusOutside ? { campus: "", campusIbge: null } : {}) } : { region: false, campus: "", campusIbge: null })} /> <span>{t("f.region")}<Help text={t("help.region")} /></span></label>
         <small className={eligible ? "ok" : ""}>{why}{mustRegion && <> <strong>{t("f.region.required")}</strong></>}</small>
         <Err msg={errors.region} />
       </div>
-      {s.region && (
+      {(s.region || campusOutside) && (
         <>
           <label data-tour="campus">{t("f.campus")}<Help text={t("help.campus")} />
             <Combobox name="campus" value={s.campus} placeholder={s.ifes ? t("f.campusPlaceholder") : t("f.campusPickIfes")} options={campusOptions} invalid={!!errors.campus} ariaLabel={t("f.campus")}
               emptyText={t("f.campusNone")} disabled={!s.institution.trim()}
-              onChange={(v) => set({ campus: v, campusIbge: null })} onPick={(o) => set({ campus: o.label, campusIbge: Number(o.key) })} />
+              onChange={(v) => set({ campus: v, campusIbge: null })} onPick={(o) => { const id = Number(o.key); set(inRegion(id) ? { campus: o.label, campusIbge: id } : { campus: o.label, campusIbge: id, region: false }); }} />
             <span className="hint">{t("f.campusHint")}</span><Err msg={errors.campus} /></label>
+          {campusOutside && <span className="hint" role="status">{t("f.campusOutsideNote")}</span>}
         </>
       )}
     </>

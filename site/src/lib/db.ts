@@ -256,15 +256,27 @@ export function getPool(): Pool {
   return g.__pool;
 }
 
-/** Domínios de e-mail das IFES (sigla.br / sigla.edu.br com servidor de e-mail ativo), já aprovados: servidor de IFES com e-mail .edu.br de instituto federal não pode ser barrado. */
-async function seedIfesDomains(): Promise<void> {
+/**
+ * Domínios de e-mail das IFES (sigla.br / sigla.edu.br com servidor de e-mail ativo), já aprovados: servidor de IFES com e-mail .edu.br de instituto federal não pode ser barrado.
+ * Domínio que um visitante já tinha digitado e ficou "pendente" na curadoria (ex.: ifc.edu.br) é promovido a aprovado; decisão manual (aprovado ou rejeitado) nunca é alterada.
+ * Quem já assinou com um domínio recém-aprovado e ainda não tinha classificação passa a constar com o domínio e a instituição (a categoria escolhida não muda).
+ */
+export async function seedIfesDomains(): Promise<void> {
   const rows = ifesDomains as { domain: string; acronym: string; institution: string }[];
-  await getPool().query(
+  const r = await getPool().query<{ domain: string; institution: string }>(
     `INSERT INTO institutional_domains(domain,kind,institution,acronym,source,status,decided_by)
      SELECT d,'ifes',n,a,'derivado-ifes','approved','semente-ifes' FROM unnest($1::text[],$2::text[],$3::text[]) AS t(d,a,n)
-     ON CONFLICT (domain) DO NOTHING`,
-    [rows.map((r) => r.domain), rows.map((r) => r.acronym), rows.map((r) => r.institution)]
+     ON CONFLICT (domain) DO UPDATE SET kind='ifes', institution=EXCLUDED.institution, acronym=EXCLUDED.acronym, status='approved', decided_by='semente-ifes',
+       updated_at=to_char(now() AT TIME ZONE 'utc','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+       WHERE institutional_domains.status = 'pending'
+     RETURNING domain, institution`,
+    [rows.map((x) => x.domain), rows.map((x) => x.acronym), rows.map((x) => x.institution)]
   );
+  for (const x of r.rows) {
+    await getPool().query(
+      "UPDATE signatures SET email_domain_kind='ifes', email_domain=$1, email_institution=$2 WHERE email_domain_kind IS NULL AND lower(split_part(email,'@',2)) = $1",
+      [x.domain, x.institution]);
+  }
 }
 
 /** Assinaturas já confirmadas ganham número (por ordem de confirmação) e código de verificação, uma única vez. */
