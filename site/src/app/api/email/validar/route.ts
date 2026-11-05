@@ -14,5 +14,5 @@ export async function POST(req: NextRequest) {
   const category = b.category === "servidor" ? "servidor" : b.category === "apoiador" ? "apoiador" : null;
   if (!email || !category) return NextResponse.json({ ok: true });
   const v = await validateEmailField(email, category);
-  return NextResponse.json(v.ok ? { ok: true } : { ok: false, code: v.code, suggest: v.suggest ?? null });
+  return NextResponse.json(v.ok ? { ok: true, ...(v.soft ? { soft: v.soft } : {}) } : { ok: false, code: v.code, suggest: v.suggest ?? null, ...(v.detail ? { fix: v.detail } : {}) });
 }
