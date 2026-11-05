@@ -38,3 +38,15 @@ test("resumo: melhor sinal por pendente; mantém o primeiro horário", async () 
     assert.equal(new Date(e.delivered_at).toISOString(), "2026-11-01T09:00:00.000Z");
   } finally { await limpa(); }
 });
+
+import { sesToEngajamento, brevoWebhookToEngaj, mailersendWebhookToEngaj } from "./mail/engajamento";
+test("webhooks: SES, Brevo e MailerSend viram entrega/abertura/clique", () => {
+  assert.deepEqual(sesToEngajamento({ eventType: "Open", mail: { destination: ["A@x.com"], timestamp: "2026-11-05T10:00:00Z" }, open: { timestamp: "2026-11-05T10:05:00Z" } }), [{ provider: "ses", email: "a@x.com", kind: "opened", ts: "2026-11-05T10:05:00.000Z" }]);
+  assert.equal(sesToEngajamento({ eventType: "Delivery", mail: { destination: ["a@x.com", "b@x.com"] }, delivery: { timestamp: "2026-11-05T10:00:00Z" } }).length, 2);
+  assert.equal(sesToEngajamento({ eventType: "Bounce", mail: { destination: ["a@x.com"] } }).length, 0);
+  assert.equal(brevoWebhookToEngaj({ event: "click", email: "C@x.com", ts_event: 1793849000 })[0].kind, "clicked");
+  assert.equal(brevoWebhookToEngaj({ event: "unique_opened", email: "c@x.com" })[0].kind, "opened");
+  assert.equal(brevoWebhookToEngaj({ event: "request", email: "c@x.com" }).length, 0);
+  assert.equal(mailersendWebhookToEngaj({ type: "activity.delivered", data: { email: { recipient: { email: "D@x.com" } }, created_at: "2026-11-05T10:00:00Z" } })[0].email, "d@x.com");
+  assert.equal(mailersendWebhookToEngaj({ type: "activity.sent", data: { email: { recipient: { email: "d@x.com" } } } }).length, 0);
+});

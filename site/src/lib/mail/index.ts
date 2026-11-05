@@ -8,6 +8,7 @@ import { isSuppressed, MailSuppressedError } from "./suppression";
 import { readCredentialText, readSmtpCredential, sesSmtpOptions } from "./smtp-credential";
 import { drainOutbox, enqueueMail } from "./outbox";
 import { attemptLogger, logQueued, type Attempt } from "./log";
+import { ordemRodizio, parsePesos, registrar } from "./rodizio";
 
 export { MailSuppressedError };
 
@@ -184,7 +185,7 @@ export const withReplyTo = (m: Mail): Mail => (m.replyTo ? m : config.mailReplyT
  * Se NENHUM provedor conseguir enviar, a mensagem vai para a fila de reenvio (tentada de novo automaticamente, em intervalos crescentes,
  * até 48 h) em vez de se perder. Endereços bloqueados continuam sendo recusados na hora.
  */
-export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean; channel?: "transactional" | "marketing" } = {}): Promise<SendOutcome> {
+export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean; channel?: "transactional" | "marketing"; avoid?: string[] } = {}): Promise<SendOutcome> {
   // Canal de marketing: cadeia e remetentes PRÓPRIOS (subdomínios de campanha), nunca a cadeia transacional; sem fila de reenvio (quem dispara acompanha o resultado).
   if (opts.channel === "marketing") {
     const mk = config.marketingProviders();
@@ -192,7 +193,8 @@ export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean;
     assertSendAllowed(m.to);
     for (const b of m.bcc ?? []) assertSendAllowed(b);
     if (mk.some((p) => p !== "dev") && (await isSuppressed(m.to))) throw new MailSuppressedError(`Endereço na lista de supressão: ${m.to}`);
-    await deliver(withReplyTo(m), mk, SENDERS, config.mailFromMarketing, kind, attemptLogger(m, kind, "marketing"));
+    const logM = attemptLogger(m, kind, "marketing");
+    await deliver(withReplyTo(m), ordemRodizio("marketing", mk, parsePesos(config.mailRotationMarketing()), { evitar: opts.avoid }), SENDERS, config.mailFromMarketing, kind, (a) => { registrar("marketing", a.provider, a.ok); logM(a); });
     return "sent";
   }
   assertSendAllowed(m.to);
@@ -205,7 +207,8 @@ export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean;
   // Endereços que já deram bounce permanente, reclamação ou e-mail inexistente nunca recebem de novo (protege a reputação do domínio).
   if (real && (await isSuppressed(m.to))) throw new MailSuppressedError(`Endereço na lista de supressão: ${m.to}`);
   try {
-    await deliver(withReplyTo(m), providers, SENDERS, config.mailFromFor, kind, attemptLogger(m, kind));
+    const log = attemptLogger(m, kind);
+    await deliver(withReplyTo(m), ordemRodizio("transacional", providers, parsePesos(config.mailRotation()), { evitar: opts.avoid }), SENDERS, config.mailFromFor, kind, (a) => { registrar("transacional", a.provider, a.ok); log(a); });
   } catch (e) {
     if (!real || opts.queue === false) throw e; // "dev" não tem o que reenviar; envios que o admin acompanha (lotes) mostram o erro na hora
     const id = await enqueueMail(m, kind, (e as Error).message);

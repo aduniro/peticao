@@ -8,7 +8,7 @@ import { hmac, newToken, normalizeEmail, sha256 } from "./security";
 import { titleCaseName, lowerEmail } from "./name-case";
 import { sendMail } from "./mail";
 import { newVerifyCode } from "./verify-code";
-import { confirmationHtml } from "./mail/templates";
+import { confirmationHtml, reenvioHtml } from "./mail/templates";
 import { logRequest } from "./abuse";
 import { isSuppressed } from "./mail/suppression";
 import type { CpfNameCheck } from "./cpf-check";
@@ -162,6 +162,22 @@ export function confirmationMail(name: string, token: string, startedIso?: strin
       `O link vale por ${config.tokenTtlHours} horas e só pode ser usado uma vez. Se não foi você, ignore esta mensagem: nada será registrado.\n\n` +
       `ADUNIR – Seção Sindical do ANDES-SN`,
     html: confirmationHtml({ origin: config.appUrl(), firstName: first, link, hours: config.tokenTtlHours, startedAt: started }),
+  };
+}
+
+/** Reenvio por falha do serviço de disparo: aviso de desculpas + pedido de ajuda + nova solicitação de confirmação (a data/hora ORIGINAL do cadastro é mantida). */
+export function reenvioMail(name: string, token: string, startedIso?: string) {
+  const link = `${config.appUrl()}/confirmar?token=${encodeURIComponent(token)}`;
+  const first = name.split(" ")[0];
+  const started = brasilia(startedIso ?? new Date(), true);
+  return {
+    subject: "Confirme sua assinatura: pedimos desculpas pela falha no envio dos e-mails (PLV 12/2026)",
+    text:
+      `Olá, ${first}.\n\nPedimos desculpas. Tivemos um problema no nosso serviço de disparo de e-mails na quarta-feira (04/11). Ele já foi corrigido, mas alguns e-mails de confirmação não chegaram ou podem ter caído na caixa de spam.\n\n` +
+      `Um pedido: avise os colegas que assinaram para olharem a pasta de spam, lixo eletrônico e promoções. Se encontrarem o e-mail da petição, marquem como "não é spam" e confirmem a assinatura.\n\n` +
+      `Você iniciou a sua assinatura em ${started}. Se já confirmou, ignore esta mensagem. Para que ela conte, abra o novo link e clique em "Confirmar":\n\n${link}\n\n` +
+      `O novo link vale por ${config.tokenTtlHours} horas e só pode ser usado uma vez. Se não foi você, ignore: nada será registrado.\n\nADUNIR – Seção Sindical do ANDES-SN`,
+    html: reenvioHtml({ origin: config.appUrl(), firstName: first, link, hours: config.tokenTtlHours, startedAt: started }),
   };
 }
 

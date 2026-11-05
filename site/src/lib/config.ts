@@ -28,6 +28,10 @@ export const config = {
     const list = (raw ? raw.split(",") : [process.env.MAIL_PROVIDER ?? "dev"]).map((s) => s.trim().toLowerCase()).filter(Boolean);
     return list.length ? list : ["dev"];
   },
+  /** Rodízio entre os serviços transacionais: MAIL_ROTATION="ses:6,sendpulse:3,mailersend:1" (pesos). Vazio = sem rodízio (ordem da cadeia). */
+  mailRotation: (): string | undefined => process.env.MAIL_ROTATION,
+  /** Rodízio do canal de marketing: MAIL_ROTATION_MARKETING="mailrelaypresidente:1,sendpulse:1". */
+  mailRotationMarketing: (): string | undefined => process.env.MAIL_ROTATION_MARKETING,
   /**
    * Cadeia do canal de MARKETING/campanhas (envios em massa: pedidos de correção de nome/CPF, divulgação…), separada da transacional para isolar a reputação.
    * MAIL_PROVIDERS_MARKETING="mailrelay,sendpulse". Sem ela, o marketing não envia (nunca cai na cadeia transacional).

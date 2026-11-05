@@ -1,7 +1,7 @@
 import { validate, submit, EmailUndeliverableError, type Meta } from "./signatures";
 import { needsIdentity, identityMode, verifyCpfName, makeTicket, checkTicket, verifyIdentity, type IdentityMethod, MAX_FAILED } from "./identity";
 import { checkMx } from "./email-check";
-import { checkWithReacher } from "./reacher";
+import { verificarEmail } from "./verificacao";
 import { emailDomain, institutionalKind, notePendingDomain, type DomainKind } from "./institutional";
 import { defaultProvider, type CpfProvider } from "./cpf-check";
 import { MailBlockedError } from "./mail/guard";
@@ -40,7 +40,7 @@ async function emailExistsGate(input: { email: string }, ctx: SignCtx): Promise<
   // Domínio que não responde à sonda (porta 25 fechada, lista cinza…): não seguramos cada pessoa por segundos; pula esse domínio por 30 min.
   const dom = emailDomain(input.email) ?? "";
   if ((slowDomains.get(dom) ?? 0) > Date.now()) return null;
-  const rv = await checkWithReacher(input.email, { timeoutMs: Number(process.env.REACHER_TIMEOUT_MS ?? 4000) });
+  const rv = await verificarEmail(input.email, { timeoutMs: Number(process.env.REACHER_TIMEOUT_MS ?? 4000) });
   if (rv.ok && rv.skipped === "indisponivel") { if (slowDomains.size > 500) slowDomains.clear(); slowDomains.set(dom, Date.now() + 30 * 60_000); }
   if (rv.ok) return null;
   if (rv.code === "email_not_found" || rv.code === "email_undeliverable" || rv.code === "email_invalid") return invalidEmail(input.email, ctx, rv.code); // caixa cheia e descartável não contam como inexistente

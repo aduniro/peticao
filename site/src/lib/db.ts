@@ -108,6 +108,8 @@ const SCHEMA_SQL = `
     id SERIAL PRIMARY KEY, signature_id INTEGER, kind TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', provider_id TEXT, error TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
   CREATE INDEX IF NOT EXISTS whatsapp_messages_provider ON whatsapp_messages(provider_id);
+  CREATE TABLE IF NOT EXISTS reenvio_falha (
+    signature_id INTEGER PRIMARY KEY, enviado_em TIMESTAMPTZ NOT NULL DEFAULT now(), provider TEXT, evitou TEXT, status TEXT NOT NULL DEFAULT 'sent', erro TEXT);
   CREATE TABLE IF NOT EXISTS mail_engagement (
     provider TEXT NOT NULL, email TEXT NOT NULL, delivered_at TIMESTAMPTZ, opened_at TIMESTAMPTZ, clicked_at TIMESTAMPTZ, updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (provider, email));

@@ -1,5 +1,6 @@
 import { createVerify } from "node:crypto";
 import { storeEvents, sesToEvents } from "./events";
+import { storeEngagement, sesToEngajamento } from "./engajamento";
 import { suppress } from "./suppression";
 
 /** Mensagem do Amazon SNS (campos usados na assinatura variam por tipo). */
@@ -93,6 +94,7 @@ export async function handleSns(m: SnsMessage, deps: { getCert?: (u: string) => 
     const list = extractSuppressions(ev);
     for (const s of list) await suppress(s.email, s.reason, s.detail);
     await storeEvents(sesToEvents(ev)).catch(() => {}); // também entra no painel de e-mails (permanentes e transitórios)
+    await storeEngagement(sesToEngajamento(ev)).catch(() => {}); // entrega, abertura e clique (quando o conjunto publica esses eventos)
     return { status: 200, body: `${list.length} endereço(s) bloqueado(s)` };
   }
   return { status: 200, body: "ignorada" };

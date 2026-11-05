@@ -80,3 +80,31 @@ export async function resumoEngajamento(): Promise<ResumoEngaj> {
     FROM p LEFT JOIN g ON g.email = p.e LEFT JOIN b ON b.e = p.e`)).rows[0];
   return r;
 }
+
+// ---------- Eventos em tempo real (webhooks) ----------
+const iso = (x: unknown) => { const d = typeof x === "number" ? new Date(x < 1e12 ? x * 1000 : x) : new Date(String(x ?? "")); return Number.isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString(); };
+
+/** SES (via SNS, conjunto de configuração): Delivery, Open e Click viram engajamento. */
+export function sesToEngajamento(ev: any): Engaj[] {
+  const kind = ev?.eventType; const out: Engaj[] = [];
+  const dest: string[] = (ev?.mail?.destination ?? []).map((x: unknown) => String(x).toLowerCase());
+  const mk = (k: Engaj["kind"], ts: unknown) => { for (const e of dest) out.push({ provider: "ses", email: e, kind: k, ts: iso(ts ?? ev?.mail?.timestamp) }); };
+  if (kind === "Delivery") mk("delivered", ev.delivery?.timestamp);
+  else if (kind === "Open") mk("opened", ev.open?.timestamp);
+  else if (kind === "Click") mk("clicked", ev.click?.timestamp);
+  return out;
+}
+
+/** Brevo (webhook transacional): event = delivered | opened | unique_opened | click | ... */
+export function brevoWebhookToEngaj(b: any): Engaj[] {
+  const email = String(b?.email ?? "").toLowerCase(); if (!email) return [];
+  const m: Record<string, Engaj["kind"]> = { delivered: "delivered", opened: "opened", unique_opened: "opened", opened_proxy: "opened", click: "clicked", clicks: "clicked" };
+  const k = m[String(b?.event ?? "")]; return k ? [{ provider: "brevo", email, kind: k, ts: iso(b?.ts_event ?? b?.ts ?? b?.date) }] : [];
+}
+
+/** MailerSend (webhook): type = activity.delivered | activity.opened | activity.clicked */
+export function mailersendWebhookToEngaj(b: any): Engaj[] {
+  const email = String(b?.data?.email?.recipient?.email ?? b?.data?.recipient?.email ?? "").toLowerCase(); if (!email) return [];
+  const m: Record<string, Engaj["kind"]> = { "activity.delivered": "delivered", "activity.opened": "opened", "activity.clicked": "clicked" };
+  const k = m[String(b?.type ?? "")]; return k ? [{ provider: "mailersend", email, kind: k, ts: iso(b?.data?.created_at ?? b?.created_at) }] : [];
+}

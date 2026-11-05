@@ -48,6 +48,24 @@ ${button(o.link, "Confirmar minha assinatura")}
   });
 }
 
+
+/** Reenvio da confirmação a quem NÃO recebeu o e-mail original (falha do serviço de disparo): aviso de desculpas + pedido de ajuda + a solicitação padrão de assinatura. */
+export function reenvioHtml(o: { origin: string; firstName: string; link: string; hours: number; startedAt: string }): string {
+  return layout({
+    origin: o.origin, title: "Confirme sua assinatura", preheader: `${o.firstName}, tivemos uma falha no envio dos e-mails. Sua confirmação ainda está pendente.`,
+    body: `<p style="margin:0 0 12px;">Olá, <strong>${esc(o.firstName)}</strong>.</p>
+<div style="margin:0 0 16px;padding:14px 16px;background:#fff8d6;border:1px solid #f2c200;border-radius:10px;">
+<p style="margin:0 0 8px;"><strong>Pedimos desculpas.</strong> Tivemos um problema no nosso serviço de disparo de e-mails na quarta-feira (04/11). Ele já foi corrigido, mas <strong>alguns e-mails de confirmação não chegaram ou podem ter caído na caixa de spam</strong>.</p>
+<p style="margin:0;"><strong>Um pedido:</strong> avise os colegas que assinaram para olharem a pasta de <strong>spam, lixo eletrônico e promoções</strong>. Se encontrarem o e-mail da petição, marquem como “não é spam” e confirmem a assinatura.</p>
+</div>
+<p style="margin:0 0 6px;">Você iniciou a sua assinatura na petição pela <strong>sanção integral do PLV nº 12/2026</strong> em ${esc(o.startedAt)}. Se já confirmou, ignore esta mensagem.</p>
+<p style="margin:0;">Para que ela conte, confirme o seu e-mail com o novo link:</p>
+${button(o.link, "Confirmar minha assinatura")}
+<p style="margin:0 0 8px;font-size:13px;color:#5b6b63;">Se o botão não abrir, copie e cole este endereço no navegador:<br><a href="${esc(o.link)}" style="color:${BRAND};word-break:break-all;">${esc(o.link)}</a></p>
+<p style="margin:14px 0 0;font-size:13px;color:#5b6b63;">O novo link vale por ${o.hours} horas e só pode ser usado uma vez. Se não foi você, ignore esta mensagem: nada será registrado.</p>`,
+  });
+}
+
 // ---------- E-mails depois da confirmação ----------
 const NET_ICON: Record<string, { cor: string; nome: string; ic: string }> = {
   whatsapp: { cor: "#25D366", nome: "WhatsApp", ic: "wa" }, telegram: { cor: "#229ED9", nome: "Telegram", ic: "tg" }, x: { cor: "#000000", nome: "X", ic: "x" },
