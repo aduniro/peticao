@@ -118,7 +118,7 @@ def _write_pdf(path, records, generated_at):
   from reportlab.lib.pagesizes import A4
   from reportlab.lib.styles import ParagraphStyle
   from reportlab.lib.units import mm
-  from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
+  from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, KeepTogether
   coverage = _fonts()
   texts = [text for record in records for text in _lines(record)]
   missing = sorted({ord(char) for text in texts for char in text if not char.isspace() and ord(char) not in coverage})
@@ -131,11 +131,18 @@ def _write_pdf(path, records, generated_at):
   doc = SimpleDocTemplate(str(path), pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=23*mm, bottomMargin=21*mm, title='Prévia local de nomes revisados - NÃO ENVIAR', author='Revisão local da petição', pageCompression=1)
   story = [Paragraph('Prévia local de nomes revisados', heading), Paragraph('Documento de conferência. NÃO ENVIAR. Esta prévia não substitui os lotes oficiais nem confirma assinaturas pendentes.', normal), Paragraph('Gerada em ' + generated_at + ' | Assinaturas selecionadas: ' + str(len(records)), normal), Spacer(1, 7*mm)]
   for record in records:
+    block = []
     for index, line in enumerate(_lines(record)):
       # Escape all signer content: ReportLab markup is never accepted from the DB.
-      story.append(Paragraph(escape(line).replace('\n', '<br/>'), name_style if index == 1 else normal))
-    # Paragraphs can split to keep unusually long names intact across pages.
-    story.extend([Spacer(1, 2*mm), HRFlowable(width='100%', thickness=.4, color=colors.HexColor('#CCD4DD')), Spacer(1, 5*mm)])
+      block.append(Paragraph(escape(line).replace('\n', '<br/>'), name_style if index == 1 else normal))
+    block.extend([Spacer(1, 2*mm), HRFlowable(width='100%', thickness=.4, color=colors.HexColor('#CCD4DD')), Spacer(1, 5*mm)])
+    # Keep an ordinary signer block together. Truly oversized blocks may still split;
+    # no names are shortened to fit a page.
+    height = sum(item.wrap(doc.width, doc.height)[1] + item.getSpaceBefore() + item.getSpaceAfter() for item in block)
+    if height < doc.height:
+      story.append(KeepTogether(block))
+    else:
+      story.extend(block)
   def decorate(canvas, document):
     canvas.saveState()
     canvas.setFillColor(colors.HexColor('#EEEEEE'))

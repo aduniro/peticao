@@ -79,6 +79,18 @@ class PreviewTests(unittest.TestCase):
     self.assertFalse((directory/'previa-nomes-revisados.pdf').exists())
     self.assertEqual('failed', json.loads((directory/'manifest.json').read_text())['state'])
 
+  def test_signer_identifier_name_and_code_stay_on_same_page(self):
+    for sid in range(2, 20):
+      self.add(sid, selected_name='Nome Fictício ' + str(sid), record={'verify_code':'FIXTURECODE'+str(sid)})
+    result=generate(self.db,self.root/'groups')
+    from pypdf import PdfReader
+    pages=[p.extract_text() for p in PdfReader(result['pdf']).pages]
+    for sid in range(2,20):
+      matches=[text for text in pages if 'FIXTURECODE'+str(sid)+'\n' in text]
+      self.assertEqual(len(matches),1)
+      self.assertIn('Nome Fictício '+str(sid)+'\n',matches[0])
+      self.assertIn('ID '+str(sid)+'\n',matches[0])
+
   def test_pending_name_does_not_change_cpf_decision(self):
     with sqlite3.connect(self.db) as db:
       db.execute("UPDATE name_decisions SET decision='pending'")
