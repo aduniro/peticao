@@ -20,3 +20,8 @@ export const gruposVisiveis = (ehTotal: boolean): Grupo[] => GRUPOS.map((g) => (
 export const ativo = (path: string, href: string) => (href === "/admin" ? path === "/admin" : path === href || path.startsWith(href + "/"));
 export const tituloDe = (path: string) => GRUPOS.flatMap((g) => g.itens).find((i) => ativo(path, i.href))?.rotulo ?? "Painel";
 export const grupoDe = (path: string) => GRUPOS.find((g) => g.itens.some((i) => ativo(path, i.href)))?.id ?? "geral";
+
+/** Atalhos da barra inferior do celular, na ordem, com rótulo curto (cabe em ~60 px). Rankings entra quando a página existir. */
+export const BARRA: { href: string; curto: string }[] = [
+  { href: "/admin", curto: "Início" }, { href: "/admin/mapa", curto: "Mapa" }, { href: "/admin/assinaturas", curto: "Lista" }, { href: "/admin/emails", curto: "E-mails" },
+];

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { filtrosParaQuery, filtrosVazios, parseFiltros, type Filtros } from "@/lib/assinaturas-filtros";
 import type { Faceta, Ponto, Resultado } from "@/lib/assinaturas-explorar";
 import { Multi as MultiBase } from "./controles";
+import { FiltrosShell, useEhMobile } from "./shell/filtros";
 import type { PontoVisita } from "@/app/api/admin/assinaturas/visitas/route";
 import type { RequestPoint } from "@/lib/monitor";
 
@@ -31,6 +32,7 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
   const [foco, setFoco] = useState<string | null>(null);
   const [buscando, setBuscando] = useState(false);
   const [aberto, setAberto] = useState(!(cheio || tela));
+  const mobile = useEhMobile(); // no celular os filtros vão para a folha do botão "Filtros" da barra inferior
   const [camada, setCamada] = useState<"assinaturas" | "visitas" | "acessos">("assinaturas");
   const [acessos, setAcessos] = useState<RequestPoint[] | null>(null);
   useEffect(() => { const q = new URLSearchParams(location.search); const c = q.get("camada"); if (c === "visitas" || c === "acessos") setCamada(c); const j = q.get("janela"); if (j && ["1h", "24h", "7d", "30d", "all"].includes(j)) setJanela(j); }, []);
@@ -88,7 +90,7 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
         </div>
         <div className="v2-mapa-comando">
           <div className="v2-mapa-barra">
-            <button type="button" className="v2-btn v2-btn-primario" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Fechar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
+            <button type="button" className="v2-btn v2-btn-primario" hidden={mobile} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Fechar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
             {!tela && <button type="button" className="v2-btn v2-btn-sec" aria-expanded={folha} onClick={() => setFolha(!folha)}>{folha ? "Fechar tabela" : "Tabela"}</button>}
       <div className="adm-seg" role="group" aria-label="Camada do mapa">
         <button type="button" aria-pressed={camada === "assinaturas"} className={camada === "assinaturas" ? "on" : ""} onClick={() => setCamada("assinaturas")}>Assinaturas (local declarado)</button>
@@ -104,13 +106,13 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
       </p>
       {erro ? <p className="err" role="alert">{erro}</p> : null}
 
-          {aberto && <div className="v2-mapa-filtros"><div className="adm-filters" role="search" >
+          {(aberto || mobile) && <div className={mobile ? undefined : "v2-mapa-filtros"}><FiltrosShell><div className="adm-filters" role="search" >
         <input type="search" placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
         {CHAVES.map((k) => <MultiBase key={k} rotulo={ROTULOS[k]} opcoes={FIXAS[k] ?? r?.facetas[k] ?? []} valor={f[k]} onChange={(v) => mudar(k, v)} />)}
         <label>De <input type="date" value={f.de} onChange={(e) => mudar("de", e.target.value)} /></label>
         <label>Até <input type="date" value={f.ate} onChange={(e) => mudar("ate", e.target.value)} /></label>
         {ativos ? <button type="button" className="adm-btn" onClick={() => { setF(filtrosVazios()); setPagina(1); }}>Limpar filtros ({ativos})</button> : null}
-      </div></div>}
+      </div></FiltrosShell></div>}
         </div>
         {!tela && folha && (
           <div className="v2-mapa-folha" role="region" aria-label="Tabela de assinaturas">
@@ -149,14 +151,14 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
   }
   return (
     <div className="adm-explorador">
-      <button type="button" className="adm-btn adm-filtros-btn" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
-      <div className="adm-filters" role="search" hidden={!aberto}>
+      <button type="button" className="adm-btn adm-filtros-btn" hidden={mobile} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
+      <FiltrosShell><div className="adm-filters" role="search" hidden={!aberto && !mobile}>
         <input type="search" placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
         {CHAVES.map((k) => <MultiBase key={k} rotulo={ROTULOS[k]} opcoes={FIXAS[k] ?? r?.facetas[k] ?? []} valor={f[k]} onChange={(v) => mudar(k, v)} />)}
         <label>De <input type="date" value={f.de} onChange={(e) => mudar("de", e.target.value)} /></label>
         <label>Até <input type="date" value={f.ate} onChange={(e) => mudar("ate", e.target.value)} /></label>
         {ativos ? <button type="button" className="adm-btn" onClick={() => { setF(filtrosVazios()); setPagina(1); }}>Limpar filtros ({ativos})</button> : null}
-      </div>
+      </div></FiltrosShell>
       <p className="adm-sub" aria-live="polite">
         <span>{r ? <><b>{r.total}</b> assinatura(s) · {r.totais.confirmadas} confirmadas · {r.totais.pendentes} aguardando{r.semLocal ? ` · ${r.semLocal} sem local no mapa` : ""}</> : "Carregando…"}{buscando ? " …" : ""}</span>
         

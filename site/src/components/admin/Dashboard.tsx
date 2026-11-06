@@ -4,6 +4,7 @@ import { filtrosParaQuery, filtrosVazios, type Filtros } from "@/lib/assinaturas
 import type { Faceta, Ponto } from "@/lib/assinaturas-explorar";
 import Grafico from "./Grafico";
 import { Caixa, Faixa, Multi, Segmentado } from "./controles";
+import { FiltrosShell, useEhMobile } from "./shell/filtros";
 
 
 type Dados = {
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const [campi, setCampi] = useState(true);
   const [auto, setAuto] = useState(false);
   const [aberto, setAberto] = useState(true);
+  const mobile = useEhMobile(); // no celular os filtros vão para a folha do botão "Filtros" da barra inferior
   useEffect(() => { if (window.innerWidth <= 768) setAberto(false); }, []);
   const seq = useRef(0);
   const qs = filtrosParaQuery(f);
@@ -77,9 +79,9 @@ export default function Dashboard() {
       <div className="adm-card">
         <div className="adm-barra-filtros">
           <Segmentado rotulo="Período das visitas (funil)" opcoes={JANELAS.map((j) => ({ v: j.v, t: j.t }))} valor={janela} onChange={setJanela} />
-          <button type="button" className="adm-btn adm-filtros-btn" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
+          <button type="button" className="adm-btn adm-filtros-btn" hidden={mobile} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
         </div>
-        <div hidden={!aberto} className="adm-filtros-corpo">
+        <FiltrosShell><div hidden={!aberto && !mobile} className="adm-filtros-corpo">
         <div className="adm-barra-filtros" role="search" style={{ marginTop: 10 }}>
           <Multi rotulo="Categoria" opcoes={CATEG} valor={f.categoria} onChange={(v) => set("categoria", v)} />
           <Multi rotulo="Cargo" opcoes={opcoes.cargo?.length ? opcoes.cargo : CARGOS} valor={f.cargo} onChange={(v) => set("cargo", v)} />
@@ -101,7 +103,7 @@ export default function Dashboard() {
         <div className="adm-barra-filtros" style={{ marginTop: 10 }}>
           {faixa && dias.length > 1 ? <Faixa rotulo="Intervalo de datas" min={0} max={dias.length - 1} valor={faixa} onChange={aplicaFaixa} formato={(n) => brData(dias[n] ?? "")} /> : null}
         </div>
-        </div>
+        </div></FiltrosShell>
       </div>
       {erro ? <p className="err" role="alert">{erro}</p> : null}
       <div className="adm-kpis" aria-live="polite" aria-busy={carregando}>

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useTurnstile } from "@/components/useTurnstile";
+import CampoSenha from "./CampoSenha";
 
 const ERRO: Record<string, string> = {
   local: "O painel só abre para IPs de Rondônia. Se você está em Rondônia e usa VPN, desligue-a e tente de novo.",
@@ -21,10 +22,9 @@ const MSG: Record<string, string> = {
 export default function AdminLogin({ siteKey, erro, msg, porUsuario }: { siteKey: string | null; erro?: string; msg?: string; porUsuario: boolean }) {
   const { el, token } = useTurnstile(siteKey);
   const [busy, setBusy] = useState(false);
-  const [ver, setVer] = useState(false);
   const textoErro = erro ? (erro === "1" && porUsuario ? ERRO["2"] : ERRO[erro] ?? ERRO[porUsuario ? "2" : "1"]) : null;
   return (
-    <form method="post" action="/api/admin/login" className="form" onSubmit={(e) => {
+    <form method="post" action="/api/admin/login" onSubmit={(e) => {
       if (siteKey && !token.current) { e.preventDefault(); alert("Aguarde a verificação de segurança terminar."); return; }
       const f = e.currentTarget; let h = f.querySelector<HTMLInputElement>("input[name=turnstile]");
       if (!h) { h = document.createElement("input"); h.type = "hidden"; h.name = "turnstile"; f.appendChild(h); }
@@ -32,16 +32,11 @@ export default function AdminLogin({ siteKey, erro, msg, porUsuario }: { siteKey
     }}>
       {msg && MSG[msg] ? <p className="box ok" role="status">{MSG[msg]}</p> : null}
       {porUsuario ? <label>E-mail<input type="email" name="email" required autoComplete="username" autoCapitalize="none" spellCheck={false} /></label> : null}
-      <label>Senha
-        <span style={{ display: "flex", gap: 6 }}>
-          <input type={ver ? "text" : "password"} name="password" required autoComplete="current-password" style={{ flex: 1 }} />
-          <button type="button" className="linklike" aria-pressed={ver} onClick={() => setVer((v) => !v)}>{ver ? "Ocultar" : "Mostrar"}</button>
-        </span>
-      </label>
+      <label>Senha<CampoSenha name="password" required autoComplete="current-password" /></label>
       {siteKey ? <div ref={el} style={{ minHeight: 65 }} /> : null}
       {textoErro ? <p className="err" role="alert">{textoErro}</p> : null}
-      <button disabled={busy}>Entrar</button>
-      {porUsuario ? <p style={{ marginTop: 10 }}><a href="/admin/esqueci">Esqueci minha senha</a></p> : null}
+      <button className="v2-login-btn" disabled={busy}>{busy ? "Entrando…" : "Entrar"}</button>
+      {porUsuario ? <p className="v2-login-pe"><a href="/admin/esqueci">Esqueci minha senha</a></p> : null}
     </form>
   );
 }

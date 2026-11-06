@@ -5,6 +5,7 @@ import Dashboard from "@/components/admin/Dashboard";
 import Painel from "@/components/admin/painel/Painel";
 import BarraLista from "@/components/admin/ui/BarraLista";
 import AdminLogin from "@/components/admin/AdminLogin";
+import LoginMoldura from "@/components/admin/LoginMoldura";
 import { turnstileEnabled, turnstileSiteKey } from "@/lib/turnstile";
 import { counts } from "@/lib/signatures";
 import { query, verifyAuditChain } from "@/lib/db";
@@ -21,11 +22,11 @@ export const metadata = { title: "Admin", robots: { index: false } };
 export default async function Admin({ searchParams }: { searchParams: { erro?: string; msg?: string } }) {
   const sessao = await sessaoAdmin();
   if (!sessao) {
+    const porUsuario = await temUsuarios();
     return (
-      <main className="narrow">
-        <h1>Acesso restrito</h1>
-        <AdminLogin siteKey={turnstileEnabled() ? turnstileSiteKey() : null} erro={searchParams.erro} msg={searchParams.msg} porUsuario={await temUsuarios()} />
-      </main>
+      <LoginMoldura titulo="Acesso restrito" sub={porUsuario ? "Entre com o seu e-mail e senha para abrir o painel da campanha." : "Digite a senha para abrir o painel da campanha."}>
+        <AdminLogin siteKey={turnstileEnabled() ? turnstileSiteKey() : null} erro={searchParams.erro} msg={searchParams.msg} porUsuario={porUsuario} />
+      </LoginMoldura>
     );
   }
   const c = await counts();
