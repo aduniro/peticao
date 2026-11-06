@@ -1,10 +1,39 @@
 // Lê as mensagens recebidas pela ponte (KV). Uso: node ler.mjs [--desde ISO] [--json]
 import { cf, conta, kvId } from "./lib.mjs";
+export async function listarChaves(consultar, acc, kv) {
+  const keys = []; let cursor = ""; const cursors = new Set();
+  do {
+    const response = await consultar(`/accounts/${acc}/storage/kv/namespaces/${kv}/keys?limit=1000&prefix=m:${cursor ? "&cursor=" + encodeURIComponent(cursor) : ""}`);
+    if (!response.success || !Array.isArray(response.result)) throw new Error("Não foi possível listar a caixa da Ponte");
+    keys.push(...response.result);
+    cursor = response.result_info?.cursor || "";
+    if (cursor && cursors.has(cursor)) throw new Error("Paginação repetida na caixa da Ponte");
+    if (cursor) cursors.add(cursor);
+  } while (cursor);
+  return keys;
+}
+const cache = new Map();
 export async function mensagens(desde = 0) {
-  const z = await conta(); const acc = z.account.id; const kv = await kvId(acc);
-  const ks = (await cf(`/accounts/${acc}/storage/kv/namespaces/${kv}/keys?limit=1000&prefix=m:`)).result ?? [];
+  const z = await conta(); const acc = z?.account?.id;
+  if (!acc) throw new Error("Conta da Ponte indisponível");
+  const kv = await kvId(acc);
+  if (!kv) throw new Error("Caixa da Ponte indisponível");
+  const ks = await listarChaves(cf, acc, kv);
+  const current = new Set(ks.map(k => k.name));
+  for (const key of cache.keys()) if (!current.has(key)) cache.delete(key);
   const out = [];
-  for (const k of ks) { const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acc}/storage/kv/namespaces/${kv}/values/${encodeURIComponent(k.name)}`, { headers: { Authorization: "Bearer " + (await import("/mnt/dev/peticao/tools/infra/lib/keystore.mjs")).getKey("CLOUDFLARE_API_TOKEN") } }); try { const m = JSON.parse(await r.text()); if (new Date(m.recebido).getTime() >= desde) out.push(m); } catch {} }
+  for (const k of ks) {
+    let m = cache.get(k.name);
+    if (!m) {
+      const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acc}/storage/kv/namespaces/${kv}/values/${encodeURIComponent(k.name)}`, { signal: AbortSignal.timeout(20_000), headers: { Authorization: "Bearer " + (await import("/mnt/dev/peticao/tools/infra/lib/keystore.mjs")).getKey("CLOUDFLARE_API_TOKEN") } });
+      if (r.status === 404) continue; // A chave pode expirar entre a listagem e a leitura.
+      if (!r.ok) throw new Error(`Falha de leitura na Ponte (HTTP ${r.status})`);
+      m = await r.json();
+      if (!m || typeof m.recebido !== "string" || !Number.isFinite(new Date(m.recebido).getTime())) throw new Error("Mensagem inválida na caixa da Ponte");
+      if (cache.size < 2000) cache.set(k.name, m);
+    }
+    if (new Date(m.recebido).getTime() >= desde) out.push(m);
+  }
   return out.sort((a, b) => a.recebido.localeCompare(b.recebido));
 }
 // Texto novo da resposta, sem a citação da mensagem anterior.

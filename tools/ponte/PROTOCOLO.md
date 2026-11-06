@@ -39,3 +39,16 @@ O `vigia.mjs` tem duas rotinas, e as duas retomam de onde pararam toda vez que e
 - Primeira rodada: só entram mensagens a partir de 05/11/2026 12h (as anteriores já foram tratadas à mão). Para reprocessar tudo, apague `.cache/ponte/triagem.json`.
 - Testar sem enviar nada: `node /mnt/dev/peticao/tools/ponte/triagem.mjs --simular`. Desligar só a triagem: `VIGIA_SEM_TRIAGEM=1`. O vigia roda como Monitor da sessão (expira em ~30 min: rearmar) e só funciona com a sessão aberta; sem sessão, a triagem roda na próxima vez que ele for ligado.
 - Limites: regras automáticas; o veredito INCONCLUSIVO pede leitura humana. Se o servidor não responde por SSH, o vigia avisa uma vez e tenta de novo na rodada seguinte.
+
+## Vigia contínuo — substitui o monitor de sessão a partir de 06/11/2026
+
+A pedido do dono, `peticao-vigia.service` passa a rodar no systemd do usuário `barre`, habilitado no início e com `Restart=always`/retentativa após 5 segundos. O linger foi habilitado e conferido: o serviço continua após encerrar a sessão gráfica. A máquina precisa permanecer ligada e conectada. Isto substitui as menções anteriores ao limite de 30 minutos e à dependência da sessão do Claude para **receber e triar** mensagens; a execução por um agente ainda depende do executor/sessão disponível e das aprovações.
+
+- Consulta da Ponte: a cada 30 segundos, com timeout de rede, paginação completa das chaves e cache das mensagens imutáveis durante o processo. Referência da paginação: [Cloudflare KV — List keys](https://developers.cloudflare.com/api/resources/kv/subresources/namespaces/subresources/keys/methods/list/).
+- Pedidos autenticados pelo DKIM do dono são persistidos, sem truncar o corpo novo, em `.cache/ponte/entrada/`, arquivos privados, com estado `aguardando_leitura`. O identificador da mensagem evita duplicação mesmo quando duas chegam no mesmo instante. As mensagens retidas pela Ponte são recuperadas ao iniciar; importar para a fila não aprova nem executa pedidos antigos.
+- O cursor histórico `vigia.json` foi preservado. O novo monitor usa `vigia-health.json`; não depende de um corte por horário que possa perder mensagens atrasadas no KV. Não apaga as decisões de aprovação nem as propostas existentes.
+- Triagem de contato: inicia junto e repete a cada 5 minutos em processo separado com limite de execução. Consultas à VPS continuam somente leitura; relatórios vão apenas ao dono, nunca automaticamente ao participante. Uma triagem lenta não bloqueia a leitura da Ponte.
+- Os logs do novo monitor registram estado e identificadores, sem corpo dos pedidos. A fila privada contém os pedidos e deve ser tratada como informação sensível.
+- Estado: `systemctl --user status peticao-vigia.service`. Saúde: `.cache/ponte/vigia-health.json` e `vigia-triagem-health.json`. A hora de `ultimaConsulta`, e não somente o processo ativo, comprova uma consulta concluída.
+
+Esta instalação não cria um agente autônomo que executa e-mails, não concede autorizações novas e não expõe segredos. Mantém os critérios de autenticação e o protocolo de aprovação já existente. Os testes de recepção/deduplicação/paginação e as regressões de triagem ficam em `tools/test/vigia.test.mjs` e `tools/test/triagem.test.mjs`.

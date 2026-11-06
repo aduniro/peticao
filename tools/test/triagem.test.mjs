@@ -129,5 +129,7 @@ test("a triagem só LÊ o servidor: nenhum comando de escrita e a sessão do ban
   assert.ok(!/cpf_hash|wa_cipher/.test(fonte.replace(/- 'cpf_hash' - 'wa_cipher'[^;]*/, "")), "só aparecem para serem REMOVIDOS da consulta");
   assert.match(fonte, /EMAIL_OK/);
   const vigia = readFileSync(new URL("../ponte/vigia.mjs", import.meta.url), "utf8");
-  assert.match(vigia, /triagemUmaVez/); assert.match(vigia, /ao ligar/);
+  assert.match(vigia, /spawn\(process\.execPath/);
+  assert.match(vigia, /tools\/ponte\/triagem\.mjs/);
+  assert.match(fonte, /export async function triagemUmaVez/); assert.match(vigia, /^triagem\(\);$/m);
 });

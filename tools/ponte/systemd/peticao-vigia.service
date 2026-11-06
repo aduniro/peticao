@@ -1,0 +1,18 @@
+[Unit]
+Description=Vigia contínuo da Ponte e triagem da petição
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+[Service]
+WorkingDirectory=/mnt/dev/peticao
+ExecStart=/usr/bin/node /mnt/dev/peticao/tools/ponte/vigia.mjs
+Environment=VIGIA_INTERVALO_S=30
+Environment=VIGIA_TRIAGEM_S=300
+Restart=always
+RestartSec=5
+TimeoutStopSec=15
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+[Install]
+WantedBy=default.target
