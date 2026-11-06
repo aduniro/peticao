@@ -83,3 +83,5 @@ O candidato agora reserva atomicamente texto e card e os retoma pelo agendador e
 Validação: **251/251** testes cumulativos e tipos aprovados. O ensaio de atualização do banco também passou com histórico administrativo anterior, preservando IDs, autores, resultados e horários, além dos registros originais de assinatura. Detalhes e limitações em `docs/A6-RESPOSTAS-PENDENTES.md`.
 
 Ainda não concluir A6: rótulos do histórico e aviso de resultado inconclusivo aguardam aprovação do dono; sem eles a interface antiga classificaria estados pendentes incorretamente. Também seguem pendentes a revisão de controles sensíveis (inclusive gestão de usuários sem confirmação extra), QA visual/permissões em seis larguras e as Etapas 2–7. Nenhum deploy autorizado ou realizado.
+
+Checkpoint `5a3cbd6`: backend da fila e regressões preservados no Git. O build de produção também passou (`stage01-build-contact.log`), além dos 251 testes, tipos e migração. O candidato continua parcial e sem autorização de publicação.

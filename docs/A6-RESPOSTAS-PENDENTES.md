@@ -42,3 +42,5 @@ A tela considera qualquer histórico ao exigir a opção existente de nova rodad
 - Regressões novas: conteúdo/origem/destinatário ligados ao selo; workers simultâneos; reserva e resultado com falha de banco; timeout e aceite tardio; histórico legado; bloqueio/supressão; agendador sem autorização; uma tentativa de provedor no contato e fallback padrão preservado para os demais envios.
 
 Logs locais: `/mnt/dev/peticao/.cache/admin-audit-20261106/stage01-cumulative-contact.log`, `stage01-typecheck-contact.log` e `stage01-schema-contact.log`. Os testes usam dados fictícios, transportes injetados e chamadas HTTP simuladas; não provam entrega em caixas reais. Nenhuma publicação ou alteração da VPS nesta revisão.
+
+Build de produção aprovado em `stage01-build-contact.log`. Código preservado no checkpoint `5a3cbd6`; não é uma versão liberada para publicação enquanto os itens pendentes acima não forem resolvidos.
