@@ -24,9 +24,20 @@ const tableArea=document.querySelector(".table-wrap");tableArea.addEventListener
 let nameDirty=false,nameEditing=null,nameRequest=0,bulkPreview=null,lastBatch=null;
 const nameLabels={pending:"Nome a decidir",approved:"Nome aprovado",rejected:"Sugestão recusada"};
 function nameCell(row){
-  const cell=el("td",undefined,"name-cell"),text=el("strong","Carregando sugestão…"),status=el("small"),button=el("button","Revisar nome para impressão","text-button");
-  button.onclick=()=>openName(row);cell.append(text,status,button);
-  const show=n=>{if(!cell.isConnected)return;text.textContent=n.selected_name||n.proposed||"Sem sugestão disponível";status.textContent=(nameLabels[n.decision]||"Nome a decidir")+(n.special?" · caso especial":"");status.className=n.decision==="approved"?"name-approved":"";};
+  const cell=el("td",undefined,"name-cell"),text=el("strong","Carregando sugestão…"),status=el("small"),approve=el("button","Aprovar nome","name-approve"),button=el("button","Revisar nome para impressão","text-button"),feedback=el("small",undefined,"name-inline-feedback");
+  let shown=null,saving=false;
+  approve.type="button";approve.disabled=true;button.onclick=()=>openName(row);cell.append(text,status,approve,button,feedback);
+  const show=n=>{if(!cell.isConnected)return;shown=n;row.names=n;text.textContent=n.selected_name||n.proposed||"Sem sugestão disponível";status.textContent=(nameLabels[n.decision]||"Nome a decidir")+(n.special?" · caso especial":"");status.className=n.decision==="approved"?"name-approved":"";approve.textContent=n.decision==="approved"?"✓ Nome aprovado":"Aprovar nome";approve.disabled=saving||n.decision==="approved"||!(n.selected_name||n.proposed);approve.setAttribute("aria-label","Aprovar nome exibido: "+text.textContent);};
+  approve.onclick=async()=>{
+    if(!shown||saving)return;
+    if(shown.instruction){feedback.textContent="Há uma instrução pendente. Confira-a em Revisar nome para impressão antes de aprovar.";feedback.className="name-inline-feedback error";return;}
+    const n=shown,literal=text.textContent;saving=true;approve.disabled=true;button.disabled=true;approve.textContent="Salvando…";feedback.textContent="";busyDecisions++;
+    try{
+      const saved=await api("/api/name-decision",{id:row.id,revision:n.revision||row.revision,name_revision:n.name_revision,version:n.version,decision:"approved",choice:"custom",literal,instruction:"",policy_version:n.policy_version});
+      saving=false;show({...n,...saved,decision:"approved",selected_name:literal,choice:"custom",version:saved.version??n.version+1});feedback.className="name-inline-feedback";feedback.textContent="Nome aprovado. Decisão do CPF preservada.";
+    }catch(e){saving=false;show(n);feedback.className="name-inline-feedback error";feedback.textContent=e.message;}
+    finally{busyDecisions--;button.disabled=false;}
+  };
   if(row.names)queueMicrotask(()=>show(row.names));else api("/api/names?id="+row.id).then(show).catch(()=>{if(cell.isConnected)text.textContent="Abra para conferir a sugestão";});
   return cell;
 }
