@@ -5,6 +5,8 @@ import { config } from "@/lib/config";
 import { safeEqual } from "@/lib/security";
 import { purgeExpiredCpfCache } from "@/lib/cpf-cache";
 import { purgeIdentityAttempts } from "@/lib/identity";
+import { purgeExpiredFormDrafts } from "@/lib/form-drafts";
+import { purgeSubscriberAccess } from "@/lib/subscriber-access";
 
 export const dynamic = "force-dynamic";
 
@@ -16,5 +18,7 @@ export async function POST(req: NextRequest) {
   const r = await drainMailOutbox(30);
   const cacheExpired = await purgeExpiredCpfCache().catch(() => null);
   const identityExpired = await purgeIdentityAttempts().catch(() => null);
-  return NextResponse.json({ ...r, stats: await outboxStats(), cpfCacheExpired: cacheExpired, identityAttemptsExpired: identityExpired });
+  const draftsExpired = await purgeExpiredFormDrafts().catch(() => null);
+  const subscriberExpired = await purgeSubscriberAccess().catch(() => null);
+  return NextResponse.json({ ...r, subscriberExpired, formDraftsExpired: draftsExpired, stats: await outboxStats(), cpfCacheExpired: cacheExpired, identityAttemptsExpired: identityExpired });
 }
