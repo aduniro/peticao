@@ -134,7 +134,7 @@ test("e-mail: descartáveis, Gmail e MX", async () => {
   assert.equal(isDisposable("a@x.mailinator.com"), true);
   assert.equal(isDisposable("a@unir.br"), false);
   assert.equal(dedupEmail("Maria.Souza+petição@Gmail.com"), "mariasouza@gmail.com");
-  assert.equal(dedupEmail("m.souza+x@unir.br"), "m.souza@unir.br");
+  assert.equal(dedupEmail("m.souza+x@unir.br"), "m.souza+x@unir.br");
   _setMxResolverForTests(async (d) => (d === "inexistente.example" ? "none" : d === "caiu.example" ? "erro" : "ok"));
   try {
     assert.equal(await checkMx("a@unir.br"), "ok");

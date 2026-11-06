@@ -27,7 +27,8 @@ export function dedupEmail(email: string): string {
     local = local.split("+")[0].replace(/\./g, "");
     return `${local}@gmail.com`;
   }
-  return `${local.split("+")[0]}@${domain}`;
+  // Fora do Gmail pessoal, não presumir que o provedor trata +etiqueta como alias.
+  return `${local}@${domain}`;
 }
 
 export type MxResult = "ok" | "none" | "erro";
