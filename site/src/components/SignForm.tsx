@@ -14,6 +14,7 @@ import { diagnosticar, type Diagnostico } from "@/lib/email-diagnostico";
 import { CountryUniversityFields, IfesCampusFields, UfCityFields, type ServerState } from "./GeoFields";
 import { maskCpf } from "@/lib/cpf-mask";
 import { formValidationNotice } from "@/lib/form-validation-notice";
+import { signRequest } from "@/lib/sign-request";
 import { useI18n } from "@/i18n/client";
 import { countryName } from "@/i18n";
 import type { MessageKey } from "@/i18n/messages-types";
@@ -121,15 +122,10 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   }
 
   async function post(body: Body) {
-    try {
-      const res = await fetch("/api/assinar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-      const data = (await res.json().catch(() => ({}))) as any;
-      formRef.current?.dispatchEvent(new CustomEvent("form-draft-result", { detail: { outcome: data.ok ? "accepted" : data.identityRequired ? "identity_required" : "rejected", invalidFields: Object.keys(data.errors ?? {}) } }));
-      return { status: res.status, data };
-    } catch (error) {
-      formRef.current?.dispatchEvent(new CustomEvent("form-draft-result", { detail: { outcome: "network_error" } }));
-      throw error;
-    }
+    const result = await signRequest(body);
+    const { data } = result;
+    formRef.current?.dispatchEvent(new CustomEvent("form-draft-result", { detail: { outcome: data.transportError ? "network_error" : data.ok ? "accepted" : data.identityRequired ? "identity_required" : "rejected", invalidFields: Object.keys(data.errors ?? {}) } }));
+    return result;
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -145,6 +141,12 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     else Object.assign(body, { country, university });
     if (whatsappAtivo && wa.numero.trim()) Object.assign(body, { whatsapp: { ddi: wa.ddi, numero: wa.numero }, whatsappConsent: waConsent });
     const { status, data } = await post(body);
+    if (data.transportError) {
+      setState("idle"); resetTs();
+      setFieldNotice({ title: t("field.validationTitle"), text: t("contact.err.generic"), buttonKey: "field.correct" });
+      setNotice("field");
+      return;
+    }
     if (data.identityRequired) {
       pending.current = { body, ticket: data.ticket };
       setIdError(""); setIdLeft(null); setIdLocked(false); setState("idle"); setIdOpen(true);
@@ -174,6 +176,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     setIdBusy(true); setIdError("");
     const { status, data } = await post({ ...pending.current.body, ticket: pending.current.ticket, identity: { method, value } });
     setIdBusy(false);
+    if (data.transportError) { setIdError(t("contact.err.generic")); return; }
     if (data.ok) { setIdOpen(false); resetTs(); setSentTo(emailMask(emailV, true)); setNotice("sent"); return setState("sent"); }
     if (data.restart) { setIdOpen(false); setMsg(tr(data.errorCode, data.error)); return; }
     if (status === 503 || data.error) { setIdError(tr(data.errorCode, data.error ?? t("err.identity_unavailable"))); return; }

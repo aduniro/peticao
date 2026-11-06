@@ -32,3 +32,17 @@ de dois ou mais campos; e-mail inválido; e a caixa regional obrigatória. Em ca
 caso, confirmar mensagem curta, avisos sob os controles, bordas vermelhas,
 apenas um modal e foco/rolagem para o primeiro campo inválido após “Corrigir”.
 Também confirmar que o texto de privacidade e os valores válidos não mudaram.
+
+## Correção emergencial de transporte — 06/11/2026
+
+O envio inicial e a confirmação de identidade deixavam uma rejeição de `fetch`
+propagar até o React. Agora `sign-request.ts` transforma falha de rede ou resposta
+ilegível em resultado tratado. Não há reenvio automático, limpeza dos campos ou
+persistência adicional dos dados digitados. O botão volta a permitir tentativa;
+a confirmação de identidade mantém seu formulário aberto e libera o botão.
+O aviso reutiliza a mensagem existente de indisponibilidade temporária.
+A origem da desconexão não pode ser determinada apenas pela pilha do navegador.
+A tela de desenvolvimento do Next não prova falha no servidor de produção.
+
+Publicação mínima: somente `SignForm.tsx` e `sign-request.ts`, com manifesto sobre
+os arquivos em produção. Nenhuma mudança no banco ou nas regras nome/CPF.
