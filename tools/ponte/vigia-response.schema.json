@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"required":["tipo","assunto","resposta"],"properties":{"tipo":{"type":"string","enum":["resposta","proposta","esclarecimento"]},"assunto":{"type":"string"},"resposta":{"type":"string"}}}

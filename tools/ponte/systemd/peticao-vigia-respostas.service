@@ -1,0 +1,16 @@
+[Unit]
+Description=Respostas privadas do Vigia ao dono da Ponte
+After=network-online.target peticao-vigia.service
+Wants=network-online.target peticao-vigia.service
+StartLimitIntervalSec=0
+[Service]
+WorkingDirectory=/mnt/dev/peticao
+ExecStart=/usr/bin/node /mnt/dev/peticao/tools/ponte/vigia-responder.mjs
+Restart=always
+RestartSec=5
+TimeoutStopSec=15
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+[Install]
+WantedBy=default.target

@@ -52,3 +52,19 @@ A pedido do dono, `peticao-vigia.service` passa a rodar no systemd do usuário `
 - Estado: `systemctl --user status peticao-vigia.service`. Saúde: `.cache/ponte/vigia-health.json` e `vigia-triagem-health.json`. A hora de `ultimaConsulta`, e não somente o processo ativo, comprova uma consulta concluída.
 
 Esta instalação não cria um agente autônomo que executa e-mails, não concede autorizações novas e não expõe segredos. Mantém os critérios de autenticação e o protocolo de aprovação já existente. Os testes de recepção/deduplicação/paginação e as regressões de triagem ficam em `tools/test/vigia.test.mjs` e `tools/test/triagem.test.mjs`.
+
+### Respostas privadas e conversa de aprovação
+
+O serviço complementar `peticao-vigia-respostas.service` acompanha a fila continuamente. Cada inicialização lê a fila e seu estado persistido; mensagens novas são interpretadas por uma execução não interativa do Codex autenticado localmente, em modo somente leitura e com ferramentas de execução, navegador, aplicativos e plugins desabilitadas. Recebe contexto preparado em `tools/ponte/CONTEXTO-VIGIA.md`, sem acesso automático ao histórico integral deste chat. A implementação foi conferida com a [documentação oficial de execução não interativa](https://learn.chatgpt.com/docs/non-interactive-mode) e um teste real sob as mesmas restrições do serviço.
+
+**Destinatário fixo: operator-78ffa47eeb@example.invalid`.** O modelo não escolhe destinatário, CC ou BCC. Mensagens de participantes só geram triagem interna ao dono, nunca resposta automática ao participante.
+
+- Pergunta: resposta baseada no contexto fornecido, indicando quando falta inspeção atual.
+- Pedido de mudança: proposta com novo código AP, aguardando a resposta do dono.
+- APROVADO vinculado ao código conhecido e autenticado: registra `aguardando_execucao` e informa que a execução ainda não começou. Não concede shell nem faz deploy automaticamente. O executor responsável precisa assumir a tarefa e informar início/resultado.
+- MODIFICAR: prepara proposta nova; após o aceite do provedor, substitui a anterior. CANCELAR encerra a proposta.
+- Pedidos e respostas ficam em arquivos privados de `.cache/ponte/entrada`, `respostas` e `conversas`. Os históricos importados antes da ativação ficam preservados e não recebem novamente respostas automáticas.
+- Após o provedor aceitar uma resposta, ela não é reenviada em reinícios. Falha explícita é tentada novamente com o mesmo conteúdo após cinco minutos. Queda durante um envio deixa estado inconclusivo para conferência, em vez de repetir um envio que pode já ter sido aceito.
+- O recebimento da Ponte continua independente do tempo de preparação das respostas. Falhas de geração têm espera de cinco minutos e não avançam a tarefa para executada.
+
+Saúde adicional: `.cache/ponte/responder-health.json`. Conferir ambos os serviços com `systemctl --user status peticao-vigia.service peticao-vigia-respostas.service`. Estas rotinas continuam somente enquanto o computador estiver ligado e conectado; linger mantém o serviço após logout, sem impedir desligamento/suspensão do computador.

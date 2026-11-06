@@ -36,3 +36,44 @@ test("ponte percorre paginação completa e recusa erro ou cursor repetido", asy
   await assert.rejects(listarChaves(async()=>({success:false}),"a","b"));
   await assert.rejects(listarChaves(async()=>({success:true,result:[],result_info:{cursor:"again"}}),"a","b"),/repetida/);
 });
+
+test("vigia responde só ao dono, aguarda aprovação e não reenvia após reinício", async () => {
+  const { responderPedido } = await import("../ponte/vigia-replies.mjs");
+  const dir=mkdtempSync(join(tmpdir(),"vigia-reply-"));
+  const sent=[];let generated=0;
+  const deps={generate:async()=>{generated++;return {tipo:"proposta",assunto:"Ajuste fictício",resposta:"Plano fictício; nenhuma ação executada.",para:"terceiro@example.org"};},send:async m=>{sent.push(m);return {status:202,id:"test-id"};}};
+  try {
+    const request={...message("reply-1"),autenticado:true,corpo:"Prepare um ajuste fictício."};
+    const result=await responderPedido(request,dir,deps);
+    assert.equal(result.estado,"respondido");assert.equal(sent.length,1);assert.equal(sent[0].para,"operator-1608598f41@example.invalid");assert.equal(sent[0].bcc,undefined);
+    assert.equal((await responderPedido(request,dir,deps)).estado,"respondido");assert.equal(sent.length,1);assert.equal(generated,1);
+    const code=result.codigo;
+    assert.equal(JSON.parse(readFileSync(join(dir,"conversas",code+".json"))).estado,"aguardando_aprovacao");
+    await responderPedido({...request,id:"reply-2",assunto:`Re: [${code}]`,corpo:"APROVADO"},dir,deps);
+    assert.equal(sent.length,2);assert.equal(generated,1);assert.equal(sent[1].para,"operator-1608598f41@example.invalid");
+    assert.equal(JSON.parse(readFileSync(join(dir,"conversas",code+".json"))).estado,"aguardando_execucao");
+    assert.match(sent[1].texto,/ainda não foi iniciada/);
+    const ignored=await responderPedido({...request,id:"fake",de:"outro@example.org"},dir,deps);
+    assert.equal(ignored.estado,"ignorado");assert.equal(sent.length,2);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test("envio inconclusivo não é repetido; falha explícita retoma a mesma resposta", async () => {
+  const { responderPedido }=await import("../ponte/vigia-replies.mjs");
+  const dir=mkdtempSync(join(tmpdir(),"vigia-retry-"));
+  let generated=0,sent=0;let clock="2026-11-06T23:00:00Z";
+  const request={...message("uncertain"),autenticado:true,corpo:"Dúvida fictícia."};
+  const generate=async()=>{generated++;return {tipo:"resposta",assunto:"Teste",resposta:"Resposta fictícia"};};
+  try {
+    const deps={generate,now:()=>clock,send:async()=>{sent++;throw new Error("conexão perdida");}};
+    assert.equal((await responderPedido(request,dir,deps)).estado,"envio_inconclusivo");
+    await responderPedido(request,dir,deps);assert.equal(sent,1);assert.equal(generated,1);
+    const retry={...request,id:"retry"};
+    const deps2={generate,now:()=>clock,send:async()=>{sent++;return {status:503};}};
+    assert.equal((await responderPedido(retry,dir,deps2)).estado,"falha_envio");
+    await responderPedido(retry,dir,deps2);assert.equal(sent,2);
+    clock="2026-11-06T23:06:00Z";
+    assert.equal((await responderPedido(retry,dir,{...deps2,send:async()=>{sent++;return {status:202};}})).estado,"respondido");
+    assert.equal(sent,3);assert.equal(generated,2);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
