@@ -64,7 +64,7 @@ class Handler(BaseHTTPRequestHandler):
    return self.send(403,{'error':'Origem não autorizada'})
   try:
    size=int(self.headers.get('Content-Length','0'))
-   if size>16384:raise ValueError('Pedido grande demais')
+   if size<1 or size>16384:raise ValueError('Tamanho de pedido inválido')
    data=json.loads(self.rfile.read(size))
    if self.path=='/api/name-decision':return self.send(200,decide_name(int(data['id']),data,getpass.getuser()))
    if self.path=='/api/bulk-preview':return self.send(200,bulk_preview(data))
