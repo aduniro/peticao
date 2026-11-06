@@ -141,3 +141,14 @@ test("funil de visitas segue o intervalo do calendário (início e fim inclusivo
     assert.equal((await M.monitorSummary("2026-11-03T00:00:00.000Z")).visitors, 3); // chamada antiga continua igual
   } finally { await c.dbmod._closeDbForTests(); }
 });
+
+test("CSV dos rankings: separador ;, BOM, aspas e proteção contra fórmula de planilha", async () => {
+  const { paraCsv, COLUNAS } = await import("./rankings-csv");
+  const csv = paraCsv(COLUNAS.ifes, [{ ifes: "UNIR", docente: 21, tae: 8, nd: 2, total: 34, conf: 29, pend: 5 }, { ifes: '=HYPERLINK("http://x")', docente: 0, tae: 0, nd: 0, total: 0, conf: 0, pend: 0 }, { ifes: 'Inst; "X"', docente: 1, tae: 1, nd: 1, total: 3, conf: 3, pend: 0 }]);
+  assert.ok(csv.startsWith("﻿IFES;Docentes;Técnicos;Não declarados;Total;Confirmadas;Aguardando\r\n"));
+  assert.ok(csv.includes("\r\nUNIR;21;8;2;34;29;5\r\n"));
+  assert.ok(csv.includes("'=HYPERLINK"), "texto que começa com = vira texto, não fórmula");
+  assert.ok(csv.includes('"Inst; ""X"""'));
+  for (const k of ["ifes", "campi", "uf", "cidade", "pais", "universidade"]) assert.ok(COLUNAS[k].length >= 4, k);
+  assert.ok(!Object.values(COLUNAS).flat().some(([c]) => /name|email|cpf|nome_pessoa/.test(c) && c !== "nome"), "sem colunas de pessoas");
+});

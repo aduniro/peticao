@@ -17,5 +17,5 @@ test("menu: itens 'total' só aparecem para o nível total; Minha conta sempre; 
   assert.ok(hrefs(false).includes("/admin/conta") && hrefs(true).includes("/admin/conta"));
   const todos = new Set(GRUPOS.flatMap((g) => g.itens.map((i) => i.href)));
   for (const b of BARRA) { assert.ok(todos.has(b.href), `a barra inferior aponta para ${b.href}, que não está no menu`); assert.ok(b.curto.length <= 8, `rótulo longo demais para a barra: ${b.curto}`); }
-  assert.ok(BARRA.length <= 4, "a barra tem 6 colunas: Filtros + até 4 atalhos + Menu");
+  assert.ok(BARRA.length <= 5, "a barra tem 7 colunas: Menu + até 5 atalhos + Filtros");
 });

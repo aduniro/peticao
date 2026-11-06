@@ -45,7 +45,7 @@ export function RankingAbas({ r, estados }: { r: Resumo; estados: EstadoApoio[] 
 
 /**
  * Conteúdo do popup do estado e da região (o MESMO nos dois): total, confirmadas e aguardando com as categorias dentro de cada uma, IFES e campus líderes.
- * "Ver ranking" RECOLHE essa parte de cima (para o ranking aparecer melhor) e mostra as abas Servidores/Apoiadores; "Esconder o ranking" traz a parte de cima de volta.
+ * "Ver Rankings" RECOLHE essa parte de cima (para o ranking aparecer melhor) e mostra as abas Servidores/Apoiadores; "Esconder Rankings" traz a parte de cima de volta.
  * O ranking nunca nasce aberto.
  */
 export default function DetalheLocal({ conf, pend, totalGeral, resumo, estados, hrefRanking, hrefMapa }: { conf: number; pend: number; totalGeral: number; resumo: Resumo; estados: EstadoApoio[]; hrefRanking: string; hrefMapa?: string }) {
@@ -67,7 +67,7 @@ export default function DetalheLocal({ conf, pend, totalGeral, resumo, estados, 
           </div>
         </div>
       )}
-      <button type="button" className="v2-btn v2-btn-sec v2-largo" aria-expanded={ver} onClick={() => setVer((v) => !v)}>{ver ? "Esconder o ranking" : "Ver ranking de IFES e campi"}</button>
+      <button type="button" className="v2-btn v2-btn-sec v2-largo" aria-expanded={ver} onClick={() => setVer((v) => !v)}>{ver ? "Esconder Rankings" : "Ver Rankings"}</button>
       {ver ? <div className="v2-det-rank"><RankingAbas r={resumo} estados={estados} /></div> : null}
       <div className="v2-det-links">
         <a className="v2-btn v2-btn-fantasma" href={hrefRanking}>Ranking completo →</a>
