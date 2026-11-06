@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { exigirNivel } from "@/lib/admin-api";
 import { config } from "@/lib/config";
 import { decideDomain, KIND_LABELS, type DomainKind } from "@/lib/institutional";
 import { pendingBySource } from "@/lib/domain-import";
@@ -8,7 +8,8 @@ import { requestOrigin } from "@/lib/net";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(req, "edicao");
+  if (bloqueio) return bloqueio;
   const f = await req.formData();
   const url = new URL("/admin/dominios", requestOrigin(req.headers));
   const by = config.approverEmail() || "admin";

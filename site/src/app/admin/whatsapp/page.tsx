@@ -1,4 +1,5 @@
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { redirect } from "next/navigation";
 import { query } from "@/lib/db";
 import { decifrar } from "@/lib/crypto-dados";
@@ -14,7 +15,9 @@ export const metadata = { title: "WhatsApp", robots: { index: false } };
 const CAT: Record<string, string> = { servidor: "Servidor", apoiador: "Apoiador", estrangeiro: "Estrangeiro" };
 
 export default async function WhatsApp({ searchParams }: { searchParams: { msg?: string; q?: string; status?: string } }) {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "total")) redirect("/admin?erro=nivel");
   const est = waEstado();
   const senders = (await query<{ id: number; label: string; phone_cipher: string; phone_last4: string; active: boolean; created_at: string }>("SELECT * FROM whatsapp_senders ORDER BY id")).rows;
   const q = (searchParams.q ?? "").trim().slice(0, 60);
@@ -29,7 +32,8 @@ export default async function WhatsApp({ searchParams }: { searchParams: { msg?:
   const msgs = (await query<{ status: string; n: number }>("SELECT status, COUNT(*)::int n FROM whatsapp_messages GROUP BY status ORDER BY n DESC")).rows;
   const ok = (b: boolean) => (b ? "✅" : "⏳");
   return (
-    <main className="adm-page">
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>WhatsApp</h1>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
 
@@ -94,6 +98,7 @@ export default async function WhatsApp({ searchParams }: { searchParams: { msg?:
         </tbody></table></div>
       <h2>Mensagens enviadas</h2>
       <p>{msgs.length ? msgs.map((m) => `${m.status}: ${m.n}`).join(" · ") : "Nenhuma mensagem enviada."}</p>
+    </div>
     </main>
   );
 }

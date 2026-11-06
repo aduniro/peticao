@@ -18,8 +18,9 @@ export async function provedoresUsados(email: string): Promise<string[]> {
   return r.rows.map((x) => x.provider).filter((p) => p && p !== "fila");
 }
 
-export async function alvos(limite: number): Promise<{ id: number; name: string; email: string; created_at: string }[]> {
-  const ini = await getSetting(CHAVES.inicio, ""), fim = await getSetting(CHAVES.fim, "");
+/** Quem seria reenviado: pendentes criados na janela (por padrão, a gravada nas configurações), nunca reenviados antes e sem bloqueio de e-mail. */
+export async function alvos(limite: number, janela?: { ini: string; fim: string }): Promise<{ id: number; name: string; email: string; created_at: string }[]> {
+  const ini = janela?.ini ?? (await getSetting(CHAVES.inicio, "")), fim = janela?.fim ?? (await getSetting(CHAVES.fim, ""));
   if (!ini || !fim) return [];
   return (await query<{ id: number; name: string; email: string; created_at: string }>(
     `SELECT s.id, s.name, s.email, s.created_at FROM signatures s

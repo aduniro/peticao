@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { config } from "@/lib/config";
 import { brasilia } from "@/lib/time";
 import { outboxStats } from "@/lib/mail/outbox";
@@ -29,7 +30,9 @@ async function comSugestoes(sem: Awaited<ReturnType<typeof semEmailEntregue>>): 
 }
 
 export default async function Emails({ searchParams }: { searchParams: { msg?: string } }) {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
   const [prov, tipos, subs, ses, evs, sem, checks, lentos, status, outbox] = await Promise.all([porProvedor(), porTipo(), porSubdominio(), sesSaude(), eventosResumo(), semEmailEntregue(), verificacoes(), dominiosLentos(), statusProvedores(), outboxStats()]);
   const blackEmails = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason='invalid'")).rows[0].n;
   const suppressed = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason IN ('bounce','complaint')")).rows[0].n;
@@ -40,8 +43,8 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
   const falhasPorMotivo = sem.reduce<Record<string, number>>((a, s) => ((a[s.motivo] = (a[s.motivo] ?? 0) + 1), a), {});
 
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>E-mails</h1>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p>Cadeia transacional: <strong>{config.mailProviders().join(" → ")}</strong> · Marketing: <strong>{config.marketingProviders().join(" → ") || "não configurado"}</strong> · Reply-To: <strong>{config.mailReplyTo() || "nenhum"}</strong></p>
@@ -132,6 +135,7 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
       <h2>Respostas recebidas (Cloudflare Email Routing → Proton)</h2>
       {rp?.ok ? <p>Últimos {rp.dias} dias: <strong>{n(rp.total)}</strong> mensagens recebidas nos endereços dos subdomínios · entregues ao Proton {n(rp.entregues)} · marcadas como spam {n(rp.spam)} · rejeitadas {n(rp.rejeitadas)}. As respostas em si ficam na caixa <code>operator-1608598f41@example.invalid</code>.</p>
         : <p className="box">{rp?.erro ?? "sem consulta"}. Para contar as respostas aqui, crie na Cloudflare um token só de leitura de estatísticas (Analytics Read, zona sancionaintegral.org) e grave-o com <code>chave.mjs cloudflare:analytics</code> e <code>deploy/17-credencial-cloudflare-analytics.sh</code>. Enquanto isso, as respostas chegam normalmente ao Proton.</p>}
+    </div>
     </main>
   );
 }

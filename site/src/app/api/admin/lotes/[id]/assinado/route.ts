@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { exigirNivel } from "@/lib/admin-api";
 import { attachSignedPdf } from "@/lib/batches";
 import { config } from "@/lib/config";
 import { requestOrigin } from "@/lib/net";
@@ -8,7 +8,8 @@ export const dynamic = "force-dynamic";
 
 /** Recebe o PDF do lote já assinado pelo responsável (e-CNPJ). */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(req, "total");
+  if (bloqueio) return bloqueio;
   const url = new URL("/admin/lotes", requestOrigin(req.headers));
   const file = (await req.formData()).get("file");
   if (!(file instanceof File) || file.size === 0) url.searchParams.set("msg", "Escolha o PDF assinado.");

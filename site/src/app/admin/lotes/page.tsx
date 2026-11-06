@@ -1,4 +1,5 @@
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { listBatches, sendingEnabled } from "@/lib/batches";
 import { config } from "@/lib/config";
 import { redirect } from "next/navigation";
@@ -8,12 +9,14 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Lotes", robots: { index: false } };
 
 export default async function Lotes({ searchParams }: { searchParams: { msg?: string } }) {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "total")) redirect("/admin?erro=nivel");
   const batches = await listBatches();
   const enabled = await sendingEnabled();
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>Lotes</h1>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p>
@@ -57,6 +60,7 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
         </tbody>
       </table></div>
       <p className="small">Fluxo: baixe o PDF do lote, assine com o e-CNPJ da ADUNIR (Adobe, LibreOffice ou Assinador do ITI) e envie o PDF assinado. O site confere a estrutura da assinatura; a validação da cadeia ICP-Brasil usa um validador configurável (ICP_VALIDATOR_URL). Em produção, só lote validado como ICP-Brasil pode ser enviado.</p>
+    </div>
     </main>
   );
 }

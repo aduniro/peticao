@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { exigirNivel } from "@/lib/admin-api";
 import { query, audit } from "@/lib/db";
 import { brasilia } from "@/lib/time";
 import { esc } from "@/lib/csv";
@@ -7,7 +7,8 @@ import { esc } from "@/lib/csv";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(req, "leitura");
+  if (bloqueio) return bloqueio;
   // A lista destinada às autoridades NÃO inclui CPF nem e-mail.
   const { rows } = await query<Record<string, string>>(
     `SELECT name, category, role, institution, campus, city, uf, country, university, region_validated, region_criteria, confirmed_at
