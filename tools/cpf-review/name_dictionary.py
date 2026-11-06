@@ -33,10 +33,13 @@ def significant(value):
 
 def display_case(value):
     value = nfc(value)
+    value = re.sub(r"(?<=\s)(?:ii|iii|iv)\b", lambda m: m.group().upper(), value, flags=re.I)
     if not (value.isupper() or value.islower()):
         return value
     def word(match):
         text = match.group()
+        if match.start() > 0 and text.lower() in {"ii", "iii", "iv"}:
+            return text.upper()
         if text.casefold() in PARTICLES:
             return text.lower()
         return "-".join("'".join(part[:1].upper() + part[1:].lower() for part in piece.split("'")) for piece in text.translate(APOSTROPHES).split("-"))
@@ -108,7 +111,10 @@ def resolve(value, evidence=""):
         variants = sorted(set(e["form"] for e in entries), key=lambda s: (s.casefold(), s))
         evidence_variants = sorted(v for v in evidence_words.get(key, set()) if _has_accent(v))
         correction = corrections.get(original.casefold())
-        if correction:
+        if match.start() > 0 and key in {"ii", "iii", "iv"}:
+            result = original.upper()
+            status = "roman_suffix"
+        elif correction:
             result = correction["suggestion"]
             status = "probable_accent_error"
         elif _has_accent(original):
@@ -146,19 +152,12 @@ def suggest(record):
     api = nfc(record.get("nome_api") or "")
     a = resolve(entered)
     b = resolve(api, a["name"])
-    at, bt = significant(entered), significant(api)
-    substantive = bool(at and bt and at != bt)
-    extra = list((Counter(at) - Counter(bt)).elements()) if bt else []
-    missing = list((Counter(bt) - Counter(at)).elements()) if at else []
-    reasons = []
-    if entered and (not api or len(at) >= len(bt)):
-        proposed, source = a["name"], "entered"
-        reasons.append("Nome digitado mais completo em palavras relevantes; empate favorece o digitado." if api else "Sem nome da API; sugestão baseada somente no nome digitado.")
-    else:
-        proposed, source = b["name"], "api"
-        reasons.append("Nome da API mais completo em palavras relevantes.")
-    if substantive:
-        reasons.append("Diferença substantiva de palavras ou ordem: decisão individual obrigatória; não mesclar sobrenomes.")
+    from name_policy import select_name
+    selection = select_name(entered, api, a["name"], b["name"], set(corpus()[1]), record.get("classification"))
+    a["name"], b["name"] = selection["entered_resolved"], selection["api_resolved"]
+    proposed, source, substantive = selection["proposed"], selection["proposed_source"], selection["special"]
+    reasons = selection["reasons"]
+    extra, missing = selection["extra_entered"], selection["missing_entered"]
     if any(d["status"] in ("ambiguous", "uncorroborated", "supplied_uncorroborated", "local_observed_candidate", "supplied_local_observation") for d in a["details"] + b["details"]):
         reasons.append("Há grafias ambíguas ou sem corroboração no corpus; a sugestão não comprova a grafia civil.")
     if any(d["status"] == "probable_accent_error" for d in a["details"] + b["details"]):
@@ -170,4 +169,6 @@ def suggest(record):
             "entered_analysis": a["details"], "api_analysis": b["details"],
             "variant_options": a["alternatives"] + b["alternatives"],
             "extra_entered": extra, "missing_entered": missing,
-            "requires_approval": True}
+            "requires_approval": True, "policy_version": selection["policy_version"],
+            "major_divergence": selection["major_divergence"], "notification_required": selection["notification_required"],
+            "typo_corrections": selection["typo_corrections"], "spacing_corrections": selection["spacing_corrections"]}

@@ -72,14 +72,14 @@ class NameDictionaryTests(unittest.TestCase):
         self.assertTrue(s["special"])
         self.assertEqual(s["proposed"], "Ana Silva Costa")
 
-    def test_special_larger_api_kept_whole(self):
+    def test_complete_api_name_fills_user_omissions(self):
         s = suggest({"name": "Ana Silva", "nome_api": "ANA SILVA COSTA"})
-        self.assertTrue(s["special"])
+        self.assertFalse(s["special"])
         self.assertEqual(s["proposed"], "Ana Silva Costa")
 
-    def test_equal_word_count_prefers_entered_not_character_count(self):
+    def test_equal_word_count_prefers_complete_api_name(self):
         s = suggest({"name": "Ana Sá", "nome_api": "ANA ALBUQUERQUE"})
-        self.assertEqual(s["proposed"], "Ana Sá")
+        self.assertEqual(s["proposed"], "Ana Albuquerque")
         self.assertTrue(s["special"])
 
     def test_particles_do_not_increase_completeness(self):
@@ -121,7 +121,7 @@ class NameDictionaryTests(unittest.TestCase):
 
     def test_no_fabricated_merge_of_surnames(self):
         s = suggest({"name": "Ana Costa", "nome_api": "ANA SILVA"})
-        self.assertEqual(s["proposed"], "Ana Costa")
+        self.assertEqual(s["proposed"], "Ana Silva")
         self.assertNotIn("Ana Costa Silva", s["alternatives"])
 
     def test_ambiguous_variants_visible(self):

@@ -1,0 +1,107 @@
+[
+  {
+    "entered": "Ana Sá",
+    "api": "ANA ALBUQUERQUE",
+    "proposed": "Ana Albuquerque",
+    "source": "api",
+    "major": true
+  },
+  {
+    "entered": "João Silva",
+    "api": "JOAO ANTONIO DA SILVA",
+    "proposed": "João Antônio da Silva",
+    "source": "api",
+    "major": false
+  },
+  {
+    "entered": "João A Silva",
+    "api": "JOAO ANTONIO SILVA",
+    "proposed": "João Antônio Silva",
+    "source": "api",
+    "major": false
+  },
+  {
+    "entered": "Bruno de Souza Barreto",
+    "api": "BRUNO SOUZA BARRETO",
+    "proposed": "Bruno de Souza Barreto",
+    "source": "api",
+    "major": false
+  },
+  {
+    "entered": "João da Silva",
+    "api": "JOAO ANTONIO SILVA",
+    "proposed": "João Antônio da Silva",
+    "source": "api",
+    "major": false
+  },
+  {
+    "entered": "Maria Silva Costa",
+    "api": "MARIA SILVA",
+    "proposed": "Maria Silva Costa",
+    "source": "entered",
+    "major": false
+  },
+  {
+    "entered": "Maria Silva X",
+    "api": "MARIA SILVA",
+    "proposed": "Maria Silva",
+    "source": "api",
+    "major": false
+  },
+  {
+    "entered": "Marrcio Silva Costa",
+    "api": "MARCIO SILVA",
+    "proposed": "Márcio Silva Costa",
+    "source": "entered",
+    "major": true
+  },
+  {
+    "entered": "Silva José",
+    "api": "JOSE SILVA",
+    "proposed": "José Silva",
+    "source": "api",
+    "major": true
+  },
+  {
+    "entered": "Ana Costa",
+    "api": "PAULO RIBEIRO",
+    "proposed": "Paulo Ribeiro",
+    "source": "api",
+    "major": true
+  },
+  {
+    "entered": "António Gonçalves",
+    "api": "ANTONIO GONCALVES",
+    "proposed": "António Gonçalves",
+    "source": "api",
+    "major": false
+  },
+  {
+    "entered": "Fulano Segundo",
+    "api": "FULANO II",
+    "proposed": "Fulano II",
+    "source": "api",
+    "major": true
+  },
+  {
+    "entered": "João de Sant Ana Silva",
+    "api": "JOAO DE SANTANA SILVA",
+    "proposed": "João de Santana Silva",
+    "source": "api",
+    "major": false
+  },
+  {
+    "entered": "João de Sant Ana Silva Costa",
+    "api": "JOAO DE SANTANA SILVA",
+    "proposed": "João de Santana Silva Costa",
+    "source": "entered",
+    "major": false
+  },
+  {
+    "entered": "Ana Maria Silva",
+    "api": "ANAMARIA SILVA",
+    "proposed": "Anamaria Silva",
+    "source": "api",
+    "major": false
+  }
+]
