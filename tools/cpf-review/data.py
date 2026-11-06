@@ -10,6 +10,7 @@ LABELS={
  'possivel_erro_de_digitacao':'Possível erro de digitação','ordem_diferente':'Nomes fora de ordem',
  'possivel_nome_incompleto_ou_abreviado':'Nome incompleto ou abreviado','nome_insuficiente':'Nome insuficiente','inconclusivo':'Comparação inconclusiva',
  'nao_encontrado':'CPF não encontrado pela API','sem_consulta':'Sem retorno associado',
+ 'estrangeiro_sem_cpf':'Exterior — revisão do nome (CPF não aplicável)',
  'erro_consulta':'Consulta com erro ou interrompida','variacao_de_particulas':'Diferença de partículas — válida',
  'coincidencia_exata':'Correspondência exata','coincidencia_normalizada':'Correspondência de nome normalizado'}
 VALID={'coincidencia_exata','coincidencia_normalizada','variacao_de_particulas'}
@@ -59,7 +60,7 @@ def ingest(source,dbpath=DB):
  with sqlite3.connect((source/'consultas.sqlite').as_uri()+'?mode=ro',uri=True) as c:
   c.row_factory=sqlite3.Row;lookups={r['cpf']:dict(r) for r in c.execute('SELECT * FROM lookups')}
  allowed=['seq','name','email','category','institution','role','campus','city','uf','country','university',
-          'region_declared','region_validated','created_at','consent_at','confirmed_at','status','ip','user_agent','cpf_name_check','identity_method']
+          'region_declared','region_validated','created_at','consent_at','confirmed_at','status','ip','user_agent','cpf_name_check','identity_method','verify_code','campus_ibge','email_domain_kind']
  changed=0;material=0
  with connect(dbpath) as db:
   db.execute('BEGIN IMMEDIATE')
@@ -69,11 +70,12 @@ def ingest(source,dbpath=DB):
   existing={r['id']:r for r in db.execute('SELECT * FROM records')}
   seen=set()
   for s in signatures:
-   if not s.get('cpf_hash'):continue
+   if not s.get('cpf_hash') and s.get('category')!='estrangeiro':continue
+   s=dict(s);s['cpf_hash']=s.get('cpf_hash') or ''
    seen.add(s['id'])
    old=existing.get(s['id']);old_data=json.loads(old['data']) if old else {}
    inherited=None
-   if not old:
+   if not old and s['cpf_hash']:
     inherited=db.execute("SELECT * FROM records WHERE cpf_hash=? AND decision_origin='manual' ORDER BY (SELECT max(at) FROM decisions WHERE record_id=records.id AND reviewer<>'importacao') DESC,updated_at DESC LIMIT 1",(s['cpf_hash'],)).fetchone()
    retained=old_data
    if not retained and inherited:retained=json.loads(inherited['data'])
@@ -93,7 +95,7 @@ def ingest(source,dbpath=DB):
     classification=result['nome_classificacao']
     record.update(nome_api=lookup['name'],nascimento_api=lookup.get('birth'),mae_api=lookup.get('mother'),sexo_api=lookup.get('sex'),consulta_em=lookup.get('queried_at'))
    elif lookup:classification='nao_encontrado' if lookup['status']=='nao_encontrado' else 'erro_consulta'
-   else:classification='sem_consulta'
+   else:classification='estrangeiro_sem_cpf' if s.get('category')=='estrangeiro' else 'sem_consulta'
    record.update(classification=classification,classification_label=LABELS.get(classification,classification),comparison=result,
                  nascimento_informado=None,mae_informada=None,sexo_informado=None,
                  api_cache_ativo=shown_from_active,api_evidencia_historica=bool(lookup and lookup.get('status')=='ok' and not shown_from_active),

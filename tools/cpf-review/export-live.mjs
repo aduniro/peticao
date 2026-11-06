@@ -28,7 +28,7 @@ try {
   await client.query("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY");
   const mode = (await client.query("SELECT current_setting('transaction_read_only') AS mode, now() AS at")).rows[0];
   if (mode.mode !== "on") throw new Error("READ_ONLY_EXPORT_NOT_READ_ONLY");
-  const signatures = (await client.query("SELECT id,cpf_hash,seq,name,email,category,institution,role,campus,city,uf,country,university,region_declared,region_validated,created_at,consent_at,confirmed_at,status,ip,user_agent,cpf_name_check,identity_method FROM signatures ORDER BY id")).rows;
+  const signatures = (await client.query("SELECT id,cpf_hash,seq,name,email,category,institution,role,campus,city,uf,country,university,region_declared,region_validated,created_at,consent_at,confirmed_at,status,ip,user_agent,cpf_name_check,identity_method,verify_code,campus_ibge,email_domain_kind FROM signatures ORDER BY id")).rows;
   const rows = (await client.query("SELECT cpf_hash,payload,fetched_at,expires_at FROM cpf_lookup_cache WHERE expires_at>now() AND fetched_at+interval '30 days'>now() ORDER BY cpf_hash")).rows;
   const records = rows.map(decode);
   await client.query("COMMIT");

@@ -5,12 +5,14 @@ from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs,urlparse
 from data import BASE,DB,connect,decide,ingest,listing,stats
+from name_review import schema,get_names,decide_name,bulk_preview,bulk_apply,bulk_undo,instructions
 os.umask(0o077);BASE.mkdir(parents=True,exist_ok=True,mode=0o700);BASE.chmod(0o700)
 tokenfile=BASE/'.access-token'
 if not tokenfile.exists():tokenfile.write_text(secrets.token_urlsafe(32));tokenfile.chmod(0o600)
 TOKEN=tokenfile.read_text();PORT=int(os.environ.get('CPF_REVIEW_PORT','8765'));ROOT=Path(__file__).parent
 if not DB.exists():ingest(Path(json.loads((BASE/'fonte-atual.json').read_text())['directory']))
 DB.chmod(0o600)
+with connect() as db:schema(db)
 class Handler(BaseHTTPRequestHandler):
  def log_message(self,*args):pass
  def send(self,status,data,kind='application/json; charset=utf-8',headers=None):
@@ -33,10 +35,21 @@ class Handler(BaseHTTPRequestHandler):
    return self.send(303,b'',headers={'Set-Cookie':f'review={TOKEN}; HttpOnly; SameSite=Strict; Path=/','Location':'/'})
   if not self.authorized():return self.send(403,{'error':'Abra a revisão pelo comando local.'})
   try:
-   if url.path=='/api/records':return self.send(200,listing(args))
+   if url.path=='/api/records':
+    result=listing(args)
+    with connect() as db:
+     from name_review import names_for
+     for row in result['rows']:
+      source=db.execute('SELECT * FROM records WHERE id=?',(row['id'],)).fetchone();row['names']=names_for(source,db)
+    return self.send(200,result)
+   if url.path=='/api/names':return self.send(200,get_names(int(args['id'])))
+   if url.path=='/api/name-instructions':return self.send(200,instructions(),headers={'Content-Disposition':'attachment; filename=name-instructions.json'})
    if url.path=='/api/stats':
     from sync import read_state
-    return self.send(200,dict(stats(),sync=read_state()))
+    with connect() as db:
+     name_counts={r['decision']:r['n'] for r in db.execute('SELECT decision,count(*) n FROM name_decisions GROUP BY decision')}
+     last=db.execute('SELECT max(id) FROM name_history').fetchone()[0]
+    return self.send(200,dict(stats(),sync=read_state(),name_decisions=name_counts,names_updated_at=last))
    if url.path=='/api/history':
     with connect() as db:rows=[dict(r) for r in db.execute('SELECT at,previous,current,reviewer,note FROM decisions WHERE record_id=? ORDER BY id DESC',(int(args['id']),))]
     return self.send(200,rows)
@@ -51,8 +64,15 @@ class Handler(BaseHTTPRequestHandler):
    return self.send(403,{'error':'Origem não autorizada'})
   try:
    size=int(self.headers.get('Content-Length','0'))
-   if size>4096:raise ValueError('Pedido grande demais')
+   if size>16384:raise ValueError('Pedido grande demais')
    data=json.loads(self.rfile.read(size))
+   if self.path=='/api/name-decision':return self.send(200,decide_name(int(data['id']),data,getpass.getuser()))
+   if self.path=='/api/bulk-preview':return self.send(200,bulk_preview(data))
+   if self.path=='/api/bulk-apply':return self.send(200,bulk_apply(data['token'],getpass.getuser()))
+   if self.path=='/api/bulk-undo':return self.send(200,bulk_undo(data['batch_id'],getpass.getuser()))
+   if self.path=='/api/preview':
+    from preview import generate
+    return self.send(200,generate(DB,BASE/'previas'))
    if self.path=='/api/decision':return self.send(200,decide(int(data['id']),data['decision'],data['revision'],getpass.getuser()))
    if self.path=='/api/reload':return self.send(200,ingest(Path(json.loads((BASE/'fonte-atual.json').read_text())['directory'])))
    if self.path=='/api/sync':
