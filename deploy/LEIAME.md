@@ -48,3 +48,15 @@ Fluxo de uma mudança:
 2. `git -C /mnt/dev/peticao-parcial push vps producao`: o gancho atualiza o `peticao-stage` (só avanço; histórico reescrito é recusado; o que não está no git, como `geo-data`, `data` e segredos, não é tocado).
 3. Deploy como sempre: `ssh peticao-root /usr/local/sbin/peticao-deploy`. O arquivo `VERSAO` do stage guarda o commit enviado.
 Modificar de dentro da VPS: clone de trabalho `/home/adunir/peticao` (`git pull`, editar, `git commit`, `git push origin producao`). O `rsync` antigo para o stage continua funcionando enquanto o git não for validado.
+
+## Publicação vinculada ao candidato (integração de 06/11 — não instalada)
+
+A revisão de integração substitui o sinal antigo que publicava qualquer conteúdo presente no stage. O candidato passa a ter manifesto de código sob controle de root, com SHA-256 da árvore e commit informativo. A Central envia o hash obtido na simulação; o executor verifica a identidade e o publicador verifica origem/cópia novamente antes de trocar a aplicação. Alterações durante a compilação recusam a publicação.
+
+A instalação exige o conjunto consistente desta versão: `publication.py`, `03-instalar-app.sh`, `peticao-atualizar-stage.sh` e `23-publicacao-segura.sh`, seguidos de `21-publicar.sh` e `peticao-publicar-executar.sh` para o botão. O 23 instala os arquivos fixos e faz backup do publicador anterior; **não publica o app**. Não executar o antigo 05 apenas para atualizar o publicador, pois ele também configura outros serviços.
+
+Após preparar o stage, root executa `/usr/local/sbin/peticao-publicar-preparar`. O atualizador Git novo faz isso automaticamente quando executado como root. A simulação passa então a mostrar o candidato disponível. Sem descritor válido, o botão não habilita a confirmação de publicação. Toda instalação/publicação desta integração aguarda autorização final do responsável.
+
+O comando manual continua sem argumentos e vincula sua cópia à origem capturada no início. A ferramenta `tools/cpf-name-rule/deploy.py` desta mesma versão compartilha a trava durante backup, preparação e eventual rollback. Usar ferramentas e instaladores da mesma versão; não misturar o script antigo com o publicador atualizado.
+
+Testes de infraestrutura: `python3 -m unittest discover -s deploy/test -v`. Ensaio do banco a partir de `site/`, usando porta/diretório de desenvolvimento isolados: `node scripts/with-db.mjs ./node_modules/.bin/tsx ../deploy/test/admin-schema-upgrade.mjs`. O ensaio recusa banco remoto e exige `DEV_DB_PORT` explícita. Nunca apontar os testes para produção.

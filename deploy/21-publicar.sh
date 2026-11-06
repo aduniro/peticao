@@ -14,6 +14,7 @@ fi
 AQUI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [ -f "$AQUI/peticao-publicar-executar.sh" ] || { echo "Falta $AQUI/peticao-publicar-executar.sh (copie os dois arquivos juntos)."; exit 1; }
 [ -x /usr/local/sbin/peticao-deploy ] || { echo "Não achei /usr/local/sbin/peticao-deploy: instale o app primeiro (03-instalar-app.sh)."; exit 1; }
+[ -f /usr/local/lib/peticao/publication.py ] && grep -q PETICAO_CANDIDATO_SHA256 /usr/local/sbin/peticao-deploy || { echo "Instale antes deploy/23-publicacao-segura.sh; executor antigo não vincula o candidato."; exit 1; }
 install -m 755 -o root -g root "$AQUI/peticao-publicar-executar.sh" /usr/local/sbin/peticao-publicar-executar
 install -d -m 755 -o root -g root /var/lib/peticao-publicar
 [ -d /var/lib/peticao ] || install -d -m 750 -o peticao -g peticao /var/lib/peticao   # já existe na instalação normal: não muda as permissões dele

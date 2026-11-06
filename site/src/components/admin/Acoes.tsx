@@ -7,9 +7,10 @@ type Saida = { efeito?: string; palavra?: string | null; resultado?: unknown; er
 const ERROS: Record<string, string> = { confirmacao: "A palavra de confirmação não confere.", ocupado: "Esta ação já está em andamento. Aguarde.", parametros: "Parâmetros inválidos.", falhou: "A ação falhou.", acao_desconhecida: "Ação desconhecida.", stepup: "A confirmação extra venceu. Confirme de novo." };
 
 function Cartao({ a }: { a: Item }) {
+  const [candidato, setCandidato] = useState("");
   const [ini, setIni] = useState(""), [fim, setFim] = useState(""), [conf, setConf] = useState("");
   const [saida, setSaida] = useState<Saida | null>(null), [ocupado, setOcupado] = useState(false), [simulou, setSimulou] = useState(false);
-  const parametros = () => (a.id === "reenvio.iniciar" ? { ini: ini ? new Date(ini).toISOString() : undefined, fim: fim ? new Date(fim).toISOString() : undefined } : {});
+  const parametros = () => (a.id === "reenvio.iniciar" ? { ini: ini ? new Date(ini).toISOString() : undefined, fim: fim ? new Date(fim).toISOString() : undefined } : a.id === "publicar.pedir" ? { candidato: candidato || undefined } : {});
   const rodar = async (modo: "simular" | "executar") => {
     setOcupado(true);
     try {
@@ -17,7 +18,12 @@ function Cartao({ a }: { a: Item }) {
       const j: Saida = await r.json().catch(() => ({ erro: "falhou" }));
       if (r.status === 403 && j.erro === "stepup") { window.location.assign("/admin/confirmar?volta=/admin/acoes"); return; }
       setSaida(j);
-      if (modo === "simular" && !j.erro) setSimulou(true);
+      if (modo === "simular" && !j.erro) {
+        const value = (j.resultado as { candidato?: { sha256?: unknown } } | undefined)?.candidato?.sha256;
+        const valid = typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
+        if (a.id === "publicar.pedir") setCandidato(valid ? value : "");
+        setSimulou(a.id !== "publicar.pedir" || valid);
+      }
       if (modo === "executar" && !j.erro) { setSimulou(false); setConf(""); }
     } catch { setSaida({ erro: "falhou" }); } finally { setOcupado(false); }
   };

@@ -24,3 +24,35 @@ A8: o resumo regional passa a agregar as listas completas antes de aplicar o top
 Ainda não concluído: A3 (publicação vinculada ao candidato), contratos/autoria de A6 e demais controles da Etapa 1, ensaio explícito das seis tabelas, QA visual/permissões e testes cumulativos finais. Não há autorização para deploy do admin. O texto da tela Minha conta sobre encerramento de sessões foi proposto ao dono, seguindo a regra de aprovação de avisos; aguarda resposta e não foi alterado. O candidato não pode ser liberado com o aviso antigo contradizendo a nova revogação.
 
 As Etapas 2–7 do plano continuam no escopo. A instalação do Vigia contínuo e do respondedor privado foi tratada no checkout principal a pedido expresso do dono, sem alterações na aplicação da VPS ou na revisão local de CPF/nome.
+
+## A3 — candidato de publicação vinculado à simulação
+
+Implementado no candidato, ainda sem instalação na VPS:
+
+- `publication.py` produz manifesto SHA-256 dos caminhos, conteúdos e permissão de execução do proprietário, incluindo `public/data`, e exclui dependências, build, runtime e segredos. O commit de `VERSAO` é metadado; o hash da árvore é a identidade efetiva.
+- O descritor fica sob controle de root. A simulação devolve o hash e o componente de Ações o devolve na confirmação; a API recusa parâmetro desconhecido, hash ausente ou diferente. O sinal é criado com exclusividade, sem sobrescrever pedido concorrente.
+- O executor só chama o programa fixo; consome o sinal, valida idade, tipo, identificador e candidato, e recusa reuso de identificador. Não aceita comando enviado pelo navegador.
+- Publicador manual, botão, atualizador do stage e ferramenta de correção compartilham `/run/lock/peticao-deploy.lock` (root:adunir, 640). O descritor herdado é validado pelo inode e pela trava; não é uma variável que simplesmente desliga a proteção.
+- A origem é conferida antes da cópia; origem e cópia são conferidas novamente antes da troca. Mudança durante o build preserva a aplicação anterior.
+- O instalador `deploy/23-publicacao-segura.sh` prepara a infraestrutura e preserva uma cópia do publicador antigo, sem publicar o app. A ativação do botão exige o publicador atualizado. O Git, se instalado e atualizado, prepara o manifesto após a atualização do stage; também existe comando root fixo `/usr/local/sbin/peticao-publicar-preparar`.
+
+Validação: oito testes Python de identidade e pipeline, incluindo cópia alterada durante o build, stage alterado durante o build, descritor herdado correto e descritor indevido; testes TypeScript de pedido/simulação/replay; checagem de tipos e build de produção aprovados. O pipeline foi ensaiado em diretórios temporários com comandos de infraestrutura substituídos, sem chamar o deploy real.
+
+### Regressão cumulativa
+
+A primeira rodada teve 225/234 aprovações. Nove falhas vinham de fixtures anteriores à consulta obrigatória de apoiadores, de expectativas antigas sobre iniciais e de espera fixa para o log assíncrono de e-mails. Foram portadas apenas as atualizações pertinentes dos testes atuais; não foram levadas mudanças públicas não publicadas. O teste de normalização de e-mails manteve a expectativa do backend da VPS, sem importar a política de aliases ainda não publicada.
+
+Os 30 testes afetados passaram após o ajuste. A rodada cumulativa seguinte passou **235/235**, com zero falhas. As verificações de logs agora aguardam as linhas efetivas, com prazo máximo, em vez de assumir que 600 ms bastam.
+
+### Ensaio de atualização do banco
+
+`deploy/test/admin-schema-upgrade.mjs` usa o esquema SQL da produção preservado em fixture com SHA-256 e exige banco de desenvolvimento em loopback/porta explícita. Cria esquema isolado com duas assinaturas fictícias, executa a inicialização real do candidato, reaplica o DDL e verifica:
+
+- adição exata de `admin_users`, `admin_sessions`, `admin_reset`, `admin_stepup`, `admin_acoes` e `contact_replies`;
+- definições das tabelas anteriores preservadas;
+- todos os campos dos assinantes e configuração de controle preservados;
+- bootstrap do esquema anterior continua compatível com o banco expandido.
+
+O ensaio passou e remove seu esquema ao terminar. Não usa registros de produção nem o SQLite de revisão.
+
+Ainda pendentes na Etapa 1: A6 (autoria, estados finais e idempotência), revisão dos demais controles sensíveis, padronização/QA visual e permissões nos seis tamanhos, e conferência final do candidato com a produção mais recente. A aprovação do texto de Minha conta continua pendente. As Etapas 2–7 permanecem no escopo completo; este checkpoint não conclui a integração e não autoriza deploy.
