@@ -28,8 +28,9 @@ export default async function Dispersao() {
   for (const r of rows) if (r.owner_id !== null) kids.set(r.owner_id, [...(kids.get(r.owner_id) ?? []), r]);
   const roots = rows.filter((r) => r.owner_id === null && (kids.get(r.id)?.length ?? 0) > 0).sort((a, b) => b.invited_confirmed - a.invited_confirmed);
   return (
-    <main className="wide">
-      <p><a href="/admin">← Painel</a> · <a href="/admin/indicacoes">Indicações</a> · <a href="/admin/monitor">Monitor</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
+      <p><a href="/admin/indicacoes">Indicações</a> · <a href="/admin/monitor">Monitor</a></p>
       <h1>Dispersão da campanha</h1>
       <p>De onde vieram as assinaturas: link direto, código de uma organização ou link/QR de outro assinante. <a href="/api/admin/dispersao">Baixar base interna (CSV, com e-mail e horário de Brasília)</a>. <strong>Não envie esse arquivo às autoridades.</strong></p>
 
@@ -78,6 +79,7 @@ export default async function Dispersao() {
           </tbody>
         </table>
       </div>
+    </div>
     </main>
   );
 }

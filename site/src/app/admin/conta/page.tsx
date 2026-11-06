@@ -12,8 +12,8 @@ export default async function Conta({ searchParams }: { searchParams: { erro?: s
   if (!s) redirect("/admin");
   const erro = searchParams.erro === "fraca" ? searchParams.d || "Escolha uma senha mais forte." : searchParams.erro ? ERRO[searchParams.erro] : null;
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>Minha conta</h1>
       <table className="adm-table"><tbody>
         <tr><td>Nome</td><td>{s.nome}</td></tr><tr><td>E-mail</td><td>{s.email}</td></tr><tr><td>Nível de acesso</td><td><strong>{ROTULO_NIVEL[s.nivel]}</strong></td></tr>
@@ -31,6 +31,7 @@ export default async function Conta({ searchParams }: { searchParams: { erro?: s
           <button>Trocar a senha</button>
         </form>
       ) : <p className="small">{ERRO.semconta}</p>}
+    </div>
     </main>
   );
 }

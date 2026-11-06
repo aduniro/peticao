@@ -15,8 +15,8 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
   const batches = await listBatches();
   const enabled = await sendingEnabled();
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>Lotes</h1>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p>
@@ -60,6 +60,7 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
         </tbody>
       </table></div>
       <p className="small">Fluxo: baixe o PDF do lote, assine com o e-CNPJ da ADUNIR (Adobe, LibreOffice ou Assinador do ITI) e envie o PDF assinado. O site confere a estrutura da assinatura; a validação da cadeia ICP-Brasil usa um validador configurável (ICP_VALIDATOR_URL). Em produção, só lote validado como ICP-Brasil pode ser enviado.</p>
+    </div>
     </main>
   );
 }

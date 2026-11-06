@@ -19,8 +19,8 @@ export default async function Usuarios({ searchParams }: { searchParams: { erro?
   if (!nivelOk(s.nivel, "total")) redirect("/admin?erro=nivel");
   const usuarios = await listarUsuarios();
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>Usuários do painel</h1>
       {searchParams.msg && MSG[searchParams.msg] ? <p className="box ok" role="status">{MSG[searchParams.msg]}</p> : null}
       {searchParams.erro ? <p className="box err" role="alert">{ERRO[searchParams.erro] ?? "Não foi possível concluir."}</p> : null}
@@ -59,6 +59,7 @@ export default async function Usuarios({ searchParams }: { searchParams: { erro?
         <p className="small">A pessoa recebe um e-mail com um link para criar a própria senha. Nenhuma senha é enviada nem mostrada.</p>
         <button>Criar e enviar o convite</button>
       </form>
+    </div>
     </main>
   );
 }

@@ -17,8 +17,9 @@ export default async function Indicacoes({ searchParams }: { searchParams: { msg
   const names = new Map(withNames);
   const total = rows.reduce((a, r) => ({ v: a.v + r.visits, s: a.s + r.signed }), { v: 0, s: 0 });
   return (
-    <main>
-      <p><a href="/admin">← Painel</a> · <a href="/admin/monitor">Monitor de acessos</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
+      <p><a href="/admin/monitor">Monitor de acessos</a></p>
       <h1>Indicações e links pessoais</h1>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p>{rows.length} códigos · <strong>{total.v}</strong> acessos por indicação · <strong>{total.s}</strong> assinaturas confirmadas por indicação.
@@ -44,6 +45,7 @@ export default async function Indicacoes({ searchParams }: { searchParams: { msg
           {rows.length === 0 && <tr><td colSpan={6}>Nenhum código ainda. Eles surgem quando alguém confirma a assinatura.</td></tr>}
         </tbody>
       </table>
+    </div>
     </main>
   );
 }

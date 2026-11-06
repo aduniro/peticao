@@ -15,7 +15,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Reco
   return (
     <main className="adm-page">
       <h1>Assinaturas</h1>
-      <p className="adm-sub">Os filtros valem para o mapa e para a tabela ao mesmo tempo. Clique em um círculo para filtrar a tabela por aquele local.</p>
+      <p className="adm-sub">Busque, filtre, ordene e baixe a lista. Para ver no mapa, use o botão “Ver estes filtros no mapa”.</p>
       <Explorador inicial={qs} />
     </main>
   );

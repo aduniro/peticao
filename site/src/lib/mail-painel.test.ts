@@ -16,12 +16,14 @@ test("painel de e-mails: registro por provedor/tipo, devoluções de todos os pr
   const { isSuppressed } = await import("./mail/suppression");
   const { logCheck } = await import("./email-check-log");
   const wait = () => new Promise((r) => setTimeout(r, 600));
+  // O log de tentativas é gravado em segundo plano: espera pelas linhas (até 10 s) em vez de um tempo fixo, que falhava com a máquina carregada.
+  const esperaLog = async (n: number) => { for (let i = 0; i < 100; i++) { if ((await query<{ c: number }>("SELECT COUNT(*)::int c FROM mail_log")).rows[0].c >= n) return; await new Promise((r) => setTimeout(r, 100)); } };
 
   // 1/4) cada tentativa fica registrada com provedor, tipo e remetente; falha de um provedor e sucesso do seguinte
   const m = { to: "Pessoa@Exemplo.org", subject: "s", text: "t" };
   await deliver(m, ["ses", "sendpulse"], { ses: async () => { throw new Error("cota excedida"); }, sendpulse: async () => {} } as never, (p: string, k?: string) => `Nome <${k}@${p}.sancionaintegral.org>`, "confirmacao", attemptLogger(m, "confirmacao"));
   logQueued({ to: "fila@exemplo.org" }, "confirmacao", "todos falharam");
-  await wait();
+  await esperaLog(3);
   const log = (await query<any>("SELECT provider,status,kind,to_addr,from_addr FROM mail_log ORDER BY id")).rows;
   assert.deepEqual(log.map((l: any) => `${l.provider}:${l.status}`).sort(), ["fila:queued", "sendpulse:sent", "ses:failed"]);
   assert.equal(log.find((l: any) => l.provider === "ses").to_addr, "pessoa@exemplo.org");

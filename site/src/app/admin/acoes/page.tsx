@@ -14,11 +14,12 @@ export default async function AcoesPagina() {
   if (!stepupValido(s)) redirect("/admin/confirmar?volta=/admin/acoes");
   const lista = ACOES.map((a) => ({ id: a.id, grupo: a.grupo, titulo: a.titulo, palavra: a.palavra ?? null, efeito: a.validar({}).ok ? a.descrever((a.validar({}) as any).p) : "" }));
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>Central de Ações</h1>
       <p className="small">Cada botão faz uma coisa fixa e fica registrado (quem, quando, o quê). Primeiro "Simular" mostra o que aconteceria sem mudar nada; só depois "Executar", digitando a palavra de confirmação.</p>
       <Acoes acoes={lista} />
+    </div>
     </main>
   );
 }
