@@ -234,6 +234,43 @@ const SCHEMA_SQL = `
     usado BOOLEAN NOT NULL DEFAULT false,
     criado_em TIMESTAMPTZ NOT NULL DEFAULT now()
   );
+  CREATE TABLE IF NOT EXISTS admin_stepup (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+    sessao_id INTEGER NOT NULL REFERENCES admin_sessions(id) ON DELETE CASCADE,
+    codigo_hash TEXT NOT NULL,
+    expira_em TIMESTAMPTZ NOT NULL,
+    tentativas INTEGER NOT NULL DEFAULT 0,
+    usado BOOLEAN NOT NULL DEFAULT false,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX IF NOT EXISTS admin_stepup_sessao ON admin_stepup(sessao_id);
+  CREATE TABLE IF NOT EXISTS contact_replies (
+    id SERIAL PRIMARY KEY,
+    contact_id INTEGER NOT NULL REFERENCES contact_messages(id) ON DELETE CASCADE,
+    rodada INTEGER NOT NULL DEFAULT 1,
+    versao TEXT NOT NULL CHECK (versao IN ('texto','card')),
+    user_id INTEGER,
+    por TEXT,
+    assunto TEXT NOT NULL,
+    codigo_pessoal TEXT,
+    agendada BOOLEAN NOT NULL DEFAULT false,
+    ok BOOLEAN NOT NULL DEFAULT false,
+    erro TEXT,
+    criada_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (contact_id, rodada, versao)
+  );
+  CREATE TABLE IF NOT EXISTS admin_acoes (
+    id SERIAL PRIMARY KEY,
+    ts TIMESTAMPTZ NOT NULL DEFAULT now(),
+    user_id INTEGER,
+    email TEXT,
+    acao TEXT NOT NULL,
+    parametros JSONB,
+    modo TEXT NOT NULL,
+    resultado JSONB,
+    ok BOOLEAN NOT NULL DEFAULT false
+  );
   CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,
     ts TEXT NOT NULL,

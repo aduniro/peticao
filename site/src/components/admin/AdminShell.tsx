@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 type Alertas = { emails: number; lotes: number; contato: number };
-const ITENS: { href: string; rotulo: string; icone: string; alerta?: keyof Alertas; mobile?: boolean }[] = [
+const ITENS: { href: string; rotulo: string; icone: string; alerta?: keyof Alertas; mobile?: boolean; total?: boolean }[] = [
   { href: "/admin", rotulo: "Início", icone: "M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z", mobile: true },
   { href: "/admin/mapa", rotulo: "Mapa", icone: "M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z", mobile: true },
   { href: "/admin/assinaturas", rotulo: "Assinaturas", icone: "M4 4h16v4H4zm0 6h16v4H4zm0 6h16v4H4z", mobile: true },
@@ -15,16 +15,22 @@ const ITENS: { href: string; rotulo: string; icone: string; alerta?: keyof Alert
   { href: "/admin/indicacoes", rotulo: "Indicações", icone: "M18 8a3 3 0 1 0-2.8-4H15a3 3 0 0 0 .1 1L8.9 8.4a3 3 0 1 0 0 4.2l6.2 3.4A3 3 0 1 0 16 14.7L9.8 11.3a3 3 0 0 0 0-.6l6.2-3.4A3 3 0 0 0 18 8z" },
   { href: "/admin/monitor", rotulo: "Monitor de acessos", icone: "M3 13h4l3-9 4 16 3-7h4" },
   { href: "/admin/dispersao", rotulo: "Dispersão", icone: "M5 5h4v4H5zm10 0h4v4h-4zM5 15h4v4H5zm10 3a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM9 7h6M7 9v6" },
+  { href: "/admin/acoes", rotulo: "Ações", icone: "M13 2L4 14h7l-1 8 9-12h-7z", total: true },
+  { href: "/admin/usuarios", rotulo: "Usuários", icone: "M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0zM4 21a8 8 0 0 1 16 0z", total: true },
+  { href: "/admin/conta", rotulo: "Minha conta", icone: "M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm-8 9a8 8 0 0 1 16 0z" },
 ];
 
 const Icone = ({ d }: { d: string }) => <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>;
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+/** `quem`: usuário logado e nível (vindos do servidor). Itens marcados `total` só aparecem para o nível Total (a checagem de verdade é feita em cada página e rota). */
+export type Quem = { nome: string; nivel: string; rotuloNivel: string };
+
+export default function AdminShell({ children, quem, ehTotal }: { children: React.ReactNode; quem?: Quem; ehTotal?: boolean }) {
   const solo = (usePathname() ?? "").startsWith("/admin/mapa/tela");
-  return solo ? <div className="adm adm-solo">{children}</div> : <Moldura>{children}</Moldura>;
+  return solo ? <div className="adm adm-solo">{children}</div> : <Moldura quem={quem} ehTotal={!!ehTotal}>{children}</Moldura>;
 }
 
-function Moldura({ children }: { children: React.ReactNode }) {
+function Moldura({ children, quem, ehTotal }: { children: React.ReactNode; quem?: Quem; ehTotal: boolean }) {
   const path = usePathname() ?? "/admin";
   const [al, setAl] = useState<Alertas>({ emails: 0, lotes: 0, contato: 0 });
   const [mais, setMais] = useState(false);
@@ -35,8 +41,9 @@ function Moldura({ children }: { children: React.ReactNode }) {
     return () => { vivo = false; clearInterval(t); };
   }, []);
   useEffect(() => setMais(false), [path]);
+  const itens = ITENS.filter((i) => !i.total || ehTotal);
   const ativo = (href: string) => (href === "/admin" ? path === "/admin" : path === href || path.startsWith(href + "/"));
-  const titulo = ITENS.find((i) => ativo(i.href))?.rotulo ?? "Painel";
+  const titulo = itens.find((i) => ativo(i.href))?.rotulo ?? "Painel";
   if (path.startsWith("/admin/mapa/tela")) return <>{children}</>; // mapa em tela cheia: sem menu
   const link = (i: (typeof ITENS)[number], classe: string) => (
     <a key={i.href} href={i.href} className={`${classe}${ativo(i.href) ? " on" : ""}`} aria-current={ativo(i.href) ? "page" : undefined}>
@@ -47,8 +54,9 @@ function Moldura({ children }: { children: React.ReactNode }) {
     <div className="adm">
       <aside className="adm-side" aria-label="Menu do painel">
         <a className="adm-brand" href="/admin"><span>PLV 12/2026</span><small>Painel da campanha</small></a>
-        <nav>{ITENS.map((i) => link(i, "adm-item"))}</nav>
+        <nav>{itens.map((i) => link(i, "adm-item"))}</nav>
         <div className="adm-side-foot">
+          {quem ? <p className="small" style={{ margin: "0 0 6px" }}>{quem.nome}<br />Nível: {quem.rotuloNivel}</p> : null}
           <a href="/" target="_blank" rel="noopener">Ver o site ↗</a>
           <form method="post" action="/api/admin/sair"><button className="adm-out">Sair</button></form>
         </div>
@@ -56,7 +64,7 @@ function Moldura({ children }: { children: React.ReactNode }) {
       <header className="adm-top"><strong>{titulo}</strong><form method="post" action="/api/admin/sair"><button className="adm-out" aria-label="Sair">Sair</button></form></header>
       <div className="adm-content">{children}</div>
       <nav className="adm-tabs" aria-label="Menu do painel">
-        {ITENS.filter((i) => i.mobile).map((i) => link(i, "adm-tab"))}
+        {itens.filter((i) => i.mobile).map((i) => link(i, "adm-tab"))}
         <button type="button" className={`adm-tab${mais ? " on" : ""}`} onClick={() => setMais((m) => !m)} aria-expanded={mais}>
           <Icone d="M5 12h.01M12 12h.01M19 12h.01" /><span>Mais</span>{(al.lotes + al.contato) > 0 && <b className="adm-dot">{al.lotes + al.contato > 9 ? "9+" : al.lotes + al.contato}</b>}
         </button>
@@ -64,7 +72,7 @@ function Moldura({ children }: { children: React.ReactNode }) {
       {mais && (<>
         <div className="adm-scrim" onClick={() => setMais(false)} />
         <div className="adm-sheet" role="dialog" aria-label="Mais opções"><div className="adm-grip" />
-          <div className="adm-sheet-grid">{ITENS.filter((i) => !i.mobile).map((i) => link(i, "adm-tile"))}</div>
+          <div className="adm-sheet-grid">{itens.filter((i) => !i.mobile).map((i) => link(i, "adm-tile"))}</div>
           <a className="adm-tile" href="/" target="_blank" rel="noopener"><span>Ver o site ↗</span></a>
           <form method="post" action="/api/admin/sair"><button className="adm-out wide">Sair do painel</button></form>
         </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ADMIN_COOKIE, sessaoDoCookie } from "./admin";
-import { nivelOk, type Nivel, type SessaoAdmin } from "./admin-users";
+import { nivelOk, stepupValido, type Nivel, type SessaoAdmin } from "./admin-users";
 import { clientIp } from "./net";
 import { rateLimit } from "./ratelimit";
 
@@ -9,12 +9,14 @@ import { rateLimit } from "./ratelimit";
  *  - leitura: consultas e estatísticas; edição: o que mostra dados de contato ou corrige cadastros, e-mails, domínios e filas;
  *  - exclusão: remover dados (reservado: hoje nenhuma rota remove); total: lotes, envio ao Governo, WhatsApp, usuários, ações.
  * Confere: sessão no banco (usuário ativo e nível atual), mesma origem (contra requisição forjada de outro site) e limite de taxa.
+ * Com `{ stepup: true }` exige também a confirmação extra (senha de novo + código por e-mail, válida por 15 min): sem ela responde 403 `{ erro: "stepup" }`.
  * Devolve a resposta de erro (401 sem sessão, 403 sem nível) ou null se pode seguir.
  */
-export async function exigirNivel(req: NextRequest, nivel: Nivel, limite = 120): Promise<NextResponse | null> {
+export async function exigirNivel(req: NextRequest, nivel: Nivel, limite = 120, opcoes: { stepup?: boolean } = {}): Promise<NextResponse | null> {
   const s = await quemAge(req);
   if (!s) return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 401 });
   if (!nivelOk(s.nivel, nivel)) return NextResponse.json({ ok: false, erro: "O seu nível de acesso não permite esta ação." }, { status: 403 });
+  if (opcoes.stepup && !stepupValido(s)) return NextResponse.json({ ok: false, erro: "stepup" }, { status: 403 });
   const origin = req.headers.get("origin");
   if (origin) { try { if (new URL(origin).host !== (req.headers.get("x-forwarded-host") ?? req.headers.get("host"))) return NextResponse.json({ ok: false, erro: "Origem não permitida." }, { status: 403 }); } catch { return NextResponse.json({ ok: false, erro: "Origem inválida." }, { status: 403 }); } }
   if (!["GET", "HEAD"].includes(req.method) && !origin && req.headers.get("sec-fetch-site") !== "same-origin") return NextResponse.json({ ok: false, erro: "Origem ausente." }, { status: 403 });
