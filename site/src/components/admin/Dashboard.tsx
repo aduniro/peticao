@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { filtrosParaQuery, filtrosVazios, type Filtros } from "@/lib/assinaturas-filtros";
 import type { Faceta, Ponto } from "@/lib/assinaturas-explorar";
 import Grafico from "./Grafico";
-import { Caixa, Faixa, Multi, Segmentado } from "./controles";
+import { Caixa, Multi } from "./controles";
+import SeletorPeriodo from "./ui/SeletorPeriodo";
 import { FiltrosShell, useEhMobile } from "./shell/filtros";
 
 
@@ -15,7 +16,6 @@ type Dados = {
   ranking: Record<"instituicao" | "campus" | "cargo" | "cidade" | "pais" | "universidade", { nome: string; valor: number }[]>;
   pontos: Ponto[]; semLocal: number;
 };
-const JANELAS = [{ v: "24h", t: "24 h" }, { v: "7d", t: "7 dias" }, { v: "30d", t: "30 dias" }, { v: "all", t: "Tudo" }] as const;
 const CATEG: Faceta[] = [{ v: "servidor", n: 0, rotulo: "Servidor" }, { v: "apoiador", n: 0, rotulo: "Apoiador" }, { v: "estrangeiro", n: 0, rotulo: "Estrangeiro" }];
 const CARGOS: Faceta[] = [{ v: "docente", n: 0, rotulo: "Docente" }, { v: "tae", n: 0, rotulo: "Técnico-administrativo (TAE)" }];
 const brData = (d: string) => d.split("-").reverse().join("/");
@@ -23,13 +23,10 @@ const brData = (d: string) => d.split("-").reverse().join("/");
 /** Painel de entrada: KPIs, gráficos (Chart.js), mapa de estados em degradê, campi e controles interativos. */
 export default function Dashboard() {
   const [f, setF] = useState<Filtros>(filtrosVazios());
-  const [janela, setJanela] = useState<"24h" | "7d" | "30d" | "all">("30d");
   const [dados, setDados] = useState<Dados | null>(null);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [opcoes, setOpcoes] = useState<Record<string, Faceta[]>>({});
-  const [dias, setDias] = useState<string[]>([]);
-  const [faixa, setFaixa] = useState<[number, number] | null>(null);
   const [minimo, setMinimo] = useState(1);
   const [campi, setCampi] = useState(true);
   const [auto, setAuto] = useState(false);
@@ -42,27 +39,27 @@ export default function Dashboard() {
   const carregar = useMemo(() => async () => {
     const id = ++seq.current; setCarregando(true);
     try {
-      const r = await fetch(`/api/admin/dashboard?${qs}${qs ? "&" : ""}janela=${janela}`);
+      // Com período no calendário (de/ate) o funil de visitas segue o mesmo intervalo; sem período, vale tudo.
+      const r = await fetch(`/api/admin/dashboard?${qs}${qs ? "&" : ""}janela=all`);
       const j = await r.json();
       if (id !== seq.current) return;
       if (!j.ok) { setErro(j.erro ?? "Falha ao carregar"); return; }
       setDados(j); setErro("");
     } catch { if (id === seq.current) setErro("Falha de rede"); }
     if (id === seq.current) setCarregando(false);
-  }, [qs, janela]);
+  }, [qs]);
 
   useEffect(() => { const t = setTimeout(carregar, 150); return () => clearTimeout(t); }, [carregar]);
   useEffect(() => { if (!auto) return; const t = setInterval(carregar, 60_000); return () => clearInterval(t); }, [auto, carregar]);
-  // opções dos dropdowns (sem filtro de data) e limites do slider de datas: uma vez
+  // opções dos dropdowns (sem filtro de data): uma vez
   useEffect(() => {
     fetch("/api/admin/assinaturas/explorar?limite=10").then((r) => r.json()).then((j) => { if (j.ok) setOpcoes(j.facetas); }).catch(() => {});
-    fetch("/api/admin/dashboard?janela=all").then((r) => r.json()).then((j) => { if (j.ok) { const d: string[] = j.serie.map((x: any) => x.d); setDias(d); setFaixa(d.length ? [0, d.length - 1] : null); } }).catch(() => {});
   }, []);
 
   const set = (k: keyof Filtros, v: string[]) => setF((a) => ({ ...a, [k]: v }));
   const tem = (k: "regiao" | "cpf" | "status", v: string) => f[k].includes(v);
   const alterna = (k: "regiao" | "cpf" | "status", v: string, on: boolean) => setF((a) => ({ ...a, [k]: on ? [...a[k], v] : a[k].filter((x) => x !== v) }));
-  const aplicaFaixa = (r: [number, number]) => { setFaixa(r); setF((a) => ({ ...a, de: r[0] > 0 ? dias[r[0]] : "", ate: r[1] < dias.length - 1 ? dias[r[1]] : "" })); };
+  const mudaPeriodo = (p: { de: string; ate: string }) => setF((a) => ({ ...a, de: p.de, ate: p.ate }));
   const pontos = useMemo(() => (dados?.pontos ?? []).filter((p) => p.conf + p.pend >= minimo), [dados, minimo]);
   const maxPonto = Math.max(1, ...(dados?.pontos ?? []).map((p) => p.conf + p.pend));
   const t = dados?.totais;
@@ -78,7 +75,7 @@ export default function Dashboard() {
     <section className="adm-dash" aria-label="Visão geral">
       <div className="adm-card">
         <div className="adm-barra-filtros">
-          <Segmentado rotulo="Período das visitas (funil)" opcoes={JANELAS.map((j) => ({ v: j.v, t: j.t }))} valor={janela} onChange={setJanela} />
+          <SeletorPeriodo rotulo="Período (assinaturas, gráficos, mapa e visitas)" valor={{ de: f.de, ate: f.ate }} onChange={mudaPeriodo} />
           <button type="button" className="adm-btn adm-filtros-btn" hidden={mobile} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
         </div>
         <FiltrosShell><div hidden={!aberto && !mobile} className="adm-filtros-corpo">
@@ -98,10 +95,7 @@ export default function Dashboard() {
           <Caixa rotulo="CPF conferido" marcado={tem("cpf", "sim")} onChange={(v) => alterna("cpf", "sim", v)} />
           <Caixa rotulo="Só confirmadas" marcado={tem("status", "confirmed")} onChange={(v) => alterna("status", "confirmed", v)} />
           <Caixa rotulo="Atualizar a cada 1 min" marcado={auto} onChange={setAuto} />
-          {ativos ? <button type="button" className="adm-btn" onClick={() => { setF(filtrosVazios()); if (dias.length) setFaixa([0, dias.length - 1]); }}>Limpar filtros ({ativos})</button> : null}
-        </div>
-        <div className="adm-barra-filtros" style={{ marginTop: 10 }}>
-          {faixa && dias.length > 1 ? <Faixa rotulo="Intervalo de datas" min={0} max={dias.length - 1} valor={faixa} onChange={aplicaFaixa} formato={(n) => brData(dias[n] ?? "")} /> : null}
+          {ativos ? <button type="button" className="adm-btn" onClick={() => setF(filtrosVazios())}>Limpar filtros ({ativos})</button> : null}
         </div>
         </div></FiltrosShell>
       </div>

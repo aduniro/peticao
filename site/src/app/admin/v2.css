@@ -212,3 +212,20 @@
 .v2-flyout-item.on, .v2-gaveta-item.on { background: rgba(0,156,59,.26); color: #fff; box-shadow: inset 3px 0 0 #8fe0b0; }
 .v2-gaveta h4, .v2-flyout h3 { color: rgba(255,255,255,.62); }
 .v2-gaveta-pe { border-top-color: rgba(255,255,255,.14); } .v2-quem { color: rgba(255,255,255,.85); }
+
+/* ===== Fase 4: detalhe do estado/região, líderes, rankings em abas, região expansível ===== */
+.v2-popup { max-height: min(86dvh, 640px); overflow-y: auto; width: 330px; }
+.v2-det table { width: 100%; border-collapse: collapse; } .v2-det td { padding: 3px 0; font-size: .9rem; } .v2-det td:last-child { text-align: right; }
+.v2-det tr.sub td { padding: 0 0 6px; font-size: .78rem; color: rgba(255,255,255,.72); text-align: left; }
+.v2-cats { display: flex; flex-wrap: wrap; gap: 2px 12px; } .v2-cats b { color: #fff; }
+.v2-lideres { margin: 8px 0; display: grid; gap: 6px; } .v2-lideres p { margin: 0; display: grid; grid-template-columns: 1fr auto; column-gap: 8px; align-items: baseline; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.07); }
+.v2-lideres small { grid-column: 1 / -1; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.6); } .v2-lideres b { font-size: .95rem; } .v2-lideres span { font-size: .82rem; color: #8fe0b0; text-align: right; }
+.v2-det-rank { margin: 8px 0; } .v2-rank { list-style: none; margin: 0; padding: 0; counter-reset: r; }
+.v2-rank li { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.08); font-size: .86rem; } .v2-rank li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .v2-rank li b { color: #fff; } .v2-rank li small { grid-column: 1 / -1; color: rgba(255,255,255,.6); font-size: .72rem; }
+.v2-det-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; } .v2-det-links .v2-btn { flex: 1 1 auto; text-align: center; margin: 0; }
+.v2-vazio { color: rgba(255,255,255,.6); font-size: .86rem; margin: 6px 0; }
+.v2-reg-resumo { flex: 1; min-width: 0; display: grid; grid-template-columns: 92px minmax(40px, 1fr) auto 38px; gap: 10px; align-items: center; }
+.v2-reg-nome { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .v2-reg-resumo b { font-variant-numeric: tabular-nums; } .v2-reg-resumo small { color: rgba(255,255,255,.6); text-align: right; }
+.v2-reg-trilho { display: block; height: 8px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; } .v2-reg-trilho i { display: block; height: 100%; border-radius: 99px; background: #2fb872; }
+.v2-expansor .v2-det td { color: inherit; } .v2-expansor-corpo .v2-aba-btn { font-size: .8rem; padding: 6px 12px; }
+.v2-popup { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.35) transparent; } .v2-popup::-webkit-scrollbar { width: 6px; } .v2-popup::-webkit-scrollbar-thumb { background: rgba(255,255,255,.3); border-radius: 6px; }

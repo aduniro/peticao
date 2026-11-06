@@ -1,17 +1,18 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MapaSVG, { type Geo, type UfDado } from "./MapaSVG";
-import BarraLista from "../ui/BarraLista";
+import Expansor from "../ui/Expansor";
+import DetalheLocal, { type Resumo } from "./DetalheLocal";
 import { RAMPA, classe, quantis } from "@/lib/quantis";
 
 type Dados = {
   geradoEm: string; meta: number; loteTamanho: number;
   totais: { confirmadas: number; pendentes: number; servidores: number; apoiadores: number; estrangeiros: number; cpfConferido: number };
-  ufs: UfDado[]; regioes: { id: string; nome: string; conf: number; pend: number }[]; exterior: { conf: number; pend: number };
+  ufs: (UfDado & Resumo)[]; regioes: ({ id: string; nome: string; conf: number; pend: number } & Resumo)[]; exterior: { conf: number; pend: number };
   hoje: { iniciadas: number; confirmadas: number }; ontem: { iniciadas: number; confirmadas: number };
   funil: { visitors: number; formStarts: number; signedVisitors: number; confirmedVisitors: number };
 };
-type Pop = { uf: string; x: number; y: number; inst?: { nome: string; valor: number }[]; campus?: { nome: string; valor: number }[] };
+type Pop = { uf: string; x: number; y: number };
 const n0 = (n: number) => n.toLocaleString("pt-BR");
 const ORDEM = ["N", "NE", "CO", "SE", "S"];
 
@@ -41,17 +42,12 @@ export default function Painel() {
   const dif = d ? d.hoje.confirmadas - d.ontem.confirmadas : 0;
   const ufsOrd = useMemo(() => [...(d?.ufs ?? [])].sort((a, b) => ORDEM.indexOf(a.regiao) - ORDEM.indexOf(b.regiao) || b.total - a.total), [d]);
 
-  async function abrir(uf: string, x: number, y: number) {
-    setPop({ uf, x, y });
-    try {
-      const r = await fetch(`/api/admin/assinaturas/explorar?uf=${uf}&status=confirmed&limite=10`); const j = await r.json();
-      if (j.ok) setPop((p) => (p && p.uf === uf ? { ...p, inst: (j.facetas.instituicao ?? []).slice(0, 4).map((f: any) => ({ nome: f.v, valor: f.n })), campus: (j.facetas.campus ?? []).slice(0, 4).map((f: any) => ({ nome: f.v, valor: f.n })) } : p));
-    } catch { /* o popup funciona sem os detalhes */ }
-  }
+  // Os detalhes do estado (categorias, IFES e campus líderes, rankings) já vêm no payload do painel: abrir o popup não faz nova consulta.
+  const abrir = (uf: string, x: number, y: number) => setPop({ uf, x, y });
   useEffect(() => { const k = (e: KeyboardEvent) => e.key === "Escape" && setPop(null); document.addEventListener("keydown", k); return () => document.removeEventListener("keydown", k); }, []);
   const u = pop && d?.ufs.find((x) => x.uf === pop.uf);
   const left = pop ? Math.max(8, Math.min(pop.x + 14, (typeof window !== "undefined" ? window.innerWidth : 1200) - 320)) : 0;
-  const top = pop ? Math.max(70, Math.min(pop.y - 20, (typeof window !== "undefined" ? window.innerHeight : 800) - 330)) : 0;
+  const top = pop ? Math.max(70, Math.min(pop.y - 20, (typeof window !== "undefined" ? window.innerHeight : 800) - 520)) : 0;
 
   return (
     <section className="v2-painel" aria-label="Painel ao vivo">
@@ -88,7 +84,20 @@ export default function Painel() {
             </div>
             <ul className="v2-legenda">{d ? [["Servidores", t!.servidores, "#2a78d6"], ["Apoiadores", t!.apoiadores, "#eb6834"], ["Estrangeiros", t!.estrangeiros, "#1baf7a"]].map(([nome, v, cor]) => <li key={nome as string}><i style={{ background: cor as string }} />{nome} <b>{n0(v as number)}</b></li>) : null}<li><i style={{ background: "#8fe0b0" }} />CPF conferido <b>{d ? n0(t!.cpfConferido) : "—"}</b></li></ul>
           </div>
-          <div className="v2-cartao"><BarraLista titulo="Por região" itens={(d?.regioes ?? []).map((r) => ({ nome: r.nome, valor: r.conf + r.pend, href: undefined }))} limite={5} /></div>
+          <div className="v2-cartao">
+            <h3 className="v2-barras-t">Por região</h3>
+            {(d?.regioes ?? []).length === 0 ? <p className="v2-vazio">Carregando…</p> : (() => {
+              const lista = d!.regioes, maximo = Math.max(1, ...lista.map((r) => r.conf + r.pend)), soma = lista.reduce((a, r) => a + r.conf + r.pend, 0) || 1;
+              return lista.map((r) => {
+                const v = r.conf + r.pend, ufs = d!.ufs.filter((x) => x.regiao === r.id).map((x) => x.uf).join(",");
+                return (
+                  <Expansor key={r.id} resumo={<span className="v2-reg-resumo"><span className="v2-reg-nome" title={r.nome}>{r.nome}</span><span className="v2-reg-trilho"><i style={{ width: `${Math.max(2, (v / maximo) * 100)}%` }} /></span><b>{n0(v)}</b><small>{Math.round((v / soma) * 100)}%</small></span>}>
+                    <DetalheLocal conf={r.conf} pend={r.pend} totalGeral={tot} resumo={r} rankingAberto hrefRanking={`/admin/rankings?uf=${ufs}`} hrefMapa={`/admin/mapa?uf=${ufs}`} />
+                  </Expansor>
+                );
+              });
+            })()}
+          </div>
         </div>
 
         <div className="v2-cartao v2-mapa-cartao">
@@ -102,13 +111,7 @@ export default function Painel() {
         <div className="v2-popup" style={{ left, top }} role="dialog" aria-label={`Detalhes de ${u.nome}`}>
           <button type="button" className="v2-popup-x" aria-label="Fechar" onClick={() => setPop(null)}>✕</button>
           <h3>{u.nome} <small>{u.uf}</small></h3>
-          <table><tbody>
-            <tr><td>Total</td><td><b>{n0(u.total)}</b></td></tr><tr><td>Confirmadas</td><td>{n0(u.conf)}</td></tr><tr><td>Aguardando</td><td>{n0(u.pend)}</td></tr>
-            <tr><td>% do total</td><td>{tot ? ((u.total / tot) * 100).toFixed(1).replace(".", ",") : 0}%</td></tr>
-          </tbody></table>
-          {pop.inst?.length ? <><h4>Principais instituições</h4><ul>{pop.inst.map((i) => <li key={i.nome}><span>{i.nome}</span><b>{i.valor}</b></li>)}</ul></> : null}
-          {pop.campus?.length ? <><h4>Campi</h4><ul>{pop.campus.map((i) => <li key={i.nome}><span>{i.nome}</span><b>{i.valor}</b></li>)}</ul></> : null}
-          <a className="v2-btn v2-btn-primario v2-largo" href={`/admin/mapa?uf=${u.uf}`}>Abrir no mapa interativo</a>
+          <DetalheLocal conf={u.conf} pend={u.pend} totalGeral={tot} resumo={u} hrefRanking={`/admin/rankings?uf=${u.uf}`} hrefMapa={`/admin/mapa?uf=${u.uf}`} />
         </div>
       )}
     </section>
