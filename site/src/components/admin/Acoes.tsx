@@ -19,7 +19,7 @@ function Cartao({ a }: { a: Item }) {
       setSaida(j);
       if (modo === "simular" && !j.erro) setSimulou(true);
       if (modo === "executar" && !j.erro) { setSimulou(false); setConf(""); }
-    } finally { setOcupado(false); }
+    } catch { setSaida({ erro: "falhou" }); } finally { setOcupado(false); }
   };
   return (
     <section className="box" style={{ marginBottom: 16 }}>

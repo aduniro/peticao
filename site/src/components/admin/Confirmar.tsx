@@ -9,6 +9,7 @@ export default function Confirmar({ email, volta }: { email: string; volta: stri
   const chamar = async (corpo: object) => {
     setOcupado(true); setErro(null);
     try { const r = await fetch("/api/admin/stepup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(corpo), credentials: "same-origin" }); return { ok: r.ok, j: await r.json().catch(() => ({})) }; }
+    catch { return { ok: false, j: { erro: "falhou" } }; }
     finally { setOcupado(false); }
   };
   const pedir = async () => { const r = await chamar({ passo: "pedir" }); if (r.ok) setEnviado(true); else setErro(MSG[r.j.erro] ?? "Não foi possível enviar o código."); };

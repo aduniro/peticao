@@ -16,7 +16,7 @@ export default function ResponderContato({ contactId, assuntoInicial, jaRespondi
       if (r.status === 403 && j.erro === "stepup") { window.location.assign("/admin/confirmar?volta=/admin/contato"); return null; }
       if (!r.ok) { setErro((ERROS[j.erro] ?? "Não foi possível.") + (j.detalhe ? ` (${j.detalhe})` : "")); return null; }
       return j;
-    } finally { setOcupado(false); }
+    } catch { setErro(ERROS.falhou); return null; } finally { setOcupado(false); }
   };
   const ver = async () => { const j = await chamar("previa"); if (j) { setPrevia(j.previa); setOk(false); } };
   const enviar = async () => {
