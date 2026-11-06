@@ -44,7 +44,9 @@ button.ghost { background: transparent; } .ghost-light { background: rgba(255,25
 label, .field > label, .datefield > label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: .92rem; }
 .field { display: flex; flex-direction: column; gap: 4px; }
 input:not([type=checkbox]):not([type=radio]), select { font: inherit; font-size: 16px; min-height: 48px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); color: var(--fg); width: 100%; }
-input[aria-invalid="true"] { border-color: var(--err); }
+input[aria-invalid="true"], select[aria-invalid="true"] { border: 2px solid var(--err) !important; }
+input[aria-invalid="true"]:focus-visible, select[aria-invalid="true"]:focus-visible { outline-color: var(--err); }
+input[type="checkbox"][aria-invalid="true"] { outline: 2px solid var(--err); outline-offset: 2px; accent-color: var(--err); }
 .row { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
 .consent { flex-direction: row !important; align-items: flex-start; gap: 10px !important; font-weight: 400 !important; }
 .consent input { width: 22px; height: 22px; margin-top: 2px; flex: none; accent-color: var(--brand); }
@@ -318,7 +320,8 @@ dialog.howto .modal-actions button:last-child { background: var(--brand); border
 .segmented.three button { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: normal; word-break: normal; font-size: .76rem; }
 .seg-cell > button { padding-right: 16px !important; padding-left: 3px !important; }
 textarea { font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); color: var(--fg); width: 100%; resize: vertical; min-height: 140px; }
-textarea[aria-invalid="true"] { border-color: var(--err); }
+textarea[aria-invalid="true"] { border: 2px solid var(--err) !important; }
+textarea[aria-invalid="true"]:focus-visible { outline-color: var(--err); }
 
 /* ===== v2: topbar com ícones, card do governo, fim da página, logos ===== */
 .appbar-share { display: none; }

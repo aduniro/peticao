@@ -83,7 +83,7 @@ test("rascunhos: cliente não recebe desafios nem modifica avisos existentes", (
   assert.ok(!component.includes("sessionStorage"));
   assert.ok(component.includes("loadDraftCapability(storage.current)"));
   const form = readFileSync(new URL("../components/SignForm.tsx", import.meta.url), "utf8");
-  assert.ok(form.includes('<input type="checkbox" name="consent" /> <span>{foreign ? consentForeign : consentBr}</span>'));
+  assert.match(form, /<input type="checkbox" name="consent" aria-invalid=\{!!errors\.consent\} \/> <span>\{foreign \? consentForeign : consentBr\}<\/span>/);
   assert.ok(form.includes('{foreign ? t("f.privacyForeign") : t("f.privacy")}'));
 });
 
