@@ -46,3 +46,23 @@ A tela de desenvolvimento do Next não prova falha no servidor de produção.
 
 Publicação mínima: somente `SignForm.tsx` e `sign-request.ts`, com manifesto sobre
 os arquivos em produção. Nenhuma mudança no banco ou nas regras nome/CPF.
+
+## Prioridade emergencial — blur e dicas de e-mail, 06/11/2026
+
+Pedido posterior do responsável: modais de validação somente após clicar em
+Assinar; sair do campo mostra apenas erro inline vermelho e contorno. Para e-mail,
+o texto vermelho é somente “E-mail inválido”, preservando a dica já existente da
+categoria. Removidas as sugestões de correção/exemplos de Gmail da apresentação
+junto ao campo, inclusive “Usar este”. A consulta remota no blur permanece, sem
+abrir modal. Não foram alteradas as regras do backend de e-mail/CPF.
+
+CPF incompleto ou inválido passa a permanecer destacado após o primeiro blur,
+mesmo com menos de 11 dígitos. Corrigir para um CPF matematicamente válido remove
+o erro local. A validação ao enviar permanece; campos e consentimento são
+preservados. Modais de ajuda acionados expressamente pelo usuário não são erros
+automáticos de blur.
+
+A integração administrativa foi interrompida para esta prioridade. Pacote de
+produção limitado a `src/components/SignForm.tsx`, preparado sobre a fonte atual
+da VPS. QA local intercepta `/api/assinar` e `/api/email/validar`, usando dados
+fictícios, sem criar assinatura ou consumir consulta paga.
