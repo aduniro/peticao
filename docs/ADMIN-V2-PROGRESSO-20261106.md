@@ -16,3 +16,9 @@ Evidências mais recentes em `/mnt/dev/peticao/.cache/admin-audit-20261106/`: su
 Detalhes e comandos: `docs/ETAPAS-ADMIN-01.md` e `deploy/LEIAME.md` dentro do candidato. O ensaio usa apenas banco de desenvolvimento em loopback/porta explícita e dados fictícios. O SQLite de revisão não participa desses testes.
 
 Próxima etapa: A6 (autoria das correções, estados finais do Terminal e idempotência de respostas), demais controles sensíveis, QA visual/permissões em seis tamanhos e conferência final com a VPS atual. O aviso de Minha conta ainda aguarda a aprovação de texto já solicitada ao dono. Triagem interna, mensagens/editor, edição recuperável, IAs e documentos das Etapas 2–7 continuam pendentes no escopo completo. O término desta rodada de testes não conclui o objetivo nem autoriza publicação.
+
+## Checkpoint seguinte — autoria e Terminal
+
+`4ca0273` implementa autoria real nas rotas de correção/reenvio e resultado autenticado do Terminal, separado da saída do comando. O registro começa sem sucesso, e o resultado só é finalizado após validação do protocolo/assinatura; a ação e a auditoria são atualizadas atomicamente. Serviço antigo é recusado antes de receber o comando. O visual do console foi preservado.
+
+A suíte cumulativa atual passou **244/244**, com tipos e build aprovados (`stage01-cumulative-terminal.log`, `stage01-typecheck-actions.log`, `stage01-build-actions.log` no diretório de evidências). A6 continua parcial: as respostas de contato ainda exigem fila durável e reconciliação de envios incertos. O diagnóstico está em `docs/A6-RESPOSTAS-PENDENTES.md` do candidato. Não houve deploy ou instalação de serviço na VPS.
