@@ -53,3 +53,44 @@ A importação confere SHA-256 do pacote, manifesto, nomes de arquivos, unicidad
 Banco: `/mnt/dev/cpfs/revisao/revisao.sqlite`.
 Estado da conexão/checkpoint: `/mnt/dev/cpfs/revisao/sync-state.json`.
 Backup anterior ao pipe: `/mnt/dev/cpfs/backups/revisao-pipe-20261106T143836Z/revisao.sqlite`.
+
+## Nomes para impressão — revisão independente
+
+A coluna **Nome para impressão** abre um editor próprio. Compare os originais e
+as sugestões de acentuação; escolha a proposta, o nome digitado, o nome da API ou
+um texto literal. Aprovar/recusar um nome não muda a decisão do CPF. Recusar a
+sugestão deixa a impressão aguardando outra escolha. Os originais e o histórico
+são preservados. Mudanças materiais nos nomes de origem exigem nova conferência;
+enriquecimentos cadastrais não desfazem decisões de CPF.
+
+O dicionário é versionado e contém candidatos, não provas da grafia civil. Consulte
+`/mnt/dev/peticao/tools/cpf-review/NAMES-SOURCES.md`. O nome mais completo é
+escolhido inteiro, pelo número de palavras relevantes; empates favorecem o digitado.
+Sobrenomes adicionais/diferentes e inversões ficam para decisão individual.
+
+Os botões de lote exigem uma categoria e mostram uma prévia. Consideram os filtros
+atuais em **todas as páginas**, somente pendentes; não sobrescrevem decisões já
+salvas. Casos especiais não entram em lotes de nomes. A prévia expira em 15 minutos;
+qualquer conflito cancela a transação inteira. **Desfazer último lote** também
+verifica decisões posteriores e mantém histórico.
+
+Instruções livres para IA são separadas do texto literal. Salve para revisão e
+use **Exportar instruções** para trazê-las a esta conversa. A interpretação nunca
+aprova automaticamente. Para importar um JSON de propostas revisadas:
+
+```sh
+/usr/bin/python3 /mnt/dev/peticao/tools/cpf-review/name_instructions.py --import-proposals /caminho/absoluto/propostas.json
+```
+
+Cada item exige `id`, `revision`, `name_revision`, `version`, `literal`,
+`explanation` e `uncertainty`, usando as revisões do lote exportado. O editor mostra
+a interpretação; **Usar proposta interpretada** apenas preenche o campo literal,
+que ainda precisa de aprovação. Não executa instruções como comandos.
+
+**Gerar prévia local** cria arquivos novos em `/mnt/dev/cpfs/revisao/previas/`, com
+seleção congelada e manifesto SHA-256. Entram apenas confirmadas com decisão de
+CPF aprovada (não aplicável a estrangeiros) e nome aprovado e atual. Nenhum nome é
+truncado ou perde acentos silenciosamente: caracteres sem cobertura da fonte
+bloqueiam a geração. O PDF é uma lista de conferência, marcada **NÃO ENVIAR**;
+não substitui os lotes oficiais, não publica mudanças e não contém CPF,
+nascimento, mãe, sexo, e-mail ou IP. Nenhum PDF anterior é sobrescrito.

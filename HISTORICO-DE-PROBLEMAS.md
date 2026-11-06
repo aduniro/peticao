@@ -146,3 +146,18 @@ Por solicitação expressa do responsável, conservar a proposta de **“Verific
 A proposta integral está em `/mnt/dev/peticao/docs/ACESSO-E-CORRECAO-DE-ASSINATURAS.md`. Na retomada, ler este histórico e o estudo, apresentar o conteúdo integral da proposta com alternativas, vantagens, desvantagens, recuperação de acesso, migração dos cadastros antigos e decisões ainda necessárias; em seguida, elaborar o plano de resolução cumulativo das pendências relacionadas.
 
 Incluir no planejamento a correção autenticada de apoiador para servidor, a resposta de duplicidade, a distinção entre conferência cadastral e autorização de edição, a preservação de registros/datas/histórico e a revisão da normalização dos e-mails. Este registro não autoriza implementação ou publicação automática das alternativas ainda não decididas.
+
+## Execução do plano — prioridade de nomes, 06/11/2026
+
+Autorizado implementar o plano e registrar commits antes/depois e por etapa, sem
+nova autorização para iniciar cada etapa. Prioridade 1: sugestões de acentos e
+escolha independente do nome de impressão na revisão **local**. Casos especiais
+individuais; escolhas de CPF e nomes originais preservados. O planejamento e a
+sequência de pendências estão em `/mnt/dev/peticao/docs/IMPLEMENTACAO-NOMES-LOCAIS.md`.
+
+No planejamento foi aprovada a opção de rascunho explicitamente facultativa por
+30 dias (atualiza a pendência de aprovação registrada antes). O acesso futuro do
+assinante fica por último e usa senha permanente com e-mail confirmado, ou
+nome+CPF+mesma senha; recuperação de uso único por e-mail para escolher outra senha.
+Isso substitui a preferência inicial por passkeys, mantendo o estudo de alternativas.
+Não confundir código implementado/testado localmente com release publicado na VPS.
