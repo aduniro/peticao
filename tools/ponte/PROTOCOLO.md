@@ -1,5 +1,15 @@
 # Ponte de e-mail: protocolo
 
+## Canal e informes do Codex — decisão de 06/11/2026
+
+O dono adiou o WAHA. E-mail é o canal de comunicação remota autorizado.
+Enviar ao dono informes de início/andamento com tarefa em execução e estimativa
+de término, atualizando a previsão se houver bloqueios ou mudança relevante.
+Ao concluir, informar resultado, verificações, limitações e perguntar qual é a
+próxima tarefa. Respostas devem voltar à Ponte. Não apresentar aceite do provedor
+como confirmação de entrega na caixa de entrada. Esta regra não instala um
+executor persistente nem torna a sessão do Codex disponível com ela encerrada.
+
 Endereço: `ponte@painel.sancionaintegral.org` (Cloudflare Email Routing → Worker `ponte-entrada` → KV `ponte-caixa`).
 
 ## Quem fala com o Claude por e-mail
