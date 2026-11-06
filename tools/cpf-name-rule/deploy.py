@@ -147,11 +147,17 @@ def main(root, prepare_only=False):
         if digest(Path('/etc/peticao/app.env')) != env_digest:
             raise RuntimeError('Configuration changed during deployment')
         http = healthy()
-        with urllib.request.urlopen('https://sancionaintegral.org/api/contador', timeout=30) as response:
-            if response.status != 200:
-                raise RuntimeError('Public counter failed')
-            http['public_counter'] = response.status
-        phase('complete', http=http, public_files_changed=changed_public,
+        try:
+            with urllib.request.urlopen('https://sancionaintegral.org/api/contador', timeout=30) as response:
+                if response.status != 200:
+                    raise RuntimeError('Public counter failed')
+                http['public_counter'] = response.status
+        except urllib.error.HTTPError as error:
+            if error.code != 403:
+                raise
+            # Cloudflare may reject a request originating at the same VPS. Verify the public URL from the deploy operator's host.
+            http['public_counter_from_vps'] = 'blocked_by_edge_403'
+        phase('complete', http=http, external_public_check_required='public_counter_from_vps' in http, public_files_changed=changed_public,
               schema_unchanged=before['src/lib/db.ts'] == after['src/lib/db.ts'],
               configuration_unchanged=True, signer_bulk_updates=False)
     except Exception as error:
