@@ -72,6 +72,21 @@ export const ERROR_PT: Record<string, string> = {
 export type ValidationResult = { ok: true; value: SignInput } | { ok: false; errors: Record<string, string> };
 
 export function validate(raw: any): ValidationResult {
+  return validateInput(raw);
+}
+
+/** Internal profile correction: the hash MUST come from the authenticated DB row.
+ * Public validate(raw) never reads a bypass flag or hash from browser input.
+ * This validates geographic/category fields without reconstructing a clear CPF.
+ */
+export function validateSubscriberProfile(raw: any, authenticatedCpfHash: string | null): ValidationResult {
+  if (raw?.category !== "estrangeiro" && (!authenticatedCpfHash || !/^[a-f0-9]{64}$/.test(authenticatedCpfHash))) {
+    return { ok: false, errors: { cpf: "cpf_invalid" } };
+  }
+  return validateInput({ ...raw, cpf: undefined }, authenticatedCpfHash ?? undefined);
+}
+
+function validateInput(raw: any, authenticatedCpfHash?: string): ValidationResult {
   const errors: Record<string, string> = {};
   const name = titleCaseName(clean(raw?.name, 120), { final: true }); // "mAria DA sILVA" → "Maria da Silva"
   const email = lowerEmail(clean(raw?.email, 200)); // sempre minúsculas antes de qualquer checagem ou gravação
@@ -82,7 +97,7 @@ export function validate(raw: any): ValidationResult {
   if (category !== "servidor" && category !== "apoiador" && category !== "estrangeiro") errors.category = "category_invalid";
   if (raw?.consent !== true) errors.consent = "consent_required";
   const cpf = clean(raw?.cpf, 20);
-  if ((category === "servidor" || category === "apoiador") && !isValidCpf(cpf)) errors.cpf = "cpf_invalid";
+  if ((category === "servidor" || category === "apoiador") && !authenticatedCpfHash && !isValidCpf(cpf)) errors.cpf = "cpf_invalid";
 
   const v: SignInput = { name, email, category, consent: true };
   if (category === "servidor") {
@@ -147,7 +162,7 @@ export function validate(raw: any): ValidationResult {
   const loc = clean(raw?.locale, 5);
   if (loc) v.locale = loc;
   if (Object.keys(errors).length) return { ok: false, errors };
-  if (category !== "estrangeiro") v.cpf = onlyDigits(cpf);
+  if (category !== "estrangeiro" && !authenticatedCpfHash) v.cpf = onlyDigits(cpf);
   return { ok: true, value: v };
 }
 
