@@ -10,7 +10,7 @@ export type Ctx = { userId: number; email: string };
 export type Validado<P> = { ok: true; p: P } | { ok: false; erro: string };
 export type Acao<P = any> = {
   id: string;
-  grupo: "reenvio" | "estado" | "publicar";
+  grupo: "reenvio" | "estado" | "publicar" | "terminal";
   titulo: string;
   palavra?: string;
   validar(entrada: unknown): Validado<P>;

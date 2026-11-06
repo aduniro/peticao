@@ -16,6 +16,7 @@ const ITENS: { href: string; rotulo: string; icone: string; alerta?: keyof Alert
   { href: "/admin/monitor", rotulo: "Monitor de acessos", icone: "M3 13h4l3-9 4 16 3-7h4" },
   { href: "/admin/dispersao", rotulo: "Dispersão", icone: "M5 5h4v4H5zm10 0h4v4h-4zM5 15h4v4H5zm10 3a2 2 0 1 0 4 0 2 2 0 0 0-4 0zM9 7h6M7 9v6" },
   { href: "/admin/acoes", rotulo: "Ações", icone: "M13 2L4 14h7l-1 8 9-12h-7z", total: true },
+  { href: "/admin/terminal", rotulo: "Terminal", icone: "M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm3 4l3 3-3 3m5 0h4", total: true },
   { href: "/admin/usuarios", rotulo: "Usuários", icone: "M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0zM4 21a8 8 0 0 1 16 0z", total: true },
   { href: "/admin/conta", rotulo: "Minha conta", icone: "M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm-8 9a8 8 0 0 1 16 0z" },
 ];

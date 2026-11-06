@@ -2,10 +2,11 @@ import { audit, query, tx } from "../db";
 import { reenvioIniciar, reenvioParar, reenvioStatus } from "./reenvio";
 import { estadoVer } from "./estado";
 import { publicarPedir, publicarStatus } from "./publicar";
+import { terminalDesligar, terminalLigar, terminalStatus } from "./terminal";
 import type { Acao, Ctx } from "./tipos";
 
 export type { Acao, Ctx } from "./tipos";
-export const ACOES: Acao[] = [estadoVer, publicarStatus, publicarPedir, reenvioStatus, reenvioIniciar, reenvioParar];
+export const ACOES: Acao[] = [estadoVer, publicarStatus, publicarPedir, reenvioStatus, reenvioIniciar, reenvioParar, terminalStatus, terminalLigar, terminalDesligar];
 export const acaoPorId = (id: unknown) => ACOES.find((a) => a.id === id);
 
 export type Resposta =
