@@ -1,5 +1,5 @@
 import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
-import { audit, query } from "./db";
+import { audit, query, tx } from "./db";
 import { hmac } from "./security";
 import { SAFE_EMAIL_RE } from "./email-syntax";
 import { HASH_FALSO, gerarSenha, hashSenha, problemaNaSenha, verificarHash } from "./senha";
@@ -116,52 +116,68 @@ export async function pedirReset(email: string, o: { origin: string; enviar?: En
 
 export async function redefinirSenha(token: string, nova: string): Promise<{ ok: true } | { ok: false; erro: "token_invalido" | "senha_fraca"; detalhe?: string }> {
   if (!/^[A-Za-z0-9_-]{40,60}$/.test(token)) return { ok: false, erro: "token_invalido" };
-  const r = (await query<any>(`SELECT r.id, r.user_id, u.email FROM admin_reset r JOIN admin_users u ON u.id=r.user_id WHERE r.token_hash=$1 AND NOT r.usado AND r.expira_em > now() AND u.ativo`, [sha(token)])).rows[0];
-  if (!r) return { ok: false, erro: "token_invalido" };
-  const fraca = problemaNaSenha(nova, r.email);
-  if (fraca) return { ok: false, erro: "senha_fraca", detalhe: fraca };
-  await query("UPDATE admin_users SET senha_hash=$2, trocar_senha=false, falhas=0, bloqueado_ate=NULL WHERE id=$1", [r.user_id, hashSenha(nova)]);
-  await query("UPDATE admin_reset SET usado=true WHERE user_id=$1", [r.user_id]);
-  await encerrarSessoesDoUsuario(r.user_id); // quem tinha a senha antiga perde as sessões
-  await audit("admin_senha_redefinida", null, { id: r.user_id });
-  return { ok: true };
+  // Lock the account before its reset tokens: all resets for one account serialize.
+  const found = (await query<{ user_id: number }>("SELECT user_id FROM admin_reset WHERE token_hash=$1", [sha(token)])).rows[0];
+  if (!found) return { ok: false, erro: "token_invalido" };
+  return tx(async (c) => {
+    const u = (await c.query("SELECT email FROM admin_users WHERE id=$1 AND ativo FOR UPDATE", [found.user_id])).rows[0];
+    if (!u) return { ok: false as const, erro: "token_invalido" as const };
+    const r = (await c.query("SELECT id FROM admin_reset WHERE user_id=$1 AND token_hash=$2 AND NOT usado AND expira_em > now() FOR UPDATE", [found.user_id, sha(token)])).rows[0];
+    if (!r) return { ok: false as const, erro: "token_invalido" as const };
+    const fraca = problemaNaSenha(nova, u.email);
+    if (fraca) return { ok: false as const, erro: "senha_fraca" as const, detalhe: fraca };
+    await c.query("UPDATE admin_users SET senha_hash=$2, trocar_senha=false, falhas=0, bloqueado_ate=NULL WHERE id=$1", [found.user_id, hashSenha(nova)]);
+    await c.query("UPDATE admin_reset SET usado=true WHERE user_id=$1", [found.user_id]);
+    await c.query("DELETE FROM admin_sessions WHERE user_id=$1", [found.user_id]);
+    await audit("admin_senha_redefinida", null, { id: found.user_id }, c);
+    return { ok: true as const };
+  });
 }
 
 // ---- gestão (só nível total) ----
 export async function listarUsuarios(): Promise<Usuario[]> {
   return (await query<any>("SELECT * FROM admin_users ORDER BY ativo DESC, nivel DESC, nome")).rows.map(doUsuario);
 }
-/** Quantos usuários ATIVOS de nível total existem, sem contar `exceto`. O painel nunca pode ficar sem nenhum. */
-async function totaisSem(exceto: number): Promise<number> {
-  return (await query<{ n: number }>("SELECT COUNT(*)::int n FROM admin_users WHERE ativo AND nivel='total' AND id<>$1", [exceto])).rows[0].n;
-}
+/** Account management shares a transaction lock so two requests cannot remove both owners. */
 export async function alterarNivel(id: number, nivel: Nivel, por: string): Promise<{ ok: true } | { ok: false; erro: "ultimo_total" | "nao_existe" | "nivel_invalido" }> {
   if (!ehNivel(nivel)) return { ok: false, erro: "nivel_invalido" };
-  const u = (await query<any>("SELECT nivel, ativo FROM admin_users WHERE id=$1", [id])).rows[0];
-  if (!u) return { ok: false, erro: "nao_existe" };
-  if (u.nivel === "total" && u.ativo && nivel !== "total" && (await totaisSem(id)) === 0) return { ok: false, erro: "ultimo_total" };
-  await query("UPDATE admin_users SET nivel=$2 WHERE id=$1", [id, nivel]);
-  await audit("admin_usuario_nivel", null, { id, de: u.nivel, para: nivel, por });
-  return { ok: true };
+  return tx(async (c) => {
+    await c.query("SELECT pg_advisory_xact_lock(7003)");
+    const u = (await c.query("SELECT nivel, ativo FROM admin_users WHERE id=$1 FOR UPDATE", [id])).rows[0];
+    if (!u) return { ok: false as const, erro: "nao_existe" as const };
+    const remaining = (await c.query("SELECT COUNT(*)::int n FROM admin_users WHERE ativo AND nivel='total' AND id<>$1", [id])).rows[0].n;
+    if (u.nivel === "total" && u.ativo && nivel !== "total" && remaining === 0) return { ok: false as const, erro: "ultimo_total" as const };
+    await c.query("UPDATE admin_users SET nivel=$2 WHERE id=$1", [id, nivel]);
+    await audit("admin_usuario_nivel", null, { id, de: u.nivel, para: nivel, por }, c);
+    return { ok: true as const };
+  });
 }
 export async function definirAtivo(id: number, ativo: boolean, por: string): Promise<{ ok: true } | { ok: false; erro: "ultimo_total" | "nao_existe" }> {
-  const u = (await query<any>("SELECT nivel, ativo FROM admin_users WHERE id=$1", [id])).rows[0];
-  if (!u) return { ok: false, erro: "nao_existe" };
-  if (!ativo && u.nivel === "total" && u.ativo && (await totaisSem(id)) === 0) return { ok: false, erro: "ultimo_total" };
-  await query("UPDATE admin_users SET ativo=$2 WHERE id=$1", [id, ativo]);
-  if (!ativo) await encerrarSessoesDoUsuario(id);
-  await audit(ativo ? "admin_usuario_ativado" : "admin_usuario_desativado", null, { id, por });
-  return { ok: true };
+  return tx(async (c) => {
+    await c.query("SELECT pg_advisory_xact_lock(7003)");
+    const u = (await c.query("SELECT nivel, ativo FROM admin_users WHERE id=$1 FOR UPDATE", [id])).rows[0];
+    if (!u) return { ok: false as const, erro: "nao_existe" as const };
+    const remaining = (await c.query("SELECT COUNT(*)::int n FROM admin_users WHERE ativo AND nivel='total' AND id<>$1", [id])).rows[0].n;
+    if (!ativo && u.nivel === "total" && u.ativo && remaining === 0) return { ok: false as const, erro: "ultimo_total" as const };
+    await c.query("UPDATE admin_users SET ativo=$2 WHERE id=$1", [id, ativo]);
+    if (!ativo) await c.query("DELETE FROM admin_sessions WHERE user_id=$1", [id]);
+    await audit(ativo ? "admin_usuario_ativado" : "admin_usuario_desativado", null, { id, por }, c);
+    return { ok: true as const };
+  });
 }
-/** O próprio usuário troca a senha (precisa da atual). */
+/** O próprio usuário troca a senha; atualiza senha, revoga sessões e audita atomicamente. */
 export async function trocarMinhaSenha(userId: number, atual: string, nova: string): Promise<{ ok: true } | { ok: false; erro: "atual_errada" | "senha_fraca"; detalhe?: string }> {
-  const u = (await query<any>("SELECT email, senha_hash FROM admin_users WHERE id=$1 AND ativo", [userId])).rows[0];
-  if (!u || !verificarHash(atual, u.senha_hash)) return { ok: false, erro: "atual_errada" };
-  const fraca = problemaNaSenha(nova, u.email);
-  if (fraca) return { ok: false, erro: "senha_fraca", detalhe: fraca };
-  await query("UPDATE admin_users SET senha_hash=$2, trocar_senha=false WHERE id=$1", [userId, hashSenha(nova)]);
-  await audit("admin_senha_trocada", null, { id: userId });
-  return { ok: true };
+  return tx(async (c) => {
+    const u = (await c.query("SELECT email, senha_hash FROM admin_users WHERE id=$1 AND ativo FOR UPDATE", [userId])).rows[0];
+    if (!u || !verificarHash(atual, u.senha_hash)) return { ok: false as const, erro: "atual_errada" as const };
+    const fraca = problemaNaSenha(nova, u.email);
+    if (fraca) return { ok: false as const, erro: "senha_fraca" as const, detalhe: fraca };
+    await c.query("UPDATE admin_users SET senha_hash=$2, trocar_senha=false WHERE id=$1", [userId, hashSenha(nova)]);
+    await c.query("DELETE FROM admin_sessions WHERE user_id=$1", [userId]);
+    await c.query("UPDATE admin_reset SET usado=true WHERE user_id=$1", [userId]);
+    await audit("admin_senha_trocada", null, { id: userId }, c);
+    return { ok: true as const };
+  });
 }
 
 // ---- confirmação extra (step-up): senha de novo + código de 6 dígitos enviado ao e-mail do próprio usuário ----

@@ -152,3 +152,25 @@ test("CSV dos rankings: separador ;, BOM, aspas e proteção contra fórmula de 
   for (const k of ["ifes", "campi", "uf", "cidade", "pais", "universidade"]) assert.ok(COLUNAS[k].length >= 4, k);
   assert.ok(!Object.values(COLUNAS).flat().some(([c]) => /name|email|cpf|nome_pessoa/.test(c) && c !== "nome"), "sem colunas de pessoas");
 });
+
+test("ranking regional soma antes do limite de exibição dos estados", async () => {
+  const c = await um();
+  try {
+    const rows: L[] = [];
+    for (const campus of [PVH, RBR]) {
+      const prefix = campus === PVH ? "RO" : "AC";
+      for (let i = 0; i < 10; i++) for (let n = 0; n < 3; n++) rows.push({ cat: "servidor", st: "confirmed", ifes: `${prefix}-LOCAL-${i}`, campus });
+      for (let n = 0; n < 2; n++) rows.push({ cat: "servidor", st: "confirmed", ifes: "IFES-REGIONAL", campus });
+    }
+    await semear(c, rows);
+    const full = await c.R.resumoPorUf(Number.POSITIVE_INFINITY);
+    const shown = c.R.limitarResumo(full.RO, 10);
+    assert.equal(shown.rankIfes.length, 10);
+    assert.ok(!shown.rankIfes.some(r => r.sigla === "IFES-REGIONAL"));
+    const region = c.R.juntarUfs([full.RO, full.AC], 10);
+    assert.equal(region.rankIfes[0].sigla, "IFES-REGIONAL");
+    assert.equal(region.rankIfes[0].conf, 4);
+    assert.equal(full.RO.rankIfes.length, 11); // Apresentação não mutila a fonte regional.
+    assert.equal(region.cat.conf.docente, 64);
+  } finally { await c.dbmod._closeDbForTests(); }
+});

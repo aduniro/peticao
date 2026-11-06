@@ -213,3 +213,59 @@ test("varredura: ninguém usa o isAdmin() síncrono nem o cookie assinado antigo
   const usam = todos.filter((f) => /\bisAdmin\b|\btokenAdminValido\b|\badminToken\b/.test(readFileSync(f, "utf8")) && !/api\/admin\/login\//.test(f));
   assert.deepEqual(usam.map((f) => f.split("/src/")[1]), []);
 });
+
+test("alterações simultâneas preservam um Total ativo e suas auditorias", async () => {
+  const { U, dbmod } = await um();
+  try {
+    const a = await U.criarUsuario({ email: "owner-a@example.org", nome: "Dono A", nivel: "total", senha: SENHA });
+    const b = await U.criarUsuario({ email: "owner-b@example.org", nome: "Dono B", nivel: "total", senha: SENHA });
+    assert.ok(a.ok && b.ok);
+    const results = await Promise.all([U.alterarNivel(a.usuario.id, "edicao", "concorrencia"), U.definirAtivo(b.usuario.id, false, "concorrencia")]);
+    assert.equal(results.filter(r => r.ok).length, 1);
+    assert.equal(results.filter(r => !r.ok && r.erro === "ultimo_total").length, 1);
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM admin_users WHERE ativo AND nivel='total'")).rows[0].n, 1);
+    assert.ok((await dbmod.verifyAuditChain()).ok);
+  } finally { await dbmod._closeDbForTests(); }
+});
+
+test("redefinições concorrentes do mesmo link só consomem o token uma vez", async () => {
+  const { U, dbmod } = await um();
+  try {
+    const user = await U.criarUsuario({ email: "reset-race@example.org", nome: "Pessoa Teste", nivel: "edicao", senha: SENHA });
+    assert.ok(user.ok);
+    let text = "";
+    await U.pedirReset(user.usuario.email, { origin: "https://site.test", enviar: async m => { text = m.text; } });
+    const token = /token=([A-Za-z0-9_-]+)/.exec(text)![1];
+    const results = await Promise.all([U.redefinirSenha(token, "Primeira-Nova-Forte-11"), U.redefinirSenha(token, "Segunda-Nova-Forte-22")]);
+    assert.equal(results.filter(r => r.ok).length, 1);
+    assert.equal(results.filter(r => !r.ok && r.erro === "token_invalido").length, 1);
+    const password = results[0].ok ? "Primeira-Nova-Forte-11" : "Segunda-Nova-Forte-22";
+    assert.ok((await U.autenticar(user.usuario.email, password)).ok);
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM audit_log WHERE event='admin_senha_redefinida'")).rows[0].n, 1);
+  } finally { await dbmod._closeDbForTests(); }
+});
+
+test("troca de senha revoga sessões e links; falha na auditoria reverte toda a operação", async () => {
+  const { U, dbmod } = await um();
+  try {
+    const user = await U.criarUsuario({ email: "atomic@example.org", nome: "Pessoa Atômica", nivel: "leitura", senha: SENHA });
+    assert.ok(user.ok);
+    const session1 = await U.abrirSessao(user.usuario.id, "127.0.0.1");
+    const session2 = await U.abrirSessao(user.usuario.id, "127.0.0.2");
+    let text = "";
+    await U.pedirReset(user.usuario.email, { origin: "https://site.test", enviar: async m => { text = m.text; } });
+    const reset = /token=([A-Za-z0-9_-]+)/.exec(text)![1];
+    await dbmod.query(`CREATE FUNCTION fail_password_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='admin_senha_trocada' THEN RAISE EXCEPTION 'simulated audit failure'; END IF; RETURN NEW; END $$;
+      CREATE TRIGGER fail_password_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION fail_password_audit();`);
+    await assert.rejects(U.trocarMinhaSenha(user.usuario.id, SENHA, "Nova-Protecao-Forte-123"), /simulated audit failure/);
+    assert.ok((await U.autenticar(user.usuario.email, SENHA)).ok);
+    assert.ok(await U.sessaoPorToken(session1.token));
+    assert.equal((await dbmod.query("SELECT usado FROM admin_reset")).rows[0].usado, false);
+    await dbmod.query("DROP TRIGGER fail_password_audit ON audit_log");
+    assert.deepEqual(await U.trocarMinhaSenha(user.usuario.id, SENHA, "Nova-Protecao-Forte-123"), { ok: true });
+    assert.equal(await U.sessaoPorToken(session1.token), null);
+    assert.equal(await U.sessaoPorToken(session2.token), null);
+    assert.deepEqual(await U.redefinirSenha(reset, "Outra-Nova-Senha-456"), { ok: false, erro: "token_invalido" });
+    assert.ok((await dbmod.verifyAuditChain()).ok);
+  } finally { await dbmod._closeDbForTests(); }
+});

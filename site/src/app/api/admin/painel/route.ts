@@ -6,7 +6,7 @@ import { facetas, serieDiaria, totais } from "@/lib/assinaturas-explorar";
 import { filtrosVazios } from "@/lib/assinaturas-filtros";
 import { monitorSummary, sinceOf } from "@/lib/monitor";
 import { config } from "@/lib/config";
-import { juntarUfs, novoResumo, resumoPorUf } from "@/lib/rankings";
+import { juntarUfs, limitarResumo, novoResumo, resumoPorUf } from "@/lib/rankings";
 import { lerConfigPainel } from "@/lib/painel-config";
 
 export const dynamic = "force-dynamic";
@@ -21,11 +21,12 @@ async function montar() {
   const [conf, pend, serie, t, ext, extPend, funil, resumo] = await Promise.all([
     facetas({ ...v, status: ["confirmed"] }), facetas({ ...v, status: ["pending"] }), serieDiaria(v), totais(v),
     totais({ ...v, categoria: ["estrangeiro"], status: ["confirmed"] }), totais({ ...v, categoria: ["estrangeiro"], status: ["pending"] }),
-    monitorSummary(sinceOf("24h")), resumoPorUf(10),
+    monitorSummary(sinceOf("24h")), resumoPorUf(Number.POSITIVE_INFINITY),
   ]);
   const c = new Map((conf.uf ?? []).map((x) => [x.v, x.n])), p = new Map((pend.uf ?? []).map((x) => [x.v, x.n]));
-  const ufs = Object.entries(svg!.ufs).map(([uf, d]) => ({ uf, nome: d.nome, regiao: d.reg, conf: c.get(uf) ?? 0, pend: p.get(uf) ?? 0, total: (c.get(uf) ?? 0) + (p.get(uf) ?? 0), ...(resumo[uf] ?? novoResumo()) }));
-  const regioes = Object.keys(NOMES_REG).map((id) => ({ id, nome: NOMES_REG[id], conf: ufs.filter((u) => u.regiao === id).reduce((a, u) => a + u.conf, 0), pend: ufs.filter((u) => u.regiao === id).reduce((a, u) => a + u.pend, 0), ...juntarUfs(ufs.filter((u) => u.regiao === id), 10) }));
+  const todosUfs = Object.entries(svg!.ufs).map(([uf, d]) => ({ uf, nome: d.nome, regiao: d.reg, conf: c.get(uf) ?? 0, pend: p.get(uf) ?? 0, total: (c.get(uf) ?? 0) + (p.get(uf) ?? 0), ...(resumo[uf] ?? novoResumo()) }));
+  const regioes = Object.keys(NOMES_REG).map((id) => ({ id, nome: NOMES_REG[id], conf: todosUfs.filter((u) => u.regiao === id).reduce((a, u) => a + u.conf, 0), pend: todosUfs.filter((u) => u.regiao === id).reduce((a, u) => a + u.pend, 0), ...juntarUfs(todosUfs.filter((u) => u.regiao === id), 10) }));
+  const ufs = todosUfs.map(u => ({ ...u, ...limitarResumo(u, 10) }));
   const dia = (d: string) => serie.find((x) => x.d === d);
   const hoje = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10), ontem = new Date(Date.now() - 27 * 3600e3).toISOString().slice(0, 10);
   return {

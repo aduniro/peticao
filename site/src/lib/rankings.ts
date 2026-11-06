@@ -108,6 +108,11 @@ export async function resumoPorUf(limite = 10): Promise<Record<string, ResumoUf>
 export const topo = <T extends { conf: number; pend: number }>(l: T[], nome: (x: T) => string, limite: number): T[] =>
   [...l].sort((a, b) => b.conf - a.conf || b.pend - a.pend || nome(a).localeCompare(nome(b), "pt")).slice(0, limite);
 
+/** Limita só a apresentação; preserve os dados completos até terminar a soma regional. */
+export function limitarResumo(r: ResumoUf, limite = 10): ResumoUf {
+  return { cat: r.cat, rankIfes: topo(r.rankIfes, x => x.sigla, limite), rankCampi: topo(r.rankCampi, x => x.nome, limite), rankCidades: topo(r.rankCidades, x => x.nome, limite) };
+}
+
 /** Junta vários estados numa região: soma as categorias e refaz os rankings (somando a mesma IFES/campus em estados diferentes). */
 export function juntarUfs(rs: ResumoUf[], limite = 10): ResumoUf {
   const o = novoResumo();
