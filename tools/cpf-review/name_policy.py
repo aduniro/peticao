@@ -23,7 +23,7 @@ def subsequence(a,b):
  return position==len(a)
 
 def restore_particles(base,evidence):
- """Copy a particle run only to an unambiguously aligned existing name anchor."""
+ """Merge aligned particle runs, preferring the official API particles."""
  particles=set(policy()['particles']);bw=words(base);ew=words(evidence)
  bnames=[(i,fold(w)) for i,w in enumerate(bw) if fold(w) not in particles]
  enames=[(i,fold(w)) for i,w in enumerate(ew) if fold(w) not in particles]
@@ -32,16 +32,25 @@ def restore_particles(base,evidence):
  for ei,word in enames:
   while bnames[position][1]!=word:position+=1
   mapping[ei]=bnames[position][0];position+=1
- inserts={};run=[]
+ inserts={};removed=set();run=[]
  for i,w in enumerate(ew):
   if fold(w) in particles:run.append(w.lower());continue
   target=mapping[i]
-  # API/base particles already present win; never concatenate conflicting runs.
-  if run and target>0 and fold(bw[target-1]) not in particles:inserts[target]=list(run)
+  if run:
+   previous=max((mapping[j] for j in mapping if j<i),default=-1);start=previous+1
+   inserts[start]=[w for w in bw[start:target] if fold(w) not in particles]+list(run)
+   removed.update(range(start,target))
   run=[]
+ if run:
+  start=mapping[enames[-1][0]]+1
+  inserts[start]=[w for w in bw[start:] if fold(w) not in particles]+list(run)
+  removed.update(range(start,len(bw)))
  if not inserts:return base
  out=[]
- for i,w in enumerate(bw):out.extend(inserts.get(i,[]));out.append(w)
+ for i,w in enumerate(bw):
+  out.extend(inserts.get(i,[]))
+  if i not in removed:out.append(w)
+ out.extend(inserts.get(len(bw),[]))
  return ' '.join(out)
 
 def one_edit(a,b):
@@ -95,7 +104,7 @@ def select_name(entered,api,entered_resolved,api_resolved,known_forms=frozenset(
  a,b=significant(aligned_entered),significant(api);af,bf=full_words(aligned_entered),full_words(api)
  user_longer=bool(api and len(af)>len(bf));fixes=[]
  if user_longer:entered_resolved,fixes=correct_extended_name(entered_resolved,api_resolved,known_forms)
- api_resolved=restore_particles(api_resolved,entered_resolved) if api else ''
+ api_resolved=restore_particles(restore_particles(api_resolved,entered_resolved),api_resolved) if api else ''
  entered_resolved=restore_particles(entered_resolved,api_resolved) if user_longer else entered_resolved
  ak,bk=[fold(w) for w in a],[fold(w) for w in b]
  # Missing middle names use the complete API result, never a merged/abbreviated name.
@@ -105,7 +114,7 @@ def select_name(entered,api,entered_resolved,api_resolved,known_forms=frozenset(
  major=bool(api and (order_changed or contradictory and (overlap<2 or overlap/max(len(ak),len(bk),1)<0.6)))
  major=major or ak!=bk and classification in {'divergencia_forte','divergencia_relevante','ordem_diferente'}
  source='entered' if not api or user_longer else 'api';proposed=entered_resolved if source=='entered' else api_resolved
- reasons=['Política central: priorizar o nome completo da API, incluindo nomes do meio e partículas comprovadas.']
+ reasons=['Política central: priorizar o nome completo da API; toda partícula que ela retorna é obrigatória no nome impresso.']
  if user_longer:reasons.append('Exceção: o nome digitado contém nomes completos adicionais; preservar a extensão e revisar individualmente.')
  elif not api:reasons.append('Sem nome cadastral da API: conferir o nome declarado; não presumir retorno cadastral.')
  if spacing:reasons.append('Espaço indevido reconhecido por correspondência exata com palavra da API: '+', '.join(f["input"]+' → '+f['suggestion'] for f in spacing)+'. Isso não conta como nome adicional.')

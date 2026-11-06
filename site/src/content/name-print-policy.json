@@ -1,9 +1,11 @@
 {
-  "version": "2026-11-06.api-complete-v2",
+  "version": "2026-11-06.api-particles-mandatory-v3",
   "default_source": "api",
   "declared_exception": "additional_full_names",
   "include_middle_names": true,
   "preserve_particles": true,
+  "api_particles_mandatory_in_printed_name": true,
+  "user_particles_optional": true,
   "invent_particles": false,
   "particles": [
     "da",

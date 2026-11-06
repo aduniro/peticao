@@ -34,6 +34,24 @@ function particlesFrom(base: string, evidence: string): string {
   ew.forEach((w,i)=>{if(PARTICLES.has(fold(w))) {run.push(w.toLowerCase());return;}const target=anchors.get(i)!;if(run.length&&target>0&&!PARTICLES.has(fold(bw[target-1])))inserts.set(target,run);run=[];});
   return inserts.size ? bw.flatMap((w,i)=>[...(inserts.get(i)??[]),w]).join(" ") : base;
 }
+function enforceApiParticles(base: string, api: string): string {
+  const bw=words(base), ew=words(api), baseCore=bw.map((w,i)=>({i,w:fold(w)})).filter(x=>!PARTICLES.has(x.w)), apiCore=ew.map((w,i)=>({i,w:fold(w)})).filter(x=>!PARTICLES.has(x.w));
+  if(!apiCore.length||!subsequence(apiCore.map(x=>x.w),baseCore.map(x=>x.w)))return base;
+  const mapping=new Map<number,number>();let at=0;
+  for(const x of apiCore){while(baseCore[at].w!==x.w)at++;mapping.set(x.i,baseCore[at].i);at++;}
+  const replacements=new Map<number,string[]>(),removed=new Set<number>();let run:string[]=[];
+  for(let i=0;i<ew.length;i++){
+    if(PARTICLES.has(fold(ew[i]))){run.push(ew[i].toLowerCase());continue;}
+    if(run.length){const target=mapping.get(i)!;let previous=-1;for(const x of apiCore)if(x.i<i)previous=mapping.get(x.i)!;
+      const start=previous+1,between=bw.slice(start,target).filter(w=>!PARTICLES.has(fold(w)));
+      for(let j=start;j<target;j++)removed.add(j);replacements.set(start,[...between,...run]);run=[];
+    }
+  }
+  if(run.length){const last=mapping.get(apiCore.at(-1)!.i)!;const start=last+1,tail=bw.slice(start).filter(w=>!PARTICLES.has(fold(w)));for(let j=start;j<bw.length;j++)removed.add(j);replacements.set(start,[...tail,...run]);}
+  if(!replacements.size)return base;
+  const out:string[]=[];for(let i=0;i<=bw.length;i++){if(replacements.has(i))out.push(...replacements.get(i)!);if(i<bw.length&&!removed.has(i))out.push(bw[i]);}
+  return out.join(" ");
+}
 function oneEdit(a:string,b:string):boolean {
   if(a===b||Math.abs(a.length-b.length)>1)return false;
   if(a.length===b.length){const d=[...a].map((c,i)=>c===b[i]?-1:i).filter(i=>i>=0);return d.length===1||d.length===2&&d[1]===d[0]+1&&a[d[0]]===b[d[1]]&&a[d[1]]===b[d[0]];}
@@ -64,7 +82,7 @@ export type PrintNameSuggestion = { proposed:string; source:"api"|"entered"; ent
 export function resolvePrintName(entered:string,api:string,classification?:string):PrintNameSuggestion {
   let a=accentedName(entered),b=accentedName(api,a);const aligned=collapseSpacing(entered,api),spaced=collapseSpacing(a,b);a=spaced.name;const userLonger=!!api&&full(aligned.name).length>full(api).length;
   const corrected=userLonger?extendedCorrection(a,b):{name:a,corrections:[]};a=corrected.name;
-  if(api)b=particlesFrom(b,a);if(userLonger)a=particlesFrom(a,b);
+  if(api)b=enforceApiParticles(particlesFrom(b,a),api);if(userLonger)a=enforceApiParticles(particlesFrom(a,b),api);
   const ak=names(aligned.name).map(fold),bk=names(api).map(fold),compatible=!!api&&(subsequence(ak,bk)||subsequence(bk,ak));
   const aa=new Map<string,number>(),bb=new Map<string,number>();for(const w of ak)aa.set(w,(aa.get(w)??0)+1);for(const w of bk)bb.set(w,(bb.get(w)??0)+1);
   const overlap=[...aa].reduce((n,[w,v])=>n+Math.min(v,bb.get(w)??0),0),sameBag=ak.length===bk.length&&overlap===ak.length,orderChanged=!!api&&sameBag&&ak.some((w,i)=>w!==bk[i]);

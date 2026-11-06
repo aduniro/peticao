@@ -11,10 +11,12 @@ impressão, independentemente do aceite de identidade/CPF.
    adicionais**. Conservar a versão mais extensa, sugerindo correções apoiadas na
    API e acentos, com revisão individual das diferenças. Uma inicial não conta
    como um nome completo adicional.
-3. Incluir nomes do meio e partículas — de, do, dos, das e variantes. Preservar as
-   partículas da API; aproveitar partículas declaradas somente com alinhamento
-   inequívoco aos mesmos nomes. Não inventar partículas nem sobrenomes ausentes
-   de ambas as fontes. Não fundir nomes de pessoas distintas.
+3. Incluir nomes do meio e partículas — de, do, dos, das e variantes. Toda
+   partícula retornada pela API é obrigatória no nome impresso, mesmo que o usuário
+   a tenha omitido ou digitado outra partícula naquela posição. Partículas do nome
+   digitado podem ser aproveitadas somente com alinhamento inequívoco aos mesmos
+   nomes. Nunca inventar partículas nem sobrenomes ausentes de ambas as fontes.
+   Não fundir nomes de pessoas distintas.
 4. Divergências maiores exigem revisão do responsável e notificação por e-mail;
    não entram em aceite automático. Uma notificação não constitui aprovação.
 5. Conservar nome digitado e retorno original da API. A política não altera CPF,

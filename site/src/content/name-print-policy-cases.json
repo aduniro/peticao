@@ -103,5 +103,19 @@
     "proposed": "Anamaria Silva",
     "source": "api",
     "major": false
+  },
+  {
+    "entered": "Maria da Silva Costa",
+    "api": "MARIA DE SILVA",
+    "proposed": "Maria de Silva Costa",
+    "source": "entered",
+    "major": false
+  },
+  {
+    "entered": "Maria Silva Costa Souza",
+    "api": "MARIA DE SILVA",
+    "proposed": "Maria de Silva Costa Souza",
+    "source": "entered",
+    "major": false
   }
 ]
