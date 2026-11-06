@@ -72,17 +72,18 @@ export type CatCont = { docente: number; tae: number; nd: number; apoiador: numb
 export type Pares = { conf: CatCont; pend: CatCont };
 export type TopIfes = { sigla: string; conf: number; pend: number };
 export type TopCampus = { nome: string; uf: string; ifes: string; conf: number; pend: number };
-export type ResumoUf = { cat: Pares; rankIfes: TopIfes[]; rankCampi: TopCampus[] };
+export type TopCidade = { nome: string; uf: string; conf: number; pend: number };
+export type ResumoUf = { cat: Pares; rankIfes: TopIfes[]; rankCampi: TopCampus[]; rankCidades: TopCidade[] };
 const zero = (): CatCont => ({ docente: 0, tae: 0, nd: 0, apoiador: 0 });
 export const somaCat = (a: CatCont, b: CatCont): CatCont => ({ docente: a.docente + b.docente, tae: a.tae + b.tae, nd: a.nd + b.nd, apoiador: a.apoiador + b.apoiador });
-export const novoResumo = (): ResumoUf => ({ cat: { conf: zero(), pend: zero() }, rankIfes: [], rankCampi: [] });
+export const novoResumo = (): ResumoUf => ({ cat: { conf: zero(), pend: zero() }, rankIfes: [], rankCampi: [], rankCidades: [] });
 
 /**
- * Por UF (local do cadastro, sem estrangeiros): categorias dentro de confirmadas e de aguardando, e rankings de IFES e de campi (até `limite` cada).
- * Três consultas agregadas no total (não uma por estado).
+ * Por UF (local do cadastro, sem estrangeiros): categorias dentro de confirmadas e de aguardando, e rankings de IFES, de campi e de cidades dos apoiadores (até `limite` cada).
+ * Quatro consultas agregadas no total (não uma por estado).
  */
 export async function resumoPorUf(limite = 10): Promise<Record<string, ResumoUf>> {
-  const [cat, ifes, campi] = await Promise.all([
+  const [cat, ifes, campi, cidades] = await Promise.all([
     query<{ uc: string; status: string } & CatCont>(`SELECT LEFT(${LOCAL_SQL}::text, 2) AS uc, s.status,
         COUNT(*) FILTER (WHERE s.category='servidor' AND s.role='docente')::int AS docente, COUNT(*) FILTER (WHERE s.category='servidor' AND s.role='tae')::int AS tae,
         COUNT(*) FILTER (WHERE s.category='servidor' AND (s.role IS NULL OR s.role NOT IN ('docente','tae')))::int AS nd, COUNT(*) FILTER (WHERE s.category='apoiador')::int AS apoiador
@@ -91,13 +92,16 @@ export async function resumoPorUf(limite = 10): Promise<Record<string, ResumoUf>
       FROM signatures s WHERE s.category = 'servidor' AND ${LOCAL_SQL} IS NOT NULL GROUP BY 1, 2`),
     query<{ ibge: number; ifes: string; conf: number; pend: number }>(`SELECT ${LOCAL_SQL} AS ibge, ${IFES_SQL} AS ifes, COUNT(*) FILTER (WHERE s.status='confirmed')::int AS conf, COUNT(*) FILTER (WHERE s.status='pending')::int AS pend
       FROM signatures s WHERE s.category = 'servidor' AND ${LOCAL_SQL} IS NOT NULL GROUP BY 1, 2`),
+    query<{ ibge: number; conf: number; pend: number }>(`SELECT ${LOCAL_SQL} AS ibge, COUNT(*) FILTER (WHERE s.status='confirmed')::int AS conf, COUNT(*) FILTER (WHERE s.status='pending')::int AS pend
+      FROM signatures s WHERE s.category = 'apoiador' AND ${LOCAL_SQL} IS NOT NULL GROUP BY 1`),
   ]);
   const out: Record<string, ResumoUf> = {};
   const de = (uf: string) => (out[uf] ??= novoResumo());
   for (const x of cat.rows) { const u = UF_POR_CODIGO[x.uc]; if (!u) continue; const c = de(u).cat[x.status === "confirmed" ? "conf" : "pend"]; c.docente += x.docente; c.tae += x.tae; c.nd += x.nd; c.apoiador += x.apoiador; }
   for (const x of ifes.rows) { const u = UF_POR_CODIGO[x.uc]; if (u) de(u).rankIfes.push({ sigla: x.ifes, conf: x.conf, pend: x.pend }); }
   for (const x of campi.rows) { const u = ufDe(Number(x.ibge)); if (u) de(u).rankCampi.push({ nome: nomeDe(Number(x.ibge)), uf: u, ifes: x.ifes, conf: x.conf, pend: x.pend }); }
-  for (const r of Object.values(out)) { r.rankIfes = topo(r.rankIfes, (x) => x.sigla, limite); r.rankCampi = topo(r.rankCampi, (x) => x.nome, limite); }
+  for (const x of cidades.rows) { const u = ufDe(Number(x.ibge)); if (u) de(u).rankCidades.push({ nome: nomeDe(Number(x.ibge)), uf: u, conf: x.conf, pend: x.pend }); }
+  for (const r of Object.values(out)) { r.rankIfes = topo(r.rankIfes, (x) => x.sigla, limite); r.rankCampi = topo(r.rankCampi, (x) => x.nome, limite); r.rankCidades = topo(r.rankCidades, (x) => x.nome, limite); }
   return out;
 }
 /** Ordena por confirmadas e depois por aguardando; devolve os `limite` primeiros. */
@@ -107,12 +111,13 @@ export const topo = <T extends { conf: number; pend: number }>(l: T[], nome: (x:
 /** Junta vários estados numa região: soma as categorias e refaz os rankings (somando a mesma IFES/campus em estados diferentes). */
 export function juntarUfs(rs: ResumoUf[], limite = 10): ResumoUf {
   const o = novoResumo();
-  const ifes = new Map<string, TopIfes>(), campi = new Map<string, TopCampus>();
+  const ifes = new Map<string, TopIfes>(), campi = new Map<string, TopCampus>(), cidades = new Map<string, TopCidade>();
   for (const r of rs) {
     o.cat.conf = somaCat(o.cat.conf, r.cat.conf); o.cat.pend = somaCat(o.cat.pend, r.cat.pend);
     for (const x of r.rankIfes) { const a = ifes.get(x.sigla) ?? { sigla: x.sigla, conf: 0, pend: 0 }; a.conf += x.conf; a.pend += x.pend; ifes.set(x.sigla, a); }
     for (const x of r.rankCampi) { const k = `${x.nome}|${x.uf}|${x.ifes}`; const a = campi.get(k) ?? { ...x, conf: 0, pend: 0 }; a.conf += x.conf; a.pend += x.pend; campi.set(k, a); }
+    for (const x of r.rankCidades) { const k = `${x.nome}|${x.uf}`; const a = cidades.get(k) ?? { ...x, conf: 0, pend: 0 }; a.conf += x.conf; a.pend += x.pend; cidades.set(k, a); }
   }
-  o.rankIfes = topo([...ifes.values()], (x) => x.sigla, limite); o.rankCampi = topo([...campi.values()], (x) => x.nome, limite);
+  o.rankIfes = topo([...ifes.values()], (x) => x.sigla, limite); o.rankCampi = topo([...campi.values()], (x) => x.nome, limite); o.rankCidades = topo([...cidades.values()], (x) => x.nome, limite);
   return o;
 }

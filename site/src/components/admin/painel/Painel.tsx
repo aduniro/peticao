@@ -1,8 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MapaSVG, { type Geo, type UfDado } from "./MapaSVG";
-import Expansor from "../ui/Expansor";
-import DetalheLocal, { type Resumo } from "./DetalheLocal";
+import DetalheLocal, { type EstadoApoio, type Resumo } from "./DetalheLocal";
 import { RAMPA, classe, quantis } from "@/lib/quantis";
 
 type Dados = {
@@ -11,8 +10,9 @@ type Dados = {
   ufs: (UfDado & Resumo)[]; regioes: ({ id: string; nome: string; conf: number; pend: number } & Resumo)[]; exterior: { conf: number; pend: number };
   hoje: { iniciadas: number; confirmadas: number }; ontem: { iniciadas: number; confirmadas: number };
   funil: { visitors: number; formStarts: number; signedVisitors: number; confirmedVisitors: number };
+  config?: { popupEstado: boolean; popupRegiao: boolean };
 };
-type Pop = { uf: string; x: number; y: number };
+type Pop = { tipo: "uf" | "regiao"; id: string; x: number; y: number };
 const n0 = (n: number) => n.toLocaleString("pt-BR");
 const ORDEM = ["N", "NE", "CO", "SE", "S"];
 
@@ -24,6 +24,7 @@ export default function Painel() {
   const [agora, setAgora] = useState(Date.now());
   const [dest, setDest] = useState<string | null>(null);
   const [pop, setPop] = useState<Pop | null>(null);
+  const [regAberta, setRegAberta] = useState<string | null>(null); // uma região expandida por vez (as outras recolhem)
   const ultimo = useRef(0);
 
   const carregar = useCallback(async () => {
@@ -42,11 +43,22 @@ export default function Painel() {
   const dif = d ? d.hoje.confirmadas - d.ontem.confirmadas : 0;
   const ufsOrd = useMemo(() => [...(d?.ufs ?? [])].sort((a, b) => ORDEM.indexOf(a.regiao) - ORDEM.indexOf(b.regiao) || b.total - a.total), [d]);
 
-  // Os detalhes do estado (categorias, IFES e campus líderes, rankings) já vêm no payload do painel: abrir o popup não faz nova consulta.
-  const abrir = (uf: string, x: number, y: number) => setPop({ uf, x, y });
+  // Os detalhes (categorias, IFES e campus líderes, rankings) já vêm no payload do painel: abrir o popup não faz nova consulta.
+  const popupEstado = d?.config?.popupEstado !== false, popupRegiao = d?.config?.popupRegiao !== false; // ligados por padrão; a página de configurações desliga
+  const abrir = (uf: string, x: number, y: number) => { if (!popupEstado) { location.assign(`/admin/mapa?uf=${uf}`); return; } setPop({ tipo: "uf", id: uf, x, y }); };
+  const alterna = (id: string) => setRegAberta((a) => (a === id ? null : id));
   useEffect(() => { const k = (e: KeyboardEvent) => e.key === "Escape" && setPop(null); document.addEventListener("keydown", k); return () => document.removeEventListener("keydown", k); }, []);
-  const u = pop && d?.ufs.find((x) => x.uf === pop.uf);
-  const left = pop ? Math.max(8, Math.min(pop.x + 14, (typeof window !== "undefined" ? window.innerWidth : 1200) - 320)) : 0;
+  const ufsDe = (reg: string) => (d?.ufs ?? []).filter((x) => x.regiao === reg);
+  const estadosApoio = (lista: NonNullable<typeof d>["ufs"], destaqueUf?: string): EstadoApoio[] =>
+    lista.map((x) => ({ nome: x.nome, conf: x.cat.conf.apoiador, pend: x.cat.pend.apoiador, destaque: x.uf === destaqueUf })).filter((x) => x.conf + x.pend > 0)
+      .sort((a, b) => b.conf - a.conf || b.pend - a.pend || a.nome.localeCompare(b.nome, "pt")).slice(0, 10);
+  const alvo = (() => {
+    if (!pop || !d) return null;
+    if (pop.tipo === "uf") { const x = d.ufs.find((u) => u.uf === pop.id); return x ? { titulo: x.nome, sigla: x.uf, conf: x.conf, pend: x.pend, resumo: x as Resumo, estados: estadosApoio(d.ufs, x.uf), ufs: x.uf } : null; }
+    const r = d.regioes.find((g) => g.id === pop.id); if (!r) return null; const ufs = ufsDe(r.id);
+    return { titulo: r.nome, sigla: undefined as string | undefined, conf: r.conf, pend: r.pend, resumo: r as Resumo, estados: estadosApoio(ufs), ufs: ufs.map((x) => x.uf).join(",") };
+  })();
+  const left = pop ? Math.max(8, Math.min(pop.x + 14, (typeof window !== "undefined" ? window.innerWidth : 1200) - 346)) : 0;
   const top = pop ? Math.max(70, Math.min(pop.y - 20, (typeof window !== "undefined" ? window.innerHeight : 800) - 520)) : 0;
 
   return (
@@ -89,11 +101,17 @@ export default function Painel() {
             {(d?.regioes ?? []).length === 0 ? <p className="v2-vazio">Carregando…</p> : (() => {
               const lista = d!.regioes, maximo = Math.max(1, ...lista.map((r) => r.conf + r.pend)), soma = lista.reduce((a, r) => a + r.conf + r.pend, 0) || 1;
               return lista.map((r) => {
-                const v = r.conf + r.pend, ufs = d!.ufs.filter((x) => x.regiao === r.id).map((x) => x.uf).join(",");
+                const v = r.conf + r.pend, aberta = regAberta === r.id, ufs = ufsDe(r.id);
                 return (
-                  <Expansor key={r.id} resumo={<span className="v2-reg-resumo"><span className="v2-reg-nome" title={r.nome}>{r.nome}</span><span className="v2-reg-trilho"><i style={{ width: `${Math.max(2, (v / maximo) * 100)}%` }} /></span><b>{n0(v)}</b><small>{Math.round((v / soma) * 100)}%</small></span>}>
-                    <DetalheLocal conf={r.conf} pend={r.pend} totalGeral={tot} resumo={r} rankingAberto hrefRanking={`/admin/rankings?uf=${ufs}`} hrefMapa={`/admin/mapa?uf=${ufs}`} />
-                  </Expansor>
+                  <div key={r.id} className={`v2-reg${aberta ? " aberta" : ""}`}>
+                    <div className="v2-reg-linha">
+                      <button type="button" className="v2-reg-resumo" aria-haspopup={popupRegiao ? "dialog" : undefined} aria-label={`${r.nome}: ${n0(v)} assinaturas`} onClick={(e) => (popupRegiao ? setPop({ tipo: "regiao", id: r.id, x: e.clientX, y: e.clientY }) : alterna(r.id))}>
+                        <span className="v2-reg-nome" title={r.nome}>{r.nome}</span><span className="v2-reg-trilho"><i style={{ width: `${Math.max(2, (v / maximo) * 100)}%` }} /></span><b>{n0(v)}</b><small>{Math.round((v / soma) * 100)}%</small>
+                      </button>
+                      <button type="button" className="v2-reg-seta" aria-expanded={aberta} aria-label={`${aberta ? "Recolher" : "Expandir"} ${r.nome}`} onClick={() => alterna(r.id)}><i aria-hidden="true" /></button>
+                    </div>
+                    {aberta ? <div className="v2-reg-corpo"><DetalheLocal conf={r.conf} pend={r.pend} totalGeral={tot} resumo={r as Resumo} estados={estadosApoio(ufs)} hrefRanking={`/admin/rankings?uf=${ufs.map((x) => x.uf).join(",")}`} hrefMapa={`/admin/mapa?uf=${ufs.map((x) => x.uf).join(",")}`} /></div> : null}
+                  </div>
                 );
               });
             })()}
@@ -102,16 +120,16 @@ export default function Painel() {
 
         <div className="v2-cartao v2-mapa-cartao">
           <h2>Mapa por estado <small>(vermelho: menos · azul: mais)</small></h2>
-          <div className="v2-mapa-caixa">{geo && d ? <MapaSVG geo={geo} dados={d.ufs} cortes={cortes} destaque={dest} selecionada={pop?.uf ?? null} onDestaque={setDest} onEscolher={abrir} /> : <div className="adm-skel" style={{ height: 380 }} />}</div>
+          <div className="v2-mapa-caixa">{geo && d ? <MapaSVG geo={geo} dados={d.ufs} cortes={cortes} destaque={dest} selecionada={pop?.tipo === "uf" ? pop.id : null} onDestaque={setDest} onEscolher={abrir} /> : <div className="adm-skel" style={{ height: 380 }} />}</div>
           <div className="v2-escala" aria-label="Legenda do mapa">{RAMPA.map((c, i) => <i key={c} style={{ background: c }} title={`classe ${i + 1}`} />)}<span>menos</span><span>mais</span></div>
         </div>
       </div>
 
-      {pop && u && (
-        <div className="v2-popup" style={{ left, top }} role="dialog" aria-label={`Detalhes de ${u.nome}`}>
+      {pop && alvo && (
+        <div className="v2-popup" style={{ left, top }} role="dialog" aria-label={`Detalhes de ${alvo.titulo}`}>
           <button type="button" className="v2-popup-x" aria-label="Fechar" onClick={() => setPop(null)}>✕</button>
-          <h3>{u.nome} <small>{u.uf}</small></h3>
-          <DetalheLocal conf={u.conf} pend={u.pend} totalGeral={tot} resumo={u} hrefRanking={`/admin/rankings?uf=${u.uf}`} hrefMapa={`/admin/mapa?uf=${u.uf}`} />
+          <h3>{alvo.titulo} {alvo.sigla ? <small>{alvo.sigla}</small> : <small>região</small>}</h3>
+          <DetalheLocal key={`${pop.tipo}-${pop.id}`} conf={alvo.conf} pend={alvo.pend} totalGeral={tot} resumo={alvo.resumo} estados={alvo.estados} hrefRanking={`/admin/rankings?uf=${alvo.ufs}`} hrefMapa={`/admin/mapa?uf=${alvo.ufs}`} />
         </div>
       )}
     </section>

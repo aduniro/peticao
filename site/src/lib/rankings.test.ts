@@ -85,6 +85,8 @@ test("resumo por UF e por região: categorias dentro de confirmadas e aguardando
     assert.equal(r.RO.rankIfes[0].sigla, "UNIR"); assert.equal(r.RO.rankIfes[0].conf, 5);
     assert.deepEqual({ nome: r.RO.rankCampi[0].nome, ifes: r.RO.rankCampi[0].ifes, conf: r.RO.rankCampi[0].conf }, { nome: "Porto Velho", ifes: "UNIR", conf: 4 });
     assert.equal(r.SP.cat.conf.apoiador, 2); assert.equal(r.SP.rankIfes.length, 0); // sem servidores em SP
+    assert.deepEqual(r.SP.rankCidades.map((x) => [x.nome, x.conf, x.pend]), [["São Paulo", 2, 0], ["Campinas", 0, 1]]); // cidades dos apoiadores
+    assert.deepEqual(r.RO.rankCidades.map((x) => [x.nome, x.uf, x.conf]), [["Porto Velho", "RO", 1]]);
     assert.equal(r.AC.rankCampi[0].nome, "Rio Branco");
     assert.ok(!("PT" in r) && !Object.keys(r).some((u) => u.length !== 2)); // estrangeiros não entram no mapa por estado
     // junta estados numa região (Norte = RO + AC): soma categorias e refaz os rankings
@@ -92,6 +94,8 @@ test("resumo por UF e por região: categorias dentro de confirmadas e aguardando
     assert.deepEqual(norte.rankIfes.map((x) => [x.sigla, x.conf, x.pend]), [["UNIR", 5, 1], ["UFAC", 1, 1]]);
     assert.equal(norte.cat.conf.docente, 3); assert.equal(norte.cat.pend.tae, 1);
     assert.equal(c.R.juntarUfs([], 10).rankIfes.length, 0);
+    const sudeste = c.R.juntarUfs([r.SP, r.RO], 10); // SP + RO só para somar cidades de estados diferentes
+    assert.deepEqual(sudeste.rankCidades.map((x) => `${x.nome}/${x.uf}`), ["São Paulo/SP", "Porto Velho/RO", "Campinas/SP"]);
     // limite
     assert.equal((await c.R.resumoPorUf(1)).RO.rankCampi.length, 1);
   } finally { await c.dbmod._closeDbForTests(); }

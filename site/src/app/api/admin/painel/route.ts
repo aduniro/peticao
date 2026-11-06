@@ -7,6 +7,7 @@ import { filtrosVazios } from "@/lib/assinaturas-filtros";
 import { monitorSummary, sinceOf } from "@/lib/monitor";
 import { config } from "@/lib/config";
 import { juntarUfs, novoResumo, resumoPorUf } from "@/lib/rankings";
+import { getSetting } from "@/lib/batches";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ let cache: { em: number; p: Promise<unknown> } | null = null;
 async function montar() {
   svg ??= JSON.parse(readFileSync(join(process.cwd(), "public", "data", "geo", "brasil-svg.json"), "utf8"));
   const v = filtrosVazios();
+  const [popupEstado, popupRegiao] = await Promise.all([getSetting("painel_popup_estado", "1"), getSetting("painel_popup_regiao", "1")]); // ligados por padrão (página de configurações)
   const [conf, pend, serie, t, ext, extPend, funil, resumo] = await Promise.all([
     facetas({ ...v, status: ["confirmed"] }), facetas({ ...v, status: ["pending"] }), serieDiaria(v), totais(v),
     totais({ ...v, categoria: ["estrangeiro"], status: ["confirmed"] }), totais({ ...v, categoria: ["estrangeiro"], status: ["pending"] }),
@@ -32,6 +34,7 @@ async function montar() {
     totais: t, ufs, regioes, exterior: { conf: ext.confirmadas, pend: extPend.pendentes },
     hoje: { iniciadas: dia(hoje)?.iniciadas ?? 0, confirmadas: dia(hoje)?.confirmadas ?? 0 }, ontem: { iniciadas: dia(ontem)?.iniciadas ?? 0, confirmadas: dia(ontem)?.confirmadas ?? 0 },
     serie: serie.slice(-14), funil,
+    config: { popupEstado: popupEstado !== "0", popupRegiao: popupRegiao !== "0" },
   };
 }
 
