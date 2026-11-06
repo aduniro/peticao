@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { getSetting, setSetting } from "./batches";
 
 /**
@@ -31,7 +31,22 @@ export function emitirTicket(usuario: string, comando: string, chave = segredo()
 }
 export const terminalConfigurado = () => segredo().length >= 32;
 
-/** Pede a execução ao serviço e devolve a resposta em fluxo (texto). */
-export async function executarNoTerminal(usuario: string, comando: string, fetchImpl: typeof fetch = fetch): Promise<Response> {
-  return fetchImpl(`${terminalUrl()}/executar`, { method: "POST", headers: { "content-type": "application/json", "x-ticket": emitirTicket(usuario, comando) }, body: JSON.stringify({ comando }), signal: AbortSignal.timeout(90_000) });
+export class TerminalProtocolUnavailable extends Error {}
+export function verifyTerminalResult(frame: Record<string, unknown>, nonce: string, commandHash: string, key: string): boolean {
+  if (frame.nonce !== nonce || frame.commandHash !== commandHash || typeof frame.signature !== "string" || !/^[a-f0-9]{64}$/.test(frame.signature)) return false;
+  const expected = createHmac("sha256", key).update("terminal-result:" + JSON.stringify([nonce, commandHash, frame.code, frame.signal, frame.timedOut, frame.truncated, frame.spawnError, frame.bytes])).digest("hex");
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(frame.signature));
+}
+export type TerminalExecution = { response: Response; verify: (frame: Record<string, unknown>) => boolean };
+
+/** Checks protocol before sending any command; final results are signed and bound to this ticket. */
+export async function executarNoTerminal(usuario: string, comando: string, fetchImpl: typeof fetch = fetch): Promise<TerminalExecution> {
+  const capability = await fetchImpl(`${terminalUrl()}/protocolo`, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(5000) });
+  if (!capability.ok) { await capability.body?.cancel().catch(() => {}); throw new TerminalProtocolUnavailable(); }
+  const protocol = await capability.json().catch(() => null);
+  if (protocol?.protocol !== "terminal-ndjson-signed-v1") throw new TerminalProtocolUnavailable();
+  const key = segredo(), ticket = emitirTicket(usuario, comando, key);
+  const identity = JSON.parse(Buffer.from(ticket.split(".")[0], "base64url").toString("utf8")) as { n: string; h: string };
+  const response = await fetchImpl(`${terminalUrl()}/executar`, { method: "POST", headers: { "content-type": "application/json", accept: "application/x-ndjson", "x-ticket": ticket }, body: JSON.stringify({ comando }), signal: AbortSignal.timeout(90_000) });
+  return { response, verify: frame => verifyTerminalResult(frame, identity.n, identity.h, key) };
 }

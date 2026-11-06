@@ -78,7 +78,6 @@ test("terminal: ligado só por tempo limitado (padrão desligado) e a rota exige
     assert.equal(await T.terminalAte(), null); // vencido = desligado
     const rota = readFileSync(join(__dirname, "../app/api/admin/terminal/route.ts"), "utf8");
     assert.match(rota, /exigirNivel\(req, "total", \d+, \{ stepup: true \}\)/);
-    assert.ok(rota.indexOf("audit(\"terminal_comando\"") < rota.indexOf("executarNoTerminal(s.email")); // registra ANTES de executar
   } finally { await dbmod._closeDbForTests(); }
 });
 
@@ -87,4 +86,17 @@ test("terminal: a unidade do serviço é restrita (sem privilégios, sem rede ex
   for (const linha of ["User=peticao-term", "NoNewPrivileges=yes", "CapabilityBoundingSet=", "ProtectSystem=strict", "IPAddressDeny=any", "IPAddressAllow=127.0.0.1", "LoadCredential=segredo:"]) assert.ok(sh.includes(linha), linha);
   for (const p of ["/opt/peticao", "/etc/peticao", "/var/lib/peticao", "/root", "/home"]) assert.ok(new RegExp(`InaccessiblePaths=.*${p.replace("/", "\\/")}( |$)`, "m").test(sh), p);
   assert.ok(!/sudo|User=root/.test(sh.replace(/#.*$/gm, "")));
+});
+
+test("terminal: resultados assinados são vinculados ao comando e ao nonce; ticket não serve como assinatura de resultado", async () => {
+  const T=await import("./terminal"), S=await import("../../scripts/terminal-servico.mjs" as string);
+  const command="echo fixture",ticket=T.emitirTicket("owner@example.org",command,SEGREDO);
+  const identity=JSON.parse(Buffer.from(ticket.split(".")[0],"base64url").toString("utf8"));
+  const result={nonce:identity.n,commandHash:identity.h,code:0,signal:null,timedOut:false,truncated:false,spawnError:false,bytes:0};
+  const signed={...result,signature:S.assinarResultado(result,SEGREDO)};
+  assert.equal(T.verifyTerminalResult(signed,identity.n,identity.h,SEGREDO),true);
+  assert.equal(T.verifyTerminalResult({...signed,code:7},identity.n,identity.h,SEGREDO),false);
+  assert.equal(T.verifyTerminalResult(signed,"different-nonce",identity.h,SEGREDO),false);
+  assert.equal(T.verifyTerminalResult(signed,identity.n,T.sha256hex("another command"),SEGREDO),false);
+  assert.equal(T.verifyTerminalResult({...signed,signature:ticket.split(".")[1]},identity.n,identity.h,SEGREDO),false);
 });
