@@ -85,3 +85,11 @@ class NameReviewTests(ReviewFixture,unittest.TestCase):
    decide_name(101,dict(n,decision='rejected',choice='entered'),'tester',self.db)
    self.assertIsNone(get_names(101,self.db)['ai_proposal'])
    with self.assertRaises(ValueError):import_proposals([request],self.db)
+
+ def test_dictionary_updates_preserve_approval_and_record_original_proposal(self):
+  with patch('name_dictionary.suggest',self.stub):
+   n=get_names(101,self.db);decide_name(101,dict(n,decision='approved',choice='entered'),'tester',self.db)
+  with patch('name_dictionary.suggest',lambda r:dict(self.stub(r),proposed='María Exemplo Silva',dictionary_version='fixture-v2')):
+   n=get_names(101,self.db);self.assertEqual(n['selected_name'],'Maria Exemplo Silva');self.assertEqual(n['decision'],'approved');self.assertEqual(n['approved_dictionary_version'],'fixture-v1')
+   with sqlite3.connect(self.db) as db:
+    snapshot=json.loads(db.execute('SELECT suggestion_snapshot FROM name_decisions').fetchone()[0]);self.assertEqual(snapshot['dictionary_version'],'fixture-v1');self.assertEqual(snapshot['proposed'],'Maria Exemplo Silva')

@@ -11,12 +11,18 @@ def schema(db):
  db.executescript('''CREATE TABLE IF NOT EXISTS name_decisions(
  record_id INTEGER PRIMARY KEY REFERENCES records(id),record_revision TEXT NOT NULL,
  name_revision TEXT NOT NULL,decision TEXT NOT NULL CHECK(decision IN ('pending','approved','rejected')),
- selected_name TEXT,choice TEXT,instruction TEXT,at TEXT NOT NULL,reviewer TEXT NOT NULL,version INTEGER NOT NULL);
+ selected_name TEXT,choice TEXT,instruction TEXT,at TEXT NOT NULL,reviewer TEXT NOT NULL,version INTEGER NOT NULL,
+ dictionary_version TEXT NOT NULL DEFAULT '',suggestion_snapshot TEXT NOT NULL DEFAULT '{}');
  CREATE TABLE IF NOT EXISTS name_history(id INTEGER PRIMARY KEY,record_id INTEGER NOT NULL,
  at TEXT NOT NULL,previous TEXT,current TEXT NOT NULL,reviewer TEXT NOT NULL,batch_id TEXT);
  CREATE TABLE IF NOT EXISTS review_batches(id TEXT PRIMARY KEY,kind TEXT NOT NULL,state TEXT NOT NULL,
  created_at TEXT NOT NULL,payload TEXT NOT NULL,reviewer TEXT,applied_at TEXT);
  ''')
+ db.execute('BEGIN IMMEDIATE')
+ columns={r[1] for r in db.execute('PRAGMA table_info(name_decisions)')}
+ if 'dictionary_version' not in columns:db.execute("ALTER TABLE name_decisions ADD COLUMN dictionary_version TEXT NOT NULL DEFAULT ''")
+ if 'suggestion_snapshot' not in columns:db.execute("ALTER TABLE name_decisions ADD COLUMN suggestion_snapshot TEXT NOT NULL DEFAULT '{}'")
+ db.commit()
 
 
 def record_from(row):
@@ -31,7 +37,8 @@ def names_for(row,db):
  result.update(revision=row['revision'],name_revision=nr,decision=previous['decision'] if current else 'pending',
   selected_name=previous['selected_name'] if previous else None,choice=previous['choice'] if previous else 'proposed',
   instruction=previous['instruction'] if previous else '',version=previous['version'] if previous else 0,
-  stale=bool(previous and not current),previous_decision=previous['decision'] if previous else None)
+  stale=bool(previous and not current),previous_decision=previous['decision'] if previous else None,
+  approved_dictionary_version=previous['dictionary_version'] if previous else None)
  return result
 
 
@@ -71,8 +78,9 @@ def write_name(db,row,request,reviewer,batch_id=None):
  if instruction and decision=='approved':raise ValueError('Salve a instrução para análise. A interpretação deve ser apresentada como nome literal e aprovada separadamente.')
  previous=db.execute('SELECT * FROM name_decisions WHERE record_id=?',(row['id'],)).fetchone()
  new=dict(record_id=row['id'],record_revision=row['revision'],name_revision=value['name_revision'],decision=decision,
-  selected_name=selected,choice=choice,instruction=instruction,at=stamp(),reviewer=reviewer,version=value['version']+1)
- db.execute('INSERT OR REPLACE INTO name_decisions VALUES(:record_id,:record_revision,:name_revision,:decision,:selected_name,:choice,:instruction,:at,:reviewer,:version)',new)
+  selected_name=selected,choice=choice,instruction=instruction,at=stamp(),reviewer=reviewer,version=value['version']+1,dictionary_version=value['dictionary_version'],
+  suggestion_snapshot=json.dumps({key:value.get(key) for key in ['entered_resolved','api_resolved','proposed','special','reasons','alternatives','dictionary_version']},ensure_ascii=False))
+ db.execute('INSERT OR REPLACE INTO name_decisions('+','.join(new)+') VALUES('+','.join(':'+key for key in new)+')',new)
  db.execute('INSERT INTO name_history(record_id,at,previous,current,reviewer,batch_id) VALUES(?,?,?,?,?,?)',
   (row['id'],stamp(),json.dumps(dict(previous),ensure_ascii=False) if previous else None,json.dumps(new,ensure_ascii=False),reviewer,batch_id))
  return new
