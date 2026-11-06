@@ -2,6 +2,7 @@ import { readSecret } from "./secrets";
 import { egressGet, egressSocket } from "./egress";
 import { normalizeRegistryBirth, parseBirth } from "./birth";
 import { cachedCpfProvider } from "./cpf-cache";
+import { classifyCpfName } from "./cpf-name";
 
 /**
  * Consulta de CPF no cpf-brasil.org (documentação v2.0): GET /cpf/{cpf} com o cabeçalho X-API-Key.
@@ -22,24 +23,12 @@ export interface CpfProvider {
   lookup(cpf: string): Promise<CpfRecord | null>;
 }
 
-const PARTICLES = new Set(["da", "de", "do", "das", "dos", "e"]);
 const strip = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z\s]/g, " ").split(/\s+/).filter(Boolean);
-const tokens = (s: string) => strip(s).filter((t) => !PARTICLES.has(t)); // para o nome do assinante (tolerante)
 const same = (a: string, b: string) => a === b || (a.length === 1 && b.startsWith(a)) || (b.length === 1 && a.startsWith(b)); // aceita iniciais
 
-/** Tolerante a acentos, partículas ("da", "de"), iniciais ("M." = "Maria") e nomes do meio omitidos. */
+/** Compatibility only; partial names require identity verification before approval. */
 export function namesMatch(registered: string, declared: string): boolean {
-  const R = tokens(registered), D = tokens(declared);
-  if (R.length === 0 || D.length === 0) return false;
-  if (!same(R[0], D[0])) return false; // primeiro nome precisa conferir
-  const [small, big] = R.length <= D.length ? [R, D] : [D, R];
-  const used = new Set<number>();
-  let shared = 0;
-  for (const t of small) {
-    const i = big.findIndex((u, k) => !used.has(k) && same(t, u));
-    if (i >= 0) { used.add(i); shared++; }
-  }
-  return shared / small.length >= 0.6 && shared >= Math.min(2, small.length);
+  return classifyCpfName(registered, declared) !== "mismatch";
 }
 
 /**
@@ -60,8 +49,9 @@ export function birthMatches(registered: string | null | undefined, typed: strin
   return !!reg && !!t && reg === t.text;
 }
 
-export function nameCheckFromRecord(rec: CpfRecord | null, declaredName: string): CpfNameCheck {
-  return rec && namesMatch(rec.nome, declaredName) ? "match" : "mismatch";
+export function nameCheckFromRecord(rec: CpfRecord | null, declaredName: string, identityVerified = false): CpfNameCheck {
+  const match = rec ? classifyCpfName(rec.nome, declaredName) : "mismatch";
+  return match === "complete" || (match === "partial" && identityVerified) ? "match" : "mismatch";
 }
 
 const clean = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);

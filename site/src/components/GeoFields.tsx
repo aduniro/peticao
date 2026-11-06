@@ -99,7 +99,7 @@ export function IfesCampusFields({ s, set, errors }: { s: ServerState; set: (p: 
           <option value="tae">{t("f.roleTae")}</option>
         </select><Err msg={errors.role} /></label>
       <div className={`region${eligible ? "" : " off"}`} data-tour="region">
-        <label className="check"><input type="checkbox" name="region" required={mustRegion} aria-required={mustRegion} checked={s.region} disabled={!eligible} onChange={(e) => set(e.target.checked ? { region: true, ...(campusOutside ? { campus: "", campusIbge: null } : {}) } : { region: false, campus: "", campusIbge: null })} /> <span>{t("f.region")}<Help text={t("help.region")} /></span></label>
+        <label className="check"><input type="checkbox" name="region" required={mustRegion} aria-required={mustRegion} aria-invalid={!!errors.region} checked={s.region} disabled={!eligible} onChange={(e) => set(e.target.checked ? { region: true, ...(campusOutside ? { campus: "", campusIbge: null } : {}) } : { region: false, campus: "", campusIbge: null })} /> <span>{t("f.region")}<Help text={t("help.region")} /></span></label>
         <small className={eligible ? "ok" : ""}>{why}{mustRegion && <> <strong>{t("f.region.required")}</strong></>}</small>
         <Err msg={errors.region} />
       </div>
