@@ -66,3 +66,21 @@ A integração administrativa foi interrompida para esta prioridade. Pacote de
 produção limitado a `src/components/SignForm.tsx`, preparado sobre a fonte atual
 da VPS. QA local intercepta `/api/assinar` e `/api/email/validar`, usando dados
 fictícios, sem criar assinatura ou consumir consulta paga.
+
+## Recomposição autorizada após auditoria — 06/11/2026
+
+Autorizado restaurar a interação anterior de e-mail sem desfazer as correções
+solicitadas. Recuperados os blocos de orientação, “Você quis dizer…?”, “Usar este”,
+a lista de provedores para apoiador e o motivo específico de conflito de categoria.
+As dicas ficam em bloco informativo; o alerta de sintaxe/provedor permanece curto.
+Servidor e estrangeiro não recebem sugestões de provedores pessoais. Nenhum
+endereço é corrigido sem clicar em “Usar este”. O botão do modal institucional
+mantém nome/e-mail/CPF/consentimento e retira o erro da categoria anterior ao
+mudar para Servidor. Preservados: CPF incompleto destacado, ausência de modais
+no blur, modal único após envio, foco e preservação de preenchimento.
+
+Pacote mínimo: `SignForm.tsx` + `email-feedback.ts`, sobre a produção atual.
+Backend, traduções, dados e regras de validação permanecem os existentes.
+Testes devem comprovar também IFC e domínio institucional, provedor de apoiador,
+e-mail institucional em apoiador, ausência de troca automática e comportamento
+de erro/rede já aprovado. A auditoria anterior é mantida como registro do defeito.

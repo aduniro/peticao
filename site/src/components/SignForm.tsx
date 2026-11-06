@@ -10,6 +10,7 @@ import IdentityModal, { type IdentityMethod } from "./IdentityModal";
 import NoticeModal, { Spammy } from "./NoticeModal";
 import { SAFE_EMAIL_RE } from "@/lib/email-syntax";
 import { suggestEmail } from "@/lib/email-typos";
+import { emailSuggestionForCategory } from "@/lib/email-feedback";
 import { diagnosticar, type Diagnostico } from "@/lib/email-diagnostico";
 import { CountryUniversityFields, IfesCampusFields, UfCityFields, type ServerState } from "./GeoFields";
 import { maskCpf } from "@/lib/cpf-mask";
@@ -46,7 +47,8 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   const explainFix = (d: Diagnostico | null) => {
     if (!d) return "";
     const key = `ef.${d.problema}${d.correto && (d.problema === "sem_final" || d.problema === "sem_arroba") ? "_c" : ""}` as MessageKey;
-    return `${t(key, { errado: d.errado, correto: d.correto ?? "" })} ${t("ef.exemplo", { exemplo: d.exemplo })}`;
+    const example = category === "apoiador" ? d.exemplo : emailSuggestionForCategory(category, d.sugestao);
+    return `${t(key, { errado: d.errado, correto: d.correto ?? "" })}${example ? ` ${t("ef.exemplo", { exemplo: example })}` : ""}`;
   };
   const emailBad = (v: string) => (v.trim() && !SAFE_EMAIL_RE.test(v.trim()) ? t("f.emailInvalid") : "");
   const [issue, setIssue] = useState<{ code: string; suggest: string } | null>(null); // problema do e-mail (domínio inválido…): campo vermelho até o e-mail validar
@@ -63,6 +65,9 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       if (j.ok) setSugg(j.soft?.sugestao ?? suggestEmail(v) ?? "");
     } catch { /* sem rede: o servidor valida de novo ao enviar */ }
   }
+  const emailSuggestion = emailSuggestionForCategory(category, issue?.suggest || sugg || fix?.sugestao, issue?.code);
+  const emailFix = fix && (!fix.sugestao || emailSuggestionForCategory(category, fix.sugestao, issue?.code)) ? fix : null;
+  const emailCategoryIssue = issue?.code === "apoiador_institutional_email" || issue?.code === "server_email_not_institutional";
   const BAD_EMAIL = new Set(["email_not_found", "email_undeliverable", "email_invalid_domain", "email_invalid"]);
   const cpfBad = (cpfTouched || onlyDigits(cpf).length === 11) && !isValidCpf(cpf); // checagem matemática no navegador: CPF inválido nunca chega à CPF Brasil
   const [srv, setSrv] = useState<ServerState>(EMPTY_SERVER);
@@ -197,8 +202,8 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   const modals = (
     <>
       <NoticeModal open={notice === "sent"} title={t("sent.title")} text={t("sent.text", { email: sentTo })} ok={t("sent.ok")} onClose={() => setNotice(null)} />
-      <NoticeModal open={notice === "inst"} tone="error" title={t("inst.title")} text={t("inst.text")} ok={t("inst.ok")} onClose={() => { setNotice(null); setCategory("servidor"); setErrors({}); setMsg(""); setTimeout(() => document.getElementById("assinar")?.scrollIntoView({ behavior: "smooth" }), 80); }} />
-      <NoticeModal open={notice === "bad"} tone="error" title={t("bad.title")} text={t("bad.text", { email: emailMask(emailV, true) })} ok={t("bad.ok")} onClose={() => { setNotice(null); setTimeout(() => document.querySelector<HTMLInputElement>('input[name="email"]')?.focus(), 60); }} />
+      <NoticeModal open={notice === "inst"} tone="error" title={t("inst.title")} text={t("inst.text")} ok={t("inst.ok")} onClose={() => { setNotice(null); setCategory("servidor"); setErrors({}); setIssue(null); setFix(null); setSugg(""); setMsg(""); setTimeout(() => document.getElementById("assinar")?.scrollIntoView({ behavior: "smooth" }), 80); }} />
+      <NoticeModal open={notice === "bad"} tone="error" title={t("bad.title")} text={t("bad.text", { email: emailMask(emailV, true) }) + (emailFix ? " " + explainFix(emailFix) : "")} ok={t("bad.ok")} onClose={() => { setNotice(null); setTimeout(() => document.querySelector<HTMLInputElement>('input[name="email"]')?.focus(), 60); }} />
       <NoticeModal open={notice === "field"} tone="error" title={fieldNotice?.title ?? t("field.validationTitle")} text={fieldNotice?.text ?? t("err.generic")} ok={t((fieldNotice?.buttonKey ?? "field.correct") as MessageKey)} onClose={closeFieldNotice} />
     </>
   );
@@ -234,7 +239,10 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
         </div>
         {err("category")}
         <label>{t("f.name")}<MaskedInput name="name" autoComplete="name" autoCapitalize="words" spellCheck={false} required aria-invalid={!!errors.name} aria-describedby={errors.name ? "error-name" : undefined} value={nameV} onChange={setNameV} mask={nameMask} />{err("name")}</label>
-        <label data-tour="email">{t("f.email")}{category === "servidor" && <Help text={t("help.email.servidor")} />}<MaskedInput name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} required aria-invalid={!!errors.email || !!issue} aria-describedby={errors.email || issue ? "error-email" : undefined} value={emailV} onChange={(v) => { setEmailV(v); emailRef.current = v; setSugg(""); setFix(null); if (errors.email) setErrors((x) => ({ ...x, email: "" })); if (issue) { clearTimeout(issueTimer.current); issueTimer.current = setTimeout(() => checkRemote(emailMask(v, true)), 700); } }} onBlur={() => { const v = emailMask(emailV, true); const m = emailBad(v); if (m) { setErrors((x) => ({ ...x, email: m })); setIssue(null); const dg = diagnosticar(v); setFix(dg); setSugg(dg?.sugestao ?? ""); } else { const dg = diagnosticar(v); setFix(dg); setSugg(dg?.sugestao ?? suggestEmail(v) ?? ""); checkRemote(v); } }} mask={emailMask} />{(errors.email || issue) && <span id="error-email" className="err" role="alert">{t("f.emailInvalid")}</span>}
+        <label data-tour="email">{t("f.email")}{category === "servidor" && <Help text={t("help.email.servidor")} />}<MaskedInput name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} required aria-invalid={!!errors.email || !!issue} aria-describedby={errors.email || issue ? "error-email" : undefined} value={emailV} onChange={(v) => { setEmailV(v); emailRef.current = v; setSugg(""); setFix(null); if (errors.email) setErrors((x) => ({ ...x, email: "" })); if (issue) { clearTimeout(issueTimer.current); issueTimer.current = setTimeout(() => checkRemote(emailMask(v, true)), 700); } }} onBlur={() => { const v = emailMask(emailV, true); const m = emailBad(v); if (m) { setErrors((x) => ({ ...x, email: m })); setIssue(null); const dg = diagnosticar(v); setFix(dg); setSugg(dg?.sugestao ?? ""); } else { const dg = diagnosticar(v); setFix(dg); setSugg(dg?.sugestao ?? suggestEmail(v) ?? ""); checkRemote(v); } }} mask={emailMask} />{(errors.email || issue) && <span id="error-email" className="err" role="alert">{emailCategoryIssue ? t(`err.${issue!.code}` as MessageKey) : errors.email && !issue ? errors.email : t("f.emailInvalid")}</span>}
+          {category === "apoiador" && issue?.code === "email_provider_invalid" && <span className="hint">{t("f.emailProviders")}</span>}
+          {emailFix && !emailCategoryIssue && <span className="hint" role="status" style={{ fontWeight: 400 }}>{explainFix(emailFix)}</span>}
+          {emailSuggestion && <span className="hint" role="status">{t("f.emailSuggest", { email: emailSuggestion })} <button type="button" className="linklike" onClick={() => { const e = emailSuggestion; setEmailV(e); emailRef.current = e; setSugg(""); setFix(null); setIssue(null); setErrors((x) => ({ ...x, email: "" })); checkRemote(e); }}>{t("f.emailUse")}</button></span>}
           <span className="hint">{foreign ? t("f.emailHintForeign") : category === "servidor" ? t("f.emailHintServer") : t("f.emailHint")}</span></label>
         {whatsappAtivo && (
           <div className="wa-field" data-tour="whatsapp">
