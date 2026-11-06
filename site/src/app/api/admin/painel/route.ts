@@ -7,7 +7,7 @@ import { filtrosVazios } from "@/lib/assinaturas-filtros";
 import { monitorSummary, sinceOf } from "@/lib/monitor";
 import { config } from "@/lib/config";
 import { juntarUfs, novoResumo, resumoPorUf } from "@/lib/rankings";
-import { getSetting } from "@/lib/batches";
+import { lerConfigPainel } from "@/lib/painel-config";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,6 @@ let cache: { em: number; p: Promise<unknown> } | null = null;
 async function montar() {
   svg ??= JSON.parse(readFileSync(join(process.cwd(), "public", "data", "geo", "brasil-svg.json"), "utf8"));
   const v = filtrosVazios();
-  const [popupEstado, popupRegiao] = await Promise.all([getSetting("painel_popup_estado", "1"), getSetting("painel_popup_regiao", "1")]); // ligados por padrão (página de configurações)
   const [conf, pend, serie, t, ext, extPend, funil, resumo] = await Promise.all([
     facetas({ ...v, status: ["confirmed"] }), facetas({ ...v, status: ["pending"] }), serieDiaria(v), totais(v),
     totais({ ...v, categoria: ["estrangeiro"], status: ["confirmed"] }), totais({ ...v, categoria: ["estrangeiro"], status: ["pending"] }),
@@ -34,7 +33,6 @@ async function montar() {
     totais: t, ufs, regioes, exterior: { conf: ext.confirmadas, pend: extPend.pendentes },
     hoje: { iniciadas: dia(hoje)?.iniciadas ?? 0, confirmadas: dia(hoje)?.confirmadas ?? 0 }, ontem: { iniciadas: dia(ontem)?.iniciadas ?? 0, confirmadas: dia(ontem)?.confirmadas ?? 0 },
     serie: serie.slice(-14), funil,
-    config: { popupEstado: popupEstado !== "0", popupRegiao: popupRegiao !== "0" },
   };
 }
 
@@ -43,6 +41,7 @@ export async function GET(req: NextRequest) {
   const bloqueio = await exigirNivel(req, "leitura", 240);
   if (bloqueio) return bloqueio;
   if (!cache || Date.now() - cache.em > 15_000) cache = { em: Date.now(), p: montar() };
-  try { return NextResponse.json(await cache.p, { headers: { "cache-control": "no-store" } }); }
+  // A configuração é lida a cada pedido (fora do cache de 15 s): mudar na página de configurações vale na hora.
+  try { return NextResponse.json({ ...(await cache.p as object), config: await lerConfigPainel() }, { headers: { "cache-control": "no-store" } }); }
   catch (e) { cache = null; return NextResponse.json({ ok: false, erro: "Falha ao montar o painel." }, { status: 500 }); }
 }

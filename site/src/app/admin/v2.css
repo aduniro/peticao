@@ -273,3 +273,11 @@ button.v2-reg-seta { flex: none; width: 48px; display: grid; place-items: center
 .v2-escuro .table-scroll { border-radius: 14px; } .v2-escuro .table-scroll table { margin: 0; }
 .v2-escuro .small a, .v2-escuro p a { text-underline-offset: 2px; }
 @media (max-width: 992px) { .v2-escuro .v2-secao > p { font-size: .95rem; } }
+
+/* ===== Configurações: interruptores ===== */
+.v2-cfg { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 14px 16px; margin: 0 0 10px; border: 1px solid var(--adm-line); border-radius: 14px; background: var(--adm-surface); } .v2-cfg h3 { margin: 0 0 4px; font-size: 1rem; } .v2-cfg .v2-sub { margin: 0; max-width: 720px; }
+.v2-chave { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; flex: none; font-weight: 700; } .v2-chave input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.v2-chave span { position: relative; width: 52px; height: 30px; border-radius: 99px; background: rgba(255,255,255,.22); transition: background .15s; } .v2-chave span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.v2-chave input:checked + span { background: #009c3b; } .v2-chave input:checked + span::after { transform: translateX(22px); } .v2-chave input:focus-visible + span { outline: 3px solid #ffdf00; outline-offset: 2px; } .v2-chave input:disabled + span { opacity: .5; } .v2-chave b { min-width: 86px; }
+@media (max-width: 640px) { .v2-cfg { flex-direction: column; align-items: flex-start; } }
+.v2-escuro label.v2-chave { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 10px; }

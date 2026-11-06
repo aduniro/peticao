@@ -12,6 +12,7 @@ export const GRUPOS: Grupo[] = [
   { id: "acesso", rotulo: "Conta e acesso", icone: "M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm-8 9a8 8 0 0 1 16 0z", itens: [
     { href: "/admin/acoes", rotulo: "Central de Ações", icone: "M13 2L4 14h7l-1 8 9-12h-7z", total: true },
     { href: "/admin/terminal", rotulo: "Terminal", icone: "M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm3 4l3 3-3 3m5 0h4", total: true },
+    { href: "/admin/configuracoes", rotulo: "Configurações", icone: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7.4-3a7.4 7.4 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7.6 7.6 0 0 0-2-1.2L14.600 3h-4l-.4 2.600a7.600 7.600 0 0 0-2 1.200l-2.300-.9-2 3.400 2 1.500a7.400 7.400 0 0 0 0 2.400l-2 1.500 2 3.400 2.300-.9a7.600 7.600 0 0 0 2 1.200l.4 2.600h4l.4-2.600a7.600 7.600 0 0 0 2-1.200l2.300.9 2-3.400-2-1.500c.1-.4.1-.8.1-1.200z", total: true },
     { href: "/admin/usuarios", rotulo: "Usuários", icone: "M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0zM4 21a8 8 0 0 1 16 0z", total: true },
     { href: "/admin/conta", rotulo: "Minha conta", icone: "M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm-8 9a8 8 0 0 1 16 0z" },
   ] },
