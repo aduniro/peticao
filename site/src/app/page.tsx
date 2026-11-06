@@ -48,6 +48,7 @@ export default async function Home() {
             <LiveFeed initial={initial} />
             <SignPanel>
               <SignForm consentBr={br.consentBr} consentForeign={est.consentForeign} turnstileSiteKey={turnstileEnabled() ? turnstileSiteKey() : null} whatsappAtivo={whatsappAtivo()} />
+              {process.env.SUBSCRIBER_ACCESS_ENABLED === "1" && <p className="small"><a href="/minha-assinatura">Verificar/Corrigir minha assinatura</a></p>}
             </SignPanel>
           </div>
         </div>
