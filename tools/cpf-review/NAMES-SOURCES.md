@@ -49,7 +49,7 @@ A versão inclui SHA-256 do corpus; mudanças no arquivo não podem passar despe
 Não há rede, escrita em banco ou alteração do registro fornecido durante a resolução.
 
 O nome mais completo é escolhido **inteiro**, pelo número de palavras relevantes.
-Em empate, prevalece o digitado. Diferenças de palavras/ordem são casos especiais
+Em empate, prevalece a API. Diferenças de palavras/ordem são casos especiais
 para decisão individual. Não há fusão automática de sobrenomes. A proposta sempre
 exige aprovação independente da decisão sobre CPF.
 
@@ -72,3 +72,9 @@ não acrescenta automaticamente um acento desconhecido ao nome da API.
 O digest da versão inclui esse arquivo. Ausência do arquivo não impede o uso do
 corpus público. A cobertura agregada, sem identificação de assinantes, fica em
 `/mnt/dev/cpfs/revisao/nomes-cobertura.json`; reflete um snapshot, não prova de nome civil.
+
+A política posterior está centralizada em `site/src/content/name-print-policy.json`:
+API completa por padrão, digitado apenas com nomes completos adicionais. Espaços
+indevidos apoiados em palavra da API não contam como nomes adicionais. O corpus
+público fica em `site/src/content/name-dictionary.json`; o caminho anterior é um
+link de compatibilidade. A validação de identidade permanece estrita e separada.

@@ -51,3 +51,11 @@ Preservar IDs, inscrição e datas originais; alteração de e-mail exige fluxo 
 e recuperação assistida quando os canais forem perdidos. Interface segue visual
 Admin-2, com autenticação separada. Nenhuma dessas pendências está concluída apenas
 por constar deste documento.
+
+## Atualização normativa posterior
+
+A escolha anterior de empate favorecendo o digitado foi substituída por instrução
+expressa: API completa por padrão; digitado apenas com nomes completos adicionais,
+sem contar espaços indevidos ou iniciais. Ver `docs/POLITICA-CENTRAL-NOMES.md`.
+Validação estrita e exceção controlada de casamento seguem política própria,
+sem alterar decisões CPF nem confundir proposta de impressão com prova de identidade.

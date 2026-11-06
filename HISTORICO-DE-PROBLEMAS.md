@@ -197,3 +197,25 @@ Não confundir código implementado/testado localmente com release publicado na 
 - Permanecem abertos: revisão humana, mensagem anônima de duplicidade, preservação
   dos pendentes refeitos, casos sem retorno/número de CPF, retenção de exportações,
   compatibilização dos avisos e publicação/consolidação/envio dos lotes.
+
+## Instruções posteriores do responsável: política central e validação
+
+- Priorizar sempre o nome completo da API com acentuação, inclusive nomes do meio e
+  partículas comprovadas. Usar o digitado apenas quando houver nomes completos
+  adicionais; espaço indevido (`Sant Ana`/`Santana`) e iniciais não contam.
+- Trocar a regra anterior de empate favorecendo digitado. Preservar escolhas e
+  histórico, sinalizando as incompatíveis para nova revisão sem alterar CPF.
+- Botão de aprovação de nome em cada linha solicitado e implementado, com QA
+  Firefox sem janela, literal exato e preservação dos controles CPF.
+- Validação pública: grafia exata de todas as palavras comparadas, sem aceitar
+  typo, colagem ou separação interna. Compostos aceitam hífen/espaço com todos os
+  componentes exatos. Acentos, caixa e partículas são normalizados.
+- Exceção de casamento: declaração, identidade adicional e revisão/notificação;
+  não presumir casamento de divergência nem apresentar sobrenome desconhecido
+  como correspondência exata confirmada pela API. Esse fluxo ainda deve ser
+  concluído e testado no candidato antes de publicar.
+- Fonte normativa: `docs/POLITICA-CENTRAL-NOMES.md`, políticas JSON compartilhadas
+  e implementações do resolvedor/validador. Notificação por e-mail é requisito da
+  integração; testes e preparação não fazem envios reais.
+- Integração admin-v2 continua em andamento: `docs/PLANO-INTEGRACAO-ADMIN-VPS.md`.
+  Não confundir a atualização local da revisão com deploy na plataforma.

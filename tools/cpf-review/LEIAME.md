@@ -65,7 +65,7 @@ enriquecimentos cadastrais não desfazem decisões de CPF.
 
 O dicionário é versionado e contém candidatos, não provas da grafia civil. Consulte
 `/mnt/dev/peticao/tools/cpf-review/NAMES-SOURCES.md`. O nome mais completo é
-escolhido inteiro, pelo número de palavras relevantes; empates favorecem o digitado.
+escolhido inteiro, pelo número de palavras relevantes; a API prevalece em empate; o digitado só é preferido com nomes completos adicionais.
 Sobrenomes adicionais/diferentes e inversões ficam para decisão individual.
 
 Os botões de lote exigem uma categoria e mostram uma prévia. Consideram os filtros
@@ -113,3 +113,18 @@ ficar privado. Não migra hashes nem autoriza uma migração automaticamente:
 ```sh
 /usr/bin/python3 /mnt/dev/peticao/tools/cpf-review/audit_email.py --output /mnt/dev/cpfs/revisao/auditoria-email-nova.json
 ```
+
+## Política central atualizada
+
+A sugestão principal usa o nome completo da API + acentos. A exceção do digitado
+mais extenso exige nomes completos adicionais, não iniciais nem espaços inseridos
+num sobrenome da API (`Sant Ana` não é maior que `Santana`). Preservar partículas
+comprovadas. Regras: `/mnt/dev/peticao/docs/POLITICA-CENTRAL-NOMES.md`.
+
+O botão **Aprovar nome** em cada linha aprova exatamente o texto exibido, sem abrir
+a janela e sem alterar CPF. Casos com instrução IA pendente precisam primeiro da
+interpretação; conflitos de outra aba não sobrescrevem a decisão mais nova.
+
+Escolhas antigas incompatíveis com a nova preferência ficam sinalizadas para
+revisão, mantendo o texto/histórico anterior e o aceite do CPF. A nova prévia não
+inclui um nome que aguarda essa revisão. Isso não reescreve PDFs já gerados.
