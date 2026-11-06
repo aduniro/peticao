@@ -47,8 +47,8 @@ async function record(cpfHash: string, method: string, ok: boolean) {
 }
 
 /**
- * Confere a identidade comparando o dado digitado com o cadastro do CPF. O dado digitado e o retornado pelo serviço
- * existem apenas em memória durante esta chamada: só gravamos o CPF em hash, o método e se acertou.
+ * Compara o dado digitado com o cadastro (API ou cache criptografado). O dado digitado não é persistido;
+ * a tentativa guarda somente o CPF em hash, o método, o resultado e o horário.
  */
 export async function verifyIdentity(a: { cpf: string; method: IdentityMethod; value: string; declaredName: string; provider?: CpfProvider | null }): Promise<IdentityResult> {
   const provider = a.provider === undefined ? defaultProvider() : a.provider;
@@ -89,20 +89,12 @@ export type NameGate =
   | { ok: true; nameCheck: "match" }
   | { ok: false; reason: "mismatch" | "not_found" | "unavailable" | "locked" };
 
-const nameCache = new Map<string, { at: number; ok: boolean }>();
-const NAME_TTL = 10 * 60_000;
-export const _clearNameCache = () => nameCache.clear();
-const foldName = (n: string) => n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z ]/g, " ").split(/\s+/).filter(Boolean).join(" ");
-
 /**
- * Impede o CPF de outra pessoa com um nome qualquer. Guarda só o veredito (booleano) por 10 min, para não repetir consulta quando a pessoa
- * reenvia o formulário; os dados cadastrais retornados pelo serviço nunca são gravados. 5 recusas por CPF em 24 h travam por 24 h.
+ * Recalcula a comparação a cada envio, inclusive quando o cadastro vem do cache de 30 dias.
+ * Não conserva recusas de nome. O limite existente continua sendo 5 erros por CPF em 24 h.
  */
 export async function verifyCpfName(a: { cpf: string; declaredName: string; provider: CpfProvider }): Promise<NameGate> {
   const cpfHash = hmac(a.cpf);
-  const key = hmac(`${a.cpf}|${foldName(a.declaredName)}`);
-  const hit = nameCache.get(key);
-  if (hit && Date.now() - hit.at < NAME_TTL) return hit.ok ? { ok: true, nameCheck: "match" } : { ok: false, reason: "mismatch" };
   if ((await failedRecent(cpfHash)) >= MAX_FAILED) return { ok: false, reason: "locked" };
   let rec;
   try {
@@ -116,7 +108,5 @@ export async function verifyCpfName(a: { cpf: string; declaredName: string; prov
   if (!rec) { await record(cpfHash, "nome", false); return { ok: false, reason: "not_found" }; }
   const ok = nameCheckFromRecord(rec, a.declaredName) === "match";
   await record(cpfHash, "nome", ok);
-  if (nameCache.size > 2000) nameCache.clear();
-  nameCache.set(key, { at: Date.now(), ok });
   return ok ? { ok: true, nameCheck: "match" } : { ok: false, reason: "mismatch" };
 }

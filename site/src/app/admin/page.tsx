@@ -1,7 +1,5 @@
 import { isAdmin } from "@/lib/admin";
 import Dashboard from "@/components/admin/Dashboard";
-import Painel from "@/components/admin/painel/Painel";
-import BarraLista from "@/components/admin/ui/BarraLista";
 import AdminLogin from "@/components/admin/AdminLogin";
 import { turnstileEnabled, turnstileSiteKey } from "@/lib/turnstile";
 import { counts } from "@/lib/signatures";
@@ -43,62 +41,45 @@ export default async function Admin({ searchParams }: { searchParams: { erro?: s
   const suppressed = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason IN ('bounce','complaint')")).rows[0].n;
   const provider = defaultProvider();
   const lastErr = await getSetting("cpf_provider_last_error", "");
-  const itens = (l: { k: string; n: number }[]) => l.map((r) => ({ nome: r.k, valor: r.n }));
-  const REG: Record<string, string> = { amazonia_legal: "Amazônia Legal", faixa_fronteira: "Faixa de Fronteira", ambos: "Ambas" };
   return (
-    <main className="v2-pagina">
-      <Painel />
-      <div className="v2-secao">
-        {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
-        <div className="v2-acoes" role="group" aria-label="Atalhos">
-          <a className="v2-btn v2-btn-primario" href="/admin/emails">E-mails e pendentes</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/lotes">Lotes e envios</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/devolvidos">Sem e-mail entregue</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/mapa">Mapa interativo</a>
-          <a className="v2-btn v2-btn-sec" href="/api/admin/export">Baixar lista (CSV)</a>
-          <a className="v2-btn v2-btn-sec" href="/api/admin/pdf-previa?tipo=modelo" target="_blank" rel="noopener">PDF: prévia do modelo</a>
-          <a className="v2-btn v2-btn-sec" href="/api/admin/pdf-previa?tipo=real" target="_blank" rel="noopener">PDF: prévia real</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/contato">Mensagens de contato</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/dominios">Domínios institucionais</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/monitor">Monitor de acessos</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/indicacoes">Indicações</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/dispersao">Dispersão da campanha</a>
-        </div>
-      </div>
-
-      <div className="v2-secao"><h2 className="v2-h2">Análise detalhada</h2><p className="v2-sub">Filtre por categoria, cargo, instituição, campus, estado, cidade, país e período; os gráficos e o mapa respondem juntos.</p><Dashboard /></div>
-
-      <div className="v2-secao v2-grade3">
-        <div className="v2-cartao"><BarraLista titulo="Servidores por instituição (IFES)" itens={itens(byIfes)} vazio="Nenhum servidor confirmado ainda." /></div>
-        <div className="v2-cartao"><BarraLista titulo="Apoiadores por estado" itens={itens(byUf)} vazio="Nenhum apoiador confirmado ainda." /></div>
-        <div className="v2-cartao"><BarraLista titulo="Estrangeiros por país" itens={itens(byCountry)} vazio="Nenhum estrangeiro confirmado ainda." /></div>
-        <div className="v2-cartao"><BarraLista titulo="Servidores na Amazônia Legal / Fronteira (validado pelo IBGE)" itens={[...byRegion.map((r) => ({ nome: REG[r.k] ?? r.k, valor: r.n })), ...(notRegion ? [{ nome: "Sem lotação validada", valor: notRegion }] : [])]} vazio="Nenhum servidor com lotação validada." /></div>
-        <div className="v2-cartao"><BarraLista titulo="Idioma da tela ao assinar" itens={itens(byLocale)} vazio="—" /></div>
-        <div className="v2-cartao"><h2>Sistema</h2>
-          <ul className="v2-status">
-            <li><span>Auditoria</span><b className={chain.ok ? "ok" : "ruim"}>{chain.ok ? "cadeia íntegra" : `ADULTERAÇÃO na linha ${chain.brokenAt}`}</b></li>
-            <li><span>Verificação de CPF</span><b>{identityMode()} · {provider ? (provider.name === "mock" ? "dados de teste" : provider.name) : "sem chave"}</b></li>
-            <li><span>Último erro do serviço de CPF</span><b>{lastErr || "nenhum"}</b></li>
-          </ul>
-          <form method="post" action="/api/admin/identidade/zerar" className="v2-linha"><input name="cpf" placeholder="CPF para liberar (zera as tentativas erradas)" inputMode="numeric" required aria-label="CPF para liberar" /><button className="v2-btn v2-btn-sec">Liberar CPF</button></form>
-        </div>
-      </div>
-
-      <div className="v2-secao">
-        <h2 className="v2-h2">Últimas 25 assinaturas</h2>
-        <div className="table-scroll">
-          <table>
-            <thead><tr><th>Nº</th><th>Nome</th><th>Categoria</th><th>Instituição / Cidade</th><th>Status</th><th>Criada em (Brasília)</th><th>Confirmada em</th><th>Lote</th></tr></thead>
-            <tbody>
-              {last.map((r, i) => (
-                <tr key={i}><td>{r.seq ?? "—"}</td><td>{r.name}</td><td>{r.category}</td>
-                  <td>{r.category === "estrangeiro" ? `${r.university ?? "—"} (${r.country ?? "—"})` : r.category === "servidor" ? r.institution ?? "—" : [r.city, r.uf].filter(Boolean).join("/") || "—"}</td>
-                  <td><span className={`v2-selo ${r.status === "confirmed" ? "ok" : "esp"}`}>{r.status === "confirmed" ? "confirmada" : "aguardando e-mail"}</span></td><td>{brasilia(r.created_at)}</td><td>{r.confirmed_at ? brasilia(r.confirmed_at) : "—"}</td><td>{r.batch_id ?? "—"}</td></tr>
-              ))}
-              {last.length === 0 && <tr><td colSpan={8}>Nenhuma assinatura ainda.</td></tr>}
-            </tbody>
-          </table>
-        </div>
+    <main>
+      <h1>Painel</h1>
+      <Dashboard />
+      <h2>Resumo e ferramentas</h2>
+      {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
+      <p><strong>{c.total}</strong> confirmadas ({c.servidor} servidores · {c.apoiador} apoiadores · {c.estrangeiro} estrangeiros) · {pending} aguardando confirmação</p>
+      <p>Auditoria: {chain.ok ? "cadeia íntegra" : `ADULTERAÇÃO detectada na linha ${chain.brokenAt}`}</p>
+      <p><a href="/api/admin/export">Baixar lista (CSV, sem CPF e sem e-mail)</a> · <a href="/admin/lotes">Lotes e envios</a> · <a href="/admin/emails"><strong>E-mails</strong></a> · <a href="/admin/devolvidos">Sem e-mail entregue</a> · <a href="/api/admin/pdf-previa?tipo=modelo" target="_blank" rel="noopener">PDF: prévia do modelo</a> · <a href="/api/admin/pdf-previa?tipo=real" target="_blank" rel="noopener">PDF: prévia real (assinaturas atuais)</a> · <a href="/admin/contato">Mensagens de contato</a> · <a href="/admin/dominios">Domínios institucionais</a> · <a href="/admin/monitor">Monitor de acessos</a> · <a href="/admin/indicacoes">Indicações</a> · <a href="/admin/dispersao">Dispersão da campanha</a></p>
+      <section className="box" style={{ margin: "12px 0" }}>
+        <h2 style={{ marginTop: 0 }}>Verificação de identidade (CPF)</h2>
+        <p>Modo: <strong>{identityMode()}</strong> · Provedor: <strong>{provider ? (provider.name === "mock" ? "DADOS DE TESTE (mock)" : provider.name) : "nenhum (sem chave)"}</strong>
+          {lastErr ? <> · Último erro do serviço: <code>{lastErr}</code></> : " · Sem erros registrados"}</p>
+        <form method="post" action="/api/admin/identidade/zerar" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <input name="cpf" placeholder="CPF para liberar (zera as tentativas erradas)" size={36} inputMode="numeric" required /><button>Liberar CPF</button>
+        </form>
+      </section>
+      <section className="box" style={{ margin: "12px 0" }}>
+        <h2 style={{ marginTop: 0 }}>Métricas (confirmadas)</h2>
+        <p>Meta: <strong>{config.goal()}</strong> · próximo envio parcial em <strong>{config.batchSize() - (c.total % config.batchSize())}</strong> assinaturas</p>
+        <p>Servidores lotados na Amazônia Legal / faixa de fronteira (declarado e validado pelo IBGE): {byRegion.length ? byRegion.map((r) => `${r.k}: ${r.n}`).join(" · ") : "0"} · servidores sem essa lotação validada: {notRegion}</p>
+        <p>Servidores por IFES: {byIfes.map((r) => `${r.k} ${r.n}`).join(" · ") || "—"}</p>
+        <p>Apoiadores por UF: {byUf.map((r) => `${r.k} ${r.n}`).join(" · ") || "—"}</p>
+        <p>Estrangeiros por país: {byCountry.map((r) => `${r.k} ${r.n}`).join(" · ") || "—"}</p>
+        <p>Idioma da tela ao assinar: {byLocale.map((r) => `${r.k} ${r.n}`).join(" · ") || "—"}</p>
+      </section>
+      <h2>Últimas 25 assinaturas</h2>
+      <div className="table-scroll">
+        <table>
+          <thead><tr><th>Nº</th><th>Nome</th><th>Categoria</th><th>Instituição / Cidade</th><th>Status</th><th>Criada em (Brasília)</th><th>Confirmada em</th><th>Lote</th></tr></thead>
+          <tbody>
+            {last.map((r, i) => (
+              <tr key={i}><td>{r.seq ?? "—"}</td><td>{r.name}</td><td>{r.category}</td>
+                <td>{r.category === "estrangeiro" ? `${r.university ?? "—"} (${r.country ?? "—"})` : r.category === "servidor" ? r.institution ?? "—" : [r.city, r.uf].filter(Boolean).join("/") || "—"}</td>
+                <td>{r.status === "confirmed" ? "confirmada" : "aguardando e-mail"}</td><td>{brasilia(r.created_at)}</td><td>{r.confirmed_at ? brasilia(r.confirmed_at) : "—"}</td><td>{r.batch_id ?? "—"}</td></tr>
+            ))}
+            {last.length === 0 && <tr><td colSpan={8}>Nenhuma assinatura ainda.</td></tr>}
+          </tbody>
+        </table>
       </div>
     </main>
   );

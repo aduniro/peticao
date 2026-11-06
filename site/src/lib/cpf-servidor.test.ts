@@ -8,7 +8,6 @@ test("servidor: CPF obrigatório — o nome precisa conferir com o cadastro do C
   const { handleSign } = await import("./sign-flow");
   const { _setMxResolverForTests } = await import("./email-check");
   const { mockProvider, ProviderUnavailable } = await import("./cpf-check");
-  const { _clearNameCache } = await import("./identity");
   _setMxResolverForTests(async () => "ok");
   const ctx = { ip: "10.2.2.2", ua: "teste", locale: "pt" } as never;
   const provider = mockProvider({ "52998224725": { nome: "MARIA DA SILVA SANTOS" }, "11144477735": { nome: "JOAO PEREIRA LIMA" } });
@@ -28,7 +27,6 @@ test("servidor: CPF obrigatório — o nome precisa conferir com o cadastro do C
     const nf = await handleSign(sv("Pedro Souza Costa", "pedro@unir.br", "390.533.447-05"), ctx, provider);
     assert.equal((nf.json as any).errors?.cpf, "cpf_not_found");
     // serviço fora do ar: 503, sem assinatura
-    _clearNameCache();
     const down = { name: "cpf-brasil", lookup: async () => { throw new ProviderUnavailable("QUOTA"); } } as never;
     const un = await handleSign(sv("Ana Lima Souza", "ana@unir.br", "123.456.789-09"), ctx, down);
     assert.deepEqual([un.status, (un.json as any).errorCode], [503, "cpf_check_unavailable"]);

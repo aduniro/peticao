@@ -1,10 +1,12 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { filtrosParaQuery, filtrosVazios, type Filtros } from "@/lib/assinaturas-filtros";
 import type { Faceta, Ponto } from "@/lib/assinaturas-explorar";
 import Grafico from "./Grafico";
 import { Caixa, Faixa, Multi, Segmentado } from "./controles";
 
+const Coropletico = dynamic(() => import("./Coropletico"), { ssr: false, loading: () => <div className="adm-skel" style={{ height: 460 }} /> });
 
 type Dados = {
   totais: { confirmadas: number; pendentes: number; servidores: number; apoiadores: number; estrangeiros: number; cpfConferido: number };
@@ -95,11 +97,13 @@ export default function Dashboard() {
           <Caixa rotulo="Faixa de Fronteira" marcado={tem("regiao", "faixa_fronteira")} onChange={(v) => alterna("regiao", "faixa_fronteira", v)} />
           <Caixa rotulo="CPF conferido" marcado={tem("cpf", "sim")} onChange={(v) => alterna("cpf", "sim", v)} />
           <Caixa rotulo="Só confirmadas" marcado={tem("status", "confirmed")} onChange={(v) => alterna("status", "confirmed", v)} />
+          <Caixa rotulo="Campi no mapa" marcado={campi} onChange={setCampi} />
           <Caixa rotulo="Atualizar a cada 1 min" marcado={auto} onChange={setAuto} />
           {ativos ? <button type="button" className="adm-btn" onClick={() => { setF(filtrosVazios()); if (dias.length) setFaixa([0, dias.length - 1]); }}>Limpar filtros ({ativos})</button> : null}
         </div>
         <div className="adm-barra-filtros" style={{ marginTop: 10 }}>
           {faixa && dias.length > 1 ? <Faixa rotulo="Intervalo de datas" min={0} max={dias.length - 1} valor={faixa} onChange={aplicaFaixa} formato={(n) => brData(dias[n] ?? "")} /> : null}
+          <Faixa rotulo="Mínimo de assinaturas por local (mapa)" min={1} max={Math.max(2, maxPonto)} valor={minimo} onChange={setMinimo} />
         </div>
         </div>
       </div>
@@ -116,6 +120,9 @@ export default function Dashboard() {
       <div className="adm-grid">
         <div className="adm-card adm-c8"><h3>Assinaturas por dia</h3><Grafico tipo="line" dados={serie} altura={260} /></div>
         <div className="adm-card adm-c4"><h3>Categorias</h3><Grafico tipo="doughnut" dados={rosca} altura={260} /></div>
+        <div className="adm-card adm-c8"><h3>Estados <small className="adm-sub">(vermelho: menos · azul: mais · amarelo: campi)</small></h3>
+          <Coropletico estados={dados?.estados ?? []} pontos={pontos} selecionadas={f.uf} onSelecionar={(ufs) => set("uf", ufs)} campi={campi} />
+          {dados?.semLocal ? <p className="adm-sub">{dados.semLocal} assinatura(s) sem local identificado não aparecem no mapa.</p> : null}</div>
         <div className="adm-card adm-c4"><h3>Funil de visitas</h3><Grafico tipo="bar" dados={funil} horizontal altura={260} /></div>
         <div className="adm-card adm-c6"><h3>Instituições</h3><Grafico tipo="bar" dados={rank("instituicao")} horizontal altura={280} />{nada("instituicao")}</div>
         <div className="adm-card adm-c6"><h3>Campi</h3><Grafico tipo="bar" dados={rank("campus")} horizontal altura={280} />{nada("campus")}</div>

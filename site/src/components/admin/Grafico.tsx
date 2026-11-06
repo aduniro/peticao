@@ -15,7 +15,7 @@ export default function Grafico({ tipo, dados, altura = 240, horizontal = false,
     (async () => {
       const { default: Chart } = await import("chart.js/auto");
       if (!vivo || !ref.current) return;
-      const escuro = !!document.querySelector(".v2-escuro") || document.documentElement.dataset.theme === "dark" || matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light";
+      const escuro = document.documentElement.dataset.theme === "dark" || matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light";
       const pal = escuro ? CORES.escuro : CORES.claro;
       const tinta = escuro ? "#c3c2b7" : "#52514e", grade = escuro ? "#ffffff1a" : "#0000001a", sup = escuro ? "#1a1a19" : "#fcfcfb";
       const ds = dados.datasets.map((d, i) => {

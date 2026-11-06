@@ -4,13 +4,11 @@ import L from "leaflet";
 import { useEffect, useRef } from "react";
 import type { Ponto } from "@/lib/assinaturas-explorar";
 import type { PontoVisita } from "@/app/api/admin/assinaturas/visitas/route";
-import type { RequestPoint } from "@/lib/monitor";
-import { REQ_COLORS } from "../req-colors";
 
 const CAT: Record<string, string> = { servidor: "Servidores", apoiador: "Apoiadores", estrangeiro: "Estrangeiros" };
 
 /** Mapa do local declarado: um círculo por lugar (tamanho = assinaturas; azul = só confirmadas, vermelho = há pendentes). Clicar filtra a tabela. */
-export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visitas, acessos }: { pontos: Ponto[]; altura: string; onEscolher: (p: Ponto) => void; foco?: string | null; visitas?: PontoVisita[] | null; acessos?: RequestPoint[] | null }) {
+export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visitas }: { pontos: Ponto[]; altura: string; onEscolher: (p: Ponto) => void; foco?: string | null; visitas?: PontoVisita[] | null }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
@@ -30,18 +28,6 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
     if (!map.current || !layer.current) return;
     layer.current.clearLayers(); marcas.current = {};
     const lim: L.LatLngTuple[] = [];
-    if (acessos) {
-      const ROT = { confirmed: "assinaturas confirmadas", pending: "aguardando confirmação do e-mail", invalid: "e-mails inexistentes", blocked: "e-mails bloqueados", queued: "e-mails na fila" } as const;
-      for (const a of acessos) {
-        const dom = (Object.keys(ROT) as (keyof typeof ROT)[]).reduce((m, k) => (a[k] > a[m] ? k : m), "confirmed" as keyof typeof ROT); const tot = a.confirmed + a.pending + a.invalid + a.blocked + a.queued; if (!tot) continue;
-        const m = L.circleMarker([a.lat, a.lon], { radius: 5 + Math.min(22, Math.sqrt(tot) * 3), color: REQ_COLORS[dom], fillColor: REQ_COLORS[dom], fillOpacity: 0.55, weight: 1.5 });
-        const box = document.createElement("div"); const h = document.createElement("strong"); h.textContent = [a.city, a.region, a.country].filter(Boolean).join(", ") || "Local desconhecido"; box.appendChild(h);
-        for (const k of Object.keys(ROT) as (keyof typeof ROT)[]) if (a[k]) { const d = document.createElement("div"); d.textContent = `${a[k]} ${ROT[k]}`; box.appendChild(d); }
-        m.bindPopup(box); m.addTo(layer.current); lim.push([a.lat, a.lon]);
-      }
-      if (lim.length) map.current.fitBounds(L.latLngBounds(lim).pad(0.2), { maxZoom: 8 });
-      return;
-    }
     if (visitas) {
       for (const v of visitas) {
         const m = L.circleMarker([v.lat, v.lon], { radius: 5 + Math.min(24, Math.sqrt(v.visitas + v.confirmadas + v.pendentes) * 2.5), color: v.devolvidos ? "#991b1b" : "#1d4ed8", fillColor: v.devolvidos ? "#ef4444" : v.confirmadas ? "#18a366" : "#3b82f6", fillOpacity: 0.55, weight: 1.5 });
@@ -65,7 +51,7 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
       m.bindPopup(box); m.addTo(layer.current); marcas.current[p.chave] = m; lim.push([p.lat, p.lon]);
     }
     if (lim.length) map.current.fitBounds(L.latLngBounds(lim).pad(0.2), { maxZoom: 8 });
-  }, [pontos, visitas, acessos]);
+  }, [pontos, visitas]);
 
   useEffect(() => { const m = foco ? marcas.current[foco] : null; if (m && map.current) { map.current.setView(m.getLatLng(), Math.max(map.current.getZoom(), 7)); m.openPopup(); } }, [foco]);
 
