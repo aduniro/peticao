@@ -1,25 +1,29 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ativo, GRUPOS, grupoDe, tituloDe, type Alertas, type Grupo, type Item } from "./menu";
+import { ativo, GRUPOS, grupoDe, gruposVisiveis, tituloDe, type Alertas, type Grupo, type Item } from "./menu";
+
+/** Quem está logado e o nível (vindos do servidor). Itens marcados `total` só aparecem para o nível Total; quem barra de verdade é cada página e rota. */
+export type Quem = { nome: string; nivel: string; rotuloNivel: string };
 
 const Icone = ({ d }: { d: string }) => <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>;
 const SAIR = (cls: string, rotulo = "Sair") => <form method="post" action="/api/admin/sair"><button className={cls} aria-label="Sair do painel">{rotulo}</button></form>;
 
 /** Moldura do painel v2: topo fixo com botão sanduíche, trilho lateral com submenus (flyout) ao passar o mouse e gaveta no celular. Sem barra inferior. */
-export default function Shell({ children }: { children: React.ReactNode }) {
+export default function Shell({ children, quem, ehTotal = false }: { children: React.ReactNode; quem?: Quem; ehTotal?: boolean }) {
   const path = usePathname() ?? "/admin";
   if (path.startsWith("/admin/mapa/tela")) return <div className="adm v2 adm-solo">{children}</div>;
-  return <Moldura path={path}>{children}</Moldura>;
+  return <Moldura path={path} quem={quem} ehTotal={ehTotal}>{children}</Moldura>;
 }
 
-function Moldura({ path, children }: { path: string; children: React.ReactNode }) {
+function Moldura({ path, children, quem, ehTotal }: { path: string; children: React.ReactNode; quem?: Quem; ehTotal: boolean }) {
   const [al, setAl] = useState<Alertas>({ emails: 0, lotes: 0, contato: 0 });
   const [gaveta, setGaveta] = useState(false);
   const [aberto, setAberto] = useState<string | null>(null); // grupo com flyout aberto
   const [fixo, setFixo] = useState(false);                   // flyout fixado por clique
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const escuro = path === "/admin";
+  const grupos = gruposVisiveis(ehTotal);
 
   useEffect(() => {
     let vivo = true;
@@ -48,7 +52,7 @@ function Moldura({ path, children }: { path: string; children: React.ReactNode }
     </a>
   );
   const gAtivo = grupoDe(path);
-  const gAberto = GRUPOS.find((g) => g.id === aberto);
+  const gAberto = grupos.find((g) => g.id === aberto);
 
   return (
     <div className="adm v2" data-tema={escuro ? "escuro" : "claro"}>
@@ -56,11 +60,11 @@ function Moldura({ path, children }: { path: string; children: React.ReactNode }
         <button type="button" className="v2-sanduiche" aria-label="Abrir o menu" aria-expanded={gaveta} onClick={abrirGaveta}><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>
         <a className="v2-marca" href="/admin"><b>PLV 12/2026</b><small>Painel da campanha</small></a>
         <nav className="v2-migalha" aria-label="Você está em"><span>{GRUPOS.find((g) => g.id === gAtivo)?.rotulo}</span><i aria-hidden="true">›</i><strong>{tituloDe(path)}</strong></nav>
-        <div className="v2-topo-dir"><a className="v2-link-site" href="/" target="_blank" rel="noopener">Ver o site ↗</a>{SAIR("v2-btn v2-btn-fantasma")}</div>
+        <div className="v2-topo-dir">{quem ? <span className="v2-quem-topo" data-testid="quem-topo" title={`Nível: ${quem.rotuloNivel}`}>{quem.nome.split(" ")[0]} · {quem.rotuloNivel}</span> : null}<a className="v2-link-site" href="/" target="_blank" rel="noopener">Ver o site ↗</a>{SAIR("v2-btn v2-btn-fantasma")}</div>
       </header>
 
       <aside className="v2-trilho" aria-label="Menu do painel" onMouseLeave={sair}>
-        {GRUPOS.map((g) => (
+        {grupos.map((g) => (
           <button key={g.id} type="button" className={`v2-trilho-item${gAtivo === g.id ? " on" : ""}${aberto === g.id ? " aberto" : ""}`} aria-haspopup="true" aria-expanded={aberto === g.id}
             onMouseEnter={() => entrar(g.id)} onFocus={() => entrar(g.id)}
             onClick={() => { if (g.itens.length === 1) { location.href = g.itens[0].href; return; } clearTimeout(timer.current); setFixo(aberto !== g.id || !fixo); setAberto(aberto === g.id && fixo ? null : g.id); }}>
@@ -77,8 +81,8 @@ function Moldura({ path, children }: { path: string; children: React.ReactNode }
       {gaveta && <div className="v2-scrim" onClick={fecharGaveta} />}
       <aside className={`v2-gaveta${gaveta ? " aberta" : ""}`} aria-hidden={!gaveta} aria-label="Menu" {...(!gaveta ? { inert: "" as unknown as undefined } : {})}>
         <div className="v2-gaveta-topo"><a className="v2-marca" href="/admin"><b>PLV 12/2026</b><small>Painel da campanha</small></a><button type="button" className="v2-sanduiche" aria-label="Fechar o menu" onClick={fecharGaveta}>✕</button></div>
-        {GRUPOS.map((g) => (<section key={g.id}><h4>{g.rotulo}</h4>{g.itens.map((i) => link(i, "v2-gaveta-item"))}</section>))}
-        <div className="v2-gaveta-pe"><a className="v2-gaveta-item" href="/" target="_blank" rel="noopener"><span>Ver o site ↗</span></a>{SAIR("v2-btn v2-btn-perigo v2-largo", "Sair do painel")}</div>
+        {grupos.map((g) => (<section key={g.id}><h4>{g.rotulo}</h4>{g.itens.map((i) => link(i, "v2-gaveta-item"))}</section>))}
+        <div className="v2-gaveta-pe">{quem ? <p className="v2-quem" data-testid="quem">{quem.nome}<br />Nível: {quem.rotuloNivel}</p> : null}<a className="v2-gaveta-item" href="/" target="_blank" rel="noopener"><span>Ver o site ↗</span></a>{SAIR("v2-btn v2-btn-perigo v2-largo", "Sair do painel")}</div>
       </aside>
 
       <div className={`adm-content v2-main${escuro ? " v2-escuro" : ""}`} {...(gaveta ? { inert: "" as unknown as undefined } : {})}>{children}</div>

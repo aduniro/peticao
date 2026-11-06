@@ -126,3 +126,7 @@
 .v2-mapa-cheio .adm-seg { background: #fff; } .v2-mapa-cheio .adm-sub { margin: 0; }
 @media (max-width: 992px) { .v2-mapa-comando { top: 8px; left: 8px; right: 8px; } .v2-mapa-folha { height: 60dvh; } }
 .v2-sanduiche { background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.35); } .v2-sanduiche svg { width: 26px; height: 26px; display: block; stroke-width: 2.6; }
+/* Quem está logado (nome e nível): no topo (computador) e no pé da gaveta (celular) */
+.adm.v2 .v2-quem-topo{font-size:12.5px;font-weight:700;opacity:.85;white-space:nowrap}
+.adm.v2 .v2-quem{margin:0 0 8px;font-size:13px;line-height:1.4;opacity:.9}
+@media (max-width:992px){.adm.v2 .v2-quem-topo{display:none}}

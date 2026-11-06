@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { exigirAdmin } from "@/lib/admin-api";
+import { exigirNivel } from "@/lib/admin-api";
 import { facetas, serieDiaria, totais } from "@/lib/assinaturas-explorar";
 import { filtrosVazios } from "@/lib/assinaturas-filtros";
 import { monitorSummary, sinceOf } from "@/lib/monitor";
@@ -36,7 +36,7 @@ async function montar() {
 
 /** Dados do painel ao vivo (somente leitura; mesmas funções do explorador). Cache de 15 s com uma única consulta em andamento. */
 export async function GET(req: NextRequest) {
-  const bloqueio = exigirAdmin(req, 240);
+  const bloqueio = await exigirNivel(req, "leitura", 240);
   if (bloqueio) return bloqueio;
   if (!cache || Date.now() - cache.em > 15_000) cache = { em: Date.now(), p: montar() };
   try { return NextResponse.json(await cache.p, { headers: { "cache-control": "no-store" } }); }
