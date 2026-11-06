@@ -85,3 +85,7 @@ Validação: **251/251** testes cumulativos e tipos aprovados. O ensaio de atual
 Ainda não concluir A6: rótulos do histórico e aviso de resultado inconclusivo aguardam aprovação do dono; sem eles a interface antiga classificaria estados pendentes incorretamente. Também seguem pendentes a revisão de controles sensíveis (inclusive gestão de usuários sem confirmação extra), QA visual/permissões em seis larguras e as Etapas 2–7. Nenhum deploy autorizado ou realizado.
 
 Checkpoint `5a3cbd6`: backend da fila e regressões preservados no Git. O build de produção também passou (`stage01-build-contact.log`), além dos 251 testes, tipos e migração. O candidato continua parcial e sem autorização de publicação.
+
+### Primeira prévia do shell
+
+Prévia local de produção em `http://127.0.0.1:3031/admin`, banco fictício separado na porta 54345 e transporte de e-mail `dev`. A tela de contato vazia respondeu 200 em 320, 390, 768, 992, 1280 e 1920 px, sem exceções de navegador ou rolagem horizontal. Capturas e relatório: `/mnt/dev/peticao/.cache/admin-audit-20261106/visual/contato-*.png` e `contato-shell.json`; a captura de 390 px foi inspecionada visualmente. Essa checagem é apenas do shell/estado vazio: não prova paridade visual integral, funcionamento do editor, conteúdo extenso, matriz de permissões nem o restante das telas. Essas provas permanecem pendentes.
