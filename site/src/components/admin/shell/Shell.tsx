@@ -12,7 +12,7 @@ const SAIR = (cls: string, rotulo = "Sair") => <form method="post" action="/api/
 
 /**
  * Moldura do painel v2. Computador: topo fixo, trilho lateral com submenus (flyout) ao passar o mouse. Celular/tablet (≤992px): barra inferior PRINCIPAL com os atalhos,
- * botão de filtros da página no canto inferior esquerdo e botão sanduíche (menu completo, em gaveta) no canto inferior direito.
+ * botão sanduíche (menu completo, em gaveta) no canto inferior ESQUERDO e botão de filtros da página no canto inferior DIREITO.
  */
 export default function Shell({ children, quem, ehTotal = false }: { children: React.ReactNode; quem?: Quem; ehTotal?: boolean }) {
   const path = usePathname() ?? "/admin";
@@ -107,11 +107,11 @@ function Moldura({ path, children, quem, ehTotal }: { path: string; children: Re
       </section>
 
       <nav className="v2-abas" aria-label="Navegação principal">
+        <button type="button" className="v2-aba" aria-label="Abrir o menu completo" aria-expanded={gaveta} onClick={abrirGaveta}><Icone d="M4 7h16M4 12h16M4 17h16" /><span>Menu</span>{somaTudo > 0 && <b className="adm-dot">{somaTudo > 9 ? "9+" : somaTudo}</b>}</button>
+        {barra.map((i) => link(i, "v2-aba"))}
         {tem > 0
           ? <button type="button" className={`v2-aba${folha ? " on" : ""}`} aria-expanded={folha} onClick={() => setFolha((f) => !f)}><Icone d="M3 5h18l-7 8v6l-4 2v-8z" /><span>Filtros</span></button>
           : <span className="v2-aba v2-aba-vazio" aria-hidden="true" />}
-        {barra.map((i) => link(i, "v2-aba"))}
-        <button type="button" className="v2-aba" aria-label="Abrir o menu completo" aria-expanded={gaveta} onClick={abrirGaveta}><Icone d="M4 7h16M4 12h16M4 17h16" /><span>Menu</span>{somaTudo > 0 && <b className="adm-dot">{somaTudo > 9 ? "9+" : somaTudo}</b>}</button>
       </nav>
     </div>
     </FiltrosContexto.Provider>
