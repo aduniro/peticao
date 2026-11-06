@@ -137,6 +137,9 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
 
   const identity = body?.identity as { method?: IdentityMethod; value?: string } | undefined;
   let needs = await needsIdentity(input.email, provider);
+  // Apoiadores sempre passam pela consulta completa antes de ver o desafio de
+  // nascimento/mãe. O modo geral "off" não desliga esta validação obrigatória.
+  if (input.category === "apoiador") needs = true;
   let extra: { identityMethod?: string | null; nameCheck?: any } = {};
 
   if (identity && !checkTicket(body?.ticket, input.cpf!, input.email)) {
@@ -144,13 +147,12 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
   }
 
   let preflightDone = false;
-  if (!needs) {
-    if (!identity) {
-      if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
-      const gS = await emailExistsGate(input, ctx); if (gS) return gS;
-    }
-    // Nome completo dispensa desafio adicional no e-mail institucional; omissões exigem nascimento ou mãe.
-    if (provider && identityMode(provider) === "required") {
+  const checkCpfBeforeIdentity = input.category === "apoiador" || !!provider && identityMode(provider) === "required";
+  if (!identity && checkCpfBeforeIdentity) {
+    if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
+    const gS = await emailExistsGate(input, ctx); if (gS) return gS;
+    if (!provider) return ASK({ error: "Não conseguimos conferir o CPF agora. Tente de novo em alguns minutos.", errorCode: "cpf_check_unavailable" }, 503);
+    {
       if (!rateLimit(`cpfname:${ctx.ip}`, 30, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
       const g = await verifyCpfName({ cpf: input.cpf!, declaredName: input.name, provider });
       if (!g.ok && g.reason === "identity_required") {
@@ -159,6 +161,7 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
         switch (g.reason) {
           case "mismatch": return ASK({ errors: { name: "name_cpf_mismatch" } });
           case "not_found": return ASK({ errors: { cpf: "cpf_not_found" } });
+          case "mock_unknown": return ASK({ error: "Este CPF não está disponível nos dados desta pré-visualização.", errorCode: "cpf_mock_unknown" }, 503);
           case "locked": return ASK({ errors: { cpf: "cpf_locked" } }, 429);
           default: return ASK({ error: "Não conseguimos conferir o CPF agora. Tente de novo em alguns minutos.", errorCode: "cpf_check_unavailable" }, 503);
         }
@@ -167,6 +170,9 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     }
     preflightDone = true;
   }
+  // O ticket só é emitido depois do preflight correspondente; revalidar o nome
+  // junto com o dado de identidade evita aceitar uma troca entre as etapas.
+  if (identity && checkCpfBeforeIdentity) needs = true;
 
   if (needs) {
     if (!identity) {

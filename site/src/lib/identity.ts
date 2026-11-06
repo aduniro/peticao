@@ -97,7 +97,7 @@ export async function resetIdentityAttempts(cpf: string): Promise<number> {
 // ---- Conferência de NOME x CPF (servidores): só o nome declarado é comparado com o cadastro do CPF; nada de nome da mãe ou nascimento. ----
 export type NameGate =
   | { ok: true; nameCheck: "match" }
-  | { ok: false; reason: "mismatch" | "identity_required" | "not_found" | "unavailable" | "locked" };
+  | { ok: false; reason: "mismatch" | "identity_required" | "not_found" | "unavailable" | "locked" | "mock_unknown" };
 
 /**
  * Recalcula a comparação a cada envio, inclusive quando o cadastro vem do cache de 30 dias.
@@ -115,6 +115,7 @@ export async function verifyCpfName(a: { cpf: string; declaredName: string; prov
     await setSetting("cpf_provider_last_error", `${code} em ${new Date().toISOString()}`).catch(() => {});
     return { ok: false, reason: "unavailable" };
   }
+  if (!rec && a.provider.name === "mock") return { ok: false, reason: "mock_unknown" };
   if (!rec) { await record(cpfHash, "nome", false); return { ok: false, reason: "not_found" }; }
   if (classifyCpfName(rec.nome, a.declaredName) === "partial") return { ok: false, reason: "identity_required" };
   const ok = nameCheckFromRecord(rec, a.declaredName) === "match";

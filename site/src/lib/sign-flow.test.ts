@@ -101,12 +101,17 @@ test("identidade: por nascimento, bloqueio após 5 erros por CPF, e-mail institu
 
   // domínio de discentes e domínio próprio comum também pedem identidade
   const c4 = cpfFrom("200000005");
-  assert.equal((await handleSign(form({ name: "Beto Lima", email: "beto@aluno.unir.br", cpf: c4 }), ctx, prov)).json.identityRequired, true);
-  assert.equal((await handleSign(form({ name: "Beto Lima", email: "beto@empresa-do-beto.com.br", cpf: c4 }), ctx, prov)).json.identityRequired, true);
+  const prov4 = mockProvider({ [c4]: { nome: "BETO LIMA", mae: "ANA LIMA", nasc: "01/02/1990" } });
+  assert.equal((await handleSign(form({ name: "Beto Lima", email: "beto@aluno.unir.br", cpf: c4 }), ctx, prov4)).json.identityRequired, true);
+  assert.equal((await handleSign(form({ name: "Beto Lima", email: "beto@empresa-do-beto.com.br", cpf: c4 }), ctx, prov4)).json.identityRequired, true);
 
-  // modo desligado (sem provedor): assina direto
+  // Sem provedor, apoiador não recebe bypass; o modo desligado ainda preserva o fluxo institucional.
   const c5 = cpfFrom("200000006");
-  assert.equal((await handleSign(form({ name: "Cris Dias", email: "cris@gmail.com", cpf: c5 }), ctx, null)).json.ok, true);
+  const noProviderSupporter = await handleSign(form({ name: "Cris Dias", email: "cris@gmail.com", cpf: c5 }), ctx, null);
+  assert.equal(noProviderSupporter.status, 503);
+  assert.equal(noProviderSupporter.json.errorCode, "cpf_check_unavailable");
+  const offInstitutional = await handleSign(form({ name: "Cris Dias", email: "cris@unir.br", cpf: c5, category: "servidor", institution: "UNIR", role: "docente", campus: "Ji-Paraná", regionDeclared: true }), ctx, null);
+  assert.equal(offInstitutional.json.ok, true);
 
   await dbmod._closeDbForTests();
   rmSync(out, { recursive: true, force: true });
@@ -121,12 +126,14 @@ test("identidade: serviço fora do ar e método sem dado cadastral", async () =>
   const c6 = cpfFrom("200000007");
   const down = { name: "x", lookup: async () => { throw new ProviderUnavailable("QUOTA_EXCEEDED"); } };
   const f = (extra: object = {}) => form({ name: "Davi Rocha", email: "davi@gmail.com", cpf: c6, ...extra });
-  const { ticket } = (await handleSign(f(), ctx, down)).json as { ticket: string };
-  const r = await handleSign(f({ ticket, identity: { method: "nascimento", value: "01/02/1990" } }), ctx, down);
-  assert.equal(r.status, 503); // nunca libera na dúvida
+  const r = await handleSign(f(), ctx, down);
+  assert.equal(r.status, 503); // consulta completa antes de abrir o desafio; nunca libera na dúvida
   assert.equal((await dbmod.query("SELECT 1 FROM signatures")).rowCount, 0);
 
   const semMae = mockProvider({ [c6]: { nome: "DAVI ROCHA", nasc: "01/02/1990" } });
+  const start = await handleSign(f(), ctx, semMae);
+  assert.equal(start.json.identityRequired, true);
+  const ticket = start.json.ticket as string;
   const m = await handleSign(f({ ticket, identity: { method: "mae", value: "Rita Rocha" } }), ctx, semMae);
   assert.equal(m.json.methodUnavailable, "mae");
   assert.equal((await handleSign(f({ ticket, identity: { method: "nascimento", value: "01/02/1990" } }), ctx, semMae)).status, 200);
@@ -144,19 +151,22 @@ test("identidade: CPF fora dos dados de teste não gasta tentativa e orienta; li
   const ctx4 = { ip: "7.7.7.7" };
   const real = cpfFrom("200000008");
   const f = (extra: object = {}) => form({ name: "Eva Lima", email: "eva@gmail.com", cpf: real, ...extra });
-  const { ticket } = (await handleSign(f(), ctx4, provider)).json as { ticket: string }; // provider = mock que só conhece outro CPF
-  for (let i = 0; i < MAX_FAILED + 2; i++) {
-    const r = await handleSign(f({ ticket, identity: { method: "nascimento", value: "01/02/1990" } }), ctx4, provider);
+  const unknown = await handleSign(f(), ctx4, provider); // provider = mock que não conhece o CPF
+  assert.equal(unknown.status, 503);
+  assert.equal(unknown.json.errorCode, "cpf_mock_unknown");
+  assert.equal((await dbmod.query<{ n: number }>("SELECT COUNT(*)::int n FROM identity_attempts")).rows[0].n, 0);
+  const live = { name: "cpf-brasil.org", lookup: async () => ({ nome: "EVA LIMA", mae: "RITA LIMA", nasc: "01/02/1990" }) };
+  const { ticket } = (await handleSign(f(), ctx4, live)).json as { ticket: string };
+  for (let i = 0; i < MAX_FAILED; i++) {
+    const r = await handleSign(f({ ticket, identity: { method: "nascimento", value: "02/02/1990" } }), ctx4, live);
     assert.equal(r.status, 422);
-    assert.match(String(r.json.identityError), /dados de TESTE/);
+    assert.equal(r.json.identityCode, "mismatch");
   }
-  assert.equal((await dbmod.query<{ n: number }>("SELECT COUNT(*)::int n FROM identity_attempts")).rows[0].n, 0); // nada contado
+  assert.equal((await dbmod.query<{ n: number }>("SELECT COUNT(*)::int n FROM identity_attempts WHERE ok=false")).rows[0].n, MAX_FAILED);
 
   // bloqueio real (provedor de verdade conhece o CPF) e liberação pelo suporte
-  const live = { name: "cpf-brasil.org", lookup: async () => ({ nome: "EVA LIMA", mae: "RITA LIMA", nasc: "01/02/1990" }) };
-  for (let i = 0; i < MAX_FAILED; i++) await handleSign(f({ ticket, identity: { method: "nascimento", value: "02/02/1990" } }), ctx4, live);
   assert.equal((await handleSign(f({ ticket, identity: { method: "nascimento", value: "01/02/1990" } }), ctx4, live)).status, 429);
-  assert.equal(await resetIdentityAttempts(real), MAX_FAILED);
+  assert.equal(await resetIdentityAttempts(real), MAX_FAILED + 1); // inclui a verificação inicial bem-sucedida do nome
   assert.equal((await handleSign(f({ ticket, identity: { method: "nascimento", value: "01/02/1990" } }), ctx4, live)).status, 200);
 
   await dbmod._closeDbForTests();

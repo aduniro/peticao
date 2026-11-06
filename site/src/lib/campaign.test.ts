@@ -49,6 +49,7 @@ test("campanha: instituição pelo e-mail, origem, gerações, mesmo aparelho e 
   const feed = await import("./public-feed");
   const inst = await import("./institutional");
   const { handleSign } = await import("./sign-flow");
+  const { mockProvider } = await import("./cpf-check");
   const out = process.env.MAIL_OUTBOX_DIR!;
   const tokenOf = () => { const f = readdirSync(out).sort().at(-1)!; return new URL(/https?:\/\/\S+/.exec(JSON.parse(readFileSync(join(out, f), "utf8")).text)![0]).searchParams.get("token")!; };
   const sign = async (name: string, email: string, n9: string, extra: { refCode?: string; visitorId?: string } = {}) => {
@@ -106,7 +107,12 @@ test("campanha: instituição pelo e-mail, origem, gerações, mesmo aparelho e 
 
   // aprovação retroativa também atualiza a instituição
   // (servidor com domínio desconhecido é recusado; a assinatura de Fábio é de apoiador, que aceita qualquer e-mail)
-  const rf = await handleSign({ name: "Fábio Mota", email: "fabio@ufxx.br", cpf: cpfFrom("400000006"), category: "apoiador", city: "Porto Velho", uf: "RO", consent: true }, { ip: "1.2.3.4" }, null);
+  const cpf = cpfFrom("400000006");
+  const provider = mockProvider({ [cpf]: { nome: "FABIO MOTA", mae: "ANA MARIA SOUZA" } });
+  const supporter = { name: "Fábio Mota", email: "fabio@ufxx.br", cpf, category: "apoiador", city: "Porto Velho", uf: "RO", consent: true };
+  const preflight = await handleSign(supporter, { ip: "1.2.3.4" }, provider);
+  assert.equal((preflight.json as any).identityRequired, true);
+  const rf = await handleSign({ ...supporter, ticket: (preflight.json as any).ticket, identity: { method: "mae", value: "Ana Maria Souza" } }, { ip: "1.2.3.4" }, provider);
   assert.equal(rf.status, 200, JSON.stringify(rf.json));
   assert.equal((await dbmod.query<any>("SELECT email_institution i FROM signatures WHERE email='fabio@ufxx.br'")).rows[0].i, null);
   await inst.decideDomain("ufxx.br", "approved", { kind: "ifes", institution: "Universidade Federal XX", by: "teste" });

@@ -13,13 +13,35 @@ test("nome: palavras completas, acentos, partículas, espaços e pontuação", (
   assert.equal(classifyCpfName("BRUNO DE SOUZA BARRETO", "Bruno Souza Barreto"), "complete");
 });
 
-test("nome: omissões em ordem e segundo termo exigem confirmação adicional", () => {
+test("nome: cortes respeitam o mínimo de correspondências conforme a quantidade de palavras da API", () => {
   const rec = { nome: registry, mae: "Helena Souza", nasc: "01/02/1990" };
-  for (const name of ["Ana Souza", "Ana Lima", "Ana Paula Lima", "Paula Lima", "Paula Souza Lima"]) {
+  for (const name of ["Ana Paula Lima", "Paula Souza Lima"]) {
     assert.equal(classifyCpfName(registry, name), "partial", name);
     assert.equal(nameCheckFromRecord(rec, name), "mismatch", "nome parcial isolado não aprova");
     assert.equal(nameCheckFromRecord(rec, name, true), "match");
   }
+  for (const name of ["Ana Souza", "Ana Lima", "Paula Lima"]) assert.equal(classifyCpfName(registry, name), "mismatch", name);
+});
+
+test("quantidade de nomes da API determina o mínimo: 2/2, 2/3, 3/4 e 3/5+", () => {
+  assert.equal(classifyCpfName("DAIANE PEREIRA", "Daiane Pereira"), "complete");
+  assert.equal(classifyCpfName("DAIANE PEREIRA", "Daiane"), "mismatch");
+  assert.equal(classifyCpfName("ANA PAULA LIMA", "Ana Lima"), "partial");
+  assert.equal(classifyCpfName("ANA PAULA LIMA", "Paula Lima"), "partial");
+  assert.equal(classifyCpfName("ANA PAULA LIMA", "Ana"), "mismatch");
+  assert.equal(classifyCpfName("ANA PAULA SILVA LIMA", "Ana Silva Lima"), "partial");
+  assert.equal(classifyCpfName("ANA PAULA SILVA LIMA", "Ana Paula Silva"), "partial");
+  assert.equal(classifyCpfName("ANA PAULA SILVA LIMA", "Ana Paula"), "mismatch");
+  assert.equal(classifyCpfName("ANA PAULA SILVA LIMA COSTA", "Paula Silva Costa"), "partial");
+  assert.equal(classifyCpfName("ANA PAULA SILVA LIMA COSTA", "Ana Paula"), "mismatch");
+});
+
+test("palavras proibidas são rejeitadas como palavras inteiras, sem afetar partes de palavras", () => {
+  for (const value of ["João Servidor Silva", "João TéCNICO Silva", "Professor Ana Souza"]) {
+    assert.equal(classifyCpfName(value, value), "mismatch", value);
+  }
+  assert.equal(classifyCpfName("João Federal Silva", "João Silva"), "mismatch");
+  assert.equal(classifyCpfName("João Silvério", "João Silvério"), "complete");
 });
 
 test("nome: grafia, iniciais, termos extras, ausência de prenome e ordem incompatível não aprovam", () => {

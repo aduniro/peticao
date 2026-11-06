@@ -55,7 +55,7 @@ test("WhatsApp: CPF, nome e nascimento ou mãe obrigatórios; sem alterar nome/h
     assert.equal((await post(token, { cpf, method: "nascimento", value: "01/02/1990" })).json.result, "invalid");
 
     const partial = "fixture-wa-token-2";
-    await insert("Pedro Lima", "11144477735", partial);
+    await insert("Pedro Pereira Lima", "11144477735", partial);
     assert.equal((await post(partial, { cpf: "11144477735", method: "mae", value: "Maria Helena Pereira" })).json.result, "ok");
     const foreign = "fixture-wa-token-3";
     await insert("Foreign Fixture", null, foreign, "estrangeiro");

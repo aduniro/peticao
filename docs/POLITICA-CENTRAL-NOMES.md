@@ -42,17 +42,23 @@ A regra anterior que favorecia o nome digitado em empate foi substituída.
 Notificações de produção serão configuradas sem enviar e-mails reais nos testes
 nem alterar o pipe somente leitura de dados da VPS.
 
-## Validação de cadastro: grafia estrita, sem reparos
+## Validação de cadastro: grafia exata por quantidade de palavras
 
 Instrução posterior do responsável: `site/src/content/name-validation-policy.json`
 é a política central de **validação**, distinta da proposta de nome de impressão.
 Cada palavra digitada deve corresponder a palavra completa da API, na ordem,
 normalizando acentos/caixa e ignorando as partículas declaradas nessa política.
-Não há distância de edição, aceitação de typo, inicial, palavra extra, colagem ou
-separação indevida. Pontuação não cria um espaço que o usuário deixou de digitar.
+Mínimos para o nome da API sem partículas: 2 palavras exigem 2 correspondências;
+3 exigem 2; 4 exigem 3; 5 ou mais exigem 3. Uma correspondência parcial ainda
+exige o desafio adicional de identidade. Palavras extras sem correspondência,
+typos, iniciais, colagens e separações indevidas são recusados.
+“Docente”, “Professor”, “Técnico”, “Servidor”, “Federal” e “Apoiador” são
+palavras proibidas, comparadas sem distinção de acentos ou caixa.
 
-Assim, `Sant Ana` não valida contra `Santana`, nem nomes colados contra palavras
-separadas. O resolvedor de **impressão** pode sugerir `Santana` com apoio na API;
+Apóstrofos podem variar, e hífen/espaço podem separar componentes de sobrenome
+composto com grafia idêntica. Fora dessas equivalências, `Sant Ana` não valida
+contra `Santana`, nem nomes colados contra palavras separadas. O resolvedor de
+**impressão** pode sugerir `Santana` com apoio na API;
 essa sugestão não autoriza a identidade. Nascimento/mãe corretos não compensam
 incompatibilidade do nome. Omissões continuam no fluxo anterior: palavras completas
 em ordem, âncora exigida e desafio adicional; a impressão usa o nome cadastral

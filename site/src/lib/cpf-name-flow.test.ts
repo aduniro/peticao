@@ -21,7 +21,7 @@ test("fluxo: nome parcial institucional exige desafio; erro de nome não é comp
   const registry = { nome: "ANA PAULA DE SOUZA LIMA", mae: "HELENA MARIA SOUZA", nasc: "01/02/1990" };
   let calls = 0;
   const provider = cachedCpfProvider({ name: "fixture", async lookup() { calls++; return registry; } });
-  const form = { name: "Ana Souza", email: "ana@unir.br", cpf, category: "servidor", institution: "UNIR", role: "docente", campus: "Ji-Paraná", regionDeclared: true, consent: true };
+  const form = { name: "Ana Souza Lima", email: "ana@unir.br", cpf, category: "servidor", institution: "UNIR", role: "docente", campus: "Ji-Paraná", regionDeclared: true, consent: true };
   const ctx = { ip: "10.23.1.1" };
   const originalFetch = globalThis.fetch;
   let robotChecks = 0;
@@ -50,7 +50,7 @@ test("fluxo: nome parcial institucional exige desafio; erro de nome não é comp
     const ok = await handleSign({ ...challenge, identity: { method: "nascimento", value: "01/02/1990" } }, ctx, provider);
     assert.equal(ok.json.ok, true);
     const saved = (await db.query("SELECT name,cpf_name_check,identity_method,status FROM signatures")).rows[0];
-    assert.deepEqual(saved, { name: "Ana Souza", cpf_name_check: "match", identity_method: "nascimento", status: "pending" });
+    assert.deepEqual(saved, { name: "Ana Souza Lima", cpf_name_check: "match", identity_method: "nascimento", status: "pending" });
     assert.equal(calls, 1, "tentativas reutilizam o retorno cadastral em cache");
 
     assert.equal(robotChecks, 1, "ticket válido evita consumir novamente o token antirrobô");
@@ -61,19 +61,25 @@ test("fluxo: nome parcial institucional exige desafio; erro de nome não é comp
     // Even a correct challenge cannot rescue incompatible names.
     const supporter = { ...form, name: "Ana Carla Lima", email: "ana@gmail.com", category: "apoiador", city: "Porto Velho", uf: "RO" };
     const first = await handleSign(supporter, ctx, provider);
-    const rejected = await handleSign({ ...supporter, ticket: first.json.ticket, identity: { method: "mae", value: registry.mae } }, ctx, provider);
-    assert.equal((rejected.json.errors as Record<string, string>).name, "name_cpf_mismatch");
+    assert.equal((first.json.errors as Record<string, string>).name, "name_cpf_mismatch");
+    assert.equal(first.json.identityRequired, undefined, "nome incompatível é recusado antes de abrir o desafio");
     assert.equal(await count(), 1, "cadastro existente não foi substituído pelo nome divergente");
+
+    const supporterValid = { ...supporter, name: "Ana Paula Souza Lima" };
+    const validStart = await handleSign(supporterValid, ctx, provider);
+    assert.equal(validStart.json.identityRequired, true, "nome compatível ainda exige nascimento ou mãe para apoiador");
+    const changedName = await handleSign({ ...supporterValid, name: "Ana Carla Lima", ticket: validStart.json.ticket, identity: { method: "mae", value: registry.mae } }, ctx, provider);
+    assert.equal((changedName.json.errors as Record<string, string>).name, "name_cpf_mismatch", "alterar o nome entre as etapas não contorna a validação");
 
     const spacing = { ...supporter, name: "Ana Paula SouzaLima" };
     const spacingStart = await handleSign(spacing, ctx, provider);
-    const spacingRejected = await handleSign({ ...spacing, ticket: spacingStart.json.ticket, identity: { method: "nascimento", value: registry.nasc } }, ctx, provider);
-    assert.equal((spacingRejected.json.errors as Record<string,string>).name,"name_cpf_mismatch");
+    assert.equal((spacingStart.json.errors as Record<string,string>).name,"name_cpf_mismatch");
+    assert.equal(spacingStart.json.identityRequired,undefined);
     assert.equal(await count(),1,"nome colado não substitui o cadastro mesmo acertando nascimento");
 
     await resetIdentityAttempts(cpf);
-    assert.deepEqual(await verifyCpfName({ cpf, declaredName: "Paula Lima", provider }), { ok: false, reason: "identity_required" });
-    assert.equal((await verifyIdentity({ cpf, declaredName: "Paula Lima", method: "mae", value: registry.mae, provider })).ok, true);
+    assert.deepEqual(await verifyCpfName({ cpf, declaredName: "Paula Souza Lima", provider }), { ok: false, reason: "identity_required" });
+    assert.equal((await verifyIdentity({ cpf, declaredName: "Paula Souza Lima", method: "mae", value: registry.mae, provider })).ok, true);
     for (let n = 0; n < 5; n++) {
       const r = await verifyIdentity({ cpf, declaredName: "Ana Carla Lima", method: "nascimento", value: registry.nasc, provider });
       assert.equal(r.ok, false);

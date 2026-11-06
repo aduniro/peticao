@@ -43,10 +43,10 @@ test("domínios: extração do domínio do e-mail (IDN, maiúsculas)", () => {
   assert.equal(emailDomain("semarroba"), null);
 });
 
-test("nome do CPF: acentos, partículas e omissões em ordem; iniciais não bastam", () => {
+test("nome do CPF: acentos, partículas e cortes obedecem aos mínimos por quantidade; iniciais não bastam", () => {
   assert.equal(namesMatch("MARIA DA SILVA SANTOS", "Maria da Silva Santos"), true);
   assert.equal(namesMatch("JOSÉ AUGUSTO DE OLIVEIRA", "Jose Augusto Oliveira"), true);
-  assert.equal(namesMatch("ANA PAULA FERREIRA LIMA", "Ana Lima"), true); // primeiro e último nome conferem
+  assert.equal(namesMatch("ANA PAULA FERREIRA LIMA", "Ana Lima"), false); // 2 de 4 não atingem o mínimo de 3
   assert.equal(namesMatch("ANA PAULA FERREIRA LIMA", "Ana Costa"), false); // mesmo primeiro nome, sobrenome diferente
   assert.equal(namesMatch("ANA PAULA FERREIRA LIMA", "Ana Paula Lima"), true);
   assert.equal(namesMatch("MARIA SOUZA", "M. Souza"), false);

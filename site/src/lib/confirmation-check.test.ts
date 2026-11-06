@@ -23,7 +23,7 @@ test("confirmação antiga: corrige apenas o nome, preserva cadastro/CPF e exige
     assert.equal(calls, 0, "CPF diferente é rejeitado antes da consulta");
     const wrong = await checkConfirmation(token, "email", { name: "Ana Carla Lima", cpf, identity: { method: "nascimento", value: record.nasc } }, provider);
     if (!wrong.ok) assert.equal(wrong.json.result, "review_required"); else assert.fail();
-    const partial = { name: "Paula Lima", cpf };
+    const partial = { name: "Paula Souza Lima", cpf };
     const challenge = await checkConfirmation(token, "email", partial, provider);
     if (!challenge.ok) assert.equal(challenge.json.result, "identity_required"); else assert.fail();
     const badDate = await checkConfirmation(token, "email", { ...partial, identity: { method: "nascimento", value: "02/02/1990" } }, provider);
@@ -35,10 +35,10 @@ test("confirmação antiga: corrige apenas o nome, preserva cadastro/CPF e exige
     const confirmed = await confirmFull(token, {}, "email", accepted.proof);
     assert.equal(confirmed.result, "ok");
     const row = (await db.query("SELECT name,cpf_hash,created_at,consent_at,confirmed_at,status,identity_method,cpf_name_check FROM signatures WHERE id=$1", [id])).rows[0];
-    assert.deepEqual({ name: row.name, hash: row.cpf_hash, created: row.created_at, consent: row.consent_at, status: row.status, method: row.identity_method, check: row.cpf_name_check }, { name: "Paula Lima", hash: hmac(cpf), created, consent: created, status: "confirmed", method: "mae", check: "match" });
+    assert.deepEqual({ name: row.name, hash: row.cpf_hash, created: row.created_at, consent: row.consent_at, status: row.status, method: row.identity_method, check: row.cpf_name_check }, { name: "Paula Souza Lima", hash: hmac(cpf), created, consent: created, status: "confirmed", method: "mae", check: "match" });
     assert.ok(row.confirmed_at);
     const audit = (await db.query("SELECT data FROM audit_log WHERE signature_id=$1 AND event='signature_name_corrected'", [id])).rows[0];
-    assert.deepEqual(JSON.parse(audit.data), { before: "Ana Carla Lima", after: "Paula Lima", channel: "email", cpfHashUnchanged: true });
+    assert.deepEqual(JSON.parse(audit.data), { before: "Ana Carla Lima", after: "Paula Souza Lima", channel: "email", cpfHashUnchanged: true });
     const repeated = await checkConfirmation(token, "email", partial, provider);
     if (!repeated.ok) assert.equal(repeated.json.result, "invalid"); else assert.fail();
     assert.equal(calls, 1);
