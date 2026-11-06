@@ -42,7 +42,7 @@ async function openName(row){
     const n=await api("/api/names?id="+row.id);if(request!==nameRequest||!$("name-editor").open)return;
     nameEditing={row,n};$("name-stale").hidden=!n.stale;const grid=$("name-comparison");
     for(const [label,value] of [["Original digitado — preservado",row.name],["Original da API — preservado",row.nome_api],["Digitado com sugestão de acentos",n.entered_resolved],["API com sugestão de acentos",n.api_resolved]]){const p=el("p");p.append(el("strong",label),el("span",display(value)));grid.append(p);}
-    $("name-reasons").textContent=(Array.isArray(n.reasons)?n.reasons.join(" · "):n.reasons||"")+" · Dicionário: "+display(n.dictionary_version);$("name-special").hidden=!n.special;
+    $("name-reasons").textContent=(Array.isArray(n.reasons)?n.reasons.join(" · "):n.reasons||"")+" · Dicionário da sugestão atual: "+display(n.dictionary_version)+(n.approved_dictionary_version?" · Versão registrada na decisão: "+n.approved_dictionary_version:"");$("name-special").hidden=!n.special;
     const chosen=n.choice||"proposed",options=$("name-options");
     for(const [value,label,text] of [["proposed","Sugestão principal",n.proposed],["entered","Nome digitado com acentos sugeridos",n.entered_resolved],["api","Nome da API com acentos sugeridos",n.api_resolved]])if(text)options.append(nameOption(value,label,text,chosen===value));
     options.append(nameOption("custom","Outra forma literal","Use o campo abaixo para definir o texto exato.",chosen==="custom"));
