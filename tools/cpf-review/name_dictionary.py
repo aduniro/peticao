@@ -45,9 +45,25 @@ def display_case(value):
 
 def corpus():
     observations = Path(os.environ.get("CPF_REVIEW_DATA_DIR", "/mnt/dev/cpfs/revisao")) / "name-observations.json"
-    raw = CORPUS_PATH.read_bytes()
-    observed = observations.read_bytes() if observations.exists() else b""
+    raw = _read_versioned(CORPUS_PATH)
+    observed = _read_versioned(observations, optional=True)
     return _corpus(raw, observed)
+
+
+def _read_versioned(path, optional=False):
+    try:
+        info = path.stat()
+        return _read_bytes(str(path), info.st_mtime_ns, info.st_ctime_ns, info.st_size, info.st_ino)
+    except FileNotFoundError:
+        if optional:
+            return b""
+        raise
+
+
+@lru_cache(maxsize=8)
+def _read_bytes(path, mtime, ctime, size, inode):
+    # File identity/version participates in the cache key; changed corpora reload.
+    return Path(path).read_bytes()
 
 
 @lru_cache(maxsize=2)
