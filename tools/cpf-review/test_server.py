@@ -1,9 +1,9 @@
 """HTTP integration against an isolated synthetic database, never the live port."""
-import json,os,socket,subprocess,sys,time,urllib.request,urllib.error
+import json,os,socket,subprocess,sys,time,urllib.request,urllib.error,unittest
 from pathlib import Path
-from test_data import ReviewTests
+from test_data import ReviewFixture
 
-class HttpReviewTests(ReviewTests):
+class HttpReviewTests(ReviewFixture,unittest.TestCase):
  def test_http_name_bulk_and_repeated_previews(self):
   with __import__('sqlite3').connect(self.db) as db:
    db.execute("UPDATE records SET decision='approved',status='confirmed'")

@@ -3,7 +3,7 @@ from unittest.mock import patch
 from pathlib import Path
 from data import connect,decide,ingest,listing
 
-class ReviewTests(unittest.TestCase):
+class ReviewFixture:
  def setUp(self):
   self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name);self.db=self.root/'review.sqlite';self.source=self.root/'source';self.source.mkdir()
   self.row={'id':101,'seq':None,'name':'Maria Exemplo Silva','cpf_hash':'a'*64,'status':'pending','category':'apoiador'}
@@ -16,6 +16,8 @@ class ReviewTests(unittest.TestCase):
   (self.source/'cache.json').write_text(json.dumps({'records':[{'hash':'a'*64,'status':'ok','name':'JOSE OUTRO TESTE','mother':'MAE FICTICIA','birth':'01/01/1980','sex':'M','queried_at':'2026-11-05T12:00:00Z'}]}))
  def tearDown(self):self.temp.cleanup()
  def item(self,view='all'):return listing({'view':view},self.db)['rows'][0]
+
+class ReviewTests(ReviewFixture,unittest.TestCase):
  def test_reject_hides_without_deleting_and_can_restore(self):
   row=self.item();decide(101,'rejected',row['revision'],'teste',self.db)
   self.assertEqual(listing({'view':'active'},self.db)['total'],0)

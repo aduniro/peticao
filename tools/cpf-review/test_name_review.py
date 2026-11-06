@@ -1,10 +1,10 @@
 import json,sqlite3,unittest
 from unittest.mock import patch
-from test_data import ReviewTests
+from test_data import ReviewFixture
 from name_review import schema,get_names,decide_name,bulk_preview,bulk_apply,bulk_undo,instructions
 
 # Inherit the isolated fake-data fixture, never touch the real review database.
-class NameReviewTests(ReviewTests):
+class NameReviewTests(ReviewFixture,unittest.TestCase):
  def setUp(self):
   super().setUp()
   with sqlite3.connect(self.db) as db:schema(db)
