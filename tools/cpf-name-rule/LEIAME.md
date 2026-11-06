@@ -12,4 +12,6 @@ A alteração vale para novas tentativas de assinatura e confirmação. Não rep
 
 Testes novos: `cpf-name.test.ts`, `cpf-name-flow.test.ts`, `cpf-name-whatsapp.test.ts`. Dados fictícios, e-mail de desenvolvimento e provedores simulados; nenhuma consulta paga nos testes.
 
-A publicação usa um pacote mínimo sobre uma cópia da produção atual, com manifesto antes/depois, backup privado da aplicação, stage e banco, compilação antes da troca e verificação de saúde. Não inclui alterações locais do painel que ainda não foram publicadas. Os textos públicos e a estrutura do banco permanecem iguais.
+A publicação usa um pacote mínimo sobre uma cópia da produção atual, com manifesto antes/depois, backup privado da aplicação, stage e banco, compilação antes da troca e verificação de saúde. A interface e os avisos ao usuário podem mudar somente nos arquivos enumerados no manifesto aprovado; o inventário recusa qualquer arquivo alterado fora dele. Não sincronizar a árvore local inteira para a VPS. Esta etapa não altera esquema, registros, hashes, datas, horários ou decisões existentes; não inclui a integração do resolvedor de nomes à geração dos PDFs.
+
+Para o ajuste de avisos do formulário, os arquivos públicos permitidos são `src/components/SignForm.tsx`, `src/components/GeoFields.tsx`, `src/app/globals.css` e as traduções `src/i18n/{pt,en,es,fr,de}.ts`, além do auxiliar `src/lib/form-validation-notice.ts`. Cada um precisa aparecer no manifesto com o hash de produção anterior e o hash do conteúdo testado. Alterações a textos fora desse conjunto são recusadas.

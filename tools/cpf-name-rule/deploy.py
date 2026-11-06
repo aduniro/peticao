@@ -138,9 +138,12 @@ def main(root, prepare_only=False):
             expected_files[entry['file']] = entry['after_sha256']
         if after != expected_files or inventory(stage) != expected_files:
             raise RuntimeError('Unexpected deployed code change')
-        public_files = [name for name in before if Path(name).suffix in {'.tsx', '.css'} or name.startswith(('src/i18n/', 'src/content/')) or name == 'README.md']
-        if any(before[name] != after[name] for name in public_files):
-            raise RuntimeError('Public text or interface changed')
+        public_paths = set(before) | set(after)
+        public_files = [name for name in public_paths if Path(name).suffix in {'.tsx', '.css'} or name.startswith(('src/i18n/', 'src/content/')) or name == 'README.md']
+        patched_files = {entry['file'] for entry in manifest}
+        changed_public = sorted(name for name in public_files if before.get(name) != after.get(name))
+        if any(name not in patched_files for name in changed_public):
+            raise RuntimeError('Unlisted public text or interface changed')
         if digest(Path('/etc/peticao/app.env')) != env_digest:
             raise RuntimeError('Configuration changed during deployment')
         http = healthy()
@@ -148,7 +151,7 @@ def main(root, prepare_only=False):
             if response.status != 200:
                 raise RuntimeError('Public counter failed')
             http['public_counter'] = response.status
-        phase('complete', http=http, public_files_unchanged=len(public_files),
+        phase('complete', http=http, public_files_changed=changed_public,
               schema_unchanged=before['src/lib/db.ts'] == after['src/lib/db.ts'],
               configuration_unchanged=True, signer_bulk_updates=False)
     except Exception as error:
