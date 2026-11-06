@@ -22,3 +22,12 @@ Próxima etapa: A6 (autoria das correções, estados finais do Terminal e idempo
 `4ca0273` implementa autoria real nas rotas de correção/reenvio e resultado autenticado do Terminal, separado da saída do comando. O registro começa sem sucesso, e o resultado só é finalizado após validação do protocolo/assinatura; a ação e a auditoria são atualizadas atomicamente. Serviço antigo é recusado antes de receber o comando. O visual do console foi preservado.
 
 A suíte cumulativa atual passou **244/244**, com tipos e build aprovados (`stage01-cumulative-terminal.log`, `stage01-typecheck-actions.log`, `stage01-build-actions.log` no diretório de evidências). A6 continua parcial: as respostas de contato ainda exigem fila durável e reconciliação de envios incertos. O diagnóstico está em `docs/A6-RESPOSTAS-PENDENTES.md` do candidato. Não houve deploy ou instalação de serviço na VPS.
+
+
+## Checkpoint seguinte — respostas de contato
+
+`5a3cbd6` implementa reserva durável e atômica do texto/card antes do envio, uma tentativa por item, retomada pelo cron existente e resultado inconclusivo sem repetição automática. O selo vincula a prévia exata, o destinatário, a origem e as cópias. O histórico anterior é preservado e não entra em disparo automático. A fila pública conserva sua política.
+
+Validação atual: **251/251**, tipos, build e ensaio de migração aprovados. Evidências: `stage01-cumulative-contact.log`, `stage01-typecheck-contact.log`, `stage01-build-contact.log`, `stage01-schema-contact.log`. Workers concorrentes, aceite tardio e falhas entre envio/gravação foram ensaiados com dados e transportes fictícios. O ensaio de histórico anterior preservou IDs, autores, resultados e horários.
+
+A6 permanece parcial até os rótulos/aviso de envio inconclusivo aprovados serem integrados à interface. Também faltam controles sensíveis, QA visual/permissões, conferência com produção e Etapas 2–7. A autorização de deploy continua sendo posterior à validação completa. Nenhuma alteração da VPS ou da revisão de CPFs nesta rodada.
