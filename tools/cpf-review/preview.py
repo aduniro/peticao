@@ -65,6 +65,9 @@ def snapshot(database):
           'created_at': record.get('created_at'), 'confirmed_at': record.get('confirmed_at'),
           'consent_at': record.get('consent_at'),
           'api_name_check': record.get('cpf_name_check'),
+          'verify_code': record.get('verify_code'),
+          'campus_ibge': record.get('campus_ibge'),
+          'email_domain_kind': record.get('email_domain_kind'),
           'name_decision_version': name['version'], 'record_revision': row['revision'],
           'name_revision': name['name_revision'],
         })
@@ -104,6 +107,8 @@ def _lines(record):
     _shown(location),
     'Cadastro (UTC): ' + _shown(record.get('created_at')),
     'Confirmação (UTC): ' + _shown(record.get('confirmed_at')),
+    'Código de verificação: ' + _shown(record.get('verify_code')),
+    'Conferência do nome pela API no aplicativo: ' + ('Registrada' if record.get('api_name_check') == 'match' else 'Não registrada'),
   ]
 
 

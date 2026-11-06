@@ -72,7 +72,9 @@ class Handler(BaseHTTPRequestHandler):
    if self.path=='/api/bulk-undo':return self.send(200,bulk_undo(data['batch_id'],getpass.getuser()))
    if self.path=='/api/preview':
     from preview import generate
-    return self.send(200,generate(DB,BASE/'previas'))
+    from data import stamp
+    directory=BASE/'previas'/('nomes-'+stamp().replace(':','').replace('+','_')+'-'+secrets.token_hex(3))
+    return self.send(200,generate(DB,directory))
    if self.path=='/api/decision':return self.send(200,decide(int(data['id']),data['decision'],data['revision'],getpass.getuser()))
    if self.path=='/api/reload':return self.send(200,ingest(Path(json.loads((BASE/'fonte-atual.json').read_text())['directory'])))
    if self.path=='/api/sync':
