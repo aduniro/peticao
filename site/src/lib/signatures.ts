@@ -240,7 +240,7 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
       return ins.rows[0].id;
     });
   } catch (e: any) {
-    if (e?.code === "23505") return; // corrida com outra requisição igual: já há cadastro
+    if (e?.code === "23505" && ["signatures_email_hash_key", "signatures_cpf_hash_key"].includes(e.constraint)) return; // corrida de deduplicação; outras restrições não são sucesso
     throw e;
   }
   try {
