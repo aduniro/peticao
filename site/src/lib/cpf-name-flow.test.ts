@@ -65,6 +65,12 @@ test("fluxo: nome parcial institucional exige desafio; erro de nome não é comp
     assert.equal((rejected.json.errors as Record<string, string>).name, "name_cpf_mismatch");
     assert.equal(await count(), 1, "cadastro existente não foi substituído pelo nome divergente");
 
+    const spacing = { ...supporter, name: "Ana Paula SouzaLima" };
+    const spacingStart = await handleSign(spacing, ctx, provider);
+    const spacingRejected = await handleSign({ ...spacing, ticket: spacingStart.json.ticket, identity: { method: "nascimento", value: registry.nasc } }, ctx, provider);
+    assert.equal((spacingRejected.json.errors as Record<string,string>).name,"name_cpf_mismatch");
+    assert.equal(await count(),1,"nome colado não substitui o cadastro mesmo acertando nascimento");
+
     await resetIdentityAttempts(cpf);
     assert.deepEqual(await verifyCpfName({ cpf, declaredName: "Paula Lima", provider }), { ok: false, reason: "identity_required" });
     assert.equal((await verifyIdentity({ cpf, declaredName: "Paula Lima", method: "mae", value: registry.mae, provider })).ok, true);

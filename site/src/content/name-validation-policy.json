@@ -1,0 +1,31 @@
+{
+  "version": "2026-11-06.strict-spelling-and-family-v5",
+  "ignore_case": true,
+  "ignore_accents": true,
+  "ignored_particles": [
+    "da",
+    "de",
+    "do",
+    "das",
+    "dos",
+    "e"
+  ],
+  "match_complete_words": true,
+  "require_order": true,
+  "allow_typo_tolerance": false,
+  "allow_word_splitting": false,
+  "allow_word_joining": false,
+  "allow_initials": false,
+  "allow_extra_words_not_in_api": false,
+  "partial_names": "ordered_complete_words_with_identity_challenge",
+  "identity_challenge_overrides_name_mismatch": false,
+  "print_name_policy": "name-print-policy.json",
+  "allow_exact_compound_hyphen_variants": true,
+  "family_name_change": {
+    "requires_explicit_declaration": true,
+    "requires_additional_identity_check": true,
+    "exact_api_match": false,
+    "requires_review": true,
+    "notify_by_email": true
+  }
+}
