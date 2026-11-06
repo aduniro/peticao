@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Help from "./Help";
+import FormDraftCapture from "./FormDraftCapture";
 import HowTo from "./HowTo";
 import MaskedInput, { emailMask, nameMask } from "./MaskedInput";
 import { isValidCpf, onlyDigits } from "@/lib/cpf";
@@ -32,6 +33,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   const [nameV, setNameV] = useState("");
   const [emailV, setEmailV] = useState("");
   const emailRef = useRef("");
+  const formRef = useRef<HTMLFormElement>(null);
   const [notice, setNotice] = useState<null | "sent" | "bad" | "inst">(null);
   const [sentTo, setSentTo] = useState("");
   const [sugg, setSugg] = useState(""); // "Você quis dizer …?" (do navegador ao sair do campo, ou do servidor)
@@ -95,16 +97,23 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   const trAll = (e: Record<string, string>) => Object.fromEntries(Object.entries(e).map(([k, v]) => [k, tr(v, v)]));
 
   async function post(body: Body) {
-    const res = await fetch("/api/assinar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-    return { status: res.status, data: (await res.json().catch(() => ({}))) as any };
+    try {
+      const res = await fetch("/api/assinar", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      const data = (await res.json().catch(() => ({}))) as any;
+      formRef.current?.dispatchEvent(new CustomEvent("form-draft-result", { detail: { outcome: data.ok ? "accepted" : data.identityRequired ? "identity_required" : "rejected", invalidFields: Object.keys(data.errors ?? {}) } }));
+      return { status: res.status, data };
+    } catch (error) {
+      formRef.current?.dispatchEvent(new CustomEvent("form-draft-result", { detail: { outcome: "network_error" } }));
+      throw error;
+    }
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const eb = emailBad(emailV);
-    if (eb || !emailV.trim()) { setErrors({ email: eb || t("f.emailInvalid") }); setMsg(t("err.generic")); return; }
-    if ((category === "servidor" || category === "apoiador") && !isValidCpf(cpf)) { setErrors({ cpf: t("err.cpf_invalid") }); setMsg(t("err.generic")); return; } // não envia nada: nem ao servidor, nem à CPF Brasil
+    if (eb || !emailV.trim()) { formRef.current?.dispatchEvent(new CustomEvent("form-draft-invalid", { detail: { fields: ["email"] } })); setErrors({ email: eb || t("f.emailInvalid") }); setMsg(t("err.generic")); return; }
+    if ((category === "servidor" || category === "apoiador") && !isValidCpf(cpf)) { formRef.current?.dispatchEvent(new CustomEvent("form-draft-invalid", { detail: { fields: ["cpf"] } })); setErrors({ cpf: t("err.cpf_invalid") }); setMsg(t("err.generic")); return; } // não envia nada: nem ao servidor, nem à CPF Brasil
     setState("sending"); setErrors({}); setMsg("");
     const body: Body = { name: nameMask(nameV, true), email: emailMask(emailV, true), category, consent: f.get("consent") === "on", website: f.get("website"), turnstileToken: tsToken.current, locale: lang };
     if (category === "servidor") Object.assign(body, { cpf, institution: srv.institution, role: srv.role, campus: srv.campus, campusIbge: srv.campusIbge, regionDeclared: srv.region });
@@ -154,9 +163,11 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       <NoticeModal open={notice === "bad"} tone="error" title={t("bad.title")} text={t("bad.text", { email: emailMask(emailV, true) }) + (fix ? " " + explainFix(fix) : "")} ok={t("bad.ok")} onClose={() => { setNotice(null); setTimeout(() => document.querySelector<HTMLInputElement>('input[name="email"]')?.focus(), 60); }} />
     </>
   );
+  const draftCapture = <FormDraftCapture completed={state === "sent"} formRef={formRef} snapshot={{ name: nameV, email: emailV, cpf, category, institution: srv.institution, role: srv.role, campus: srv.campus, region: srv.region, city, uf, country, university }} />;
   if (state === "sent")
     return (
       <>
+        {draftCapture}
         <div className="box ok" role="status">
           <h3>{t("ok.title")}</h3>
           <p><Spammy text={t("ok.text")} /></p>
@@ -176,7 +187,8 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   );
   return (
     <>
-      <form onSubmit={onSubmit} className="form" noValidate>
+      {draftCapture}
+      <form ref={formRef} onSubmit={onSubmit} className="form" noValidate>
         <div className="form-head"><h2 className="form-title">{t("form.title")}</h2><HowTo onYes={() => startTour(category, true)} /></div>
         <div className="segmented three" data-tour="tabs" role="radiogroup" aria-label={t("cat.label")}>
           {cat("servidor", t("cat.servidor"))}{cat("apoiador", t("cat.apoiador"))}{cat("estrangeiro", t("cat.estrangeiro"))}
