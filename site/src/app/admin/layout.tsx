@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { sessaoAdmin } from "@/lib/admin";
 import AdminShell from "@/components/admin/AdminShell";
+import { ROTULO_NIVEL, nivelOk } from "@/lib/admin-users";
 import "./admin.css";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
 
 /** Moldura do painel: menu lateral no computador, barra superior no tablet e abas inferiores no celular. Sem sessão, mostra só a tela de acesso. */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  if (!(await sessaoAdmin())) return <>{children}</>;
-  return <AdminShell>{children}</AdminShell>;
+  const s = await sessaoAdmin();
+  if (!s) return <>{children}</>;
+  return <AdminShell quem={{ nome: s.nome, nivel: s.nivel, rotuloNivel: ROTULO_NIVEL[s.nivel] }} ehTotal={nivelOk(s.nivel, "total")}>{children}</AdminShell>;
 }

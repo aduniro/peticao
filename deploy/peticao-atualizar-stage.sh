@@ -19,5 +19,6 @@ rsync -rlc --delete --omit-dir-times "${CHOWN[@]}" \
   --exclude '.env*' --exclude /secrets --exclude /.npmrc --exclude /tsconfig.tsbuildinfo \
   "$CHECKOUT/site/" "$STAGE/site/"
 [ -d "$CHECKOUT/deploy" ] && rsync -rlc --delete --omit-dir-times "${CHOWN[@]}" "$CHECKOUT/deploy/" "$STAGE/deploy/"
-echo "$SHA" > "$STAGE/VERSAO"; [ "$(id -u)" = 0 ] && chown "$DEPLOY_USER:$DEPLOY_USER" "$STAGE/VERSAO" || true
+# VERSAO também dentro de site/: acompanha a publicação e a Central de Ações do painel mostra a versão implantada.
+for f in "$STAGE/VERSAO" "$STAGE/site/VERSAO"; do echo "$SHA" > "$f"; [ "$(id -u)" = 0 ] && chown "$DEPLOY_USER:$DEPLOY_USER" "$f" || true; done
 echo "stage atualizado para $BRANCH @ ${SHA:0:12} ($(git --git-dir="$BARE" log -1 --format=%s "$SHA" | cut -c1-70))"
