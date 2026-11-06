@@ -9,23 +9,23 @@ Não registrar aqui nomes de assinantes, CPFs, nascimento, nome da mãe, endere�
 | ID | Prioridade | Problema ou necessidade | Estado em 06/11/2026 |
 |---|---|---|---|
 | PLAT-001 | Alta | Tentativa duplicada confirmada mostra “e-mail enviado”, embora nenhum envio ocorra | Diagnosticado em produção; correção pendente |
-| PLAT-002 | Alta | Acesso seguro para “Verificar/Corrigir minha assinatura” | Pesquisa solicitada e documentada; arquitetura depende de decisão |
-| PLAT-003 | Alta | Corrigir apoiador para servidor sem criar outra assinatura | Proposto; regras de vínculo e autenticação ainda não implementadas |
+| PLAT-002 | Alta | Acesso seguro para “Verificar/Corrigir minha assinatura” | Login por senha e e-mail escolhido; implementado/testado em DEV, desligado e sem deploy |
+| PLAT-003 | Alta | Corrigir apoiador para servidor sem criar outra assinatura | Correção autenticada e confirmada por e-mail implementada em DEV; sem deploy |
 | PLAT-004 | Alta | Novas regras de nome × CPF e impedimento de aprovação com nome incompatível | Implementadas em desenvolvimento; publicação pendente |
 | PLAT-005 | Alta | Correção de nome durante confirmação de cadastro antigo pendente | Texto aprovado; fallback em desenvolvimento; publicação pendente |
-| PLAT-006 | Alta | Registros de preenchimento parcial e tentativas, com retenção de 30 dias | Escopo e aviso de coleta parcial aguardam decisão; coleta não ativada |
+| PLAT-006 | Alta | Registros de preenchimento parcial e tentativas, com retenção de 30 dias | Adesão explícita aprovada no plano; rascunhos cifrados implementados/testados em DEV, desligados |
 | PLAT-007 | Média | Histórico de tentativas de identidade dura sete dias em produção | Retenção de 30 dias preparada em desenvolvimento; publicação pendente |
 | PLAT-008 | Alta | Reenvio do formulário apaga e recria cadastros pendentes | Comportamento identificado; preservação de ID/histórico requer ajuste |
-| PLAT-009 | Média | Tratamento genérico de conflito SQL `23505` esconde o resultado da operação | Revisão pendente |
+| PLAT-009 | Média | Tratamento genérico de conflito SQL `23505` esconde o resultado da operação | DEV trata somente conflitos de deduplicação conhecidos; regressão aprovada, sem deploy |
 | PLAT-010 | Alta | Revisão humana das divergências históricas ainda não terminou | Em andamento pelo responsável; decisões locais preservadas |
-| PLAT-011 | Alta | Política para substituir nomes nos documentos e tratar exceções cadastrais | Pendente; prévias atuais mantêm nomes registrados |
+| PLAT-011 | Prioridade 1 | Nome para impressão, acentos e exceções | Ferramenta local ativa, decisões independentes e prévia nova; revisão humana continua |
 | PLAT-012 | Alta | Consolidar e regenerar PDFs/lotes para envio após revisão | Pendente; nenhuma autorização de envio nesta rodada |
-| PLAT-013 | Média | Normalização de e-mails presume suporte a `+etiqueta` em todos os domínios | Identificado; revisar por provedor sem migração cega dos hashes |
+| PLAT-013 | Média | Normalização de e-mails presume suporte a `+etiqueta` em todos os domínios | DEV preserva +etiqueta fora de Gmail; auditoria local sem afetados; exige preflight fresco antes de publicar |
 | PLAT-014 | Alta | Avisos existentes e retenção real de respostas da API precisam ser compatibilizados | Decisão editorial pendente; não alterar avisos sem aprovação |
 | PLAT-015 | Média | Novas assinaturas posteriores ao snapshot não têm número de CPF na cópia local | Limitação conhecida; dados disponíveis continuam chegando pelo hash |
 | PLAT-016 | Média | Quatro CPFs do grupo consultado não foram encontrados pela API | Sem resolução cadastral; não declarar CPF inválido por isso |
 | PLAT-017 | Alta | Definir descarte de dados derivados, exportações e backups de conferência | Pendente; expiração do cache não apaga automaticamente CSVs/SQLites |
-| PLAT-018 | Alta | Publicação cumulativa, isolada das alterações ainda não publicadas do painel | Testes finais e escopo de release pendentes |
+| PLAT-018 | Alta | Publicação cumulativa, isolada das alterações ainda não publicadas do painel | 278 testes cumulativos e build local aprovados; release mínimo e publicação pendentes |
 
 ## Detalhamento e critérios de conclusão
 
@@ -47,9 +47,9 @@ Não registrar aqui nomes de assinantes, CPFs, nascimento, nome da mãe, endere�
 
 **Atenção ao código atual:** `/meu/[token]` é um painel de cartaz/indicações. O token em `referrers.manage_token_hash` é um segredo de posse; a consulta atual não estabelece uma sessão de edição com expiração/reautenticação. Código público, QR, inscrição e link de indicação não podem autorizar alterações.
 
-**Estudo:** [Alternativas e proposta de acesso seguro](docs/ACESSO-E-CORRECAO-DE-ASSINATURAS.md). Ainda não implementar login/recuperação nem publicar textos novos sem decisão do responsável.
+**Estudo original:** [Alternativas e proposta de acesso seguro](docs/ACESSO-E-CORRECAO-DE-ASSINATURAS.md). A decisão posterior escolheu senha permanente com e-mail confirmado, implementada em DEV e descrita em `docs/ACESSO-ASSINANTE-DEV.md`; o estudo original foi preservado.
 
-**Aceite:** autenticação e recuperação resistentes a tomada de conta; escopo restrito por assinatura; reautenticação para alteração; sessão curta, proteção CSRF e contra enumeração; testes de acesso cruzado, replay, token vencido, roubo de sessão, cadastro de passkey e recuperação sem downgrade.
+**Aceite:** autenticação e recuperação resistentes a tomada de conta; escopo restrito por assinatura; reautenticação para alteração; sessão curta, proteção CSRF e contra enumeração; testes de acesso cruzado, replay, token vencido, roubo de sessão, recuperação e vinculação ao canal confirmado. O estudo de passkeys fica como alternativa futura.
 
 ### PLAT-003 — Correção de categoria e dados profissionais
 
@@ -73,7 +73,7 @@ Hoje `events` registra visitas, cliques e início de formulário, respeitando DN
 
 Preparada em desenvolvimento a retenção de tentativas de identidade por 30 dias, mantendo limite de cinco erros em 24 horas. Nascimento e mãe digitados no desafio não foram incluídos nesse histórico.
 
-**Decisão pendente:** foi apresentada uma opção inicialmente desmarcada para autorizar rascunho protegido por até 30 dias, inclusive sem envio, com CPF apenas em hash e sem nascimento/mãe digitados. O usuário ainda não aprovou esse texto/escopo. Alternativa: registrar somente eventos e estados dos campos, sem conteúdo pessoal. Não ativar coleta silenciosa antes do envio.
+**Decisão posterior no plano:** aprovada a opção inicialmente desmarcada para rascunho protegido por até 30 dias, inclusive sem envio, CPF apenas em hash e sem nascimento/mãe digitados. Implementada em DEV com exclusão por capability e coleta desativada após reload; recurso desligado por padrão, sem ativação pública.
 
 **Aceite:** retenção e limpeza testadas; conteúdo protegido e acesso restrito; escopo explícito, minimizado e aprovado; sem senhas, tokens, segredos ou desafios pessoais nos logs; navegação/erro local distinguidos de requisição efetiva e assinatura confirmada.
 
@@ -95,7 +95,7 @@ Antes do envio oficial, verificar configuração efetiva de destinatários, assi
 
 `dedupEmail()` remove pontos somente em `gmail.com`/`googlemail.com`, o que não deve ser generalizado para domínios próprios/Workspace. Mantém a grafia digitada para entrega; a forma canônica é usada no hash de deduplicação. Endereços institucionais com/sem pontos podem ser pessoas diferentes.
 
-A função também remove `+etiqueta` de todos os domínios. Revisar essa hipótese por provedor e separar endereço de entrega, endereço verificado e chave canônica. Não alterar hashes existentes cegamente: avaliar compatibilidade, colisões e migração/versionamento antes da mudança. Domínios ou provedores em comum nunca bastam para vincular contas.
+A função em produção também remove `+etiqueta` de todos os domínios. A correção em DEV preserva o sufixo fora de Gmail. Revisar essa hipótese por provedor e separar endereço de entrega, endereço verificado e chave canônica. Não alterar hashes existentes cegamente: avaliar compatibilidade, colisões e migração/versionamento antes da mudança. Domínios ou provedores em comum nunca bastam para vincular contas.
 
 ### PLAT-014 e PLAT-017 — Informação ao usuário e ciclo de vida dos dados
 
@@ -161,3 +161,39 @@ assinante fica por último e usa senha permanente com e-mail confirmado, ou
 nome+CPF+mesma senha; recuperação de uso único por e-mail para escolher outra senha.
 Isso substitui a preferência inicial por passkeys, mantendo o estudo de alternativas.
 Não confundir código implementado/testado localmente com release publicado na VPS.
+
+## Verificações desta implementação
+
+- Revisão local: dicionário inicial de 840 formas públicas candidatas, observações
+  privadas agregadas, editor de nome independente e ações por categoria. O corpus
+  não é exaustivo nem prova grafia civil; casos especiais continuam individuais.
+- Foram preservadas as 39 decisões manuais e suas linhas de histórico presentes
+  no backup inicial. Nenhuma aprovação de nome foi inventada na ativação.
+- Campos adicionais do exportador foram testados em transação READ ONLY. Nenhuma
+  assinatura, hash, data ou decisão foi escrita no banco remoto.
+- Auditoria local de e-mail: nenhum endereço não-Gmail com `+` e nenhuma colisão
+  nas linhas presentes do snapshot avaliado; repetir a auditoria antes do release.
+- Commits por etapa registram baseline, dicionário, decisões/lotes, interface, PDF,
+  rascunhos opcionais, backend e interface do assinante. Dados pessoais e bancos
+  permaneceram fora do Git. Publicação principal e revisão humana continuam pendentes.
+
+### Fechamento técnico da etapa local
+
+- 65 testes locais distintos, 278 testes da aplicação, TypeScript e build de
+  produção aprovados. Smoke HTTP verificou recurso desligado (404), ligado (200),
+  origem externa recusada (403) e corpo excessivo recusado (413). Testes não usaram
+  dados reais para assinar, consultar API paga ou enviar e-mail.
+- Firefox: controles CPF preservados, editor e lotes de nomes, texto escapado,
+  alterações não salvas, recuperação e rascunhos opcionais verificados.
+- Prévia de conferência congelada: 6.311 elegíveis, 1.578 páginas, SHA-256 conferido,
+  IDs únicos, sem campos privados, amostras inicial/meio/final renderizadas. Caminho:
+  `/mnt/dev/cpfs/revisao/previas/nomes-aprovados-revisados-20261106T164952Z/previa-nomes-revisados.pdf`.
+  Continua marcada NÃO ENVIAR. O total representa o snapshot, não encerra a revisão.
+- As escolhas antigas de nome feitas antes de existir o campo de versão do
+  dicionário foram preservadas sem inventar proveniência retroativa; decisões
+  posteriores conservam versão e cópia da sugestão apresentada.
+- Aplicação pública permanece sem deploy nesta rodada. Rascunhos e área do
+  assinante estão somente em DEV, desligados por padrão. Avisos existentes intactos.
+- Permanecem abertos: revisão humana, mensagem anônima de duplicidade, preservação
+  dos pendentes refeitos, casos sem retorno/número de CPF, retenção de exportações,
+  compatibilização dos avisos e publicação/consolidação/envio dos lotes.

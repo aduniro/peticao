@@ -94,3 +94,22 @@ truncado ou perde acentos silenciosamente: caracteres sem cobertura da fonte
 bloqueiam a geração. O PDF é uma lista de conferência, marcada **NÃO ENVIAR**;
 não substitui os lotes oficiais, não publica mudanças e não contém CPF,
 nascimento, mãe, sexo, e-mail ou IP. Nenhum PDF anterior é sobrescrito.
+
+### Dependências da prévia
+
+A geração usa `reportlab` e `fonttools`; os testes também usam `pypdf`. Nesta
+máquina foram verificados ReportLab 5.0.1, fontTools 4.46.0 e pypdf 4.0.2.
+Nenhuma dependência da aplicação foi alterada para essa prévia local.
+
+Cada decisão de nome conserva a versão do dicionário e uma cópia da sugestão
+apresentada. Atualizar o corpus não substitui um nome aprovado anteriormente.
+
+### Auditoria anterior à mudança de e-mails
+
+O código em DEV passa a preservar `+etiqueta` fora do Gmail pessoal. Antes de
+publicar, refaça a auditoria somente leitura; o relatório contém endereços e deve
+ficar privado. Não migra hashes nem autoriza uma migração automaticamente:
+
+```sh
+/usr/bin/python3 /mnt/dev/peticao/tools/cpf-review/audit_email.py --output /mnt/dev/cpfs/revisao/auditoria-email-nova.json
+```
