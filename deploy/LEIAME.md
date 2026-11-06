@@ -60,3 +60,7 @@ Após preparar o stage, root executa `/usr/local/sbin/peticao-publicar-preparar`
 O comando manual continua sem argumentos e vincula sua cópia à origem capturada no início. A ferramenta `tools/cpf-name-rule/deploy.py` desta mesma versão compartilha a trava durante backup, preparação e eventual rollback. Usar ferramentas e instaladores da mesma versão; não misturar o script antigo com o publicador atualizado.
 
 Testes de infraestrutura: `python3 -m unittest discover -s deploy/test -v`. Ensaio do banco a partir de `site/`, usando porta/diretório de desenvolvimento isolados: `node scripts/with-db.mjs ./node_modules/.bin/tsx ../deploy/test/admin-schema-upgrade.mjs`. O ensaio recusa banco remoto e exige `DEV_DB_PORT` explícita. Nunca apontar os testes para produção.
+
+### Protocolo do Terminal integrado
+
+O app novo consulta `/protocolo` antes de enviar um comando ao serviço local. Exige `terminal-ndjson-signed-v1`; serviço antigo não recebe comandos por esse caminho. A nova versão de `terminal-servico.mjs` mantém a saída textual para clientes antigos e oferece resultado autenticado para o app novo. Publicar o código e instalar/atualizar o serviço pelo conjunto consistente desta versão, somente após autorização; não copiar apenas o handler. O Terminal continua desligado por padrão e exige Total com confirmação extra para ser ligado/usado. Não há necessidade de alterar `HASH_PEPPER` ou os dados de assinatura.

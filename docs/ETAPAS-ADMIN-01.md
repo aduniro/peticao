@@ -56,3 +56,21 @@ Os 30 testes afetados passaram após o ajuste. A rodada cumulativa seguinte pass
 O ensaio passou e remove seu esquema ao terminar. Não usa registros de produção nem o SQLite de revisão.
 
 Ainda pendentes na Etapa 1: A6 (autoria, estados finais e idempotência), revisão dos demais controles sensíveis, padronização/QA visual e permissões nos seis tamanhos, e conferência final do candidato com a produção mais recente. A aprovação do texto de Minha conta continua pendente. As Etapas 2–7 permanecem no escopo completo; este checkpoint não conclui a integração e não autoriza deploy.
+
+## A6 — autoria e resultado do Terminal
+
+Checkpoint de código: `4ca0273`.
+
+As rotas de correção de e-mail, reenvio e ações em lote agora repassam a identidade da sessão à auditoria, em vez de usar o autor genérico `admin`. O teste atravessa os handlers reais, verifica o autor e preserva nome, CPF em hash, IDs, sequência, código de verificação e horários. O acesso sem autenticação continua recusado.
+
+No Terminal, pedido e auditoria são gravados atomicamente antes de qualquer comando. O pedido começa como `solicitado`, com `ok=false`. Antes de enviar o comando, o app exige que o serviço anuncie o protocolo novo; um serviço antigo é recusado sem receber o comando.
+
+O serviço continua aceitando a interface textual antiga, mas o app novo usa quadros NDJSON internos: saída em base64 e resultado separado. O resultado é assinado com a chave própria do Terminal e ligado ao nonce e ao hash do comando. A página recebe apenas o texto de sempre; stdout não pode fabricar um resultado de sucesso. A chave não é enviada ao navegador ou gravada nos registros.
+
+O resultado final atualiza a ação e a cadeia de auditoria na mesma transação, uma única vez. Sucesso exige código zero, sem timeout, corte de saída ou erro de inicialização. Interrupção, resultado ausente, protocolo inválido e assinatura inválida não viram sucesso. Falha na gravação final não deixa `ok=true`; o registro inicial permanece sem resultado conclusivo.
+
+Validação: suíte cumulativa **244/244**, tipos e build de produção aprovados. Inclui handlers reais com banco fictício, serviço HTTP local, código de saída não zero, recusa antes do envio a serviço antigo, assinatura forjada, saída tentando imitar resultado, fragmentação UTF-8, timeout/corte, cancelamento e rollback se a auditoria falhar. Os comandos de teste foram inofensivos e executados somente no ambiente local; nenhum comando foi enviado ao Terminal da VPS.
+
+Não foram alterados o componente visual do console, avisos da assinatura, dados da petição, cache de CPF ou configurações/segredos da VPS. A atualização futura do serviço deve acompanhar o app; o instalador 22 permanece pendente de autorização e execução.
+
+A6 ainda não está concluído: `docs/A6-RESPOSTAS-PENDENTES.md` registra a falha das reservas de contato que expiram após dois minutos e o contrato para a fila durável. Controles sensíveis, QA visual/permissões e Etapas 2–7 continuam no escopo. Não publicar este candidato parcial.
