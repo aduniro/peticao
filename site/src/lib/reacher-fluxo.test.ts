@@ -19,8 +19,10 @@ test("fluxo: Reacher recusa só com prova do SMTP e não é chamado quando o CPF
   process.env.REACHER_URL = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   const dbmod = await import("./db"); await dbmod._openForTests("t_reacher_fluxo");
   const { handleSign } = await import("./sign-flow");
+  const { mockProvider } = await import("./cpf-check");
   const { _clearReacherCache } = await import("./reacher");
   const provider = { name: "espião", async lookup() { throw new Error("não devia consultar a CPF Brasil"); } } as never;
+  const cpfProvider = mockProvider({ "52998224725": { nome: "MARIA DA SILVA", mae: "ANA MARIA DA CONCEICAO", nasc: "15/08/1985" } });
   const body = (email: string, cpf = "529.982.247-25") => ({ name: "Maria da Silva", email, cpf, category: "apoiador", city: "Porto Velho", uf: "RO", consent: true });
   try {
     _clearReacherCache();
@@ -28,18 +30,18 @@ test("fluxo: Reacher recusa só com prova do SMTP e não é chamado quando o CPF
     const bad = await handleSign(body("qualquer@gmail.com", "529.982.247-26"), { ip: "9.9.9.1" }, provider);
     assert.equal(bad.status, 422); assert.equal(seen.length, 0);
     // caixa inexistente (prova do SMTP): recusa com o código certo, antes da janela de identidade
-    const nf = await handleSign(body("fantasma@gmail.com"), { ip: "9.9.9.2" }, null);
+    const nf = await handleSign(body("fantasma@gmail.com"), { ip: "9.9.9.2" }, cpfProvider);
     assert.deepEqual((nf.json as { errors: Record<string, string> }).errors, { email: "email_not_found" });
     // caixa cheia
-    const full = await handleSign(body("cheia@gmail.com"), { ip: "9.9.9.3" }, null);
+    const full = await handleSign(body("cheia@gmail.com"), { ip: "9.9.9.3" }, cpfProvider);
     assert.deepEqual((full.json as { errors: Record<string, string> }).errors, { email: "email_full" });
     // sem prova (porta 25 fechada → can_connect_smtp=false): NÃO bloqueia; segue o fluxo normal (200 ou pede identidade)
-    const ok = await handleSign(body("normal@gmail.com"), { ip: "9.9.9.4" }, null);
+    const ok = await handleSign(body("normal@gmail.com"), { ip: "9.9.9.4" }, cpfProvider);
     assert.equal(ok.status, 200);
     assert.deepEqual(seen, ["fantasma@gmail.com", "cheia@gmail.com", "normal@gmail.com"]);
     // Reacher fora do ar: deixa passar
     server.close(); _clearReacherCache();
-    const down = await handleSign(body("outra@gmail.com"), { ip: "9.9.9.5" }, null);
+    const down = await handleSign(body("outra@gmail.com"), { ip: "9.9.9.5" }, cpfProvider);
     assert.equal(down.status, 200);
   } finally { delete process.env.REACHER_URL; server.close(); await dbmod._closeDbForTests(); }
 });

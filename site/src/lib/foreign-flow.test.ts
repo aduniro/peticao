@@ -18,6 +18,7 @@ test("estrangeiro: base de universidades, país, domínio listado, fora da lista
   const dbmod = await import("./db");
   await dbmod._openForTests("t_foreign");
   const { handleSign } = await import("./sign-flow");
+  const { mockProvider } = await import("./cpf-check");
   const wu = await import("./world-universities");
   const out = process.env.MAIL_OUTBOX_DIR!;
   const rows = async () => (await dbmod.query<{ n: number }>("SELECT COUNT(*)::int n FROM signatures")).rows[0].n;
@@ -106,7 +107,11 @@ test("estrangeiro: base de universidades, país, domínio listado, fora da lista
   assert.equal(br.status, 200);
   const b = (await dbmod.query<any>("SELECT ifes_acronym, campus, campus_ibge, campus_listed, region_declared, region_validated, region_criteria, country, institution_listed FROM signatures WHERE email='maria@unir.br'")).rows[0];
   assert.deepEqual(b, { ifes_acronym: "UNIR", campus: "Ji-Paraná", campus_ibge: 1100122, campus_listed: true, region_declared: true, region_validated: true, region_criteria: "amazonia_legal", country: "BR", institution_listed: true });
-  const ap = await handleSign({ name: "João Pereira", email: "joao.pereira@gmail.com", cpf: "111.444.777-35", category: "apoiador", uf: "ro", city: "ji parana", consent: true }, ctx, null);
+  const apForm = { name: "João Pereira", email: "joao.pereira@gmail.com", cpf: "111.444.777-35", category: "apoiador", uf: "ro", city: "ji parana", consent: true };
+  const apProvider = mockProvider({ "11144477735": { nome: "JOAO PEREIRA", mae: "ANA MARIA SOUZA" } });
+  const apPreflight = await handleSign(apForm, ctx, apProvider);
+  assert.equal((apPreflight.json as any).identityRequired, true);
+  const ap = await handleSign({ ...apForm, ticket: (apPreflight.json as any).ticket, identity: { method: "mae", value: "Ana Maria Souza" } }, ctx, apProvider);
   assert.equal(ap.status, 200);
   assert.deepEqual((await dbmod.query<any>("SELECT city, uf, city_ibge FROM signatures WHERE email='joao.pereira@gmail.com'")).rows[0], { city: "Ji-Paraná", uf: "RO", city_ibge: 1100122 });
 
