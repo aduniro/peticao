@@ -84,3 +84,15 @@ Backend, traduções, dados e regras de validação permanecem os existentes.
 Testes devem comprovar também IFC e domínio institucional, provedor de apoiador,
 e-mail institucional em apoiador, ausência de troca automática e comportamento
 de erro/rede já aprovado. A auditoria anterior é mantida como registro do defeito.
+
+Publicação da recomposição concluída em 06/11/2026, às 21:58 UTC, pelo pacote
+`/root/peticao-recovery/name-rule-deploys/restore-email-20261106/` (commit de código
+`57e10aa`). Vinte e um testes de lógica, tipos e build aprovados. QA de navegador
+aprovado localmente e na interface publicada: orientação institucional, IFC,
+provedor de apoiador, “Usar este” explícito, lista de provedores, institucional em
+apoiador, CPF incompleto, modal só após envio e preservação de campos/consentimento.
+No QA de interface, as APIs de validação/envio foram interceptadas: não comprova
+entrega real de e-mail, não cria assinatura e não consome consulta de CPF.
+Verificação externa: página e contador HTTP 200; serviço ativo. Esquema e
+configuração preservados, sem atualização em massa de assinantes. A integração
+do admin permanece pausada.

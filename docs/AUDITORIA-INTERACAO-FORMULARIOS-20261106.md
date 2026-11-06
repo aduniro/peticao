@@ -105,3 +105,11 @@ O roteiro da correção verificou o erro genérico e a ausência de sugestões e
 **Alterar apenas o comportamento solicitado. Tudo que já existe permanece por padrão.** Antes de editar a interação, identificar o pedido, o fluxo anterior, o trecho exato que mudará e os cenários que devem continuar iguais. Mudanças em avisos/informações ao usuário precisam de autorização específica, salvo o texto exato já aprovado. Teste deve provar também a preservação do que não foi pedido para mudar.
 
 Este relatório não declara o formulário corrigido. Aplicação, deploy e integração do admin permanecem parados nesta etapa; foram realizadas somente leitura, documentação e envio do diagnóstico ao responsável.
+
+## Atualização posterior à auditoria
+
+Após autorização expressa, a recomposição delimitada foi implementada no commit
+`57e10aa` e publicada em 06/11/2026 às 21:58 UTC. Resultados e limites dos testes
+estão em `docs/UX-AVISOS-DE-VALIDACAO.md`, seção de recomposição autorizada.
+Este relatório preserva o diagnóstico da versão anterior; não descreve essa
+regressão como ainda presente após a recomposição validada.
