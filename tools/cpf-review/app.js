@@ -27,7 +27,7 @@ function nameCell(row){
   const cell=el("td",undefined,"name-cell"),text=el("strong","Carregando sugestão…"),status=el("small"),approve=el("button","Aprovar nome","name-approve"),button=el("button","Revisar nome para impressão","text-button"),feedback=el("small",undefined,"name-inline-feedback");
   let shown=null,saving=false;
   approve.type="button";approve.disabled=true;button.onclick=()=>openName(row);cell.append(text,status,approve,button,feedback);
-  const show=n=>{if(!cell.isConnected)return;shown=n;row.names=n;text.textContent=n.selected_name||n.proposed||"Sem sugestão disponível";status.textContent=(nameLabels[n.decision]||"Nome a decidir")+(n.special?" · caso especial":"");status.className=n.decision==="approved"?"name-approved":"";approve.textContent=n.decision==="approved"?"✓ Nome aprovado":"Aprovar nome";approve.disabled=saving||n.decision==="approved"||!(n.selected_name||n.proposed);approve.setAttribute("aria-label","Aprovar nome exibido: "+text.textContent);};
+  const show=n=>{if(!cell.isConnected)return;shown=n;row.names=n;text.textContent=(!n.stale&&!n.policy_review_required&&(n.decision==="approved"||n.previous_policy_version===n.policy_version)?n.selected_name:null)||n.proposed||"Sem sugestão disponível";status.textContent=(nameLabels[n.decision]||"Nome a decidir")+(n.special?" · caso especial":"");status.className=n.decision==="approved"?"name-approved":"";approve.textContent=n.decision==="approved"?"✓ Nome aprovado":"Aprovar nome";approve.disabled=saving||n.decision==="approved"||!(n.selected_name||n.proposed);approve.setAttribute("aria-label","Aprovar nome exibido: "+text.textContent);};
   approve.onclick=async()=>{
     if(!shown||saving)return;
     if(shown.instruction){feedback.textContent="Há uma instrução pendente. Confira-a em Revisar nome para impressão antes de aprovar.";feedback.className="name-inline-feedback error";return;}
@@ -51,10 +51,10 @@ async function openName(row){
   if(!$("name-editor").open)$("name-editor").showModal();
   try{
     const n=await api("/api/names?id="+row.id);if(request!==nameRequest||!$("name-editor").open)return;
-    nameEditing={row,n};$("name-stale").hidden=!n.stale;const grid=$("name-comparison");
+    nameEditing={row,n};$("name-stale").hidden=!(n.stale||n.policy_review_required);const grid=$("name-comparison");
     for(const [label,value] of [["Original digitado — preservado",row.name],["Original da API — preservado",row.nome_api],["Digitado com sugestão de acentos",n.entered_resolved],["API com sugestão de acentos",n.api_resolved]]){const p=el("p");p.append(el("strong",label),el("span",display(value)));grid.append(p);}
     $("name-reasons").textContent=(Array.isArray(n.reasons)?n.reasons.join(" · "):n.reasons||"")+" · Dicionário da sugestão atual: "+display(n.dictionary_version)+(n.approved_dictionary_version?" · Versão registrada na decisão: "+n.approved_dictionary_version:"");$("name-special").hidden=!n.special;
-    const chosen=n.choice||"proposed",options=$("name-options");
+    const chosen=n.stale||n.policy_review_required||n.decision!=="approved"&&n.previous_policy_version!==n.policy_version?"proposed":n.choice||"proposed",options=$("name-options");
     for(const [value,label,text] of [["proposed","Sugestão principal",n.proposed],["entered","Nome digitado com acentos sugeridos",n.entered_resolved],["api","Nome da API com acentos sugeridos",n.api_resolved]])if(text)options.append(nameOption(value,label,text,chosen===value));
     options.append(nameOption("custom","Outra forma literal","Use o campo abaixo para definir o texto exato.",chosen==="custom"));
     if(!options.querySelector("input:checked"))options.querySelector("input").checked=true;
@@ -78,7 +78,7 @@ $("name-form").addEventListener("submit",async event=>{
   if(decision==="approved"&&choice==="custom"&&!literal){$("name-feedback").textContent="Escreva o nome literal para aprovar essa opção.";$("name-literal").focus();return;}
   const {row,n}=nameEditing,buttons=[...$("name-form").querySelectorAll("button")];buttons.forEach(b=>b.disabled=true);busyDecisions++;
   try{
-    await api("/api/name-decision",{id:row.id,revision:n.revision||row.revision,name_revision:n.name_revision,version:n.version,decision,choice,literal,instruction});
+    await api("/api/name-decision",{id:row.id,revision:n.revision||row.revision,name_revision:n.name_revision,version:n.version,policy_version:n.policy_version,decision,choice,literal,instruction});
     nameDirty=false;$("name-editor").close();await summary();await load();message(decision==="approved"?"Nome para impressão aprovado. A decisão do CPF foi preservada.":decision==="rejected"?"Sugestão de nome recusada; aguardando nova escolha. A decisão do CPF foi preservada.":"Nome e instrução salvos para revisão. Nenhuma aprovação automática foi feita.");
   }catch(e){$("name-feedback").textContent=e.message;$("name-feedback").className="error";}finally{busyDecisions--;buttons.forEach(b=>b.disabled=false);}
 });

@@ -52,6 +52,8 @@ def snapshot(database):
         excluded['nome_nao_aprovado'] += 1
       elif name['record_revision'] != row['revision'] or name['name_revision'] != source_revision(record):
         excluded['decisao_de_nome_desatualizada'] += 1
+      elif _policy_review_required(record,name):
+        excluded['politica_de_nome_exige_revisao'] += 1
       elif not isinstance(name['selected_name'], str) or not name['selected_name'].strip():
         excluded['nome_aprovado_vazio'] += 1
       else:
@@ -77,6 +79,13 @@ def snapshot(database):
   finally:
     db.close()
 
+
+def _policy_review_required(record,decision):
+  from name_policy import key,policy
+  if decision.get('policy_version')==policy()['version']:
+    return False
+  from name_dictionary import suggest
+  return key(decision.get('selected_name'))!=key(suggest(record)['proposed'])
 
 def _fonts():
   from fontTools.ttLib import TTFont as FontCoverage

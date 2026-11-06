@@ -93,3 +93,13 @@ class NameReviewTests(ReviewFixture,unittest.TestCase):
    n=get_names(101,self.db);self.assertEqual(n['selected_name'],'Maria Exemplo Silva');self.assertEqual(n['decision'],'approved');self.assertEqual(n['approved_dictionary_version'],'fixture-v1')
    with sqlite3.connect(self.db) as db:
     snapshot=json.loads(db.execute('SELECT suggestion_snapshot FROM name_decisions').fetchone()[0]);self.assertEqual(snapshot['dictionary_version'],'fixture-v1');self.assertEqual(snapshot['proposed'],'Maria Exemplo Silva')
+
+ def test_new_policy_holds_incomplete_old_print_choice_but_preserves_cpf(self):
+  from name_policy import policy
+  with patch('name_dictionary.suggest',self.stub):
+   n=get_names(101,self.db);decide_name(101,dict(n,decision='approved',choice='entered'),'tester',self.db)
+   with sqlite3.connect(self.db) as db:db.execute("UPDATE name_decisions SET selected_name='Maria Silva',policy_version='old-policy'")
+   n=get_names(101,self.db);self.assertTrue(n['policy_review_required']);self.assertEqual(n['decision'],'pending');self.assertEqual(n['selected_name'],'Maria Silva')
+   with self.assertRaises(ValueError):decide_name(101,dict(n,decision='approved',choice='custom',literal='Maria Silva'),'tester',self.db)
+   with self.assertRaises(RuntimeError):decide_name(101,dict(n,decision='approved',choice='entered',policy_version='old-policy'),'tester',self.db)
+   self.assertEqual(self.item()['decision'],'pending')

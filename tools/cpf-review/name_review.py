@@ -12,7 +12,7 @@ def schema(db):
  record_id INTEGER PRIMARY KEY REFERENCES records(id),record_revision TEXT NOT NULL,
  name_revision TEXT NOT NULL,decision TEXT NOT NULL CHECK(decision IN ('pending','approved','rejected')),
  selected_name TEXT,choice TEXT,instruction TEXT,at TEXT NOT NULL,reviewer TEXT NOT NULL,version INTEGER NOT NULL,
- dictionary_version TEXT NOT NULL DEFAULT '',suggestion_snapshot TEXT NOT NULL DEFAULT '{}');
+ dictionary_version TEXT NOT NULL DEFAULT '',suggestion_snapshot TEXT NOT NULL DEFAULT '{}',policy_version TEXT NOT NULL DEFAULT '');
  CREATE TABLE IF NOT EXISTS name_history(id INTEGER PRIMARY KEY,record_id INTEGER NOT NULL,
  at TEXT NOT NULL,previous TEXT,current TEXT NOT NULL,reviewer TEXT NOT NULL,batch_id TEXT);
  CREATE TABLE IF NOT EXISTS review_batches(id TEXT PRIMARY KEY,kind TEXT NOT NULL,state TEXT NOT NULL,
@@ -22,6 +22,7 @@ def schema(db):
  columns={r[1] for r in db.execute('PRAGMA table_info(name_decisions)')}
  if 'dictionary_version' not in columns:db.execute("ALTER TABLE name_decisions ADD COLUMN dictionary_version TEXT NOT NULL DEFAULT ''")
  if 'suggestion_snapshot' not in columns:db.execute("ALTER TABLE name_decisions ADD COLUMN suggestion_snapshot TEXT NOT NULL DEFAULT '{}'")
+ if 'policy_version' not in columns:db.execute("ALTER TABLE name_decisions ADD COLUMN policy_version TEXT NOT NULL DEFAULT ''")
  db.commit()
 
 
@@ -32,13 +33,18 @@ def record_from(row):
 def names_for(row,db):
  from name_dictionary import suggest
  data=record_from(row); result=suggest(data); previous=db.execute('SELECT * FROM name_decisions WHERE record_id=?',(row['id'],)).fetchone()
+ from name_policy import key,policy
+ result.setdefault('policy_version',policy()['version'])
+ old=dict(previous) if previous else {}
+ policy_review=bool(previous and previous['decision']=='approved' and old.get('policy_version')!=result['policy_version'] and key(previous['selected_name'])!=key(result['proposed']))
  nr=source_revision(data)
- current=bool(previous and previous['record_revision']==row['revision'] and previous['name_revision']==nr)
+ current=not policy_review and bool(previous and previous['record_revision']==row['revision'] and previous['name_revision']==nr)
  result.update(revision=row['revision'],name_revision=nr,decision=previous['decision'] if current else 'pending',
   selected_name=previous['selected_name'] if previous else None,choice=previous['choice'] if previous else 'proposed',
   instruction=previous['instruction'] if previous else '',version=previous['version'] if previous else 0,
   stale=bool(previous and not current),previous_decision=previous['decision'] if previous else None,
-  approved_dictionary_version=previous['dictionary_version'] if previous else None)
+  approved_dictionary_version=previous['dictionary_version'] if previous else None,
+  previous_policy_version=old.get('policy_version'),policy_review_required=policy_review)
  return result
 
 
@@ -68,6 +74,7 @@ def write_name(db,row,request,reviewer,batch_id=None):
   raise RuntimeError('O nome de origem mudou. Atualize antes de decidir.')
  if request.get('version',value['version'])!=value['version']:raise RuntimeError('Outra decisão de nome foi salva. Atualize antes de decidir.')
  decision=request.get('decision');choice=request.get('choice','proposed')
+ if decision=='approved' and request.get('policy_version')!=value['policy_version']:raise RuntimeError('A política de nomes foi atualizada. Recarregue a linha antes de aprovar.')
  if decision not in ('pending','approved','rejected'):raise ValueError('Decisão de nome inválida')
  options={'proposed':value['proposed'],'entered':value['entered_resolved'],'api':value['api_resolved'],'custom':request.get('literal')}
  if choice not in options:raise ValueError('Escolha de nome inválida')
@@ -75,11 +82,14 @@ def write_name(db,row,request,reviewer,batch_id=None):
  if len(instruction)>4000:raise ValueError('Instrução longa demais')
  selected=literal_name(options[choice]) if options[choice] else None
  if decision=='approved' and not selected:raise ValueError('Selecione um nome para aprovar')
+ if decision=='approved':
+  from name_policy import full_words
+  if len(full_words(selected))<len(full_words(json.loads(row['data']).get('nome_api') or '')):raise ValueError('O nome para impressão deve ser completo; use o retorno integral da API ou uma forma mais extensa.')
  if instruction and decision=='approved':raise ValueError('Salve a instrução para análise. A interpretação deve ser apresentada como nome literal e aprovada separadamente.')
  previous=db.execute('SELECT * FROM name_decisions WHERE record_id=?',(row['id'],)).fetchone()
  new=dict(record_id=row['id'],record_revision=row['revision'],name_revision=value['name_revision'],decision=decision,
-  selected_name=selected,choice=choice,instruction=instruction,at=stamp(),reviewer=reviewer,version=value['version']+1,dictionary_version=value['dictionary_version'],
-  suggestion_snapshot=json.dumps({key:value.get(key) for key in ['entered_resolved','api_resolved','proposed','special','reasons','alternatives','dictionary_version']},ensure_ascii=False))
+  selected_name=selected,choice=choice,instruction=instruction,at=stamp(),reviewer=reviewer,version=value['version']+1,dictionary_version=value['dictionary_version'],policy_version=value['policy_version'],
+  suggestion_snapshot=json.dumps({key:value.get(key) for key in ['entered_resolved','api_resolved','proposed','special','reasons','alternatives','dictionary_version','policy_version','major_divergence','spacing_corrections']},ensure_ascii=False))
  db.execute('INSERT OR REPLACE INTO name_decisions('+','.join(new)+') VALUES('+','.join(':'+key for key in new)+')',new)
  db.execute('INSERT INTO name_history(record_id,at,previous,current,reviewer,batch_id) VALUES(?,?,?,?,?,?)',
   (row['id'],stamp(),json.dumps(dict(previous),ensure_ascii=False) if previous else None,json.dumps(new,ensure_ascii=False),reviewer,batch_id))
@@ -119,8 +129,8 @@ def bulk_preview(request,dbpath=DB):
     items.append(dict(id=row['id'],revision=row['revision'],previous=row['decision'],origin=row['decision_origin'],updated_at=row['updated_at']))
    else:
     n=names_for(row,db)
-    if n['decision']!='pending' or n['special'] or n.get('instruction') or not n.get('proposed'):continue
-    items.append(dict(id=row['id'],revision=row['revision'],name_revision=n['name_revision'],version=n['version'],proposal=n['proposed'],dictionary_version=n['dictionary_version']))
+    if n['decision']!='pending' or n['special'] or n.get('stale') or n.get('policy_review_required') or n.get('instruction') or not n.get('proposed'):continue
+    items.append(dict(id=row['id'],revision=row['revision'],name_revision=n['name_revision'],version=n['version'],proposal=n['proposed'],dictionary_version=n['dictionary_version'],policy_version=n['policy_version']))
   token=secrets.token_urlsafe(24);payload=dict(kind=kind,decision=decision,filters=request.get('filters'),items=items)
   db.execute('INSERT INTO review_batches(id,kind,state,created_at,payload) VALUES(?,?,?,?,?)',(token,kind,'preview',stamp(),json.dumps(payload)))
  return dict(token=token,count=len(items),skipped=len(rows)-len(items))
@@ -143,7 +153,7 @@ def bulk_apply(token,reviewer,dbpath=DB):
     db.execute("UPDATE records SET decision=?,decision_origin='manual',updated_at=? WHERE id=?",(payload['decision'],stamp(),row['id']))
    else:
     n=names_for(row,db)
-    if n['version']!=item['version'] or n['name_revision']!=item['name_revision'] or n['special'] or n['proposed']!=item['proposal'] or n['dictionary_version']!=item['dictionary_version']:raise RuntimeError('Sugestão mudou; confira novamente')
+    if n['version']!=item['version'] or n['name_revision']!=item['name_revision'] or n['special'] or n['proposed']!=item['proposal'] or n['dictionary_version']!=item['dictionary_version'] or n['policy_version']!=item.get('policy_version'):raise RuntimeError('Sugestão mudou; confira novamente')
     new=write_name(db,row,dict(item,decision=payload['decision'],choice='proposed'),reviewer,token);item['applied_version']=new['version']
   db.execute("UPDATE review_batches SET state='applied',reviewer=?,applied_at=?,payload=? WHERE id=?",(reviewer,stamp(),json.dumps(payload),token))
  return dict(ok=True,batch_id=token,count=len(payload['items']))
