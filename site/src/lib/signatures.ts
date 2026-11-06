@@ -210,7 +210,7 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
     const d = emailDomain(input.email);
     if (d) await notePendingDomain(d).catch(() => {}); // fila de curadoria da ADUNIR
   }
-  const identityMethod = foreign ? extra.identityMethod ?? "universidade_estrangeira" : domainKind && domainKind !== "discente" ? "email_institucional" : extra.identityMethod ?? null;
+  const identityMethod = extra.identityMethod ?? (foreign ? "universidade_estrangeira" : domainKind && domainKind !== "discente" ? "email_institucional" : null);
   const refCode = meta.refCode && (await query("SELECT 1 FROM referrers WHERE code=$1", [meta.refCode])).rowCount ? meta.refCode : null;
   const cols: Record<string, unknown> = {
     name: input.name, email: normalizeEmail(input.email), email_hash: emailHash, cpf_hash: cpfHash, category: input.category,
@@ -259,20 +259,30 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
 
 export type ConfirmResult = "ok" | "invalid" | "expired";
 export type ConfirmFull = { result: ConfirmResult; manageToken?: string; code?: string; email?: string; name?: string; visitorId?: string | null; signatureId?: number };
+export type ConfirmationProof = { id: number; originalName: string; originalEmail: string; cpfHash: string; correctedName: string; identityMethod: string };
 
 /** Confirma a assinatura e cria o código/painel de indicação da pessoa (o token do painel só é devolvido aqui, uma vez). */
-export async function confirmFull(token: string, ctx: { visitorId?: string; ip?: string } = {}, canal: "email" | "whatsapp" = "email"): Promise<ConfirmFull> {
+export async function confirmFull(token: string, ctx: { visitorId?: string; ip?: string } = {}, canal: "email" | "whatsapp" = "email", proof?: ConfirmationProof): Promise<ConfirmFull> {
   if (!token || token.length > 200) return { result: "invalid" };
   return tx(async (c) => {
-    const { rows } = await c.query<{ id: number; status: string; token_expires_at: string; name: string; email: string; visitor_id: string | null }>(
+    const { rows } = await c.query<{ id: number; status: string; token_expires_at: string; name: string; email: string; visitor_id: string | null; cpf_hash: string | null }>(
       canal === "whatsapp"
-        ? "SELECT id,status,wa_token_expires_at AS token_expires_at,name,email,visitor_id FROM signatures WHERE wa_token_hash = $1 FOR UPDATE"
-        : "SELECT id,status,token_expires_at,name,email,visitor_id FROM signatures WHERE token_hash = $1 FOR UPDATE",
+        ? "SELECT id,status,wa_token_expires_at AS token_expires_at,name,email,visitor_id,cpf_hash FROM signatures WHERE wa_token_hash = $1 FOR UPDATE"
+        : "SELECT id,status,token_expires_at,name,email,visitor_id,cpf_hash FROM signatures WHERE token_hash = $1 FOR UPDATE",
       [sha256(token)]
     );
     const row = rows[0];
     if (!row || row.status !== "pending") return { result: "invalid" as const };
     if (new Date(row.token_expires_at).getTime() < Date.now()) return { result: "expired" as const };
+    if (proof) {
+      if (row.id !== proof.id || row.name !== proof.originalName || row.email !== proof.originalEmail || row.cpf_hash !== proof.cpfHash) return { result: "invalid" as const };
+      if (row.name !== proof.correctedName) {
+        await audit("signature_name_corrected", row.id, { before: row.name, after: proof.correctedName, channel: canal, cpfHashUnchanged: true }, c);
+      }
+      await c.query("UPDATE signatures SET name=$2,cpf_name_check='match',identity_method=$3 WHERE id=$1", [row.id, proof.correctedName, proof.identityMethod]);
+      await audit("signature_revalidated", row.id, { channel: canal, method: proof.identityMethod }, c);
+      row.name = proof.correctedName;
+    }
     // "Mesmo aparelho": o navegador que confirmou é o mesmo que assinou? (null = não dá para saber). É só um indício de repasse do e-mail.
     const same = row.visitor_id && ctx.visitorId ? row.visitor_id === ctx.visitorId : null;
     await c.query("UPDATE signatures SET status='confirmed', confirmed_at=$1, token_hash=NULL, token_expires_at=NULL, wa_token_hash=NULL, wa_token_expires_at=NULL, wa_confirmed_at=CASE WHEN $7 THEN $8::timestamptz ELSE wa_confirmed_at END, confirm_visitor_id=$3, confirm_ip=$4, confirm_same_visitor=$5, seq=nextval('signature_seq'), verify_code=$6 WHERE id=$2",

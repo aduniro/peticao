@@ -1,5 +1,70 @@
 # Recuperação isolada dos CPFs
 
+## Consulta e comparação pela CPF-Brasil
+
+No Zorin, em `/mnt/dev/peticao`, execute o arquivo único:
+
+```bash
+./validar-cpfs.py
+```
+
+O usuário autorizou consultar todos, inclusive eventual excedente pago. O arquivo
+usa a conta existente e não contrata nem muda planos. Requer Python 3.11+, SSH
+`peticao-root` e a variável `CPF_BRASIL_API_KEY` em `/etc/peticao/app.env` na VPS.
+Não lê as pastas de segredos do projeto nem expõe a chave. Não utiliza Playwright
+ou a aplicação: faz chamadas HTTPS diretas ao serviço privado.
+
+Seleciona os dois CSVs de dados completos da última recuperação concluída em
+`/mnt/dev/cpfs`. Preserva seus campos e horários literalmente. Faz backup das
+entradas e do cache anterior antes de iniciar. Copia a entrada exata para uma
+pasta isolada na VPS e confere SHA-256. Não faz nova recuperação HMAC.
+
+Consulta uma vez por CPF distinto, até uma nova consulta por segundo, reutilizando
+o cache persistente `/root/peticao-recovery/validacao-cpf-brasil-cache.sqlite`.
+Não altera o PostgreSQL, não importa o código do app, não reinicia serviços da
+aplicação e não chama serviços governamentais. O novo serviço usa até um quarto
+de núcleo de CPU e 512 MiB. A coleta pode demorar horas.
+
+Os arquivos são baixados para `/mnt/dev/cpfs` com identificadores únicos:
+
+- `comparacao-cpf-brasil-todas-*.csv`: tabela completa dos dois grupos.
+- `comparacao-cpf-brasil-confirmadas-*.csv` e `comparacao-cpf-brasil-pendentes-*.csv`.
+- `comparacao-cpf-brasil-*.sqlite`: resultados restritos ao grupo consultado.
+- `resumo-*.json` e manifesto com hashes dos arquivos baixados.
+
+Além dos 24 campos existentes, acrescenta nome retornado e sugerido para revisão,
+nascimento, mãe, sexo original e normalizado, CPF retornado e sua correspondência,
+validade dos dígitos, fonte e data da consulta, campos ausentes no retorno,
+classificação e similaridade dos nomes, palavras ausentes e extras, diferenças,
+indício de titularidade e necessidade de revisão. Nascimento, mãe e sexo são
+marcados como não comparáveis porque não foram coletados na base original.
+
+Classificações incluem coincidência exata/normalizada, variação de partículas,
+possível nome incompleto/abreviado, possível erro de digitação, ordem diferente,
+divergência relevante, divergência forte e informação insuficiente.
+Nenhuma categoria comprova a identidade do signatário. Divergência forte produz
+`possivel_cpf_de_outra_pessoa_nao_comprovado`, nunca uma acusação conclusiva.
+O nome original nunca é substituído. Nomes da fonte privada não são rotulados
+como validados na Receita Federal.
+
+Interrompe novas consultas após erro de rede/provedor, inclusive cota, autenticação
+ou limite de frequência, e exporta uma tabela parcial com todas as linhas.
+Não encontrado/erro/não consultado são distintos de divergência de nome.
+Cada intenção de consulta é gravada antes do envio para evitar cobrança duplicada
+após interrupção. Respostas e tentativas anteriores, inclusive erros, não são
+reconsultadas automaticamente. Uma nova execução continua apenas CPFs ainda não
+tentados; eventuais erros antigos precisarão de revisão/reconsulta explícita.
+
+O mesmo comando retoma após fechar o terminal; o serviço já iniciado permanece
+na VPS. Os arquivos parciais anteriores são preservados e os novos recebem outro
+sufixo. O progresso mostra contagens, sem nomes, CPFs, nascimento, mãe ou chave.
+Dados pessoais permanecem nos resultados privados (arquivos 600, diretórios 700).
+
+Documentação do retorno: https://www.cpf-brasil.org/documentacao/.
+`./validar-cpfs.py --check` valida o pacote sem rede ou leitura de segredos.
+Testes usam dados fictícios e HTTP/SSH simulados; não comprovam validade da chave,
+saldo da conta, disponibilidade ou precisão dos registros retornados pelo provedor.
+
 ## Rotina completa com um único comando
 
 No terminal do Zorin, dentro de `/mnt/dev/peticao`, execute:

@@ -5,9 +5,7 @@ import { clientIp } from "@/lib/net";
 import { posConfirmacao } from "@/lib/pos-confirmacao";
 import { whatsappAtivo } from "@/lib/whatsapp/provider";
 import { pendentePorToken } from "@/lib/whatsapp/store";
-import { identityMode, verifyIdentity, MAX_FAILED, type IdentityMethod } from "@/lib/identity";
-import { isValidCpf, onlyDigits } from "@/lib/cpf";
-import { hmac } from "@/lib/security";
+import { checkConfirmation } from "@/lib/confirmation-check";
 import { audit } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -26,19 +24,11 @@ export async function POST(req: NextRequest) {
   if (!pend) return NextResponse.json({ result: "invalid" });
   if (!rateLimit(`confirm-wa-tok:${pend.id}`, 12, 60 * 60_000)) return NextResponse.json({ result: "locked" }, { status: 429 });
 
-  if (pend.category !== "estrangeiro") {
-    const cpf = onlyDigits(String(body?.cpf ?? ""));
-    if (!isValidCpf(cpf) || !pend.cpfHash || hmac(cpf) !== pend.cpfHash) return NextResponse.json({ result: "cpf_mismatch" });
-    if (identityMode() === "required") {
-      const method = body?.method as IdentityMethod;
-      const r = await verifyIdentity({ cpf, method, value: String(body?.value ?? ""), declaredName: pend.name });
-      if (!r.ok) {
-        const status = r.reason === "locked" ? 429 : r.reason === "unavailable" ? 503 : 200;
-        return NextResponse.json({ result: "identity", code: r.reason, attemptsLeft: r.reason === "mismatch" ? r.attemptsLeft ?? MAX_FAILED - 1 : undefined }, { status });
-      }
-    }
-  }
-  const r = await confirmFull(token, { visitorId: req.cookies.get("vid")?.value, ip }, "whatsapp");
+  const checked = await checkConfirmation(token, "whatsapp", body?.recovery ?? {
+    name: pend.name, cpf: body?.cpf, identity: { method: body?.method, value: body?.value },
+  });
+  if (!checked.ok) return NextResponse.json(checked.json, { status: checked.status });
+  const r = await confirmFull(token, { visitorId: req.cookies.get("vid")?.value, ip }, "whatsapp", checked.proof);
   if (r.result !== "ok") return NextResponse.json({ result: r.result });
   await audit("whatsapp_confirmed", r.signatureId ?? null, {}).catch(() => {});
   await posConfirmacao(r, { ip, headers: req.headers, canal: "whatsapp" });

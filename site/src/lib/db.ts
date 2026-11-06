@@ -166,6 +166,14 @@ const SCHEMA_SQL = `
     ts TEXT NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_idatt ON identity_attempts(cpf_hash, ts);
+  CREATE TABLE IF NOT EXISTS cpf_lookup_cache (
+    cpf_hash TEXT PRIMARY KEY,
+    payload TEXT NOT NULL,
+    fetched_at TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    CHECK (expires_at > fetched_at AND expires_at <= fetched_at + interval '30 days')
+  );
+  CREATE INDEX IF NOT EXISTS cpf_lookup_cache_expiry ON cpf_lookup_cache(expires_at);
   CREATE TABLE IF NOT EXISTS institutional_domains (
     domain TEXT PRIMARY KEY,
     kind TEXT NOT NULL DEFAULT 'outro',

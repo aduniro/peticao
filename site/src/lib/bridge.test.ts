@@ -53,7 +53,7 @@ test("ponte: método diferente de GET, sem chave e limite por minuto", async () 
 test("provedor por ponte: registro, não encontrado e erros do serviço", async () => {
   let reply: { status: number; body: string } = { status: 200, body: V2 };
   await withBridge({ getKey: () => "k", upstream: async () => reply }, async () => {
-    assert.deepEqual(await cpfBridgeProvider().lookup("00000000191"), { nome: "RECEITA FEDERAL PARA USO DO SISTEMA", mae: "ROSEMAR MARIA P LUNA", nasc: "30/11/1899" });
+    assert.deepEqual(await cpfBridgeProvider().lookup("00000000191"), { nome: "RECEITA FEDERAL PARA USO DO SISTEMA", mae: "ROSEMAR MARIA P LUNA", nasc: "30/11/1899", sexo: null });
     reply = { status: 404, body: JSON.stringify({ code: "CPF_NOT_FOUND" }) };
     assert.equal(await cpfBridgeProvider().lookup("00000000191"), null);
     for (const [status, code] of [[401, "INVALID_API_KEY"], [401, "TOKEN_EXPIRED"], [401, "QUOTA_EXCEEDED"], [401, "PLAN_EXPIRED"], [500, "DATABASE_ERROR"]] as const) {

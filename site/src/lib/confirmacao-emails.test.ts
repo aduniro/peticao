@@ -15,8 +15,11 @@ test("depois de confirmar: dois e-mails (cartão da assinatura com a data ORIGIN
   const { submit } = await import("./signatures");
   const { POST } = await import("../app/api/confirmar/route");
   const { NextRequest } = await import("next/server");
+  const { cachedCpfProvider } = await import("./cpf-cache");
+  const { mockProvider } = await import("./cpf-check");
+  await cachedCpfProvider(mockProvider({ "52998224725": { nome: "MARIA DA SILVA" } })).lookup("52998224725");
   const mails = () => readdirSync(dir).sort().map((f) => JSON.parse(readFileSync(join(dir, f), "utf8")));
-  await submit({ name: "Maria da Silva", email: "maria@unir.br", category: "servidor", consent: true, cpf: "52998224725", institution: "UNIR", role: "docente", campus: "Ji-Paraná", regionDeclared: true, regionValidated: true, ifesListed: true } as any, { ip: "local" } as any);
+  await submit({ name: "Maria da Silva", email: "maria@unir.br", category: "servidor", consent: true, cpf: "52998224725", institution: "UNIR", role: "docente", campus: "Ji-Paraná", regionDeclared: true, regionValidated: true, ifesListed: true } as any, { ip: "local" } as any, { nameCheck: "match" });
   const conf = mails()[0];
   const token = new URL(conf.text.match(/https?:\/\/\S+/)![0]).searchParams.get("token")!;
   const req = () => new NextRequest("http://localhost/api/confirmar", { method: "POST", body: JSON.stringify({ token }), headers: { "content-type": "application/json" } });

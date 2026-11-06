@@ -4,6 +4,7 @@ import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/messages-types";
 import { isValidCpf, onlyDigits } from "@/lib/cpf";
 import { maskCpf } from "@/lib/cpf-mask";
+import ConfirmationRecovery from "./ConfirmationRecovery";
 
 /** Confirmação pelo link do WhatsApp: CPF + data de nascimento OU nome da mãe (nada é gravado) e opção de usar o link do e-mail. */
 export default function WhatsappConfirm({ token, foreign }: { token: string; foreign: boolean }) {
@@ -14,6 +15,7 @@ export default function WhatsappConfirm({ token, foreign }: { token: string; for
   const [state, setState] = useState<"idle" | "busy" | "ok">("idle");
   const [err, setErr] = useState("");
   const [panel, setPanel] = useState<string | null>(null);
+  const [recoveryName, setRecoveryName] = useState<string | null>(null);
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -23,6 +25,7 @@ export default function WhatsappConfirm({ token, foreign }: { token: string; for
     const j = await r.json().catch(() => ({}));
     if (j.result === "ok") { setPanel(j.panel ?? null); setState("ok"); return; }
     setState("idle");
+    if (j.result === "review_required") { setRecoveryName(j.name ?? ""); return; }
     if (j.result === "cpf_mismatch") setErr(t("wac.cpfMismatch"));
     else if (j.result === "identity") { const k = `id.err.${j.code}` as MessageKey; setErr(t(k) !== k ? t(k) : t("id.err.mismatch")); }
     else if (j.result === "locked") setErr(t("err.rate_limited"));
@@ -30,6 +33,7 @@ export default function WhatsappConfirm({ token, foreign }: { token: string; for
   }
 
   if (state === "ok") return <div className="box ok" role="status"><h3>{t("wac.done")}</h3><p>{t("confirm.okText")}</p>{panel ? <p><a className="primary" href={panel}>{t("confirm.openNow")}</a></p> : null}</div>;
+  if (recoveryName !== null) return <ConfirmationRecovery token={token} channel="whatsapp" initialName={recoveryName} initialCpf={cpf} onComplete={(value) => { setPanel(value); setState("ok"); }} onTerminal={() => { setRecoveryName(null); setErr(t("wac.invalid")); }} />;
   return (
     <form onSubmit={enviar} className="form" noValidate>
       {foreign ? <p>{t("wac.foreignText")}</p> : (

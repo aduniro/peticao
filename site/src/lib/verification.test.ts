@@ -43,13 +43,13 @@ test("domínios: extração do domínio do e-mail (IDN, maiúsculas)", () => {
   assert.equal(emailDomain("semarroba"), null);
 });
 
-test("nome do CPF: tolerante a acentos, partículas, iniciais e nome do meio", () => {
+test("nome do CPF: acentos, partículas e omissões em ordem; iniciais não bastam", () => {
   assert.equal(namesMatch("MARIA DA SILVA SANTOS", "Maria da Silva Santos"), true);
   assert.equal(namesMatch("JOSÉ AUGUSTO DE OLIVEIRA", "Jose Augusto Oliveira"), true);
   assert.equal(namesMatch("ANA PAULA FERREIRA LIMA", "Ana Lima"), true); // primeiro e último nome conferem
   assert.equal(namesMatch("ANA PAULA FERREIRA LIMA", "Ana Costa"), false); // mesmo primeiro nome, sobrenome diferente
   assert.equal(namesMatch("ANA PAULA FERREIRA LIMA", "Ana Paula Lima"), true);
-  assert.equal(namesMatch("MARIA SOUZA", "M. Souza"), true);
+  assert.equal(namesMatch("MARIA SOUZA", "M. Souza"), false);
   assert.equal(namesMatch("MARIA SOUZA", "Joana Souza"), false);
   assert.equal(namesMatch("", "Maria"), false);
 });
@@ -107,10 +107,10 @@ test("provedor cpf-brasil v2.0: cabeçalho, URL, resposta com data e códigos de
   const seen: { url: string; key: string | null }[] = [];
   const mk = (status: number, body: unknown) => (async (url: any, init: any) => { seen.push({ url: String(url), key: new Headers(init.headers).get("x-api-key") }); return new Response(JSON.stringify(body), { status }); }) as typeof fetch;
   const ok = { success: true, data: { CPF: "52998224725", NOME: "MARIA DA SILVA", SEXO: "Feminino", NASC: "15/08/1985", NOME_MAE: "ANA DA SILVA" }, meta: {} };
-  assert.deepEqual(await cpfBrasilProvider("K", mk(200, ok)).lookup("52998224725"), { nome: "MARIA DA SILVA", mae: "ANA DA SILVA", nasc: "15/08/1985" });
+  assert.deepEqual(await cpfBrasilProvider("K", mk(200, ok)).lookup("52998224725"), { nome: "MARIA DA SILVA", mae: "ANA DA SILVA", nasc: "15/08/1985", sexo: "Feminino" });
   assert.deepEqual(seen[0], { url: "https://api.cpf-brasil.org/cpf/52998224725", key: "K" });
   assert.equal(await cpfBrasilProvider("K", mk(404, { code: "CPF_NOT_FOUND" })).lookup("52998224725"), null);
-  assert.deepEqual(await cpfBrasilProvider("K", mk(200, { NOME: "A B" })).lookup("52998224725"), { nome: "A B", mae: null, nasc: null }); // formato plano
+  assert.deepEqual(await cpfBrasilProvider("K", mk(200, { NOME: "A B" })).lookup("52998224725"), { nome: "A B", mae: null, nasc: null, sexo: null }); // formato plano
   assert.equal((await cpfBrasilProvider("K", mk(200, { success: true, data: { NOME: "A B", NOME_MAE: "", NASC: "" } })).lookup("1"))?.mae, null);
   for (const [status, code] of [[401, "QUOTA_EXCEEDED"], [401, "TOKEN_EXPIRED"], [401, "INVALID_API_KEY"], [401, "PLAN_EXPIRED"], [500, "DATABASE_ERROR"]] as const) {
     await assert.rejects(() => cpfBrasilProvider("K", mk(status, { code })).lookup("52998224725"), (e: any) => e instanceof ProviderUnavailable && e.code === code);

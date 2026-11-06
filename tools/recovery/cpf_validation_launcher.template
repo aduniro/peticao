@@ -1,0 +1,271 @@
+#!/usr/bin/env python3
+"""Consult all recovered CPFs through the existing CPF-Brasil account on the VPS.
+
+Authorized account usage may be billed by the provider. Application unchanged.
+Run ./validar-cpfs.py. Use the same command to resume after a disconnect.
+"""
+import argparse
+import ast
+import base64
+import csv
+import datetime
+import fcntl
+import hashlib
+import io
+import json
+import os
+from pathlib import Path
+import re
+import secrets
+import shlex
+import subprocess
+import sys
+import tarfile
+import time
+import zipfile
+
+PAYLOAD = '__BUNDLE__'
+ROOT = Path('/mnt/dev/cpfs')
+STATE = ROOT / '.validacao-cpf-brasil.json'
+HOST = 'peticao-root'
+REMOTE = '/root/peticao-recovery/validacoes'
+
+
+def sha(path):
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def save(path, content):
+    temporary = path.with_name(path.name + '.tmp')
+    with temporary.open('wb') as stream:
+        stream.write(content)
+    temporary.chmod(0o600)
+    os.replace(temporary, path)
+
+
+def persist(state):
+    save(STATE, json.dumps(state, indent=2).encode())
+
+
+def run(command, capture=False):
+    result = subprocess.run(command, text=True, capture_output=capture)
+    if result.returncode:
+        if capture and result.stderr:
+            print(result.stderr.strip(), file=sys.stderr)
+        raise RuntimeError('Comando falhou; nenhuma nova tentativa automática')
+    return result.stdout if capture else ''
+
+
+def ssh(*args, capture=False):
+    return run(['ssh', '-o', 'ConnectTimeout=15', HOST, shlex.join(args)], capture)
+
+
+def bundle():
+    with zipfile.ZipFile(io.BytesIO(base64.b64decode(PAYLOAD))) as archive:
+        result = {name: archive.read(name).decode() for name in archive.namelist()}
+    if set(result) != {'cpf_compare.py', 'cpf_validation_worker.py', 'cycle_worker.py'}:
+        raise RuntimeError('Pacote interno inválido')
+    for name, content in result.items():
+        ast.parse(content, filename=name)
+    return result
+
+
+def choose_sources():
+    state_file = ROOT / '.atualizacao-em-andamento.json'
+    if state_file.exists():
+        state = json.loads(state_file.read_text())
+        if state.get('phase') != 'complete':
+            raise RuntimeError('A recuperação mais recente ainda não está completa')
+        source_id = state['id']
+    else:
+        suffixes = []
+        for path in ROOT.glob('dados-completos-confirmadas-*.csv'):
+            suffix = path.name[len('dados-completos-confirmadas-'):-4]
+            if (ROOT / ('dados-completos-pendentes-' + suffix + '.csv')).is_file():
+                suffixes.append(suffix)
+        if not suffixes:
+            raise RuntimeError('Não há um par de CSVs completos dos recuperados')
+        source_id = max(suffixes)
+    if not re.fullmatch(r'[0-9TZabcdef-]+', source_id):
+        raise RuntimeError('Identificador de origem inválido')
+    result = []
+    for group in ('confirmadas', 'pendentes'):
+        path = ROOT / f'dados-completos-{group}-{source_id}.csv'
+        if path.is_symlink():
+            raise RuntimeError('Link simbólico recusado')
+        with path.open(encoding='utf-8-sig', newline='') as stream:
+            reader = csv.DictReader(stream)
+            if not {'nome', 'cpf', 'assinatura_id', 'email'} <= set(reader.fieldnames or []):
+                raise RuntimeError('CSV não contém os campos esperados')
+            count = sum(1 for _ in reader)
+        result.append({'group': group, 'source_name': path.name, 'source': str(path),
+                       'file': 'entrada-' + group + '.csv', 'rows': count, 'sha256': sha(path)})
+    return result
+
+
+def unpack_verified(archive_path, destination):
+    destination.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with tarfile.open(archive_path, 'r:gz') as archive:
+        members = archive.getmembers()
+        names = [m.name for m in members]
+        if len(names) != len(set(names)):
+            raise RuntimeError('Nomes duplicados no pacote')
+        if any(not m.isfile() or Path(m.name).is_absolute() or '..' in Path(m.name).parts for m in members):
+            raise RuntimeError('Caminho inseguro no pacote')
+        manifest = json.load(archive.extractfile('manifest.json'))
+        if set(names) != {r['file'] for r in manifest} | {'manifest.json'} or len(manifest) != len(set(r['file'] for r in manifest)):
+            raise RuntimeError('Manifesto divergente')
+        for record in manifest:
+            data = archive.extractfile(record['file']).read()
+            if len(data) != record['bytes'] or hashlib.sha256(data).hexdigest() != record['sha256']:
+                raise RuntimeError('Checksum divergente')
+        for name in names:
+            target = destination / name
+            if target.is_symlink() or any(parent.is_symlink() for parent in target.parents):
+                raise RuntimeError('Link simbólico no destino')
+            target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            data = archive.extractfile(name).read()
+            if target.exists():
+                if target.read_bytes() != data:
+                    raise RuntimeError('Arquivo anterior diferente; preservado')
+            else:
+                with target.open('xb') as stream:
+                    stream.write(data)
+                target.chmod(0o600)
+    return manifest
+
+
+def execute(scripts):
+    state = json.loads(STATE.read_text()) if STATE.exists() else {}
+    if not state or state.get('phase') == 'complete':
+        stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+        state = {'id': stamp + '-' + secrets.token_hex(3), 'phase': 'preparing', 'inputs': choose_sources()}
+        persist(state)
+    identifier = state['id']
+    if not re.fullmatch(r'[0-9TZabcdef-]+', identifier):
+        raise RuntimeError('Identificador inválido')
+    staging = ROOT / '.validacoes' / identifier
+    backup = ROOT / 'backups' / ('validacao-' + identifier)
+    staging.mkdir(parents=True, exist_ok=True, mode=0o700)
+    backup.mkdir(parents=True, exist_ok=True, mode=0o700)
+    if not state.get('backup_local'):
+        for entry in state['inputs']:
+            original = Path(entry['source'])
+            if sha(original) != entry['sha256']:
+                raise RuntimeError('A origem mudou desde a preparação')
+            target = staging / entry['file']
+            if not target.exists():
+                save(target, original.read_bytes())
+            if sha(target) != entry['sha256']:
+                raise RuntimeError('Cópia local divergente')
+            saved = backup / entry['source_name']
+            if saved.exists() and sha(saved) != entry['sha256']:
+                raise RuntimeError('Backup anterior diferente')
+            if not saved.exists():
+                save(saved, target.read_bytes())
+        save(backup / 'inputs.json', json.dumps(state['inputs'], indent=2).encode())
+        state['backup_local'] = True
+        persist(state)
+    print('Consulta de TODOS os CPFs pelo plano existente, inclusive eventual excedente autorizado.', flush=True)
+    print('A chave ficará na VPS. Nenhum registro ou horário da aplicação será alterado.', flush=True)
+    if ssh('id', '-u', capture=True).strip() != '0':
+        raise RuntimeError('SSH sem acesso root')
+    job = REMOTE + '/' + identifier
+    worker = job + '/cpf_validation_worker.py'
+    if not state.get('uploaded'):
+        ssh('install', '-d', '-m', '700', job)
+        paths = []
+        for name, content in scripts.items():
+            path = staging / name
+            save(path, content.encode())
+            paths.append(str(path))
+        descriptor = staging / 'inputs.json'
+        save(descriptor, json.dumps(state['inputs']).encode())
+        paths += [str(descriptor)] + [str(staging / entry['file']) for entry in state['inputs']]
+        run(['scp', *paths, HOST + ':' + job + '/'])
+        state['uploaded'] = True
+        persist(state)
+    if not state.get('prepared'):
+        info = json.loads(ssh('python3', worker, 'prepare', identifier, capture=True))
+        print(f"Registros: {info['registros']}; CPFs distintos: {info['cpfs_distintos']}. Respostas em cache serão reutilizadas.", flush=True)
+        archive = backup / 'backup-validacao-vps.tar.gz'
+        run(['scp', HOST + ':' + job + '/backup-validacao.tar.gz', str(archive)])
+        unpack_verified(archive, backup / 'vps')
+        state['prepared'] = True
+        persist(state)
+    status = json.loads(ssh('python3', worker, 'status', identifier, capture=True))
+    # After a partial batch, a deliberate rerun continues only unseen CPFs.
+    # Previously attempted errors are preserved and never silently billed again.
+    if not status.get('active') and status['phase'] != 'complete':
+        ssh('python3', worker, 'launch', identifier)
+    while True:
+        status = json.loads(ssh('python3', worker, 'status', identifier, capture=True))
+        print('Progresso: ' + json.dumps({k: v for k, v in status.items() if k != 'classificacao_por_registro'}, ensure_ascii=False), flush=True)
+        if status['phase'] in ('complete', 'partial') and not status.get('active'):
+            break
+        if status['phase'] == 'failed' or not status.get('active'):
+            raise RuntimeError('Serviço interrompido. Execute novamente para retomar sem repetir consultas já registradas')
+        time.sleep(15)
+    # A new folder allows a partial result to be downloaded again after continuation,
+    # without overwriting the earlier partial exports or breaking their manifest.
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + secrets.token_hex(2)
+    downloaded = staging / ('download-' + stamp)
+    downloaded.mkdir(mode=0o700)
+    archive = downloaded / 'resultados-validacao.tar.gz'
+    run(['scp', HOST + ':' + job + '/resultados-validacao.tar.gz', str(archive)])
+    manifest = unpack_verified(archive, downloaded / 'arquivos')
+    expected = {'comparacao-cpf-brasil-todas.csv', 'comparacao-cpf-brasil-confirmadas.csv',
+                'comparacao-cpf-brasil-pendentes.csv', 'comparacao-cpf-brasil.sqlite', 'resumo.json'}
+    if {r['file'] for r in manifest} != expected:
+        raise RuntimeError('Pacote de resultados incompleto')
+    saved_manifest = []
+    for record in manifest:
+        source = downloaded / 'arquivos' / record['file']
+        target = ROOT / (source.stem + '-' + identifier + '-' + stamp + source.suffix)
+        with target.open('xb') as out, source.open('rb') as stream:
+            for block in iter(lambda: stream.read(1024*1024), b''):
+                out.write(block)
+        target.chmod(0o600)
+        if sha(target) != record['sha256']:
+            raise RuntimeError('Resultado local divergente')
+        saved_manifest.append(dict(record, file=target.name))
+        print('Salvo: ' + str(target), flush=True)
+    save(ROOT / ('manifest-validacao-' + identifier + '-' + stamp + '.json'), json.dumps(saved_manifest, indent=2).encode())
+    state['phase'] = status['phase']
+    state['last_status'] = status
+    persist(state)
+    print('CONCLUÍDO: consultas e tabelas baixadas.' if status['phase'] == 'complete'
+          else 'PARCIAL: tabelas baixadas com pendências/erros explicitamente identificados.', flush=True)
+    print('Nomes da fonte privada são sugestões para revisão; não houve validação governamental nem alteração de assinaturas.', flush=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check', action='store_true')
+    args = parser.parse_args()
+    scripts = bundle()
+    if args.check:
+        print('OK: arquivo único válido; nenhuma consulta, leitura de segredo ou alteração de dados.')
+        return
+    os.umask(0o077)
+    if not ROOT.is_dir() or ROOT.is_symlink():
+        raise RuntimeError('Pasta /mnt/dev/cpfs ausente ou inválida')
+    lock = os.open(ROOT / '.validacao-cpf-brasil.lock', os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        execute(scripts)
+    finally:
+        os.close(lock)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('\nAcompanhamento fechado; o serviço já iniciado continua na VPS. Execute o mesmo comando para retomar.')
+        sys.exit(130)
+    except Exception as exc:
+        print(f'Execução interrompida ({type(exc).__name__}): {exc}', file=sys.stderr)
+        print('Dados originais preservados. Nenhum segredo precisa ser enviado à conversa.', file=sys.stderr)
+        sys.exit(1)

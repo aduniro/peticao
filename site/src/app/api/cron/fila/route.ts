@@ -3,6 +3,8 @@ import { drainMailOutbox } from "@/lib/mail";
 import { outboxStats } from "@/lib/mail/outbox";
 import { config } from "@/lib/config";
 import { safeEqual } from "@/lib/security";
+import { purgeExpiredCpfCache } from "@/lib/cpf-cache";
+import { purgeIdentityAttempts } from "@/lib/identity";
 
 export const dynamic = "force-dynamic";
 
@@ -12,5 +14,7 @@ export async function POST(req: NextRequest) {
   const got = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
   if (!secret || !safeEqual(got, secret)) return new NextResponse("Não autorizado", { status: 401 });
   const r = await drainMailOutbox(30);
-  return NextResponse.json({ ...r, stats: await outboxStats() });
+  const cacheExpired = await purgeExpiredCpfCache().catch(() => null);
+  const identityExpired = await purgeIdentityAttempts().catch(() => null);
+  return NextResponse.json({ ...r, stats: await outboxStats(), cpfCacheExpired: cacheExpired, identityAttemptsExpired: identityExpired });
 }

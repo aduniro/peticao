@@ -136,23 +136,50 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
   }
 
   const identity = body?.identity as { method?: IdentityMethod; value?: string } | undefined;
-  const needs = await needsIdentity(input.email, provider);
+  let needs = await needsIdentity(input.email, provider);
   let extra: { identityMethod?: string | null; nameCheck?: any } = {};
+
+  if (identity && !checkTicket(body?.ticket, input.cpf!, input.email)) {
+    return ASK({ restart: true, error: "Sua sessão de confirmação expirou. Preencha e envie o formulário novamente.", errorCode: "ticket_expired" }, 400);
+  }
+
+  let preflightDone = false;
+  if (!needs) {
+    if (!identity) {
+      if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
+      const gS = await emailExistsGate(input, ctx); if (gS) return gS;
+    }
+    // Nome completo dispensa desafio adicional no e-mail institucional; omissões exigem nascimento ou mãe.
+    if (provider && identityMode(provider) === "required") {
+      if (!rateLimit(`cpfname:${ctx.ip}`, 30, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
+      const g = await verifyCpfName({ cpf: input.cpf!, declaredName: input.name, provider });
+      if (!g.ok && g.reason === "identity_required") {
+        needs = true;
+      } else if (!g.ok) {
+        switch (g.reason) {
+          case "mismatch": return ASK({ errors: { name: "name_cpf_mismatch" } });
+          case "not_found": return ASK({ errors: { cpf: "cpf_not_found" } });
+          case "locked": return ASK({ errors: { cpf: "cpf_locked" } }, 429);
+          default: return ASK({ error: "Não conseguimos conferir o CPF agora. Tente de novo em alguns minutos.", errorCode: "cpf_check_unavailable" }, 503);
+        }
+      }
+      if (g.ok) extra = { nameCheck: g.nameCheck };
+    }
+    preflightDone = true;
+  }
 
   if (needs) {
     if (!identity) {
-      if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
-      const gN = await emailExistsGate(input, ctx); if (gN) return gN; // antes de a pessoa gastar a janela de identidade (e a CPF Brasil)
+      if (!preflightDone && turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
+      if (!preflightDone) { const gN = await emailExistsGate(input, ctx); if (gN) return gN; } // antes de a pessoa gastar a janela de identidade (e a CPF Brasil)
       return { status: 200, json: { identityRequired: true, ticket: makeTicket(input.cpf!, input.email), methods: ["mae", "nascimento"] } };
-    }
-    if (!checkTicket(body?.ticket, input.cpf!, input.email)) {
-      return ASK({ restart: true, error: "Sua sessão de confirmação expirou. Preencha e envie o formulário novamente.", errorCode: "ticket_expired" }, 400);
     }
     if (!rateLimit(`ident:${ctx.ip}`, 15, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
 
     const r = await verifyIdentity({ cpf: input.cpf!, method: identity.method as IdentityMethod, value: String(identity.value ?? ""), declaredName: input.name, provider });
     if (!r.ok) {
       switch (r.reason) {
+        case "name_mismatch": return ASK({ errors: { name: "name_cpf_mismatch" } });
         case "bad_input": return ASK({ identityError: "Confira o dado informado: digite o nome completo da mãe ou uma data de nascimento válida (dd/mm/aaaa).", identityCode: "bad_input" });
         case "method_unavailable": return ASK({ identityError: "Não conseguimos conferir por este método para este CPF. Tente pelo outro método.", identityCode: "method_unavailable", methodUnavailable: identity.method });
         case "mock_unknown": return ASK({ identityError: "Pré-visualização com dados de TESTE: este CPF não existe no ambiente de teste. Para experimentar a janela, use o CPF 529.982.247-25 (nascimento 15/08/1985; mãe: Ana Maria da Conceição). Para consultar CPFs reais, grave a chave com: npm run chave:cpf -- --preview e reinicie.", identityCode: "mock_unknown" });
@@ -162,23 +189,6 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
       }
     }
     extra = { identityMethod: identity.method, nameCheck: r.nameCheck };
-  } else {
-    if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
-    const gS = await emailExistsGate(input, ctx); if (gS) return gS;
-    // CPF obrigatório também para servidor: o nome precisa conferir com o cadastro do CPF (sem nome da mãe nem nascimento: o e-mail institucional já é uma camada).
-    if (provider && identityMode(provider) === "required") {
-      if (!rateLimit(`cpfname:${ctx.ip}`, 30, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
-      const g = await verifyCpfName({ cpf: input.cpf!, declaredName: input.name, provider });
-      if (!g.ok) {
-        switch (g.reason) {
-          case "mismatch": return ASK({ errors: { name: "name_cpf_mismatch" } });
-          case "not_found": return ASK({ errors: { cpf: "cpf_not_found" } });
-          case "locked": return ASK({ errors: { cpf: "cpf_locked" } }, 429);
-          default: return ASK({ error: "Não conseguimos conferir o CPF agora. Tente de novo em alguns minutos.", errorCode: "cpf_check_unavailable" }, 503);
-        }
-      }
-      extra = { nameCheck: g.nameCheck };
-    }
   }
 
   try {
