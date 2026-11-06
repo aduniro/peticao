@@ -16,10 +16,11 @@ export default async function ConfirmarPagina({ searchParams }: { searchParams: 
   const volta = destino(searchParams.volta);
   if (stepupValido(s)) redirect(volta);
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>Confirmar o seu acesso</h1>
       {s.userId ? <Confirmar email={s.email} volta={volta} /> : <p className="box err" role="alert">Este acesso (senha única de transição) não tem e-mail para receber o código. Crie o usuário dono com <code>admin-dono.mjs</code> e entre com ele.</p>}
+    </div>
     </main>
   );
 }

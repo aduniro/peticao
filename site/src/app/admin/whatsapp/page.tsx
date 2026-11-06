@@ -32,7 +32,8 @@ export default async function WhatsApp({ searchParams }: { searchParams: { msg?:
   const msgs = (await query<{ status: string; n: number }>("SELECT status, COUNT(*)::int n FROM whatsapp_messages GROUP BY status ORDER BY n DESC")).rows;
   const ok = (b: boolean) => (b ? "✅" : "⏳");
   return (
-    <main className="adm-page">
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>WhatsApp</h1>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
 
@@ -97,6 +98,7 @@ export default async function WhatsApp({ searchParams }: { searchParams: { msg?:
         </tbody></table></div>
       <h2>Mensagens enviadas</h2>
       <p>{msgs.length ? msgs.map((m) => `${m.status}: ${m.n}`).join(" · ") : "Nenhuma mensagem enviada."}</p>
+    </div>
     </main>
   );
 }

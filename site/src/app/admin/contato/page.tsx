@@ -18,9 +18,10 @@ export default async function ContatoAdmin() {
   const hist = await historicoDeRespostas(rows.map((r) => r.id));
   const cadastros = new Map(await Promise.all(rows.map(async (r) => [r.id, await situacaoDoCadastro(r.email)] as const)));
   return (
-    <main>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>Mensagens de contato</h1>
-      <p><a href="/admin">← Painel</a> · <a href="/admin/monitor">Monitor</a> · {rows.length} mensagem(ns). Responda pelo e-mail informado; a mensagem também vai para a caixa de contato quando o envio está configurado.</p>
+      <p><a href="/admin/monitor">Monitor</a> · {rows.length} mensagem(ns). Responda pelo e-mail informado; a mensagem também vai para a caixa de contato quando o envio está configurado.</p>
       {rows.length === 0 && <p className="box">Nenhuma mensagem de contato ainda.</p>}
       {rows.map((r) => (
         <section className="box" key={r.id} style={{ margin: "10px 0" }}>
@@ -32,6 +33,7 @@ export default async function ContatoAdmin() {
           {podeResponder ? (stepupValido(sessao) ? <ResponderContato contactId={r.id} assuntoInicial={`Re: ${r.kind === "duvida" ? "sua dúvida" : r.kind === "bug" ? "o problema que você relatou" : "sua mensagem"} sobre a petição`} jaRespondida={(hist[r.id] ?? []).some((h) => h.ok)} /> : <p className="small"><a href="/admin/confirmar?volta=/admin/contato">Confirmar o acesso (código por e-mail) para responder</a></p>) : null}
         </section>
       ))}
+    </div>
     </main>
   );
 }

@@ -254,3 +254,22 @@ button.v2-reg-seta { flex: none; width: 48px; display: grid; place-items: center
 .v2-escuro .v2-btn-sec { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.3); } .v2-escuro .v2-btn-sec:hover { background: rgba(255,255,255,.2); }
 @media (max-width: 992px) { .v2-aba { font-size: .64rem; } }
 .v2-escuro .v2-periodo input[type=date], .v2-escuro .v2-rank-sel select { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.3); color-scheme: dark; }
+
+/* ===== Fase 6: telas internas no mesmo padrão (cabeçalho, cartões, campos, números) ===== */
+.v2-escuro .v2-secao > h1:first-child { margin: 4px 0 6px; font-size: clamp(1.4rem, 2.4vw, 1.8rem); letter-spacing: -.01em; }
+.v2-escuro .v2-secao > h2, .v2-escuro .v2-secao > section > h2 { margin: 26px 0 8px; font-size: 1.12rem; }
+.v2-escuro .v2-secao > p { max-width: 980px; }
+.v2-escuro .box { border-radius: 16px; padding: 16px 18px; margin-top: 10px; margin-bottom: 10px; }
+/* campos: nunca brancos no tema escuro (a regra global de .form/label vencia a do tema) */
+.v2-escuro input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), .v2-escuro select, .v2-escuro textarea { background: rgba(255,255,255,.08) !important; color: #fff !important; border: 1px solid rgba(255,255,255,.28) !important; border-radius: 10px; color-scheme: dark; }
+.v2-escuro input:focus-visible, .v2-escuro select:focus-visible, .v2-escuro textarea:focus-visible { outline: 3px solid #ffdf00; outline-offset: 1px; }
+.v2-escuro select option { background: #0c2a1c; color: #eaf5ee; }
+.v2-escuro label { color: #dff2e6; }
+/* cartões de números (.stats): escuros, número em destaque */
+.v2-escuro .stats > div { background: var(--adm-surface); border: 1px solid var(--adm-line); border-radius: 14px; color: var(--adm-ink); }
+.v2-escuro .stats strong { color: #fff; } .v2-escuro .stats span { color: var(--adm-muted); }
+/* botões de ação em tabelas e formulários: mesmo verde do painel; os de perigo, vermelho */
+.v2-escuro button:not([class]):not(:disabled):hover, .v2-escuro form > button:not(:disabled):hover { filter: brightness(1.12); }
+.v2-escuro .table-scroll { border-radius: 14px; } .v2-escuro .table-scroll table { margin: 0; }
+.v2-escuro .small a, .v2-escuro p a { text-underline-offset: 2px; }
+@media (max-width: 992px) { .v2-escuro .v2-secao > p { font-size: .95rem; } }

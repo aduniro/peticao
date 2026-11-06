@@ -26,8 +26,8 @@ export default async function Dominios({ searchParams }: { searchParams: { msg?:
   const stats = (await query<{ k: string | null; n: number }>("SELECT email_domain_kind k, COUNT(*)::int n FROM signatures WHERE status='confirmed' GROUP BY 1 ORDER BY 2 DESC")).rows;
   const checks = (await query<{ c: string | null; n: number }>("SELECT cpf_name_check c, COUNT(*)::int n FROM signatures WHERE status='confirmed' GROUP BY 1 ORDER BY 2 DESC")).rows;
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>Domínios institucionais</h1>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p className="small">O selo <strong>e-mail institucional confirmado</strong> indica domínio de órgão ou instituição pública (ou de ensino superior). Ele <strong>não</strong> prova que a pessoa é servidora: alunos, terceirizados e aposentados também têm e-mail institucional.
@@ -74,6 +74,7 @@ export default async function Dominios({ searchParams }: { searchParams: { msg?:
       <table><tbody>{appr.map((r) => <tr key={r.domain}><td>{r.domain}</td><td>{KIND_LABELS[r.kind as keyof typeof KIND_LABELS] ?? r.kind}</td><td>{r.institution ?? "—"}</td><td>{r.source}</td></tr>)}</tbody></table>
       <h2>Rejeitados ({rej.length})</h2>
       <table><tbody>{rej.map((r) => <tr key={r.domain}><td>{r.domain}</td><td>{r.institution ?? "—"}</td><td>{r.source}</td></tr>)}</tbody></table>
+    </div>
     </main>
   );
 }
