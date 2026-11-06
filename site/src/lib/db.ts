@@ -268,6 +268,16 @@ const SCHEMA_SQL = `
     criada_em TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (contact_id, rodada, versao)
   );
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS estado TEXT NOT NULL DEFAULT 'legacy' CHECK (estado IN ('legacy','prepared','blocked','sending','accepted','uncertain','rejected'));
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS payload JSONB;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS selo TEXT;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS finished_at TIMESTAMPTZ;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS attempt_id TEXT;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS error_code TEXT;
+  CREATE INDEX IF NOT EXISTS contact_replies_due ON contact_replies(estado,due_at);
   CREATE TABLE IF NOT EXISTS admin_acoes (
     id SERIAL PRIMARY KEY,
     ts TIMESTAMPTZ NOT NULL DEFAULT now(),

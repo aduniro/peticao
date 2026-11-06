@@ -39,6 +39,21 @@ try{
  assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_reset","admin_sessions","admin_stepup","admin_users","contact_replies"]);
  assert.equal((await c.query("SELECT value FROM settings WHERE key='rehearsal'")).rows[0].value,"preserve");
  await c.query(oldSql);assert.deepEqual(await rows(),before,"Previous schema bootstrap remains compatible with the extended database");
+ // Older admin installations already have contact history; migrate it without dispatching it.
+ const legacyContact=/CREATE TABLE IF NOT EXISTS contact_replies \([\s\S]*?\n  \);/.exec(newSql);
+ assert.ok(legacyContact);
+ await c.query("DROP TABLE contact_replies");
+ await c.query(legacyContact[0]);
+ const contact=(await c.query("INSERT INTO contact_messages(name,email,kind,message) VALUES('Pessoa Fictícia','contact@example.test','duvida','Ensaio de atualização') RETURNING id")).rows[0].id;
+ await c.query("INSERT INTO contact_replies(contact_id,rodada,versao,por,assunto,ok,criada_em) VALUES($1,1,'texto','legacy@example.test','Histórico preservado',true,'2026-10-01T10:00:00Z'),($1,1,'card','legacy@example.test','Card antigo',false,'2026-10-01T10:01:00Z')",[contact]);
+ const originalHistory=(await c.query("SELECT * FROM contact_replies ORDER BY id")).rows;
+ await c.query(newSql);
+ await c.query(newSql);
+ const migratedHistory=(await c.query("SELECT * FROM contact_replies ORDER BY id")).rows;
+ assert.deepEqual(migratedHistory.map(row=>Object.fromEntries(Object.keys(originalHistory[0]).map(key=>[key,row[key]]))),originalHistory);
+ assert.ok(migratedHistory.every(row=>row.estado==="legacy" && row.payload===null && row.due_at===null && row.attempts===0));
+ assert.deepEqual(await rows(),before,"Contact history migration must also preserve every signer field");
+ console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS real startup on old schema plus DDL replay: six additive tables; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();

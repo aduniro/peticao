@@ -74,3 +74,12 @@ Validação: suíte cumulativa **244/244**, tipos e build de produção aprovado
 Não foram alterados o componente visual do console, avisos da assinatura, dados da petição, cache de CPF ou configurações/segredos da VPS. A atualização futura do serviço deve acompanhar o app; o instalador 22 permanece pendente de autorização e execução.
 
 A6 ainda não está concluído: `docs/A6-RESPOSTAS-PENDENTES.md` registra a falha das reservas de contato que expiram após dois minutos e o contrato para a fila durável. Controles sensíveis, QA visual/permissões e Etapas 2–7 continuam no escopo. Não publicar este candidato parcial.
+
+
+## A6 — fila durável de respostas de contato
+
+O candidato agora reserva atomicamente texto e card e os retoma pelo agendador existente. O selo liga destinatário, origem, conteúdo e cópias; o card só é liberado depois do aceite do texto. Resultado ambíguo não apaga histórico nem provoca outra tentativa automática. A fila dos e-mails públicos conserva sua política anterior. Histórico anterior fica como legado, sem disparo automático.
+
+Validação: **251/251** testes cumulativos e tipos aprovados. O ensaio de atualização do banco também passou com histórico administrativo anterior, preservando IDs, autores, resultados e horários, além dos registros originais de assinatura. Detalhes e limitações em `docs/A6-RESPOSTAS-PENDENTES.md`.
+
+Ainda não concluir A6: rótulos do histórico e aviso de resultado inconclusivo aguardam aprovação do dono; sem eles a interface antiga classificaria estados pendentes incorretamente. Também seguem pendentes a revisão de controles sensíveis (inclusive gestão de usuários sem confirmação extra), QA visual/permissões em seis larguras e as Etapas 2–7. Nenhum deploy autorizado ou realizado.

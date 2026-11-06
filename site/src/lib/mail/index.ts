@@ -155,7 +155,7 @@ const SENDERS: Record<string, Sender> = { dev: async (m) => sendDev(m), smtp: se
  * Tenta cada provedor da cadeia, na ordem; se um falhar (credencial ausente, sandbox, fora do ar), passa ao próximo,
  * cada um com o seu remetente (subdomínio próprio). Só lança erro se todos falharem. Nunca registra segredos.
  */
-export async function deliver(m: Mail, providers: string[], senders: Record<string, Sender> = SENDERS, fromFor: (p: string, kind?: string) => string = config.mailFromFor, kind?: string, onAttempt?: (a: Attempt) => void): Promise<string> {
+export async function deliver(m: Mail, providers: string[], senders: Record<string, Sender> = SENDERS, fromFor: (p: string, kind?: string) => string = config.mailFromFor, kind?: string, onAttempt?: (a: Attempt) => void, opts: { singleAttempt?: boolean } = {}): Promise<string> {
   const errors: string[] = [];
   for (const p of providers) {
     const send = senders[p];
@@ -170,6 +170,7 @@ export async function deliver(m: Mail, providers: string[], senders: Record<stri
     } catch (e) {
       errors.push(`${p}: ${(e as Error).message.slice(0, 160)}`);
       onAttempt?.({ provider: p, from, ok: false, error: (e as Error).message });
+      if (opts.singleAttempt) throw e;
     }
   }
   throw new Error(`Nenhum provedor de e-mail conseguiu enviar (${errors.join(" | ")})`);
@@ -185,7 +186,7 @@ export const withReplyTo = (m: Mail): Mail => (m.replyTo ? m : config.mailReplyT
  * Se NENHUM provedor conseguir enviar, a mensagem vai para a fila de reenvio (tentada de novo automaticamente, em intervalos crescentes,
  * até 48 h) em vez de se perder. Endereços bloqueados continuam sendo recusados na hora.
  */
-export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean; channel?: "transactional" | "marketing"; avoid?: string[] } = {}): Promise<SendOutcome> {
+export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean; channel?: "transactional" | "marketing"; avoid?: string[]; singleAttempt?: boolean } = {}): Promise<SendOutcome> {
   // Canal de marketing: cadeia e remetentes PRÓPRIOS (subdomínios de campanha), nunca a cadeia transacional; sem fila de reenvio (quem dispara acompanha o resultado).
   if (opts.channel === "marketing") {
     const mk = config.marketingProviders();
@@ -194,7 +195,7 @@ export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean;
     for (const b of m.bcc ?? []) assertSendAllowed(b);
     if (mk.some((p) => p !== "dev") && (await isSuppressed(m.to))) throw new MailSuppressedError(`Endereço na lista de supressão: ${m.to}`);
     const logM = attemptLogger(m, kind, "marketing");
-    await deliver(withReplyTo(m), ordemRodizio("marketing", mk, parsePesos(config.mailRotationMarketing()), { evitar: opts.avoid }), SENDERS, config.mailFromMarketing, kind, (a) => { registrar("marketing", a.provider, a.ok); logM(a); });
+    await deliver(withReplyTo(m), ordemRodizio("marketing", mk, parsePesos(config.mailRotationMarketing()), { evitar: opts.avoid }), SENDERS, config.mailFromMarketing, kind, (a) => { registrar("marketing", a.provider, a.ok); logM(a); }, { singleAttempt: opts.singleAttempt });
     return "sent";
   }
   assertSendAllowed(m.to);
@@ -208,7 +209,7 @@ export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean;
   if (real && (await isSuppressed(m.to))) throw new MailSuppressedError(`Endereço na lista de supressão: ${m.to}`);
   try {
     const log = attemptLogger(m, kind);
-    await deliver(withReplyTo(m), ordemRodizio("transacional", providers, parsePesos(config.mailRotation()), { evitar: opts.avoid }), SENDERS, config.mailFromFor, kind, (a) => { registrar("transacional", a.provider, a.ok); log(a); });
+    await deliver(withReplyTo(m), ordemRodizio("transacional", providers, parsePesos(config.mailRotation()), { evitar: opts.avoid }), SENDERS, config.mailFromFor, kind, (a) => { registrar("transacional", a.provider, a.ok); log(a); }, { singleAttempt: opts.singleAttempt });
   } catch (e) {
     if (!real || opts.queue === false) throw e; // "dev" não tem o que reenviar; envios que o admin acompanha (lotes) mostram o erro na hora
     const id = await enqueueMail(m, kind, (e as Error).message);

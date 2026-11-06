@@ -27,5 +27,5 @@ export async function POST(req: NextRequest) {
   }
   const r = await enviarResposta({ contactId: id, entrada, selo: String(b.selo ?? ""), nova: b.nova === true, por: { userId: s.userId, email: s.email } });
   await audit("contato_respondido", null, { contato: id, por: s.email, ok: r.ok, ...(r.ok ? { rodada: r.rodada } : { erro: r.erro }) });
-  return NextResponse.json(r, { status: r.ok ? 200 : r.erro === "nao_existe" ? 404 : r.erro === "falhou" ? 502 : 409 });
+  return NextResponse.json(r, { status: r.ok ? 200 : r.erro === "nao_existe" ? 404 : (r.erro === "falhou" || r.erro === "envio_inconclusivo") ? 502 : 409 });
 }
