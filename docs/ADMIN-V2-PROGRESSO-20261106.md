@@ -238,3 +238,12 @@ Mensagens, tentativas e eventos vinculados passam a compor a coleta consistente 
 Passaram **414/414 cumulativos**, nove novos, build, typecheck serial e HTTP compilado (primeira rodada direcionada 37/37). QA compilado: outra conta ignorada, evento vinculado invalida sugestão e agenda revisão via cron, anterior preservada/polling estável. A fixture HTTP sem assinatura não alega resolução; testes de integração com assinante fictício comprovam permanência pendente. Nenhum transporte externo ou escrita de assinaturas. Sessões revogadas e prévia original 3031 retomada (200), com banco/configuração anteriores. Evidências `stage02-outbound-*.log` e `runtime-triage-outbound/triage.json` na cache de auditoria; contrato no candidato `docs/ETAPA-02-EVIDENCIAS-MENSAGENS.md`.
 
 Nada publicado ou alterado na interface, schema ou revisão CPF. Vigia e respostas ativos na verificação; nenhuma aprovação nova na entrada autenticada local de 07/11. AV-10 aprovado, demais avisos/retenção sem aprovação inferida. Próximo: curadoria/aprovação de campus; persistência de minutas humanas, informes, interfaces, conversas/editor e etapas restantes continuam no objetivo completo. Deploy final exige autorização do dono.
+
+
+## 07/11 — gate de migração atualizado e executado (72ec622)
+
+O ensaio `deploy/test/admin-schema-upgrade.mjs` falhou na execução atual por esperar nove tabelas aditivas; `mail_message_events` é a décima. A falha anterior foi preservada. Atualizada a lista exata e ampliado o ensaio da fundação anterior ao escopo de conta/eventos: mantém conta desconhecida como NULL, não fabrica entrega, conserva recibo/estado/horários com microssegundos e eventos vinculados na repetição do DDL atual e bootstrap anterior. Três índices de correlação verificados. Demais invariantes de esquema/assinantes/fila/históricos permanecem exigidos.
+
+Rodada final aprovada em PostgreSQL fictício 54341, esquema temporário removido. Logs `stage07-schema-current-before.log`, `-after.log` e `-final.log` na cache; contrato no candidato `docs/ETAPA-07-ENSAIO-SCHEMA-ATUAL.md`. Teste/documentação apenas, sem mudança de aplicação ou DDL; 414 cumulativos/build/tipos/HTTP da aplicação continuam sendo a evidência anterior, sem repetição desnecessária. Não é prova de instalação na VPS nem de compatibilidade com alterações futuras.
+
+Próximo: curadoria de campus e demais partes já autorizadas. A integração completa permanece ativa e incompleta; deploy não autorizado, avisos pendentes sem aprovação inferida.
