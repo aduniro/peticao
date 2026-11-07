@@ -19,7 +19,7 @@ def clean(value, limit=240):
     value = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', value)
     value = ''.join(c for c in value if c >= ' ' or c in '\n\t')
     value = re.sub(r'(?i)(password|secret|api[_-]?key|authorization|token)\s*[:=]\s*[^\s,;]+', r'\1=[restrito]', value)
-    value = re.sub(r'(?<!\d)\d{3}\.?\d{3}\.?\d{3}-?\d{2}(?!\d)', '[CPF omitido]', value)
+    value = re.sub(r'(?<![\w])\d{3}\.?\d{3}\.?\d{3}-?\d{2}(?![\w])', '[CPF omitido]', value)
     return value[:limit]
 def stamp(value):
     if not isinstance(value,str):return '—'
@@ -73,7 +73,7 @@ def processes():
         if not entry.name.isdigit() or int(entry.name)==os.getpid():continue
         try:
             comm=(entry/'comm').read_text().strip()
-            if comm == 'node_repl' or not comm.startswith(('node','next-server','python','postgres','npm')):continue
+            if comm == 'node_repl' or not comm.startswith(('node','next-server','python','postgres','npm','codex')):continue
             cwd=str((entry/'cwd').resolve())
             if not (cwd==str(ROOT) or cwd.startswith(str(ROOT)+'/') or cwd.startswith('/mnt/dev/cpfs')):continue
             args=[a.decode(errors='replace') for a in (entry/'cmdline').read_bytes().split(b'\0') if a]

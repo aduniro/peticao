@@ -40,12 +40,13 @@ class Daemon:
     self.work={key:f for key,f in self.work.items() if not f.done()}
     if len(self.work)<2:
      request=self.store.claim()
-     if request:self.work[request['id']]=self.pool.submit(execute_request,self.store,request)
+     if request:self.work[request['id']]=self.pool.submit(execute_request,self.store,request,self.stop)
     if tick%30==0 and self.collector.remote.enabled:
      try:
       from .diagnostics import pull
       pull(self.store)
-     except Exception:self.store.snapshot('diagnostics',{'available':False},'unavailable')
+     except Exception:
+      previous=self.store.rows("SELECT payload FROM snapshots WHERE source='diagnostics'");payload=json.loads(previous[0]['payload']) if previous else {};payload.update(available=False,checked_at=now());self.store.snapshot('diagnostics',payload,'unavailable')
     if not self.mail_busy:
      self.mail_busy=True
      def send():
@@ -54,5 +55,7 @@ class Daemon:
      threading.Thread(target=send,daemon=True).start()
     tick+=1;self.stop.wait(max(.2,2-(time.monotonic()-started)))
   finally:
-   for rid in self.work:self.store.execute('UPDATE requests SET control=? WHERE id=?',(json.dumps({'action':'cancel'}),rid))
+   for rid in self.work:
+    row=self.store.rows('SELECT kind FROM requests WHERE id=?',(rid,))[0]
+    if row['kind']!='vps':self.store.execute('UPDATE requests SET control=? WHERE id=?',(json.dumps({'action':'cancel'}),rid))
    self.collector.stop();self.pool.shutdown(wait=True,cancel_futures=True);self.store.snapshot('daemon',{'pid':os.getpid(),'alive':False},'stopped');self.store.event('daemon','Coletor encerrado');lock.close()

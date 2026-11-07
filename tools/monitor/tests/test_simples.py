@@ -17,6 +17,7 @@ class SimpleTests(unittest.TestCase):
   with self.assertRaises(ValueError):module.register(self.args(register='../escape'))
   self.assertNotIn('\x1b',module.clean('\x1b]52;c;payload\x07visible'))
   self.assertNotIn('529.982.247-25',module.clean('CPF 529.982.247-25'))
+  self.assertEqual(module.clean('abcdef12345678901abcdef12345678901abcdef12'),'abcdef12345678901abcdef12345678901abcdef12')
   self.assertNotIn('MY_PRIVATE_KEY',module.clean('api_key=MY_PRIVATE_KEY'))
  def test_partial_or_malformed_files_do_not_break_dashboard(self):
   (module.STATE/'activities').mkdir();(module.STATE/'activities/bad.json').write_text('{')

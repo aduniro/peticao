@@ -27,13 +27,19 @@ def git(path,*args,limit=100000):
  return clean(r.stdout.decode(errors='replace'),limit)
 
 def git_snapshot(path=ROOT):
+ files=git(path,'diff','--name-only','HEAD').splitlines();untracked=git(path,'ls-files','--others','--exclude-standard').splitlines()[:200];versions={}
+ for name in set(files+untracked):
+  if not safe_file(name):continue
+  try:
+   target=Path(path)/name
+   if target.is_symlink():continue
+   info=target.stat();versions[name]=[info.st_mtime_ns,info.st_size]
+  except OSError:pass
  return {'cwd':str(path),'status':git(path,'status','--short'),
   'graph':git(path,'log','--graph','--decorate','--oneline','--all','-50'),
-  'branches':git(path,'branch','-a','--no-color'),
-  'worktrees':git(path,'worktree','list','--porcelain'),
+  'branches':git(path,'branch','-a','--no-color'),'worktrees':git(path,'worktree','list','--porcelain'),
   'commits':git(path,'log','--format=%H%x09%h%x09%s','-60').splitlines(),
-  'files':git(path,'diff','--name-only','HEAD').splitlines(),
-  'untracked':git(path,'ls-files','--others','--exclude-standard').splitlines()[:200]}
+  'files':files,'untracked':untracked,'versions':versions}
 
 def safe_file(path):
  p=Path(path)
@@ -86,13 +92,13 @@ class Collector:
    except ValueError:remote['state']='horário remoto inválido'
   self.store.snapshot('vps',remote,status=remote.get('state','unknown'))
   if slow:
-   for path in self.store.rows("SELECT DISTINCT cwd FROM tasks UNION SELECT '/mnt/dev/peticao' AS cwd"):
+   for path in self.store.rows("SELECT DISTINCT cwd FROM tasks UNION SELECT '/mnt/dev/peticao' AS cwd UNION SELECT substr(source,5) AS cwd FROM snapshots WHERE source LIKE 'git:%'"):
     repo=Path(path['cwd'])
     if not repo.is_dir():continue
     try:
      payload=git_snapshot(repo);key='git:'+str(repo);old=self.store.rows('SELECT payload FROM snapshots WHERE source=?',(key,))
      self.store.snapshot(key,payload)
-     if old and json.loads(old[0]['payload']).get('status')!=payload['status']:self.store.event('git','Arquivos modificados',data={'cwd':str(repo),'status':payload['status']})
+     if old and (json.loads(old[0]['payload']).get('status')!=payload['status'] or json.loads(old[0]['payload']).get('versions')!=payload['versions']):self.store.event('git','Arquivos modificados',data={'cwd':str(repo),'status':payload['status']})
     except (RuntimeError,OSError,subprocess.TimeoutExpired):self.store.snapshot('git:'+str(repo),{'cwd':str(repo),'error':'Git indisponível'},status='unavailable')
    self.import_mail()
  def import_mail(self):

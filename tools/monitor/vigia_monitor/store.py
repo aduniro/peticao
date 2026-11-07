@@ -13,6 +13,7 @@ def checksum(value):return hashlib.sha256(encode(value).encode()).hexdigest()
 class Store:
  def __init__(self,path=None):
   self.path=Path(path or STATE/'monitor.sqlite');self.path.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+  if self.path.parent==Path.home()/'.local/state/peticao-monitor':self.path.parent.chmod(0o700)
   with self.connect() as db:
    db.executescript('''
    PRAGMA journal_mode=WAL;
@@ -22,6 +23,7 @@ class Store:
    CREATE INDEX IF NOT EXISTS events_task ON events(task_id,seq);
    CREATE TABLE IF NOT EXISTS snapshots(source TEXT PRIMARY KEY,at TEXT,status TEXT,payload TEXT);
    CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY,task_id TEXT,kind TEXT,body TEXT,state TEXT,at TEXT,updated_at TEXT,pid INTEGER,exit_code INTEGER,control TEXT);
+   CREATE TABLE IF NOT EXISTS threads(task_id TEXT,host TEXT,id TEXT,PRIMARY KEY(task_id,host));
    CREATE TABLE IF NOT EXISTS output(seq INTEGER PRIMARY KEY AUTOINCREMENT,request_id TEXT,at TEXT,kind TEXT,text TEXT);
    CREATE TABLE IF NOT EXISTS approvals(id TEXT PRIMARY KEY,request_id TEXT,rpc_id TEXT,method TEXT,payload TEXT,at TEXT,expires REAL,decision TEXT,answered INTEGER DEFAULT 0);
    CREATE TABLE IF NOT EXISTS mail(id TEXT PRIMARY KEY,at TEXT,subject TEXT,state TEXT,provider_id TEXT,detail TEXT);
@@ -31,7 +33,11 @@ class Store:
    existing={r[1] for r in db.execute('PRAGMA table_info(steps)')}
    for column in ['started_at','finished_at','updated_at','eta']:
     if column not in existing:db.execute(f'ALTER TABLE steps ADD COLUMN {column} TEXT')
+   if 'context' not in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:db.execute('ALTER TABLE requests ADD COLUMN context TEXT')
   self.path.chmod(0o600)
+  for suffix in ('-wal','-shm'):
+   sidecar=Path(str(self.path)+suffix)
+   if sidecar.is_file():sidecar.chmod(0o600)
  @contextmanager
  def connect(self):
   db=sqlite3.connect(self.path,timeout=10);db.row_factory=sqlite3.Row;db.execute('PRAGMA busy_timeout=10000')
@@ -72,20 +78,31 @@ class Store:
    if state=='running' and previous.get('state')!='running' and (not started or previous.get('state') in {'completed','failed','interrupted'}):started=now();finished=None
    if state in {'completed','failed','interrupted'} and not finished:finished=now()
    db.execute('INSERT OR REPLACE INTO steps(task_id,id,parent,title,state,weight,detail,started_at,finished_at,updated_at,eta) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(task_id,step_id,parent,title,state,weight,detail,started,finished,now(),eta if eta is not None else previous.get('eta')))
- def progress(self,task_id):
-  rows=self.rows('SELECT * FROM steps WHERE task_id=?',(task_id,));parents={r['parent'] for r in rows if r['parent']};leaves=[r for r in rows if r['id'] not in parents]
+ def progress(self,task_id,parent=None):
+  rows=self.rows('SELECT * FROM steps WHERE task_id=?',(task_id,))
+  if parent is not None:
+   selected={parent}
+   for _ in rows:
+    selected.update(r['id'] for r in rows if r['parent'] in selected)
+   rows=[r for r in rows if r['id'] in selected]
+  parents={r['parent'] for r in rows if r['parent']};leaves=[r for r in rows if r['id'] not in parents]
   if not leaves:return None
   return round(100*sum(r['weight'] for r in leaves if r['state']=='completed')/sum(r['weight'] for r in leaves),1)
  def snapshot(self,source,payload,status='online'):
   self.execute('INSERT OR REPLACE INTO snapshots VALUES(?,?,?,?)',(source,now(),status,encode(payload)))
- def request(self,task_id,kind,body):
-  if kind not in ('ai','shell','vps'):raise ValueError('Tipo de execução inválido')
+ def request(self,task_id,kind,body,cwd=None):
+  if kind not in ('ai','shell','vps','ai-vps'):raise ValueError('Tipo de execução inválido')
   if not body.strip() or len(body)>50000:raise ValueError('Pedido vazio ou grande demais')
-  if not self.rows('SELECT id FROM tasks WHERE id=?',(task_id,)):raise ValueError('Selecione uma tarefa existente')
-  rid=uid();self.execute('INSERT INTO requests(id,task_id,kind,body,state,at,updated_at) VALUES(?,?,?,?,?,?,?)',(rid,task_id,kind,body,'queued',now(),now()));self.event('request','Pedido na fila',task_id,{'id':rid,'kind':kind});return rid
+  task=self.rows('SELECT * FROM tasks WHERE id=?',(task_id,))
+  if not task:raise ValueError('Selecione uma tarefa existente')
+  context={k:task[0][k] for k in ('cwd','environment','scope','title','detail')}
+  if cwd is not None:
+   if not Path(cwd).is_absolute():raise ValueError('Use um diretório absoluto')
+   context['cwd']=cwd
+  rid=uid();self.execute('INSERT INTO requests(id,task_id,kind,body,state,at,updated_at,context) VALUES(?,?,?,?,?,?,?,?)',(rid,task_id,kind,body,'queued',now(),now(),encode(context)));self.event('request','Pedido na fila',task_id,{'id':rid,'kind':kind});return rid
  def claim(self):
   with self.connect() as db:
-   db.execute('BEGIN IMMEDIATE');r=db.execute("SELECT * FROM requests q WHERE state='queued' AND NOT EXISTS (SELECT 1 FROM requests a WHERE a.task_id=q.task_id AND a.state IN ('running','paused')) ORDER BY at LIMIT 1").fetchone()
+   db.execute('BEGIN IMMEDIATE');r=db.execute("SELECT * FROM requests q WHERE state='queued' AND NOT EXISTS (SELECT 1 FROM requests a WHERE a.task_id=q.task_id AND a.state IN ('running','paused','waiting')) ORDER BY at LIMIT 1").fetchone()
    if not r:return None
    db.execute("UPDATE requests SET state='running',updated_at=? WHERE id=?",(now(),r['id']));return dict(r)
  def out(self,request_id,text,kind='output'):
@@ -101,6 +118,7 @@ class Store:
  def recover(self):
   with self.connect() as db:
    # Never replay a possibly executed command or a possibly sent email automatically.
-   db.execute("UPDATE requests SET state='interrupted',updated_at=? WHERE state IN ('running','paused')",(now(),))
+   db.execute("UPDATE requests SET state='interrupted',updated_at=? WHERE kind!='vps' AND state IN ('running','paused','waiting')",(now(),))
+   db.execute("UPDATE requests SET state='queued',updated_at=? WHERE kind='vps' AND state IN ('running','paused','waiting')",(now(),))
    db.execute("UPDATE approvals SET decision='decline',answered=1 WHERE answered=0")
    db.execute("UPDATE outbox SET state='uncertain' WHERE state='sending'")

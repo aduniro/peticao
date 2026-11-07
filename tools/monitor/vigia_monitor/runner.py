@@ -73,6 +73,7 @@ def command_run(store,request,task):
     elif action['action'] in ('pause','resume'):
      os.killpg(proc.pid,signal.SIGSTOP if action['action']=='pause' else signal.SIGCONT)
      store.execute('UPDATE requests SET state=? WHERE id=?',('paused' if action['action']=='pause' else 'running',rid))
+     store.event('control',action['action'],request['task_id'],{'id':rid});store.queue_mail('control:'+rid+':'+action.get('id',uid()),'Vigia: '+('execução pausada' if action['action']=='pause' else 'execução retomada'),f"# Controle da execução\n\nTarefa: {task['title']}\n\nAção: {action['action']}\n\nAmbiente local.")
     elif action['action']=='stdin':os.write(master,action['text'].encode())
    ready,_,_=select.select([master],[],[],.2)
    if ready:
@@ -83,7 +84,8 @@ def command_run(store,request,task):
     try:proc.wait(timeout=5)
     except subprocess.TimeoutExpired:os.killpg(proc.pid,signal.SIGKILL)
   # Drain final output already queued by the child.
-  while select.select([master],[],[],0)[0]:
+  drain_deadline=time.monotonic()+1
+  while time.monotonic()<drain_deadline and select.select([master],[],[],0)[0]:
    try:raw=os.read(master,8192)
    except OSError:break
    if not raw:break
@@ -94,20 +96,23 @@ def command_run(store,request,task):
   os.close(master)
 
 def ai_run(store,request,task):
- rpc=Rpc();rid=request['id'];thread_id=task.get('thread_id');turn_id=None;approval_ids=[]
+ remote=request['kind']=='ai-vps';host='vps' if remote else 'local';rpc=Rpc(['ssh','-o','BatchMode=yes','peticao','/home/adunir/.local/bin/codex','app-server'] if remote else None);rid=request['id'];saved=store.rows('SELECT id FROM threads WHERE task_id=? AND host=?',(task['id'],host));thread_id=saved[0]['id'] if saved else None;turn_id=None;approval_ids=[]
  try:
   rpc.initialize()
   params={'cwd':task['cwd'],'approvalPolicy':'on-request','sandbox':'workspace-write','developerInstructions':INSTRUCTIONS}
   if thread_id:
    params.update(threadId=thread_id,excludeTurns=True);result=rpc.call('thread/resume',params)
   else:result=rpc.call('thread/start',params)
-  thread_id=result['thread']['id'];store.execute('UPDATE tasks SET thread_id=? WHERE id=?',(thread_id,task['id']))
+  thread_id=result['thread']['id'];store.execute('INSERT OR REPLACE INTO threads VALUES(?,?,?)',(task['id'],host,thread_id))
   text=f"Tarefa: {task['title']}\nAmbiente: {task['environment']}\nEscopo: {task['scope']}\nEstado: {task['detail']}\nPedido do usuário: {request['body']}"
   result=rpc.call('turn/start',{'threadId':thread_id,'input':[{'type':'text','text':text,'text_elements':[]}]});turn_id=result['turn']['id']
   while True:
    action=control(store,rid)
    if action and action['action']=='cancel':rpc.request('turn/interrupt',{'threadId':thread_id,'turnId':turn_id})
-   elif action and action['action']=='steer':rpc.request('turn/steer',{'threadId':thread_id,'expectedTurnId':turn_id,'input':[{'type':'text','text':action['text'],'text_elements':[]}]})
+   elif action and action['action']=='steer':
+    try:
+     rpc.call('turn/steer',{'threadId':thread_id,'expectedTurnId':turn_id,'input':[{'type':'text','text':action['text'],'text_elements':[]}]},timeout=10);store.out(rid,'Direcionamento entregue ao turno ativo.','control')
+    except (RuntimeError,TimeoutError):store.out(rid,'Direcionamento não confirmado; confira o estado do turno antes de reenviar.','control_error')
    for approval in store.rows('SELECT * FROM approvals WHERE request_id=? AND answered=0',(rid,)):
     decision=approval['decision'] or ('decline' if time.time()>approval['expires'] else None)
     if decision:
@@ -119,6 +124,7 @@ def ai_run(store,request,task):
     if method in ('item/commandExecution/requestApproval','item/fileChange/requestApproval'):
      aid=uid();approval_ids.append(aid);store.execute('INSERT INTO approvals VALUES(?,?,?,?,?,?,?,?,?)',(aid,rid,json.dumps(msg['id']),method,json.dumps(p),now(),time.time()+1200,None,0))
      store.event('approval','Aprovação solicitada',task['id'],{'id':aid,'request_id':rid})
+     store.queue_mail('approval:'+aid,'Vigia: aprovação solicitada — '+task['title'],f"# Aprovação pendente\n\nTarefa: {task['title']}\n\nAmbiente: {task['environment']}\n\nAbra a aba Aprovações do Vigia para conferir a ação e decidir. Pedido {aid}, válido por 20 minutos. Nenhuma aprovação permanente será concedida.")
     else:rpc.send({'id':msg['id'],'error':{'code':-32601,'message':'Interface não suporta esse pedido; peça esclarecimento ao usuário por mensagem.'}})
    elif method=='item/agentMessage/delta':store.out(rid,clean(p.get('delta',''),10000),'assistant')
    elif method=='item/commandExecution/outputDelta':store.out(rid,clean(p.get('delta',''),10000),'output')
@@ -133,12 +139,18 @@ def ai_run(store,request,task):
  finally:
   store.execute("UPDATE approvals SET answered=1,decision=COALESCE(decision,'decline') WHERE request_id=? AND answered=0",(rid,));rpc.close()
 
-def execute_request(store,request):
+def execute_request(store,request,stop=None):
  task=store.rows('SELECT * FROM tasks WHERE id=?',(request['task_id'],))[0]
+ if request.get('context'):task.update(json.loads(request['context']))
  store.event('run_started','Execução iniciada',task['id'],{'id':request['id'],'kind':request['kind']})
  store.queue_mail('start:'+request['id'],'Vigia: execução iniciada — '+task['title'],f"# Execução iniciada\n\nTarefa: {task['title']}\n\nCanal: {request['kind']}\n\nAmbiente: {task['environment']}.\n\nAcompanhe no prompt da tarefa. Estimativa de término ainda não informada.")
- try:state,code=ai_run(store,request,task) if request['kind']=='ai' else command_run(store,request,task)
+ try:
+  if request['kind'] in ('ai','ai-vps'):state,code=ai_run(store,request,task)
+  elif request['kind']=='vps':
+   from .remote import run
+   state,code=run(store,request,task,stop)
+  else:state,code=command_run(store,request,task)
  except Exception as error:state,code='failed',None;store.out(request['id'],clean(str(error),1500),'error')
  store.execute('UPDATE requests SET state=?,exit_code=?,updated_at=? WHERE id=?',(state,code,now(),request['id']))
- store.event('run_finished','Execução '+state,task['id'],{'id':request['id'],'exit_code':code})
+ store.event('observation_paused' if state=='waiting' else 'run_finished','Observação suspensa; job remoto preservado' if state=='waiting' else 'Execução '+state,task['id'],{'id':request['id'],'exit_code':code})
  store.queue_mail('run:'+request['id'],'Vigia: execução '+state+' — '+task['title'],f"# Execução {state}\n\nTarefa: {task['title']}\n\nAmbiente: {task['environment']}\n\nTipo: {request['kind']}\n\nCódigo de saída: {code if code is not None else 'não aplicável'}.\n\nConsulte o prompt da tarefa no Vigia para saída e próximos passos.")
