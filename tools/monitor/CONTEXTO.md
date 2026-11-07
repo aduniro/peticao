@@ -1,6 +1,6 @@
 # Contexto do Vigia
 
-Política central obrigatória: [prioridade e execução](../../docs/POLITICA-CENTRAL-EXECUCAO.md). O admin-v2 é a prioridade número1 até concluir o plano integral. Após terminar qualquer tarefa temporária que o interrompa, retomá-lo imediatamente do checkpoint, sem aguardar novo pedido. Não confundir prévia ligada ou etapa antiga com desenvolvimento efetivamente em execução. Deploy continua exigindo permissão explícita.
+Política central obrigatória: [prioridade e execução](../../docs/POLITICA-CENTRAL-EXECUCAO.md). O admin-v2 é a prioridade número1 até concluir o plano integral. Após terminar qualquer tarefa temporária que o interrompa, retomá-lo imediatamente do checkpoint, sem aguardar novo pedido. Não confundir prévia ligada ou etapa antiga com desenvolvimento efetivamente em execução. Deploy e qualquer merge/integração de código com a VPS, em qualquer direção, exigem permissão explícita.
 
 O proprietário é a ADUNIR e as notificações são exclusivamente para operator-78ffa47eeb@example.invalid`, em HTML. Informar início, retomada, interrupção e término; consolidar andamento a cada 30 minutos. Aceite de provedor não comprova entrega. O canal WhatsApp/WAHA está desativado; existe somente contrato de extensão.
 
