@@ -46,3 +46,7 @@ Evidência: o componente mostra `a.efeito` estático, mesmo quando `saida.efeito
 ## AV-7 — Histórico e conciliação da Central
 
 Propostas perguntadas no chat, ainda pendentes: “Histórico de ações”, “Conferir resultado” e “A conferência consulta o resultado do executor; não executa a ação novamente”. Não inseridas na interface. O backend pode prosseguir sem ativar novos textos. O resultado da publicação deverá distinguir pedido aceito, publicação concluída e resultado inconclusivo, sem rotular falha do deploy como ausência de efeitos.
+
+## AV-8 — Triagem no Contato
+
+Perguntados no chat, ainda pendentes: “Análise automática”, “Reanalisar”, “Evidências”, “Sugestão de resposta” e “Revise a análise antes de responder. Nenhuma resposta é enviada automaticamente”. O backend usa códigos estruturados e não ativa esses textos. Categorias/diagnósticos/minutas ainda precisam de apresentação revisada, sem transformar proposta automática em confirmação ou ação executada.

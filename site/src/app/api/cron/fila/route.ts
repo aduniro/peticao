@@ -5,6 +5,7 @@ import { outboxStats } from "@/lib/mail/outbox";
 import { config } from "@/lib/config";
 import { safeEqual } from "@/lib/security";
 import { purgeExpiredCpfCache } from "@/lib/cpf-cache";
+import { drainTriages } from "@/lib/contact-triage/jobs";
 
 export const dynamic = "force-dynamic";
 
@@ -16,5 +17,6 @@ export async function POST(req: NextRequest) {
   const r = await drainMailOutbox(30);
   const contactReplies = await drainContactReplies(5);
   const cacheExpired = await purgeExpiredCpfCache().catch(() => null);
-  return NextResponse.json({ ...r, stats: await outboxStats(), cpfCacheExpired: cacheExpired, contactReplies });
+  const contactTriage = await drainTriages(3).catch(() => ({ error: "triage_unavailable" }));
+  return NextResponse.json({ ...r, contactTriage, stats: await outboxStats(), cpfCacheExpired: cacheExpired, contactReplies });
 }

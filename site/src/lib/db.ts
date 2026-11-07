@@ -74,6 +74,15 @@ const SCHEMA_SQL = `
     id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL, kind TEXT NOT NULL, message TEXT NOT NULL,
     locale TEXT, ip_hash TEXT, mailed BOOLEAN NOT NULL DEFAULT false, mail_error TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
+  CREATE TABLE IF NOT EXISTS contact_triage_jobs (
+    id SERIAL PRIMARY KEY, contact_id INTEGER NOT NULL REFERENCES contact_messages(id), revision INTEGER NOT NULL,
+    engine TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued' CHECK(status IN ('queued','running','complete','failed')),
+    requested_by TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), finished_at TIMESTAMPTZ,
+    attempts INTEGER NOT NULL DEFAULT 0, next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(), lease_token TEXT, lease_until TIMESTAMPTZ,
+    input_hash TEXT, evidence JSONB, analysis JSONB, error_code TEXT, UNIQUE(contact_id,revision)
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS contact_triage_active ON contact_triage_jobs(contact_id) WHERE status IN ('queued','running');
+  CREATE INDEX IF NOT EXISTS contact_triage_due ON contact_triage_jobs(status,next_attempt_at);
   CREATE TABLE IF NOT EXISTS email_suppressions (
     email TEXT PRIMARY KEY, reason TEXT NOT NULL CHECK (reason IN ('bounce','complaint')), detail TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()

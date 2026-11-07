@@ -200,3 +200,10 @@ O candidato inclui consulta paginada Total + step-up e conciliação que aceita 
 Validação: **292/292** cumulativos finais, tipos/build e oito testes Python aprovados. Regra conservadora conferida também no artefato compilado. Regressão de navegador nas seis larguras aprovada, sem efeitos duplicados, erros HTTP inesperados ou exceções; preferência fictícia restaurada, sessão revogada e servidor temporário 3032 encerrado. Prévia 3031 retomada após o build.
 
 Detalhes, evidências e limites em `docs/A6-CENTRAL-JOURNAL.md`. Interface de histórico/conferência aguarda aprovação de AV-7; falhas parciais/sem prova ainda exigem procedimento operacional controlado, sem edição SQL ou veredito livre no navegador. AV-1–AV-6, demais telas e Etapas 2–7 continuam pendentes. Nenhuma instalação remota, modificação de dados reais/revisão local ou autorização de deploy.
+
+
+## Continuidade — primeiro backend da Etapa 2
+
+A integração prossegue além da Etapa 1. Implementados no candidato a classificação por regras, coleta parametrizada por campos permitidos em transação de leitura, proposta de campus e fila durável/versionada de triagem. O agendador existente autentica antes do processamento. A análise não altera assinaturas, listas de campus ou decisões humanas e não envia respostas. Fontes insuficientes não viram aprovação; aceite de transporte não vira prova de entrega.
+
+**307/307** cumulativos, tipos, build, migração de sete tabelas aditivas e teste HTTP do app compilado aprovados. Contrato, evidências e pendências em `docs/ETAPA-02-TRIAGEM.md`; base observada para a Etapa 3 em `docs/ETAPA-03-BASE-MENSAGENS.md`. A interface de triagem aguarda AV-8 e não foi ativada. Etapa 2 e integração integral ainda incompletas; nenhuma autorização de publicação foi inferida.

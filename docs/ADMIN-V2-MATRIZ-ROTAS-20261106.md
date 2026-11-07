@@ -13,6 +13,7 @@ Inventário estático do checkout local; não é prova de publicação ou execu�
 | /api/admin/assinaturas/visitas | GET | leitura | Não neste handler |
 | /api/admin/configuracoes | GET, POST | leitura, total | Não neste handler |
 | /api/admin/conta | POST | leitura | Não neste handler |
+| /api/admin/contato/triagem | GET, POST | edicao | Não neste handler |
 | /api/admin/contato/responder | POST | total | Sim |
 | /api/admin/dashboard | GET | leitura | Não neste handler |
 | /api/admin/dispersao | GET | edicao | Não neste handler |
