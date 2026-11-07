@@ -4,9 +4,9 @@ A integração permanece em andamento, sem deploy autorizado. O plano completo c
 
 Candidato: `/mnt/dev/peticao/.cache/admin-integration/candidate-stage01`, ramo `admin-v2-stage01`. Não publicar o checkout principal inteiro, que contém mudanças públicas de outras tarefas ainda não publicadas.
 
-## Estado atual — 03f251c
+## Estado atual — 3b59a5a
 
-438/438 cumulativos finais, build, tipos e HTTP compilado aprovados. Contextos e configuração de IA preparados; executor/chamadas continuam indisponíveis, sem consulta paga. Próximo: reserva durável de quota/idempotência e execução controlada. Prévia 3031 restaurada e respondendo 200 após corrigir erro de tipo e reconstruir o artefato. Integração inteira ainda incompleta, sem deploy; avisos/retencão pendentes continuam separados. Detalhes e limitações nos checkpoints abaixo.
+450/450 testes cumulativos, migração com 12 tabelas aditivas, build, tipos e HTTP compilado aprovados. Executor de IA com reserva durável global de quota, UUID por tentativa, bloqueio de repetição e registro de incerteza; uso observado separado da reserva e de consumo desconhecido. Geração positiva testada somente com transporte simulado interno; chamadas reais permanecem desarmadas, sem cobrança. Prévia http://127.0.0.1:3031/admin restaurada com banco/configuração fictícios anteriores e HTTP 200. Integração inteira continua incompleta; outros provedores, interfaces, minutas/retencão e etapas restantes permanecem no plano. Sem deploy ou mudança dos formulários/revisão CPF. AV-10 aprovado explicitamente; AV-1–AV-9 e AV-11/AV-12 não foram aprovados por essa resposta. Próximo bloco: avançar as demais dependências de IA e integração conforme o plano, sem ativação paga ou avisos não aprovados.
 
 ## Histórico de checkpoints
 
@@ -286,3 +286,8 @@ Passaram 23/23 direcionados. A primeira rodada438 passou, mas o build revelou ti
 Lançador privado correto `run-ai-context-fixed-qa.py`, na cache: registro fictício protegido/validado e cópia de artefato anterior para próximos builds. Rotina de restaurar essa cópia ainda não tem teste dedicado de falha; recuperação por reconstrução foi a executada. Fonte/valores de runtime fora do Git. Contrato no candidato `docs/ETAPA-05-CONTEXTOS-CONFIGURACAO.md`; logs `stage05-context-*` e `runtime-ai-context-fixed/ai-context.json`. Sem novo DDL, mantém onze tabelas ensaiadas.
 
 Nenhuma interface/aviso, VPS ou revisão CPF alterados. Vigia/respostas ativos e nenhuma nova entrada autenticada local desde07/11 na conferência. Próximo: reserva durável de quota/idempotência e executor; outros provedores, minutas humanas/retencão, informes, interfaces/conversas/editor e demais etapas continuam no objetivo. AV-10 aprovado; demais textos/retenção sem inferência. Deploy final exige autorização do dono.
+
+
+## Checkpoint 3b59a5a — executor de IA
+
+450/450 testes cumulativos, migração com 12 tabelas aditivas, build, tipos e HTTP compilado aprovados. Executor de IA com reserva durável global de quota, UUID por tentativa, bloqueio de repetição e registro de incerteza; uso observado separado da reserva e de consumo desconhecido. Geração positiva testada somente com transporte simulado interno; chamadas reais permanecem desarmadas, sem cobrança. Prévia http://127.0.0.1:3031/admin restaurada com banco/configuração fictícios anteriores e HTTP 200. Integração inteira continua incompleta; outros provedores, interfaces, minutas/retencão e etapas restantes permanecem no plano. Sem deploy ou mudança dos formulários/revisão CPF. AV-10 aprovado explicitamente; AV-1–AV-9 e AV-11/AV-12 não foram aprovados por essa resposta. Próximo bloco: avançar as demais dependências de IA e integração conforme o plano, sem ativação paga ou avisos não aprovados. Contrato e evidências: `docs/ETAPA-05-EXECUTOR.md` no candidato. A resposta nativa recebida novamente confirma exclusivamente o botão e aviso do AV-10; não amplia permissões de textos ou deploy. Notificações somente a operator-1608598f41@example.invalid.
