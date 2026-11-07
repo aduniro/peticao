@@ -31,3 +31,12 @@ A suíte cumulativa atual passou **244/244**, com tipos e build aprovados (`stag
 Validação atual: **251/251**, tipos, build e ensaio de migração aprovados. Evidências: `stage01-cumulative-contact.log`, `stage01-typecheck-contact.log`, `stage01-build-contact.log`, `stage01-schema-contact.log`. Workers concorrentes, aceite tardio e falhas entre envio/gravação foram ensaiados com dados e transportes fictícios. O ensaio de histórico anterior preservou IDs, autores, resultados e horários.
 
 A6 permanece parcial até os rótulos/aviso de envio inconclusivo aprovados serem integrados à interface. Também faltam controles sensíveis, QA visual/permissões, conferência com produção e Etapas 2–7. A autorização de deploy continua sendo posterior à validação completa. Nenhuma alteração da VPS ou da revisão de CPFs nesta rodada.
+
+
+## Checkpoint seguinte — confirmação extra e QA de contato
+
+No candidato, `aada17c` torna atômicos a reserva e o consumo do código de confirmação extra, serializa a quota entre sessões e relê a conta/sessão no banco. A gestão de usuários exige a confirmação existente na página e no POST; nenhuma redação de aviso foi alterada. O handler foi testado nos quatro níveis, com ausência/expiração de confirmação, origem externa e autoria real.
+
+Validação atual: **256/256** testes cumulativos, tipos e build aprovados (`stage01-cumulative-stepup.log`, `stage01-typecheck-stepup.log`, `stage01-build-stepup.log`). `0ba3094` promove o QA local de contato ao repositório: seis larguras aprovadas para falha de rede injetada, preservação do rascunho, botão liberado e recuperação da prévia. Não houve envio real; não é prova de QA integral ou de entrega. Evidências em `visual/contact-editor.json` e `stage01-contact-browser.log`.
+
+A prévia isolada foi reiniciada em `http://127.0.0.1:3031/admin`, com banco fictício 54345. O banco de testes cumulativos é outro (54341). Pendências preservadas: avisos aguardando aprovação, resultado de convites/redefinições, demais controles e telas, QA por nível e Etapas 2–7. Nenhuma alteração da produção, instalação remota ou deploy.
