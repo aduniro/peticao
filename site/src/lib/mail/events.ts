@@ -2,6 +2,7 @@ import { query } from "../db";
 import { suppress } from "./suppression";
 import { readCredentialText } from "./smtp-credential";
 import { sendpulseCreds } from "./index";
+import { brevoApiEvents, mailersendApiEvents, mailrelayApiEvents, recordApiEvents, type EventPage } from "./api-message-events";
 
 /**
  * Devoluções (hard/soft bounce), bloqueios e reclamações de TODOS os provedores num só lugar (tabela mail_events).
@@ -19,13 +20,15 @@ const jget = async (f: F, url: string, headers: Record<string, string>) => {
   return r.json() as Promise<any>;
 };
 
-export async function brevoEvents(key: string, days: number, f: F = fetch): Promise<MailEvent[]> {
+export async function brevoEvents(key: string, days: number, f: F = fetch, onPage?: EventPage<MailEvent>): Promise<MailEvent[]> {
   const out: MailEvent[] = [];
   for (const [ev, type] of [["hardBounces", "hard_bounce"], ["softBounces", "soft_bounce"], ["blocked", "blocked"], ["spam", "complaint"]] as const) {
     for (let off = 0; off < 5000; off += 500) {
       const j = await jget(f, `https://api.brevo.com/v3/smtp/statistics/events?event=${ev}&days=${days}&limit=500&offset=${off}`, { "api-key": key });
       const list: any[] = j.events ?? [];
+      const start = out.length;
       for (const e of list) if (e.email && e.date) out.push({ ts: new Date(e.date).toISOString(), provider: "brevo", type, email: String(e.email).toLowerCase(), reason: clean(e.reason ?? ev), source: "api" });
+      if (onPage) await onPage(out.slice(start), brevoApiEvents(list, key, type));
       if (list.length < 500) break;
     }
   }
@@ -48,7 +51,7 @@ export async function sendpulseEvents(token: string, days: number, f: F = fetch)
   return out;
 }
 
-export async function mailersendEvents(token: string, days: number, f: F = fetch): Promise<MailEvent[]> {
+export async function mailersendEvents(token: string, days: number, f: F = fetch, onPage?: EventPage<MailEvent>): Promise<MailEvent[]> {
   const out: MailEvent[] = [];
   const H = { Authorization: `Bearer ${token}` };
   const domains: any[] = (await jget(f, "https://api.mailersend.com/v1/domains?limit=25", H)).data ?? [];
@@ -57,27 +60,31 @@ export async function mailersendEvents(token: string, days: number, f: F = fetch
     for (let page = 1; page <= 20; page++) {
       const j = await jget(f, `https://api.mailersend.com/v1/activity/${d.id}?limit=100&page=${page}&date_from=${since}&date_to=${now}&event[]=hard_bounced&event[]=soft_bounced&event[]=spam_complaints`, H);
       const list: any[] = j.data ?? [];
+      const start = out.length;
       for (const e of list) {
         const email = e.email?.recipient?.email; if (!email) continue;
         const type: MailEventType = e.type === "hard_bounced" ? "hard_bounce" : (e.type === "spam_complaint" || e.type === "spam_complaints") ? "complaint" : "soft_bounce";
         out.push({ ts: new Date(e.created_at).toISOString(), provider: "mailersend", type, email: String(email).toLowerCase(), reason: clean(e.type), source: "api" });
       }
+      if (onPage) await onPage(out.slice(start), mailersendApiEvents(list, token));
       if (list.length < 100) break;
     }
   }
   return out;
 }
 
-export async function mailrelayEvents(key: string, host: string, provider: string, f: F = fetch): Promise<MailEvent[]> {
+export async function mailrelayEvents(key: string, host: string, provider: string, f: F = fetch, onPage?: EventPage<MailEvent>): Promise<MailEvent[]> {
   const out: MailEvent[] = [];
   for (let page = 1; page <= 20; page++) {
     const list: any[] = await jget(f, `https://${host}/api/v1/smtp_emails?per_page=100&page=${page}`, { "X-AUTH-TOKEN": key });
     if (!Array.isArray(list)) break;
+    const start = out.length;
     for (const e of list) {
       const hard = e.bounced_at, soft = e.soft_bounced_at;
       if (!e.email || !(hard || soft)) continue;
       out.push({ ts: new Date(hard ?? soft).toISOString(), provider, type: hard ? "hard_bounce" : "soft_bounce", email: String(e.email).toLowerCase(), reason: clean(e.bounce_message ?? e.bounce_category ?? e.status), source: "api" });
     }
+    if (onPage) await onPage(out.slice(start), mailrelayApiEvents(list, key, host, provider));
     if (list.length < 100) break;
   }
   return out;
@@ -96,11 +103,13 @@ export async function storeEvents(list: MailEvent[]): Promise<{ inserted: number
   return { inserted, suppressed };
 }
 
-type Creds = { brevo: string | null; sendpulse: string | null; mailersend: string | null; mailrelayP: { key: string; host: string } | null };
+type Creds = { brevo: string | null; sendpulse: string | null; mailersend: string | null; mailrelayP: { key: string; host: string } | null; mailrelay?: { key: string; host: string } | null };
 export function providerCreds(): Creds {
   const sp = sendpulseCreds();
   const mrKey = process.env.MAILRELAY_PRESIDENTE_API_KEY ?? readCredentialText("mailrelay-presidente-api"), mrHost = process.env.MAILRELAY_PRESIDENTE_HOST;
+  const integralKey = process.env.MAILRELAY_API_KEY ?? readCredentialText("mailrelay-api"), integralHost = process.env.MAILRELAY_HOST;
   return {
+    mailrelay: integralKey && integralHost ? { key: integralKey, host: integralHost } : null,
     brevo: process.env.BREVO_API_KEY ?? readCredentialText("brevo-api"),
     sendpulse: sp ? `${sp.id}\n${sp.secret}` : null,
     mailersend: process.env.MAILERSEND_API_TOKEN ?? readCredentialText("mailersend-api"),
@@ -121,14 +130,24 @@ export type PollReport = Record<string, { ok: boolean; eventos?: number; novos?:
 /** Consulta todos os provedores configurados (últimos `days` dias), grava as devoluções e atualiza a supressão. Um provedor com erro não impede os outros. */
 export async function pollProviders(days = 3, f: F = fetch, creds: Creds = providerCreds()): Promise<PollReport> {
   const rep: PollReport = {};
-  const run = async (nome: string, fn: () => Promise<MailEvent[]>) => {
-    try { const ev = await fn(); const s = await storeEvents(ev); rep[nome] = { ok: true, eventos: ev.length, novos: s.inserted, suprimidos: s.suppressed }; }
-    catch (e) { rep[nome] = { ok: false, erro: String((e as Error).message).slice(0, 120) }; }
+  const run = async (nome: string, fn: (sink: EventPage<MailEvent>) => Promise<MailEvent[]>, paged = true) => {
+    let inserted = 0, suppressed = 0;
+    const sink: EventPage<MailEvent> = async (legacy, events) => {
+      const saved = await storeEvents(legacy); inserted += saved.inserted; suppressed += saved.suppressed;
+      await recordApiEvents(events);
+    };
+    try {
+      const ev = await fn(sink);
+      if (!paged) await sink(ev, []);
+      rep[nome] = { ok: true, eventos: ev.length, novos: inserted, suprimidos: suppressed };
+    } catch (e) { rep[nome] = { ok: false, erro: String((e as Error).message).slice(0, 120) }; }
   };
-  if (creds.brevo) await run("brevo", () => brevoEvents(creds.brevo!, days, f));
-  if (creds.sendpulse) await run("sendpulse", async () => sendpulseEvents(await spToken(creds.sendpulse!, f), days, f));
-  if (creds.mailersend) await run("mailersend", () => mailersendEvents(creds.mailersend!, days, f));
-  if (creds.mailrelayP) await run("mailrelaypresidente", () => mailrelayEvents(creds.mailrelayP!.key, creds.mailrelayP!.host, "mailrelaypresidente", f));
+  if (creds.brevo) await run("brevo", sink => brevoEvents(creds.brevo!, days, f, sink));
+  // SMTP send_date is not an occurrence time for a delivery/bounce. Preserve the legacy aggregate only.
+  if (creds.sendpulse) await run("sendpulse", async () => sendpulseEvents(await spToken(creds.sendpulse!, f), days, f), false);
+  if (creds.mailersend) await run("mailersend", sink => mailersendEvents(creds.mailersend!, days, f, sink));
+  if (creds.mailrelay) await run("mailrelay", sink => mailrelayEvents(creds.mailrelay!.key, creds.mailrelay!.host, "mailrelay", f, sink));
+  if (creds.mailrelayP) await run("mailrelaypresidente", sink => mailrelayEvents(creds.mailrelayP!.key, creds.mailrelayP!.host, "mailrelaypresidente", f, sink));
   await query("INSERT INTO provider_status(provider,data) VALUES('_poll',$1) ON CONFLICT (provider) DO UPDATE SET data=$1, at=now()", [JSON.stringify(rep)]);
   return rep;
 }

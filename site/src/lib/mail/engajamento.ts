@@ -1,5 +1,6 @@
 import { query } from "../db";
 import { providerCreds, spToken } from "./events";
+import { brevoApiEvents, mailersendApiEvents, recordApiEvents, type EventPage } from "./api-message-events";
 
 /**
  * Engajamento dos e-mails (entregue / aberto / clicado) vindo das APIs dos provedores. Tabela própria (mail_engagement), sem relação com devoluções.
@@ -14,20 +15,22 @@ const jget = async (f: F, url: string, headers: Record<string, string>) => {
   return r.json() as Promise<any>;
 };
 
-export async function brevoEngagement(key: string, days: number, f: F = fetch): Promise<Engaj[]> {
+export async function brevoEngagement(key: string, days: number, f: F = fetch, onPage?: EventPage<Engaj>): Promise<Engaj[]> {
   const out: Engaj[] = [];
   for (const [ev, kind] of [["delivered", "delivered"], ["opened", "opened"], ["clicks", "clicked"]] as const) {
     for (let off = 0; off < 50_000; off += 500) {
       const j = await jget(f, `https://api.brevo.com/v3/smtp/statistics/events?event=${ev}&days=${Math.min(90, days)}&limit=500&offset=${off}`, { "api-key": key });
       const list: any[] = j.events ?? [];
+      const start = out.length;
       for (const e of list) if (e.email && e.date) out.push({ provider: "brevo", email: String(e.email).toLowerCase(), kind, ts: new Date(e.date).toISOString() });
+      if (onPage) await onPage(out.slice(start), brevoApiEvents(list, key, kind));
       if (list.length < 500) break;
     }
   }
   return out;
 }
 
-export async function mailersendEngagement(token: string, days: number, f: F = fetch): Promise<Engaj[]> {
+export async function mailersendEngagement(token: string, days: number, f: F = fetch, onPage?: EventPage<Engaj>): Promise<Engaj[]> {
   const out: Engaj[] = [];
   const H = { Authorization: `Bearer ${token}` };
   const domains: any[] = (await jget(f, "https://api.mailersend.com/v1/domains?limit=25", H)).data ?? [];
@@ -36,7 +39,9 @@ export async function mailersendEngagement(token: string, days: number, f: F = f
   for (const d of domains) for (let page = 1; page <= 50; page++) {
     const j = await jget(f, `https://api.mailersend.com/v1/activity/${d.id}?limit=100&page=${page}&date_from=${since}&date_to=${now}&event[]=delivered&event[]=opened&event[]=clicked`, H);
     const list: any[] = j.data ?? [];
+    const start = out.length;
     for (const e of list) { const email = e.email?.recipient?.email, kind = map[e.type]; if (email && kind) out.push({ provider: "mailersend", email: String(email).toLowerCase(), kind, ts: new Date(e.created_at).toISOString() }); }
+    if (onPage) await onPage(out.slice(start), mailersendApiEvents(list, token));
     if (list.length < 100) break;
   }
   return out;
@@ -74,10 +79,14 @@ export async function storeEngagement(list: Engaj[]): Promise<number> {
 export type RelEngaj = Record<string, { ok: boolean; eventos?: number; erro?: string }>;
 export async function syncEngajamento(days = 30, f: F = fetch, creds = providerCreds()): Promise<RelEngaj> {
   const rep: RelEngaj = {};
-  const run = async (nome: string, fn: () => Promise<Engaj[]>) => { try { const ev = await fn(); await storeEngagement(ev); rep[nome] = { ok: true, eventos: ev.length }; } catch (e) { rep[nome] = { ok: false, erro: e instanceof Error ? e.message : String(e) }; } };
-  if (creds.brevo) await run("brevo", () => brevoEngagement(creds.brevo!, days, f));
-  if (creds.mailersend) await run("mailersend", () => mailersendEngagement(creds.mailersend!, days, f));
-  if (creds.sendpulse) await run("sendpulse", async () => sendpulseEngagement(await spToken(creds.sendpulse!, f), days, f));
+  const run = async (nome: string, fn: (sink: EventPage<Engaj>) => Promise<Engaj[]>, paged = true) => {
+    const sink: EventPage<Engaj> = async (legacy, events) => { await storeEngagement(legacy); await recordApiEvents(events); };
+    try { const ev = await fn(sink); if (!paged) await sink(ev, []); rep[nome] = { ok: true, eventos: ev.length }; }
+    catch (e) { rep[nome] = { ok: false, erro: e instanceof Error ? e.message : String(e) }; }
+  };
+  if (creds.brevo) await run("brevo", sink => brevoEngagement(creds.brevo!, days, f, sink));
+  if (creds.mailersend) await run("mailersend", sink => mailersendEngagement(creds.mailersend!, days, f, sink));
+  if (creds.sendpulse) await run("sendpulse", async () => sendpulseEngagement(await spToken(creds.sendpulse!, f), days, f), false);
   return rep;
 }
 

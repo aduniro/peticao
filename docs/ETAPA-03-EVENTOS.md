@@ -26,6 +26,8 @@ O GET administrativo de metadados mostra até cem eventos vinculados da mensagem
 
 ## Limites e gates restantes
 
+Atualização posterior: a conexão das APIs está em `ETAPA-03-EVENTOS-API.md`. O parágrafo seguinte registra o limite do checkpoint b0ab46e.
+
 Apenas SES/SNS está conectado ao journal nesta etapa. Coletores de API/webhooks dos demais provedores continuam com seus agregados anteriores; os respectivos envios já capturam escopo/ID para a conexão seguinte. Não fabricar vínculo com logs antigos sem identidade.
 
 Antes de qualquer deploy, conferir configuração real do tópico/conta e a política SNS/IAM que restringe publicação ao SES esperado: assinatura do SNS prova publicação pelo SNS, não substitui a política de quem pode publicar no tópico. Não criar/confirmar assinaturas SNS ou publicar testes na AWS automaticamente. Recebimento de conversas, recuperação operacional, retenção, interfaces/editor e demais Etapas 2–7 continuam pendentes. AV-1–AV-9 permanecem sem aprovação inferida.
