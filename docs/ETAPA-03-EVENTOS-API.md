@@ -36,3 +36,6 @@ Continuam no escopo: webhooks autenticados por conta, cobertura do MailerSend/Se
 - [MailerSend — activity](https://developers.mailersend.com/api/v1/email/activity)
 - [Mailrelay — SMTP emails](https://apidocs.mailrelay.com/tag/smtp-emails/GET/smtp_emails)
 - [SendPulse — SMTP API](https://sendpulse.com/integrations/api/smtp) e [OpenAPI público](https://api.sendpulse.com/.well-known/openapi/smtp.yaml)
+
+
+Atualização posterior: o backend dos webhooks autenticados por conta está descrito em `ETAPA-03-EVENTOS-WEBHOOK.md`. Isso não comprova ativação real, equivalência de IDs entre transportes ou cobertura de todo o histórico. Mantêm-se os gates operacionais e as outras pendências acima.

@@ -26,7 +26,7 @@ O GET administrativo de metadados mostra até cem eventos vinculados da mensagem
 
 ## Limites e gates restantes
 
-Atualização posterior: a conexão das APIs está em `ETAPA-03-EVENTOS-API.md`. O parágrafo seguinte registra o limite do checkpoint b0ab46e.
+Atualização posterior: a conexão das APIs está em `ETAPA-03-EVENTOS-API.md`. O receptor por conta está em `ETAPA-03-EVENTOS-WEBHOOK.md`. O parágrafo seguinte registra o limite do checkpoint b0ab46e.
 
 Apenas SES/SNS está conectado ao journal nesta etapa. Coletores de API/webhooks dos demais provedores continuam com seus agregados anteriores; os respectivos envios já capturam escopo/ID para a conexão seguinte. Não fabricar vínculo com logs antigos sem identidade.
 

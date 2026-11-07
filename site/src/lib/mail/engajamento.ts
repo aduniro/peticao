@@ -128,14 +128,18 @@ export function sesToEngajamento(ev: any): Engaj[] {
 export function brevoWebhookToEngaj(b: any): Engaj[] {
   const email = String(b?.email ?? "").toLowerCase(); if (!email) return [];
   const m: Record<string, Engaj["kind"]> = { delivered: "delivered", opened: "opened", unique_opened: "opened", opened_proxy: "opened", click: "clicked", clicks: "clicked" };
-  const k = m[String(b?.event ?? "")]; return k ? [{ provider: "brevo", email, kind: k, ts: iso(b?.ts_event ?? b?.ts ?? b?.date) }] : [];
+  const t = String(b?.event ?? ""), k = Object.prototype.hasOwnProperty.call(m,t) ? m[t] : undefined; return k ? [{ provider: "brevo", email, kind: k, ts: iso(b?.ts_event ?? b?.ts ?? b?.date) }] : [];
 }
 
 /** MailerSend (webhook): type = activity.delivered | activity.opened | activity.clicked */
+export const mailersendWebhookEmail = (b: any): string => {
+  const raw = b?.data?.email?.recipient?.email ?? b?.data?.recipient?.email ?? b?.data?.recipient;
+  return typeof raw === "string" ? raw.toLowerCase() : "";
+};
 export function mailersendWebhookToEngaj(b: any): Engaj[] {
-  const email = String(b?.data?.email?.recipient?.email ?? b?.data?.recipient?.email ?? "").toLowerCase(); if (!email) return [];
-  const m: Record<string, Engaj["kind"]> = { "activity.delivered": "delivered", "activity.opened": "opened", "activity.clicked": "clicked" };
-  const k = m[String(b?.type ?? "")]; return k ? [{ provider: "mailersend", email, kind: k, ts: iso(b?.data?.created_at ?? b?.created_at) }] : [];
+  const email = mailersendWebhookEmail(b); if (!email) return [];
+  const m: Record<string, Engaj["kind"]> = { "activity.delivered": "delivered", "activity.opened": "opened", "activity.opened_unique": "opened", "activity.clicked": "clicked", "activity.clicked_unique": "clicked" };
+  const t = String(b?.type ?? ""), k = Object.prototype.hasOwnProperty.call(m,t) ? m[t] : undefined; return k ? [{ provider: "mailersend", email, kind: k, ts: iso(b?.data?.created_at ?? b?.created_at) }] : [];
 }
 
 /** SendPulse (webhook SMTP): nomes de evento conforme a documentação (delivered, opened, clicked, hard_bounced, soft_bounced, spam...), tolerante a variações. */
