@@ -141,3 +141,17 @@ A regra dos quatro níveis foi extraída para `admin-levels.ts`, sem banco/segre
 No painel inicial, atalhos incompatíveis e “Liberar CPF” deixam de aparecer para níveis sem acesso. “Ver pendentes” acompanha a permissão do painel de e-mails. A barra inferior mantém as sete posições; atalhos indisponíveis usam espaços sem foco/sem conteúdo acessível para preservar Menu à esquerda e Filtros à direita. Não foram alterados CSS, fontes, ícones, rótulos ou avisos.
 
 Verificação inicial: três testes de UI/permissões e tipos aprovados (`stage01-role-menu.log`, `stage01-typecheck-role-ui.log`). A suíte cumulativa passou **261/261** e o build de produção também passou (`stage01-cumulative-role-ui.log`, `stage01-build-role-ui.log`). O roteiro de navegador foi ampliado para verificar controles e gaveta por nível, posições da barra, erros HTTP/rede e rolagem horizontal; ainda não declarar este achado corrigido no runtime antes dessa execução.
+
+### Ajuste do isolamento do roteiro de navegador
+
+A primeira execução ampliada parou após 23 casos aprovados: ao reutilizar a página, uma navegação cancelou consultas da página anterior (`dashboard?janela=all` e `alertas`, `net::ERR_ABORTED`). O relatório de falha foi preservado em `visual-role-ui/access-pages.json` e `stage01-role-visibility-browser.log`; não houve exceção JavaScript registrada nesse trecho. O roteiro passou a abrir uma página por caso e conferir todos os erros antes de encerrá-la deliberadamente. Nenhum filtro genérico de mensagem de erro foi introduzido. A repetição isolada está em andamento, com evidências em outro diretório (`visual-role-ui-isolated`) para preservar a primeira execução.
+
+### Visibilidade por nível validada no runtime
+
+Checkpoint de código: `c169f57`. A execução isolada passou **144 casos**: quatro níveis × seis larguras × (controles do painel/menu + cinco páginas). Comprovou atalhos/formulários por nível, gaveta abrindo/fechando, Menu à esquerda/Filtros à direita, bloqueios de acesso direto, ausência de rolagem horizontal e ausência de exceções/erros HTTP/rede durante cada caso ativo. O cenário Total sem confirmação extra e o cenário sem sessão também passaram.
+
+Relatório: `/mnt/dev/peticao/.cache/admin-audit-20261106/visual-role-ui-isolated/access-pages.json`; log `stage01-role-visibility-isolated.log`; 24 capturas `access-<nivel>-<largura>.png`. A captura de Leitura em 1280 px foi inspecionada visualmente: atalhos incompatíveis e liberação de CPF ausentes, mantendo as consultas e o padrão visual. O CSS do painel permanece sem alteração; isso não é prova de paridade por pixel de todas as telas.
+
+O achado específico de controles indevidos para Leitura está corrigido no candidato local. A primeira execução com cancelamentos de navegação foi preservada; a repetição usa páginas separadas, sem filtro de mensagens de erro. O servidor de QA 3032 foi encerrado e suas sessões foram revogadas; a prévia 3031 continua ativa.
+
+A Etapa 1 ainda não está liberada: avisos/estados de contato e convites, aviso de Minha conta, revisão de outros controles/telas e conferência final continuam pendentes. As Etapas 2–7 permanecem no objetivo; este checkpoint não conclui a integração nem autoriza deploy. Nenhuma alteração da VPS ou da revisão local de CPFs nesta rodada.
