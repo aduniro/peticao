@@ -52,3 +52,13 @@ export async function validateReplySuggestion(id:unknown,proof:unknown) {
     return safeEqual(state.proof,proof)?{ok:true as const,context:state.context}:{ok:false as const,error:"context_changed"};
   });
 }
+
+/** Allow-list context for a future draft generator. No name/address/body/identity answer enters this object. */
+export async function contactAiContext(id:unknown) {
+  if(!validId(id))return{ok:false as const,error:"parameters"};
+  return tx(async c=>{
+    await c.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");await c.query("SET LOCAL statement_timeout='1500ms'");
+    const state=await freshContext(c,id);if(!state.ok)return state;
+    return{ok:true as const,proof:state.proof,context:{contactId:state.context.contactId,jobId:state.context.jobId,revision:state.context.revision},analysis:{category:state.analysis.category,state:state.analysis.state,reasons:state.analysis.reasons},baseline:replyBody(state.analysis)};
+  });
+}
