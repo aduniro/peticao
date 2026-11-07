@@ -8,6 +8,8 @@ ROOT = Path('/mnt/dev/peticao')
 STATE = Path(os.environ.get('VIGIA_SIMPLES_STATE', str(Path.home()/'.local/state/peticao-monitor/simple')))
 ZONE = ZoneInfo('America/Porto_Velho')
 PROCESS_OFFSET = 0
+ACTIVE_TAB = "running"
+TASK_OFFSET = 0
 STATES = {'running':'em execução','waiting':'aguardando','completed':'concluída','failed':'falhou','interrupted':'interrompida','queued':'na fila'}
 FIELDS = {'id','title','stage','environment','scope','state','updated_at','created_at','done','total','eta','detail'}
 
@@ -118,19 +120,50 @@ class Remote:
 def snapshot(remote=None):
     return {'at':now(),'activities':activities(),'processes':processes(),'services':local_services(),'vps':remote.value if remote else {'state':'não consultada'}}
 
+def task_groups(data):
+    rows=data.get('activities',[])
+    return ([r for r in rows if r.get('state')!='completed'],[r for r in rows if r.get('state')=='completed'])
+
+def tab_bar(data):
+    from rich.text import Text
+    active,done=task_groups(data)
+    text=Text()
+    text.append(f" 1  Em andamento ({len(active)}) ",style='bold black on green' if ACTIVE_TAB=='running' else 'dim')
+    text.append('   ')
+    text.append(f" 2  Concluídos ({len(done)}) ",style='bold black on cyan' if ACTIVE_TAB=='completed' else 'dim')
+    text.append('   Tab: alternar',style='dim')
+    return text
+
+def completed_view(data,width,height,paused=False):
+    from rich.console import Group
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.text import Text
+    _,rows=task_groups(data)
+    rows=sorted(rows,key=lambda row:row.get('updated_at',''),reverse=True)
+    table=Table(expand=True);table.add_column('Tarefa',ratio=2);table.add_column('Resultado / ambiente',ratio=4);table.add_column('Concluída',ratio=1)
+    limit=max(1,(height-9)//5)
+    for row in rows[TASK_OFFSET:TASK_OFFSET+limit]:
+        table.add_row(Text(row.get('title',row.get('id','—'))),Text(f"{row.get('stage','Concluída')}\n{row.get('detail','')}\n{row.get('environment','—')} · {row.get('scope','—')}"),Text(stamp(row.get('updated_at'))))
+    if not rows:table.add_row('Nenhuma tarefa concluída','As tarefas em execução estão na outra aba.','—')
+    return Group(Text(f"VIGIA SIMPLES · {stamp(data['at'])} · {'PAUSADO' if paused else 'atualiza a cada 2 s'}",style='bold green'),tab_bar(data),Panel(table,title=f'Tarefas concluídas: {len(rows)}',border_style='cyan'),Text('1 andamento | 2 concluídos | Tab alterna | j/k tarefas | q sai | r atualiza',style='dim'))
+
 def render(data, width, height, paused=False):
     from rich.console import Group
     from rich.panel import Panel
     from rich.table import Table
     from rich.text import Text
-    if height < 36:return render_compact(data,width,height,paused)
-    groups=[Text(f"VIGIA SIMPLES · {stamp(data['at'])} (Porto Velho) · {'PAUSADO' if paused else 'atualiza a cada 2 s'}",style='bold green')]
+    if ACTIVE_TAB=='completed':return completed_view(data,width,height,paused)
+    original=data
+    data={**data,'activities':task_groups(data)[0]}
+    if height < 36:return render_compact(data,width,height,paused,original)
+    groups=[Text(f"VIGIA SIMPLES · {stamp(data['at'])} (Porto Velho) · {'PAUSADO' if paused else 'atualiza a cada 2 s'}",style='bold green'),tab_bar(original)]
     table=Table(expand=True);table.add_column('Atividade',ratio=2);table.add_column('Estado / etapa',ratio=3);table.add_column('Atualização / progresso',ratio=2)
     for r in data['activities'][:6]:
         elapsed=age(r.get('updated_at',''));stale=' · sem atualização recente' if elapsed is not None and elapsed>180 and r['state']=='running' else ''
         pct=f"{100*r['done']/r['total']:.0f}% ({r['done']}/{r['total']})" if r.get('total') else 'progresso não medido'
         table.add_row(Text(f"{r['title']}\n{r.get('environment','—')} · {r.get('scope','—')}"),Text(f"{STATES[r['state']]}{stale}\n{r.get('stage','—')}\n{r.get('detail','')}"),Text(f"{stamp(r.get('updated_at'))} · {pct}\nETA: {r.get('eta','sem estimativa')}"))
-    if not data['activities']:table.add_row('Nenhuma atividade registrada','Processos abaixo são observados diretamente.','—')
+    if not data['activities']:table.add_row('Nenhuma tarefa em andamento','Veja as finalizadas na aba Concluídos.','—')
     groups.append(Panel(table,title='Andamento registrado pelos agentes',border_style='green'))
     local=' · '.join(f"{s['name'].replace('peticao-','').replace('.service','')}: {s['state']}" for s in data['services'])
     remote=data['vps'];vps=f"VPS: {remote.get('state')}"
@@ -142,10 +175,10 @@ def render(data, width, height, paused=False):
     limit=max(3,min(16,height-23))
     for r in data['processes'][PROCESS_OFFSET:PROCESS_OFFSET+limit]:proc.add_row(str(r['pid']),Text(r['name']),r['port'],Text(r['cwd']))
     groups.append(Panel(proc,title=f"Processos do projeto: {len(data['processes'])} · exibindo {min(limit,len(data['processes']))}",border_style='blue'))
-    groups.append(Text('q: sair  |  j/k: processos  |  espaço: pausar  |  r: atualizar  ·  Fechar esta tela não encerra os trabalhos.',style='dim'))
+    groups.append(Text('1 andamento | 2 concluídos | Tab alterna | q sai | j/k processos | espaço pausa | r atualiza',style='dim'))
     return Group(*groups)
 
-def render_compact(data, width, height, paused=False):
+def render_compact(data, width, height, paused=False, original=None):
     from rich.console import Group
     from rich.panel import Panel
     from rich.table import Table
@@ -161,10 +194,10 @@ def render_compact(data, width, height, paused=False):
     proc=Table(expand=True,padding=(0,1));proc.add_column('PID',width=8);proc.add_column('Processo',ratio=2,no_wrap=True,overflow='ellipsis');proc.add_column('Diretório / porta',ratio=4,no_wrap=True,overflow='ellipsis')
     limit=max(1,min(12,height-18))
     for row in data['processes'][PROCESS_OFFSET:PROCESS_OFFSET+limit]:proc.add_row(str(row['pid']),Text(row['name']),Text(row['cwd']+((' :'+row['port']) if row['port'] else '')))
-    return Group(Text(f"VIGIA SIMPLES · {stamp(data['at'])} · {'PAUSADO' if paused else 'LOCAL 2s / VPS 10s'}",style='bold green'),Panel(Group(*lines) if lines else Text('Nenhuma atividade registrada'),title='Atividades registradas pelos agentes',border_style='green'),Panel(Group(Text(local,no_wrap=True,overflow='ellipsis'),Text(remote,no_wrap=True,overflow='ellipsis'),Text('Novos logs: '+('módulo/build presentes' if v.get('diagnostics_source') and v.get('diagnostics_build') else 'não publicados nesta fonte')+' · coleta VPS '+stamp(v.get('received_at')),no_wrap=True,overflow='ellipsis')),title='Serviços observados',border_style='cyan'),Panel(proc,title=f"Processos: {len(data['processes'])} · mostrando {min(limit,len(data['processes']))}",border_style='blue'),Text('q sair | j/k processos | espaço pausa tela | r atualiza | não encerra tarefas',style='dim',no_wrap=True,overflow='ellipsis'))
+    return Group(Text(f"VIGIA SIMPLES · {stamp(data['at'])} · {'PAUSADO' if paused else 'LOCAL 2s / VPS 10s'}",style='bold green'),tab_bar(original or data),Panel(Group(*lines) if lines else Text('Nenhuma tarefa em andamento; veja Concluídos'),title='Atividades registradas pelos agentes',border_style='green'),Panel(Group(Text(local,no_wrap=True,overflow='ellipsis'),Text(remote,no_wrap=True,overflow='ellipsis'),Text('Novos logs: '+('módulo/build presentes' if v.get('diagnostics_source') and v.get('diagnostics_build') else 'não publicados nesta fonte')+' · coleta VPS '+stamp(v.get('received_at')),no_wrap=True,overflow='ellipsis')),title='Serviços observados',border_style='cyan'),Panel(proc,title=f"Processos: {len(data['processes'])} · mostrando {min(limit,len(data['processes']))}",border_style='blue'),Text('1 andamento | 2 concluídos | Tab alterna | q sai | j/k processos | espaço pausa | r atualiza',style='dim',no_wrap=True,overflow='ellipsis'))
 
 def main(argv=None):
-    global PROCESS_OFFSET
+    global PROCESS_OFFSET, ACTIVE_TAB, TASK_OFFSET
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--json',action='store_true');p.add_argument('--uma-vez',action='store_true');p.add_argument('--sem-vps',action='store_true')
     p.add_argument('--register');p.add_argument('--title');p.add_argument('--state',choices=STATES);p.add_argument('--stage');p.add_argument('--environment');p.add_argument('--scope');p.add_argument('--eta');p.add_argument('--detail');p.add_argument('--done',type=int);p.add_argument('--total',type=int)
@@ -195,8 +228,15 @@ def main(argv=None):
                 if ready:
                     key=os.read(sys.stdin.fileno(),1).decode(errors='ignore')
                     if key in ['q','Q','\x03','']:break
-                    if key=='j':PROCESS_OFFSET=min(max(0,len(data['processes'])-1),PROCESS_OFFSET+1)
-                    if key=='k':PROCESS_OFFSET=max(0,PROCESS_OFFSET-1)
+                    if key in ['1','2','\t']:
+                        ACTIVE_TAB=('completed' if ACTIVE_TAB=='running' else 'running') if key=='\t' else ('running' if key=='1' else 'completed')
+                        TASK_OFFSET=0
+                    if key=='j':
+                        if ACTIVE_TAB=='completed':TASK_OFFSET=min(max(0,len(task_groups(data)[1])-1),TASK_OFFSET+1)
+                        else:PROCESS_OFFSET=min(max(0,len(data['processes'])-1),PROCESS_OFFSET+1)
+                    if key=='k':
+                        if ACTIVE_TAB=='completed':TASK_OFFSET=max(0,TASK_OFFSET-1)
+                        else:PROCESS_OFFSET=max(0,PROCESS_OFFSET-1)
                     if key==' ':paused=not paused
                     if key in ['r','R']:data=snapshot(remote)
     except KeyboardInterrupt:pass

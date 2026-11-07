@@ -8,8 +8,11 @@ Execute **`vigia-simples`** em outro terminal. O alias foi acrescentado a `/home
 
 Comando completo: `/mnt/dev/peticao/vigia-simples`.
 
+- `1`: aba **Em andamento** (padrão), somente tarefas ainda não concluídas e observação de processos/serviços.
+- `2`: aba **Concluídos**, somente tarefas finalizadas, com resultado e horário.
+- `Tab`: alternar abas.
 - `q`: sair sem interromper tarefas ou serviços.
-- `j` / `k`: percorrer os processos.
+- `j` / `k`: percorrer os processos em andamento ou as tarefas na aba de concluídos.
 - Espaço: pausar somente a atualização da tela.
 - `r`: atualizar.
 - Em terminais pequenos, usa apresentação compacta; em terminais maiores, mostra detalhes.
@@ -31,4 +34,6 @@ Use `/mnt/dev/peticao/vigia-simples --register identificador --title 'Título' -
 
 `python3 -m unittest discover -s /mnt/dev/peticao/tools/monitor/tests -p test_simples.py -v`.
 
-Cobertura: escrita atômica, preservação de criação, permissões, validação de total/identificador, filtragem de sequências de terminal, arquivos corrompidos e renderização compacta/detalhada. Os seis testes incluem uma sessão PTY real, com teclas em sequência e encerramento. Um travamento causado pelo buffer de entrada foi corrigido e coberto por regressão. A consulta somente leitura da VPS também foi exercitada.
+Cobertura: escrita atômica, preservação de criação, permissões, validação de total/identificador, filtragem de sequências de terminal, arquivos corrompidos e renderização compacta/detalhada. Os oito testes incluem separação das abas, transição sem perda de histórico e uma sessão PTY real, com teclas em sequência e encerramento. Um travamento causado pelo buffer de entrada foi corrigido e coberto por regressão. A consulta somente leitura da VPS também foi exercitada.
+
+Após atualizar o código, saia com `q` e abra novamente `/mnt/dev/peticao/vigia-simples` para carregar as novas abas. A troca de aba não altera estados nem registros.
