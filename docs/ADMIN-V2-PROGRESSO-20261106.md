@@ -187,3 +187,14 @@ Passaram **383/383 cumulativos**, onze regressões novas, build, tipos após bui
 Sessão de QA revogada, temporário 3032 encerrado e prévia 3031 retomada com banco/configuração anteriores (/admin 200). Nenhum schema, aparência/aviso, VPS ou revisão de CPF alterado. Não foram criados/alterados webhooks reais; a conta e a equivalência dos IDs precisam de prova operacional antes de afirmar cobertura real.
 
 Próximo bloco: recuperação operacional das tentativas interrompidas, retenção e integração das consultas/interfaces; conversas/editor e demais Etapas 2–7 continuam no objetivo. A integração inteira não está concluída. AV-1–AV-9 e retenção continuam sem aprovação inferida. Deploy final aguarda autorização explícita; notificações somente a operator-1608598f41@example.invalid.
+
+
+## 07/11 — checkpoint ac7e859: recuperação operacional de fila sem reenvio
+
+No candidato `admin-v2-stage01`, diagnóstico e conclusão administrativa de fila exigem prova exata do vínculo/conteúdo/destinatário e tentativa finalizada com aceite. Total + confirmação extra e usuário atual são exigidos; o autor não vem do corpo. A conclusão preserva data original do aceite, payload, tentativas e dados de assinatura, sem chamar transporte. Entrega individual, ausência de registro ou tempo decorrido não liberam incerteza. Worker atrasado agora só atualiza itens ainda pendentes, sem sobrescrever uma recuperação concorrente.
+
+Passaram **389/389 cumulativos**, seis regressões novas, build, tipos e HTTP compilado. A primeira falha era a ausência de Host na fixture; corrigida sem relaxar a proteção de origem. O ensaio compilado usou banco novo separado, assinatura e fila fictícias, conferiu autoria/idempotência/microdatas e não chamou transporte/provedor. Contrato do candidato `docs/ETAPA-03-RECUPERACAO.md`; evidências `stage03-mail-recovery-*` e `runtime-mail-recovery/mail-recovery.json`. Sessão revogada, temporário 3032 encerrado, prévia 3031 retomada com banco/configuração anteriores (/admin 200).
+
+O dono aprovou explicitamente, pela resposta nativa “Aprovar estes textos”, o **AV-10**: botão “Concluir fila sem reenviar” e aviso “A fila será concluída com base no aceite já registrado pelo provedor. Nenhum e-mail será reenviado. Isso não comprova entrega ao destinatário.” Essa autorização não se estende aos AV-1–AV-9, retenção ou deploy. O controle visual ainda não foi integrado; este checkpoint é backend e prova de funcionamento.
+
+Não alterei schema, aparência/avisos do app, VPS ou revisão de CPFs. Próximo bloco: integrar controle aprovado e consultas no visual admin-v2. Retenção, conversas/editor e demais Etapas 2–7 continuam no objetivo completo. Nenhum deploy realizado; autorização final continua necessária. Notificações somente a operator-1608598f41@example.invalid.
