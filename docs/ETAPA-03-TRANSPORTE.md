@@ -34,3 +34,8 @@ Evidências em `/mnt/dev/peticao/.cache/admin-audit-20261106/`: `stage03-transpo
 As duas rodadas anteriores foram preservadas: a primeira encontrou expectativa antiga dos parâmetros do contato (corrigida para exigir também a chave); a segunda teve timeout de uma sonda Reacher do teste enquanto concorria com o build. O diagnóstico gravado (`stage03-reacher-diagnostic.json`) mostrou `indisponivel` em 359 ms para prazo de 300 ms. A repetição não alterou regras, limites ou verificações: isolou a carga e passou integralmente. Na revisão também foi corrigido o uso da chave interna do rodízio para conservar o disjuntor `transacional`.
 
 Nenhum deploy, dado real/revisão local alterado ou aviso novo ativado. Permanecem preferências/avisos pendentes e o restante das Etapas 2–7; não concluir a integração integral a partir deste checkpoint.
+
+
+## Captura posterior de recibos
+
+Os adapters agora passam IDs disponíveis ao journal, inclusive recibo parcial do destinatário principal no Mailrelay. Contrato em `ETAPA-03-RECIBOS.md`. Isso não correlaciona os eventos atuais por endereço a mensagens individuais, não reescreve mensagens antigas e não comprova entrega. SMTP genérico/dev permanecem sem ID externo inventado.

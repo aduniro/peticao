@@ -11,6 +11,7 @@ import { logQueued, type Attempt } from "./log";
 import { withReplyTo } from "./payload";
 import { journalFor, prepareRecorded, recordedQueueMail, type DeliveryJournal } from "./recorded";
 import { messageMetadata } from "./archive";
+import { receiptId, receiptJson, objectReceiptId, smtpInfoReceipt, mailersendReceipt, mailrelayReceipt, type TransportReceipt } from "./receipt";
 export { withReplyTo } from "./payload";
 import { ordemRodizio, parsePesos, registrar } from "./rodizio";
 
@@ -29,13 +30,16 @@ async function sendDev(m: Mail) {
   writeFileSync(join(outboxDir(), name), JSON.stringify({ ...m, attachments, at: new Date().toISOString() }, null, 2));
 }
 
-async function sendSmtp(m: Mail, from: string) {
+async function sendSmtp(m: Mail, from: string, provider = "smtp") {
   // Prioridade: SMTP_URL explícita; senão a credencial criptografada do SES entregue pelo systemd.
   const url = process.env.SMTP_URL;
   const cred = url ? null : readSmtpCredential();
   if (!url && !cred) throw new Error("SMTP não configurado (SMTP_URL ou credencial ses-smtp)");
   const transport = url ? nodemailer.createTransport(url) : nodemailer.createTransport(sesSmtpOptions(cred!));
-  await transport.sendMail({ from, ...m });
+  const result = await transport.sendMail({ from, ...m });
+  let awsHost = !url;
+  if (url) { try { awsHost = /^email-smtp\.[a-z0-9-]+\.amazonaws\.com(?:\.cn)?$/.test(new URL(url).hostname); } catch { awsHost = false; } }
+  return provider === "ses" && awsHost ? { providerId: smtpInfoReceipt(result) } : undefined;
 }
 
 async function sendBrevo(m: Mail, fromHeader: string) {
@@ -58,6 +62,7 @@ async function sendBrevo(m: Mail, fromHeader: string) {
     }),
   });
   if (!res.ok) throw new Error(`Brevo respondeu ${res.status}`);
+  return { providerId: objectReceiptId(await receiptJson(res), "messageId") };
 }
 
 /** Mailrelay (API v1, POST /send_emails). A conta tem endereço próprio (MAILRELAY_HOST = algo.ipzmarketing.com) e o remetente precisa estar confirmado lá. */
@@ -65,9 +70,9 @@ async function sendBrevo(m: Mail, fromHeader: string) {
 const mailrelayAccount = (which: "integral" | "presidente") => which === "presidente"
   ? { key: process.env.MAILRELAY_PRESIDENTE_API_KEY ?? readCredentialText("mailrelay-presidente-api"), host: process.env.MAILRELAY_PRESIDENTE_HOST, nome: "mailrelaypresidente" }
   : { key: process.env.MAILRELAY_API_KEY ?? readCredentialText("mailrelay-api"), host: process.env.MAILRELAY_HOST, nome: "mailrelay" };
-const sendMailrelay = (m: Mail, from: string) => sendMailrelayOf("integral", m, from);
-const sendMailrelayPresidente = (m: Mail, from: string) => sendMailrelayOf("presidente", m, from);
-async function sendMailrelayOf(which: "integral" | "presidente", m: Mail, fromHeader: string) {
+const sendMailrelay = (m: Mail, from: string, onReceipt?: (receipt: TransportReceipt) => void) => sendMailrelayOf("integral", m, from, onReceipt);
+const sendMailrelayPresidente = (m: Mail, from: string, onReceipt?: (receipt: TransportReceipt) => void) => sendMailrelayOf("presidente", m, from, onReceipt);
+async function sendMailrelayOf(which: "integral" | "presidente", m: Mail, fromHeader: string, onReceipt?: (receipt: TransportReceipt) => void) {
   const { key, host, nome } = mailrelayAccount(which);
   if (!key || !host || !/^[a-z0-9-]+\.ipzmarketing\.com$/.test(host)) throw new Error(`Mailrelay não configurado para "${nome}" (host e chave da API)`);
   if (m.attachments?.length) throw new Error("Mailrelay: anexos não suportados neste provedor");
@@ -83,9 +88,12 @@ async function sendMailrelayOf(which: "integral" | "presidente", m: Mail, fromHe
       const body = await res.text().catch(() => "");
       throw new Error(`Mailrelay respondeu ${res.status}${body ? `: ${body.replace(/\s+/g, " ").slice(0, 140)}` : ""}`);
     }
+    return { providerId: mailrelayReceipt(await receiptJson(res), to) };
   };
-  await post(m.to);
+  const primary = await post(m.to);
+  onReceipt?.(primary);
   for (const b of m.bcc ?? []) await post(b); // cópia oculta como envio separado: o campo bcc da API não é documentado
+  return primary;
 }
 
 /**
@@ -121,11 +129,12 @@ export async function sendSendpulseWith(fetchImpl: typeof fetch, creds: SpCreds,
   if (!res.ok) { const body = await res.text().catch(() => ""); throw new Error(`SendPulse respondeu ${res.status}${body ? `: ${body.replace(/\s+/g, " ").slice(0, 140)}` : ""}`); }
   const j = (await res.json().catch(() => ({}))) as { result?: boolean; id?: string };
   if (j.result === false) throw new Error("SendPulse recusou o envio (result=false)");
+  return { providerId: objectReceiptId(j,"id") };
 }
 async function sendSendpulse(m: Mail, from: string) {
   const c = sendpulseCreds();
   if (!c) throw new Error("SendPulse não configurado (SENDPULSE_CLIENT_ID/SECRET ou credenciais sendpulse-id e sendpulse-secret)");
-  await sendSendpulseWith(fetch, c, m, from);
+  return sendSendpulseWith(fetch, c, m, from);
 }
 
 /**
@@ -144,16 +153,17 @@ export async function sendMailersendWith(fetchImpl: typeof fetch, token: string,
   };
   const res = await fetchImpl("https://api.mailersend.com/v1/email", { method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json", "x-requested-with": "XMLHttpRequest" }, body: JSON.stringify(body), signal: AbortSignal.timeout(30_000) });
   if (!res.ok) { const t = await res.text().catch(() => ""); throw new Error(`MailerSend respondeu ${res.status}${t ? `: ${t.replace(/\s+/g, " ").slice(0, 140)}` : ""}`); }
+  return { providerId: mailersendReceipt(res) };
 }
 async function sendMailersend(m: Mail, from: string) {
   const token = process.env.MAILERSEND_API_TOKEN ?? readCredentialText("mailersend-api");
   if (!token) throw new Error("MailerSend não configurado (MAILERSEND_API_TOKEN ou credencial mailersend-api)");
-  await sendMailersendWith(fetch, token, m, from);
+  return sendMailersendWith(fetch, token, m, from);
 }
 
-export type Sender = (m: Mail, from: string) => Promise<void>;
+export type Sender = (m: Mail, from: string, onReceipt?: (receipt: TransportReceipt) => void) => Promise<void | TransportReceipt>;
 /** Provedores conhecidos. "ses" e "smtp" usam SMTP (a credencial do SES vem do systemd); "brevo" e "mailrelay" usam API HTTPS. */
-const SENDERS: Record<string, Sender> = { dev: async (m) => sendDev(m), smtp: sendSmtp, ses: sendSmtp, brevo: sendBrevo, mailrelay: sendMailrelay, mailrelaypresidente: sendMailrelayPresidente, sendpulse: sendSendpulse, mailersend: sendMailersend };
+const SENDERS: Record<string, Sender> = { dev: async (m) => sendDev(m), smtp: (m, from) => sendSmtp(m, from), ses: (m, from) => sendSmtp(m, from, "ses"), brevo: sendBrevo, mailrelay: sendMailrelay, mailrelaypresidente: sendMailrelayPresidente, sendpulse: sendSendpulse, mailersend: sendMailersend };
 
 /**
  * Tenta cada provedor da cadeia, na ordem; se um falhar (credencial ausente, sandbox, fora do ar), passa ao próximo,
@@ -171,10 +181,11 @@ export async function deliver(m: Mail, providers: string[], senders: Record<stri
     // Admission failures are not transport failures and never cause an unrecorded provider call.
     const admission = await opts.journal?.begin(p,from);
     if (admission?.alreadyAccepted) return p;
-    let failure: unknown,accepted=false;
-    try { await send(m,from); accepted=true; } catch(error) { failure=error; }
+    let failure: unknown,accepted=false,providerReceipt: string | undefined, conflictingReceipt=false;
+    const capture = (raw: unknown) => { const id=receiptId(raw); if (!id) return; if (providerReceipt && providerReceipt!==id) conflictingReceipt=true; providerReceipt=id; };
+    try { const result=await send(m,from,capture); accepted=true; capture(result); } catch(error) { failure=error; }
     if(admission?.id) {
-      try { await opts.journal!.finish(admission.id,accepted,failure); }
+      try { await opts.journal!.finish(admission.id,accepted,failure,providerReceipt&&!conflictingReceipt?{providerId:providerReceipt}:undefined); }
       catch { console.error("mail_attempt_result_unconfirmed"); }
     }
     if(accepted) {

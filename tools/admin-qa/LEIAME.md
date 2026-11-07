@@ -46,3 +46,5 @@ O teste rejeita requisição que use modo `executar` e nunca preenche a palavra 
 ## Prévia protegida: HTTP compilado e navegador
 
 `mail-preview.mjs` usa o ambiente fictício autenticado 3032/54345 com as mesmas guardas de `mail-history.mjs`. Prepara uma mensagem criptografada de teste sem transporte, exige sessão Total e confirmação extra por stub local, confere máscara/auditoria no endpoint real e abre o HTML transformado em iframe sandbox vazio. Nas seis larguras (320, 390, 768, 992, 1280, 1920), nenhuma requisição externa, exceção ou erro de console é tolerado; o frame não acessa o pai e não contém scripts/recursos ativos. Usa `QA_PLAYWRIGHT_MODULE`/`QA_CHROMIUM` se necessário, `QA_OUTPUT_DIR` para capturas/relatório. Revoga a sessão e fecha o navegador ao terminar. Não envia e-mails nem muda assinaturas.
+
+O roteiro de transporte também exige IDs de provedor nulos no transporte dev: um nome de arquivo local não pode ser apresentado como recibo externo. Os IDs dos adapters reais são cobertos por testes com HTTP/SMTP fictícios; esse roteiro compilado não chama provedores reais.

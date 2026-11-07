@@ -2,9 +2,10 @@ import { prepareMessage,beginAttempt,finishAttempt,messageMetadata,linkOutbox } 
 import { contentFingerprint } from "./archive-codec";
 import { frozenReplyTo,withReplyTo } from "./payload";
 import type { Mail } from "./index";
+import type { TransportReceipt } from "./receipt";
 export class MailJournalError extends Error {}
 export class MailTransportRejected extends Error {}
-export type DeliveryJournal = {begin(provider:string,from:string):Promise<{id?:string;alreadyAccepted?:boolean}>;finish(id:string,accepted:boolean,error?:unknown):Promise<void>};
+export type DeliveryJournal = {begin(provider:string,from:string):Promise<{id?:string;alreadyAccepted?:boolean}>;finish(id:string,accepted:boolean,error?:unknown,receipt?:TransportReceipt):Promise<void>};
 /** No policy is silently selected; content retention is enabled only by explicit deployment configuration. */
 export function archivePolicy() {
   const value=process.env.MAIL_ARCHIVE_RETENTION;
@@ -24,8 +25,8 @@ export function journalFor(messageId:string,retryUncertain:boolean):DeliveryJour
       if(result.error==="already_accepted")return {alreadyAccepted:true};
       throw new MailJournalError("mail_record_"+result.error);
     },
-    async finish(id,accepted,error){
-      const result=await finishAttempt(id,accepted?"accepted":error instanceof MailTransportRejected?"rejected":"indeterminate",accepted?{}:{errorCode:error instanceof MailTransportRejected?"provider_rejected":"transport_uncertain"});
+    async finish(id,accepted,error,receipt){
+      const result=await finishAttempt(id,accepted?"accepted":error instanceof MailTransportRejected?"rejected":"indeterminate",{providerId:receipt?.providerId,...(accepted?{}:{errorCode:error instanceof MailTransportRejected?"provider_rejected":"transport_uncertain"})});
       if(!result.ok)throw new MailJournalError("mail_result_"+result.error);
     }
   };
