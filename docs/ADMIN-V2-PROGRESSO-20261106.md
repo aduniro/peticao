@@ -51,3 +51,14 @@ A prévia isolada foi reiniciada em `http://127.0.0.1:3031/admin`, com banco fic
 Novo achado para corrigir: Leitura ainda vê alguns atalhos incompatíveis e “Liberar CPF”, embora as rotas recusem a operação. Ajustar visibilidade sem mudar rótulos/estética. Avisos pendentes consolidados no candidato em `docs/ADMIN-AVISOS-PARA-APROVACAO.md`; não interpretar silêncio como aprovação.
 
 Conferência SSH somente leitura: 333 arquivos de código da VPS sem diferenças da referência após os formulários; sete arquivos críticos do candidato iguais por SHA-256. Evidência `production-contract-reset.json`. Nenhum dado de assinatura ou valor de configuração inspecionado nesta conferência. Etapas restantes e deploy continuam pendentes; não reduzir o escopo do plano.
+
+
+## Checkpoint seguinte — controles visíveis conforme o nível
+
+`c169f57` extrai a política pura de níveis para uso compartilhado com o navegador, preservando os exports do backend e recusando níveis desconhecidos. Menu, atalhos do painel, “Ver pendentes” e liberação de CPF seguem o nível real. Total mantém todos os itens; a barra inferior preserva as sete posições. CSS, rótulos e avisos foram preservados.
+
+Validação atual: **261/261** testes cumulativos, tipos e build aprovados (`stage01-cumulative-role-ui.log`, `stage01-typecheck-role-ui.log`, `stage01-build-role-ui.log`). `e07fdac` registra **144 casos de QA** em quatro níveis e seis larguras, cobrindo controles, cinco páginas, posições Menu/Filtros, acesso direto, erros HTTP/rede/exceções e rolagem horizontal. Relatório: `visual-role-ui-isolated/access-pages.json`.
+
+A execução inicial detectou cancelamentos de consultas da página anterior ao reutilizar a aba; o registro foi preservado. A execução aprovada usa uma página por caso e não filtra mensagens de erro. O servidor temporário 3032 foi encerrado e as sessões foram revogadas; a prévia 3031 permanece ativa. O achado específico de controles indevidos para Leitura está corrigido no candidato.
+
+Seguem pendentes os avisos em aprovação, feedback de contato/convites, revisão das demais telas/contratos e Etapas 2–7. Não houve deploy, alteração da VPS nem modificação da revisão de CPFs. Este checkpoint não conclui o plano.
