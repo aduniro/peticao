@@ -1,6 +1,6 @@
 # Avisos administrativos aguardando aprovação
 
-Regra do responsável: “ANTES DE ALTERAR QUALQUER AVISO OU INFORMAÇÃO QUE APAREÇA PARA O USUÁRIO, VOCÊ DEVE ME PERGUNTAR ANTES.” As propostas abaixo já foram perguntadas no chat e continuam **pendentes**. Este documento não as ativa na interface e não trata ausência de resposta como aprovação. O trabalho independente prossegue; a publicação não pode conter informação contraditória.
+Regra do responsável: “ANTES DE ALTERAR QUALQUER AVISO OU INFORMAÇÃO QUE APAREÇA PARA O USUÁRIO, VOCÊ DEVE ME PERGUNTAR ANTES.” As propostas abaixo foram perguntadas no chat; o status individual indica quais foram aprovadas e quais continuam **pendentes**. Este documento não as ativa na interface e não trata ausência de resposta como aprovação. O trabalho independente prossegue; a publicação não pode conter informação contraditória.
 
 ## AV-1 — Minha conta
 
@@ -47,9 +47,9 @@ Evidência: o componente mostra `a.efeito` estático, mesmo quando `saida.efeito
 
 Propostas perguntadas no chat, ainda pendentes: “Histórico de ações”, “Conferir resultado” e “A conferência consulta o resultado do executor; não executa a ação novamente”. Não inseridas na interface. O backend pode prosseguir sem ativar novos textos. O resultado da publicação deverá distinguir pedido aceito, publicação concluída e resultado inconclusivo, sem rotular falha do deploy como ausência de efeitos.
 
-## AV-8 — Triagem no Contato
+## AV-8 — Triagem no Contato (aprovado em07/11/2026)
 
-Perguntados no chat, ainda pendentes: “Análise automática”, “Reanalisar”, “Evidências”, “Sugestão de resposta” e “Revise a análise antes de responder. Nenhuma resposta é enviada automaticamente”. O backend usa códigos estruturados e não ativa esses textos. Categorias/diagnósticos/minutas ainda precisam de apresentação revisada, sem transformar proposta automática em confirmação ou ação executada.
+Aprovação explícita recebida por pergunta nativa: “Aprovar estes textos”. Autorizados somente “Análise automática”, “Reanalisar”, “Evidências”, “Sugestão de resposta” e “Revise a análise antes de responder. Nenhuma resposta é enviada automaticamente”. Não autoriza outros AVs, envio automático, deploy ou merge com a VPS. A integração visual local desses cinco textos está em validação. Os dados estruturados e as sugestões são apresentados como revisão; nenhuma proposta é confirmação ou ação executada. Não amplia aprovação dos demais avisos.
 
 ## AV-9 — prévia protegida de mensagens (pendente)
 

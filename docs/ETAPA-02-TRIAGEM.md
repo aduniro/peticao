@@ -36,3 +36,10 @@ O roteiro `tools/admin-qa/triage.mjs` atravessou os handlers compilados, sessão
 Evidências em `/mnt/dev/peticao/.cache/admin-audit-20261106/`: `stage02-cumulative-hmac.log`, `stage02-build-hmac.log`, `stage02-typecheck-hmac-serial.log`, `stage02-migration.log`, `stage02-triage-expanded-final.log`, `stage02-runtime-hmac.log` e `runtime-triage-hmac/triage.json`. O HMAC foi incluído na revisão final e a suíte/build/HTTP foram repetidos sobre essa versão. A execução de tipos paralela ao build encontrou arquivos gerados do Next removidos pelo próprio build; o log foi preservado e a conferência serial posterior passou. Não repetir essa concorrência entre build e tipos.
 
 Os avisos AV-1–AV-8 foram reunidos e enviados somente ao dono por e-mail para revisão; continuam pendentes de resposta. Prévia 3031 retomada; servidor temporário 3032 encerrado. Nenhum deploy ou alteração da VPS/revisão local de CPFs nesta etapa.
+
+
+## Atualização07/11 — AV-8 aprovado e interface em validação
+
+O dono respondeu explicitamente “Aprovar estes textos” para os cinco textos do AV-8. A integração local acrescenta um expansor por contato, usando as classes existentes do admin-v2, sem CSS/layout global novo. A leitura é sob demanda; Reanalisar enfileira somente a análise. Histórico, evidências e sugestão vinculada à revisão atual não acionam o compositor de envio. Perda de resposta de POST é conciliada por GET, sem repetição automática; consultas antigas são canceladas ao fechar/desmontar ou concluir a escrita. Campos de posse do trabalhador e provas de sugestão não são exibidos.
+
+Dois testes de apresentação e a checagem de tipos dirigida passaram. A primeira cumulativa478 passou, mas o build identificou tipagem de ref após await; foi refatorado o cancelamento e iniciada uma rodada cumulativa/build/tipos sobre a correção. A versão congelada94c9cc0 continua em3031/Tailnet. Este checkpoint é preparação de interface, não conclusão validada: o QA de navegador e resultados finais serão registrados após observados. Não há deploy/merge com VPS nem aprovação de outros AVs.
