@@ -97,4 +97,13 @@ Pedidos de código agora reservam o desafio e sua auditoria na mesma transação
 
 Gestão de usuários passa pelo fluxo de confirmação extra já existente: a página redireciona antes de exibir os formulários, e o POST exige novamente a confirmação. Não foram introduzidos avisos ou rótulos. Os testes de handler incluem os quatro níveis, origem externa, expiração, ausência de efeitos antes da autorização e autoria real.
 
-Verificação específica: **24/24** testes de contas/step-up/handler e tipos aprovados (`stage01-stepup-atomic.log`, `stage01-typecheck-stepup.log`). A regressão cumulativa passou **256/256** (`stage01-cumulative-stepup.log`); o build desta revisão ainda está em andamento. O status de convite/redefinição que é exibido após falha de transporte ainda precisa ser revisto; não declarar todos os controles de conta concluídos. O aviso de Minha conta, os rótulos de contato, QA completo e Etapas 2–7 continuam pendentes.
+Verificação específica: **24/24** testes de contas/step-up/handler e tipos aprovados (`stage01-stepup-atomic.log`, `stage01-typecheck-stepup.log`). A regressão cumulativa passou **256/256** (`stage01-cumulative-stepup.log`); o build de produção desta revisão também passou (`stage01-build-stepup.log`). O status de convite/redefinição que é exibido após falha de transporte ainda precisa ser revisto; não declarar todos os controles de conta concluídos. O aviso de Minha conta, os rótulos de contato, QA completo e Etapas 2–7 continuam pendentes.
+
+
+### Regressão de navegador do editor de contato
+
+`tools/admin-qa/contact.mjs` foi promovido ao repositório com alvo exclusivo de QA local (servidor 3031, banco 54345, e-mail dev). A ferramenta preserva linhas existentes e usa apenas uma mensagem fictícia marcada. Nas seis larguras (320, 390, 768, 992, 1280, 1920), passou: abrir editor, preencher assunto/corpo, abortar uma única requisição de prévia, preservar rascunho, liberar botão e obter a prévia na tentativa seguinte. Sem exceções de navegador, HTTPs de erro ou falhas de rede não injetadas; sem rolagem horizontal. Nenhum botão Enviar foi acionado.
+
+Relatório: `/mnt/dev/peticao/.cache/admin-audit-20261106/visual/contact-editor.json`; capturas `contact-editor-*.png`; log `stage01-contact-browser.log`. A captura de 320 px foi inspecionada. As capturas de página inteira conservam a posição de rolagem provocada pela interação; não devem ser usadas como prova de posição do cabeçalho no topo. Essa prova funcional não substitui comparação estética integral, teste de card/entrega real ou matriz de páginas por nível. A prévia foi reiniciada somente depois de o build terminar.
+
+Checkpoint funcional da confirmação extra: `aada17c`. Continuam pendentes os avisos já submetidos à aprovação, o resultado de convites/redefinições na interface, demais controles, QA das outras telas e Etapas 2–7. Nenhum deploy nesta rodada.
