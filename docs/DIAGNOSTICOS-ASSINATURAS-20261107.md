@@ -1,6 +1,6 @@
 # Diagnóstico das tentativas de assinatura
 
-Candidato separado do admin-v2, baseado no snapshot efetivo da VPS de 07/11/2026 (0483a20). Nenhuma publicação realizada nesta etapa.
+Candidato separado do admin-v2, baseado no snapshot efetivo da VPS de 07/11/2026 (0483a20). Publicado em 07/11/2026 às 17:56:31 UTC, com verificação interna e externa concluída.
 
 ## Escopo e limites
 
@@ -37,3 +37,16 @@ Validação final: baseline 176/176 e candidato 184/184; ambos os builds passara
 Manifesto fresco confirmou app e stage integrais iguais ao snapshot testado. Publicação limitada a 13 arquivos de runtime, com manifesto integral de 675 arquivos e backup privado fresco de banco/app/stage validado antes de qualquer troca. O script compila `app.new` antes da troca e reverte somente código se necessário; não restaura banco sobre novas assinaturas. A tabela de diagnóstico é aditiva, criada transacionalmente pelo próprio módulo. Nenhum dado de assinante é atualizado por migração.
 
 Evidências locais preservadas na pasta `.cache/signature-diagnostics-20261107/`: `baseline-final.log`, `candidate-final.log`, `build.log`, `baseline-build.log`, `http-qa-result.json`, `patch-manifest.json`, `full-baseline-manifest.json`, snapshots frescos e registros de publicação. A aprovação visual e a publicação ainda devem ser registradas após sua verificação efetiva.
+
+
+## Publicação comprovada
+
+Concluída em 07/11/2026 às 17:56:31 UTC. A primeira execução falhou antes da compilação devido à permissão de diretórios novos do stage; houve rollback de código e health 200, sem restaurar o banco. O publicador foi corrigido para criar ancestrais legíveis pelo usuário do stage. A segunda execução compilou e publicou com sucesso; manifesto completo de app e stage corresponde exatamente à baseline mais os 13 arquivos autorizados. Configuração permanece idêntica.
+
+Comparação visual em 360, 390, 768, 1024, 1440 e 1920 pixels: screenshots idênticos pixel a pixel; versões de 390 e 1440 também inspecionadas visualmente. O navegador confirmou `client_invalid` de e-mail antes de qualquer POST de assinatura; o valor fictício digitado e abandonado não apareceu em nenhum payload técnico. O primeiro harness tinha seletor incorreto de botão; o harness corrigido passou.
+
+Health externo com User-Agent de navegador: inicial, contador, privacidade e confirmação 200; diagnóstico administrativo sem sessão 401. O User-Agent padrão de Python e a saída da própria VPS receberam 403 da Cloudflare, tratados como inconclusivos antes da verificação externa bem-sucedida. Evento técnico sintético sem valores foi recebido com 204, conferido no banco e removido; não deixou tentativa artificial na análise. Diff do schema mostra apenas `signup_diagnostics`, sua chave primária e seus quatro índices. Invariantes das 12.295 assinaturas existentes foram comparados antes/depois: IDs, hashes de CPF/e-mail, criação, consentimento e versão textual preservados; nenhuma restauração ou atualização em massa de assinaturas.
+
+Backups e registros privados da VPS: `/root/peticao-recovery/signup-diagnostics-deploys/20261107T1750Z/`. Evidências locais adicionais: `deployed-status.json`, `external-health.json`, `signature-invariants-result.json`, `after-manifest.json`, `schema-diff.txt`, `visual/pixel-result.json` e `visual/client-result.json`. Runtime publicado é o pacote vinculado por `patch-manifest.json`; documentação, fixtures e ferramentas locais não foram incluídas.
+
+Limites: a telemetria pode não chegar por DNT/GPC, bloqueios, encerramento do navegador ou rede; sinais de saída não comprovam impedimento. Retenção é de 30 dias. O contato submetido só fica disponível se consentido, válido e cifrado com a chave existente. Não houve envio de e-mail real de participante ou consulta real de CPF durante QA. Admin-v2 e WAHA não fazem parte desta publicação.
