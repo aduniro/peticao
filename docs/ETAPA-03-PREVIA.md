@@ -38,7 +38,7 @@ Continuam pendentes interface, política de arquivo/retenção de todas as cópi
 
 ## Resultado final do checkpoint
 
-**343/343 cumulativos**, oito específicos, build, tipos após build e HTTP compilado + navegador nas seis larguras aprovados. O relatório `runtime-mail-preview/mail-preview.json` comprova zero requisições do documento a rastreadores, sandbox sem acesso ao pai, máscaras e autor da auditoria. Capturas 320/390 foram também inspecionadas visualmente. Sessão fictícia revogada, navegador e servidor temporário 3032 encerrados; prévia 3031 retomada e `/admin` respondeu 200. A pasta de e-mails dev deste ensaio permaneceu vazia; arquivos de assinaturas/mensagens/tentativas/filas foram preservados pelas consultas.
+**343/343 cumulativos**, oito específicos, build, tipos após build e HTTP compilado + navegador nas seis larguras aprovados. O relatório `runtime-mail-preview/mail-preview.json` comprova zero requisições do documento a rastreadores, sandbox sem acesso ao pai, máscaras e autor da auditoria. Capturas 320/390 foram também inspecionadas visualmente. Sessão fictícia revogada, navegador e servidor temporário 3032 encerrados; prévia 3031 retomada e `/admin` respondeu 200. A pasta de e-mails dev deste ensaio permaneceu vazia; registros de assinaturas/mensagens/tentativas/filas foram preservados pelas consultas.
 
 A comparação de dependências (`stage03-preview-dependency-comparison.json`) confirma 150 versões anteriores preservadas, sem pacotes removidos/atualizados; só parse5/entities foram acrescentados. O build final é `stage03-preview-build.log`; os logs de tentativa de preparação/interrupção anteriores não são certificação de build. O aviso de CSS já existente foi conservado sem alteração visual solicitada.
 
