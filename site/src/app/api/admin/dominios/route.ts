@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exigirNivel } from "@/lib/admin-api";
-import { config } from "@/lib/config";
+import { exigirNivel, quemAge } from "@/lib/admin-api";
 import { decideDomain, KIND_LABELS, type DomainKind } from "@/lib/institutional";
 import { pendingBySource } from "@/lib/domain-import";
 import { requestOrigin } from "@/lib/net";
@@ -10,12 +9,14 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const bloqueio = await exigirNivel(req, "edicao");
   if (bloqueio) return bloqueio;
+  const actor = await quemAge(req);
+  if (!actor) return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 401 });
   const f = await req.formData();
   const url = new URL("/admin/dominios", requestOrigin(req.headers));
-  const by = config.approverEmail() || "admin";
+  const by = actor.email;
   const str = (k: string) => String(f.get(k) ?? "").trim();
   const kindRaw = str("kind");
-  const kind = (kindRaw in KIND_LABELS ? kindRaw : "outro") as DomainKind;
+  const kind = (Object.prototype.hasOwnProperty.call(KIND_LABELS, kindRaw) ? kindRaw : "outro") as DomainKind;
   try {
     const action = str("action");
     if (action === "approve" || action === "reject") {

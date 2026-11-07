@@ -1,5 +1,5 @@
 import { domainToASCII } from "node:url";
-import { audit, query } from "./db";
+import { audit, query, tx } from "./db";
 import freemailList from "./freemail.json";
 
 /**
@@ -107,28 +107,31 @@ export async function decideDomain(domain: string, status: "approved" | "rejecte
   const d = domainToASCII(domain.trim().toLowerCase());
   if (!d || !d.includes(".")) throw new Error("Domínio inválido.");
   if ([...FREEMAIL].some((f) => domainMatches(d, f))) throw new Error("Provedores de e-mail gratuitos não podem ser institucionais.");
-  await query(
-    `INSERT INTO institutional_domains(domain,kind,institution,source,status,evidence_url,decided_by,updated_at)
-     VALUES($1,$2,$3,'manual',$4,$5,$6,$7)
-     ON CONFLICT (domain) DO UPDATE SET kind=EXCLUDED.kind, institution=COALESCE(EXCLUDED.institution, institutional_domains.institution),
-       status=EXCLUDED.status, evidence_url=COALESCE(EXCLUDED.evidence_url, institutional_domains.evidence_url), decided_by=EXCLUDED.decided_by, updated_at=EXCLUDED.updated_at`,
-    [d, opts.kind ?? "outro", opts.institution ?? null, status, opts.evidenceUrl ?? null, opts.by, new Date().toISOString()]
-  );
-  _clearDomainCache();
-  let updated = 0;
-  if (status === "approved") {
-    // Sobe retroativamente quem já assinou com esse domínio (e subdomínios), respeitando a regra de discentes.
-    const approved = await approvedDomains();
-    const sigs = (await query<{ id: number; email: string }>(
-      "SELECT id,email FROM signatures WHERE split_part(email,'@',2) = $1 OR RIGHT(split_part(email,'@',2), LENGTH($1)+1) = '.' || $1", [d])).rows;
-    for (const s of sigs) {
-      const k = await institutionalKind(s.email);
-      const info = k ? await institutionInfo(s.email) : { domain: null, institution: null };
-      await query("UPDATE signatures SET email_domain_kind=$1, email_domain=$2, email_institution=$3 WHERE id=$4", [k, info.domain, info.institution, s.id]);
-      updated++;
+  const updated = await tx(async client => {
+    // Manual decisions overlap for parent/subdomains; serialize them before touching signer metadata.
+    await client.query("SELECT pg_advisory_xact_lock(hashtext('institutional-domain-decision'))");
+    await client.query(
+      `INSERT INTO institutional_domains(domain,kind,institution,source,status,evidence_url,decided_by,updated_at)
+       VALUES($1,$2,$3,'manual',$4,$5,$6,$7)
+       ON CONFLICT (domain) DO UPDATE SET kind=EXCLUDED.kind, institution=COALESCE(EXCLUDED.institution, institutional_domains.institution),
+         status=EXCLUDED.status, evidence_url=COALESCE(EXCLUDED.evidence_url, institutional_domains.evidence_url), decided_by=EXCLUDED.decided_by, updated_at=EXCLUDED.updated_at`,
+      [d, opts.kind ?? "outro", opts.institution ?? null, status, opts.evidenceUrl ?? null, opts.by, new Date().toISOString()]
+    );
+    let count = 0;
+    if (status === "approved") {
+      // Use the same classifier, with rules from this transaction rather than the process cache.
+      const rules = (await client.query<ApprovedDomain>("SELECT domain,kind,status,institution FROM institutional_domains WHERE status IN ('approved','rejected') AND kind <> 'universidade-estrangeira'")).rows;
+      const sigs = (await client.query<{ id: number; email: string }>("SELECT id,email FROM signatures WHERE split_part(email,'@',2) = $1 OR RIGHT(split_part(email,'@',2), LENGTH($1)+1) = '.' || $1 ORDER BY id FOR UPDATE", [d])).rows;
+      for (const signer of sigs) {
+        const domain = emailDomain(signer.email), classification = domain ? classifyDomain(domain, rules) : null;
+        const rule = classification && domain ? rules.filter(r => r.status !== "rejected" && domainMatches(domain, r.domain)).sort((a, b) => b.domain.length - a.domain.length)[0] : null;
+        await client.query("UPDATE signatures SET email_domain_kind=$1,email_domain=$2,email_institution=$3 WHERE id=$4", [classification?.kind ?? null, classification && domain ? registrableDomain(domain) ?? domain : null, rule?.institution ?? null, signer.id]);
+        count++;
+      }
     }
-    void approved;
-  }
-  await audit(status === "approved" ? "domain_approved" : "domain_rejected", null, { domain: d, kind: opts.kind ?? "outro", by: opts.by, updated });
+    await audit(status === "approved" ? "domain_approved" : "domain_rejected", null, { domain: d, kind: opts.kind ?? "outro", by: opts.by, updated: count }, client);
+    return count;
+  });
+  _clearDomainCache();
   return updated;
 }

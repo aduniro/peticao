@@ -26,3 +26,9 @@ A ferramenta cria/reutiliza somente as contas fixas `qa-access-<nivel>@example.t
 A revisão de visibilidade também confere controles do painel inicial e links da gaveta por nível, o atalho inferior de E-mails e o formulário de liberação de CPF. No celular abre/fecha a gaveta e exige Menu à esquerda/Filtros à direita na lista de assinaturas. A execução reprova exceções, respostas HTTP de erro, requisições que falham e rolagem horizontal; não ignora erros de rede genericamente.
 
 Cada caso usa uma página nova e verifica erros antes do encerramento deliberado dessa página. Isso evita atribuir ao caso seguinte o cancelamento de consultas da página anterior durante uma navegação. O roteiro não filtra `ERR_ABORTED`, `NetworkError` ou `ChunkLoadError` por texto: qualquer falha durante o caso ativo continua reprovando a execução.
+
+## Configurações: falha, recuperação e concorrência no cliente
+
+`settings.mjs` usa o servidor autenticado 3032 e o banco fictício 54345, com as mesmas variáveis do QA de acesso. Cria/reutiliza somente `qa-settings@example.test`, valida seis larguras e modifica apenas `painel_popup_estado`, cujo valor anterior é restaurado no encerramento. A sessão emitida é revogada. Não usar no banco de produção nem em dados da revisão.
+
+O teste segura uma requisição para confirmar que ambos os interruptores ficam indisponíveis enquanto há gravação pendente, injeta uma falha de rede e exige a preservação dos estados anteriores. Depois deixa uma gravação atravessar o handler real e verifica resultado e autor na auditoria. O aborto deliberado é associado à requisição exata; as demais falhas de rede, HTTP e JavaScript reprovam a execução. As capturas/relatório ficam em `QA_OUTPUT_DIR`.

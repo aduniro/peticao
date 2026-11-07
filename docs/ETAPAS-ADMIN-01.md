@@ -155,3 +155,22 @@ Relatório: `/mnt/dev/peticao/.cache/admin-audit-20261106/visual-role-ui-isolate
 O achado específico de controles indevidos para Leitura está corrigido no candidato local. A primeira execução com cancelamentos de navegação foi preservada; a repetição usa páginas separadas, sem filtro de mensagens de erro. O servidor de QA 3032 foi encerrado e suas sessões foram revogadas; a prévia 3031 continua ativa.
 
 A Etapa 1 ainda não está liberada: avisos/estados de contato e convites, aviso de Minha conta, revisão de outros controles/telas e conferência final continuam pendentes. As Etapas 2–7 permanecem no objetivo; este checkpoint não conclui a integração nem autoriza deploy. Nenhuma alteração da VPS ou da revisão local de CPFs nesta rodada.
+
+## Configurações e curadoria de domínios — próxima revisão local
+
+Achados: a preferência era persistida antes da auditoria; decisões de domínio e atualização de metadados também eram separadas da auditoria; a rota usava autor de configuração/genérico e `in` para aceitar tipos, incluindo propriedades herdadas. O candidato passa a salvar preferência/auditoria atomicamente, registra o autor da sessão e usa apenas tipos próprios do catálogo. Tipos desconhecidos mantêm o fallback existente para `outro`; não foram alterados rótulos ou avisos.
+
+Cada decisão manual de domínio usa transação e trava no banco, com atualização dos três metadados institucionais e auditoria. A classificação continua usando a função existente; regras são lidas na própria transação, sem publicar estado não confirmado no cache do processo. Invalidação de cache ocorre depois do commit. O comportamento anterior de rejeição foi preservado; o lote por fonte ainda é uma sequência de decisões por domínio, não uma transação única do lote.
+
+Os testes iniciais passaram para rollback de auditoria/metadados, preservação de todos os demais campos dos assinantes, autor real, tipos herdados e regressão institucional. A suíte cumulativa inclui também duas decisões simultâneas sobre domínio/subdomínio e permissões de curadoria para Leitura/Edição. A interface de configurações bloqueia ambos os interruptores durante uma gravação pendente; o QA de navegador correspondente está preparado, ainda não executado. Tipos, suíte cumulativa **265/265** e build aprovados (`stage01-typecheck-settings-domains.log`, `stage01-cumulative-settings-domains.log`, `stage01-build-settings-domains.log`).
+
+
+### Configurações validadas no navegador
+
+O teste `tools/admin-qa/settings.mjs` passou nas seis larguras: mantém ambos os interruptores bloqueados durante uma requisição pendente, preserva os estados após aborto deliberado da requisição exata e recupera com gravação real pelo handler/auditoria. Autor confirmado pela sessão, sem exceções, erros HTTP inesperados, falhas de rede não injetadas ou rolagem horizontal.
+
+Evidências: `/mnt/dev/peticao/.cache/admin-audit-20261106/visual-settings/settings.json`, `settings-<largura>.png` e `stage01-settings-browser.log`. A captura de 390 px foi inspecionada visualmente. A preferência fictícia modificada foi restaurada ao valor anterior; a sessão do teste foi revogada. O servidor temporário 3032 foi encerrado; a prévia 3031 permanece ativa.
+
+A correção de domínios foi exercitada em testes de handlers/banco com dados fictícios, não em curadoria real da VPS. O classificador público e seus critérios não foram reescritos. A rejeição preserva o comportamento anterior; a operação por fonte continua sendo uma sequência de transações por domínio. Não afirmar atomicidade de lote por fonte.
+
+Próximo contrato a revisar: `acoes/index.ts` ainda registra ação/auditoria depois do efeito, com gravações separadas. Isso é distinto do journal/protocolo do Terminal já corrigido; a Central ainda exige revisão antes da liberação. Avisos em aprovação, demais telas/contratos e Etapas 2–7 continuam pendentes. Nenhum deploy ou alteração da VPS/SQLite de revisão nesta rodada.

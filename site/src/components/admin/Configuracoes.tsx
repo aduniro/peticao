@@ -26,7 +26,7 @@ export default function Configuracoes({ inicial, podeEditar }: { inicial: Config
         <div className="v2-cfg" key={i.chave}>
           <div><h3>{i.titulo}</h3><p className="v2-sub">{i.texto}</p></div>
           <label className="v2-chave">
-            <input type="checkbox" role="switch" aria-label={i.titulo} checked={cfg[i.chave]} disabled={!podeEditar || ocupado === i.chave} onChange={(e) => mudar(i.chave, e.target.checked)} />
+            <input type="checkbox" role="switch" aria-label={i.titulo} checked={cfg[i.chave]} disabled={!podeEditar || ocupado !== null} onChange={(e) => mudar(i.chave, e.target.checked)} />
             <span aria-hidden="true" />
             <b>{cfg[i.chave] ? "Ligado" : "Desligado"}</b>
           </label>
