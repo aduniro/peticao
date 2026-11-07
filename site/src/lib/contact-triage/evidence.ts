@@ -2,6 +2,7 @@ import { hmac } from "../security";
 import type { PoolClient } from "pg";
 import { tx } from "../db";
 import { redact, type Evidence, type SignatureEvidence } from "./analyze";
+import { collectOutbound } from "./outbound";
 export const CONTACT_SQL = "SELECT id,kind,created_at,left(message,4000) message,lower(email) email FROM contact_messages WHERE id=$1";
 export const inputHash = (row: Record<string, unknown>) => hmac("contact-triage-input-v1:" + JSON.stringify([row.id,row.kind,row.created_at,row.message,row.email]));
 const iso = (value: unknown) => value instanceof Date ? value.toISOString() : String(value);
@@ -32,6 +33,17 @@ export async function collectEvidenceWith(client: PoolClient,id: number): Promis
   if (evidence.events.length > 10) { evidence.events.pop(); evidence.truncated.push("events"); }
   evidence.suppression = await read("suppression", "SELECT reason,created_at FROM email_suppressions WHERE lower(email)=$1", [row.email], null, rows => rows[0] ? { reason: rows[0].reason,created_at: iso(rows[0].created_at) } : null);
   evidence.queue = await read("queue", "SELECT count(*) FILTER (WHERE status='pending')::int pending,count(*) FILTER (WHERE status='failed')::int failed FROM mail_outbox WHERE lower(to_addr)=$1 AND kind IN ('confirmacao','reenvio')", [row.email], null, rows => rows[0]);
+  await client.query("SAVEPOINT outbound_source");
+  try {
+    const outbound = await collectOutbound(client, row.email);
+    evidence.outbound = outbound.evidence;
+    evidence.truncated.push(...outbound.truncated);
+    await client.query("RELEASE SAVEPOINT outbound_source");
+  } catch {
+    await client.query("ROLLBACK TO SAVEPOINT outbound_source");
+    await client.query("RELEASE SAVEPOINT outbound_source");
+    evidence.unavailable.push("outbound");
+  }
   return { evidence,inputHash: inputHash(row) };
 }
 /** Used with a row lock at finalization so edited contacts cannot receive stale analyses. */

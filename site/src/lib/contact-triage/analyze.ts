@@ -1,5 +1,6 @@
 import { findIfes } from "../ifes-data";
 import { findByName, municipalityById, regionCriteria, regionOf } from "../geo-data";
+import { outboundReasons, type OutboundEvidence } from "./outbound";
 
 export const ENGINE = "contact-triage-v1";
 export type Category = "remover" | "cpf" | "campus" | "expirou" | "corrigir" | "email_recusado" | "nao_recebeu" | "erro" | "duvida";
@@ -46,6 +47,7 @@ export type Evidence = {
   snapshotAt: string; signatures: SignatureEvidence[];
   mail: { ts: string; provider: string; status: string; kind: string }[];
   events: { ts: string; provider: string; type: string }[];
+  outbound?: OutboundEvidence;
   suppression: { reason: string; created_at: string } | null;
   queue: { pending: number; failed: number } | null;
   unavailable: string[]; truncated: string[];
@@ -74,12 +76,14 @@ export function analyze(e: Evidence): Analysis {
   }
   if (signature.status !== "pending") { out.reasons.push("registration_not_pending"); return out; }
   out.state = "review";
+  out.reasons.push(...outboundReasons(e.outbound, e.snapshotAt));
   if (e.suppression) { out.reasons.push("address_suppressed"); out.suggestedActions.push("review_suppression_reason"); }
   if (e.events.some(event => ["hard_bounce", "blocked", "complaint"].includes(event.type))) out.reasons.push("address_event_not_message_linked");
   if (signature.token_expires_at && Date.parse(signature.token_expires_at) < Date.parse(e.snapshotAt)) out.reasons.push("confirmation_link_expired");
-  if (e.mail.some(mail => mail.status === "sent")) { out.reasons.push("provider_accepted_not_delivery_proof"); out.suggestedActions.push("check_delivery_evidence"); }
+  if (e.mail.some(mail => mail.status === "sent") && !out.reasons.includes("provider_accepted_not_delivery_proof")) out.reasons.push("provider_accepted_not_delivery_proof");
+  if (out.reasons.includes("provider_accepted_not_delivery_proof")) out.suggestedActions.push("check_delivery_evidence");
   if (e.queue?.pending) out.reasons.push("confirmation_queued");
-  if (e.mail.some(mail => mail.status === "failed") || e.queue?.failed) out.reasons.push("send_failure_recorded");
+  if ((e.mail.some(mail => mail.status === "failed") || e.queue?.failed) && !out.reasons.includes("send_failure_recorded")) out.reasons.push("send_failure_recorded");
   if (!out.reasons.length) { out.state = "inconclusive"; out.reasons.push("no_delivery_evidence"); }
   return out;
 }

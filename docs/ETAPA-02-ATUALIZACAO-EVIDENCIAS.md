@@ -6,7 +6,7 @@
 
 O coletor existente mantém o snapshot consistente e os campos permitidos. O comparador usa HMAC em domínio próprio, com chaves JSON ordenadas: a ordem de propriedades do JSONB não vira mudança. Não copia texto livre do contato. A hora da coleta é ignorada; a transição efetiva de expiração de link de um cadastro pendente é considerada. Link antigo de cadastro confirmado não dispara revisão apenas por vencer.
 
-O processo compara o input do contato e as evidências permitidas do último diagnóstico concluído. Mudanças no cadastro, log de envio, eventos negativos por endereço, supressão ou contagem da fila podem gerar nova revisão. A consulta continua limitada às fontes/janelas do coletor atual. Novos eventos individuais positivos e mudanças nas bases estáticas de campus precisam de integração própria; não afirmar que todas as fontes possíveis já são observadas.
+O processo compara o input do contato e as evidências permitidas do último diagnóstico concluído. Mudanças no cadastro, log de envio, eventos negativos por endereço, supressão ou contagem da fila podem gerar nova revisão. O complemento descrito em `ETAPA-02-EVIDENCIAS-MENSAGENS.md` acrescenta mensagens/eventos individuais vinculados e comparação da análise recalculada, incluindo contexto público de campus. A consulta continua limitada às fontes/janelas documentadas; não afirmar que todas as fontes possíveis já são observadas.
 
 Não há consulta à API CPF-Brasil, SSH, busca externa ou envio. CPF/hash do CPF, nascimento, mãe, sexo, token de confirmação e payload de e-mail não são acrescentados aos snapshots.
 
@@ -28,4 +28,4 @@ O roteiro `tools/admin-qa/triage.mjs` foi ampliado para exigir cache CPF vazio n
 
 ## Pendências preservadas
 
-Minutas humanas, vínculo de minuta à revisão atual, curadoria de campus, informe operacional durável ao dono e integração visual AV-8 continuam pendentes. Também faltam retenção, conversas/editor, demais interfaces e Etapas 3–7. AV-10 está aprovado; AV-11/AV-12 e avisos anteriores não tiveram aprovação inferida. Nenhuma interface nova foi ativada neste bloco; deploy final depende da autorização do dono.
+O backend de sugestão sem persistência e sua prova de contexto foram acrescentados no checkpoint 737e700 (`ETAPA-02-SUGESTAO-RESPOSTA.md`). Minutas humanas persistentes, curadoria de campus, informe operacional durável ao dono e integração visual AV-8 continuam pendentes. Também faltam retenção, conversas/editor, demais interfaces e Etapas 3–7. AV-10 está aprovado; AV-11/AV-12 e avisos anteriores não tiveram aprovação inferida. Nenhuma interface nova foi ativada neste bloco; deploy final depende da autorização do dono.

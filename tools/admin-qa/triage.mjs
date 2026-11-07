@@ -1,5 +1,6 @@
 // Actual built HTTP handlers and worker, only on the isolated fictitious local preview.
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { mkdir,writeFile } from "node:fs/promises";
 const base=new URL(process.env.QA_BASE_URL??"http://127.0.0.1:3032"),database=new URL(process.env.DATABASE_URL??"http://missing");
 assert.equal(base.hostname,"127.0.0.1");assert.equal(base.port,"3032");assert.equal(database.hostname,"127.0.0.1");assert.equal(database.port,"54345");assert.equal(database.pathname,"/peticao");
@@ -54,7 +55,23 @@ try{
  await db.query("UPDATE contact_messages SET message=$2 WHERE id=$1",[contact.id,message]);assert.equal((await request(path,{contato:contact.id})).status,200);assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);assert.equal((await request("/api/admin/contato/minuta",{contato:contact.id,proof:proposal.proof})).status,409);
  const total=await U.criarUsuario({email:"qa-triage-total@example.test",nome:"QA Triagem Total",nivel:"total",senha:"QA-Local-Triagem-Total-2026-Ficticia"});assert.ok(total.ok);totalToken=(await U.abrirSessao(total.usuario.id,"127.0.0.1")).token;await db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '10 minutes' WHERE user_id=$1",[total.usuario.id]);
  const wrongSeal=await fetch(new URL("/api/admin/contato/responder",base),{method:"POST",headers:{origin:base.origin,cookie:`adm=${totalToken}`,"content-type":"application/json"},body:JSON.stringify({contactId:contact.id,modo:"enviar",assunto:proposal.draft.assunto,corpo:proposal.draft.corpo,selo:proposal.proof})});assert.equal(wrongSeal.status,409);assert.equal((await wrongSeal.json()).erro,"selo");
+ // New journal metadata reaches the compiled triage handler and invalidates a prior proposal.
+ const messageId=randomUUID(),attemptId=randomUUID(),receiptId=`QA-${messageId}`,scope="b".repeat(64);
+ await db.query("INSERT INTO mail_messages(id,kind,channel,to_addr,status,content_fingerprint,content_state,created_at) VALUES($1,'confirmacao','transactional',$2,'accepted','QA-FINGERPRINT','unavailable',now()-interval '3 minutes')",[messageId,email]);
+ await db.query("INSERT INTO mail_message_attempts(id,message_id,provider,from_addr,state,started_at,finished_at,provider_id,account_scope) VALUES($1,$2,'brevo','qa@example.test','accepted',now()-interval '2 minutes',now()-interval '90 seconds',$3,$4)",[attemptId,messageId,receiptId,scope]);
+ assert.equal((await request(proposalPath)).status,409);assert.equal((await request(path,{contato:contact.id})).status,200);assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);
+ const acceptedVersion=(await history())[0];assert.ok(acceptedVersion.analysis.reasons.includes("no_registration_for_email"));assert.equal(acceptedVersion.evidence.outbound.messages.length,1);
+ const acceptedProposalResponse=await request(proposalPath);assert.equal(acceptedProposalResponse.status,200);const acceptedProposal=await acceptedProposalResponse.json();
+ const em=await import("../../site/src/lib/mail/message-events.ts"),events=em.default??em;
+ const delivered={provider:"brevo",accountScope:scope,providerId:receiptId,recipient:email,type:"delivered",timestamp:new Date(Date.now()-60_000).toISOString(),source:"webhook"};
+ await events.recordMessageEvents([{...delivered,accountScope:"c".repeat(64)}]);assert.equal((await request("/api/admin/contato/minuta",{contato:contact.id,proof:acceptedProposal.proof})).status,200);
+ await events.recordMessageEvents([delivered]);assert.equal((await request("/api/admin/contato/minuta",{contato:contact.id,proof:acceptedProposal.proof})).status,409);
+ const linkedRefresh=await tick(process.env.QA_CRON_SECRET);assert.equal(linkedRefresh.status,200);assert.equal((await linkedRefresh.json()).contactTriage.refresh.queued,1);
+ assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);const deliveredVersion=(await history())[0];assert.equal(deliveredVersion.status,"complete");assert.equal(deliveredVersion.analysis.state,"inconclusive"); // This fixture has no signature to resolve.
+ assert.equal(deliveredVersion.evidence.outbound.events.length,1);assert.deepEqual((await history())[1],acceptedVersion);
+ const serialized=JSON.stringify(deliveredVersion.evidence);for(const forbidden of [receiptId,scope,"QA-FINGERPRINT"])assert.ok(!serialized.includes(forbidden));
+ assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);assert.deepEqual((await history())[0],deliveredVersion);
  assert.deepEqual(await signatures(),before);assert.equal(await count("mail_outbox"),0);assert.equal(await count("contact_replies"),0);
- const report={ok:true,httpAuth:true,cronAuth:true,workerComplete:true,suggestionReadOnly:true,suggestionStaleContextRejected:true,suggestionCannotSend:true,oldContextCannotRevive:true,contextProofNotSendSeal:true,evidenceChangeCreatesRevision:true,unchangedPollingDoesNotCreateRevision:true,reprocessingVersioned:true,previousVersionPreserved:true,noSignerWrites:true,noParticipantMail:true};
+ const report={ok:true,httpAuth:true,cronAuth:true,workerComplete:true,linkedJournalEvidence:true,unlinkedEventIgnored:true,linkedEventCreatesRevision:true,suggestionReadOnly:true,suggestionStaleContextRejected:true,suggestionCannotSend:true,oldContextCannotRevive:true,contextProofNotSendSeal:true,evidenceChangeCreatesRevision:true,unchangedPollingDoesNotCreateRevision:true,reprocessingVersioned:true,previousVersionPreserved:true,noSignerWrites:true,noParticipantMail:true};
  await writeFile(`${output}/triage.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
 }finally{if(totalToken)await U.encerrarSessao(totalToken);if(token)await U.encerrarSessao(token);await db._closeDbForTests();}

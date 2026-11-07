@@ -1,7 +1,7 @@
 import { audit, tx } from "../db";
-import { ENGINE } from "./analyze";
+import { analyze, ENGINE } from "./analyze";
 import { collectEvidence, currentInputHash } from "./evidence";
-import { evidenceFingerprint } from "./fingerprint";
+import { analysisFingerprint, evidenceFingerprint } from "./fingerprint";
 const CURSOR="contact_triage_refresh_cursor";
 /** Claim a bounded, round-robin scan. A crash can delay a check until the next wrap, never erase a revision. */
 async function claim(limit:number) {
@@ -10,8 +10,8 @@ async function claim(limit:number) {
     await c.query("INSERT INTO settings(key,value) VALUES($1,'0') ON CONFLICT DO NOTHING",[CURSOR]);
     const raw=(await c.query<{value:string}>("SELECT value FROM settings WHERE key=$1 FOR UPDATE",[CURSOR])).rows[0].value;
     const before=/^\d{1,10}$/.test(raw)&&Number(raw)<=2147483647?Number(raw):0;
-    const read=async(after:number)=>(await c.query(`SELECT c.id contact_id,j.id job_id,j.revision,j.input_hash,j.evidence
-      FROM contact_messages c JOIN LATERAL(SELECT id,revision,status,engine,input_hash,evidence FROM contact_triage_jobs WHERE contact_id=c.id ORDER BY revision DESC LIMIT 1) j ON true
+    const read=async(after:number)=>(await c.query(`SELECT c.id contact_id,j.id job_id,j.revision,j.input_hash,j.evidence,j.analysis
+      FROM contact_messages c JOIN LATERAL(SELECT id,revision,status,engine,input_hash,evidence,analysis FROM contact_triage_jobs WHERE contact_id=c.id ORDER BY revision DESC LIMIT 1) j ON true
       WHERE c.id>$1 AND j.status='complete' AND j.engine=$2 AND j.evidence IS NOT NULL ORDER BY c.id LIMIT $3`,[after,ENGINE,limit])).rows;
     let rows=await read(before);if(!rows.length&&before)rows=await read(0);
     await c.query("UPDATE settings SET value=$2 WHERE key=$1",[CURSOR,String(rows.length?rows[rows.length-1].contact_id:0)]);
@@ -29,7 +29,7 @@ export async function refreshTriages(limit=2,options:{collect?:typeof collectEvi
     try{
       const snapshot=await(options.collect??collectEvidence)(row.contact_id);
       if(!snapshot){report.unavailable++;continue;}
-      if(snapshot.inputHash===row.input_hash&&evidenceFingerprint(snapshot.evidence)===evidenceFingerprint(row.evidence)){report.unchanged++;continue;}
+      if(snapshot.inputHash===row.input_hash&&evidenceFingerprint(snapshot.evidence)===evidenceFingerprint(row.evidence)&&row.analysis&&analysisFingerprint(analyze(snapshot.evidence))===analysisFingerprint(row.analysis)){report.unchanged++;continue;}
       const added=await tx(async c=>{
         await c.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='2000ms'");
         const current=await currentInputHash(c,row.contact_id);
