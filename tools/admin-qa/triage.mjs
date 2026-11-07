@@ -7,7 +7,7 @@ assert.equal(process.env.PREVIEW_MODE,"1");assert.equal(process.env.ADMIN_NO_PAS
 const bootstrap=await fetch(new URL("/admin",base));assert.equal(bootstrap.status,200);assert.ok((await bootstrap.text()).includes("/dev/outbox"));
 const dm=await import("../../site/src/lib/db.ts"),um=await import("../../site/src/lib/admin-users.ts"),db=dm.default??dm,U=um.default??um;
 const output=process.env.QA_OUTPUT_DIR;assert.ok(output);await mkdir(output,{recursive:true});
-let token;
+let token,totalToken;
 try{
  const unknown=(await db.query("SELECT count(*)::int n FROM contact_messages WHERE lower(name) NOT LIKE 'qa %' OR email NOT LIKE '%@example.test'")).rows[0].n;assert.equal(unknown,0,"Refuse to process non-QA contacts");
  const count=async table=>Number((await db.query(`SELECT count(*) n FROM ${table}`)).rows[0].n);
@@ -39,7 +39,22 @@ try{
  assert.equal((await history())[0].status,"queued");assert.equal((await history())[0].revision,previous.revision+1);
  assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);const refreshed=await history();assert.equal(refreshed[0].status,"complete");assert.deepEqual(refreshed[1],previous);assert.equal(refreshed[0].evidence.events.length,1);
  assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);assert.deepEqual(await history(),refreshed);
+ const proposalPath=`/api/admin/contato/minuta?contato=${contact.id}`;
+ assert.equal((await request(proposalPath,undefined,false)).status,401);
+ const unchanged=async()=>(await db.query("SELECT row_to_json(c) data FROM contact_messages c UNION ALL SELECT row_to_json(j) FROM contact_triage_jobs j UNION ALL SELECT row_to_json(a) FROM audit_log a")).rows;
+ const priorRead=await unchanged(),proposalResponse=await request(proposalPath);assert.equal(proposalResponse.status,200);const proposal=await proposalResponse.json();assert.equal(proposal.persisted,false);assert.equal(proposal.source,"rules");assert.equal(proposal.requiresHumanReview,true);assert.match(proposal.proof,/^[a-f0-9]{64}$/);
+ assert.ok(!JSON.stringify(proposal).includes("QA-TRIAGE-RUNTIME"));assert.ok(!JSON.stringify(proposal).includes(email));
+ assert.equal((await request("/api/admin/contato/minuta",{contato:contact.id,proof:proposal.proof})).status,200);assert.deepEqual(await unchanged(),priorRead);
+ assert.equal((await request("/api/admin/contato/minuta",{contato:contact.id,proof:proposal.proof,modo:"enviar"})).status,400);
+ assert.equal((await request("/api/admin/contato/responder",{contactId:contact.id,modo:"enviar",assunto:"QA",corpo:"QA mensagem fictícia",selo:proposal.proof})).status,403);
+ await db.query("UPDATE contact_messages SET message=message||' QA UPDATED' WHERE id=$1",[contact.id]);assert.equal((await request(proposalPath)).status,409);
+ assert.equal((await request(path,{contato:contact.id})).status,200);assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);
+ const newProposal=await request(proposalPath);assert.equal(newProposal.status,200);assert.notEqual((await newProposal.json()).proof,proposal.proof);assert.equal((await request("/api/admin/contato/minuta",{contato:contact.id,proof:proposal.proof})).status,409);
+ // Returning the original text still creates a newer revision: an old context stamp cannot revive (ABA).
+ await db.query("UPDATE contact_messages SET message=$2 WHERE id=$1",[contact.id,message]);assert.equal((await request(path,{contato:contact.id})).status,200);assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);assert.equal((await request("/api/admin/contato/minuta",{contato:contact.id,proof:proposal.proof})).status,409);
+ const total=await U.criarUsuario({email:"qa-triage-total@example.test",nome:"QA Triagem Total",nivel:"total",senha:"QA-Local-Triagem-Total-2026-Ficticia"});assert.ok(total.ok);totalToken=(await U.abrirSessao(total.usuario.id,"127.0.0.1")).token;await db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '10 minutes' WHERE user_id=$1",[total.usuario.id]);
+ const wrongSeal=await fetch(new URL("/api/admin/contato/responder",base),{method:"POST",headers:{origin:base.origin,cookie:`adm=${totalToken}`,"content-type":"application/json"},body:JSON.stringify({contactId:contact.id,modo:"enviar",assunto:proposal.draft.assunto,corpo:proposal.draft.corpo,selo:proposal.proof})});assert.equal(wrongSeal.status,409);assert.equal((await wrongSeal.json()).erro,"selo");
  assert.deepEqual(await signatures(),before);assert.equal(await count("mail_outbox"),0);assert.equal(await count("contact_replies"),0);
- const report={ok:true,httpAuth:true,cronAuth:true,workerComplete:true,evidenceChangeCreatesRevision:true,unchangedPollingDoesNotCreateRevision:true,reprocessingVersioned:true,previousVersionPreserved:true,noSignerWrites:true,noParticipantMail:true};
+ const report={ok:true,httpAuth:true,cronAuth:true,workerComplete:true,suggestionReadOnly:true,suggestionStaleContextRejected:true,suggestionCannotSend:true,oldContextCannotRevive:true,contextProofNotSendSeal:true,evidenceChangeCreatesRevision:true,unchangedPollingDoesNotCreateRevision:true,reprocessingVersioned:true,previousVersionPreserved:true,noSignerWrites:true,noParticipantMail:true};
  await writeFile(`${output}/triage.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
-}finally{if(token)await U.encerrarSessao(token);await db._closeDbForTests();}
+}finally{if(totalToken)await U.encerrarSessao(totalToken);if(token)await U.encerrarSessao(token);await db._closeDbForTests();}
