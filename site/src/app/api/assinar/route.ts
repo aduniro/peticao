@@ -1,3 +1,5 @@
+import { withSignupDiagnostics } from "@/lib/signup-diagnostics";
+import { defaultProvider } from "@/lib/cpf-check";
 import { NextRequest, NextResponse } from "next/server";
 import { handleSign } from "@/lib/sign-flow";
 import { rateLimit } from "@/lib/ratelimit";
@@ -16,11 +18,11 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Requisição inválida." }, { status: 400 });
   }
-  const r = await handleSign(body, {
+  const r = await withSignupDiagnostics(req.headers.get("x-sign-attempt"), body, provider => handleSign(body, {
     ip,
     userAgent: req.headers.get("user-agent") ?? undefined,
     visitorId: req.cookies.get("vid")?.value,
     refCode: req.cookies.get("ref")?.value,
-  });
+  }, provider), defaultProvider());
   return NextResponse.json(r.json, { status: r.status });
 }

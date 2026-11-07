@@ -1,3 +1,4 @@
+import { diagnosticMark } from "./signup-diagnostics";
 import { query, tx, audit } from "./db";
 import { config } from "./config";
 import { isValidCpf, onlyDigits } from "./cpf";
@@ -199,6 +200,7 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
   const confirmed = found.find((r) => r.status === "confirmed");
   if (confirmed) {
     await audit("duplicate_attempt", confirmed.id);
+    diagnosticMark("submission", "duplicate");
     return;
   }
   const token = newToken();
@@ -240,11 +242,12 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
       return ins.rows[0].id;
     });
   } catch (e: any) {
-    if (e?.code === "23505") return; // corrida com outra requisição igual: já há cadastro
+    if (e?.code === "23505") { diagnosticMark("submission", "race_duplicate"); return; } // corrida com outra requisição igual: já há cadastro
     throw e;
   }
   try {
     const outcome = await sendMail({ to: normalizeEmail(input.email), ...confirmationMail(input.name, token) }, "confirmacao");
+    diagnosticMark("submission", outcome);
     await logRequest("sign_pending", meta.ip ?? "local", { signatureId: id, email: input.email, detail: "aguardando confirmação do e-mail" });
     if (outcome === "queued") await logRequest("mail_queued", meta.ip ?? "local", { signatureId: id, email: input.email, detail: "e-mail na fila de reenvio" });
     // WhatsApp (opcional, só quando o recurso está ligado): nunca atrapalha a assinatura; falha aqui é só registrada.
@@ -253,6 +256,7 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
     // Sem e-mail entregue não há como confirmar: desfaz o cadastro pendente.
     await query("DELETE FROM signatures WHERE id = $1 AND status = 'pending'", [id]);
     await audit("send_failed_rolled_back", id);
+    diagnosticMark("submission", "send_failed");
     throw e;
   }
 }

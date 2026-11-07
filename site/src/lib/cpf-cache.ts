@@ -1,3 +1,4 @@
+import { diagnosticMark } from "./signup-diagnostics";
 import { tx, query } from "./db";
 import { encryptCpfCache, decryptCpfCache } from "./cpf-cache-crypto";
 import { hmac } from "./security";
@@ -52,7 +53,8 @@ export function cachedCpfProvider(provider: CpfProvider, options: {
       try {
         return await run(hash, async (entry, save) => {
           const hit = decode(entry, hash, clock());
-          if (hit) return hit;
+          if (hit) { diagnosticMark("cache", "hit"); return hit; }
+          diagnosticMark("cache", "miss");
           called = true;
           try { answer = await provider.lookup(cpf); }
           catch (error) { upstreamFailed = true; upstreamError = error; throw error; }
@@ -68,6 +70,7 @@ export function cachedCpfProvider(provider: CpfProvider, options: {
       } catch (error) {
         if (upstreamFailed) throw upstreamError;
         // Uma falha de gravação não invalida o retorno já obtido nem repete a cobrança.
+        diagnosticMark("cache", "bypass");
         console.warn("[cpf-cache] cache indisponível; consulta segue sem persistência");
         return called ? answer : provider.lookup(cpf);
       }
