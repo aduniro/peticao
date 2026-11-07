@@ -121,3 +121,7 @@ Ainda falta consumir o resultado na interface administrativa: o handler antigo c
 ### Conferência atual da VPS
 
 Inventário por SSH somente leitura: 333 arquivos de código, sem diferenças desde a referência após a restauração dos formulários. Sete arquivos críticos do candidato foram comparados por SHA-256 com a VPS: formulário, consulta/cache CPF, identidade, assinatura e handlers de assinar/confirmar; todos idênticos. Evidência: `/mnt/dev/peticao/.cache/admin-audit-20261106/production-contract-reset.json`. Isso confere código, não dados de assinantes, valores de configuração ou compatibilidade integral de todos os módulos. Nenhuma alteração remota foi realizada.
+
+### Achado do QA por nível (a corrigir)
+
+A captura de Leitura em 1280 px (`visual/access-leitura-1280.png`) mostra o aviso existente de nível insuficiente após acesso direto recusado. Porém, a página inicial e o menu ainda exibem atalhos para funções de nível superior e o formulário “Liberar CPF”. O POST é protegido no backend, mas a apresentação precisa ser condicionada ao nível real para evitar controles que não podem ser usados. Não há motivo para mudar rótulos ou estética nessa correção. O ensaio de páginas está em andamento; não considerá-lo aprovação integral do painel.
