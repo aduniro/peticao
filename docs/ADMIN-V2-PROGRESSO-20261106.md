@@ -176,3 +176,14 @@ Passaram **372/372** cumulativos, nove novos (17 direcionados), build, tipos ap�
 O diagnóstico anterior da estrutura de respostas reais terminou em modo somente leitura, sem envio de mensagens ou alteração de contas; seu relatório contém apenas flags/formatos/status. Não confundir esse diagnóstico com os testes fictícios ou com cobertura completa do histórico.
 
 Nenhum deploy, schema, regra/visual/aviso público ou revisão de CPF alterado. Próximo bloco: completar eventos autenticados por conta e lacunas de identidade/datas, recuperação operacional/retenção, depois interfaces/conversas/editor e demais Etapas 2–7. A integração completa segue ativa; AV-1–AV-9 e retenção não tiveram aprovação inferida. O deploy final continuará aguardando autorização expressa. Notificações somente para operator-1608598f41@example.invalid.
+
+
+## 07/11 — checkpoint d421a59: webhooks autenticados por conta
+
+No candidato `admin-v2-stage01`, notificações Brevo/MailerSend/SendPulse conectam-se ao journal com autenticação específica e escopo de conta configurado no servidor. MailerSend v2 é suportado sem retirar o agregado anterior. O ping com chave pública só confirma envelope de teste inerte, nunca atividades. Corpo tem limite em bytes/UTF-8/estrutura; IDs/datas/destinatário continuam necessários sem associação por proximidade. Configuração incompleta falha fechada; falha do journal/agregado em modo vinculado permite repetição, preservando a supressão anterior. A revisão também corrigiu o caso herdado de destinatário ausente/malformado que poderia gravar `undefined` como endereço.
+
+Passaram **383/383 cumulativos**, onze regressões novas, build, tipos após build e HTTP compilado dos três provedores com notificações fictícias. Assinatura confirmada e item de fila anteriores preservaram todos os dados. A primeira rodada de 382/build/HTTP foi mantida como evidência anterior à correção do destinatário; o código final foi novamente validado. Nenhuma chamada a provedor real ou envio de e-mail nos testes. Relatório `runtime-mail-webhook-events/mail-webhook-events.json`, logs `stage03-webhook-events-*` e contrato do candidato `docs/ETAPA-03-EVENTOS-WEBHOOK.md`.
+
+Sessão de QA revogada, temporário 3032 encerrado e prévia 3031 retomada com banco/configuração anteriores (/admin 200). Nenhum schema, aparência/aviso, VPS ou revisão de CPF alterado. Não foram criados/alterados webhooks reais; a conta e a equivalência dos IDs precisam de prova operacional antes de afirmar cobertura real.
+
+Próximo bloco: recuperação operacional das tentativas interrompidas, retenção e integração das consultas/interfaces; conversas/editor e demais Etapas 2–7 continuam no objetivo. A integração inteira não está concluída. AV-1–AV-9 e retenção continuam sem aprovação inferida. Deploy final aguarda autorização explícita; notificações somente a operator-1608598f41@example.invalid.
