@@ -125,7 +125,11 @@ def main(root, prepare_only=False):
         for entry in manifest:
             target = stage / entry['file']
             target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.chown(target.parent, user='adunir', group='adunir')
+            directory = target.parent
+            while directory != stage:
+                directory.chmod(0o755)
+                shutil.chown(directory, user='adunir', group='adunir')
+                directory = directory.parent
             shutil.copyfile(package / 'site' / entry['file'], target)
             shutil.chown(target, user='adunir', group='adunir')
             target.chmod(0o644)
@@ -171,7 +175,7 @@ def main(root, prepare_only=False):
         if patched:
             phase('rolling_back', error_type=type(error).__name__, reason=str(error))
             # Restore code only. Restoring the database would erase legitimate new signatures.
-            if deploy_started:
+            if deploy_started and inventory(app) != before:
                 restore = Path('/opt/peticao/app.signup-diagnostics-restore')
                 if restore.exists():
                     raise RuntimeError('Rollback path occupied; manual recovery required') from error
