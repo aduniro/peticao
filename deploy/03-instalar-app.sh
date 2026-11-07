@@ -22,6 +22,8 @@ else
 fi
 DEPLOY_USER=adunir; APP_USER=peticao
 APP_DIR=/opt/peticao/app; NEW_DIR=/opt/peticao/app.new; OLD_DIR=/opt/peticao/app.old; ENV_FILE=/etc/peticao/app.env
+[ -x /usr/local/sbin/peticao-mail-rollback-guard ] || { echo "Instale o guard de rollback com deploy/23-publicacao-segura.sh."; exit 1; }
+if [ -e "$OLD_DIR" ] || [ -L "$OLD_DIR" ]; then echo "Rollback anterior não resolvido; preserve app.old e conclua a recuperação antes de publicar."; exit 1; fi
 HOME_DIR="$(getent passwd "$DEPLOY_USER" | cut -d: -f6)"; SRC="$HOME_DIR/peticao-stage/site"
 [ -d "$SRC" ] && [ ! -L "$SRC" ] && [ ! -L "$HOME_DIR/peticao-stage" ] || { echo "Origem inválida (ausente ou link simbólico): $SRC"; exit 1; }
 [ -f "$ENV_FILE" ] || { echo "Falta $ENV_FILE: rode antes 01-preparar-debian.sh"; exit 1; }
@@ -52,17 +54,38 @@ echo "== removendo dependências de desenvolvimento do servidor"; run "npm prune
 
 verificar "$DEPLOY_USER" "$SRC"
 verificar "$APP_USER" "$NEW_DIR"
+# Stop managed consumers before the swap; restart only the timer that was active.
+SCHEDULER_WAS_ACTIVE=0
+if [ "$(systemctl show peticao-agendador.timer -p LoadState --value)" = loaded ]; then
+  systemctl is-active --quiet peticao-agendador.timer && SCHEDULER_WAS_ACTIVE=1
+  systemctl stop peticao-agendador.timer
+  systemctl stop peticao-agendador.service
+fi
+resume_scheduler() { if [ "$SCHEDULER_WAS_ACTIVE" = 1 ]; then systemctl start peticao-agendador.timer; fi; }
+wait_app() {
+  local result=000
+  for i in $(seq 1 30); do result="$(curl -s -o /dev/null -w '%{http_code}' --max-time 4 http://127.0.0.1:3000/ || true)"; [ "$result" = 200 ] && break; sleep 2; done
+  printf '%s' "$result"
+}
+systemctl stop peticao
 echo "== trocando a versão em uso (a anterior fica em $OLD_DIR até o novo responder)"
 rm -rf "$OLD_DIR"; [ -d "$APP_DIR" ] && mv "$APP_DIR" "$OLD_DIR"; mv "$NEW_DIR" "$APP_DIR"
-systemctl restart peticao
 code=000
-for i in $(seq 1 30); do code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 4 http://127.0.0.1:3000/ || true)"; [ "$code" = 200 ] && break; sleep 2; done
+if systemctl start peticao; then code="$(wait_app)"; fi
 echo "página inicial: HTTP $code"
 echo "contador:       $(curl -s --max-time 5 http://127.0.0.1:3000/api/contador || true)"
 if [ "$code" != 200 ]; then
-  echo "ERRO: o app novo não respondeu; voltando à versão anterior."
-  if [ -d "$OLD_DIR" ]; then rm -rf "$APP_DIR"; mv "$OLD_DIR" "$APP_DIR"; systemctl restart peticao; fi
+  echo "ERRO: o app novo não respondeu; preparando retorno protegido."
+  systemctl stop peticao
+  if [ -d "$OLD_DIR" ]; then
+    # Fail closed: never run an old worker over correlated, possibly delivered queues.
+    PETICAO_DEPLOY_LOCK_FD=9 /usr/local/sbin/peticao-mail-rollback-guard
+    FAILED_DIR="/opt/peticao/app.failed-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+    mv "$APP_DIR" "$FAILED_DIR"; mv "$OLD_DIR" "$APP_DIR"
+    if systemctl start peticao && [ "$(wait_app)" = 200 ]; then resume_scheduler; else echo "A versão anterior exige intervenção; agendador mantido parado." >&2; fi
+  fi
   echo "Veja: sudo journalctl -u peticao -n 50 --no-pager"; exit 1
 fi
+resume_scheduler
 rm -rf "$OLD_DIR"
 systemctl --no-pager --lines=3 status peticao | sed -n '1,6p'

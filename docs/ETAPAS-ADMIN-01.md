@@ -220,3 +220,9 @@ Adicionadas no candidato a identidade de mensagem/pedido, cópia criptografada o
 `sendMail` e o worker agora usam identidade/journal; contato conserva reserva, tentativa única e ausência de fila automática. A fila preserva a identidade e o envelope observado e pode recuperar aceite conhecido sem enviar de novo. Conteúdo só é copiado mediante política explícita; nenhuma opção foi ativada. Contrato/limites em `docs/ETAPA-03-TRANSPORTE.md`.
 
 **326/326** cumulativos com paralelismo limitado e sem build concorrente, tipos/build/migração e HTTP do app compilado aprovados. Os logs anteriores foram preservados, incluindo a sonda local que ultrapassou 300 ms por carga. Nenhuma regra pública foi relaxada. Permanecem recuperação operacional, eventos/IDs reais dos provedores, política completa, consultas autorizadas, prévia segura, interfaces e demais etapas. Nenhum deploy.
+
+## Continuidade — rollback protegido das filas correlacionadas
+
+O candidato inclui guard root fixo e SQL transacional antes de retornar ao worker anterior. Aceite comprovado recupera a fila sem envio; demais itens correlacionados ficam retidos para investigação. Falha do guard impede iniciar o código antigo, preservando app.old; nova publicação recusa recuperação anterior não resolvida. Payloads, mensagens, tentativas e assinaturas permanecem preservados. Contrato e limites em `docs/ETAPA-03-ROLLBACK.md`.
+
+**331/331** cumulativos, cinco testes SQL específicos, **17/17** Python, tipos, sintaxe shell e diff sem erros. Systemd/root foram simulados; SQL usou PostgreSQL fictício isolado. Não houve alteração de componentes/textos/estilos, nem build novo: o build anterior permanece referência do código aplicativo inalterado, não certificação da integração integral. Nenhum guard instalado/executado na VPS, deploy ou mudança da revisão de CPFs. Continuam pendentes consultas administrativas, recuperação operacional normal, IDs/eventos reais, interfaces e demais Etapas 2–7.

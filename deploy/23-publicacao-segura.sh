@@ -3,7 +3,7 @@
 set -euo pipefail
 [ "$(id -u)" = 0 ] || { echo "Rode como root."; exit 1; }
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-for file in publication.py 03-instalar-app.sh peticao-atualizar-stage.sh; do [ -f "$HERE/$file" ] || { echo "Falta $file."; exit 1; }; done
+for file in publication.py 03-instalar-app.sh peticao-atualizar-stage.sh peticao-mail-rollback-guard.sh mail-rollback.sql; do [ -f "$HERE/$file" ] || { echo "Falta $file."; exit 1; }; done
 /usr/bin/python3 - <<'PYLOCK'
 import os,stat,grp
 fd=os.open('/run/lock/peticao-deploy.lock',os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o644)
@@ -20,6 +20,9 @@ install -d -m700 -o root -g root "$BACKUP"
 install -d -m755 -o root -g root /usr/local/lib/peticao
 install -m644 -o root -g root "$HERE/publication.py" /usr/local/lib/peticao/publication.py
 /usr/bin/python3 /usr/local/lib/peticao/publication.py --ensure-lock
+for original in /usr/local/sbin/peticao-mail-rollback-guard /usr/local/lib/peticao/mail-rollback.sql; do [ ! -f "$original" ] || cp -a "$original" "$BACKUP/"; done
+install -m755 -o root -g root "$HERE/peticao-mail-rollback-guard.sh" /usr/local/sbin/peticao-mail-rollback-guard
+install -m644 -o root -g root "$HERE/mail-rollback.sql" /usr/local/lib/peticao/mail-rollback.sql
 install -m755 -o root -g root "$HERE/03-instalar-app.sh" /usr/local/sbin/peticao-deploy
 if [ -f /usr/local/sbin/peticao-atualizar-stage ]; then cp -a /usr/local/sbin/peticao-atualizar-stage "$BACKUP/"; install -m755 -o root -g root "$HERE/peticao-atualizar-stage.sh" /usr/local/sbin/peticao-atualizar-stage; fi
 cat > /usr/local/sbin/peticao-publicar-preparar <<'WRAPPER'

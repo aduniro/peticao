@@ -20,7 +20,7 @@ Não há endpoint de conteúdo bruto descriptografado nem interface nova. Prote�
 
 ## Compatibilidade operacional ainda a verificar
 
-Migração/boot antigos são compatíveis estruturalmente; isso não prova que voltar a um worker antigo preserve as proteções novas. Antes do deploy final, o rollback deve reconciliar filas correlacionadas já aceitas e impedir que o código anterior repita um possível envio. Nenhum SQL manual de desbloqueio ou reenfileiramento foi fornecido/executado.
+Migração/boot antigos são compatíveis estruturalmente; isso não prova que voltar a um worker antigo preserve as proteções novas. O candidato agora inclui guard fixo para reconciliar filas correlacionadas já aceitas e reter as demais antes de iniciar código anterior; contrato em `docs/ETAPA-03-ROLLBACK.md`. Instalação e conferência das unidades/perfil reais continuam pendentes. Nenhum SQL manual de desbloqueio ou reenfileiramento foi fornecido/executado.
 
 
 ## Validação deste checkpoint
