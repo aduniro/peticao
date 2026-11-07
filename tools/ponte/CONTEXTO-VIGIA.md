@@ -103,3 +103,7 @@ Passaram sete testes novos e typecheck. Primeira comparação cumulativa com env
 O relatório de experiência foi enviado somente a operator-1608598f41@example.invalid, assunto “Relatório: falhas de assinatura, quantos não concluíram e e-mails registrados”, aceite202 id6aef3b5199ec5ff9bc559ca5. O dono perguntou novamente e já foi informado do assunto, destinatário e link local, sem afirmar entrega confirmada.
 
 Admin-v2 permanece objetivo ativo separado: candidato aa29ea6 com WIP de resiliência da tabela de pendentes (460 cumulativos/build/tipos passaram; browser não iniciou por Node18 e depois socket Unix demasiado longo). Os lançadores restauraram3031; usar Node24 só no harness e TMPDIR curto `/mnt/dev/.qa-tmp`. Não perder esse WIP nem publicar junto ao pacote de logs.
+
+## Monitor de tarefas integrado — 07/11/2026
+
+O comando `/mnt/dev/peticao/vigia` abre o painel terminal com SQLite privado em `/home/barre/.local/state/peticao-monitor/monitor.sqlite`. Serviço local separado `peticao-monitor.service`; saúde remota `peticao-monitor-collector.service` de adunir. Não substitui a Ponte, não altera o site e não recebe WhatsApp. Orientações operacionais em `/mnt/dev/peticao/tools/monitor/LEIAME.md`; resumo preparado em `tools/monitor/CONTEXTO.md`. Fonte do diagnóstico de assinatura é somente leitura e técnica, sem valores pessoais. Notificações do monitor e da Ponte destinam-se somente ao proprietário e mantêm HTML.

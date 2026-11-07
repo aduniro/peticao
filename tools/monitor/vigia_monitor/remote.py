@@ -31,6 +31,8 @@ def run(store,request,task,stop=None):
    data=call({'action':'read','id':rid,'offset':offset})
    persist_output(data)
    offset=data['offset'];remote=data['state'];state=remote.get('state','running')
+   store.execute('INSERT OR REPLACE INTO meta VALUES(?,?)',('remote-state:'+rid,json.dumps(remote)))
+   if remote.get('pid'):store.execute('UPDATE requests SET pid=? WHERE id=?',(remote['pid'],rid))
    if state in ('completed','failed','interrupted'):
     # One final poll may contain remaining buffered output larger than one chunk.
     while True:

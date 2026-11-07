@@ -28,7 +28,7 @@ class Daemon:
   STATE.mkdir(parents=True,exist_ok=True,mode=0o700);lock=(STATE/'daemon.lock').open('a')
   try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
   except BlockingIOError:raise RuntimeError('Coletor já está em execução')
-  self.store.recover();self.store.event('daemon','Coletor iniciado')
+  self.store.recover();self.store.event('daemon','Coletor iniciado');self.store.queue_mail('daemon:start:'+str(time.time_ns()),'Vigia: coletor iniciado ou reiniciado',f"# Monitor ativo\n\nColetor local iniciado às {now()}.\n\nA tela pode ser fechada sem parar a coleta. O site e seus serviços não foram reiniciados.")
   for s in (signal.SIGTERM,signal.SIGINT):signal.signal(s,lambda *_:self.stop.set())
   tick=0
   try:
@@ -58,4 +58,4 @@ class Daemon:
    for rid in self.work:
     row=self.store.rows('SELECT kind FROM requests WHERE id=?',(rid,))[0]
     if row['kind']!='vps':self.store.execute('UPDATE requests SET control=? WHERE id=?',(json.dumps({'action':'cancel'}),rid))
-   self.collector.stop();self.pool.shutdown(wait=True,cancel_futures=True);self.store.snapshot('daemon',{'pid':os.getpid(),'alive':False},'stopped');self.store.event('daemon','Coletor encerrado');lock.close()
+   self.collector.stop();self.pool.shutdown(wait=True,cancel_futures=True);self.store.snapshot('daemon',{'pid':os.getpid(),'alive':False},'stopped');self.store.event('daemon','Coletor encerrado');self.store.queue_mail('daemon:stop:'+str(time.time_ns()),'Vigia: coletor encerrado',f"# Monitor interrompido\n\nColetor encerrado às {now()}.\n\nEsta notificação pode ser enviada na retomada. Jobs persistentes da VPS permanecem no servidor.");lock.close()

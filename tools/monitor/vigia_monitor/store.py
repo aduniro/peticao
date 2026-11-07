@@ -117,8 +117,14 @@ class Store:
    if result.rowcount!=1:raise ValueError('Pedido expirado ou já decidido')
  def recover(self):
   with self.connect() as db:
+   changed=[dict(r) for r in db.execute("SELECT id,task_id,kind FROM requests WHERE state IN ('running','paused','waiting')")]
    # Never replay a possibly executed command or a possibly sent email automatically.
    db.execute("UPDATE requests SET state='interrupted',updated_at=? WHERE kind!='vps' AND state IN ('running','paused','waiting')",(now(),))
    db.execute("UPDATE requests SET state='queued',updated_at=? WHERE kind='vps' AND state IN ('running','paused','waiting')",(now(),))
    db.execute("UPDATE approvals SET decision='decline',answered=1 WHERE answered=0")
+   pending_mail=[dict(r) for r in db.execute("SELECT id,subject FROM outbox WHERE state='sending'")]
    db.execute("UPDATE outbox SET state='uncertain' WHERE state='sending'")
+   for row in pending_mail:db.execute('INSERT OR REPLACE INTO mail VALUES(?,?,?,?,?,?)',(row['id'],now(),row['subject'],'uncertain',None,'Envio interrompido; não reenviar automaticamente.'))
+  for row in changed:
+   title='Retomando observação do job remoto, sem reenviar' if row['kind']=='vps' else 'Execução local interrompida; não reenviada'
+   self.event('recovery',title,row['task_id'],{'id':row['id']});self.queue_mail('recovery:'+row['id']+':'+now(),'Vigia: recuperação após interrupção',f"# Recuperação da tarefa\n\nTarefa: {row['task_id']}\n\n{title}.\n\nConsulte a execução no painel.")

@@ -150,8 +150,8 @@ class VigiaApp(App):
     with VerticalScroll():yield Markdown('# Vigia\n\nSelecione uma tarefa para ver seu contexto e plano.',id='context')
   yield Footer()
  def on_mount(self):
-  for name,cols in {'tasks':['Tarefa','Estado','Etapa','Progresso','Desde criação','Estimativa'], 'processes':['Origem','PID','Processo','CPU %','RAM MB','Tempo','Sem terminal','Diretório / porta'],'runs':['Execução','Canal','Estado','Início','Saída'],'approvals':['Pedido','Tarefa','Tipo','Situação','Expira em'],'events':['Hora UTC','Tarefa','Tipo','Descrição'],'mail':['Hora UTC','Assunto','Estado','ID do provedor'],'diagnostics':['Origem','Classificação','Categoria','Eventos (24 h)','Tentativas distintas no grupo']}.items():self.query_one('#'+name,DataTable).add_columns(*cols)
-  self.set_interval(2,self.refresh_data);self.refresh_data()
+  for name,cols in {'tasks':['Tarefa','Estado','Etapa','Progresso','Desde criação','Estimativa'], 'processes':['Origem','PID','Processo','CPU %','RAM MB','Tempo','Sem terminal','Diretório / porta'],'runs':['Execução','Canal','Estado','Solicitado UTC','Saída'],'approvals':['Pedido','Tarefa','Tipo','Situação','Expira em'],'events':['Hora UTC','Tarefa','Tipo','Descrição'],'mail':['Hora UTC','Assunto','Estado','ID do provedor'],'diagnostics':['Origem','Classificação','Categoria','Eventos (24 h)','Tentativas distintas no grupo']}.items():self.query_one('#'+name,DataTable).add_columns(*cols)
+  self.refresh_timer=self.set_interval(2,self.refresh_data);self.refresh_data()
  def table(self,name,rows):
   widget=self.query_one('#'+name,DataTable);signature=repr(rows)
   if self.table_signatures.get(name)==signature:return
@@ -164,6 +164,7 @@ class VigiaApp(App):
     if key.value==old_key:widget.move_cursor(row=index);break
   self.table_signatures[name]=signature
  def refresh_data(self):
+  if not self.query('#overview'):return  # Screen teardown can race a scheduled refresh.
   snapshots=self.store.rows('SELECT * FROM snapshots');self.snapshots={r['source']:{**r,'payload':json.loads(r['payload'])} for r in snapshots}
   daemon=self.snapshots.get('daemon');fresh=bool(daemon and daemon['payload'].get('alive') and age(daemon['at'])<10)
   rows=self.store.rows("SELECT * FROM tasks ORDER BY CASE state WHEN 'running' THEN 0 WHEN 'waiting' THEN 1 WHEN 'queued' THEN 2 WHEN 'completed' THEN 9 ELSE 3 END,updated_at DESC")
@@ -347,6 +348,9 @@ class VigiaApp(App):
    self.query_one('#prompt-text',TextArea).clear();self.notify('Pedido registrado. O coletor executa a fila.');self.refresh_data()
   except ValueError as error:self.notify(str(error),severity='error')
  def action_show_prompt(self):self.query_one(TabbedContent).active='tab-prompt';self.query_one('#prompt-text',TextArea).focus()
+ def action_quit(self):
+  if hasattr(self,'refresh_timer'):self.refresh_timer.stop()
+  self.exit()
  def action_refresh_view(self):self.refresh_data()
  def edit_step(self,editing=False):
   if not self.task_id:self.notify('Selecione uma tarefa.');return
