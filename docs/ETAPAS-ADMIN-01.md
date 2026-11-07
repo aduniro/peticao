@@ -183,3 +183,12 @@ Ações de escrita passam a registrar admissão/ator/parâmetros/pedido com audi
 Validação: **277/277** cumulativos, 27/27 específicos, tipos, build e migração com histórico anterior aprovados. O navegador passou nas seis larguras em consultas/simulações com falha de rede e recuperação, sem executar publicação, reenvio ou Terminal. O servidor temporário 3032 foi encerrado e a sessão revogada; prévia 3031 preservada.
 
 Contrato/evidências/limites em `docs/A6-CENTRAL-JOURNAL.md`. A6 continua parcial: faltam vínculo único simulação/execução para retries HTTP, histórico/fluxo controlado de conciliação e avisos em aprovação (AV-5/AV-6). A descrição estática e as dicas da janela não foram alteradas antes da aprovação; não mudar a janela/público-alvo. As Etapas 2–7 e demais pendências permanecem no objetivo. Nenhum deploy ou alteração da VPS/SQLite de revisão nesta rodada.
+
+
+## A6 — uma execução por simulação e recuperação de resposta
+
+A rota exige intenção emitida pela simulação e vinculada a ação/parâmetros/administrador; a reserva admite uma única execução. Retentativas devolvem resultado persistido, inclusive após expirar o prazo de admissão. O navegador preserva intenção/parâmetros antes do envio e, ao recarregar, apenas consulta. Publicação liga o ticket ao SHA retornado na simulação. Efeitos externos incertos não são repetidos.
+
+Validação: **283/283** cumulativos, tipos, build e migração legada aprovados. Seis larguras passaram no navegador com resposta perdida depois do efeito, repetição explícita ou recarga sem execução automática, sem erros HTTP inesperados/exceções. Configuração fictícia restaurada e sessão revogada. Evidências e limites em `docs/A6-CENTRAL-JOURNAL.md`; log principal `stage01-cumulative-intent-isolated.log`. A primeira rodada foi preservada: duas falhas resultaram de variável de transporte imposta à suíte; a repetição retirou essa variável sem alterar os testes.
+
+CSS, rótulos, avisos, regras públicas e dados de revisão de CPFs preservados. Permanecem histórico/conciliação controlada, AV-1–AV-6 aguardando resposta, demais controles/telas e Etapas 2–7. Este checkpoint não conclui a integração nem autoriza deploy. Prévia 3031 retomada após o build; servidor temporário 3032 encerrado após QA.

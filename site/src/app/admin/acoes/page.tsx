@@ -18,7 +18,7 @@ export default async function AcoesPagina() {
       <div className="v2-secao">
       <h1>Central de Ações</h1>
       <p className="small">Cada botão faz uma coisa fixa e fica registrado (quem, quando, o quê). Primeiro "Simular" mostra o que aconteceria sem mudar nada; só depois "Executar", digitando a palavra de confirmação.</p>
-      <Acoes acoes={lista} />
+      <Acoes acoes={lista} storageScope={`${s.userId}:${s.sessaoId ?? "preview"}`} />
     </div>
     </main>
   );

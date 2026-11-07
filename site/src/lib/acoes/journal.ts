@@ -2,14 +2,21 @@ import { randomBytes } from "node:crypto";
 import { audit, query, tx } from "../db";
 import type { PoolClient } from "pg";
 import type { Ctx } from "./tipos";
+import { checkIntent, intentHash, type ActionIntent, type IntentCheck } from "./intent";
 export type ActionState = "concluido" | "aceito" | "falhou" | "indeterminado";
 
 /** Durable admission, before any effect. The lock transaction must not own the audit lock yet. */
-export async function prepareAction(acao: string, parametros: unknown, actor: Ctx, transactional: boolean): Promise<{ id: number; requestId: string }> {
+export async function prepareAction(acao: string, parametros: unknown, actor: Ctx, transactional: boolean, intent?: unknown): Promise<{ id: number; requestId: string } | { checked: IntentCheck }> {
   return tx(async client => {
+    let simulationId: number | null = null;
+    if (intent !== undefined) {
+      const checked = await checkIntent(client, intent, acao, parametros, actor);
+      if (checked.kind !== "ready") return { checked };
+      simulationId = checked.id;
+    }
     const requestId = randomBytes(8).toString("hex");
-    const row = (await client.query<{ id: number }>("INSERT INTO admin_acoes(user_id,email,acao,parametros,modo,ok,central_estado,central_transacional,central_request_id) VALUES($1,$2,$3,$4,'executar',false,'solicitado',$5,$6) RETURNING id", [actor.userId || null, actor.email, acao, JSON.stringify(parametros ?? {}), transactional, requestId])).rows[0];
-    await audit("admin_acao_pedida", null, { acao, por: actor.email, acaoId: row.id, transacional: transactional, pedido: requestId }, client);
+    const row = (await client.query<{ id: number }>("INSERT INTO admin_acoes(user_id,email,acao,parametros,modo,ok,central_estado,central_transacional,central_request_id,central_simulacao_id) VALUES($1,$2,$3,$4,'executar',false,'solicitado',$5,$6,$7) RETURNING id", [actor.userId || null, actor.email, acao, JSON.stringify(parametros ?? {}), transactional, requestId, simulationId])).rows[0];
+    await audit("admin_acao_pedida", null, { acao, por: actor.email, acaoId: row.id, transacional: transactional, pedido: requestId, simulacaoId: simulationId }, client);
     return { id: row.id, requestId };
   });
 }
@@ -41,10 +48,12 @@ export async function recoverActions(groupIds: string[], currentId: string): Pro
   });
 }
 
-export async function recordRead(acao: string, parameters: unknown, mode: string, actor: Ctx, result: unknown): Promise<void> {
-  await tx(async client => {
-    const row = (await client.query<{ id: number }>("INSERT INTO admin_acoes(user_id,email,acao,parametros,modo,resultado,ok,central_estado,central_fim) VALUES($1,$2,$3,$4,$5,$6,true,'concluido',now()) RETURNING id", [actor.userId || null, actor.email, acao, JSON.stringify(parameters ?? {}), mode, JSON.stringify(result ?? {})])).rows[0];
+export async function recordRead(acao: string, parameters: unknown, mode: string, actor: Ctx, result: unknown, issueIntent = false): Promise<ActionIntent | null> {
+  return tx(async client => {
+    const token = issueIntent ? randomBytes(24).toString("hex") : null;
+    const row = (await client.query<{ id: number; expira: Date }>("INSERT INTO admin_acoes(user_id,email,acao,parametros,modo,resultado,ok,central_estado,central_fim,central_simulacao_hash) VALUES($1,$2,$3,$4,$5,$6,true,'concluido',now(),$7) RETURNING id,ts+interval '15 minutes' expira", [actor.userId || null, actor.email, acao, JSON.stringify(parameters ?? {}), mode, JSON.stringify(result ?? {}), token ? intentHash(token) : null])).rows[0];
     if (mode === "executar") await audit("admin_acao_executada", null, { acao, por: actor.email, acaoId: row.id, estado: "concluido", ok: true }, client);
+    return token ? { id: row.id, token, expira: row.expira.toISOString() } : null;
   });
 }
 

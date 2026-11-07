@@ -1,31 +1,60 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Item = { id: string; grupo: string; titulo: string; palavra: string | null; efeito: string };
-type Saida = { efeito?: string; palavra?: string | null; resultado?: unknown; erro?: string; detalhe?: string; modo?: string };
+type Intent = { id: number; token: string; expira: string };
+type Pending = { intent: Intent; params: Record<string, unknown>; ini: string; fim: string; candidato: string };
+type Saida = { ok?: boolean; simulacao?: Intent; encerrada?: boolean; efeito?: string; palavra?: string | null; resultado?: unknown; erro?: string; detalhe?: string; modo?: string };
 
 const ERROS: Record<string, string> = { confirmacao: "A palavra de confirmação não confere.", ocupado: "Esta ação já está em andamento. Aguarde.", parametros: "Parâmetros inválidos.", falhou: "A ação falhou.", acao_desconhecida: "Ação desconhecida.", stepup: "A confirmação extra venceu. Confirme de novo." };
 
-function Cartao({ a }: { a: Item }) {
+function Cartao({ a, storageScope }: { a: Item; storageScope: string }) {
   const [candidato, setCandidato] = useState("");
   const [ini, setIni] = useState(""), [fim, setFim] = useState(""), [conf, setConf] = useState("");
   const [saida, setSaida] = useState<Saida | null>(null), [ocupado, setOcupado] = useState(false), [simulou, setSimulou] = useState(false);
+  const [intent, setIntent] = useState<Intent | null>(null), [pending, setPending] = useState<Pending | null>(null);
+  const revision = useRef(0), requestVersion = useRef(0);
+  const key = `admin-action-v1:${storageScope}:${a.id}`;
+  const remember = (value: Pending | null) => { setPending(value); try { if (value) sessionStorage.setItem(key, JSON.stringify(value)); else sessionStorage.removeItem(key); } catch { /* In-memory intent still protects retries in this tab. */ } };
+  useEffect(() => {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(key) ?? "null") as Pending | null;
+      if (value && Number.isSafeInteger(value.intent?.id) && /^[a-f0-9]{48}$/.test(value.intent?.token) && value.params && typeof value.ini === "string" && typeof value.fim === "string" && typeof value.candidato === "string") {
+        setIntent(value.intent); setPending(value); setIni(value.ini); setFim(value.fim); setCandidato(value.candidato); setSimulou(true);
+        void rodar("consultar", value);
+      }
+    } catch { /* An invalid local snapshot never authorizes execution. */ }
+    // Scope identifies the authenticated session; never auto-execute a recovered intent.
+  }, [key]);
   const parametros = () => (a.id === "reenvio.iniciar" ? { ini: ini ? new Date(ini).toISOString() : undefined, fim: fim ? new Date(fim).toISOString() : undefined } : a.id === "publicar.pedir" ? { candidato: candidato || undefined } : {});
-  const rodar = async (modo: "simular" | "executar") => {
+  const rodar = async (modo: "simular" | "executar" | "consultar", recovered?: Pending) => {
+    if (modo === "simular" && pending) return;
+    const active = recovered ?? pending;
+    const ticket = active?.intent ?? intent;
+    const params = active?.params ?? parametros();
+    const version = revision.current, requestId = ++requestVersion.current;
+    if (modo === "executar") {
+      if (!ticket) return;
+      remember(active ?? { intent: ticket, params, ini, fim, candidato });
+    }
     setOcupado(true);
     try {
-      const r = await fetch("/api/admin/acoes", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ acao: a.id, modo, parametros: parametros(), confirmacao: conf }) });
+      const r = await fetch("/api/admin/acoes", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ acao: a.id, modo, parametros: params, confirmacao: conf, simulacao: ticket }) });
       const j: Saida = await r.json().catch(() => ({ erro: "falhou" }));
+      if (requestId !== requestVersion.current) return;
       if (r.status === 403 && j.erro === "stepup") { window.location.assign("/admin/confirmar?volta=/admin/acoes"); return; }
       setSaida(j);
       if (modo === "simular" && !j.erro) {
         const value = (j.resultado as { candidato?: { sha256?: unknown } } | undefined)?.candidato?.sha256;
         const valid = typeof value === "string" && /^[a-f0-9]{64}$/.test(value);
         if (a.id === "publicar.pedir") setCandidato(valid ? value : "");
-        setSimulou(a.id !== "publicar.pedir" || valid);
+        const current = revision.current === version;
+        setIntent(current ? j.simulacao ?? null : null);
+        setSimulou(current && !!j.simulacao && (a.id !== "publicar.pedir" || valid));
       }
-      if (modo === "executar" && !j.erro) { setSimulou(false); setConf(""); }
-    } catch { setSaida({ erro: "falhou" }); } finally { setOcupado(false); }
+      if (j.modo === "executar" && !j.erro) { remember(null); setIntent(null); setSimulou(false); setConf(""); }
+      if (j.encerrada) { remember(null); setIntent(null); setSimulou(false); }
+    } catch { if (requestId === requestVersion.current) setSaida({ erro: "falhou" }); } finally { if (requestId === requestVersion.current) setOcupado(false); }
   };
   return (
     <section className="box" style={{ marginBottom: 16 }}>
@@ -33,12 +62,12 @@ function Cartao({ a }: { a: Item }) {
       <p>{a.efeito}</p>
       {a.id === "reenvio.iniciar" ? (
         <div className="form" style={{ maxWidth: 420 }}>
-          <label>Início da janela (vazio = 04/11 às 04h)<input type="datetime-local" value={ini} onChange={(e) => { setIni(e.target.value); setSimulou(false); }} /></label>
-          <label>Fim da janela (vazio = 04/11 às 12h)<input type="datetime-local" value={fim} onChange={(e) => { setFim(e.target.value); setSimulou(false); }} /></label>
+          <label>Início da janela (vazio = 04/11 às 04h)<input type="datetime-local" disabled={!!pending} value={ini} onChange={(e) => { revision.current++; setIni(e.target.value); setSimulou(false); setIntent(null); }} /></label>
+          <label>Fim da janela (vazio = 04/11 às 12h)<input type="datetime-local" disabled={!!pending} value={fim} onChange={(e) => { revision.current++; setFim(e.target.value); setSimulou(false); setIntent(null); }} /></label>
         </div>
       ) : null}
       <p>
-        <button type="button" onClick={() => rodar("simular")} disabled={ocupado}>{a.palavra ? "Simular (não altera nada)" : "Ver"}</button>
+        <button type="button" onClick={() => rodar("simular")} disabled={ocupado || !!pending}>{a.palavra ? "Simular (não altera nada)" : "Ver"}</button>
         {a.palavra && simulou ? (<> {" "}<label style={{ display: "inline-block" }}>Digite <strong>{a.palavra}</strong> para confirmar <input value={conf} onChange={(e) => setConf(e.target.value)} autoComplete="off" style={{ width: 130 }} /></label> <button type="button" onClick={() => rodar("executar")} disabled={ocupado || conf.trim() !== a.palavra}>Executar</button></>) : null}
       </p>
       {saida?.erro ? <p className="err" role="alert">{ERROS[saida.erro] ?? saida.erro}{saida.detalhe ? ` (${saida.detalhe})` : ""}</p> : null}
@@ -47,6 +76,6 @@ function Cartao({ a }: { a: Item }) {
   );
 }
 
-export default function Acoes({ acoes }: { acoes: Item[] }) {
-  return <>{acoes.map((a) => <Cartao key={a.id} a={a} />)}</>;
+export default function Acoes({ acoes, storageScope }: { acoes: Item[]; storageScope: string }) {
+  return <>{acoes.map((a) => <Cartao key={a.id} a={a} storageScope={storageScope} />)}</>;
 }

@@ -178,20 +178,25 @@ test("API exige sessão e confirmação extra; resultado incerto usa 502 e o aut
   const c = await setup();
   delete process.env.PREVIEW_MODE; delete process.env.ADMIN_NO_PASSWORD;
   const U = await import("./admin-users"), { NextRequest } = await import("next/server"), { POST } = await import("../app/api/admin/acoes/route");
-  const action = c.A.ACOES.find(a => a.id === "publicar.pedir")!, original = action.executar; let effects = 0;
+  const action = c.A.ACOES.find(a => a.id === "publicar.pedir")!, original = action.executar, simulate = action.simular; let effects = 0;
+  action.simular = async () => ({ candidato: { sha256: "b".repeat(64) } });
   action.executar = async () => { effects++; throw new Error("fixture possible acceptance"); };
   try {
     const created = await U.criarUsuario({ email: "action-api-owner@example.test", nome: "QA Dona", nivel: "total", senha: "Uma-Senha-Forte-2026" }); assert.ok(created.ok);
     const session = await U.abrirSessao(created.usuario.id, "127.0.0.1");
-    const req = (authenticated: boolean, modo = "executar") => new NextRequest("http://localhost/api/admin/acoes", { method: "POST", headers: { host: "localhost", origin: "http://localhost", cookie: authenticated ? `adm=${session.token}` : "", "content-type": "application/json" }, body: JSON.stringify({ acao: action.id, modo, parametros: {}, confirmacao: "PUBLICAR", email: "forged@example.test" }) });
+    const req = (authenticated: boolean, modo = "executar", simulacao?: unknown) => new NextRequest("http://localhost/api/admin/acoes", { method: "POST", headers: { host: "localhost", origin: "http://localhost", cookie: authenticated ? `adm=${session.token}` : "", "content-type": "application/json" }, body: JSON.stringify({ acao: action.id, modo, parametros: { candidato: "b".repeat(64) }, simulacao, confirmacao: "PUBLICAR", email: "forged@example.test" }) });
     assert.equal((await POST(req(false))).status, 401);
     assert.equal((await POST(req(true))).status, 403);
     assert.equal(effects, 0); assert.equal((await rows(c)).length, 0);
     await c.db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '15 minutes' WHERE user_id=$1", [created.usuario.id]);
     assert.equal((await POST(req(true, "invalid"))).status, 400);
-    const response = await POST(req(true)); assert.equal(response.status, 502); assert.equal((await response.json()).erro, "indeterminado");
+    assert.equal((await POST(req(true))).status, 400);
+    assert.equal(effects, 0);
+    const preview = await POST(req(true, "simular")); assert.equal(preview.status, 200);
+    const ticket = (await preview.json()).simulacao; assert.ok(ticket);
+    const response = await POST(req(true, "executar", ticket)); assert.equal(response.status, 502); assert.equal((await response.json()).erro, "indeterminado");
     assert.equal(effects, 1); assert.equal((await rows(c))[0].email, created.usuario.email);
-  } finally { action.executar = original; await c.db._closeDbForTests(); }
+  } finally { action.executar = original; action.simular = simulate; await c.db._closeDbForTests(); }
 });
 
 test("identificador do sinal de publicação já está gravado antes do efeito externo", async () => {

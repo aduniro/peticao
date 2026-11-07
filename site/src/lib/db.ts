@@ -294,6 +294,9 @@ const SCHEMA_SQL = `
   ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_fim TIMESTAMPTZ;
   ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_request_id TEXT;
   CREATE UNIQUE INDEX IF NOT EXISTS admin_acoes_central_request ON admin_acoes(central_request_id) WHERE central_request_id IS NOT NULL;
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_simulacao_hash TEXT;
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_simulacao_id INTEGER REFERENCES admin_acoes(id);
+  CREATE UNIQUE INDEX IF NOT EXISTS admin_acoes_central_intent ON admin_acoes(central_simulacao_id) WHERE modo='executar' AND central_simulacao_id IS NOT NULL;
   CREATE INDEX IF NOT EXISTS admin_acoes_central_pendente ON admin_acoes(acao) WHERE modo='executar' AND central_estado IN ('solicitado','indeterminado');
   CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,

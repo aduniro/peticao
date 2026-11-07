@@ -61,7 +61,7 @@ try{
  await c.query(newSql);await c.query(newSql);
  const upgradedActions=(await c.query("SELECT * FROM admin_acoes ORDER BY id")).rows;
  assert.deepEqual(upgradedActions.map(row=>Object.fromEntries(Object.keys(oldActions[0]).map(key=>[key,row[key]]))),oldActions);
- assert.ok(upgradedActions.every(row=>row.central_estado==="legacy" && row.central_transacional===false && row.central_fim===null && row.central_request_id===null));
+ assert.ok(upgradedActions.every(row=>row.central_estado==="legacy" && row.central_transacional===false && row.central_fim===null && row.central_request_id===null && row.central_simulacao_hash===null && row.central_simulacao_id===null));
  console.log("PASS legacy action history migration: original rows unchanged, no old record admitted as a new request.");
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS real startup on old schema plus DDL replay: six additive tables; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
