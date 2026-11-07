@@ -62,3 +62,12 @@ Validação atual: **261/261** testes cumulativos, tipos e build aprovados (`sta
 A execução inicial detectou cancelamentos de consultas da página anterior ao reutilizar a aba; o registro foi preservado. A execução aprovada usa uma página por caso e não filtra mensagens de erro. O servidor temporário 3032 foi encerrado e as sessões foram revogadas; a prévia 3031 permanece ativa. O achado específico de controles indevidos para Leitura está corrigido no candidato.
 
 Seguem pendentes os avisos em aprovação, feedback de contato/convites, revisão das demais telas/contratos e Etapas 2–7. Não houve deploy, alteração da VPS nem modificação da revisão de CPFs. Este checkpoint não conclui o plano.
+
+
+## Checkpoint seguinte — preferências e curadoria auditadas
+
+`f9bb4ff` torna atômica a gravação das preferências com sua auditoria. Decisões individuais de domínio também reúnem domínio, três metadados institucionais e auditoria em transação, com trava entre decisões manuais; a rota registra o autor real e recusa propriedades herdadas como tipo. O classificador existente, os demais campos dos assinantes, os rótulos e avisos foram preservados. A operação por fonte continua uma sequência de decisões individuais, sem promessa de atomicidade do lote completo.
+
+Validação atual: **265/265**, tipos e build aprovados (`stage01-cumulative-settings-domains.log`, `stage01-typecheck-settings-domains.log`, `stage01-build-settings-domains.log`). Regressões incluem rollback de auditoria/metadados, preservação dos demais dados, permissões/autor e domínio/subdomínio simultâneos. O teste do navegador passou nas seis larguras para pendência, falha de rede, preservação dos estados, recuperação e auditoria do autor; relatório `visual-settings/settings.json`.
+
+A preferência fictícia foi restaurada e a sessão revogada; servidor temporário 3032 encerrado, prévia 3031 preservada. Nenhuma consulta/curadoria de assinantes reais ou alteração da VPS/SQLite de revisão. Próxima revisão: registro de ações em `acoes/index.ts`, ainda posterior aos efeitos e separado da auditoria; não confundir com o journal do Terminal já corrigido. Demais telas/contratos, avisos em aprovação e Etapas 2–7 continuam no escopo; nenhum deploy autorizado.
