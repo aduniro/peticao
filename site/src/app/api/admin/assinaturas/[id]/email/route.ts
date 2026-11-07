@@ -11,6 +11,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (!actor) return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 401 });
   const b = await req.json().catch(() => ({}));
   if (typeof b?.email !== "string") return NextResponse.json({ ok: false, erro: "Informe o e-mail." }, { status: 400 });
-  const r = await corrigirEmail(Number(params.id), b.email, actor.email);
-  return NextResponse.json(r, { status: r.ok ? 200 : 422 });
+  const r = await corrigirEmail(Number(params.id), b.email, { userId: actor.userId, email: actor.email });
+  return NextResponse.json(r, { status: r.ok ? 200 : r.code === "forbidden" ? 403 : r.code === "conflict" ? 409 : 422 });
 }

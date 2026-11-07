@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   if (ids.length === 0) return NextResponse.json({ ok: false, erro: "Nenhum cadastro selecionado." }, { status: 400 });
   if (ids.length > MAX) return NextResponse.json({ ok: false, erro: `Selecione no máximo ${MAX} por vez.` }, { status: 400 });
   const resultados: { id: number; r: Resultado }[] = [];
-  for (const id of ids) resultados.push({ id, r: b.acao === "sugestoes" ? await aceitarSugestao(id, actor.email) : await reenviarConfirmacao(id, actor.email) });
+  for (const id of ids) resultados.push({ id, r: b.acao === "sugestoes" ? await aceitarSugestao(id, { userId: actor.userId, email: actor.email }) : await reenviarConfirmacao(id, actor.email) });
   const ok = resultados.filter((x) => x.r.ok).length;
   return NextResponse.json({ ok: true, total: ids.length, aplicados: ok, falhas: ids.length - ok, resultados });
 }

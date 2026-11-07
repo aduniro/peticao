@@ -68,3 +68,7 @@ Propostos: colunas “ID”, “Tipo”, “E-mail”, “Data do aceite”; bot
 ## AV-12 — erro de paginação da recuperação (pendente)
 
 Proposto: “Não foi possível carregar a lista. Tente novamente.” Submetido por pergunta nativa e incluído no mesmo e-mail de AV-11. A falha deve conservar os itens já carregados. Sem aprovação inferida: o componente está preparado, mas não foi conectado à página.
+
+## AV-13 — conflito na correção administrativa de e-mail (pendente)
+
+Proposto ao dono por pergunta nativa: “O cadastro foi alterado durante a conferência. Atualize a página e tente novamente.” Sem aprovação inferida. A correção transacional usa por enquanto a mensagem já existente “Não foi possível salvar.” O novo texto não foi incorporado à interface. Contrato em `ETAPA-04-CORRECAO-EMAIL.md`.
