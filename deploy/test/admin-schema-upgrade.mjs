@@ -44,7 +44,7 @@ try{
   {table_name:"mail_log",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null},
   {table_name:"mail_outbox",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null}
  ],"Only the two explicit nullable correlation columns may be added to old tables");
- assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_reset","admin_sessions","admin_stepup","admin_users","contact_replies","contact_triage_jobs","mail_message_attempts","mail_messages"]);
+ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_reset","admin_sessions","admin_stepup","admin_users","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
  const newMailLog=(await c.query("SELECT * FROM mail_log ORDER BY id")).rows,newMailOutbox=(await c.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
  assert.ok([...newMailLog,...newMailOutbox].every(row=>row.message_id===null));
  assert.deepEqual(newMailLog.map(({message_id,...row})=>row),oldMailLog);assert.deepEqual(newMailOutbox.map(({message_id,...row})=>row),oldMailOutbox);
@@ -82,10 +82,30 @@ try{
  const upgradedFoundation=(await c.query("SELECT * FROM mail_messages")).rows;
  assert.ok(upgradedFoundation.every(row=>row.reply_to===null));
  assert.deepEqual(upgradedFoundation.map(({reply_to,...row})=>row),priorFoundation);
+ // An already installed journal predates account scoping and individual event correlation.
+ await c.query("DROP TABLE mail_message_events; ALTER TABLE mail_message_attempts DROP COLUMN account_scope");
+ await c.query(`INSERT INTO mail_message_attempts(id,message_id,provider,from_addr,state,started_at,finished_at,provider_id)
+   VALUES('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001','brevo','qa@example.test','accepted',
+     '2026-10-01T10:00:01.123456Z','2026-10-01T10:00:02.654321Z','QA-LEGACY-RECEIPT')`);
+ const priorAttempts=(await c.query("SELECT row_to_json(a)::text raw FROM mail_message_attempts a ORDER BY id")).rows;
+ await c.query(newSql);await c.query(newSql);
+ assert.ok((await c.query("SELECT account_scope FROM mail_message_attempts")).rows.every(row=>row.account_scope===null),"Do not invent the account for a historical receipt");
+ assert.deepEqual((await c.query("SELECT (to_jsonb(a)-'account_scope')::text raw FROM mail_message_attempts a ORDER BY id")).rows.map(r=>JSON.parse(r.raw)),priorAttempts.map(r=>JSON.parse(r.raw)),"Preserve receipt identity, state and microsecond timestamps");
+ assert.equal((await c.query("SELECT count(*)::int n FROM mail_message_events")).rows[0].n,0,"Do not fabricate historical delivery events");
+ await c.query("UPDATE mail_message_attempts SET account_scope=$1",["b".repeat(64)]);
+ await c.query(`INSERT INTO mail_message_events(fingerprint,provider,account_scope,provider_id,recipient,event_type,occurred_at,received_at,source,association_state,message_id,attempt_id)
+   VALUES('QA-EVENT','brevo',$1,'QA-LEGACY-RECEIPT','foundation@example.test','delivered','2026-10-01T10:00:03.123456Z','2026-10-01T10:00:04.654321Z','webhook','linked',
+     '00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002')`,["b".repeat(64)]);
+ const journalSnapshot=async()=>(await c.query("SELECT 'message' kind,row_to_json(m)::text raw FROM mail_messages m UNION ALL SELECT 'attempt',row_to_json(a)::text FROM mail_message_attempts a UNION ALL SELECT 'event',row_to_json(e)::text FROM mail_message_events e ORDER BY kind,raw")).rows;
+ const priorJournal=await journalSnapshot();await c.query(newSql);await c.query(newSql);await c.query(oldSql);
+ assert.deepEqual(await journalSnapshot(),priorJournal,"DDL replay and previous bootstrap must preserve linked events and receipt identity byte for byte");
+ assert.deepEqual(await rows(),before,"Message-event upgrade must preserve all signer fields");
+ assert.ok((await c.query("SELECT indexname FROM pg_indexes WHERE schemaname=current_schema() AND indexname IN ('mail_message_receipt','mail_message_event_identity','mail_message_event_history')")).rowCount===3,"Correlation indexes must survive the foundation upgrade");
+ console.log("PASS scoped journal upgrade: unknown account stays null, no fabricated events; existing receipt and linked event identity/timestamps preserved on replay.");
  console.log("PASS archive foundation upgrade: existing message identity, fingerprint, state and timestamp preserved; Reply-To left unknown.");
  console.log("PASS legacy action history migration: original rows unchanged, no old record admitted as a new request.");
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
- console.log("PASS real startup on old schema plus DDL replay: nine additive tables and two nullable correlation columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS real startup on old schema plus DDL replay: ten additive tables and two nullable correlation columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;
