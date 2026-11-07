@@ -80,3 +80,12 @@ A preferência fictícia foi restaurada e a sessão revogada; servidor temporár
 Validação atual: **277/277**, tipos, build e migração aprovados; suíte específica 27/27. Inclui perda simulada de resposta do commit, falhas em auditoria, operações opostas, aviso pendente e correlação do sinal temporário de publicação. Não foi executado deploy/serviço root. O navegador passou nas seis larguras para consultas/simulações, preservando campos e configurações. Relatório `visual-actions/actions.json`; contrato completo `docs/A6-CENTRAL-JOURNAL.md` do candidato.
 
 Ainda falta vincular execução à intenção/simulação única para retries após perda da resposta HTTP, além do histórico/fluxo controlado de conciliação. A trava não substitui essa idempotência. AV-5 e AV-6 foram submetidos ao dono: resultado indeterminado e descrição/dicas da janela. Nenhum desses textos foi inserido; a janela configurada não foi alterada. As demais pendências e Etapas 2–7 continuam no objetivo. Sem deploy ou alteração da VPS/revisão de CPFs; prévia 3031 ativa, servidor temporário 3032 encerrado.
+
+
+## Checkpoint 49e0fdf — execução única da intenção administrativa
+
+No candidato isolado `admin-v2-stage01`, cada execução HTTP de escrita exige intenção da simulação, vinculada ao administrador/ação/parâmetros e consumida uma única vez. Retentativas recuperam o resultado persistido; após recarga, o navegador apenas consulta. Efeitos externos incertos continuam bloqueados até conciliação. Nenhum aviso ou CSS alterado.
+
+Validação: **283/283** cumulativos, tipos, build e migração; seis larguras de navegador com resposta perdida e recuperação, sem duplicação, exceções ou erros HTTP inesperados. O primeiro cumulativo teve duas falhas de configuração do transporte de teste; o log foi preservado e a repetição passou sem editar esses testes. Documentação e evidências no candidato em `docs/A6-CENTRAL-JOURNAL.md`.
+
+Servidor temporário 3032 encerrado após QA e sessão fictícia revogada. Prévia 3031 ativa. Vigia e respondedor conferidos ativos. Nenhuma alteração remota, deploy ou mudança das decisões da revisão local. Próximo trabalho: histórico e conciliação controlada da Central; avisos aguardam resposta e Etapas 2–7 continuam pendentes. Integração completa ainda não concluída; publicação exige autorização final.
