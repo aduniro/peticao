@@ -15,13 +15,16 @@ test("painel de e-mails: registro por provedor/tipo, devoluções de todos os pr
   const pn = await import("./mail/painel");
   const { isSuppressed } = await import("./mail/suppression");
   const { logCheck } = await import("./email-check-log");
-  const wait = () => new Promise((r) => setTimeout(r, 600));
+  const waitUntil = async (ready: () => Promise<boolean>) => {
+    const deadline = Date.now() + 15000;
+    while (!await ready()) { if (Date.now() > deadline) throw new Error("Asynchronous log did not settle"); await new Promise(r => setTimeout(r, 50)); }
+  };
 
   // 1/4) cada tentativa fica registrada com provedor, tipo e remetente; falha de um provedor e sucesso do seguinte
   const m = { to: "Pessoa@Exemplo.org", subject: "s", text: "t" };
   await deliver(m, ["ses", "sendpulse"], { ses: async () => { throw new Error("cota excedida"); }, sendpulse: async () => {} } as never, (p: string, k?: string) => `Nome <${k}@${p}.sancionaintegral.org>`, "confirmacao", attemptLogger(m, "confirmacao"));
   logQueued({ to: "fila@exemplo.org" }, "confirmacao", "todos falharam");
-  await wait();
+  await waitUntil(async () => (await query("SELECT 1 FROM mail_log")).rowCount === 3);
   const log = (await query<any>("SELECT provider,status,kind,to_addr,from_addr FROM mail_log ORDER BY id")).rows;
   assert.deepEqual(log.map((l: any) => `${l.provider}:${l.status}`).sort(), ["fila:queued", "sendpulse:sent", "ses:failed"]);
   assert.equal(log.find((l: any) => l.provider === "ses").to_addr, "pessoa@exemplo.org");
@@ -103,7 +106,7 @@ test("painel de e-mails: registro por provedor/tipo, devoluções de todos os pr
 
   // verificações (Reacher pelas sondas de cabanos.cc e MX)
   logCheck("reacher", "a@unir.br", "indisponivel", 4000); logCheck("reacher", "b@unir.br", "indisponivel", 4001); logCheck("reacher", "c@gmail.com", "aceito", 800); logCheck("mx", "d@x.org", "ok", 12);
-  await wait();
+  await waitUntil(async () => (await pn.verificacoes()).some(c => c.via === "reacher" && c.verdict === "indisponivel" && c.n7 === 2));
   const ck = await pn.verificacoes(); assert.ok(ck.some((c) => c.via === "reacher" && c.verdict === "indisponivel" && c.n7 === 2));
   assert.deepEqual((await pn.dominiosLentos())[0], { dominio: "unir.br", n: 2 });
 });

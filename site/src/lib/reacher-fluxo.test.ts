@@ -34,12 +34,13 @@ test("fluxo: Reacher recusa só com prova do SMTP e não é chamado quando o CPF
     const full = await handleSign(body("cheia@gmail.com"), { ip: "9.9.9.3" }, null);
     assert.deepEqual((full.json as { errors: Record<string, string> }).errors, { email: "email_full" });
     // sem prova (porta 25 fechada → can_connect_smtp=false): NÃO bloqueia; segue o fluxo normal (200 ou pede identidade)
-    const ok = await handleSign(body("normal@gmail.com"), { ip: "9.9.9.4" }, null);
+    const ok = await handleSign(body("normal@gmail.com"), { ip: "9.9.9.4" }, { name: "synthetic", lookup: async () => ({ nome: "MARIA DA SILVA", mae: null, nasc: "01/02/1990" }) });
     assert.equal(ok.status, 200);
     assert.deepEqual(seen, ["fantasma@gmail.com", "cheia@gmail.com", "normal@gmail.com"]);
     // Reacher fora do ar: deixa passar
     server.close(); _clearReacherCache();
     const down = await handleSign(body("outra@gmail.com"), { ip: "9.9.9.5" }, null);
-    assert.equal(down.status, 200);
+    assert.equal(down.status, 503);
+    assert.equal(down.json.errorCode, "cpf_check_unavailable");
   } finally { delete process.env.REACHER_URL; server.close(); await dbmod._closeDbForTests(); }
 });

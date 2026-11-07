@@ -1,3 +1,4 @@
+import { makeTicket } from "./identity";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { rmSync, readdirSync, readFileSync } from "node:fs";
@@ -106,7 +107,7 @@ test("campanha: instituição pelo e-mail, origem, gerações, mesmo aparelho e 
 
   // aprovação retroativa também atualiza a instituição
   // (servidor com domínio desconhecido é recusado; a assinatura de Fábio é de apoiador, que aceita qualquer e-mail)
-  const rf = await handleSign({ name: "Fábio Mota", email: "fabio@ufxx.br", cpf: cpfFrom("400000006"), category: "apoiador", city: "Porto Velho", uf: "RO", consent: true }, { ip: "1.2.3.4" }, null);
+  const rf = await handleSign({ name: "Fábio Mota", email: "fabio@ufxx.br", cpf: cpfFrom("400000006"), category: "apoiador", city: "Porto Velho", uf: "RO", consent: true, ticket: makeTicket(cpfFrom("400000006"), "fabio@ufxx.br"), identity: { method: "nascimento", value: "01/02/1990" } }, { ip: "1.2.3.4" }, { name: "synthetic", lookup: async () => ({ nome: "FÁBIO MOTA", nasc: "01/02/1990", mae: null }) });
   assert.equal(rf.status, 200, JSON.stringify(rf.json));
   assert.equal((await dbmod.query<any>("SELECT email_institution i FROM signatures WHERE email='fabio@ufxx.br'")).rows[0].i, null);
   await inst.decideDomain("ufxx.br", "approved", { kind: "ifes", institution: "Universidade Federal XX", by: "teste" });

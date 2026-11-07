@@ -4,6 +4,7 @@ import { rmSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { _setMxResolverForTests } from "./email-check";
+import { makeTicket } from "./identity";
 import { mockProvider } from "./cpf-check";
 
 (process.env as Record<string, string>).NODE_ENV = "test";
@@ -101,12 +102,13 @@ test("identidade: por nascimento, bloqueio após 5 erros por CPF, e-mail institu
 
   // domínio de discentes e domínio próprio comum também pedem identidade
   const c4 = cpfFrom("200000005");
-  assert.equal((await handleSign(form({ name: "Beto Lima", email: "beto@aluno.unir.br", cpf: c4 }), ctx, prov)).json.identityRequired, true);
-  assert.equal((await handleSign(form({ name: "Beto Lima", email: "beto@empresa-do-beto.com.br", cpf: c4 }), ctx, prov)).json.identityRequired, true);
+  const beto = mockProvider({ [c4]: { nome: "BETO LIMA", nasc: "01/02/1990" } });
+  assert.equal((await handleSign(form({ name: "Beto Lima", email: "beto@aluno.unir.br", cpf: c4 }), ctx, beto)).json.identityRequired, true);
+  assert.equal((await handleSign(form({ name: "Beto Lima", email: "beto@empresa-do-beto.com.br", cpf: c4 }), ctx, beto)).json.identityRequired, true);
 
-  // modo desligado (sem provedor): assina direto
+  // apoiador sem provedor: não pode pular a consulta obrigatória
   const c5 = cpfFrom("200000006");
-  assert.equal((await handleSign(form({ name: "Cris Dias", email: "cris@gmail.com", cpf: c5 }), ctx, null)).json.ok, true);
+  assert.equal((await handleSign(form({ name: "Cris Dias", email: "cris@gmail.com", cpf: c5 }), ctx, null)).status, 503);
 
   await dbmod._closeDbForTests();
   rmSync(out, { recursive: true, force: true });
@@ -121,7 +123,8 @@ test("identidade: serviço fora do ar e método sem dado cadastral", async () =>
   const c6 = cpfFrom("200000007");
   const down = { name: "x", lookup: async () => { throw new ProviderUnavailable("QUOTA_EXCEEDED"); } };
   const f = (extra: object = {}) => form({ name: "Davi Rocha", email: "davi@gmail.com", cpf: c6, ...extra });
-  const { ticket } = (await handleSign(f(), ctx, down)).json as { ticket: string };
+  assert.equal((await handleSign(f(), ctx, down)).status, 503);
+  const ticket = makeTicket(c6, "davi@gmail.com");
   const r = await handleSign(f({ ticket, identity: { method: "nascimento", value: "01/02/1990" } }), ctx, down);
   assert.equal(r.status, 503); // nunca libera na dúvida
   assert.equal((await dbmod.query("SELECT 1 FROM signatures")).rowCount, 0);
@@ -144,7 +147,8 @@ test("identidade: CPF fora dos dados de teste não gasta tentativa e orienta; li
   const ctx4 = { ip: "7.7.7.7" };
   const real = cpfFrom("200000008");
   const f = (extra: object = {}) => form({ name: "Eva Lima", email: "eva@gmail.com", cpf: real, ...extra });
-  const { ticket } = (await handleSign(f(), ctx4, provider)).json as { ticket: string }; // provider = mock que só conhece outro CPF
+  assert.equal((await handleSign(f(), ctx4, provider)).json.errorCode, "cpf_mock_unknown");
+  const ticket = makeTicket(real, "eva@gmail.com"); // challenge unit fixture; production preflight refuses unknown CPF
   for (let i = 0; i < MAX_FAILED + 2; i++) {
     const r = await handleSign(f({ ticket, identity: { method: "nascimento", value: "01/02/1990" } }), ctx4, provider);
     assert.equal(r.status, 422);
