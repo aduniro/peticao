@@ -352,3 +352,23 @@ Encerrada a passagem reforçada:100/100 cenários, quatro níveis,44 verificaç�
 Nova auditoria nominal solicitada pelo dono: `docs/AUDITORIA-PUBLICACAO-NOMES-CPF-20261107.md`. V6 de validação comprovada no build da VPS e nos snapshots; resolvedor/PDF, confirmação antiga, exceção de casamento, envio de alertas, prioridade do método de identidade e extensão de identity_attempts têm pendências distintas. O candidato essencial preserva o backend publicado e não promove a revisão local. A correção de chave fictícia era exclusivamente QA; o pedido de publicá-la não autoriza publicar todo o painel nem levar chave de teste à produção.
 
 Prioridade reafirmada pelo dono: retornar sempre ao admin-v2 após interrupções. Auditoria estrangeiros registrada na fila, com comparação em base própria e consultas somente de CPFs já fornecidos; não identificar CPF de terceiros pelo nome. A próxima etapa do painel será feita em checkout separado para preservar94c9cc0 durante a revisão local do dono.
+
+
+## Continuidade real — indicações atômicas02f699a
+
+Após um intervalo sem build/teste ativo, o dono cobrou andamento; foi explicitado que respostas de status não eram execução. A prioridade contínua e a retomada obrigatória foram registradas em `docs/POLITICA-CENTRAL-EXECUCAO.md` e no contexto do Vigia (83228fd/47157d4). A proibição atual inclui deploy e qualquer merge/integração de código com a VPS sem autorização específica.
+
+Na cópia seguinte `candidate-stage02`, ramoadmin-v2-stage02, concluída criação de indicação com autoria/conta atual e auditoria transacional, sem atualizar a prévia3031/Tailnet94c9cc0. Passaram7 direcionados,476 cumulativos, build, tipos e HTTP compilado com falha de auditoria injetada e recuperação. Nenhuma assinatura/mensagem/fila alterada, nenhum DDL novo. ProcessoHTTP3033/PG54346 encerrado. Contrato em `docs/ETAPA-04-INDICACOES-ATOMICAS.md` do candidato; commit02f699a. CriaçõesHTTP repetidas, edição/arquivamento e demais entidades não estão concluídas.
+
+Continuidade imediata: criação de usuário administrativo ainda precisa unir conta e auditoria na mesma transação. AV-8 (triagem visual) foi perguntado novamente de forma autocontida e continua sem aprovação inferida. Outros avisos pendentes não foram ativados.
+
+Por autorização explícita de trabalho em paralelo, a auditoria estrangeira foi delegada e concluída emd8a2918 (`docs/AUDITORIA-ESTRANGEIROS-CPF-20261107.md`):5 nomes diretos sem candidatos na base própria,3 endereços de recusas ligados a cadastros próprios,12 sem nome preservado.196800 comparações sobre12302 registros próprios, zeroAPI nova. Não há inferência de nacionalidade/fraude; documentação consultada só oferece consulta por CPF conhecido e estrangeiros também podem ter CPF. Relatório HTML aceito202 id6aefa0cb3c59d58cc029d557, somente ao dono.
+
+
+## AV-8 aprovado — triagem visual76c7b5c em validação
+
+Recebida resposta explícita “Aprovar estes textos” para AV-8. No candidato seguinte, integrado expansor de Análise automática por contato com leitura sob demanda, histórico, evidências e sugestão somente leitura vinculada à revisão. Reanalisar só enfileira a análise; não envia resposta. Mantidos CSS/layout globais e o candidato essencial na Tailnet. Código preservado no commit76c7b5c; não é declaração de conclusão.
+
+A primeira cumulativa478 passou; build detectou TS2339 em ref após await. Cancelamento foi refatorado sem cast; tipos e dois testes direcionados passaram. A rodada corrigida passou478/478 novamente e segue para build/tipos e QA compilado de seis larguras (`stage02-triage-ui-retry-*`). Continuação automática específica1655337 aguarda o supervisor1650621 para executar o navegador em banco fictício novo, sem apresentar a espera como escrita de código. IDs são evidência deste checkpoint e devem ser revalidados antes de inferir atividade futura.
+
+AV-14 de legenda legível foi proposto em pergunta separada, ainda sem aprovação inferida; os cinco textos do AV-8 não aprovam outros avisos. A próxima escrita administrativa tem prova isolada de baseline: falha de auditoria na criação deixa uma conta fictícia sem evento; schema de teste removido e sem acesso à produção. Implementação dessa correção ainda não iniciada enquanto o bloco visual está em validação.
