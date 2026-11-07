@@ -13,5 +13,5 @@ export async function POST(req: NextRequest) {
   if (!s || !b || typeof b !== "object") return NextResponse.json({ ok: false, erro: "pedido_invalido" }, { status: 400 });
   if (b.modo !== "simular" && b.modo !== "executar") return NextResponse.json({ ok: false, erro: "pedido_invalido" }, { status: 400 });
   const r = await rodarAcao(b.acao, b.modo, b.parametros, b.confirmacao, { userId: s.userId, email: s.email });
-  return NextResponse.json(r, { status: r.ok ? 200 : r.erro === "ocupado" ? 409 : r.erro === "falhou" ? 500 : 400 });
+  return NextResponse.json(r, { status: r.ok ? 200 : r.erro === "ocupado" ? 409 : r.erro === "falhou" ? 500 : r.erro === "indeterminado" ? 502 : 400 });
 }

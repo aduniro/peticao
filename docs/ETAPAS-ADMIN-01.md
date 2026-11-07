@@ -174,3 +174,12 @@ Evidências: `/mnt/dev/peticao/.cache/admin-audit-20261106/visual-settings/setti
 A correção de domínios foi exercitada em testes de handlers/banco com dados fictícios, não em curadoria real da VPS. O classificador público e seus critérios não foram reescritos. A rejeição preserva o comportamento anterior; a operação por fonte continua sendo uma sequência de transações por domínio. Não afirmar atomicidade de lote por fonte.
 
 Próximo contrato a revisar: `acoes/index.ts` ainda registra ação/auditoria depois do efeito, com gravações separadas. Isso é distinto do journal/protocolo do Terminal já corrigido; a Central ainda exige revisão antes da liberação. Avisos em aprovação, demais telas/contratos e Etapas 2–7 continuam pendentes. Nenhum deploy ou alteração da VPS/SQLite de revisão nesta rodada.
+
+
+## A6 — registro durável da Central
+
+Ações de escrita passam a registrar admissão/ator/parâmetros/pedido com auditoria antes do efeito. Efeitos de reenvio e lease do Terminal usam a mesma transação do resultado final; pedidos externos têm aceite/indeterminação separados da conclusão. A trava é por grupo e esquema. O identificador do sinal de publicação já está persistido antes da escrita. O aviso do Terminal ocorre depois do commit e não mantém a trava ocupada; desligamento continua possível durante a espera.
+
+Validação: **277/277** cumulativos, 27/27 específicos, tipos, build e migração com histórico anterior aprovados. O navegador passou nas seis larguras em consultas/simulações com falha de rede e recuperação, sem executar publicação, reenvio ou Terminal. O servidor temporário 3032 foi encerrado e a sessão revogada; prévia 3031 preservada.
+
+Contrato/evidências/limites em `docs/A6-CENTRAL-JOURNAL.md`. A6 continua parcial: faltam vínculo único simulação/execução para retries HTTP, histórico/fluxo controlado de conciliação e avisos em aprovação (AV-5/AV-6). A descrição estática e as dicas da janela não foram alteradas antes da aprovação; não mudar a janela/público-alvo. As Etapas 2–7 e demais pendências permanecem no objetivo. Nenhum deploy ou alteração da VPS/SQLite de revisão nesta rodada.

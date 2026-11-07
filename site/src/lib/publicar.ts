@@ -44,14 +44,15 @@ export function situacaoPublicacao() {
 
 export type Pedido = { ok: true; id: string } | { ok: false; erro: "preview" | "nao_instalado" | "ja_pedido" | "em_andamento" | "gravar" };
 /** Grava o sinal com exclusividade (arquivo temporário + link atômico). Recusa se já há pedido ou publicação em andamento. */
-export function pedirPublicacao(por: string, candidato: string): Pedido {
+export function pedirPublicacao(por: string, candidato: string, requestId?: string): Pedido {
   if (process.env.PREVIEW_MODE === "1") return { ok: false, erro: "preview" };
   const s = situacaoPublicacao();
   if (!s.instalado) return { ok: false, erro: "nao_instalado" };
   if (s.emAndamento) return { ok: false, erro: "em_andamento" };
   if (s.pedidoPendente) return { ok: false, erro: "ja_pedido" };
   if (!/^[a-f0-9]{64}$/.test(candidato) || s.candidato?.sha256 !== candidato) return { ok: false, erro: "gravar" };
-  const id = randomBytes(8).toString("hex");
+  if (requestId !== undefined && !/^[a-f0-9]{16}$/.test(requestId)) return { ok: false, erro: "gravar" };
+  const id = requestId ?? randomBytes(8).toString("hex");
   const tmp = `${pedidoPath()}.${id}.tmp`;
   try {
     writeFileSync(tmp, JSON.stringify({ id, candidato, por: por.replace(/[^\w.@+-]/g, "").slice(0, 80), em: new Date().toISOString() }) + "\n", { mode: 0o640, flag: "wx" });

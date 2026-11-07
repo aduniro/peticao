@@ -1,4 +1,6 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { query } from "./db";
+import type { PoolClient } from "pg";
 import { getSetting, setSetting } from "./batches";
 
 /**
@@ -15,9 +17,9 @@ export async function terminalAte(): Promise<Date | null> {
   const v = await getSetting(CHAVE_ATE, ""); const d = v ? new Date(v) : null;
   return d && d.getTime() > Date.now() ? d : null;
 }
-export async function ligarTerminal(minutos: number): Promise<Date> {
+export async function ligarTerminal(minutos: number, client?: PoolClient): Promise<Date> {
   const m = Math.min(MAX_MINUTOS, Math.max(5, Math.round(minutos) || 30)), ate = new Date(Date.now() + m * 60_000);
-  await setSetting(CHAVE_ATE, ate.toISOString()); return ate;
+  await query("INSERT INTO settings(key,value) VALUES($1,$2) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value", [CHAVE_ATE, ate.toISOString()], client); return ate;
 }
 export const desligarTerminal = () => setSetting(CHAVE_ATE, "");
 

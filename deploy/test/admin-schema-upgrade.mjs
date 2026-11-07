@@ -53,6 +53,16 @@ try{
  assert.deepEqual(migratedHistory.map(row=>Object.fromEntries(Object.keys(originalHistory[0]).map(key=>[key,row[key]]))),originalHistory);
  assert.ok(migratedHistory.every(row=>row.estado==="legacy" && row.payload===null && row.due_at===null && row.attempts===0));
  assert.deepEqual(await rows(),before,"Contact history migration must also preserve every signer field");
+ const legacyAction=/CREATE TABLE IF NOT EXISTS admin_acoes \([\s\S]*?\n  \);/.exec(newSql);
+ assert.ok(legacyAction);
+ await c.query("DROP TABLE admin_acoes");await c.query(legacyAction[0]);
+ await c.query("INSERT INTO admin_acoes(email,acao,modo,parametros,resultado,ok) VALUES('legacy@example.test','reenvio.parar','executar','{}','{\"ligado\":false}',true)");
+ const oldActions=(await c.query("SELECT * FROM admin_acoes ORDER BY id")).rows;
+ await c.query(newSql);await c.query(newSql);
+ const upgradedActions=(await c.query("SELECT * FROM admin_acoes ORDER BY id")).rows;
+ assert.deepEqual(upgradedActions.map(row=>Object.fromEntries(Object.keys(oldActions[0]).map(key=>[key,row[key]]))),oldActions);
+ assert.ok(upgradedActions.every(row=>row.central_estado==="legacy" && row.central_transacional===false && row.central_fim===null && row.central_request_id===null));
+ console.log("PASS legacy action history migration: original rows unchanged, no old record admitted as a new request.");
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS real startup on old schema plus DDL replay: six additive tables; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{

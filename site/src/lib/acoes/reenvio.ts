@@ -1,8 +1,9 @@
 import { query } from "../db";
-import { getSetting, setSetting } from "../batches";
+import { getSetting } from "../batches";
 import { CHAVES, alvos } from "../reenvio";
-import type { Acao } from "./tipos";
+import type { Acao, Ctx } from "./tipos";
 
+const writeSetting = (key: string, value: string, ctx: Ctx) => query("INSERT INTO settings(key,value) VALUES($1,$2) ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value", [key, value], ctx.client);
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(-03:00|Z|[+-]\d{2}:\d{2})$/;
 const JANELA_PADRAO = { ini: "2026-11-04T04:00:00-03:00", fim: "2026-11-04T12:00:00-03:00" };
 const brt = (iso: string) => new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Porto_Velho", dateStyle: "short", timeStyle: "short" });
@@ -26,7 +27,7 @@ export const reenvioStatus: Acao<{}> = {
 
 type PIniciar = { ini: string; fim: string };
 export const reenvioIniciar: Acao<PIniciar> = {
-  id: "reenvio.iniciar", grupo: "reenvio", titulo: "Ligar o reenvio das confirmações", palavra: "REENVIAR",
+  id: "reenvio.iniciar", grupo: "reenvio", titulo: "Ligar o reenvio das confirmações", palavra: "REENVIAR", transacional: true,
   validar: (e) => {
     const x = (e ?? {}) as Record<string, unknown>;
     const ini = typeof x.ini === "string" && x.ini ? x.ini : JANELA_PADRAO.ini, fim = typeof x.fim === "string" && x.fim ? x.fim : JANELA_PADRAO.fim;
@@ -42,17 +43,17 @@ export const reenvioIniciar: Acao<PIniciar> = {
   },
   executar: async (p, ctx) => {
     const n = (await alvos(1_000_000, p)).length;
-    await setSetting(CHAVES.inicio, p.ini); await setSetting(CHAVES.fim, p.fim); await setSetting(CHAVES.lote, "60");
+    await writeSetting(CHAVES.inicio, p.ini, ctx); await writeSetting(CHAVES.fim, p.fim, ctx); await writeSetting(CHAVES.lote, "60", ctx);
     const marca = `PAINEL-${ctx.userId}-${new Date().toISOString().slice(0, 10)}`;
-    await setSetting(CHAVES.ativo, marca);
+    await writeSetting(CHAVES.ativo, marca, ctx);
     return { ligado: true, codigo: marca, pessoasAlcancadas: n };
   },
 };
 
 export const reenvioParar: Acao<{}> = {
-  id: "reenvio.parar", grupo: "reenvio", titulo: "Parar o reenvio", palavra: "PARAR",
+  id: "reenvio.parar", grupo: "reenvio", titulo: "Parar o reenvio", palavra: "PARAR", transacional: true,
   validar: () => ({ ok: true, p: {} }),
   descrever: () => "Desliga o reenvio. Nada mais é enviado por ele; o que já foi enviado continua registrado e ninguém é reenviado duas vezes.",
   simular: async () => ({ estavaLigado: !!(await getSetting(CHAVES.ativo, "")).trim() }),
-  executar: async () => { const antes = !!(await getSetting(CHAVES.ativo, "")).trim(); await setSetting(CHAVES.ativo, ""); return { estavaLigado: antes, ligado: false }; },
+  executar: async (_p, ctx) => { const antes = !!(await query<{ value: string }>("SELECT value FROM settings WHERE key=$1", [CHAVES.ativo], ctx.client)).rows[0]?.value.trim(); await writeSetting(CHAVES.ativo, "", ctx); return { estavaLigado: antes, ligado: false }; },
 };

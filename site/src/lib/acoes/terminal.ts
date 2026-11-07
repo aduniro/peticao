@@ -1,4 +1,5 @@
-import { MAX_MINUTOS, desligarTerminal, ligarTerminal, terminalAte, terminalConfigurado } from "../terminal";
+import { query } from "../db";
+import { MAX_MINUTOS, CHAVE_ATE, ligarTerminal, terminalAte, terminalConfigurado } from "../terminal";
 import type { Acao } from "./tipos";
 
 /** Avisa o dono por e-mail sempre que o Terminal é ligado (quem, até quando). Falha de e-mail nunca impede a ação. */
@@ -14,18 +15,19 @@ export async function avisarTerminalLigado(quem: string, ate: Date, minutos: num
 const estado = async () => { const ate = await terminalAte(); return { ligado: !!ate, ate: ate?.toISOString() ?? null, configurado: terminalConfigurado() }; };
 
 export const terminalLigar: Acao<{ minutos: number }> = {
-  id: "terminal.ligar", grupo: "terminal", titulo: "Ligar o Terminal", palavra: "TERMINAL",
+  id: "terminal.ligar", grupo: "terminal", titulo: "Ligar o Terminal", palavra: "TERMINAL", transacional: true,
   validar: (e) => { const m = Number((e as any)?.minutos ?? 30); return Number.isFinite(m) && m >= 5 && m <= MAX_MINUTOS ? { ok: true, p: { minutos: Math.round(m) } } : { ok: false, erro: `Informe de 5 a ${MAX_MINUTOS} minutos.` }; },
   descrever: (p) => `Liga o Terminal (/admin/terminal) por ${p.minutos} minutos e depois desliga sozinho, e avisa o dono por e-mail. Ele roda num serviço separado, sem privilégios de administrador, sem acesso às senhas do site e sem acesso à internet. Cada comando fica registrado. Comandos que precisam de administrador continuam indo por e-mail.`,
   simular: async (p) => ({ ...(await estado()), ligariaPorMinutos: p.minutos }),
-  executar: async (p, ctx) => { const ate = await ligarTerminal(p.minutos); const avisado = await avisarTerminalLigado(ctx.email, ate, p.minutos); return { ligado: true, ate: ate.toISOString(), configurado: terminalConfigurado(), dono_avisado_por_email: avisado }; },
+  executar: async (p, ctx) => { const ate = await ligarTerminal(p.minutos, ctx.client); return { ligado: true, ate: ate.toISOString(), configurado: terminalConfigurado(), dono_avisado_por_email: false }; },
+  aposCommit: async (p, ctx, resultado) => ({ dono_avisado_por_email: await avisarTerminalLigado(ctx.email, new Date(String(resultado.ate)), p.minutos) }),
 };
 export const terminalDesligar: Acao<{}> = {
-  id: "terminal.desligar", grupo: "terminal", titulo: "Desligar o Terminal", palavra: "DESLIGAR",
+  id: "terminal.desligar", grupo: "terminal", titulo: "Desligar o Terminal", palavra: "DESLIGAR", transacional: true,
   validar: () => ({ ok: true, p: {} }),
   descrever: () => "Desliga o Terminal agora. Nenhum comando novo é aceito.",
   simular: () => estado(),
-  executar: async () => { await desligarTerminal(); return { ligado: false }; },
+  executar: async (_p, ctx) => { await query("INSERT INTO settings(key,value) VALUES($1,'') ON CONFLICT (key) DO UPDATE SET value=''", [CHAVE_ATE], ctx.client); return { ligado: false }; },
 };
 export const terminalStatus: Acao<{}> = {
   id: "terminal.status", grupo: "terminal", titulo: "Ver o Terminal",

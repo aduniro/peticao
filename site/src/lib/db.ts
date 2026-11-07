@@ -289,6 +289,12 @@ const SCHEMA_SQL = `
     resultado JSONB,
     ok BOOLEAN NOT NULL DEFAULT false
   );
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_estado TEXT NOT NULL DEFAULT 'legacy' CHECK (central_estado IN ('legacy','solicitado','concluido','aceito','falhou','indeterminado'));
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_transacional BOOLEAN NOT NULL DEFAULT false;
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_fim TIMESTAMPTZ;
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_request_id TEXT;
+  CREATE UNIQUE INDEX IF NOT EXISTS admin_acoes_central_request ON admin_acoes(central_request_id) WHERE central_request_id IS NOT NULL;
+  CREATE INDEX IF NOT EXISTS admin_acoes_central_pendente ON admin_acoes(acao) WHERE modo='executar' AND central_estado IN ('solicitado','indeterminado');
   CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,
     ts TEXT NOT NULL,
