@@ -89,3 +89,12 @@ No candidato isolado `admin-v2-stage01`, cada execução HTTP de escrita exige i
 Validação: **283/283** cumulativos, tipos, build e migração; seis larguras de navegador com resposta perdida e recuperação, sem duplicação, exceções ou erros HTTP inesperados. O primeiro cumulativo teve duas falhas de configuração do transporte de teste; o log foi preservado e a repetição passou sem editar esses testes. Documentação e evidências no candidato em `docs/A6-CENTRAL-JOURNAL.md`.
 
 Servidor temporário 3032 encerrado após QA e sessão fictícia revogada. Prévia 3031 ativa. Vigia e respondedor conferidos ativos. Nenhuma alteração remota, deploy ou mudança das decisões da revisão local. Próximo trabalho: histórico e conciliação controlada da Central; avisos aguardam resposta e Etapas 2–7 continuam pendentes. Integração completa ainda não concluída; publicação exige autorização final.
+
+
+## Checkpoint 89600b6 — histórico e conciliação por comprovante
+
+Backend local: histórico paginado Total + step-up; conciliação por comprovante root ligado ao ID/SHA do pedido, com auditoria atômica e preservação da autoria/horário originais. O executor proposto grava comprovantes por ID sem sobrescrita. Recusa comprovada permite nova intenção; falha do publicador continua indeterminada, pois pode haver deploy parcial. Não usar último estado mutável, ausência de prova ou veredito livre como atalho.
+
+Validação final: **292/292** cumulativos, tipos, build, oito testes Python e regressão no navegador em seis larguras aprovados. Detalhes em `docs/A6-CENTRAL-JOURNAL.md` no candidato; evidências `stage01-cumulative-reconcile-final.log` e `stage01-reconcile-browser-regression.log`. O roteiro de navegador exercita o fluxo de intenção já existente; a interface nova aguarda AV-7 e não foi ativada. AV-1–AV-6 e procedimento controlado para falhas parciais também pendentes.
+
+O servidor temporário 3032 foi encerrado e a sessão fictícia revogada; prévia 3031 preservada. Nenhuma alteração da VPS, revisão local ou dados reais; nenhum deploy. O próximo avanço independente é a triagem interna (Etapa 2), portando lógica pura e evidências por colunas permitidas, sem SSH root no app. A leitura de `tools/ponte/triagem-lib.mjs`/`triagem.mjs` mostrou duas correções necessárias no porte: a coleta atual usa exclusão de colunas em vez de lista permitida, e algumas minutas inferem recebimento/ação executada só pelo registro de envio. Não levar essas inferências para o app novo. As Etapas 2–7 permanecem no objetivo completo.
