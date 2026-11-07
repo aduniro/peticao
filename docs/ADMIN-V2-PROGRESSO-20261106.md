@@ -4,14 +4,18 @@ A integração permanece em andamento, sem deploy autorizado. O plano completo c
 
 Candidato: `/mnt/dev/peticao/.cache/admin-integration/candidate-stage01`, ramo `admin-v2-stage01`. Não publicar o checkout principal inteiro, que contém mudanças públicas de outras tarefas ainda não publicadas.
 
-Checkpoints:
+## Estado atual — 03f251c
+
+438/438 cumulativos finais, build, tipos e HTTP compilado aprovados. Contextos e configuração de IA preparados; executor/chamadas continuam indisponíveis, sem consulta paga. Próximo: reserva durável de quota/idempotência e execução controlada. Prévia 3031 restaurada e respondendo 200 após corrigir erro de tipo e reconstruir o artefato. Integração inteira ainda incompleta, sem deploy; avisos/retencão pendentes continuam separados. Detalhes e limitações nos checkpoints abaixo.
+
+## Histórico de checkpoints
 
 - `77f33f7`: candidato atualizado com os três arquivos efetivamente publicados após a restauração dos formulários, hashes conferidos.
 - `0020ce1`: transações de contas, proteção concorrente do último Total, uso único de redefinição e revogação; ranking regional agregado antes do limite por estado.
 - `43b56e8`: publicação vinculada ao manifesto simulado, verificação de origem/cópia antes da troca e trava comum entre os caminhos de publicação. Inclui instalador separado, ainda não executado na VPS, e ensaio de atualização do banco.
 - `7750df0`: fixtures cumulativas atualizadas para as regras de CPF/identidade já publicadas, sem importar mudanças de aliases de e-mail ainda não publicadas.
 
-Evidências mais recentes em `/mnt/dev/peticao/.cache/admin-audit-20261106/`: suíte cumulativa **235/235**, oito testes Python do publicador/pipeline, ensaio da inicialização real no esquema anterior (seis tabelas aditivas, registros fictícios e definições existentes preservados), tipos e build aprovados. A rodada inicial 225/234 foi diagnosticada e corrigida nos testes que presumiam contratos antigos; as regras públicas atuais foram mantidas.
+Evidências do primeiro checkpoint em `/mnt/dev/peticao/.cache/admin-audit-20261106/`: suíte cumulativa **235/235**, oito testes Python do publicador/pipeline, ensaio da inicialização real no esquema anterior (seis tabelas aditivas, registros fictícios e definições existentes preservados), tipos e build aprovados. A rodada inicial 225/234 foi diagnosticada e corrigida nos testes que presumiam contratos antigos; as regras públicas atuais foram mantidas.
 
 Detalhes e comandos: `docs/ETAPAS-ADMIN-01.md` e `deploy/LEIAME.md` dentro do candidato. O ensaio usa apenas banco de desenvolvimento em loopback/porta explícita e dados fictícios. O SQLite de revisão não participa desses testes.
 
@@ -269,3 +273,16 @@ Passaram **16/16 direcionados, 430/430 cumulativos**, build, tipos e HTTP compil
 Contrato no candidato `docs/ETAPA-05-CONHECIMENTO.md`. Artefatos iniciais e finais em `stage05-knowledge-*` e `runtime-knowledge-final/knowledge.json`. Sem novo DDL: permanece o esquema de onze tabelas ensaiado no checkpoint anterior, sem repetição de migração desnecessária. Nenhuma interface ou aviso ativado, VPS/revisão CPF alterado. Serviços Vigia/respostas ativos e entrada autenticada local de 07/11 vazia na verificação.
 
 Próximo: contextos das três funções e configuração de provedor/modelo/limites; ainda não há inferência de IA funcionando. Minutas humanas, informes, interfaces/conversas/editor/retenção e Etapas 2–7 permanecem no objetivo completo. AV-10 aprovado; demais avisos e retenção sem aprovação inferida; deploy final exige autorização do dono.
+
+
+## 07/11 — contextos, configuração e contrato de IA (03f251c)
+
+Três contextos distintos com fontes versionadas e prova de atualidade. Atendimento recebe diagnóstico estruturado e minuta-base da triagem atual, sem copiar relato, identidade ou respostas pessoais. API devolve identidade/referências, não prompt/consulta. Configuração em settings com autoria Total + confirmação extra, revisão otimista e auditoria atômica; sem chave/endpoint no objeto. Padrão desativado/modelo null. Limites diários são preferências para o próximo executor, não controle de consumo já ativo nem teto monetário.
+
+Contrato Responses/saída estruturada conferido nas páginas oficiais da OpenAI e exercitado offline: store:false, ferramentas ausentes, modelo explícito, esforço não presumido, parser recusa incompletude/ferramentas/citações desconhecidas/uso incoerente. Nenhuma chamada paga, credencial real ou autenticação deste chat usada. executionAvailable permanece false; não apresentar como IA funcionando.
+
+Passaram 23/23 direcionados. A primeira rodada438 passou, mas o build revelou tipagem estrutural na rota. A falha interrompeu o artefato e a primeira restauração local não iniciou. Ramos separados corrigiram o tipo, sem cast; preservado o mesmo banco e recuperados parâmetros fictícios de inicialização registrados na própria execução, sem imprimir valores ou consultar segredos de produção. Build, typecheck serial e HTTP compilado passaram; **438/438 cumulativos finais** repetidos sobre o código corrigido também passaram. Prévia original 3031 voltou a responder200, sessões QA revogadas, nenhum assinante/fila/resposta alterado.
+
+Lançador privado correto `run-ai-context-fixed-qa.py`, na cache: registro fictício protegido/validado e cópia de artefato anterior para próximos builds. Rotina de restaurar essa cópia ainda não tem teste dedicado de falha; recuperação por reconstrução foi a executada. Fonte/valores de runtime fora do Git. Contrato no candidato `docs/ETAPA-05-CONTEXTOS-CONFIGURACAO.md`; logs `stage05-context-*` e `runtime-ai-context-fixed/ai-context.json`. Sem novo DDL, mantém onze tabelas ensaiadas.
+
+Nenhuma interface/aviso, VPS ou revisão CPF alterados. Vigia/respostas ativos e nenhuma nova entrada autenticada local desde07/11 na conferência. Próximo: reserva durável de quota/idempotência e executor; outros provedores, minutas humanas/retencão, informes, interfaces/conversas/editor e demais etapas continuam no objetivo. AV-10 aprovado; demais textos/retenção sem inferência. Deploy final exige autorização do dono.
