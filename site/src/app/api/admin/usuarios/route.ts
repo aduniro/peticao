@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
  * nivel, ativar, desativar e redefinir (manda o link de redefinição). O sistema nunca deixa o painel sem nenhum usuário de nível total ativo.
  */
 export async function POST(req: NextRequest) {
-  const bloqueio = await exigirNivel(req, "total", 40);
+  const bloqueio = await exigirNivel(req, "total", 40, { stepup: true });
   if (bloqueio) return bloqueio;
   const eu = await quemAge(req);
   const origem = requestOrigin(req.headers);

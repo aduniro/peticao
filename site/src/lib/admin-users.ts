@@ -191,32 +191,48 @@ export const stepupValido = (s: SessaoAdmin | null): boolean => !!s && (s.previe
 /** Manda um código de 6 dígitos para o e-mail do usuário (um válido por vez, até 3 por hora). */
 export async function pedirStepup(s: SessaoAdmin, enviar?: EnviarEmail): Promise<{ ok: true } | { ok: false; erro: "sem_conta" | "muitos_pedidos" }> {
   if (!s.userId || !s.sessaoId) return { ok: false, erro: "sem_conta" };
-  const recentes = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM admin_stepup WHERE user_id=$1 AND criado_em > now() - interval '1 hour'", [s.userId])).rows[0].n;
-  if (recentes >= STEPUP_MAX_POR_HORA) return { ok: false, erro: "muitos_pedidos" };
-  const codigo = String(randomInt(0, 1_000_000)).padStart(6, "0");
-  await query("UPDATE admin_stepup SET usado=true WHERE sessao_id=$1 AND NOT usado", [s.sessaoId]);
-  await query("INSERT INTO admin_stepup(user_id,sessao_id,codigo_hash,expira_em) VALUES($1,$2,$3,now() + ($4 || ' minutes')::interval)", [s.userId, s.sessaoId, codigoHash(s.sessaoId, codigo), String(STEPUP_CODIGO_MIN)]);
-  const primeiro = s.nome.split(" ")[0];
+  const reservation = await tx(async c => {
+    const user = (await c.query<{ email: string; nome: string }>("SELECT email,nome FROM admin_users WHERE id=$1 AND ativo FOR UPDATE", [s.userId])).rows[0];
+    const session = (await c.query("SELECT id FROM admin_sessions WHERE id=$1 AND user_id=$2 AND expira_em>now() FOR UPDATE", [s.sessaoId, s.userId])).rows[0];
+    if (!user || !session) return { ok: false as const, erro: "sem_conta" as const };
+    const recentes = (await c.query<{ n: number }>("SELECT COUNT(*)::int n FROM admin_stepup WHERE user_id=$1 AND criado_em > now() - interval '1 hour'", [s.userId])).rows[0].n;
+    if (recentes >= STEPUP_MAX_POR_HORA) return { ok: false as const, erro: "muitos_pedidos" as const };
+    const codigo = String(randomInt(0, 1_000_000)).padStart(6, "0");
+    await c.query("UPDATE admin_stepup SET usado=true WHERE sessao_id=$1 AND NOT usado", [s.sessaoId]);
+    await c.query("INSERT INTO admin_stepup(user_id,sessao_id,codigo_hash,expira_em) VALUES($1,$2,$3,now() + ($4 || ' minutes')::interval)", [s.userId, s.sessaoId, codigoHash(s.sessaoId!, codigo), String(STEPUP_CODIGO_MIN)]);
+    await audit("admin_stepup_pedido", null, { id: s.userId }, c);
+    return { ok: true as const, codigo, user };
+  });
+  if (!reservation.ok) return reservation;
+  const { codigo, user } = reservation;
+  const primeiro = user.nome.split(" ")[0];
   const texto = `Olá, ${primeiro}.\n\nSeu código para liberar as ações do painel da petição: ${codigo}\n\nVale ${STEPUP_CODIGO_MIN} minutos e só funciona uma vez. Se não foi você, ignore este e-mail e troque a sua senha.`;
   const html = `<p>Olá, <strong>${primeiro.replace(/[<>&"]/g, "")}</strong>.</p><p>Seu código para liberar as ações do painel da petição:</p><p style="font-size:30px;letter-spacing:6px;font-weight:700;">${codigo}</p><p style="color:#5b6b63;font-size:13px;">Vale ${STEPUP_CODIGO_MIN} minutos e só funciona uma vez. Se não foi você, ignore este e-mail e troque a sua senha.</p>`;
-  await (enviar ?? enviarPadrao)({ to: s.email, subject: "Código de confirmação do painel da petição", text: texto, html });
-  await audit("admin_stepup_pedido", null, { id: s.userId });
+  await (enviar ?? enviarPadrao)({ to: user.email, subject: "Código de confirmação do painel da petição", text: texto, html });
   return { ok: true };
 }
 
 /** Confere a senha e o código; se ambos baterem, a sessão fica liberada por 15 minutos. 5 erros no código o invalidam. */
 export async function confirmarStepup(s: SessaoAdmin, senha: string, codigo: string): Promise<{ ok: true; ate: Date } | { ok: false; erro: "senha" | "codigo" | "sem_conta" }> {
   if (!s.userId || !s.sessaoId) return { ok: false, erro: "sem_conta" };
-  const u = (await query<any>("SELECT senha_hash FROM admin_users WHERE id=$1 AND ativo", [s.userId])).rows[0];
-  const senhaOk = verificarHash(senha, u?.senha_hash ?? HASH_FALSO);
-  const c = (await query<any>("SELECT id, codigo_hash, tentativas FROM admin_stepup WHERE sessao_id=$1 AND NOT usado AND expira_em > now() ORDER BY id DESC LIMIT 1", [s.sessaoId])).rows[0];
-  if (!u || !senhaOk) { if (c) await query("UPDATE admin_stepup SET tentativas=tentativas+1, usado=(tentativas+1 >= $2) WHERE id=$1", [c.id, STEPUP_MAX_TENTATIVAS]); await audit("admin_stepup_falhou", null, { id: s.userId, motivo: "senha" }); return { ok: false, erro: "senha" }; }
-  if (!c) return { ok: false, erro: "codigo" };
-  const bate = /^\d{6}$/.test(codigo) && iguais(codigoHash(s.sessaoId, codigo), c.codigo_hash);
-  if (!bate) { await query("UPDATE admin_stepup SET tentativas=tentativas+1, usado=(tentativas+1 >= $2) WHERE id=$1", [c.id, STEPUP_MAX_TENTATIVAS]); await audit("admin_stepup_falhou", null, { id: s.userId, motivo: "codigo" }); return { ok: false, erro: "codigo" }; }
-  await query("UPDATE admin_stepup SET usado=true WHERE id=$1", [c.id]);
-  const ate = new Date(Date.now() + STEPUP_VALE_MIN * 60_000);
-  await query("UPDATE admin_sessions SET stepup_ate=$2 WHERE id=$1", [s.sessaoId, ate]);
-  await audit("admin_stepup_ok", null, { id: s.userId });
-  return { ok: true, ate };
+  return tx(async client => {
+    // Same lock order as password changes: account, session, then challenge.
+    const user = (await client.query<{ senha_hash: string }>("SELECT senha_hash FROM admin_users WHERE id=$1 AND ativo FOR UPDATE", [s.userId])).rows[0];
+    const session = (await client.query("SELECT id FROM admin_sessions WHERE id=$1 AND user_id=$2 AND expira_em>now() FOR UPDATE", [s.sessaoId, s.userId])).rows[0];
+    if (!user || !session) return { ok: false as const, erro: "sem_conta" as const };
+    const senhaOk = verificarHash(senha, user.senha_hash);
+    const challenge = (await client.query<{ id: number; codigo_hash: string }>("SELECT id,codigo_hash FROM admin_stepup WHERE sessao_id=$1 AND NOT usado AND expira_em>now() ORDER BY id DESC LIMIT 1 FOR UPDATE", [s.sessaoId])).rows[0];
+    const codeOk = !!challenge && /^\d{6}$/.test(codigo) && iguais(codigoHash(s.sessaoId!, codigo), challenge.codigo_hash);
+    if (!senhaOk || !codeOk) {
+      if (challenge) await client.query("UPDATE admin_stepup SET tentativas=tentativas+1, usado=(tentativas+1 >= $2) WHERE id=$1", [challenge.id, STEPUP_MAX_TENTATIVAS]);
+      const motivo = senhaOk ? "codigo" as const : "senha" as const;
+      await audit("admin_stepup_falhou", null, { id: s.userId, motivo }, client);
+      return { ok: false as const, erro: motivo };
+    }
+    await client.query("UPDATE admin_stepup SET usado=true WHERE id=$1", [challenge!.id]);
+    const ate = new Date(Date.now() + STEPUP_VALE_MIN * 60_000);
+    await client.query("UPDATE admin_sessions SET stepup_ate=$2 WHERE id=$1", [s.sessaoId, ate]);
+    await audit("admin_stepup_ok", null, { id: s.userId }, client);
+    return { ok: true as const, ate };
+  });
 }

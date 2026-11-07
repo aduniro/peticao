@@ -89,3 +89,12 @@ Checkpoint `5a3cbd6`: backend da fila e regressões preservados no Git. O build 
 ### Primeira prévia do shell
 
 Prévia local de produção em `http://127.0.0.1:3031/admin`, banco fictício separado na porta 54345 e transporte de e-mail `dev`. A tela de contato vazia respondeu 200 em 320, 390, 768, 992, 1280 e 1920 px, sem exceções de navegador ou rolagem horizontal. Capturas e relatório: `/mnt/dev/peticao/.cache/admin-audit-20261106/visual/contato-*.png` e `contato-shell.json`; a captura de 390 px foi inspecionada visualmente. Essa checagem é apenas do shell/estado vazio: não prova paridade visual integral, funcionamento do editor, conteúdo extenso, matriz de permissões nem o restante das telas. Essas provas permanecem pendentes.
+
+
+## A4 — confirmação extra e gestão de usuários
+
+Pedidos de código agora reservam o desafio e sua auditoria na mesma transação, com bloqueio por conta/sessão. A quota de três pedidos por hora é serializada entre sessões. Consumo do código, liberação da sessão e auditoria também são atômicos; o mesmo código não libera a sessão duas vezes. A conta e a sessão são relidas no banco: um snapshot anterior não permite usar sessão revogada/expirada ou de outra conta. O e-mail mantém o texto existente e usa o endereço atual da conta; nenhum envio acontece se a reserva falhar.
+
+Gestão de usuários passa pelo fluxo de confirmação extra já existente: a página redireciona antes de exibir os formulários, e o POST exige novamente a confirmação. Não foram introduzidos avisos ou rótulos. Os testes de handler incluem os quatro níveis, origem externa, expiração, ausência de efeitos antes da autorização e autoria real.
+
+Verificação específica: **24/24** testes de contas/step-up/handler e tipos aprovados (`stage01-stepup-atomic.log`, `stage01-typecheck-stepup.log`). A regressão cumulativa passou **256/256** (`stage01-cumulative-stepup.log`); o build desta revisão ainda está em andamento. O status de convite/redefinição que é exibido após falha de transporte ainda precisa ser revisto; não declarar todos os controles de conta concluídos. O aviso de Minha conta, os rótulos de contato, QA completo e Etapas 2–7 continuam pendentes.

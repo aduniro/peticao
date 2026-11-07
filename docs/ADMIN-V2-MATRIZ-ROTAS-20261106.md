@@ -43,7 +43,10 @@ Inventário estático do checkout local; não é prova de publicação ou execu�
 | /api/admin/seguranca/fila | POST | edicao | Não neste handler |
 | /api/admin/stepup | POST | total | Não neste handler |
 | /api/admin/terminal | POST | total | Sim |
-| /api/admin/usuarios | POST | total | Não neste handler |
+| /api/admin/usuarios | POST | total | Sim — candidato integrado |
 | /api/admin/whatsapp/remetentes | POST | total | Não neste handler |
 
 Os níveis listados são por chamada ao porteiro, não necessariamente uma coluna por método. Login, recuperação, redefinição e saída têm validações próprias; não são rotas sem proteção por simples ausência de exigirNivel.
+
+
+No candidato integrado, a gestão de usuários exige confirmação extra tanto na página (redirecionamento para o fluxo existente) quanto no POST. `admin-user-actions.test.ts` atravessa o handler e comprova recusa antes de efeitos para sessão ausente, níveis inferiores, falta/expiração da confirmação e origem externa; a mudança autorizada grava o autor da sessão, ignorando autor forjado no formulário. Esta prova não significa instalação na VPS.

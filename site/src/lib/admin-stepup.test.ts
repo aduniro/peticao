@@ -96,3 +96,69 @@ test("exigirNivel com step-up: 403 stepup sem confirmação, passa depois", asyn
     assert.equal(await c.API.exigirNivel(mk(), "total", 120, { stepup: true }), null);
   } finally { await c.dbmod._closeDbForTests(); }
 });
+
+test("step-up concorrente: código libera a sessão uma vez, mesmo com duas confirmações", async () => {
+  const c = await cenario();
+  try {
+    await c.U.pedirStepup(await c.sessao(), c.enviar as never);
+    const snapshot = await c.sessao(), code = c.codigo();
+    const results = await Promise.all([c.U.confirmarStepup(snapshot, SENHA, code), c.U.confirmarStepup(snapshot, SENHA, code)]);
+    assert.equal(results.filter(r => r.ok).length, 1);
+    assert.equal((await c.dbmod.query("SELECT count(*)::int n FROM audit_log WHERE event='admin_stepup_ok'")).rows[0].n, 1);
+    assert.equal(c.U.stepupValido(await c.sessao()), true);
+    assert.ok((await c.dbmod.verifyAuditChain()).ok);
+  } finally { await c.dbmod._closeDbForTests(); }
+});
+
+test("step-up concorrente: quota por conta é respeitada entre sessões e há um código ativo por sessão", async () => {
+  const c = await cenario();
+  try {
+    const first = await c.sessao();
+    const other = await c.U.abrirSessao(first.userId, "127.0.0.1");
+    const second = (await c.U.sessaoPorToken(other.token))!;
+    const results = await Promise.all(Array.from({ length: 8 }, (_, i) => c.U.pedirStepup(i % 2 ? first : second, c.enviar as never)));
+    assert.equal(results.filter(r => r.ok).length, 3);
+    assert.equal(c.caixa.length, 3);
+    assert.equal((await c.dbmod.query("SELECT count(*)::int n FROM admin_stepup")).rows[0].n, 3);
+    const active = (await c.dbmod.query("SELECT sessao_id,count(*)::int n FROM admin_stepup WHERE NOT usado GROUP BY sessao_id")).rows;
+    assert.ok(active.every(row => row.n === 1));
+    assert.ok((await c.dbmod.verifyAuditChain()).ok);
+  } finally { await c.dbmod._closeDbForTests(); }
+});
+
+test("step-up: falha na auditoria desfaz reserva e liberação, sem enviar um código órfão", async () => {
+  const c = await cenario();
+  try {
+    await c.dbmod.query(`CREATE FUNCTION fail_stepup_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event IN ('admin_stepup_pedido','admin_stepup_ok') THEN RAISE EXCEPTION 'stepup audit failure'; END IF; RETURN NEW; END $$;
+      CREATE TRIGGER fail_stepup_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION fail_stepup_audit();`);
+    await assert.rejects(c.U.pedirStepup(await c.sessao(), c.enviar as never), /stepup audit failure/);
+    assert.equal(c.caixa.length, 0);
+    assert.equal((await c.dbmod.query("SELECT count(*)::int n FROM admin_stepup")).rows[0].n, 0);
+    await c.dbmod.query("DROP TRIGGER fail_stepup_audit ON audit_log");
+    await c.U.pedirStepup(await c.sessao(), c.enviar as never);
+    await c.dbmod.query("CREATE TRIGGER fail_stepup_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION fail_stepup_audit()");
+    await assert.rejects(c.U.confirmarStepup(await c.sessao(), SENHA, c.codigo()), /stepup audit failure/);
+    assert.equal(c.U.stepupValido(await c.sessao()), false);
+    assert.equal((await c.dbmod.query("SELECT usado FROM admin_stepup")).rows[0].usado, false);
+    await c.dbmod.query("DROP TRIGGER fail_stepup_audit ON audit_log");
+    assert.ok((await c.U.confirmarStepup(await c.sessao(), SENHA, c.codigo())).ok);
+  } finally { await c.dbmod._closeDbForTests(); }
+});
+
+test("step-up: snapshot antigo não recria sessão revogada, expirada ou de outra conta", async () => {
+  const c = await cenario();
+  try {
+    const snapshot = await c.sessao();
+    await c.U.pedirStepup(snapshot, c.enviar as never);
+    const code = c.codigo();
+    assert.deepEqual(await c.U.confirmarStepup({ ...snapshot, userId: snapshot.userId + 1000 }, SENHA, code), { ok: false, erro: "sem_conta" });
+    await c.dbmod.query("UPDATE admin_sessions SET expira_em=now()-interval '1 second' WHERE id=$1", [snapshot.sessaoId]);
+    assert.deepEqual(await c.U.pedirStepup(snapshot, c.enviar as never), { ok: false, erro: "sem_conta" });
+    assert.deepEqual(await c.U.confirmarStepup(snapshot, SENHA, code), { ok: false, erro: "sem_conta" });
+    assert.equal((await c.dbmod.query("SELECT usado FROM admin_stepup")).rows[0].usado, false);
+    await c.U.encerrarSessao(c.token);
+    assert.deepEqual(await c.U.confirmarStepup(snapshot, SENHA, code), { ok: false, erro: "sem_conta" });
+    assert.equal(c.caixa.length, 1);
+    assert.equal((await c.dbmod.query("SELECT count(*)::int n FROM admin_stepup")).rows[0].n, 0);
+  } finally { await c.dbmod._closeDbForTests(); }
+});

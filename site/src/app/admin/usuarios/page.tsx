@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { sessaoAdmin } from "@/lib/admin";
-import { NIVEIS, ROTULO_NIVEL, listarUsuarios, nivelOk } from "@/lib/admin-users";
+import { NIVEIS, ROTULO_NIVEL, listarUsuarios, nivelOk, stepupValido } from "@/lib/admin-users";
 import { brasilia } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +17,7 @@ export default async function Usuarios({ searchParams }: { searchParams: { erro?
   const s = await sessaoAdmin();
   if (!s) redirect("/admin");
   if (!nivelOk(s.nivel, "total")) redirect("/admin?erro=nivel");
+  if (!stepupValido(s)) redirect("/admin/confirmar?volta=/admin/usuarios");
   const usuarios = await listarUsuarios();
   return (
     <main className="v2-pagina">
