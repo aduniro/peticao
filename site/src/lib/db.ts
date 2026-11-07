@@ -133,6 +133,24 @@ const SCHEMA_SQL = `
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','sent','failed')), attempts INTEGER NOT NULL DEFAULT 0,
     next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(), last_error TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), sent_at TIMESTAMPTZ);
   CREATE INDEX IF NOT EXISTS mail_outbox_due ON mail_outbox(status, next_attempt_at);
+  CREATE TABLE IF NOT EXISTS mail_messages (
+    id UUID PRIMARY KEY, request_key TEXT UNIQUE, kind TEXT NOT NULL, channel TEXT NOT NULL CHECK(channel IN ('transactional','marketing')),
+    to_addr TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), status TEXT NOT NULL DEFAULT 'prepared'
+      CHECK(status IN ('prepared','sending','accepted','rejected','indeterminate','queued')),
+    content_fingerprint TEXT NOT NULL, content_state TEXT NOT NULL CHECK(content_state IN ('unavailable','stored','expired','oversize')),
+    content_cipher TEXT, content_expires_at TIMESTAMPTZ, previous_id UUID REFERENCES mail_messages(id)
+  );
+  CREATE INDEX IF NOT EXISTS mail_messages_history ON mail_messages(created_at DESC,id);
+  CREATE INDEX IF NOT EXISTS mail_messages_to ON mail_messages(lower(to_addr),created_at DESC);
+  CREATE TABLE IF NOT EXISTS mail_message_attempts (
+    id UUID PRIMARY KEY, message_id UUID NOT NULL REFERENCES mail_messages(id), provider TEXT NOT NULL, from_addr TEXT NOT NULL,
+    state TEXT NOT NULL DEFAULT 'prepared' CHECK(state IN ('prepared','accepted','rejected','indeterminate')),
+    started_at TIMESTAMPTZ NOT NULL DEFAULT now(), finished_at TIMESTAMPTZ, provider_id TEXT, error_code TEXT
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS mail_message_attempt_active ON mail_message_attempts(message_id) WHERE state='prepared';
+  CREATE INDEX IF NOT EXISTS mail_message_attempt_history ON mail_message_attempts(message_id,started_at);
+  ALTER TABLE mail_log ADD COLUMN IF NOT EXISTS message_id UUID REFERENCES mail_messages(id);
+  ALTER TABLE mail_outbox ADD COLUMN IF NOT EXISTS message_id UUID REFERENCES mail_messages(id);
   CREATE SEQUENCE IF NOT EXISTS signature_seq;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS seq INTEGER;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS verify_code TEXT;

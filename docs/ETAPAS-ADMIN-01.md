@@ -207,3 +207,9 @@ Detalhes, evidências e limites em `docs/A6-CENTRAL-JOURNAL.md`. Interface de hi
 A integração prossegue além da Etapa 1. Implementados no candidato a classificação por regras, coleta parametrizada por campos permitidos em transação de leitura, proposta de campus e fila durável/versionada de triagem. O agendador existente autentica antes do processamento. A análise não altera assinaturas, listas de campus ou decisões humanas e não envia respostas. Fontes insuficientes não viram aprovação; aceite de transporte não vira prova de entrega.
 
 **307/307** cumulativos, tipos, build, migração de sete tabelas aditivas e teste HTTP do app compilado aprovados. Contrato, evidências e pendências em `docs/ETAPA-02-TRIAGEM.md`; base observada para a Etapa 3 em `docs/ETAPA-03-BASE-MENSAGENS.md`. A interface de triagem aguarda AV-8 e não foi ativada. Etapa 2 e integração integral ainda incompletas; nenhuma autorização de publicação foi inferida.
+
+## Continuidade — base inicial da Etapa 3
+
+Adicionadas no candidato a identidade de mensagem/pedido, cópia criptografada opcional, versões e tentativas duráveis. Vínculo de fila verifica conteúdo exato; resultados repetidos não duplicam logs e incerteza não vira recusa. A política de conteúdo não foi escolhida automaticamente: foi perguntada ao dono. O transporte e a fila atuais ainda não chamam essa biblioteca; conexão, eventos, consultas autorizadas e interface continuam pendentes.
+
+**318/318** cumulativos, tipos/build e migração de nove tabelas aditivas + duas colunas opcionais aprovados, preservando dados legados. Contrato/evidências em `docs/ETAPA-03-BASE-MENSAGENS.md`. Nenhum deploy, aviso alterado ou rotina nova de arquivo automático instalada. Etapas 2/3 e integração integral continuam incompletas.
