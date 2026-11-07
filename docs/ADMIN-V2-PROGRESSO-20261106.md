@@ -40,3 +40,14 @@ No candidato, `aada17c` torna atômicos a reserva e o consumo do código de conf
 Validação atual: **256/256** testes cumulativos, tipos e build aprovados (`stage01-cumulative-stepup.log`, `stage01-typecheck-stepup.log`, `stage01-build-stepup.log`). `0ba3094` promove o QA local de contato ao repositório: seis larguras aprovadas para falha de rede injetada, preservação do rascunho, botão liberado e recuperação da prévia. Não houve envio real; não é prova de QA integral ou de entrega. Evidências em `visual/contact-editor.json` e `stage01-contact-browser.log`.
 
 A prévia isolada foi reiniciada em `http://127.0.0.1:3031/admin`, com banco fictício 54345. O banco de testes cumulativos é outro (54341). Pendências preservadas: avisos aguardando aprovação, resultado de convites/redefinições, demais controles e telas, QA por nível e Etapas 2–7. Nenhuma alteração da produção, instalação remota ou deploy.
+
+
+## Checkpoint seguinte — pedidos de redefinição e matriz de páginas
+
+`661fa7a` serializa a quota compartilhada de convites/redefinições e reserva token em hash + auditoria atomicamente antes do transporte. O resultado interno distingue aceite/fila/pedido sem envio; o handler administrativo ainda precisa consumi-lo após aprovação dos avisos. A resposta pública permanece uniforme. Suíte atual: **260/260**, tipos e build aprovados (`stage01-cumulative-reset.log`, `stage01-typecheck-reset.log`, `stage01-build-reset.log`).
+
+`e4a629b` promove o QA de páginas por nível: **120 verificações aprovadas** (quatro níveis, cinco páginas, seis larguras), mais ausência de sessão e gate de confirmação extra. Usa contas/sessões fictícias, sem envio de código real; não comprova todos os endpoints assíncronos. Relatório `visual/access-pages.json`. O servidor temporário 3032 foi encerrado, sessões do teste revogadas e prévia 3031 preservada.
+
+Novo achado para corrigir: Leitura ainda vê alguns atalhos incompatíveis e “Liberar CPF”, embora as rotas recusem a operação. Ajustar visibilidade sem mudar rótulos/estética. Avisos pendentes consolidados no candidato em `docs/ADMIN-AVISOS-PARA-APROVACAO.md`; não interpretar silêncio como aprovação.
+
+Conferência SSH somente leitura: 333 arquivos de código da VPS sem diferenças da referência após os formulários; sete arquivos críticos do candidato iguais por SHA-256. Evidência `production-contract-reset.json`. Nenhum dado de assinatura ou valor de configuração inspecionado nesta conferência. Etapas restantes e deploy continuam pendentes; não reduzir o escopo do plano.
