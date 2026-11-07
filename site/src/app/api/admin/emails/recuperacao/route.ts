@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exigirNivel, quemAge } from "@/lib/admin-api";
-import { mailRecoveryStatus, settleAcceptedQueue } from "@/lib/mail/recovery";
+import { mailRecoveryStatus, listMailRecovery, settleAcceptedQueue } from "@/lib/mail/recovery";
 export const dynamic="force-dynamic";
 const reply=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{"cache-control":"no-store"}});
 const id=(raw:string|null)=>raw&&/^[1-9]\d{0,9}$/.test(raw)&&Number(raw)<=2147483647?Number(raw):undefined;
 export async function GET(req:NextRequest) {
   const denied=await exigirNivel(req,"total",60,{stepup:true});if(denied)return denied;
-  const q=req.nextUrl.searchParams;if(q.size!==1||q.getAll("id").length!==1||id(q.get("id"))===undefined)return reply({ok:false,error:"parameters"},400);
-  const result=await mailRecoveryStatus(id(q.get("id")));return reply(result,result.ok?200:404);
+  const q=req.nextUrl.searchParams;
+  if(q.has("id")){
+    if(q.size!==1||q.getAll("id").length!==1||id(q.get("id"))===undefined)return reply({ok:false,error:"parameters"},400);
+    const result=await mailRecoveryStatus(id(q.get("id")));return reply(result,result.ok?200:404);
+  }
+  if([...q.keys()].some(k=>!["before","limit"].includes(k)||q.getAll(k).length!==1)||q.has("before")&&id(q.get("before"))===undefined||q.has("limit")&&!/^[1-9]\d?$/.test(q.get("limit")!))return reply({ok:false,error:"parameters"},400);
+  const result=await listMailRecovery({before:q.has("before")?id(q.get("before")):undefined,limit:q.has("limit")?Number(q.get("limit")):undefined});
+  return reply(result,result.ok?200:400);
 }
 export async function POST(req:NextRequest) {
   const denied=await exigirNivel(req,"total",30,{stepup:true});if(denied)return denied;

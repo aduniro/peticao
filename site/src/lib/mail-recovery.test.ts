@@ -78,3 +78,28 @@ test("entrega individual não transforma resultado incerto em aceite do envelope
   const status=await c.R.mailRecoveryStatus(active.q);assert.ok(status.ok&&!status.eligible);assert.equal(status.reason,"attempt_unfinished");assert.equal((await c.R.settleAcceptedQueue(active.q,c.actor)).ok,false);
  }finally{await c.db._closeDbForTests();}
 });
+
+test("lista paginada omite conteúdo divergente sem perder cursor e nunca expõe payload ou fingerprint",async()=>{
+ const c=await setup();try{
+  const ids:number[]=[];for(let i=0;i<5;i++)ids.push((await pair(c,"accepted")).q);
+  await c.db.query("UPDATE mail_outbox SET payload=$2 WHERE id=$1",[ids[4],JSON.stringify({...mail,text:"ALTERED_PRIVATE_TEXT"})]);
+  const before=await snapshot(c),audit=(await c.db.query("SELECT * FROM audit_log ORDER BY id")).rows;
+  const first=await c.R.listMailRecovery({limit:1});assert.ok(first.ok);assert.deepEqual(first.records,[]);assert.equal(first.next,ids[4]);
+  const seen:number[]=[];let cursor:number|undefined;
+  do{const result=await c.R.listMailRecovery({limit:2,before:cursor});assert.ok(result.ok);seen.push(...result.records.map(r=>r.queueId));cursor=result.next??undefined;assert.ok(!/NEVER_EXPOSE|ALTERED_PRIVATE_TEXT|fingerprint|payload|account_scope/.test(JSON.stringify(result)));}while(cursor);
+  assert.deepEqual(seen,ids.slice(0,4).reverse());assert.deepEqual(await snapshot(c),before);assert.deepEqual((await c.db.query("SELECT * FROM audit_log ORDER BY id")).rows,audit);
+  for(const input of [{limit:0},{limit:21},{before:0},{before:1.5}])assert.equal((await c.R.listMailRecovery(input)).ok,false);
+ }finally{await c.db._closeDbForTests();}
+});
+
+test("listagem HTTP mantém Total/stepup e valida cursor, limite e combinações de parâmetros",async()=>{
+ const c=await setup();try{
+  process.env.ADMIN_NO_PASSWORD="0";const {NextRequest}=await import("next/server"),{GET}=await import("../app/api/admin/emails/recuperacao/route");await pair(c,"accepted");
+  const s=await c.U.abrirSessao(c.actor.userId,"127.0.0.1");const request=(q="",token=s.token)=>new NextRequest(`http://localhost/api/admin/emails/recuperacao${q}`,{headers:{host:"localhost",origin:"http://localhost",cookie:token?`adm=${token}`:""}});
+  assert.equal((await GET(request("",""))).status,401);assert.equal((await GET(request())).status,403);
+  await c.db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '10 minutes' WHERE user_id=$1",[c.actor.userId]);
+  const response=await GET(request());assert.equal(response.status,200);assert.equal((await response.json()).records.length,1);
+  for(const q of ["?limit=0","?limit=21","?before=0","?before=1.5","?before=2&before=1","?id=1&limit=2","?content=1"])assert.equal((await GET(request(q))).status,400);
+  await c.db.query("UPDATE admin_users SET nivel='edicao' WHERE id=$1",[c.actor.userId]);assert.equal((await GET(request())).status,403);await c.U.encerrarSessao(s.token);
+ }finally{await c.db._closeDbForTests();}
+});

@@ -60,3 +60,11 @@ Perguntado no chat após preparar o backend e o ensaio visual com mensagem fict�
 Botão proposto: “Concluir fila sem reenviar”. Aviso proposto: “A fila será concluída com base no aceite já registrado pelo provedor. Nenhum e-mail será reenviado. Isso não comprova entrega ao destinatário.”
 
 Submetidos ao dono antes de qualquer mudança visível, por solicitação nativa assíncrona. Resposta explícita recebida: “Aprovar estes textos”. Aprovação restrita ao botão e aviso acima; não aprova os demais AVs nem o deploy. Backend permite apenas concluir metadados com prova exata e Total + confirmação extra; não reenvia, não altera assinatura e não libera resultado incerto. A interface não foi ativada. Contrato em `ETAPA-03-RECUPERACAO.md`.
+
+## AV-11 — complementos da tabela de recuperação (pendente)
+
+Propostos: colunas “ID”, “Tipo”, “E-mail”, “Data do aceite”; botões “Cancelar”, “Carregar mais”; falhas “Falha de rede. Confira o estado da fila antes de tentar novamente.” e “Não foi possível concluir a fila. Atualize a página para conferir o estado atual.” Submetidos por pergunta nativa assíncrona e e-mail somente ao dono. A aprovação anterior do AV-10 não foi ampliada automaticamente.
+
+## AV-12 — erro de paginação da recuperação (pendente)
+
+Proposto: “Não foi possível carregar a lista. Tente novamente.” Submetido por pergunta nativa e incluído no mesmo e-mail de AV-11. A falha deve conservar os itens já carregados. Sem aprovação inferida: o componente está preparado, mas não foi conectado à página.

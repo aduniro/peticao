@@ -47,3 +47,22 @@ export async function settleAcceptedQueue(id:unknown,actor:Actor) {
     return{ok:true as const,existing:false,queueId:id};
   });
 }
+
+export type RecoveryRow = {queueId:number;kind:string;toAddr:string;acceptedAt:string};
+/** Bounded keyset scan; invalid content is omitted without hiding the next scan cursor. */
+export async function listMailRecovery(options:{before?:number;limit?:number}={}) {
+  const limit=options.limit??10;
+  if(!Number.isInteger(limit)||limit<1||limit>20||options.before!==undefined&&!validId(options.before))return{ok:false as const,error:"parameters"};
+  return tx(async c=>{
+    await c.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");await c.query("SET LOCAL statement_timeout='2000ms'");
+    const candidates=(await c.query<{id:number;kind:string;to_addr:string}>(`SELECT q.id,q.kind,q.to_addr FROM mail_outbox q JOIN mail_messages m ON m.id=q.message_id
+      WHERE q.status IN ('pending','failed') AND m.status='accepted' AND m.channel='transactional'
+      AND m.kind=q.kind AND m.to_addr=lower(q.to_addr) AND ($1::int IS NULL OR q.id<$1)
+      AND EXISTS(SELECT 1 FROM mail_message_attempts a WHERE a.message_id=m.id AND a.state='accepted' AND a.finished_at IS NOT NULL)
+      AND NOT EXISTS(SELECT 1 FROM mail_message_attempts a WHERE a.message_id=m.id AND a.state='prepared')
+      ORDER BY q.id DESC LIMIT $2`,[options.before??null,limit+1])).rows;
+    const page=candidates.slice(0,limit),records:RecoveryRow[]=[];
+    for(const row of page){const check=await inspect(c,row.id);if(check.ok&&check.eligible)records.push({queueId:row.id,kind:row.kind,toAddr:row.to_addr,acceptedAt:check.acceptedAt});}
+    return{ok:true as const,records,next:candidates.length>limit?page[page.length-1].id:null};
+  });
+}
