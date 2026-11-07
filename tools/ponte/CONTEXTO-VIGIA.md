@@ -1,5 +1,10 @@
 # Contexto fornecido ao assistente de e-mail
 
+## Estado mais recente — d7e0542
+
+391 testes cumulativos, build/tipos e HTTP de backend aprovados. A integração inteira ainda NÃO está pronta nem publicada. O componente de recuperação foi preparado, mas não foi conectado/validado no navegador: AV-10 está aprovado; AV-11/AV-12 aguardam resposta. AV-1–AV-9 e retenção também não tiveram aprovação inferida. O objetivo completo e as Etapas 2–7 continuam ativos. Respostas/notificações só para operator-1608598f41@example.invalid; deploy final exige autorização. Os checkpoints abaixo preservam histórico, inclusive contagens antigas que não são o estado atual.
+
+
 Atualizado em 06/11/2026. Este é um contexto preparado; não equivale ao histórico completo do chat nem a uma inspeção ao vivo.
 
 - O responsável quer conversar por e-mail; WhatsApp/WAHA foi adiado. Todas as respostas e relatórios são somente para o dono. Nunca escrever a participantes nem autoridades a partir deste canal.
@@ -36,3 +41,6 @@ Atualizado em 06/11/2026. Este é um contexto preparado; não equivale ao histó
 
 
 - Checkpoint ac7e859 (07/11), candidato: diagnóstico e recuperação de fila com aceite exato, Total + confirmação extra e autoria atual. Não reenvia, não resolve incerteza por entrega individual/tempo, conserva data original e payload/tentativas/assinatura. Worker atrasado não sobrescreve fila concluída. Passaram 389 cumulativos, seis novos, build/tipos e HTTP compilado com banco/dados fictícios; sem transporte/provedor. Host da fixture inicial corrigido sem relaxar origem. Sessão revogada, temporário 3032 encerrado e prévia 3031 retomada com banco/configuração anteriores (/admin 200). O dono APROVOU explicitamente AV-10 na resposta nativa: botão “Concluir fila sem reenviar” + aviso “A fila será concluída com base no aceite já registrado pelo provedor. Nenhum e-mail será reenviado. Isso não comprova entrega ao destinatário.” Só esses textos foram aprovados. AV-1–AV-9, retenção e deploy continuam pendentes. Próximo bloco: controle visual aprovado e consultas no admin-v2; conversas/editor e demais etapas mantidos no objetivo. Sem schema/interface/produção/revisão CPF alterados. Notificar somente operator-1608598f41@example.invalid.
+
+
+- Checkpoint d7e0542 (07/11): lista paginada de recuperação Total + stepup, scan/cursor seguros e whitelist de metadados. 391 cumulativos, dois novos, build/tipos e HTTP compilado aprovados. Componente RecuperarFila.tsx preparado, porém NÃO conectado à página e ainda sem QA de navegador. AV-10 aprovado; AV-11 (colunas, Cancelar/Carregar mais e erros da ação) e AV-12 (erro ao paginar) perguntados nativamente e por e-mail, pendentes sem inferência. Contrato no candidato docs/ETAPA-03-RECUPERACAO-INTERFACE.md. Ponte consultada somente leitura, dois pedidos anteriores, nenhum aceite novo desses textos; Vigia/respostas ativos na verificação. Pedido antigo do CPF ao focar e resumo legado da fila registrados para regressão/revisão própria, sem mudança pública silenciosa. Sessão de QA revogada, temporário 3032 encerrado, prévia 3031 retomada com banco/configuração anteriores (/admin 200); nada de produção/revisão CPF alterado. Todo o objetivo segue ativo, inclusive interfaces/conversas/editor/retenção/demais etapas; deploy aguarda autorização final. Notificar só o dono.
