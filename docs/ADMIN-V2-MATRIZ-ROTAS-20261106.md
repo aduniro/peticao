@@ -4,7 +4,7 @@ Inventário estático do checkout local; não é prova de publicação ou execu�
 
 | Rota | Métodos | Níveis encontrados | Confirmação extra |
 |---|---|---|---|
-| /api/admin/acoes | POST | total | Sim |
+| /api/admin/acoes | GET, POST | total | Sim |
 | /api/admin/alertas | GET | leitura | Não neste handler |
 | /api/admin/assinaturas/[id]/email | PATCH | edicao | Não neste handler |
 | /api/admin/assinaturas/[id]/reenviar | POST | edicao | Não neste handler |
@@ -50,3 +50,5 @@ Os níveis listados são por chamada ao porteiro, não necessariamente uma colun
 
 
 No candidato integrado, a gestão de usuários exige confirmação extra tanto na página (redirecionamento para o fluxo existente) quanto no POST. `admin-user-actions.test.ts` atravessa o handler e comprova recusa antes de efeitos para sessão ausente, níveis inferiores, falta/expiração da confirmação e origem externa; a mudança autorizada grava o autor da sessão, ignorando autor forjado no formulário. Esta prova não significa instalação na VPS.
+
+No candidato, a Central inclui histórico paginado em GET e conferência em POST (`modo=conciliar`). Ambos exigem Total e confirmação extra. A conciliação aceita somente prova por pedido/candidato do executor, sem executar outro deploy; os controles visuais aguardam aprovação de AV-7.

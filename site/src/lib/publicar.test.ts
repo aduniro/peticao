@@ -39,7 +39,7 @@ test("executor recusa hash diferente, manifesto ausente e sinais inválidos",()=
 });
 test("executor registra expiração e falha de deploy sem executar texto do pedido",()=>{
  const a=ambiente(3);a.sinal();const old=new Date(Date.now()-3600000);utimesSync(a.pedido,old,old);a.rodar();assert.equal(a.estadoJson().estado,"expirado");
- const marker=join(a.raiz,"injection");a.sinal({por:`$(touch ${marker})`,comando:`touch ${marker}`});a.rodar();assert.equal(a.estadoJson().estado,"falhou");assert.equal(a.estadoJson().codigo,3);assert.equal(existsSync(marker),false);
+ const marker=join(a.raiz,"injection");a.sinal({id:"fedcba9876543210",por:`$(touch ${marker})`,comando:`touch ${marker}`});a.rodar();assert.equal(a.estadoJson().estado,"falhou");assert.equal(a.estadoJson().codigo,3);assert.equal(existsSync(marker),false);
 });
 test("site exige o hash simulado e publica o sinal sem sobrescrever outro pedido",async()=>{
  const P=await import("./publicar");const a=ambiente();noEnv(a);
@@ -68,4 +68,39 @@ test("ação vincula o pedido ao hash devolvido pela simulação e recusa parâm
  await assert.rejects(publicarPedir.executar({}, {userId:1,email:"dona@example.org"}));assert.equal(existsSync(a.pedido),false);
  const result=await publicarPedir.executar({candidato:candidate.sha256},{userId:1,email:"dona@example.org"});
  assert.ok(result.pedido);assert.equal(JSON.parse(readFileSync(a.pedido,"utf8")).candidato,candidate.sha256);
+});
+
+test("comprovante final por pedido sobrevive a outro deploy e ao replay do identificador", async () => {
+ const P=await import("./publicar");const a=ambiente();noEnv(a);
+ const id="0123456789abcdef";
+ a.sinal();a.rodar();const first=P.comprovantePublicacao(id,a.candidate.sha256);assert.equal(first?.estado,"ok");
+ const bytes=readFileSync(join(a.estado,`resultado-${id}.json`),"utf8");
+ a.sinal();a.rodar();assert.equal(a.estadoJson().estado,"recusado");assert.equal(readFileSync(join(a.estado,`resultado-${id}.json`),"utf8"),bytes);
+ a.sinal({id:"fedcba9876543210"});a.rodar();assert.equal(a.chamadas().length,2);assert.deepEqual(P.comprovantePublicacao(id,a.candidate.sha256),first);
+ assert.equal(P.comprovantePublicacao(id,"0".repeat(64)),null);
+ assert.equal(P.comprovantePublicacao("../publicar.estado",a.candidate.sha256),null);
+});
+
+test("comprovantes rejeitados e expirados provam recusa sem disparar publicação", async () => {
+ const P=await import("./publicar");const a=ambiente();noEnv(a);a.sinal();
+ const old=new Date(Date.now()-3600000);utimesSync(a.pedido,old,old);a.rodar();
+ assert.equal(P.comprovantePublicacao("0123456789abcdef",a.candidate.sha256)?.estado,"expirado");
+ a.sinal({id:"fedcba9876543210"});writeFileSync(join(a.stage,"changed.ts"),"modified");a.rodar();
+ assert.equal(P.comprovantePublicacao("fedcba9876543210",a.candidate.sha256)?.estado,"recusado");
+ assert.equal(a.chamadas().length,0);
+});
+
+test("leitor recusa comprovante malformado, link simbólico e arquivo gravável em produção", async () => {
+ const P=await import("./publicar");const {unlinkSync,chmodSync}=await import("node:fs");const a=ambiente();noEnv(a);
+ const id="0123456789abcdef", path=join(a.estado,`resultado-${id}.json`);
+ a.sinal();a.rodar();const receipt=P.comprovantePublicacao(id,a.candidate.sha256);assert.ok(receipt);
+ for(const extra of [{format:2},{id:"f".repeat(16)},{estado:"executando"},{codigo:3},{fim:"invalid"},{inicio:"2099-01-01T00:00:00Z"}]) {
+   writeFileSync(path,JSON.stringify({...receipt,...extra}));assert.equal(P.comprovantePublicacao(id,a.candidate.sha256),null);
+ }
+ writeFileSync(path,"x".repeat(5000));assert.equal(P.comprovantePublicacao(id,a.candidate.sha256),null);
+ unlinkSync(path);const target=join(a.raiz,"receipt.json");writeFileSync(target,JSON.stringify(receipt));symlinkSync(target,path);
+ assert.equal(P.comprovantePublicacao(id,a.candidate.sha256),null);unlinkSync(path);writeFileSync(path,JSON.stringify(receipt));
+ const previous=process.env.NODE_ENV;
+ try { (process.env as any).NODE_ENV="production";chmodSync(a.estado,0o777);assert.equal(P.comprovantePublicacao(id,a.candidate.sha256),null); }
+ finally { (process.env as any).NODE_ENV=previous;chmodSync(a.estado,0o755); }
 });

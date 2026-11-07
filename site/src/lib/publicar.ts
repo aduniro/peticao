@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { existsSync, readFileSync, linkSync, unlinkSync, writeFileSync, lstatSync } from "node:fs";
+import { constants, openSync, closeSync, fstatSync, existsSync, readFileSync, linkSync, unlinkSync, writeFileSync, lstatSync } from "node:fs";
 import { join } from "node:path";
 
 /**
@@ -12,6 +12,25 @@ export const estadoDir = () => process.env.PUBLICAR_ESTADO_DIR ?? "/var/lib/peti
 export const PEDIDO_VALE_S = 15 * 60, EXECUCAO_MAX_S = 30 * 60;
 
 export type EstadoPublicacao = { estado: "executando" | "ok" | "falhou" | "recusado" | "expirado"; id: string; inicio: string; fim: string; codigo: number | null };
+export type ComprovantePublicacao = Omit<EstadoPublicacao, "estado"> & { format: 1; estado: "ok" | "falhou" | "recusado" | "expirado"; candidato: string };
+/** A request-specific, final root receipt; the mutable latest-status file is never reconciliation evidence. */
+export function comprovantePublicacao(id: string, candidato: string): ComprovantePublicacao | null {
+  if (!/^[a-f0-9]{16}$/.test(id) || !/^[a-f0-9]{64}$/.test(candidato)) return null;
+  let fd: number | undefined;
+  try {
+    const parent = lstatSync(estadoDir());
+    if (!parent.isDirectory() || process.env.NODE_ENV === "production" && (parent.uid !== 0 || parent.mode & 0o022)) return null;
+    fd = openSync(join(estadoDir(), `resultado-${id}.json`), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    const info = fstatSync(fd);
+    if (!info.isFile() || info.size > 4096 || process.env.NODE_ENV === "production" && (info.uid !== 0 || info.mode & 0o022)) return null;
+    const value = JSON.parse(readFileSync(fd, "utf8"));
+    if (!value || value.format !== 1 || value.id !== id || value.candidato !== candidato || !["ok", "falhou", "recusado", "expirado"].includes(value.estado)) return null;
+    if (typeof value.inicio !== "string" || typeof value.fim !== "string" || !Number.isFinite(Date.parse(value.inicio)) || !Number.isFinite(Date.parse(value.fim)) || Date.parse(value.fim) < Date.parse(value.inicio)) return null;
+    if (value.estado === "ok" ? value.codigo !== 0 : value.estado === "falhou" ? !Number.isSafeInteger(value.codigo) || value.codigo === 0 : value.codigo !== null) return null;
+    return { format: 1, id, candidato, estado: value.estado, inicio: value.inicio, fim: value.fim, codigo: value.codigo };
+  } catch { return null; }
+  finally { if (fd !== undefined) closeSync(fd); }
+}
 const lerEstado = (): EstadoPublicacao | null => { try { const j = JSON.parse(readFileSync(join(estadoDir(), "publicar.estado"), "utf8")); return j && typeof j.estado === "string" ? j : null; } catch { return null; } };
 export const lerLog = (): string => { try { return readFileSync(join(estadoDir(), "publicar.log"), "utf8").slice(-4000); } catch { return ""; } };
 

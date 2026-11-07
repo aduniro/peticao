@@ -79,9 +79,21 @@ def run():
         claimed = directory / ('.pedido-' + os.urandom(12).hex())
         try: os.rename(request, claimed)
         except FileNotFoundError: return
-        identifier, sha = '-', None
+        identifier, sha, owns_request = '-', None, False
         def state(status, start=None, code=None):
-            atomic(directory / 'publicar.estado', {'estado': status, 'id': identifier, 'inicio': start or stamp(), 'fim': '' if status == 'executando' else stamp(), 'codigo': code, 'candidato': sha})
+            value = {'estado': status, 'id': identifier, 'inicio': start or stamp(), 'fim': '' if status == 'executando' else stamp(), 'codigo': code, 'candidato': sha}
+            atomic(directory / 'publicar.estado', value)
+            if owns_request and status != 'executando':
+                # One root-owned final receipt per consumed identifier. A replay cannot replace it.
+                target = directory / ('resultado-' + identifier + '.json')
+                temporary = directory / ('.resultado-' + os.urandom(12).hex())
+                try:
+                    atomic(temporary, {'format': 1, **value})
+                    os.link(temporary, target)
+                    fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
+                    try: os.fsync(fd)
+                    finally: os.close(fd)
+                finally: temporary.unlink(missing_ok=True)
         try:
             fd = os.open(claimed, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
             with os.fdopen(fd, 'rb') as stream:
@@ -90,19 +102,25 @@ def run():
                 payload = json.loads(stream.read(2049))
             if not isinstance(payload, dict) or not re.fullmatch(r'[a-f0-9]{16}', payload.get('id', '')): raise ValueError('invalid_id')
             identifier = payload['id']
-            age = time.time() - info.st_mtime
-            if age > int(os.environ.get('PUBLICAR_MAX_IDADE', '900')) or age < -60:
-                state('expirado'); return
             provided = payload.get('candidato')
             if not isinstance(provided, str) or not re.fullmatch(r'[a-f0-9]{64}', provided): raise ValueError('invalid_candidate')
             sha = provided
+            ledger = directory / ('pedido-' + identifier + '.json')
+            with ledger.open('x') as stream:
+                json.dump({'id': identifier, 'candidato': sha, 'at': stamp()}, stream)
+                stream.flush(); os.fsync(stream.fileno())
+            fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
+            try: os.fsync(fd)
+            finally: os.close(fd)
+            owns_request = True
+            age = time.time() - info.st_mtime
+            if age > int(os.environ.get('PUBLICAR_MAX_IDADE', '900')) or age < -60:
+                state('expirado'); return
             manifest = directory / 'candidato.json'
             meta = manifest.lstat()
             if manifest.is_symlink() or not stat.S_ISREG(meta.st_mode) or (os.geteuid() == 0 and (meta.st_uid != 0 or meta.st_mode & 0o022)): raise ValueError('untrusted_manifest')
             candidate = json.loads(manifest.read_text())
             if candidate['sha256'] != sha or source_identity(stage)['sha256'] != sha: raise ValueError('candidate_changed')
-            ledger = directory / ('pedido-' + identifier + '.json')
-            with ledger.open('x') as stream: json.dump({'id': identifier, 'candidato': sha, 'at': stamp()}, stream)
         except (OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError):
             state('recusado'); return
         finally:

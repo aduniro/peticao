@@ -42,3 +42,7 @@ Perguntado antes da alteração; ainda pendente. O backend distingue esse estado
 Proposta submetida ao dono: usar a descrição exata retornada pela simulação e os rótulos “Início da janela (vazio = padrão exibido na simulação)” e “Fim da janela (vazio = padrão exibido na simulação)”. Ainda pendente; nenhum texto/descrição foi alterado na tela.
 
 Evidência: o componente mostra `a.efeito` estático, mesmo quando `saida.efeito` representa as datas escolhidas. Além disso, as dicas atuais indicam 04h/12h enquanto os instantes padrão `2026-11-04T04:00:00-03:00` / `2026-11-04T12:00:00-03:00` são exibidos pelo backend como 03h/11h em `America/Porto_Velho`. A captura `visual-actions/actions-1280.png` mostra a divergência com as datas preenchidas e o JSON da simulação. A janela configurada e o público-alvo não devem ser alterados silenciosamente.
+
+## AV-7 — Histórico e conciliação da Central
+
+Propostas perguntadas no chat, ainda pendentes: “Histórico de ações”, “Conferir resultado” e “A conferência consulta o resultado do executor; não executa a ação novamente”. Não inseridas na interface. O backend pode prosseguir sem ativar novos textos. O resultado da publicação deverá distinguir pedido aceito, publicação concluída e resultado inconclusivo, sem rotular falha do deploy como ausência de efeitos.

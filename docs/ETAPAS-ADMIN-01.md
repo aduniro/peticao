@@ -192,3 +192,11 @@ A rota exige intenção emitida pela simulação e vinculada a ação/parâmetro
 Validação: **283/283** cumulativos, tipos, build e migração legada aprovados. Seis larguras passaram no navegador com resposta perdida depois do efeito, repetição explícita ou recarga sem execução automática, sem erros HTTP inesperados/exceções. Configuração fictícia restaurada e sessão revogada. Evidências e limites em `docs/A6-CENTRAL-JOURNAL.md`; log principal `stage01-cumulative-intent-isolated.log`. A primeira rodada foi preservada: duas falhas resultaram de variável de transporte imposta à suíte; a repetição retirou essa variável sem alterar os testes.
 
 CSS, rótulos, avisos, regras públicas e dados de revisão de CPFs preservados. Permanecem histórico/conciliação controlada, AV-1–AV-6 aguardando resposta, demais controles/telas e Etapas 2–7. Este checkpoint não conclui a integração nem autoriza deploy. Prévia 3031 retomada após o build; servidor temporário 3032 encerrado após QA.
+
+## A6 — backend de histórico/conciliação por comprovante
+
+O candidato inclui consulta paginada Total + step-up e conciliação que aceita apenas comprovante final do executor para o mesmo pedido e candidato. O publicador proposto preserva comprovantes por identificador sem sobrescrita/replay; a situação global mutável não serve como prova. Efeito/auditoria da conciliação são atômicos; autoria original, ID e horário do pedido são preservados. Recusa antes do deploy permite nova intenção; qualquer falha do executor permanece indeterminada para não presumir recuperação de deploy parcial.
+
+Validação: **292/292** cumulativos finais, tipos/build e oito testes Python aprovados. Regra conservadora conferida também no artefato compilado. Regressão de navegador nas seis larguras aprovada, sem efeitos duplicados, erros HTTP inesperados ou exceções; preferência fictícia restaurada, sessão revogada e servidor temporário 3032 encerrado. Prévia 3031 retomada após o build.
+
+Detalhes, evidências e limites em `docs/A6-CENTRAL-JOURNAL.md`. Interface de histórico/conferência aguarda aprovação de AV-7; falhas parciais/sem prova ainda exigem procedimento operacional controlado, sem edição SQL ou veredito livre no navegador. AV-1–AV-6, demais telas e Etapas 2–7 continuam pendentes. Nenhuma instalação remota, modificação de dados reais/revisão local ou autorização de deploy.
