@@ -150,13 +150,19 @@ def filter_name_decisions(rows,args,db):
  previous={r['record_id']:dict(r) for r in db.execute('SELECT * FROM name_decisions')} if exists else {}
  from name_review import source_revision,record_from,names_for
  from name_policy import policy
- version=policy()['version'];selected=[]
+ from name_dictionary import corpus
+ from decision_filter_cache import DecisionFilterCache,DependencyIndex
+ version=policy()['version'];policy_key=fingerprint(policy());dependencies=DependencyIndex(corpus());selected=[];cache=DecisionFilterCache(db,DB,BASE)
  for row in rows:
-  old=previous.get(row['id']);decision='pending'
-  if old and old['record_revision']==row['revision'] and old['name_revision']==source_revision(record_from(row)):
+  old=previous.get(row['id']);decision='pending';record=record_from(row) if old else None
+  if old and old['record_revision']==row['revision'] and old['name_revision']==source_revision(record):
    decision=old['decision']
-   if decision=='approved' and old.get('policy_version')!=version:decision=names_for(row,db)['decision']
+   if decision=='approved' and old.get('policy_version')!=version:
+    saved=[old.get(k) for k in ('record_revision','name_revision','decision','selected_name','version','policy_version')]
+    key=fingerprint(['dependency-v3',row['id'],row['revision'],saved,policy_key,dependencies.record(record)])
+    decision=cache.get(key,lambda: names_for(row,db)['decision'])
   if decision==choice or choice=='not_approved' and decision!='approved':selected.append(row)
+ cache.flush()
  return selected
 
 def listing(args,dbpath=DB):

@@ -128,3 +128,11 @@ interpretação; conflitos de outra aba não sobrescrevem a decisão mais nova.
 Escolhas antigas incompatíveis com a nova preferência ficam sinalizadas para
 revisão, mantendo o texto/histórico anterior e o aceite do CPF. A nova prévia não
 inclui um nome que aguarda essa revisão. Isso não reescreve PDFs já gerados.
+
+## Filtros independentes de decisões
+
+Nos filtros gerais, **Decisão do CPF** acompanha as abas existentes e **Decisão do nome** filtra separadamente o nome para impressão. Use ambos juntos, por exemplo **CPF aprovado + nome a decidir**, ou **CPF ainda não aprovado + nome aprovado**. Busca, categoria, confirmação e paginação continuam combináveis; os lotes respeitam a mesma seleção. Aprovações de nome desatualizadas entram como pendentes, conforme o estado mostrado pelo editor.
+
+A filtragem somente lê decisões. Um cache privado de rótulos derivados evita recalcular milhares de sugestões antigas por consulta; ele não contém nomes/CPFs em claro e não substitui decisões. É invalidado por revisão, decisão, política e grafias relevantes do dicionário, sem depender de mudanças em palavras não relacionadas. Falha de gravação do cache não impede a leitura.
+
+Após salvar um nome, o editor libera os botões antes de atualizar a lista. É possível reabrir um aprovado, alterar, recusar ou devolver à revisão; as versões e o histórico continuam auditados. Atualize a página uma vez para carregar o JavaScript novo, depois de salvar qualquer edição ainda aberta.

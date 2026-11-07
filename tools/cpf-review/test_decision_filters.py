@@ -45,3 +45,12 @@ class DecisionFilterTests(ReviewFixture,unittest.TestCase):
    with connect(self.db) as db:items=json.loads(db.execute('SELECT payload FROM review_batches WHERE id=?',(p['token'],)).fetchone()[0])['items']
    self.assertTrue(items);self.assertNotIn(103,{r['id'] for r in items});self.assertTrue(all(r['id']%2==1 and r['id']%3==1 for r in items))
   with self.assertRaises(ValueError):listing({'view':'all','name_decision':"approved' OR 1=1 --"},self.db)
+ def test_private_cache_replays_only_derived_labels_and_invalidates_relevant_words(self):
+  from decision_filter_cache import DecisionFilterCache,DependencyIndex
+  with connect(self.db) as db:
+   cache=DecisionFilterCache(db,self.db,self.root);self.assertEqual(cache.get('technical-key',lambda:'approved'),'approved');cache.flush()
+   second=DecisionFilterCache(db,self.db,self.root);self.assertEqual(second.get('technical-key',lambda: self.fail('Recomputed cached label')),'approved')
+  data={'preferred':{},'probable_accent_errors':{}};index={'jose':[{'form':'José','source':'editorial','count':1}]}
+  one=DependencyIndex((data,index,'v1')).record({'name':'Jose Silva'});index['other']=[{'form':'Other','source':'local-observed'}];index['jose'][0]['count']=99
+  self.assertEqual(one,DependencyIndex((data,index,'v2')).record({'name':'Jose Silva'}))
+  index['jose'].append({'form':'Jose','source':'editorial'});self.assertNotEqual(one,DependencyIndex((data,index,'v3')).record({'name':'Jose Silva'}))
