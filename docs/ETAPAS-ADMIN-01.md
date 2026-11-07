@@ -125,3 +125,11 @@ Inventário por SSH somente leitura: 333 arquivos de código, sem diferenças de
 ### Achado do QA por nível (a corrigir)
 
 A captura de Leitura em 1280 px (`visual/access-leitura-1280.png`) mostra o aviso existente de nível insuficiente após acesso direto recusado. Porém, a página inicial e o menu ainda exibem atalhos para funções de nível superior e o formulário “Liberar CPF”. O POST é protegido no backend, mas a apresentação precisa ser condicionada ao nível real para evitar controles que não podem ser usados. Não há motivo para mudar rótulos ou estética nessa correção. O ensaio de páginas está em andamento; não considerá-lo aprovação integral do painel.
+
+### Resultado da matriz de páginas por nível
+
+`tools/admin-qa/access.mjs` passou **120 verificações** (quatro níveis × cinco páginas × seis larguras), sem exceções de navegador: Assinaturas, Contato, E-mails, Lotes e Usuários. Também conferiu a ausência de sessão e o redirecionamento de Total sem confirmação extra para o fluxo existente. O cenário posterior usa uma sessão fictícia liberada diretamente no banco; não é ensaio de envio/digitação de OTP.
+
+Evidências: `/mnt/dev/peticao/.cache/admin-audit-20261106/visual/access-pages.json`, `access-<nivel>-<largura>.png` e `stage01-access-browser.log`. O servidor temporário 3032 foi encerrado após os testes, e as sessões emitidas pelo roteiro foram revogadas. A prévia 3031 permanece ativa. A ferramenta verifica status/redirecionamento das páginas e exceções do navegador; não afirma inspeção completa de todos os endpoints assíncronos.
+
+O achado de controles/atalhos indevidos para Leitura permanece aberto: a matriz demonstra o bloqueio das páginas, não corrige a visibilidade dos controles. Os avisos submetidos ao dono estão reunidos em `docs/ADMIN-AVISOS-PARA-APROVACAO.md`, todos pendentes de aprovação. Continuam pendentes QA das demais telas e Etapas 2–7; não publicar este candidato parcial.

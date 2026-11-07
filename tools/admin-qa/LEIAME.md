@@ -16,3 +16,9 @@ Variáveis para executar `node tools/admin-qa/contact.mjs` a partir do candidato
 - `QA_OUTPUT_DIR`: diretório absoluto de evidências fora dos arquivos versionados.
 
 Essa execução comprova somente o editor/estado sem card e a recuperação da prévia. Não comprova entrega de e-mail, todas as permissões ou paridade integral das demais telas. Os testes TypeScript de handler e de envio cobrem os contratos correspondentes com dados e transportes fictícios.
+
+## Páginas por nível de acesso
+
+`access.mjs` usa um segundo servidor do mesmo build em `http://127.0.0.1:3032`, com `ADMIN_NO_PASSWORD=0`, `PREVIEW_MODE=1` e e-mail dev, conectado ao banco fictício 54345. Executar com `site/node_modules/.bin/tsx tools/admin-qa/access.mjs`; fornecer as mesmas variáveis do teste de contato, alterando `QA_BASE_URL` para a porta 3032 e acrescentando `ADMIN_NO_PASSWORD=0`.
+
+A ferramenta cria/reutiliza somente as contas fixas `qa-access-<nivel>@example.test`, emite sessões temporárias e as encerra ao terminar. Não apaga contas ou assinaturas. Confere ausência de sessão, os quatro níveis e cinco páginas em seis larguras; Total sem confirmação deve ir ao fluxo existente. A confirmação é habilitada diretamente na sessão fictícia para testar as páginas seguintes: este QA não prova envio ou digitação real de OTP. A prévia sem senha da porta 3031 não serve para testar essa matriz.
