@@ -50,3 +50,7 @@ Propostas perguntadas no chat, ainda pendentes: “Histórico de ações”, “
 ## AV-8 — Triagem no Contato
 
 Perguntados no chat, ainda pendentes: “Análise automática”, “Reanalisar”, “Evidências”, “Sugestão de resposta” e “Revise a análise antes de responder. Nenhuma resposta é enviada automaticamente”. O backend usa códigos estruturados e não ativa esses textos. Categorias/diagnósticos/minutas ainda precisam de apresentação revisada, sem transformar proposta automática em confirmação ou ação executada.
+
+## AV-9 — prévia protegida de mensagens (pendente)
+
+Perguntado no chat após preparar o backend e o ensaio visual com mensagem fictícia. Botão proposto: “Ver prévia protegida”. Aviso proposto: “Esta prévia oculta links, imagens e códigos e simplifica a formatação. O e-mail original foi preservado.” A máscara de exibição usa `[restrito]`. Ainda não há controle novo na interface. Não interpretar o sucesso do QA, passagem do tempo ou aprovação geral do plano como aprovação desses avisos. AV-1–AV-8 permanecem independentes.

@@ -14,7 +14,7 @@ A paginação usa instante com seis casas decimais e chave em ordenação fixa, 
 
 ## Dados excluídos
 
-Não são selecionados assunto/corpo/anexos, payload da fila, ciphertext, fingerprint, chave do pedido, tokens ou erro livre do provedor. O estado de arquivo expirado é calculado pelo relógio do banco, sem apagar ou renovar conteúdo numa leitura. CPF, nascimento, nome da mãe, sexo e hashes de assinantes não integram esta consulta. Prévia de conteúdo, anexos e editor exigem contrato separado; não há endpoint de conteúdo bruto.
+Não são selecionados assunto/corpo/anexos, payload da fila, ciphertext, fingerprint, chave do pedido, tokens ou erro livre do provedor. O estado de arquivo expirado é calculado pelo relógio do banco, sem apagar ou renovar conteúdo numa leitura. CPF, nascimento, nome da mãe, sexo e hashes de assinantes não integram esta consulta. A prévia protegida tem contrato próprio em `ETAPA-03-PREVIA.md`; não há endpoint de conteúdo bruto nem download de anexos. Editor permanece pendente.
 
 ## Evidências e continuidade
 

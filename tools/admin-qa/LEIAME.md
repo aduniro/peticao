@@ -42,3 +42,7 @@ O teste rejeita requisição que use modo `executar` e nunca preenche a palavra 
 ## Histórico de mensagens: contrato compilado
 
 `mail-history.mjs` exige app autenticado em 127.0.0.1:3032 e banco fictício 127.0.0.1:54345/peticao, `PREVIEW_MODE=1`, `ADMIN_NO_PASSWORD=0` e `MAIL_PROVIDER=dev`. Usa contas `qa-mail-history-*@example.test`, metadados e tentativa fictícia, sem chamar transporte. Confere autorização HTTP, paginação, detalhe, separação do legado e ausência de conteúdo secreto na resposta; compara filas/mensagens/tentativas/logs e assinaturas antes/depois das consultas. Sessões são revogadas ao terminar. Requer `QA_OUTPUT_DIR`; relatório `mail-history.json`.
+
+## Prévia protegida: HTTP compilado e navegador
+
+`mail-preview.mjs` usa o ambiente fictício autenticado 3032/54345 com as mesmas guardas de `mail-history.mjs`. Prepara uma mensagem criptografada de teste sem transporte, exige sessão Total e confirmação extra por stub local, confere máscara/auditoria no endpoint real e abre o HTML transformado em iframe sandbox vazio. Nas seis larguras (320, 390, 768, 992, 1280, 1920), nenhuma requisição externa, exceção ou erro de console é tolerado; o frame não acessa o pai e não contém scripts/recursos ativos. Usa `QA_PLAYWRIGHT_MODULE`/`QA_CHROMIUM` se necessário, `QA_OUTPUT_DIR` para capturas/relatório. Revoga a sessão e fecha o navegador ao terminar. Não envia e-mails nem muda assinaturas.

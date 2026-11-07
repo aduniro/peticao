@@ -37,3 +37,8 @@ Logs em `/mnt/dev/peticao/.cache/admin-audit-20261106/`: `stage03-cumulative-fou
 ## Consulta posterior de metadados
 
 O contrato de lista/detalhe autorizado está em `ETAPA-03-CONSULTAS.md`. Ele cobre mensagens/tentativas novas e logs antigos sem vínculo, mantendo conteúdo indisponível para o legado e excluindo corpos, tokens, payloads e ciphertext. Não libera prévia descriptografada nem substitui o painel de entregas por endereço. As pendências anteriores sobre conteúdo/interface permanecem.
+
+
+## Prévia protegida posterior
+
+O candidato inclui agora um endpoint separado Total + confirmação extra, que retorna apenas documento transformado/mascarado e audita o acesso. Contrato, limites e evidências em `ETAPA-03-PREVIA.md`. Não é conteúdo bruto nem editor, e não altera o original. A interface e AV-9 permanecem pendentes; a opção de retenção não foi ativada.
