@@ -1,6 +1,6 @@
 # Etapa 3 — base observada para mensagens
 
-Base e conexão inicial ao transporte implementadas no candidato; eventos, consultas e interface ainda pendentes. Não alterar filas públicas ou política de reenvio junto com a integração visual sem regressão própria.
+Base, conexão inicial ao transporte e consulta autorizada de metadados implementadas no candidato; eventos, conteúdo e interface ainda pendentes. Não alterar filas públicas ou política de reenvio junto com a integração visual sem regressão própria.
 
 - `mail/index.ts`: `sendMail` é o ponto de saída, com guardas de destinatário, supressão, prévia e canais separados. `sent` significa aceite do transporte, não entrega. Na leitura inicial, `drainMailOutbox` chamava o transporte diretamente; a integração de arquivo/identidade deve cobrir ambos os caminhos, preservando rotação e canal de marketing.
 - `mail/log.ts`: o logger legado gravava tentativas sem ID estável de mensagem e em modo de melhor esforço, sem esperar o INSERT. `logQueued` também não correlaciona uma mensagem. Não há corpo/assunto/anexos nesse histórico; sua ausência não pode ser preenchida com conteúdo inventado.
@@ -32,3 +32,8 @@ Após a conexão inicial de `sendMail`/drain descrita em `ETAPA-03-TRANSPORTE.md
 A migração agora confere nove tabelas aditivas e exatamente duas colunas UUID nulas (`mail_log.message_id`, `mail_outbox.message_id`). Metadados, payload, IDs e horários de e-mails legados são comparados antes/depois. Nenhuma identidade/conteúdo antigo é fabricado. O bootstrap anterior continua compatível. Isso não mede duração de migração sobre todo o volume da VPS; essa conferência operacional continua no gate final.
 
 Logs em `/mnt/dev/peticao/.cache/admin-audit-20261106/`: `stage03-cumulative-foundation.log`, `stage03-build-foundation.log`, `stage03-typecheck-serial.log`, `stage03-migration.log` e `stage03-archive-expanded.log`. O cumulativo inclui a última prova de rollback do expurgo, além da rodada específica anterior. A prévia 3031 foi retomada e `/admin` respondeu 200. Não houve nova interface/QA visual porque os componentes visíveis não foram modificados; não confundir esse smoke com conclusão do painel transacional.
+
+
+## Consulta posterior de metadados
+
+O contrato de lista/detalhe autorizado está em `ETAPA-03-CONSULTAS.md`. Ele cobre mensagens/tentativas novas e logs antigos sem vínculo, mantendo conteúdo indisponível para o legado e excluindo corpos, tokens, payloads e ciphertext. Não libera prévia descriptografada nem substitui o painel de entregas por endereço. As pendências anteriores sobre conteúdo/interface permanecem.

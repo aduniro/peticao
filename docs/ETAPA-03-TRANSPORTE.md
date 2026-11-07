@@ -16,7 +16,7 @@ Quando o aceite já está registrado, a fila pode recuperar uma confirmação pe
 
 `MAIL_ARCHIVE_RETENTION` aceita `30`, `90` ou `forever`. Sem valor, novos envios registram identidade/tentativas, mas não copiam o corpo. A preferência foi perguntada ao dono e não foi ativada automaticamente. Envelope efetivo após defaults é o que pode ser arquivado. A integração não expõe chaves nem altera HASH_PEPPER.
 
-Não há endpoint de conteúdo bruto descriptografado nem interface nova. Proteção de acesso, prévia segura, eventos/IDs reais de provedores, conversas/editor, retenção entre todas as cópias e recuperação controlada ainda faltam. Não afirmar arquivo completo ativo ou entrega ao destinatário: aceite é aceite do transporte.
+Há consulta administrativa somente de metadados/tentativas (`ETAPA-03-CONSULTAS.md`); não há endpoint de conteúdo bruto descriptografado nem interface nova. Proteção de acesso, prévia segura, eventos/IDs reais de provedores, conversas/editor, retenção entre todas as cópias e recuperação controlada ainda faltam. Não afirmar arquivo completo ativo ou entrega ao destinatário: aceite é aceite do transporte.
 
 ## Compatibilidade operacional ainda a verificar
 

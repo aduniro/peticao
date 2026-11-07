@@ -38,3 +38,7 @@ O teste segura uma requisição para confirmar que ambos os interruptores ficam 
 `actions.mjs` usa as mesmas variáveis do servidor autenticado 3032 e banco fictício 54345. Cria/reutiliza `qa-actions@example.test` e libera somente sua sessão fictícia para testar a tela, sem enviar OTP real. Em seis larguras, preenche as datas, injeta uma falha na simulação, exige preservação dos campos e recupera por uma simulação real. Consulta o estado do sistema e confere o registro da simulação.
 
 O teste rejeita requisição que use modo `executar` e nunca preenche a palavra ou aciona Executar. Configurações de reenvio/Terminal são comparadas antes e depois e devem permanecer iguais. A sessão é revogada ao encerrar. Este roteiro não comprova publicação, reenvio ou execução real de Terminal; os cenários de efeitos/auditoria são cobertos separadamente em banco fictício e callbacks controlados.
+
+## Histórico de mensagens: contrato compilado
+
+`mail-history.mjs` exige app autenticado em 127.0.0.1:3032 e banco fictício 127.0.0.1:54345/peticao, `PREVIEW_MODE=1`, `ADMIN_NO_PASSWORD=0` e `MAIL_PROVIDER=dev`. Usa contas `qa-mail-history-*@example.test`, metadados e tentativa fictícia, sem chamar transporte. Confere autorização HTTP, paginação, detalhe, separação do legado e ausência de conteúdo secreto na resposta; compara filas/mensagens/tentativas/logs e assinaturas antes/depois das consultas. Sessões são revogadas ao terminar. Requer `QA_OUTPUT_DIR`; relatório `mail-history.json`.

@@ -20,6 +20,7 @@ Inventário estático do checkout local; não é prova de publicação ou execu�
 | /api/admin/dominios | POST | edicao | Não neste handler |
 | /api/admin/emails/engajamento | POST | edicao | Não neste handler |
 | /api/admin/emails/entregas | GET | edicao | Não neste handler |
+| /api/admin/emails/mensagens | GET | edicao | Metadados; conteúdo não disponível |
 | /api/admin/emails/sincronizar | POST | edicao | Não neste handler |
 | /api/admin/esqueci | POST | Fluxo próprio: login, recuperação ou saída | Não neste handler |
 | /api/admin/export | GET | leitura | Não neste handler |
