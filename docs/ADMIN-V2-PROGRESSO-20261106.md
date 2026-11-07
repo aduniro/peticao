@@ -107,3 +107,12 @@ O candidato contém análise por regras, evidência limitada/parametrizada, prop
 Validação final: **307/307** cumulativos, tipos e build; migração com sete tabelas aditivas preservando esquema e registros anteriores; teste HTTP dos handlers compilados, autenticação, agendador, análise e revisão preservada. Dados fictícios, sem API CPF-Brasil ou envios externos a participantes. Evidências e limites em `docs/ETAPA-02-TRIAGEM.md` do candidato. Build e tipos devem ser sequenciais: a checagem paralela viu arquivos gerados removidos pelo build; a rodada serial passou.
 
 A Etapa 2 ainda não está completa: interface/minutas, informes duráveis somente ao dono, atualização por eventos e curadoria de campus pendentes. AV-8 não foi ativado; AV-1–AV-8 foram reunidos por e-mail e continuam aguardando resposta. A aplicação da VPS e a revisão local de CPF não foram alteradas. O servidor temporário 3032 foi encerrado e a sessão revogada; prévia 3031 preservada. Rotina nova não está instalada/em execução automática na VPS. A leitura da base de e-mails da Etapa 3 foi registrada em `docs/ETAPA-03-BASE-MENSAGENS.md`; as Etapas 3–7 continuam no escopo, sem autorização de deploy.
+
+
+## Checkpoint 55b830f — base de mensagem, conteúdo e tentativas
+
+No candidato: identidade de pedido/mensagem, conteúdo criptografado opcional, versões e tentativas duráveis. Vínculo com fila exige conteúdo/tipo/destinatário exatos. Aceite bloqueia repetição; incerteza permanece distinguida e a exceção de retry é explícita/interna. Conteúdo tem política explícita, limite separado da identidade e expurgo auditado que conserva metadados. Foram perguntadas ao dono as opções 30/90 dias ou sem exclusão automática; nenhuma política foi ativada.
+
+**318/318** cumulativos, tipos após build, build e migração aprovados. O ensaio inclui e-mails/filas antigos e não fabrica conteúdo ou identidade retroativa. São nove tabelas aditivas e duas colunas UUID nulas nos legados. Código/contrato/evidências em `docs/ETAPA-03-BASE-MENSAGENS.md` do candidato.
+
+A biblioteca ainda não é chamada pelo transporte atual ou worker: não afirmar arquivo automático funcionando. Conexão de envios/fila, correlação real de provedores/eventos, política completa, consultas autorizadas, prévia, conversas/editor e interfaces continuam pendentes. Nenhuma alteração de estética/avisos. Prévia 3031 retomada, `/admin` respondeu 200. Nenhum deploy, modificação da VPS ou revisão local de CPFs. A integração completa e as etapas seguintes continuam em andamento.
