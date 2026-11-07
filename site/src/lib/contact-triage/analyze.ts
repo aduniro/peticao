@@ -7,7 +7,8 @@ export type Category = "remover" | "cpf" | "campus" | "expirou" | "corrigir" | "
 const sem = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 /** Priority and keyword patterns extracted from tools/ponte/triagem-lib.mjs; campus is an additional case. */
 export function categoryOf(text: string, kind = ""): Category {
-  const t = sem(text);
+  // Redaction markers describe hidden data, not the subject of the request.
+  const t = sem(text).replace(/\[(?:cpf|email|ip|code)\]/g, " ");
   if (/(remov|exclu|apag|cancel|retir)\w*.{0,40}(assinatura|dados|cadastro|nome|e-?mail)|lgpd|nao quero mais (assin|constar|participar)/.test(t)) return "remover";
   if (/\bcpf\b|nome nao confere|nao confere com|receita federal/.test(t)) return "cpf";
   if (/campus|campi/.test(t) && /nao|ausen|falt|cadast|inclu|encontr|list/.test(t)) return "campus";

@@ -44,7 +44,7 @@ try{
   {table_name:"mail_log",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null},
   {table_name:"mail_outbox",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null}
  ],"Only the two explicit nullable correlation columns may be added to old tables");
- assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_reset","admin_sessions","admin_stepup","admin_users","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
+ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_reset","admin_sessions","admin_stepup","admin_users","contact_campus_reviews","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
  const newMailLog=(await c.query("SELECT * FROM mail_log ORDER BY id")).rows,newMailOutbox=(await c.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
  assert.ok([...newMailLog,...newMailOutbox].every(row=>row.message_id===null));
  assert.deepEqual(newMailLog.map(({message_id,...row})=>row),oldMailLog);assert.deepEqual(newMailOutbox.map(({message_id,...row})=>row),oldMailOutbox);
@@ -101,11 +101,23 @@ try{
  assert.deepEqual(await journalSnapshot(),priorJournal,"DDL replay and previous bootstrap must preserve linked events and receipt identity byte for byte");
  assert.deepEqual(await rows(),before,"Message-event upgrade must preserve all signer fields");
  assert.ok((await c.query("SELECT indexname FROM pg_indexes WHERE schemaname=current_schema() AND indexname IN ('mail_message_receipt','mail_message_event_identity','mail_message_event_history')")).rowCount===3,"Correlation indexes must survive the foundation upgrade");
+ // Curated reference decisions are additive and remain recoverable across a code rollback.
+ const reviewer=(await c.query("INSERT INTO admin_users(email,nome,nivel,senha_hash) VALUES('qa-curator@example.test','QA Curator','total','QA-NOT-A-LOGIN-HASH') RETURNING id")).rows[0].id;
+ const reviewJob=(await c.query("INSERT INTO contact_triage_jobs(contact_id,revision,engine,status,analysis) VALUES($1,1,'contact-triage-v1','complete','{\"category\":\"campus\"}') RETURNING id",[contact])).rows[0].id;
+ const review=(await c.query(`INSERT INTO contact_campus_reviews(contact_id,triage_job_id,revision,proposal,decision,source_reviewed,created_by,intent_hash,created_at)
+   VALUES($1,$2,1,'{"institution":"UNIR","campusName":"QA Campus"}','approved',true,$3,'QA-CURATION-1','2026-10-01T10:00:05.123456Z') RETURNING id`,[contact,reviewJob,reviewer])).rows[0].id;
+ await c.query(`INSERT INTO contact_campus_reviews(contact_id,triage_job_id,revision,previous_id,proposal,decision,source_reviewed,created_by,intent_hash,created_at)
+   VALUES($1,$2,2,$3,'{"institution":"UNIR","campusName":"QA Campus"}','rejected',false,$4,'QA-CURATION-2','2026-10-01T10:00:06.654321Z')`,[contact,reviewJob,review,reviewer]);
+ const curated=async()=>(await c.query("SELECT row_to_json(r)::text raw FROM contact_campus_reviews r ORDER BY id")).rows;
+ const priorCurated=await curated();await c.query(newSql);await c.query(newSql);await c.query(oldSql);
+ assert.deepEqual(await curated(),priorCurated,"Curated reference versions, authors, previous links and timestamps survive replay and old bootstrap");
+ assert.deepEqual(await rows(),before);assert.deepEqual(await journalSnapshot(),priorJournal);
+ console.log("PASS campus curation upgrade: eleven additive tables; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
  console.log("PASS scoped journal upgrade: unknown account stays null, no fabricated events; existing receipt and linked event identity/timestamps preserved on replay.");
  console.log("PASS archive foundation upgrade: existing message identity, fingerprint, state and timestamp preserved; Reply-To left unknown.");
  console.log("PASS legacy action history migration: original rows unchanged, no old record admitted as a new request.");
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
- console.log("PASS real startup on old schema plus DDL replay: ten additive tables and two nullable correlation columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS real startup on old schema plus DDL replay: eleven additive tables and two nullable correlation columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;

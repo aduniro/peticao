@@ -318,6 +318,16 @@ const SCHEMA_SQL = `
   ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0;
   ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS error_code TEXT;
   CREATE INDEX IF NOT EXISTS contact_replies_due ON contact_replies(estado,due_at);
+  CREATE TABLE IF NOT EXISTS contact_campus_reviews (
+    id SERIAL PRIMARY KEY, contact_id INTEGER NOT NULL REFERENCES contact_messages(id),
+    triage_job_id INTEGER NOT NULL REFERENCES contact_triage_jobs(id), revision INTEGER NOT NULL,
+    previous_id INTEGER REFERENCES contact_campus_reviews(id), proposal JSONB NOT NULL,
+    decision TEXT NOT NULL CHECK(decision IN ('approved','rejected')), source_reviewed BOOLEAN NOT NULL,
+    created_by INTEGER NOT NULL REFERENCES admin_users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    intent_hash TEXT NOT NULL UNIQUE, UNIQUE(contact_id,revision),
+    CHECK(decision<>'approved' OR source_reviewed)
+  );
+  CREATE INDEX IF NOT EXISTS contact_campus_review_history ON contact_campus_reviews(contact_id,id DESC);
   CREATE TABLE IF NOT EXISTS admin_acoes (
     id SERIAL PRIMARY KEY,
     ts TIMESTAMPTZ NOT NULL DEFAULT now(),

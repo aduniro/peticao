@@ -15,3 +15,7 @@ Continuam verificados o startup real sobre esquema antigo, reexecução do DDL, 
 Execução anterior com falha: `stage07-schema-current-before.log`. Primeira correção aprovada: `stage07-schema-current-after.log`. Rodada final, incluindo bootstrap anterior com eventos existentes: `stage07-schema-current-final.log`. Todos sob `.cache/admin-audit-20261106/`, fora do Git. O esquema temporário foi removido pelo roteiro.
 
 Mudança restrita ao ensaio e documentação. Não altera DDL/aplicação, não repete build nem a suíte de 414 testes que já passaram sobre o mesmo código aplicativo. Não prova instalação root, compatibilidade com mudanças futuras na VPS, rollback de todos os módulos ou conclusão da integração. Nova conferência da produção e autorização final de deploy permanecem obrigatórias.
+
+## Complemento posterior — curadoria de campus
+
+O bloco descrito em `ETAPA-02-CURADORIA-CAMPUS.md` acrescenta `contact_campus_reviews`: o esquema atual passa a **11 tabelas aditivas**. O mesmo roteiro foi atualizado e passou novamente em `stage02-campus-schema.log`, preservando todas as exigências anteriores. Agora também cria duas decisões fictícias encadeadas e comprova preservação integral de propostas, autoria, vínculo anterior e horários com microssegundos após repetir DDL atual e bootstrap anterior. Não alterou assinaturas ou journal de mensagens. O resultado histórico de dez tabelas acima corresponde ao checkpoint 72ec622, não ao esquema acrescido posteriormente.
