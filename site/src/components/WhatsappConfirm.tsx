@@ -4,11 +4,14 @@ import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/messages-types";
 import { isValidCpf, onlyDigits } from "@/lib/cpf";
 import { maskCpf } from "@/lib/cpf-mask";
+import { showCpfError } from "@/lib/cpf-feedback";
 
 /** Confirmação pelo link do WhatsApp: CPF + data de nascimento OU nome da mãe (nada é gravado) e opção de usar o link do e-mail. */
 export default function WhatsappConfirm({ token, foreign }: { token: string; foreign: boolean }) {
   const { t } = useI18n();
   const [cpf, setCpf] = useState("");
+  const [cpfTouched, setCpfTouched] = useState(false);
+  const cpfBad = showCpfError(cpf, cpfTouched);
   const [method, setMethod] = useState<"nascimento" | "mae">("nascimento");
   const [value, setValue] = useState("");
   const [state, setState] = useState<"idle" | "busy" | "ok">("idle");
@@ -17,7 +20,7 @@ export default function WhatsappConfirm({ token, foreign }: { token: string; for
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
-    if (!foreign && !isValidCpf(cpf)) { setErr(t("err.cpf_invalid")); return; }
+    if (!foreign && !isValidCpf(cpf)) { setCpfTouched(true); return; }
     setState("busy"); setErr("");
     const r = await fetch("/api/confirmar/whatsapp", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token, cpf: onlyDigits(cpf), method, value }) });
     const j = await r.json().catch(() => ({}));
@@ -35,7 +38,7 @@ export default function WhatsappConfirm({ token, foreign }: { token: string; for
       {foreign ? <p>{t("wac.foreignText")}</p> : (
         <>
           <p>{t("wac.text")}</p>
-          <label>{t("f.cpf")}<input name="cpf" inputMode="numeric" autoComplete="off" placeholder="999.999.999-99" maxLength={14} value={cpf} onChange={(e) => setCpf(maskCpf(e.target.value))} /></label>
+          <label>{t("f.cpf")}<input name="cpf" inputMode="numeric" autoComplete="off" placeholder="999.999.999-99" maxLength={14} value={cpf} onFocus={() => setCpfTouched(false)} onBlur={() => setCpfTouched(true)} onChange={(e) => setCpf(maskCpf(e.target.value))} aria-invalid={cpfBad} aria-describedby={cpfBad ? "wac-cpf-error" : undefined} />{cpfBad && <span id="wac-cpf-error" className="err" role="alert">{t("err.cpf_invalid")}</span>}</label>
           <div className="segmented" role="radiogroup" aria-label={t("id.method")}>
             <button type="button" role="radio" aria-checked={method === "nascimento"} className={method === "nascimento" ? "on" : ""} onClick={() => { setMethod("nascimento"); setValue(""); }}>{t("id.birth")}</button>
             <button type="button" role="radio" aria-checked={method === "mae"} className={method === "mae" ? "on" : ""} onClick={() => { setMethod("mae"); setValue(""); }}>{t("id.mother")}</button>

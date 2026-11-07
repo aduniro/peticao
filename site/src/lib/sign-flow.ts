@@ -1,3 +1,4 @@
+import { diagnosticMark } from "./signup-diagnostics";
 import { validate, submit, EmailUndeliverableError, type Meta } from "./signatures";
 import { needsIdentity, identityMode, verifyCpfName, makeTicket, checkTicket, verifyIdentity, type IdentityMethod, MAX_FAILED } from "./identity";
 import { checkMx } from "./email-check";
@@ -64,7 +65,7 @@ async function invalidEmail(email: string, ctx: SignCtx, code: string, estrangei
 
 
 export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider | null = defaultProvider(), probe?: Probe): Promise<FlowResult> {
-  if (typeof body?.website === "string" && body.website.length > 0) return { status: 200, json: { ok: true } }; // honeypot
+  if (typeof body?.website === "string" && body.website.length > 0) { diagnosticMark("submission", "ignored"); return { status: 200, json: { ok: true } }; } // honeypot
   const v = validate(body);
   if (!v.ok) return ASK({ errors: v.errors });
   const input = v.value;

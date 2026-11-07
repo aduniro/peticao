@@ -13,6 +13,9 @@ assert.ok(["localhost","127.0.0.1"].includes(url.hostname) && url.port===process
 const oldSql=readFileSync(resolve(here,"fixtures/production-db-20261106.sql"),"utf8");
 const provenance=JSON.parse(readFileSync(resolve(here,"fixtures/production-db-20261106.json"),"utf8"));
 assert.equal(createHash("sha256").update(oldSql).digest("hex"),provenance.schema_sha256);
+const diagnosticSql=readFileSync(resolve(here,"fixtures/production-diagnostics-20261107.sql"),"utf8");
+const diagnosticProvenance=JSON.parse(readFileSync(resolve(here,"fixtures/production-diagnostics-20261107.json"),"utf8"));
+assert.equal(createHash("sha256").update(diagnosticSql).digest("hex"),diagnosticProvenance.schema_sha256);
 const newSource=readFileSync(resolve(here,"../../site/src/lib/db.ts"),"utf8");
 const match=/const SCHEMA_SQL = (`[\s\S]*?`);/.exec(newSource);assert.ok(match);assert.ok(!match[1].includes("${"));
 const newSql=Function("return "+match[1])();
@@ -22,6 +25,11 @@ const pool=new Pool({connectionString:process.env.DATABASE_URL,max:1});const c=a
 try{
  await c.query(`CREATE SCHEMA ${schemaName}`);await c.query(`SET search_path=${schemaName}`);
  await c.query(oldSql);
+ await c.query(diagnosticSql);
+ await c.query(`INSERT INTO signup_diagnostics(id,trace_id,ts,expires_at,source,classification,learning_index,policy_version,metadata,email_cipher,email_hash)
+   VALUES('00000000-0000-4000-8000-000000000010','00000000-0000-4000-8000-000000000011','2026-11-07T10:00:00.123456Z','2026-12-07T10:00:00.123456Z','server','validation_failed','QA-LEARNING','QA-POLICY','{"fixture":true}','QA-NOT-A-REAL-CIPHER','QA-NOT-A-REAL-HASH')`);
+ const diagnosticsSnapshot=async()=>(await c.query("SELECT row_to_json(d)::text raw FROM signup_diagnostics d ORDER BY id")).rows;
+ const originalDiagnostics=await diagnosticsSnapshot();
  await c.query(`INSERT INTO signatures(id,name,email,email_hash,cpf_hash,category,text_version,consent_at,status,created_at,confirmed_at,seq,verify_code) VALUES
  (201,'Pessoa Confirmada','confirmed@example.test','hash-email-1','hash-cpf-1','apoiador','fixture','2026-10-01T10:00:00Z','confirmed','2026-10-01T10:00:00Z','2026-10-01T10:10:00Z',42,'ABCDEF123456'),
  (202,'Pessoa Pendente','pending@example.test','hash-email-2','hash-cpf-2','apoiador','fixture','2026-10-02T10:00:00Z','pending','2026-10-02T10:00:00Z',null,null,null)`);
@@ -120,6 +128,10 @@ try{
  const priorGenerations=await generations();await c.query(newSql);await c.query(newSql);await c.query(oldSql);
  assert.deepEqual(await generations(),priorGenerations,"AI request identity, ownership, budget and uncertainty survive replay and old bootstrap");
  assert.deepEqual(await rows(),before);assert.deepEqual(await journalSnapshot(),priorJournal);assert.deepEqual(await curated(),priorCurated);
+ await c.query(diagnosticSql);
+ assert.deepEqual(await diagnosticsSnapshot(),originalDiagnostics,"Published diagnostic identity, encrypted payload, metadata, expiry and microsecond timestamps survive upgrade/replay/old bootstrap");
+ assert.equal((await c.query("SELECT count(*)::int n FROM pg_indexes WHERE schemaname=current_schema() AND tablename='signup_diagnostics'")).rows[0].n,5);
+ console.log("PASS currently published diagnostics survive additive admin upgrade and code rollback bootstrap; no contact decryption or signer writes.");
  console.log("PASS AI ledger upgrade: twelve additive tables; request UUID, actor, quota reservation, uncertain state and microsecond timestamps preserved, no generation dispatched.");
  console.log("PASS campus curation upgrade: twelve additive tables; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
  console.log("PASS scoped journal upgrade: unknown account stays null, no fabricated events; existing receipt and linked event identity/timestamps preserved on replay.");

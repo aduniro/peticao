@@ -1,3 +1,4 @@
+import { diagnosticMark } from "./signup-diagnostics";
 import { query } from "./db";
 import { birthMatches, type CpfProvider, type CpfNameCheck, defaultProvider, motherNameMatches, nameCheckFromRecord, ProviderUnavailable } from "./cpf-check";
 import { parseBirth, normalizeRegistryBirth } from "./birth";
@@ -51,7 +52,7 @@ async function record(cpfHash: string, method: string, ok: boolean) {
  * Compara o dado digitado com o cadastro (API ou cache criptografado). O dado digitado não é persistido;
  * a tentativa guarda somente o CPF em hash, o método, o resultado e o horário.
  */
-export async function verifyIdentity(a: { cpf: string; method: IdentityMethod; value: string; declaredName: string; provider?: CpfProvider | null }): Promise<IdentityResult> {
+async function verifyIdentityImpl(a: { cpf: string; method: IdentityMethod; value: string; declaredName: string; provider?: CpfProvider | null }): Promise<IdentityResult> {
   const provider = a.provider === undefined ? defaultProvider() : a.provider;
   if (!provider) return { ok: false, reason: "unavailable" };
   if (a.method !== "mae" && a.method !== "nascimento") return { ok: false, reason: "bad_input" };
@@ -98,7 +99,7 @@ export type NameGate =
  * Recalcula a comparação a cada envio, inclusive quando o cadastro vem do cache de 30 dias.
  * Não conserva recusas de nome. O limite existente continua sendo 5 erros por CPF em 24 h.
  */
-export async function verifyCpfName(a: { cpf: string; declaredName: string; provider: CpfProvider }): Promise<NameGate> {
+async function verifyCpfNameImpl(a: { cpf: string; declaredName: string; provider: CpfProvider }): Promise<NameGate> {
   const cpfHash = hmac(a.cpf);
   if ((await failedRecent(cpfHash)) >= MAX_FAILED) return { ok: false, reason: "locked" };
   let rec;
@@ -116,4 +117,16 @@ export async function verifyCpfName(a: { cpf: string; declaredName: string; prov
   const ok = nameCheckFromRecord(rec, a.declaredName) === "match";
   await record(cpfHash, "nome", ok);
   return ok ? { ok: true, nameCheck: "match" } : { ok: false, reason: "mismatch" };
+}
+
+
+export async function verifyIdentity(a: Parameters<typeof verifyIdentityImpl>[0]): Promise<IdentityResult> {
+  const result = await verifyIdentityImpl(a);
+  diagnosticMark("identity", result.ok ? "match" : result.reason, a.method);
+  return result;
+}
+export async function verifyCpfName(a: Parameters<typeof verifyCpfNameImpl>[0]): Promise<NameGate> {
+  const result = await verifyCpfNameImpl(a);
+  diagnosticMark("name", result.ok ? "match" : result.reason, "nome");
+  return result;
 }
