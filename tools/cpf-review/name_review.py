@@ -109,13 +109,15 @@ def filtered_rows(db,args):
  view=args.get('view','pending')
  if view in ('pending','approved','rejected'):clauses.append('decision=?');params.append(view)
  elif view=='active':clauses.append("decision<>'rejected'")
+ elif view=='not_approved':clauses.append("decision<>'approved'")
  if not args.get('group'):raise ValueError('Selecione uma categoria antes da ação em grupo')
  clauses.append('classification=?');params.append(args['group'])
  if args.get('status') in ('confirmed','pending'):clauses.append('status=?');params.append(args['status'])
  if args.get('q'):
   from data import norm
   clauses.append('search LIKE ?');params.append('%'+norm(args['q'])+'%')
- return db.execute('SELECT * FROM records WHERE '+' AND '.join(clauses)+' ORDER BY id',params).fetchall()
+ from data import filter_name_decisions
+ return filter_name_decisions(db.execute('SELECT * FROM records WHERE '+' AND '.join(clauses)+' ORDER BY id',params).fetchall(),args,db)
 
 
 def bulk_preview(request,dbpath=DB):

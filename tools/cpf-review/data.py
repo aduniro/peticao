@@ -142,20 +142,42 @@ def stats(dbpath=DB):
           'validation_version':meta.get('validation_version'),'source_build_id':meta.get('source_build_id'),
           'source_read_only':meta.get('source_read_only')=='true','labels':LABELS,
           'review_version':'name-cpf-v3','last_changed_records':int(meta.get('last_changed_records',0))}
+def filter_name_decisions(rows,args,db):
+ choice=args.get('name_decision','')
+ if choice not in ('','pending','approved','rejected','not_approved'):raise ValueError('Filtro de nome inválido')
+ if not choice:return rows
+ exists=db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='name_decisions'").fetchone()
+ previous={r['record_id']:dict(r) for r in db.execute('SELECT * FROM name_decisions')} if exists else {}
+ from name_review import source_revision,record_from,names_for
+ from name_policy import policy
+ version=policy()['version'];selected=[]
+ for row in rows:
+  old=previous.get(row['id']);decision='pending'
+  if old and old['record_revision']==row['revision'] and old['name_revision']==source_revision(record_from(row)):
+   decision=old['decision']
+   if decision=='approved' and old.get('policy_version')!=version:decision=names_for(row,db)['decision']
+  if decision==choice or choice=='not_approved' and decision!='approved':selected.append(row)
+ return selected
+
 def listing(args,dbpath=DB):
  clauses=[];params=[]
  view=args.get('view','pending')
  if view not in ('rejected','all'):clauses.append('present=1')
  if view in ('pending','approved','rejected'):clauses.append('decision=?');params.append(view)
  elif view=='active':clauses.append("decision<>'rejected'")
+ elif view=='not_approved':clauses.append("decision<>'approved'")
  if args.get('group'):clauses.append('classification=?');params.append(args['group'])
  if args.get('status') in ('confirmed','pending'):clauses.append('status=?');params.append(args['status'])
  if args.get('q'):clauses.append('search LIKE ?');params.append('%'+norm(args['q'])+'%')
  where=' AND '.join(clauses) or '1=1';page=max(1,int(args.get('page',1)));limit=50
  with connect(dbpath) as db:
-  total=db.execute('SELECT count(*) FROM records WHERE '+where,params).fetchone()[0]
-  pages=max(1,(total+limit-1)//limit);page=min(page,pages)
-  rows=db.execute('SELECT * FROM records WHERE '+where+' ORDER BY priority,id LIMIT ? OFFSET ?',params+[limit,(page-1)*limit]).fetchall()
+  if args.get('name_decision'):
+   eligible=filter_name_decisions(db.execute('SELECT * FROM records WHERE '+where+' ORDER BY priority,id',params).fetchall(),args,db)
+   total=len(eligible);pages=max(1,(total+limit-1)//limit);page=min(page,pages);rows=eligible[(page-1)*limit:page*limit]
+  else:
+   total=db.execute('SELECT count(*) FROM records WHERE '+where,params).fetchone()[0]
+   pages=max(1,(total+limit-1)//limit);page=min(page,pages)
+   rows=db.execute('SELECT * FROM records WHERE '+where+' ORDER BY priority,id LIMIT ? OFFSET ?',params+[limit,(page-1)*limit]).fetchall()
   return {'total':total,'page':page,'limit':limit,'rows':[dict(json.loads(r['data']),decision=r['decision'],revision=r['revision'],decision_origin=r['decision_origin'],present=bool(r['present'])) for r in rows]}
 def decide(sid,decision,revision,reviewer,dbpath=DB):
  if decision not in ('approved','rejected','pending'):raise ValueError('Decisão inválida')
