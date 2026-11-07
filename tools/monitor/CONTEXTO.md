@@ -1,5 +1,7 @@
 # Contexto do Vigia
 
+Política central obrigatória: [prioridade e execução](../../docs/POLITICA-CENTRAL-EXECUCAO.md). O admin-v2 é a prioridade número1 até concluir o plano integral. Após terminar qualquer tarefa temporária que o interrompa, retomá-lo imediatamente do checkpoint, sem aguardar novo pedido. Não confundir prévia ligada ou etapa antiga com desenvolvimento efetivamente em execução. Deploy continua exigindo permissão explícita.
+
 O proprietário é a ADUNIR e as notificações são exclusivamente para operator-78ffa47eeb@example.invalid`, em HTML. Informar início, retomada, interrupção e término; consolidar andamento a cada 30 minutos. Aceite de provedor não comprova entrega. O canal WhatsApp/WAHA está desativado; existe somente contrato de extensão.
 
 Esta ferramenta monitora a petição sem alterar o aplicativo por conta própria. Código principal: `/mnt/dev/peticao`. Admin-v2 isolado: `/mnt/dev/peticao/.cache/admin-integration/candidate-stage01` (candidato essencial 94c9cc0: 471 testes e 100 cenários de navegador aprovados, sem deploy). Não publicar esse checkout integralmente. Produção está na VPS em `/opt/peticao/app`, stage em `/home/adunir/peticao-stage/site`. Os logs de diagnóstico e ajustes de foco/textos/filtros já publicados têm relatórios próprios em docs/.
