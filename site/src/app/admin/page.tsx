@@ -53,22 +53,22 @@ export default async function Admin({ searchParams }: { searchParams: { erro?: s
   return (
     <main className="v2-pagina">
       {searchParams.erro === "nivel" && <p className="box err" role="alert">O seu nível de acesso ({ROTULO_NIVEL[sessao.nivel]}) não permite abrir aquela página.</p>}
-      <Painel />
+      <Painel podeVerEmails={nivelOk(sessao.nivel, "edicao")} />
       <div className="v2-secao">
         {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
         <div className="v2-acoes" role="group" aria-label="Atalhos">
-          <a className="v2-btn v2-btn-primario" href="/admin/emails">E-mails e pendentes</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/lotes">Lotes e envios</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/devolvidos">Sem e-mail entregue</a>
+          {nivelOk(sessao.nivel, "edicao") && <a className="v2-btn v2-btn-primario" href="/admin/emails">E-mails e pendentes</a>}
+          {nivelOk(sessao.nivel, "total") && <a className="v2-btn v2-btn-sec" href="/admin/lotes">Lotes e envios</a>}
+          {nivelOk(sessao.nivel, "edicao") && <a className="v2-btn v2-btn-sec" href="/admin/devolvidos">Sem e-mail entregue</a>}
           <a className="v2-btn v2-btn-sec" href="/admin/mapa">Mapa interativo</a>
           <a className="v2-btn v2-btn-sec" href="/api/admin/export">Baixar lista (CSV)</a>
           <a className="v2-btn v2-btn-sec" href="/api/admin/pdf-previa?tipo=modelo" target="_blank" rel="noopener">PDF: prévia do modelo</a>
           <a className="v2-btn v2-btn-sec" href="/api/admin/pdf-previa?tipo=real" target="_blank" rel="noopener">PDF: prévia real</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/contato">Mensagens de contato</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/dominios">Domínios institucionais</a>
+          {nivelOk(sessao.nivel, "edicao") && <a className="v2-btn v2-btn-sec" href="/admin/contato">Mensagens de contato</a>}
+          {nivelOk(sessao.nivel, "edicao") && <a className="v2-btn v2-btn-sec" href="/admin/dominios">Domínios institucionais</a>}
           <a className="v2-btn v2-btn-sec" href="/admin/monitor">Monitor de acessos</a>
           <a className="v2-btn v2-btn-sec" href="/admin/indicacoes">Indicações</a>
-          <a className="v2-btn v2-btn-sec" href="/admin/dispersao">Dispersão da campanha</a>
+          {nivelOk(sessao.nivel, "edicao") && <a className="v2-btn v2-btn-sec" href="/admin/dispersao">Dispersão da campanha</a>}
         </div>
       </div>
 
@@ -86,7 +86,7 @@ export default async function Admin({ searchParams }: { searchParams: { erro?: s
             <li><span>Verificação de CPF</span><b>{identityMode()} · {provider ? (provider.name === "mock" ? "dados de teste" : provider.name) : "sem chave"}</b></li>
             <li><span>Último erro do serviço de CPF</span><b>{lastErr || "nenhum"}</b></li>
           </ul>
-          <form method="post" action="/api/admin/identidade/zerar" className="v2-linha"><input name="cpf" placeholder="CPF para liberar (zera as tentativas erradas)" inputMode="numeric" required aria-label="CPF para liberar" /><button className="v2-btn v2-btn-sec">Liberar CPF</button></form>
+          {nivelOk(sessao.nivel, "edicao") && <form method="post" action="/api/admin/identidade/zerar" className="v2-linha"><input name="cpf" placeholder="CPF para liberar (zera as tentativas erradas)" inputMode="numeric" required aria-label="CPF para liberar" /><button className="v2-btn v2-btn-sec">Liberar CPF</button></form>}
         </div>
       </div>
 

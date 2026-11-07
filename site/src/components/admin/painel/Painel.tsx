@@ -17,7 +17,7 @@ const n0 = (n: number) => n.toLocaleString("pt-BR");
 const ORDEM = ["N", "NE", "CO", "SE", "S"];
 
 /** Painel ao vivo (estilo "apuração"): cartões-herói, faixa de UFs, mapa do Brasil com popups e barras por região. Atualiza a cada 20 s. */
-export default function Painel() {
+export default function Painel({ podeVerEmails = false }: { podeVerEmails?: boolean }) {
   const [d, setD] = useState<Dados | null>(null);
   const [geo, setGeo] = useState<Geo | null>(null);
   const [erro, setErro] = useState(false);
@@ -86,7 +86,7 @@ export default function Painel() {
               <div className="v2-prog" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100} aria-label="Progresso da meta"><i style={{ width: `${pct}%` }} /></div>
               <p className="v2-leg"><b>{pct.toFixed(1).replace(".", ",")}%</b> da meta de {d ? n0(d.meta) : "—"} · faltam <b>{d ? n0(faltaLote) : "—"}</b> para o próximo envio ao Governo</p>
             </div>
-            <div className="v2-cartao"><h2>Aguardando confirmação</h2><div className="v2-numerao m">{d ? n0(d.totais.pendentes) : "—"}</div><p className="v2-leg">{tot ? `${Math.round(((t?.pendentes ?? 0) / tot) * 100)}% dos cadastros` : ""}</p><a className="v2-btn v2-btn-sec v2-pequeno" href="/admin/emails">Ver pendentes</a></div>
+            <div className="v2-cartao"><h2>Aguardando confirmação</h2><div className="v2-numerao m">{d ? n0(d.totais.pendentes) : "—"}</div><p className="v2-leg">{tot ? `${Math.round(((t?.pendentes ?? 0) / tot) * 100)}% dos cadastros` : ""}</p>{podeVerEmails && <a className="v2-btn v2-btn-sec v2-pequeno" href="/admin/emails">Ver pendentes</a>}</div>
             <div className="v2-cartao"><h2>Hoje</h2><div className="v2-numerao m">{d ? n0(d.hoje.confirmadas) : "—"}</div><p className="v2-leg">confirmadas · {d ? n0(d.hoje.iniciadas) : "—"} iniciadas{d ? <> · <b className={dif >= 0 ? "pos" : "neg"}>{dif >= 0 ? "+" : ""}{dif}</b> vs. ontem</> : null}</p></div>
           </div>
           <div className="v2-cartao">

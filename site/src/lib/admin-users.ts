@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import { audit, query, tx } from "./db";
 import { hmac } from "./security";
+import { ehNivel, type Nivel } from "./admin-levels";
 import { SAFE_EMAIL_RE } from "./email-syntax";
 import { HASH_FALSO, gerarSenha, hashSenha, problemaNaSenha, verificarHash } from "./senha";
 
@@ -9,11 +10,7 @@ import { HASH_FALSO, gerarSenha, hashSenha, problemaNaSenha, verificarHash } fro
  * Sessão guardada no banco (só o hash do token), com validade e revogável na hora; senha scrypt; bloqueio após 5 erros; redefinição por e-mail.
  * A senha única antiga (lib/admin.ts) só vale enquanto NÃO existir nenhum usuário (ver `temUsuarios`).
  */
-export const NIVEIS = ["leitura", "edicao", "exclusao", "total"] as const;
-export type Nivel = (typeof NIVEIS)[number];
-export const ROTULO_NIVEL: Record<Nivel, string> = { leitura: "Leitura", edicao: "Edição", exclusao: "Exclusão", total: "Total" };
-export const nivelOk = (tem: Nivel, exige: Nivel) => NIVEIS.indexOf(tem) >= NIVEIS.indexOf(exige);
-export const ehNivel = (x: unknown): x is Nivel => typeof x === "string" && (NIVEIS as readonly string[]).includes(x);
+export { NIVEIS, ROTULO_NIVEL, nivelOk, ehNivel, type Nivel } from "./admin-levels";
 
 export const SESSAO_HORAS = 4, RESET_MINUTOS = 30, CONVITE_MINUTOS = 24 * 60, MAX_FALHAS = 5, BLOQUEIO_MINUTOS = 15;
 

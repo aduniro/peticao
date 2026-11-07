@@ -133,3 +133,11 @@ A captura de Leitura em 1280 px (`visual/access-leitura-1280.png`) mostra o avis
 Evidências: `/mnt/dev/peticao/.cache/admin-audit-20261106/visual/access-pages.json`, `access-<nivel>-<largura>.png` e `stage01-access-browser.log`. O servidor temporário 3032 foi encerrado após os testes, e as sessões emitidas pelo roteiro foram revogadas. A prévia 3031 permanece ativa. A ferramenta verifica status/redirecionamento das páginas e exceções do navegador; não afirma inspeção completa de todos os endpoints assíncronos.
 
 O achado de controles/atalhos indevidos para Leitura permanece aberto: a matriz demonstra o bloqueio das páginas, não corrige a visibilidade dos controles. Os avisos submetidos ao dono estão reunidos em `docs/ADMIN-AVISOS-PARA-APROVACAO.md`, todos pendentes de aprovação. Continuam pendentes QA das demais telas e Etapas 2–7; não publicar este candidato parcial.
+
+## Visibilidade dos controles por nível — implementação local
+
+A regra dos quatro níveis foi extraída para `admin-levels.ts`, sem banco/segredos e segura para componentes do navegador; `admin-users.ts` reexporta a interface existente. Níveis desconhecidos passam a ser recusados explicitamente. O menu usa o nível completo da sessão, em vez de apenas Total/não Total: Leitura vê consultas permitidas, Edição/Exclusão incluem funções de edição e Total conserva todos os itens.
+
+No painel inicial, atalhos incompatíveis e “Liberar CPF” deixam de aparecer para níveis sem acesso. “Ver pendentes” acompanha a permissão do painel de e-mails. A barra inferior mantém as sete posições; atalhos indisponíveis usam espaços sem foco/sem conteúdo acessível para preservar Menu à esquerda e Filtros à direita. Não foram alterados CSS, fontes, ícones, rótulos ou avisos.
+
+Verificação inicial: três testes de UI/permissões e tipos aprovados (`stage01-role-menu.log`, `stage01-typecheck-role-ui.log`). A suíte cumulativa passou **261/261** e o build de produção também passou (`stage01-cumulative-role-ui.log`, `stage01-build-role-ui.log`). O roteiro de navegador foi ampliado para verificar controles e gaveta por nível, posições da barra, erros HTTP/rede e rolagem horizontal; ainda não declarar este achado corrigido no runtime antes dessa execução.

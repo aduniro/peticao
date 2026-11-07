@@ -1,11 +1,12 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import type { Nivel } from "@/lib/admin-levels";
 import { ativo, BARRA, GRUPOS, grupoDe, gruposVisiveis, tituloDe, type Alertas, type Grupo, type Item } from "./menu";
 import { FiltrosContexto } from "./filtros";
 
 /** Quem está logado e o nível (vindos do servidor). Itens marcados `total` só aparecem para o nível Total; quem barra de verdade é cada página e rota. */
-export type Quem = { nome: string; nivel: string; rotuloNivel: string };
+export type Quem = { nome: string; nivel: Nivel; rotuloNivel: string };
 
 const Icone = ({ d }: { d: string }) => <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>;
 const SAIR = (cls: string, rotulo = "Sair") => <form method="post" action="/api/admin/sair"><button className={cls} aria-label="Sair do painel">{rotulo}</button></form>;
@@ -32,7 +33,7 @@ function Moldura({ path, children, quem, ehTotal }: { path: string; children: Re
   const [folha, setFolha] = useState(false);
   const registrar = useCallback((d: number) => setTem((n) => n + d), []);
   const ctx = useMemo(() => ({ slot, registrar }), [slot, registrar]);
-  const grupos = gruposVisiveis(ehTotal);
+  const grupos = gruposVisiveis(quem?.nivel ?? (ehTotal ? "total" : "leitura"));
 
   useEffect(() => {
     let vivo = true;
@@ -63,7 +64,7 @@ function Moldura({ path, children, quem, ehTotal }: { path: string; children: Re
   const gAtivo = grupoDe(path);
   const gAberto = grupos.find((g) => g.id === aberto);
 
-  const barra = BARRA.map((b) => { const i = grupos.flatMap((g) => g.itens).find((x) => x.href === b.href); return i ? { ...i, rotulo: b.curto } : null; }).filter((i): i is Item => !!i);
+  const barra = BARRA.map((b) => { const i = grupos.flatMap((g) => g.itens).find((x) => x.href === b.href); return i ? { ...i, rotulo: b.curto } : null; });
   const somaTudo = Object.values(al).reduce((a, b) => a + b, 0);
 
   return (
@@ -108,7 +109,7 @@ function Moldura({ path, children, quem, ehTotal }: { path: string; children: Re
 
       <nav className="v2-abas" aria-label="Navegação principal">
         <button type="button" className="v2-aba" aria-label="Abrir o menu completo" aria-expanded={gaveta} onClick={abrirGaveta}><Icone d="M4 7h16M4 12h16M4 17h16" /><span>Menu</span>{somaTudo > 0 && <b className="adm-dot">{somaTudo > 9 ? "9+" : somaTudo}</b>}</button>
-        {barra.map((i) => link(i, "v2-aba"))}
+        {barra.map((i, index) => i ? link(i, "v2-aba") : <span key={BARRA[index].href} className="v2-aba v2-aba-vazio" aria-hidden="true" />)}
         {tem > 0
           ? <button type="button" className={`v2-aba${folha ? " on" : ""}`} aria-expanded={folha} onClick={() => setFolha((f) => !f)}><Icone d="M3 5h18l-7 8v6l-4 2v-8z" /><span>Filtros</span></button>
           : <span className="v2-aba v2-aba-vazio" aria-hidden="true" />}
