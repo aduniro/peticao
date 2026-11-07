@@ -1,0 +1,144 @@
+from __future__ import annotations
+import json, os, pty, select, shlex, signal, subprocess, threading, time
+from pathlib import Path
+from .store import Store, now, uid
+from .sources import clean
+
+CODEX=str(Path.home()/'.local/bin/codex')
+INSTRUCTIONS='''Você é o agente de uma tarefa do Vigia. Trabalhe somente no escopo e diretório da tarefa e siga AGENTS.md.
+Não há acesso automático ao chat anterior: use o resumo da tarefa e os documentos do repositório.
+Não leia nem revele .env, credenciais, secrets/, preview-state/, chaves SSH ou dados pessoais de assinantes.
+Não altere avisos, privacidade, aparência ou regras fora da solicitação. Não publique nem altere a VPS sem autorização específica do usuário.
+Preserve alterações existentes e faça commits por etapa. Use dados fictícios e entrega dev em testes.
+Não envie mensagens a participantes ou autoridades. Notificações do monitor destinam-se exclusivamente a operator-1608598f41@example.invalid em HTML.
+Descreva o resultado e os testes; não invente percentuais nem estimativas. Informe bloqueios. Não acesse outros threads em execução.'''
+
+class Rpc:
+ def __init__(self,command=None):
+  self.proc=subprocess.Popen(command or [CODEX,'app-server'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,start_new_session=True)
+  self.sequence=0;self.buffer=b'';self.pending=[]
+ def send(self,message):
+  self.proc.stdin.write((json.dumps(message)+'\n').encode());self.proc.stdin.flush()
+ def request(self,method,params):
+  self.sequence+=1;self.send({'id':self.sequence,'method':method,'params':params});return self.sequence
+ def receive(self,timeout=.2):
+  if self.pending:return self.pending.pop(0)
+  if b'\n' not in self.buffer:
+   ready,_,_=select.select([self.proc.stdout],[],[],timeout)
+   if not ready:return None
+   raw=os.read(self.proc.stdout.fileno(),65536)
+   if not raw:raise RuntimeError('Conexão com o Codex encerrada')
+   self.buffer+=raw
+  if b'\n' not in self.buffer:return None
+  line,self.buffer=self.buffer.split(b'\n',1)
+  try:return json.loads(line)
+  except ValueError:return None
+ def call(self,method,params,timeout=30):
+  expected=self.request(method,params);deadline=time.monotonic()+timeout;aside=[]
+  try:
+   while time.monotonic()<deadline:
+    msg=self.receive()
+    if not msg:continue
+    if msg.get('id')==expected:
+     if 'error' in msg:raise RuntimeError(clean(msg['error'].get('message','Erro de protocolo'),500))
+     return msg.get('result',{})
+    aside.append(msg)
+   raise TimeoutError('Codex não respondeu à inicialização')
+  finally:self.pending=aside+self.pending
+ def initialize(self):
+  self.call('initialize',{'clientInfo':{'name':'peticao_vigia','title':'Vigia','version':'0.1.0'}});self.send({'method':'initialized','params':{}})
+ def close(self):
+  if self.proc.poll() is None:
+   self.proc.terminate()
+   try:self.proc.wait(timeout=3)
+   except subprocess.TimeoutExpired:self.proc.kill();self.proc.wait()
+
+def control(store,rid):
+ with store.connect() as db:
+  row=db.execute('SELECT control FROM requests WHERE id=?',(rid,)).fetchone()
+  if not row or not row['control']:return None
+  db.execute('UPDATE requests SET control=NULL WHERE id=?',(rid,));return json.loads(row['control'])
+
+def command_run(store,request,task):
+ rid=request['id'];command=request['body'];master,slave=pty.openpty()
+ argv=['bash','-lc',command] if request['kind']=='shell' else ['ssh','-tt','-o','BatchMode=yes','-o','ConnectTimeout=8','peticao','bash -lc '+shlex.quote(command)]
+ proc=subprocess.Popen(argv,cwd=task['cwd'],stdin=slave,stdout=slave,stderr=slave,start_new_session=True);os.close(slave)
+ store.execute('UPDATE requests SET pid=? WHERE id=?',(proc.pid,rid));store.out(rid,'Execução explícita do usuário: '+clean(command,10000),'command');canceled=False;output_count=0
+ try:
+  while proc.poll() is None:
+   action=control(store,rid)
+   if action:
+    if action['action']=='cancel':
+     os.killpg(proc.pid,signal.SIGCONT);os.killpg(proc.pid,signal.SIGTERM);canceled=True
+    elif action['action'] in ('pause','resume'):
+     os.killpg(proc.pid,signal.SIGSTOP if action['action']=='pause' else signal.SIGCONT)
+     store.execute('UPDATE requests SET state=? WHERE id=?',('paused' if action['action']=='pause' else 'running',rid))
+    elif action['action']=='stdin':os.write(master,action['text'].encode())
+   ready,_,_=select.select([master],[],[],.2)
+   if ready:
+    try:raw=os.read(master,8192)
+    except OSError:break
+    if raw and output_count<2000000:store.out(rid,clean(raw.decode(errors='replace'),8192));output_count+=len(raw)
+   if canceled:
+    try:proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:os.killpg(proc.pid,signal.SIGKILL)
+  # Drain final output already queued by the child.
+  while select.select([master],[],[],0)[0]:
+   try:raw=os.read(master,8192)
+   except OSError:break
+   if not raw:break
+   if output_count<2000000:store.out(rid,clean(raw.decode(errors='replace'),8192));output_count+=len(raw)
+  code=proc.wait();return ('interrupted' if canceled else 'completed' if code==0 else 'failed',code)
+ finally:
+  if proc.poll() is None:os.killpg(proc.pid,signal.SIGTERM)
+  os.close(master)
+
+def ai_run(store,request,task):
+ rpc=Rpc();rid=request['id'];thread_id=task.get('thread_id');turn_id=None;approval_ids=[]
+ try:
+  rpc.initialize()
+  params={'cwd':task['cwd'],'approvalPolicy':'on-request','sandbox':'workspace-write','developerInstructions':INSTRUCTIONS}
+  if thread_id:
+   params.update(threadId=thread_id,excludeTurns=True);result=rpc.call('thread/resume',params)
+  else:result=rpc.call('thread/start',params)
+  thread_id=result['thread']['id'];store.execute('UPDATE tasks SET thread_id=? WHERE id=?',(thread_id,task['id']))
+  text=f"Tarefa: {task['title']}\nAmbiente: {task['environment']}\nEscopo: {task['scope']}\nEstado: {task['detail']}\nPedido do usuário: {request['body']}"
+  result=rpc.call('turn/start',{'threadId':thread_id,'input':[{'type':'text','text':text,'text_elements':[]}]});turn_id=result['turn']['id']
+  while True:
+   action=control(store,rid)
+   if action and action['action']=='cancel':rpc.request('turn/interrupt',{'threadId':thread_id,'turnId':turn_id})
+   elif action and action['action']=='steer':rpc.request('turn/steer',{'threadId':thread_id,'expectedTurnId':turn_id,'input':[{'type':'text','text':action['text'],'text_elements':[]}]})
+   for approval in store.rows('SELECT * FROM approvals WHERE request_id=? AND answered=0',(rid,)):
+    decision=approval['decision'] or ('decline' if time.time()>approval['expires'] else None)
+    if decision:
+     rpc.send({'id':json.loads(approval['rpc_id']),'result':{'decision':decision}});store.execute('UPDATE approvals SET answered=1,decision=? WHERE id=?',(decision,approval['id']))
+   msg=rpc.receive()
+   if not msg:continue
+   method=msg.get('method','');p=msg.get('params',{})
+   if 'id' in msg and method:
+    if method in ('item/commandExecution/requestApproval','item/fileChange/requestApproval'):
+     aid=uid();approval_ids.append(aid);store.execute('INSERT INTO approvals VALUES(?,?,?,?,?,?,?,?,?)',(aid,rid,json.dumps(msg['id']),method,json.dumps(p),now(),time.time()+1200,None,0))
+     store.event('approval','Aprovação solicitada',task['id'],{'id':aid,'request_id':rid})
+    else:rpc.send({'id':msg['id'],'error':{'code':-32601,'message':'Interface não suporta esse pedido; peça esclarecimento ao usuário por mensagem.'}})
+   elif method=='item/agentMessage/delta':store.out(rid,clean(p.get('delta',''),10000),'assistant')
+   elif method=='item/commandExecution/outputDelta':store.out(rid,clean(p.get('delta',''),10000),'output')
+   elif method in ('item/started','item/completed'):
+    item=p.get('item',{});kind=item.get('type','')
+    if kind in ('commandExecution','fileChange'):store.out(rid,clean(json.dumps(item,ensure_ascii=False),15000),kind)
+   elif method=='turn/completed':
+    status=p['turn']['status'];error=p['turn'].get('error')
+    if error:store.out(rid,clean(json.dumps(error),2000),'error')
+    return ('completed' if status=='completed' else 'interrupted' if status=='interrupted' else 'failed',None)
+   elif method=='error':store.out(rid,clean(json.dumps(p),3000),'error')
+ finally:
+  store.execute("UPDATE approvals SET answered=1,decision=COALESCE(decision,'decline') WHERE request_id=? AND answered=0",(rid,));rpc.close()
+
+def execute_request(store,request):
+ task=store.rows('SELECT * FROM tasks WHERE id=?',(request['task_id'],))[0]
+ store.event('run_started','Execução iniciada',task['id'],{'id':request['id'],'kind':request['kind']})
+ store.queue_mail('start:'+request['id'],'Vigia: execução iniciada — '+task['title'],f"# Execução iniciada\n\nTarefa: {task['title']}\n\nCanal: {request['kind']}\n\nAmbiente: {task['environment']}.\n\nAcompanhe no prompt da tarefa. Estimativa de término ainda não informada.")
+ try:state,code=ai_run(store,request,task) if request['kind']=='ai' else command_run(store,request,task)
+ except Exception as error:state,code='failed',None;store.out(request['id'],clean(str(error),1500),'error')
+ store.execute('UPDATE requests SET state=?,exit_code=?,updated_at=? WHERE id=?',(state,code,now(),request['id']))
+ store.event('run_finished','Execução '+state,task['id'],{'id':request['id'],'exit_code':code})
+ store.queue_mail('run:'+request['id'],'Vigia: execução '+state+' — '+task['title'],f"# Execução {state}\n\nTarefa: {task['title']}\n\nAmbiente: {task['environment']}\n\nTipo: {request['kind']}\n\nCódigo de saída: {code if code is not None else 'não aplicável'}.\n\nConsulte o prompt da tarefa no Vigia para saída e próximos passos.")
