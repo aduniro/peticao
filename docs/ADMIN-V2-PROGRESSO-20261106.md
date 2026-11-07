@@ -133,3 +133,11 @@ No candidato `admin-v2-stage01`, o publicador para consumidores antes da troca e
 Passaram 331/331 cumulativos, cinco testes SQL específicos, 17/17 Python, tipos, sintaxe shell e diff. Root/systemd são fixtures locais; SQL rodou somente em PostgreSQL isolado. Não mudou código visual/textos e não houve novo build ou QA visual: a referência compilada anterior continua a mesma. Contrato: `.cache/admin-integration/candidate-stage01/docs/ETAPA-03-ROLLBACK.md`. Logs: `.cache/admin-audit-20261106/stage03-rollback-{cumulative,pipeline-final,sql-final,typecheck}.log`.
 
 Próximo bloco: consultas administrativas autorizadas de mensagens/tentativas, depois prévia segura e correlação de eventos/IDs. Recuperação de incerteza durante operação normal, interfaces, política de retenção e demais Etapas 2–7 continuam pendentes. Não considerar a integração integral concluída nem iniciar deploy sem autorização específica. Notificações somente para operator-1608598f41@example.invalid.
+
+## Checkpoint 5331053 — metadados de mensagens autorizados
+
+No candidato `admin-v2-stage01`, GET `/api/admin/emails/mensagens` exige Edição ou superior e oferece lista/detalhe de metadados e tentativas. Logs legados sem vínculo são tentativas independentes; logs correlacionados não duplicam mensagens. Paginação conserva microssegundos. Conteúdo, tokens, payloads, ciphertext e erros livres não são expostos. Nenhum texto/interface foi ativado.
+
+Passaram 335/335 cumulativos, quatro específicos, tipos após build, build e HTTP compilado. Na primeira rodada HTTP a expectativa literal do cabeçalho foi ajustada à composição do Next, mantendo exigência de no-store. Relatório `.cache/admin-audit-20261106/runtime-mail-history/mail-history.json`; contrato no candidato `docs/ETAPA-03-CONSULTAS.md`. Assinaturas e registros de envio foram comparados antes/depois e preservados. Sessões fictícias revogadas, temporário 3032 encerrado; prévia 3031 retomada e /admin respondeu 200.
+
+Próximo: prévia segura de conteúdo com autorização própria e dados sensíveis mascarados, correlação de IDs/eventos, recuperação operacional e demais etapas. Retenção/avisos e interfaces continuam pendentes; não confundir este checkpoint com integração completa. Nenhum deploy ou alteração da VPS/revisão de CPFs.
