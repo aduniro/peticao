@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+
+curl --fail --silent --output /dev/null http://127.0.0.1:3031/admin
+admin_tailnet_dns=$(tailscale status --json | python3 -c 'import json,sys; print(json.load(sys.stdin)["Self"]["DNSName"].rstrip("."))')
+admin_tailnet_config=$(tailscale serve status --json)
+python3 -c '
+import json,sys
+config=json.load(sys.stdin)
+for host,entry in config.get("Web",{}).items():
+    if host.endswith(":9443") and entry.get("Handlers") != {"/":{"Proxy":"http://127.0.0.1:3031"}}:
+        raise SystemExit("Porta 9443 já usada por outro encaminhamento; configuração preservada.")
+if any(host.endswith(":9443") and allowed for host,allowed in config.get("AllowFunnel",{}).items()):
+    raise SystemExit("Porta 9443 possui Funnel; configuração preservada.")
+if "9443" in config.get("TCP",{}) and not config.get("TCP",{}).get("9443",{}).get("HTTPS"):
+    raise SystemExit("Porta 9443 já usada por outro serviço; configuração preservada.")
+' <<< "$admin_tailnet_config"
+
+sudo tailscale serve --bg --https=9443 --yes http://127.0.0.1:3031
+printf '\nAdmin-v2 na mesma instância local:\nhttps://%s:9443/admin\n' "$admin_tailnet_dns"
