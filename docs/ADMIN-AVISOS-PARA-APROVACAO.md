@@ -54,3 +54,9 @@ Perguntados no chat, ainda pendentes: “Análise automática”, “Reanalisar�
 ## AV-9 — prévia protegida de mensagens (pendente)
 
 Perguntado no chat após preparar o backend e o ensaio visual com mensagem fictícia. Botão proposto: “Ver prévia protegida”. Aviso proposto: “Esta prévia oculta links, imagens e códigos e simplifica a formatação. O e-mail original foi preservado.” A máscara de exibição usa `[restrito]`. Ainda não há controle novo na interface. Não interpretar o sucesso do QA, passagem do tempo ou aprovação geral do plano como aprovação desses avisos. AV-1–AV-8 permanecem independentes.
+
+## AV-10 — recuperação de fila com aceite comprovado (aprovado em 07/11/2026)
+
+Botão proposto: “Concluir fila sem reenviar”. Aviso proposto: “A fila será concluída com base no aceite já registrado pelo provedor. Nenhum e-mail será reenviado. Isso não comprova entrega ao destinatário.”
+
+Submetidos ao dono antes de qualquer mudança visível, por solicitação nativa assíncrona. Resposta explícita recebida: “Aprovar estes textos”. Aprovação restrita ao botão e aviso acima; não aprova os demais AVs nem o deploy. Backend permite apenas concluir metadados com prova exata e Total + confirmação extra; não reenvia, não altera assinatura e não libera resultado incerto. A interface não foi ativada. Contrato em `ETAPA-03-RECUPERACAO.md`.

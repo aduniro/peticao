@@ -35,13 +35,13 @@ export async function drainOutbox(send: (m: Mail, kind: string, context?: {id:nu
     out.tried++;
     try {
       await send(fromStored(row.payload), row.kind, {id:row.id,messageId:row.message_id});
-      await query("UPDATE mail_outbox SET status='sent', sent_at=now(), attempts=attempts+1, last_error=NULL WHERE id=$1", [row.id]);
-      out.sent++;
+      const changed = await query("UPDATE mail_outbox SET status='sent', sent_at=now(), attempts=attempts+1, last_error=NULL WHERE id=$1 AND status='pending'", [row.id]);
+      if (changed.rowCount) out.sent++;
     } catch (e) {
       const attempts = row.attempts + 1;
       const tooOld = Date.now() - new Date(row.created_at).getTime() > MAX_AGE_H * 3600_000;
-      if (tooOld) { await query("UPDATE mail_outbox SET status='failed', attempts=$2, last_error=$3 WHERE id=$1", [row.id, attempts, String((e as Error).message).slice(0, 300)]); out.failed++; }
-      else await query("UPDATE mail_outbox SET attempts=$2, last_error=$3, next_attempt_at = now() + ($4 || ' minutes')::interval WHERE id=$1", [row.id, attempts, String((e as Error).message).slice(0, 300), String(nextDelayMinutes(attempts))]);
+      if (tooOld) { const changed = await query("UPDATE mail_outbox SET status='failed', attempts=$2, last_error=$3 WHERE id=$1 AND status='pending'", [row.id, attempts, String((e as Error).message).slice(0, 300)]); if (changed.rowCount) out.failed++; }
+      else await query("UPDATE mail_outbox SET attempts=$2, last_error=$3, next_attempt_at = now() + ($4 || ' minutes')::interval WHERE id=$1 AND status='pending'", [row.id, attempts, String((e as Error).message).slice(0, 300), String(nextDelayMinutes(attempts))]);
     }
   }
   out.pending = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM mail_outbox WHERE status='pending'")).rows[0].n;
