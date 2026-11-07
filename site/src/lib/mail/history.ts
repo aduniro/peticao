@@ -73,6 +73,8 @@ export async function mailHistoryDetail(key: unknown) {
     const attempts = (await client.query(`SELECT id,provider,from_addr,state,${isoSql("started_at")} started_at,
       ${isoSql("finished_at")} finished_at,provider_id,error_code FROM mail_message_attempts
       WHERE message_id=$1 ORDER BY started_at DESC,id DESC LIMIT 101`, [id])).rows;
-    return { ok: true as const, source: "message" as const, record: row, attempts: attempts.slice(0, 100), attempts_truncated: attempts.length > 100 };
+    const events=(await client.query(`SELECT id,provider,event_type,${isoSql("occurred_at")} occurred_at,${isoSql("received_at")} received_at,attempt_id
+      FROM mail_message_events WHERE message_id=$1 AND association_state='linked' ORDER BY occurred_at DESC,id DESC LIMIT 101`,[id])).rows;
+    return { ok: true as const, source: "message" as const, record: row, attempts: attempts.slice(0, 100), attempts_truncated: attempts.length > 100, events:events.slice(0,100),events_truncated:events.length>100 };
   });
 }

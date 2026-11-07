@@ -150,6 +150,18 @@ const SCHEMA_SQL = `
   );
   CREATE UNIQUE INDEX IF NOT EXISTS mail_message_attempt_active ON mail_message_attempts(message_id) WHERE state='prepared';
   CREATE INDEX IF NOT EXISTS mail_message_attempt_history ON mail_message_attempts(message_id,started_at);
+  ALTER TABLE mail_message_attempts ADD COLUMN IF NOT EXISTS account_scope TEXT CHECK(account_scope IS NULL OR account_scope ~ '^[a-f0-9]{64}$');
+  CREATE INDEX IF NOT EXISTS mail_message_receipt ON mail_message_attempts(provider,account_scope,provider_id) WHERE provider_id IS NOT NULL;
+  CREATE TABLE IF NOT EXISTS mail_message_events (
+    id BIGSERIAL PRIMARY KEY, fingerprint TEXT NOT NULL UNIQUE,
+    provider TEXT NOT NULL, account_scope TEXT NOT NULL, provider_id TEXT NOT NULL, recipient TEXT NOT NULL,
+    event_type TEXT NOT NULL CHECK(event_type IN ('delivered','opened','clicked','hard_bounce','soft_bounce','blocked','complaint')),
+    occurred_at TIMESTAMPTZ NOT NULL, received_at TIMESTAMPTZ NOT NULL DEFAULT now(), source TEXT NOT NULL CHECK(source IN ('api','sns','webhook')),
+    association_state TEXT NOT NULL DEFAULT 'unlinked' CHECK(association_state IN ('unlinked','linked','ambiguous')),
+    message_id UUID REFERENCES mail_messages(id), attempt_id UUID REFERENCES mail_message_attempts(id)
+  );
+  CREATE INDEX IF NOT EXISTS mail_message_event_identity ON mail_message_events(provider,account_scope,provider_id,recipient);
+  CREATE INDEX IF NOT EXISTS mail_message_event_history ON mail_message_events(message_id,occurred_at DESC,id DESC) WHERE association_state='linked';
   ALTER TABLE mail_log ADD COLUMN IF NOT EXISTS message_id UUID REFERENCES mail_messages(id);
   ALTER TABLE mail_outbox ADD COLUMN IF NOT EXISTS message_id UUID REFERENCES mail_messages(id);
   CREATE SEQUENCE IF NOT EXISTS signature_seq;

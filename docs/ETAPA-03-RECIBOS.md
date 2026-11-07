@@ -44,3 +44,8 @@ O HTTP compilado é exercitado com transporte dev, sem inventar ID externo; os f
 **351/351 cumulativos**, oito testes novos (23 direcionados junto às regressões de cadeia/fila/adapters), build, tipos após build, sintaxe do roteiro e HTTP compilado aprovados. O HTTP usou um banco de QA novo em `candidate-receipt-preview-db`, preservando o banco da prévia anterior. Duas mensagens exclusivamente dev/fictícias, uma tentativa por mensagem, resposta duplicada recusada, IDs externos nulos em dev e assinaturas preservadas. Relatório `runtime-mail-receipts/mail-transport.json`.
 
 Sessão de QA revogada, servidor temporário 3032 encerrado, prévia 3031 retomada com seu banco anterior; nenhum dado dessa prévia foi substituído pelo banco de QA. Não houve mudança de schema, interface/avisos, revisão de CPFs ou VPS. Isto certifica a captura de recibos no candidato; não a correlação completa de eventos nem envios reais por cada conta.
+
+
+## Associação posterior inicial
+
+`ETAPA-03-EVENTOS.md` descreve o escopo de conta e o primeiro journal ligado ao SES/SNS. O campo account_scope foi adicionado à tentativa; dados anteriores continuam nulos. A associação dos outros provedores ainda está pendente, apesar de os seus envios já capturarem escopo. Não reinterpretar o checkpoint de recibos como prova de entrega.

@@ -26,7 +26,7 @@ export function journalFor(messageId:string,retryUncertain:boolean):DeliveryJour
       throw new MailJournalError("mail_record_"+result.error);
     },
     async finish(id,accepted,error,receipt){
-      const result=await finishAttempt(id,accepted?"accepted":error instanceof MailTransportRejected?"rejected":"indeterminate",{providerId:receipt?.providerId,...(accepted?{}:{errorCode:error instanceof MailTransportRejected?"provider_rejected":"transport_uncertain"})});
+      const result=await finishAttempt(id,accepted?"accepted":error instanceof MailTransportRejected?"rejected":"indeterminate",{providerId:receipt?.providerId,accountScope:receipt?.accountScope,...(accepted?{}:{errorCode:error instanceof MailTransportRejected?"provider_rejected":"transport_uncertain"})});
       if(!result.ok)throw new MailJournalError("mail_result_"+result.error);
     }
   };

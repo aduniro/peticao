@@ -12,6 +12,7 @@ import { withReplyTo } from "./payload";
 import { journalFor, prepareRecorded, recordedQueueMail, type DeliveryJournal } from "./recorded";
 import { messageMetadata } from "./archive";
 import { receiptId, receiptJson, objectReceiptId, smtpInfoReceipt, mailersendReceipt, mailrelayReceipt, type TransportReceipt } from "./receipt";
+import { credentialScope, snsScope, validAccountScope, sendpulseScope, mailrelayScope } from "./event-scope";
 export { withReplyTo } from "./payload";
 import { ordemRodizio, parsePesos, registrar } from "./rodizio";
 
@@ -36,10 +37,11 @@ async function sendSmtp(m: Mail, from: string, provider = "smtp") {
   const cred = url ? null : readSmtpCredential();
   if (!url && !cred) throw new Error("SMTP não configurado (SMTP_URL ou credencial ses-smtp)");
   const transport = url ? nodemailer.createTransport(url) : nodemailer.createTransport(sesSmtpOptions(cred!));
+  const notificationTopic=process.env.SES_SNS_TOPIC_ARN, sendingAccount=process.env.SES_SENDING_ACCOUNT_ID;
   const result = await transport.sendMail({ from, ...m });
   let awsHost = !url;
   if (url) { try { awsHost = /^email-smtp\.[a-z0-9-]+\.amazonaws\.com(?:\.cn)?$/.test(new URL(url).hostname); } catch { awsHost = false; } }
-  return provider === "ses" && awsHost ? { providerId: smtpInfoReceipt(result) } : undefined;
+  return provider === "ses" && awsHost ? { providerId: smtpInfoReceipt(result), accountScope: snsScope(notificationTopic,sendingAccount) } : undefined;
 }
 
 async function sendBrevo(m: Mail, fromHeader: string) {
@@ -62,7 +64,7 @@ async function sendBrevo(m: Mail, fromHeader: string) {
     }),
   });
   if (!res.ok) throw new Error(`Brevo respondeu ${res.status}`);
-  return { providerId: objectReceiptId(await receiptJson(res), "messageId") };
+  return { providerId: objectReceiptId(await receiptJson(res), "messageId"), accountScope: credentialScope("brevo",key) };
 }
 
 /** Mailrelay (API v1, POST /send_emails). A conta tem endereço próprio (MAILRELAY_HOST = algo.ipzmarketing.com) e o remetente precisa estar confirmado lá. */
@@ -88,7 +90,7 @@ async function sendMailrelayOf(which: "integral" | "presidente", m: Mail, fromHe
       const body = await res.text().catch(() => "");
       throw new Error(`Mailrelay respondeu ${res.status}${body ? `: ${body.replace(/\s+/g, " ").slice(0, 140)}` : ""}`);
     }
-    return { providerId: mailrelayReceipt(await receiptJson(res), to) };
+    return { providerId: mailrelayReceipt(await receiptJson(res), to), accountScope: mailrelayScope(nome,host,key) };
   };
   const primary = await post(m.to);
   onReceipt?.(primary);
@@ -101,19 +103,20 @@ async function sendMailrelayOf(which: "integral" | "presidente", m: Mail, fromHe
  * O corpo HTML vai em Base64, como a API exige. O remetente precisa estar ativo no SendPulse e no mesmo domínio do domínio de envio autenticado.
  */
 type SpCreds = { id: string; secret: string };
-const spToken = { value: "", exp: 0 };
+const spToken = { value: "", exp: 0, scope: "" };
 export function sendpulseCreds(): SpCreds | null {
   const id = process.env.SENDPULSE_CLIENT_ID ?? readCredentialText("sendpulse-id");
   const secret = process.env.SENDPULSE_CLIENT_SECRET ?? readCredentialText("sendpulse-secret");
   return id && secret ? { id, secret } : null;
 }
-export const _clearSendpulseToken = () => { spToken.value = ""; spToken.exp = 0; };
+export const _clearSendpulseToken = () => { spToken.value = ""; spToken.exp = 0; spToken.scope = ""; };
 export async function sendSendpulseWith(fetchImpl: typeof fetch, creds: SpCreds, m: Mail, fromHeader: string) {
-  if (!spToken.value || spToken.exp < Date.now() + 60_000) {
+  const accountScope=sendpulseScope(creds.id,creds.secret);
+  if (!spToken.value || spToken.exp < Date.now() + 60_000 || !accountScope || spToken.scope!==accountScope) {
     const r = await fetchImpl("https://api.sendpulse.com/oauth/access_token", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ grant_type: "client_credentials", client_id: creds.id, client_secret: creds.secret }), signal: AbortSignal.timeout(15_000) });
     const j = (await r.json().catch(() => ({}))) as { access_token?: string; expires_in?: number };
     if (!r.ok || !j.access_token) throw new Error(`SendPulse: autenticação recusada (HTTP ${r.status})`);
-    spToken.value = j.access_token; spToken.exp = Date.now() + (j.expires_in ?? 3600) * 1000;
+    spToken.value = j.access_token; spToken.exp = Date.now() + (j.expires_in ?? 3600) * 1000; spToken.scope=accountScope??"";
   }
   const parsed = /^(.*)<(.+)>$/.exec(fromHeader);
   const from = parsed ? { name: parsed[1].trim().replace(/^"|"$/g, ""), email: parsed[2] } : { name: "", email: fromHeader };
@@ -129,7 +132,7 @@ export async function sendSendpulseWith(fetchImpl: typeof fetch, creds: SpCreds,
   if (!res.ok) { const body = await res.text().catch(() => ""); throw new Error(`SendPulse respondeu ${res.status}${body ? `: ${body.replace(/\s+/g, " ").slice(0, 140)}` : ""}`); }
   const j = (await res.json().catch(() => ({}))) as { result?: boolean; id?: string };
   if (j.result === false) throw new Error("SendPulse recusou o envio (result=false)");
-  return { providerId: objectReceiptId(j,"id") };
+  return { providerId: objectReceiptId(j,"id"), accountScope };
 }
 async function sendSendpulse(m: Mail, from: string) {
   const c = sendpulseCreds();
@@ -153,7 +156,7 @@ export async function sendMailersendWith(fetchImpl: typeof fetch, token: string,
   };
   const res = await fetchImpl("https://api.mailersend.com/v1/email", { method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json", "x-requested-with": "XMLHttpRequest" }, body: JSON.stringify(body), signal: AbortSignal.timeout(30_000) });
   if (!res.ok) { const t = await res.text().catch(() => ""); throw new Error(`MailerSend respondeu ${res.status}${t ? `: ${t.replace(/\s+/g, " ").slice(0, 140)}` : ""}`); }
-  return { providerId: mailersendReceipt(res) };
+  return { providerId: mailersendReceipt(res), accountScope: credentialScope("mailersend",token) };
 }
 async function sendMailersend(m: Mail, from: string) {
   const token = process.env.MAILERSEND_API_TOKEN ?? readCredentialText("mailersend-api");
@@ -181,11 +184,16 @@ export async function deliver(m: Mail, providers: string[], senders: Record<stri
     // Admission failures are not transport failures and never cause an unrecorded provider call.
     const admission = await opts.journal?.begin(p,from);
     if (admission?.alreadyAccepted) return p;
-    let failure: unknown,accepted=false,providerReceipt: string | undefined, conflictingReceipt=false;
-    const capture = (raw: unknown) => { const id=receiptId(raw); if (!id) return; if (providerReceipt && providerReceipt!==id) conflictingReceipt=true; providerReceipt=id; };
+    let failure: unknown,accepted=false,providerReceipt: string | undefined, providerScope: string | undefined, conflictingReceipt=false;
+    const capture = (raw: unknown) => {
+      const id=receiptId(raw); if (!id) return;
+      let scope: unknown; try { scope=(raw as TransportReceipt).accountScope; } catch { /* Missing scope must not change acceptance. */ }
+      if (providerReceipt && providerReceipt!==id || validAccountScope(scope) && providerScope && providerScope!==scope) conflictingReceipt=true;
+      providerReceipt=id; if(validAccountScope(scope))providerScope=scope;
+    };
     try { const result=await send(m,from,capture); accepted=true; capture(result); } catch(error) { failure=error; }
     if(admission?.id) {
-      try { await opts.journal!.finish(admission.id,accepted,failure,providerReceipt&&!conflictingReceipt?{providerId:providerReceipt}:undefined); }
+      try { await opts.journal!.finish(admission.id,accepted,failure,providerReceipt&&!conflictingReceipt?{providerId:providerReceipt,accountScope:providerScope}:undefined); }
       catch { console.error("mail_attempt_result_unconfirmed"); }
     }
     if(accepted) {

@@ -1,5 +1,5 @@
 /** Only an opaque provider identifier, never a response body, token or transport credentials. */
-export type TransportReceipt = { providerId?: string };
+export type TransportReceipt = { providerId?: string; accountScope?: string };
 export function providerId(raw: unknown): string | undefined {
   return typeof raw === "string" && /^[A-Za-z0-9_.@+<>=:/-]{1,200}$/.test(raw) ? raw : undefined;
 }

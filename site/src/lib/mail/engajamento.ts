@@ -104,12 +104,14 @@ const iso = (x: unknown) => { const d = typeof x === "number" ? new Date(x < 1e1
 
 /** SES (via SNS, conjunto de configuração): Delivery, Open e Click viram engajamento. */
 export function sesToEngajamento(ev: any): Engaj[] {
-  const kind = ev?.eventType; const out: Engaj[] = [];
-  const dest: string[] = (ev?.mail?.destination ?? []).map((x: unknown) => String(x).toLowerCase());
-  const mk = (k: Engaj["kind"], ts: unknown) => { for (const e of dest) out.push({ provider: "ses", email: e, kind: k, ts: iso(ts ?? ev?.mail?.timestamp) }); };
-  if (kind === "Delivery") mk("delivered", ev.delivery?.timestamp);
-  else if (kind === "Open") mk("opened", ev.open?.timestamp);
-  else if (kind === "Click") mk("clicked", ev.click?.timestamp);
+  const kind = ev?.eventType ?? ev?.notificationType; const out: Engaj[] = [];
+  const raw=Array.isArray(ev?.mail?.destination)?ev.mail.destination:[];
+  const dest:string[]=[...new Set<string>(raw.filter((x:unknown):x is string=>typeof x==="string").map((x:string)=>x.trim().toLowerCase()))];
+  const actual:string[]=kind==="Delivery" && Array.isArray(ev.delivery?.recipients)?ev.delivery.recipients.filter((x:unknown):x is string=>typeof x==="string").map((x:string)=>x.trim().toLowerCase()).filter((x:string)=>dest.includes(x)):dest;
+  const mk = (k: Engaj["kind"], ts: unknown, recipients=dest) => { for (const e of recipients) out.push({ provider: "ses", email: e, kind: k, ts: iso(ts ?? ev?.mail?.timestamp) }); };
+  if (kind === "Delivery") mk("delivered", ev.delivery?.timestamp,actual);
+  else if (kind === "Open" && dest.length===1) mk("opened", ev.open?.timestamp);
+  else if (kind === "Click" && dest.length===1) mk("clicked", ev.click?.timestamp);
   return out;
 }
 

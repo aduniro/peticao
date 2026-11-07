@@ -47,13 +47,13 @@ test("falha de auditoria reverte todo o fence e nenhuma mensagem some",async()=>
 
 test("base anterior sem correlação é aceita sem reescrever a fila",async()=>{
  const c=await setup();try{
-  await c.O.enqueueMail(mail(1),"confirmacao","legacy");await c.db.query("ALTER TABLE mail_outbox DROP COLUMN message_id; ALTER TABLE mail_log DROP COLUMN message_id; DROP TABLE mail_message_attempts; DROP TABLE mail_messages");
+  await c.O.enqueueMail(mail(1),"confirmacao","legacy");await c.db.query("ALTER TABLE mail_outbox DROP COLUMN message_id; ALTER TABLE mail_log DROP COLUMN message_id; DROP TABLE mail_message_events; DROP TABLE mail_message_attempts; DROP TABLE mail_messages");
   const before=(await c.db.query("SELECT * FROM mail_outbox")).rows;await c.db.query(fence);assert.deepEqual((await c.db.query("SELECT * FROM mail_outbox")).rows,before);
  }finally{await c.db._closeDbForTests();}});
 
 test("schema parcial é recusado antes de alterar qualquer fila",async()=>{
  const c=await setup();try{
-  await pair(c,1);await c.db.query("DROP TABLE mail_message_attempts");const before=(await c.db.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
+  await pair(c,1);await c.db.query("DROP TABLE mail_message_events; DROP TABLE mail_message_attempts");const before=(await c.db.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
   await assert.rejects(c.db.tx(async client=>{await client.query(fence.replace(/^BEGIN;/m,"").replace(/^COMMIT;/m,""));}),/unsupported_mail_rollback_schema/);
   assert.deepEqual((await c.db.query("SELECT * FROM mail_outbox ORDER BY id")).rows,before);
  }finally{await c.db._closeDbForTests();}});

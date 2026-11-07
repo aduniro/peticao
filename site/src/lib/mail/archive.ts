@@ -4,6 +4,8 @@ import { hmac } from "../security";
 import type { Mail } from "./index";
 import { toStored, fromStored, frozenReplyTo } from "./payload";
 import { contentFingerprint, decryptMail, encryptMail, fitsArchive, serializeMail, validMessageId } from "./archive-codec";
+import { lockEventLinks, reconcileReceiptEvents } from "./message-events";
+import { validAccountScope } from "./event-scope";
 type Channel = "transactional" | "marketing";
 type State = "prepared" | "sending" | "accepted" | "rejected" | "indeterminate" | "queued";
 /** Explicit content retention; absence archives metadata only. Nothing chooses a policy for the operator. */
@@ -48,23 +50,25 @@ export async function beginAttempt(messageId: string, provider: string, from: st
 }
 
 /** A caller must distinguish a proven rejection from an uncertain transport result. */
-export async function finishAttempt(id: string, outcome: "accepted" | "rejected" | "indeterminate", options: { providerId?: string; errorCode?: string } = {}) {
-  if (!validMessageId(id) || !["accepted","rejected","indeterminate"].includes(outcome) || options.providerId !== undefined && (typeof options.providerId !== "string" || options.providerId.length>200) || options.errorCode !== undefined && !/^[a-z0-9_]{1,50}$/.test(options.errorCode)) throw new Error("archive_parameters");
+export async function finishAttempt(id: string, outcome: "accepted" | "rejected" | "indeterminate", options: { providerId?: string; errorCode?: string; accountScope?: string } = {}) {
+  if (!validMessageId(id) || !["accepted","rejected","indeterminate"].includes(outcome) || options.providerId !== undefined && (typeof options.providerId !== "string" || options.providerId.length>200) || options.errorCode !== undefined && !/^[a-z0-9_]{1,50}$/.test(options.errorCode) || options.accountScope !== undefined && !validAccountScope(options.accountScope)) throw new Error("archive_parameters");
   return tx(async c => {
     const base = (await c.query<{message_id:string}>("SELECT message_id FROM mail_message_attempts WHERE id=$1",[id])).rows[0];
     if (!base) return {ok:false as const,error:"not_found"};
+    if(options.providerId && options.accountScope)await lockEventLinks(c);
     // Same lock order as admission: message, then attempt.
     const message = (await c.query<{id:string;kind:string;channel:string;to_addr:string}>("SELECT id,kind,channel,to_addr FROM mail_messages WHERE id=$1 FOR UPDATE",[base.message_id])).rows[0];
-    const row = (await c.query<{state:string;provider:string;from_addr:string;provider_id:string|null;error_code:string|null}>("SELECT state,provider,from_addr,provider_id,error_code FROM mail_message_attempts WHERE id=$1 FOR UPDATE",[id])).rows[0];
+    const row = (await c.query<{state:string;provider:string;from_addr:string;provider_id:string|null;error_code:string|null;account_scope:string|null}>("SELECT state,provider,from_addr,provider_id,error_code,account_scope FROM mail_message_attempts WHERE id=$1 FOR UPDATE",[id])).rows[0];
     if (row.state !== "prepared") {
-      if (row.state !== outcome || row.provider_id !== (options.providerId??null) || row.error_code !== (options.errorCode??null)) return {ok:false as const,error:"outcome_conflict"};
+      if (row.state !== outcome || row.provider_id !== (options.providerId??null) || row.error_code !== (options.errorCode??null) || row.account_scope !== (options.accountScope??null)) return {ok:false as const,error:"outcome_conflict"};
       return {ok:true as const,existing:true};
     }
-    await c.query("UPDATE mail_message_attempts SET state=$2,finished_at=now(),provider_id=$3,error_code=$4 WHERE id=$1",[id,outcome,options.providerId??null,options.errorCode??null]);
+    await c.query("UPDATE mail_message_attempts SET state=$2,finished_at=now(),provider_id=$3,error_code=$4,account_scope=$5 WHERE id=$1",[id,outcome,options.providerId??null,options.errorCode??null,options.accountScope??null]);
     const aggregate = (await c.query<{accepted:boolean;uncertain:boolean}>("SELECT bool_or(state='accepted') accepted,bool_or(state='indeterminate') uncertain FROM mail_message_attempts WHERE message_id=$1",[message.id])).rows[0];
     const state = aggregate.accepted ? "accepted" : aggregate.uncertain ? "indeterminate" : "rejected";
     await c.query("UPDATE mail_messages SET status=$2 WHERE id=$1",[message.id,state]);
     await c.query("INSERT INTO mail_log(kind,provider,from_addr,to_addr,status,error,channel,message_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",[message.kind,row.provider,row.from_addr,message.to_addr,outcome==="accepted"?"sent":"failed",options.errorCode??null,message.channel,message.id]);
+    if(options.providerId && options.accountScope)await reconcileReceiptEvents(c,row.provider,options.accountScope,options.providerId,message.to_addr);
     await audit("mail_message_attempt_finished",null,{messageId:message.id,attemptId:id,state:outcome},c);
     return {ok:true as const,existing:false};
   });
