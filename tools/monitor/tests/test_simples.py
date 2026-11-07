@@ -54,7 +54,15 @@ class SimpleTests(unittest.TestCase):
     if ready:
      output+=os.read(master,8192)
      if b'VIGIA SIMPLES' in output:break
-   self.assertIn(b'VIGIA SIMPLES',output);os.write(master,b'2\t1jrq');self.assertEqual(p.wait(timeout=5),0)
+   self.assertIn(b'VIGIA SIMPLES',output);os.write(master,b'2\t1jrq')
+   # Drain PTY redraws while awaiting exit, as a real terminal emulator does.
+   deadline=time.monotonic()+5
+   while p.poll() is None and time.monotonic()<deadline:
+    ready,_,_=select.select([master],[],[],.1)
+    if ready:
+     try:output+=os.read(master,65536)
+     except OSError:break
+   self.assertEqual(p.wait(timeout=1),0)
   finally:
    if p.poll() is None:
     p.terminate()
