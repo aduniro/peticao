@@ -5,6 +5,7 @@ import { dedupEmail } from "./email-check";
 import { institutionalKind } from "./institutional";
 import { hmac, safeEqual } from "./security";
 import { setSetting } from "./batches";
+import { classifyCpfName } from "./cpf-name";
 
 export type IdentityMethod = "mae" | "nascimento";
 export const MAX_FAILED = 5; // tentativas erradas por CPF em 24 h
@@ -36,7 +37,7 @@ export function checkTicket(ticket: unknown, cpf: string, email: string, now = D
 
 export type IdentityResult =
   | { ok: true; nameCheck: CpfNameCheck }
-  | { ok: false; reason: "mismatch" | "locked" | "unavailable" | "method_unavailable" | "bad_input" | "mock_unknown"; attemptsLeft?: number };
+  | { ok: false; reason: "mismatch" | "name_mismatch" | "locked" | "unavailable" | "method_unavailable" | "bad_input" | "mock_unknown"; attemptsLeft?: number };
 
 const failedRecent = async (cpfHash: string) =>
   (await query<{ n: number }>("SELECT COUNT(*)::int n FROM identity_attempts WHERE cpf_hash=$1 AND ok=false AND ts > $2", [cpfHash, new Date(Date.now() - 24 * 3600_000).toISOString()])).rows[0].n;
@@ -70,12 +71,16 @@ export async function verifyIdentity(a: { cpf: string; method: IdentityMethod; v
     return { ok: false, reason: "unavailable" };
   }
   if (!rec && provider.name === "mock") return { ok: false, reason: "mock_unknown" }; // dados de teste: não conta como tentativa errada
+  if (rec && classifyCpfName(rec.nome, a.declaredName) === "mismatch") {
+    await record(cpfHash, a.method, false);
+    return { ok: false, reason: "name_mismatch", attemptsLeft: Math.max(0, MAX_FAILED - failed - 1) };
+  }
   if (rec && (a.method === "mae" ? !rec.mae : !normalizeRegistryBirth(rec.nasc))) return { ok: false, reason: "method_unavailable" };
 
   const ok = !!rec && (a.method === "mae" ? motherNameMatches(rec.mae, a.value) : birthMatches(rec.nasc, a.value));
   await record(cpfHash, a.method, ok);
   if (!ok) return { ok: false, reason: "mismatch", attemptsLeft: Math.max(0, MAX_FAILED - failed - 1) };
-  return { ok: true, nameCheck: nameCheckFromRecord(rec, a.declaredName) };
+  return { ok: true, nameCheck: nameCheckFromRecord(rec, a.declaredName, true) };
 }
 
 /** Suporte: libera um CPF que ficou bloqueado por tentativas erradas (ex.: pessoa legítima que errou o nome da mãe). */
@@ -87,7 +92,7 @@ export async function resetIdentityAttempts(cpf: string): Promise<number> {
 // ---- Conferência de NOME x CPF (servidores): só o nome declarado é comparado com o cadastro do CPF; nada de nome da mãe ou nascimento. ----
 export type NameGate =
   | { ok: true; nameCheck: "match" }
-  | { ok: false; reason: "mismatch" | "not_found" | "unavailable" | "locked" };
+  | { ok: false; reason: "mismatch" | "identity_required" | "not_found" | "unavailable" | "locked" | "mock_unknown" };
 
 /**
  * Recalcula a comparação a cada envio, inclusive quando o cadastro vem do cache de 30 dias.
@@ -105,7 +110,9 @@ export async function verifyCpfName(a: { cpf: string; declaredName: string; prov
     await setSetting("cpf_provider_last_error", `${code} em ${new Date().toISOString()}`).catch(() => {});
     return { ok: false, reason: "unavailable" };
   }
+  if (!rec && a.provider.name === "mock") return { ok: false, reason: "mock_unknown" };
   if (!rec) { await record(cpfHash, "nome", false); return { ok: false, reason: "not_found" }; }
+  if (classifyCpfName(rec.nome, a.declaredName) === "partial") return { ok: false, reason: "identity_required" };
   const ok = nameCheckFromRecord(rec, a.declaredName) === "match";
   await record(cpfHash, "nome", ok);
   return ok ? { ok: true, nameCheck: "match" } : { ok: false, reason: "mismatch" };
