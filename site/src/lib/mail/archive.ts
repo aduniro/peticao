@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { audit, query, tx } from "../db";
 import { hmac } from "../security";
 import type { Mail } from "./index";
+import { toStored, fromStored, frozenReplyTo } from "./payload";
 import { contentFingerprint, decryptMail, encryptMail, fitsArchive, serializeMail, validMessageId } from "./archive-codec";
 type Channel = "transactional" | "marketing";
 type State = "prepared" | "sending" | "accepted" | "rejected" | "indeterminate" | "queued";
@@ -24,7 +25,7 @@ export async function prepareMessage(mail: Mail, kind: string, channel: Channel,
       }
     }
     if (expires && !(await c.query<{future:boolean}>("SELECT $1::timestamptz>clock_timestamp() future",[expires])).rows[0].future) throw new Error("archive_expired");
-    await c.query("INSERT INTO mail_messages(id,request_key,kind,channel,to_addr,content_fingerprint,content_state,content_cipher,content_expires_at,previous_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)", [id,request,kind,channel,mail.to.toLowerCase(),fingerprint,cipher?"stored":options.archive&&!fits?"oversize":"unavailable",cipher,cipher?expires:null,options.previousId??null]);
+    await c.query("INSERT INTO mail_messages(id,request_key,kind,channel,to_addr,content_fingerprint,content_state,content_cipher,content_expires_at,previous_id,reply_to) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)", [id,request,kind,channel,mail.to.toLowerCase(),fingerprint,cipher?"stored":options.archive&&!fits?"oversize":"unavailable",cipher,cipher?expires:null,options.previousId??null,mail.replyTo??null]);
     await audit("mail_message_prepared",null,{messageId:id,kind,channel,contentStored:!!cipher,previousId:options.previousId??null},c);
     return {id,existing:false};
   });
@@ -70,15 +71,16 @@ export async function finishAttempt(id: string, outcome: "accepted" | "rejected"
 }
 
 /** Links an already identified queue item; never silently replaces a different message identity. */
-export async function linkOutbox(outboxId: number, messageId: string) {
+export async function linkOutbox(outboxId: number, messageId: string, options: { frozenDefault?: boolean } = {}) {
   if (!Number.isSafeInteger(outboxId) || outboxId<1 || outboxId>2147483647 || !validMessageId(messageId)) throw new Error("archive_parameters");
   return tx(async c => {
-    const message = (await c.query<{kind:string;to_addr:string;content_fingerprint:string}>("SELECT kind,to_addr,content_fingerprint FROM mail_messages WHERE id=$1 FOR UPDATE",[messageId])).rows[0];
+    const message = (await c.query<{kind:string;to_addr:string;content_fingerprint:string;reply_to:string|null}>("SELECT kind,to_addr,content_fingerprint,reply_to FROM mail_messages WHERE id=$1 FOR UPDATE",[messageId])).rows[0];
     const row = (await c.query<{kind:string;to_addr:string;message_id:string|null;payload:any}>("SELECT kind,to_addr,message_id,payload FROM mail_outbox WHERE id=$1 FOR UPDATE",[outboxId])).rows[0];
     if (!message || !row || message.kind!==row.kind || message.to_addr!==row.to_addr.toLowerCase() || row.message_id && row.message_id!==messageId) return {ok:false as const,error:"queue_conflict"};
     let matches = false;
     try {
-      const payload: Mail = { ...row.payload, attachments: row.payload.attachments?.map((a: any) => ({filename:a.filename,contentType:a.contentType,content:Buffer.from(a.contentBase64,"base64")})) };
+      const raw = fromStored(row.payload);
+      const payload = options.frozenDefault ? frozenReplyTo(raw,message.reply_to) : raw;
       matches = contentFingerprint(payload) === message.content_fingerprint;
     } catch { /* A legacy/invalid payload cannot establish content identity. */ }
     if (!matches) return {ok:false as const,error:"queue_conflict"};
@@ -107,5 +109,26 @@ export async function purgeArchivedContent(limit=100) {
       UPDATE mail_messages m SET content_cipher=NULL,content_state='expired' FROM expired WHERE m.id=expired.id RETURNING m.id`,[limit])).rows;
     if(rows.length)await audit("mail_message_content_expired",null,{messages:rows.map(r=>r.id)},c);
     return rows.length;
+  });
+}
+
+
+export async function messageMetadata(id: string) {
+  if (!validMessageId(id)) return null;
+  return (await query<{id:string;kind:string;channel:string;to_addr:string;status:State;reply_to:string|null;content_fingerprint:string}>("SELECT id,kind,channel,to_addr,status,reply_to,content_fingerprint FROM mail_messages WHERE id=$1",[id])).rows[0]??null;
+}
+
+/** Queue creation and identity link commit together; no unlinked window for a new message. */
+export async function queueMessage(mail: Mail,kind: string,error: string,messageId: string) {
+  if (!validMessageId(messageId)) throw new Error("archive_parameters");
+  return tx(async c=>{
+    const message=(await c.query<{kind:string;channel:string;to_addr:string;status:State;content_fingerprint:string}>("SELECT kind,channel,to_addr,status,content_fingerprint FROM mail_messages WHERE id=$1 FOR UPDATE",[messageId])).rows[0];
+    if (!message || message.kind!==kind || message.channel!=="transactional" || message.to_addr!==mail.to.toLowerCase() || message.content_fingerprint!==contentFingerprint(mail) || message.status==="accepted") throw new Error("queue_conflict");
+    const existing=(await c.query<{id:number}>("SELECT id FROM mail_outbox WHERE message_id=$1 AND status='pending' ORDER BY id LIMIT 1",[messageId])).rows[0];
+    if (existing) return existing.id;
+    const row=(await c.query<{id:number}>("INSERT INTO mail_outbox(kind,to_addr,payload,last_error,attempts,next_attempt_at,message_id) VALUES($1,$2,$3,$4,0,now()+interval '1 minute',$5) RETURNING id",[kind,mail.to,JSON.stringify(toStored(mail)),error.slice(0,300),messageId])).rows[0];
+    if (["prepared","rejected"].includes(message.status)) await c.query("UPDATE mail_messages SET status='queued' WHERE id=$1",[messageId]);
+    await audit("mail_message_queued",null,{messageId,outboxId:row.id},c);
+    return row.id;
   });
 }

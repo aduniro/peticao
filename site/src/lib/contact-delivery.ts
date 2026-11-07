@@ -50,7 +50,7 @@ async function execute(job: Job, options: ContactDeliveryOptions): Promise<Conta
       assertSendAllowed(job.payload.to);
       for (const recipient of job.payload.bcc ?? []) assertSendAllowed(recipient);
       if (await isSuppressed(job.payload.to)) throw new MailSuppressedError();
-      const result = await (options.enviar ?? sendMail)(job.payload, "resposta-contato", { queue: false, singleAttempt: true });
+      const result = await (options.enviar ?? sendMail)(job.payload, "resposta-contato", { queue: false, singleAttempt: true, messageKey: `contact-reply:${job.id}` });
       if (result !== "sent") throw new Error("untracked_delivery_queue");
       accepted = true;
       await outcome(job, "accepted");

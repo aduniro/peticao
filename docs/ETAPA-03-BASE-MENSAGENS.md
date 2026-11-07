@@ -1,9 +1,9 @@
 # Etapa 3 — base observada para mensagens
 
-Base inicial implementada no candidato; integração aos envios e à interface ainda pendente. Não alterar filas públicas ou política de reenvio junto com a integração visual sem regressão própria.
+Base e conexão inicial ao transporte implementadas no candidato; eventos, consultas e interface ainda pendentes. Não alterar filas públicas ou política de reenvio junto com a integração visual sem regressão própria.
 
-- `mail/index.ts`: `sendMail` é o ponto de saída, com guardas de destinatário, supressão, prévia e canais separados. `sent` significa aceite do transporte, não entrega. `drainMailOutbox` chama o transporte diretamente; a integração de arquivo/identidade deve cobrir ambos os caminhos, preservando rotação e canal de marketing.
-- `mail/log.ts`: o logger grava tentativas sem ID estável de mensagem e em modo de melhor esforço, sem esperar o INSERT. `logQueued` também não correlaciona uma mensagem. Não há corpo/assunto/anexos nesse histórico; sua ausência não pode ser preenchida com conteúdo inventado.
+- `mail/index.ts`: `sendMail` é o ponto de saída, com guardas de destinatário, supressão, prévia e canais separados. `sent` significa aceite do transporte, não entrega. Na leitura inicial, `drainMailOutbox` chamava o transporte diretamente; a integração de arquivo/identidade deve cobrir ambos os caminhos, preservando rotação e canal de marketing.
+- `mail/log.ts`: o logger legado gravava tentativas sem ID estável de mensagem e em modo de melhor esforço, sem esperar o INSERT. `logQueued` também não correlaciona uma mensagem. Não há corpo/assunto/anexos nesse histórico; sua ausência não pode ser preenchida com conteúdo inventado.
 - `mail/outbox.ts`: só conserva conteúdo de mensagens enfileiradas. Anexos viram base64. O processamento reserva por prazo e depois grava o resultado. Uma nova identidade não pode ser criada em cada reenvio da mesma fila; os IDs e metadados legados devem ser preservados. Reavaliar retenção/acesso de cópias de conteúdo e links secretos antes do arquivo futuro.
 - `contact-delivery`/`contact-replies`: a reserva durável de respostas tem identidade/rodada/prévia e estados próprios. A base de mensagens não pode contornar essa proteção nem repetir automaticamente um resultado inconclusivo.
 - Eventos/engajamento atuais são por endereço/provedor. Não atribuir abertura, clique ou entrega a uma mensagem individual sem correlação realmente recebida do provedor.
@@ -11,7 +11,7 @@ Base inicial implementada no candidato; integração aos envios e à interface a
 Próximo contrato: mensagem estável + tentativas/eventos correlacionados; conteúdo futuro versionado, protegido e com guarda de acesso; importação antiga como metadados/conteúdo indisponível; prévia isolada sem scripts ou carregamento de rastreadores. Edição cria rascunho/versão nova, nunca altera o histórico do que foi enviado. A Ponte do dono continua separada da correspondência de participantes. Webhook/domínio e autorização de textos continuam dependências explícitas da etapa completa.
 
 
-## Base implementada — ainda não conectada ao transporte
+## Base implementada — checkpoint 55b830f
 
 `mail/archive.ts` prepara identidade UUID, pedido idempotente protegido por HMAC, conteúdo opcional e versões por `previous_id`. Repetir o pedido exige o mesmo envelope/conteúdo e não renova retenção. Outro texto/anexo cria outra versão. A vinculação com `mail_outbox` exige identidade de conteúdo, tipo e destinatário; não substitui vínculo existente. As colunas novas são nulas nos registros anteriores.
 
@@ -21,9 +21,9 @@ A biblioteca só grava conteúdo quando recebe política explícita (`until` ou 
 
 Tentativas têm ID próprio e uma admissão ativa por mensagem, antes do futuro efeito. Resultado e auditoria são atômicos; aceite é terminal para novas tentativas. Recusa comprovada pode permitir outro provedor; incerteza bloqueia por padrão. A exceção explícita `retryUncertain` é interna e auditada, para integração consciente com a política pública existente; não é uma opção do navegador. Uma tentativa ainda preparada não expira como falsa prova de ausência de envio. Falha ao registrar resultado não autoriza repetir um possível envio.
 
-O logger legado pode receber `message_id`; resultados da nova biblioteca geram um único log correlacionado, sem duplicação na repetição do resultado. O transporte atual ainda usa o caminho anterior. A integração deverá substituir o registro anterior nesse caminho, não somar dois loggers; deve arquivar o envelope efetivo após defaults e preservar guards, canais, rotação e reservas de contato. Nenhuma rotina de envio existente foi modificada neste checkpoint.
+O logger legado pode receber `message_id`; resultados da nova biblioteca geram um único log correlacionado, sem duplicação na repetição do resultado. No checkpoint 55b830f, o transporte ainda usava o caminho anterior. A integração deverá substituir o registro anterior nesse caminho, não somar dois loggers; deve arquivar o envelope efetivo após defaults e preservar guards, canais, rotação e reservas de contato. Nenhuma rotina de envio havia sido modificada no checkpoint 55b830f; a conexão posterior está registrada em `ETAPA-03-TRANSPORTE.md`.
 
-Ainda faltam conexão de `sendMail`/drain da fila, recuperação controlada de tentativas interrompidas, IDs reais dos provedores/eventos, política/retenção integrada, consultas autorizadas, prévia segura, conversas e editor. Não há endpoint de conteúdo descriptografado. A biblioteca é interna e sua autorização será exigida no chamador administrativo. Não declarar a Etapa 3 completa, nem que novos e-mails já estejam sendo arquivados automaticamente.
+Após a conexão inicial de `sendMail`/drain descrita em `ETAPA-03-TRANSPORTE.md`, ainda faltam recuperação controlada de tentativas interrompidas, IDs reais dos provedores/eventos, política/retenção integrada, consultas autorizadas, prévia segura, conversas e editor. Não há endpoint de conteúdo descriptografado. A biblioteca é interna e sua autorização será exigida no chamador administrativo. Não declarar a Etapa 3 completa nem arquivo automático de conteúdo ativado sem política explícita.
 
 ## Validação da base
 

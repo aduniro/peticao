@@ -7,7 +7,11 @@ import { assertSendAllowed } from "./guard";
 import { isSuppressed, MailSuppressedError } from "./suppression";
 import { readCredentialText, readSmtpCredential, sesSmtpOptions } from "./smtp-credential";
 import { drainOutbox, enqueueMail } from "./outbox";
-import { attemptLogger, logQueued, type Attempt } from "./log";
+import { logQueued, type Attempt } from "./log";
+import { withReplyTo } from "./payload";
+import { journalFor, prepareRecorded, recordedQueueMail, type DeliveryJournal } from "./recorded";
+import { messageMetadata } from "./archive";
+export { withReplyTo } from "./payload";
 import { ordemRodizio, parsePesos, registrar } from "./rodizio";
 
 export { MailSuppressedError };
@@ -155,72 +159,83 @@ const SENDERS: Record<string, Sender> = { dev: async (m) => sendDev(m), smtp: se
  * Tenta cada provedor da cadeia, na ordem; se um falhar (credencial ausente, sandbox, fora do ar), passa ao próximo,
  * cada um com o seu remetente (subdomínio próprio). Só lança erro se todos falharem. Nunca registra segredos.
  */
-export async function deliver(m: Mail, providers: string[], senders: Record<string, Sender> = SENDERS, fromFor: (p: string, kind?: string) => string = config.mailFromFor, kind?: string, onAttempt?: (a: Attempt) => void, opts: { singleAttempt?: boolean } = {}): Promise<string> {
+export async function deliver(m: Mail, providers: string[], senders: Record<string, Sender> = SENDERS, fromFor: (p: string, kind?: string) => string = config.mailFromFor, kind?: string, onAttempt?: (a: Attempt) => void, opts: { singleAttempt?: boolean; journal?: DeliveryJournal } = {}): Promise<string> {
   const errors: string[] = [];
+  const notify = (attempt: Attempt) => { try { onAttempt?.(attempt); } catch { console.error("mail_attempt_callback_failed"); } };
   for (const p of providers) {
     const send = senders[p];
     if (!send) { errors.push(`${p}: provedor desconhecido`); continue; }
     let from = "";
-    try {
-      from = fromFor(p, kind);
-      await send(m, from);
-      onAttempt?.({ provider: p, from, ok: true });
-      if (errors.length) console.warn(`e-mail enviado por "${p}" depois de falha em: ${errors.join(" | ")}`);
-      return p;
-    } catch (e) {
-      errors.push(`${p}: ${(e as Error).message.slice(0, 160)}`);
-      onAttempt?.({ provider: p, from, ok: false, error: (e as Error).message });
-      if (opts.singleAttempt) throw e;
+    try { from = fromFor(p,kind); }
+    catch(error) { errors.push(`${p}: ${(error as Error).message.slice(0,160)}`); notify({provider:p,from,ok:false,error:(error as Error).message}); if(opts.singleAttempt)throw error; continue; }
+    // Admission failures are not transport failures and never cause an unrecorded provider call.
+    const admission = await opts.journal?.begin(p,from);
+    if (admission?.alreadyAccepted) return p;
+    let failure: unknown,accepted=false;
+    try { await send(m,from); accepted=true; } catch(error) { failure=error; }
+    if(admission?.id) {
+      try { await opts.journal!.finish(admission.id,accepted,failure); }
+      catch { console.error("mail_attempt_result_unconfirmed"); }
     }
+    if(accepted) {
+      notify({provider:p,from,ok:true});
+      if(errors.length)console.warn(`e-mail enviado por "${p}" depois de falha em: ${errors.join(" | ")}`);
+      return p;
+    }
+    const error=failure instanceof Error ? failure : new Error("mail_transport_error");
+    errors.push(`${p}: ${error.message.slice(0,160)}`);notify({provider:p,from,ok:false,error:error.message});
+    if(opts.singleAttempt)throw error;
   }
   throw new Error(`Nenhum provedor de e-mail conseguiu enviar (${errors.join(" | ")})`);
 }
 
 export type SendOutcome = "sent" | "queued";
 
-/** Reply-To padrão (MAIL_REPLY_TO) quando a mensagem não traz o próprio (o formulário de contato responde a quem escreveu). */
-export const withReplyTo = (m: Mail): Mail => (m.replyTo ? m : config.mailReplyTo() ? { ...m, replyTo: config.mailReplyTo() } : m);
-
 /**
  * Único ponto de saída de e-mail: sempre passa pela trava antes dos provedores.
  * Se NENHUM provedor conseguir enviar, a mensagem vai para a fila de reenvio (tentada de novo automaticamente, em intervalos crescentes,
  * até 48 h) em vez de se perder. Endereços bloqueados continuam sendo recusados na hora.
  */
-export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean; channel?: "transactional" | "marketing"; avoid?: string[]; singleAttempt?: boolean } = {}): Promise<SendOutcome> {
-  // Canal de marketing: cadeia e remetentes PRÓPRIOS (subdomínios de campanha), nunca a cadeia transacional; sem fila de reenvio (quem dispara acompanha o resultado).
-  if (opts.channel === "marketing") {
-    const mk = config.marketingProviders();
-    if (mk.length === 0) throw new Error("Canal de marketing não configurado (MAIL_PROVIDERS_MARKETING)");
-    assertSendAllowed(m.to);
-    for (const b of m.bcc ?? []) assertSendAllowed(b);
-    if (mk.some((p) => p !== "dev") && (await isSuppressed(m.to))) throw new MailSuppressedError(`Endereço na lista de supressão: ${m.to}`);
-    const logM = attemptLogger(m, kind, "marketing");
-    await deliver(withReplyTo(m), ordemRodizio("marketing", mk, parsePesos(config.mailRotationMarketing()), { evitar: opts.avoid }), SENDERS, config.mailFromMarketing, kind, (a) => { registrar("marketing", a.provider, a.ok); logM(a); }, { singleAttempt: opts.singleAttempt });
-    return "sent";
-  }
-  assertSendAllowed(m.to);
-  for (const b of m.bcc ?? []) assertSendAllowed(b);
-  const providers = config.mailProviders();
-  const real = providers.some((p) => p !== "dev");
-  if (process.env.PREVIEW_MODE === "1" && real) {
-    throw new Error("PREVIEW_MODE só permite MAIL_PROVIDER=dev (caixa de saída local).");
-  }
-  // Endereços que já deram bounce permanente, reclamação ou e-mail inexistente nunca recebem de novo (protege a reputação do domínio).
-  if (real && (await isSuppressed(m.to))) throw new MailSuppressedError(`Endereço na lista de supressão: ${m.to}`);
+async function checkEnvelope(m: Mail,providers:string[]) {
+  assertSendAllowed(m.to);for(const recipient of m.bcc??[])assertSendAllowed(recipient);
+  const real=providers.some(provider=>provider!=="dev");
+  if(process.env.PREVIEW_MODE==="1"&&real)throw new Error("PREVIEW_MODE só permite MAIL_PROVIDER=dev (caixa de saída local).");
+  if(real&&await isSuppressed(m.to))throw new MailSuppressedError(`Endereço na lista de supressão: ${m.to}`);
+}
+
+const backgroundMail = new Set<Promise<unknown>>();
+function scheduleDrain() {
+  const work=new Promise<void>(resolve=>setImmediate(resolve)).then(()=>drainMailOutbox(3)).catch(()=>{});
+  backgroundMail.add(work);void work.finally(()=>backgroundMail.delete(work));
+}
+/** Allows a controlled shutdown/test to wait for the existing opportunistic drains. */
+export async function waitForBackgroundMail() { while(backgroundMail.size)await Promise.all([...backgroundMail]); }
+
+export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean; channel?: "transactional" | "marketing"; avoid?: string[]; singleAttempt?: boolean; messageKey?:string } = {}): Promise<SendOutcome> {
+  const channel=opts.channel??"transactional",providers=channel==="marketing"?config.marketingProviders():config.mailProviders();
+  if(channel==="marketing"&&!providers.length)throw new Error("Canal de marketing não configurado (MAIL_PROVIDERS_MARKETING)");
+  await checkEnvelope(m,providers);
+  const effective=withReplyTo(m),record=await prepareRecorded(effective,kind,channel,opts.messageKey);
+  const rotationChannel=channel==="marketing"?"marketing":"transacional";
+  const order=ordemRodizio(rotationChannel,providers,parsePesos(channel==="marketing"?config.mailRotationMarketing():config.mailRotation()),{evitar:opts.avoid});
   try {
-    const log = attemptLogger(m, kind);
-    await deliver(withReplyTo(m), ordemRodizio("transacional", providers, parsePesos(config.mailRotation()), { evitar: opts.avoid }), SENDERS, config.mailFromFor, kind, (a) => { registrar("transacional", a.provider, a.ok); log(a); }, { singleAttempt: opts.singleAttempt });
-  } catch (e) {
-    if (!real || opts.queue === false) throw e; // "dev" não tem o que reenviar; envios que o admin acompanha (lotes) mostram o erro na hora
-    const id = await enqueueMail(m, kind, (e as Error).message);
-    logQueued(m, kind, (e as Error).message);
-    console.warn(`e-mail #${id} (${kind}) para a fila de reenvio: ${(e as Error).message.slice(0, 160)}`);
+    await deliver(effective,order,SENDERS,channel==="marketing"?config.mailFromMarketing:config.mailFromFor,kind,a=>registrar(rotationChannel,a.provider,a.ok),{singleAttempt:opts.singleAttempt,journal:journalFor(record.id,!opts.singleAttempt)});
+  } catch(error) {
+    if(channel==="marketing"||!providers.some(p=>p!=="dev")||opts.queue===false)throw error;
+    const id=await enqueueMail(effective,kind,(error as Error).message,record.id);
+    await logQueued(effective,kind,(error as Error).message,record.id);
+    console.warn(`e-mail #${id} (${kind}) para a fila de reenvio: ${(error as Error).message.slice(0,160)}`);
     return "queued";
   }
-  // Serviço saudável: aproveita para esvaziar a fila (sem atrasar a resposta).
-  setImmediate(() => { drainMailOutbox(3).catch(() => {}); });
+  if(channel!=="marketing")scheduleDrain();
   return "sent";
 }
 
-/** Reenvia o que está na fila, direto pela cadeia de provedores (sem enfileirar de novo). */
-export const drainMailOutbox = (limit = 20) => drainOutbox((m, kind) => deliver(withReplyTo(m), config.mailProviders(), SENDERS, config.mailFromFor, kind, attemptLogger(m, kind)), limit);
+/** Queue retries retain identity and the observed envelope, including previously missing Reply-To defaults. */
+export const drainMailOutbox = (limit = 20) => drainOutbox(async (raw,kind,context) => {
+  if(!context)throw new Error("mail_queue_context_missing");
+  const record=await recordedQueueMail(raw,kind,context),metadata=await messageMetadata(record.id);
+  if(metadata?.status==="accepted")return;
+  const providers=config.mailProviders();await checkEnvelope(record.mail,providers);
+  return deliver(record.mail,providers,SENDERS,config.mailFromFor,kind,undefined,{journal:journalFor(record.id,true)});
+},limit);

@@ -140,6 +140,7 @@ const SCHEMA_SQL = `
     content_fingerprint TEXT NOT NULL, content_state TEXT NOT NULL CHECK(content_state IN ('unavailable','stored','expired','oversize')),
     content_cipher TEXT, content_expires_at TIMESTAMPTZ, previous_id UUID REFERENCES mail_messages(id)
   );
+  ALTER TABLE mail_messages ADD COLUMN IF NOT EXISTS reply_to TEXT;
   CREATE INDEX IF NOT EXISTS mail_messages_history ON mail_messages(created_at DESC,id);
   CREATE INDEX IF NOT EXISTS mail_messages_to ON mail_messages(lower(to_addr),created_at DESC);
   CREATE TABLE IF NOT EXISTS mail_message_attempts (

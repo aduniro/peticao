@@ -30,7 +30,7 @@ test("resposta preserva modelos, guarda os dois conteúdos antes do envio e só 
   assert.deepEqual(await c.C.enviarResposta({...a.input,enviar:sender as never}),{ok:true,texto:"enviado",card:"agendado",rodada:1});
   let rows=await jobs(c);assert.deepEqual(rows.map(r=>[r.estado,r.ok]),[["accepted",true],["prepared",false]]);
   assert.equal(a.sent.length,1);assert.equal(a.sent[0].mail.html,undefined);assert.equal(a.sent[0].mail.to,ADDRESS);
-  assert.ok(a.sent[0].mail.bcc.length&&a.sent[0].mail.replyTo);assert.deepEqual(a.sent[0].opts,{queue:false,singleAttempt:true});
+  assert.ok(a.sent[0].mail.bcc.length&&a.sent[0].mail.replyTo);assert.deepEqual(a.sent[0].opts,{queue:false,singleAttempt:true,messageKey:`contact-reply:${rows[0].id}`});
   assert.ok(new Date(rows[1].due_at).getTime()>Date.now()+50_000);
   assert.equal((await c.D.drainContactReplies(5,{enviar:a.sender as never})).tried,0);
   await c.db.query("UPDATE contact_replies SET due_at=now()-interval '1 second' WHERE versao='card'");

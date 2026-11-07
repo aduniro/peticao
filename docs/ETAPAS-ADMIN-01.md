@@ -213,3 +213,10 @@ A integração prossegue além da Etapa 1. Implementados no candidato a classifi
 Adicionadas no candidato a identidade de mensagem/pedido, cópia criptografada opcional, versões e tentativas duráveis. Vínculo de fila verifica conteúdo exato; resultados repetidos não duplicam logs e incerteza não vira recusa. A política de conteúdo não foi escolhida automaticamente: foi perguntada ao dono. O transporte e a fila atuais ainda não chamam essa biblioteca; conexão, eventos, consultas autorizadas e interface continuam pendentes.
 
 **318/318** cumulativos, tipos/build e migração de nove tabelas aditivas + duas colunas opcionais aprovados, preservando dados legados. Contrato/evidências em `docs/ETAPA-03-BASE-MENSAGENS.md`. Nenhum deploy, aviso alterado ou rotina nova de arquivo automático instalada. Etapas 2/3 e integração integral continuam incompletas.
+
+
+## Continuidade — conexão inicial de mensagens ao envio/fila
+
+`sendMail` e o worker agora usam identidade/journal; contato conserva reserva, tentativa única e ausência de fila automática. A fila preserva a identidade e o envelope observado e pode recuperar aceite conhecido sem enviar de novo. Conteúdo só é copiado mediante política explícita; nenhuma opção foi ativada. Contrato/limites em `docs/ETAPA-03-TRANSPORTE.md`.
+
+**326/326** cumulativos com paralelismo limitado e sem build concorrente, tipos/build/migração e HTTP do app compilado aprovados. Os logs anteriores foram preservados, incluindo a sonda local que ultrapassou 300 ms por carga. Nenhuma regra pública foi relaxada. Permanecem recuperação operacional, eventos/IDs reais dos provedores, política completa, consultas autorizadas, prévia segura, interfaces e demais etapas. Nenhum deploy.

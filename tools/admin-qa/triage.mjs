@@ -9,7 +9,7 @@ const dm=await import("../../site/src/lib/db.ts"),um=await import("../../site/sr
 const output=process.env.QA_OUTPUT_DIR;assert.ok(output);await mkdir(output,{recursive:true});
 let token;
 try{
- const unknown=(await db.query("SELECT count(*)::int n FROM contact_messages WHERE name NOT LIKE 'QA %' OR email NOT LIKE '%@example.test'")).rows[0].n;assert.equal(unknown,0,"Refuse to process non-QA contacts");
+ const unknown=(await db.query("SELECT count(*)::int n FROM contact_messages WHERE lower(name) NOT LIKE 'qa %' OR email NOT LIKE '%@example.test'")).rows[0].n;assert.equal(unknown,0,"Refuse to process non-QA contacts");
  const count=async table=>Number((await db.query(`SELECT count(*) n FROM ${table}`)).rows[0].n);
  assert.equal(await count("mail_outbox"),0);assert.equal(await count("contact_replies"),0);
  const signatures=async()=>(await db.query("SELECT id,name,cpf_hash,email_hash,status,seq,created_at,confirmed_at FROM signatures ORDER BY id")).rows;

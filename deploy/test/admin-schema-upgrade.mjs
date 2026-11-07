@@ -74,6 +74,15 @@ try{
  const upgradedActions=(await c.query("SELECT * FROM admin_acoes ORDER BY id")).rows;
  assert.deepEqual(upgradedActions.map(row=>Object.fromEntries(Object.keys(oldActions[0]).map(key=>[key,row[key]]))),oldActions);
  assert.ok(upgradedActions.every(row=>row.central_estado==="legacy" && row.central_transacional===false && row.central_fim===null && row.central_request_id===null && row.central_simulacao_hash===null && row.central_simulacao_id===null));
+ // A previously installed archive foundation has messages but no observed Reply-To column yet.
+ await c.query("ALTER TABLE mail_messages DROP COLUMN reply_to");
+ await c.query("INSERT INTO mail_messages(id,kind,channel,to_addr,content_fingerprint,content_state,created_at) VALUES('00000000-0000-4000-8000-000000000001','confirmacao','transactional','foundation@example.test','fixture-fingerprint','unavailable','2026-10-01T10:00:00Z')");
+ const priorFoundation=(await c.query("SELECT * FROM mail_messages")).rows;
+ await c.query(newSql);await c.query(newSql);
+ const upgradedFoundation=(await c.query("SELECT * FROM mail_messages")).rows;
+ assert.ok(upgradedFoundation.every(row=>row.reply_to===null));
+ assert.deepEqual(upgradedFoundation.map(({reply_to,...row})=>row),priorFoundation);
+ console.log("PASS archive foundation upgrade: existing message identity, fingerprint, state and timestamp preserved; Reply-To left unknown.");
  console.log("PASS legacy action history migration: original rows unchanged, no old record admitted as a new request.");
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS real startup on old schema plus DDL replay: nine additive tables and two nullable correlation columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
