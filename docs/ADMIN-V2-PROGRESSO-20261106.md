@@ -116,3 +116,12 @@ No candidato: identidade de pedido/mensagem, conteúdo criptografado opcional, v
 **318/318** cumulativos, tipos após build, build e migração aprovados. O ensaio inclui e-mails/filas antigos e não fabrica conteúdo ou identidade retroativa. São nove tabelas aditivas e duas colunas UUID nulas nos legados. Código/contrato/evidências em `docs/ETAPA-03-BASE-MENSAGENS.md` do candidato.
 
 A biblioteca ainda não é chamada pelo transporte atual ou worker: não afirmar arquivo automático funcionando. Conexão de envios/fila, correlação real de provedores/eventos, política completa, consultas autorizadas, prévia, conversas/editor e interfaces continuam pendentes. Nenhuma alteração de estética/avisos. Prévia 3031 retomada, `/admin` respondeu 200. Nenhum deploy, modificação da VPS ou revisão local de CPFs. A integração completa e as etapas seguintes continuam em andamento.
+
+
+## Checkpoint 30c30d2 — mensagem/journal conectados ao transporte
+
+Os caminhos direto e de fila usam identidade, admissão e resultado correlacionado. Falha de gravação/callback após aceite não causa outro envio; contato mantém tentativa única/sem fila e chave por resposta. A fila antiga é identificada no primeiro processamento novo, preservando payload/data; Reply-To observado fica estável. A política pública de fallback/retry permanece explícita, e aceite conhecido permite recuperar uma confirmação perdida da fila sem novo transporte.
+
+**326/326** cumulativos com `--test-concurrency=4` e build separado; tipos/build/migração e HTTP do app compilado aprovados. O smoke criou contato e resposta somente dev/fictícios, conferiu dois registros correlacionados, tentativa única por mensagem, recusa de resposta duplicada e assinaturas intactas. Os logs anteriores foram preservados; a sonda Reacher havia levado 359 ms para prazo de 300 ms sob carga, e passou sem mudar prazo/regra após isolamento. Rodízio/disjuntor mantêm a chave original `transacional` separada do marketing.
+
+Conteúdo continua sem cópia automática até política explícita; preferência 30/90/permanente e avisos AV-1–AV-8 aguardam resposta. Etapa 3 ainda incompleta: recuperação/rollback, IDs/eventos, retenção completa, consultas protegidas e interface. Detalhes/evidências em `docs/ETAPA-03-TRANSPORTE.md`. Prévia 3031 preservada, QA 3032 encerrado e sessão revogada. Nenhum deploy, modificação de dados reais ou revisão local. Objetivo completo e Etapas 4–7 continuam ativos.
