@@ -55,7 +55,7 @@ try {
         await box.getByText(/#1 · queued/).waitFor(); await idle(); assert.equal(posts, 1); assert.equal((await jobs()).length, 1);
         mode = "normal"; await tick(); await summary.click(); await summary.click();
         await box.getByText(/#1 · complete/).waitFor(); await idle();
-        const proposal = box.locator("details").filter({ has: page.locator("summary", { hasText: "Sugestão de resposta" }) }); assert.equal(await proposal.count(), 1);
+        const proposal = box.locator("details").filter({ has: page.locator("summary", { hasText: "Sugestão de resposta" }) }); await proposal.locator("summary").waitFor(); assert.equal(await proposal.count(), 1);
         const old = (await jobs())[0];
         const previousReads = reads; await proposal.locator("summary").click(); await page.waitForTimeout(150); assert.equal(reads, previousReads, "Nested expansion must not reload the parent or erase the proposal");
         assert.ok(!(await box.innerText()).includes("lease_token"));
@@ -69,7 +69,8 @@ try {
         assert.equal((await jobs()).length, 3); await summary.click(); mode = "normal";
       }
       await summary.click(); await box.getByText(/#3 · complete/).waitFor(); await idle();
-      assert.equal(await box.locator("details").filter({ has: page.locator("summary", { hasText: "Sugestão de resposta" }) }).count(), 1);
+      const readyProposal = box.locator("details").filter({ has: page.locator("summary", { hasText: "Sugestão de resposta" }) });
+      await readyProposal.locator("summary").waitFor(); assert.equal(await readyProposal.count(), 1);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2), false);
       assert.deepEqual(exceptions, []); assert.deepEqual(otherWrites, []); assert.deepEqual(await signatures(), before);
       assert.equal((await db.query("SELECT 1 FROM contact_replies UNION ALL SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox")).rowCount, 0);

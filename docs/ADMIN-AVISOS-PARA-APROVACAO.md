@@ -72,3 +72,10 @@ Proposto: “Não foi possível carregar a lista. Tente novamente.” Submetido 
 ## AV-13 — conflito na correção administrativa de e-mail (pendente)
 
 Proposto ao dono por pergunta nativa: “O cadastro foi alterado durante a conferência. Atualize a página e tente novamente.” Sem aprovação inferida. A correção transacional usa por enquanto a mensagem já existente “Não foi possível salvar.” O novo texto não foi incorporado à interface. Contrato em `ETAPA-04-CORRECAO-EMAIL.md`.
+
+
+## AV-14 — legenda legível da triagem (pendente)
+
+Perguntado após a aprovação do AV-8, antes de adicionar legenda/novas mensagens. Campos propostos: “Categoria”, “Processamento”, “Diagnóstico”, “Prioridade” e “Histórico”. Estados: “Em fila”, “Em análise”, “Concluída”, “Falha técnica”, “Inconclusivo”, “Revisão necessária”, “Confirmação posterior ao relato”, “Normal” e “Alta”. Categorias: “Confirmação por e-mail”, “Link expirado”, “E-mail recusado”, “Nome/CPF”, “Pedido de remoção”, “Pedido de correção”, “Campus”, “Erro no formulário” e “Dúvida”. Falhas: “Não foi possível atualizar a análise. Reabra este painel para conferir o estado atual.” e “Os dados mudaram. Solicite uma nova análise.”
+
+Objetivo: substituir códigos no resumo por legenda compreensível, preservando evidências técnicas completas e os limites do diagnóstico. Não altera o formulário público, não aprova identidade nem conclui que a mensagem chegou ao destinatário. Até resposta explícita, a interface usa os textos do AV-8 e dados estruturados recebidos, sem essas novas legendas. Não aprova outros AVs, envio, deploy ou merge com a VPS.
