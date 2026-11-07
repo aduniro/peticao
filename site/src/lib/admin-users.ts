@@ -26,8 +26,8 @@ export async function temUsuarios(): Promise<boolean> {
   try { return (await query<{ e: boolean }>("SELECT EXISTS(SELECT 1 FROM admin_users) e")).rows[0].e; } catch { return true; }
 }
 
-export type ResultadoCriar = { ok: true; usuario: Usuario; senhaGerada: string | null } | { ok: false; erro: "email_invalido" | "nome_invalido" | "nivel_invalido" | "email_ja_existe" | "senha_fraca"; detalhe?: string };
-export async function criarUsuario(o: { email: string; nome: string; nivel: Nivel; senha?: string; trocarSenha?: boolean; por?: string }): Promise<ResultadoCriar> {
+export type ResultadoCriar = { ok: true; usuario: Usuario; senhaGerada: string | null } | { ok: false; erro: "email_invalido" | "nome_invalido" | "nivel_invalido" | "email_ja_existe" | "senha_fraca" | "nao_autorizado"; detalhe?: string };
+export async function criarUsuario(o: { email: string; nome: string; nivel: Nivel; senha?: string; trocarSenha?: boolean; por?: string; actor?: { userId: number; email: string } }): Promise<ResultadoCriar> {
   const email = normEmail(o.email), nome = o.nome.replace(/\s+/g, " ").trim();
   if (!SAFE_EMAIL_RE.test(email)) return { ok: false, erro: "email_invalido" };
   if (nome.length < 2 || nome.length > 120) return { ok: false, erro: "nome_invalido" };
@@ -35,15 +35,22 @@ export async function criarUsuario(o: { email: string; nome: string; nivel: Nive
   const senha = o.senha ?? gerarSenha();
   const fraca = o.senha ? problemaNaSenha(senha, email) : null;
   if (fraca) return { ok: false, erro: "senha_fraca", detalhe: fraca };
-  try {
-    const r = await query("INSERT INTO admin_users(email,nome,nivel,senha_hash,trocar_senha) VALUES($1,$2,$3,$4,$5) RETURNING *", [email, nome, o.nivel, hashSenha(senha), o.trocarSenha ?? !o.senha]);
+  const senhaHash = hashSenha(senha);
+  return tx(async c => {
+    // Use the same lock order as role/deactivation changes. CLI bootstrap has no actor.
+    await c.query("SELECT pg_advisory_xact_lock(7003)");
+    if (o.actor !== undefined) {
+      const actor = o.actor;
+      if (!Number.isInteger(actor?.userId) || actor.userId <= 0 || actor.userId > 2147483647 || typeof actor.email !== "string") return { ok: false as const, erro: "nao_autorizado" as const };
+      const current = await c.query("SELECT id FROM admin_users WHERE id=$1 AND email=$2 AND ativo AND nivel='total' FOR SHARE", [actor.userId, normEmail(actor.email)]);
+      if (!current.rowCount) return { ok: false as const, erro: "nao_autorizado" as const };
+    }
+    const r = await c.query("INSERT INTO admin_users(email,nome,nivel,senha_hash,trocar_senha) VALUES($1,$2,$3,$4,$5) ON CONFLICT(email) DO NOTHING RETURNING *", [email, nome, o.nivel, senhaHash, o.trocarSenha ?? !o.senha]);
+    if (!r.rowCount) return { ok: false as const, erro: "email_ja_existe" as const };
     const usuario = doUsuario(r.rows[0]);
-    await audit("admin_usuario_criado", null, { id: usuario.id, nivel: usuario.nivel, por: o.por ?? "cli" });
-    return { ok: true, usuario, senhaGerada: o.senha ? null : senha };
-  } catch (e: any) {
-    if (e?.code === "23505") return { ok: false, erro: "email_ja_existe" };
-    throw e;
-  }
+    await audit("admin_usuario_criado", null, { id: usuario.id, nivel: usuario.nivel, por: o.actor ? normEmail(o.actor.email) : o.por ?? "cli", ...(o.actor ? { userId: o.actor.userId } : {}) }, c);
+    return { ok: true as const, usuario, senhaGerada: o.senha ? null : senha };
+  });
 }
 
 export type ResultadoAuth = { ok: true; usuario: Usuario } | { ok: false; motivo: "credenciais" | "bloqueado" };

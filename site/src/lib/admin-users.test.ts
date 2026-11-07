@@ -269,3 +269,55 @@ test("troca de senha revoga sessões e links; falha na auditoria reverte toda a 
     assert.ok((await dbmod.verifyAuditChain()).ok);
   } finally { await dbmod._closeDbForTests(); }
 });
+
+test("criação de usuário e autoria são atômicas; falha de auditoria não deixa conta", async () => {
+  const { U, dbmod } = await um();
+  try {
+    const owner = await U.criarUsuario({ email: "owner-atomic@example.test", nome: "Dono QA", nivel: "total", senha: SENHA });
+    assert.ok(owner.ok);
+    const actor = { userId: owner.usuario.id, email: owner.usuario.email };
+    await dbmod.query(`CREATE FUNCTION fail_create_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='admin_usuario_criado' THEN RAISE EXCEPTION 'simulated creation audit failure'; END IF; RETURN NEW; END $$;
+      CREATE TRIGGER fail_create_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION fail_create_audit();`);
+    const request = { email: "new-atomic@example.test", nome: "Pessoa QA", nivel: "edicao" as const, senha: SENHA, actor, por: "ignored-spoof@example.test" };
+    await assert.rejects(U.criarUsuario(request), /simulated creation audit failure/);
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM admin_users WHERE email=$1", [request.email])).rows[0].n, 0);
+    await dbmod.query("DROP TRIGGER fail_create_audit ON audit_log");
+    const created = await U.criarUsuario(request); assert.ok(created.ok);
+    const event = (await dbmod.query("SELECT data FROM audit_log WHERE event='admin_usuario_criado' ORDER BY id DESC LIMIT 1")).rows[0].data;
+    const detail = typeof event === "string" ? JSON.parse(event) : event;
+    assert.equal(detail.id, created.usuario.id); assert.equal(detail.userId, actor.userId); assert.equal(detail.por, actor.email);
+    assert.ok(!JSON.stringify(detail).includes(SENHA)); assert.ok(!JSON.stringify(detail).includes("scrypt"));
+    assert.deepEqual(await U.criarUsuario(request), { ok: false, erro: "email_ja_existe" });
+    assert.ok((await dbmod.verifyAuditChain()).ok);
+  } finally { await dbmod._closeDbForTests(); }
+});
+
+test("criação administrativa confere novamente conta, nível, atividade e autoria", async () => {
+  const { U, dbmod } = await um();
+  try {
+    const owner = await U.criarUsuario({ email: "current-owner@example.test", nome: "Dono QA", nivel: "total", senha: SENHA }); assert.ok(owner.ok);
+    const actor = { userId: owner.usuario.id, email: owner.usuario.email };
+    const create = (a: typeof actor) => U.criarUsuario({ email: "forbidden-new@example.test", nome: "Pessoa QA", nivel: "leitura", senha: SENHA, actor: a });
+    for (const invalid of [{ ...actor, userId: 0 }, { ...actor, userId: 2147483648 }, { ...actor, email: "another@example.test" }]) assert.deepEqual(await create(invalid), { ok: false, erro: "nao_autorizado" });
+    await dbmod.query("UPDATE admin_users SET nivel='edicao' WHERE id=$1", [actor.userId]);
+    assert.deepEqual(await create(actor), { ok: false, erro: "nao_autorizado" });
+    await dbmod.query("UPDATE admin_users SET nivel='total', ativo=false WHERE id=$1", [actor.userId]);
+    assert.deepEqual(await create(actor), { ok: false, erro: "nao_autorizado" });
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM admin_users")).rows[0].n, 1);
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM audit_log WHERE event='admin_usuario_criado'")).rows[0].n, 1);
+  } finally { await dbmod._closeDbForTests(); }
+});
+
+test("criações simultâneas com mesmo e-mail deixam uma conta e uma auditoria", async () => {
+  const { U, dbmod } = await um();
+  try {
+    const owner = await U.criarUsuario({ email: "concurrent-owner@example.test", nome: "Dono QA", nivel: "total", senha: SENHA }); assert.ok(owner.ok);
+    const request = { email: "concurrent-new@example.test", nome: "Pessoa QA", nivel: "leitura" as const, senha: SENHA, actor: { userId: owner.usuario.id, email: owner.usuario.email } };
+    const results = await Promise.all([U.criarUsuario(request), U.criarUsuario(request)]);
+    assert.equal(results.filter(r => r.ok).length, 1);
+    assert.equal(results.filter(r => !r.ok && r.erro === "email_ja_existe").length, 1);
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM admin_users WHERE email=$1", [request.email])).rows[0].n, 1);
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM audit_log WHERE event='admin_usuario_criado'")).rows[0].n, 2);
+    assert.ok((await dbmod.verifyAuditChain()).ok);
+  } finally { await dbmod._closeDbForTests(); }
+});

@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
   const bloqueio = await exigirNivel(req, "total", 40, { stepup: true });
   if (bloqueio) return bloqueio;
   const eu = await quemAge(req);
+  if (!eu) return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 401 });
   const origem = requestOrigin(req.headers);
   const volta = (q: string) => NextResponse.redirect(new URL("/admin/usuarios?" + q, origem), 303);
   const f = await req.formData();
@@ -20,8 +21,11 @@ export async function POST(req: NextRequest) {
   if (acao === "criar") {
     const email = String(f.get("email") ?? ""), nivel = String(f.get("nivel") ?? "");
     if (!ehNivel(nivel)) return volta("erro=nivel_invalido");
-    const r = await criarUsuario({ email, nome: String(f.get("nome") ?? ""), nivel, por });
-    if (!r.ok) return volta(`erro=${r.erro}`);
+    const r = await criarUsuario({ email, nome: String(f.get("nome") ?? ""), nivel, por, actor: { userId: eu.userId, email: eu.email } });
+    if (!r.ok) {
+      if (r.erro === "nao_autorizado") return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 403 });
+      return volta(`erro=${r.erro}`);
+    }
     await pedirReset(r.usuario.email, { origin: origem, convite: true }).catch((e) => console.error("convite falhou:", e instanceof Error ? e.message : e));
     return volta("msg=criado");
   }
