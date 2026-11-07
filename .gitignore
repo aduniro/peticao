@@ -1,0 +1,18 @@
+# Track project instructions and executable source only.
+# Generated records, credentials, databases, logs and backups stay local.
+/*
+!/.gitignore
+!/AGENTS.md
+!/revisar-cpfs
+!/.execucoes/
+!/.validacoes/
+
+/.execucoes/*
+!/.execucoes/20261104T223158Z-8205ee/
+/.execucoes/20261104T223158Z-8205ee/*
+!/.execucoes/20261104T223158Z-8205ee/*.py
+
+/.validacoes/*
+!/.validacoes/20261105T145514Z-3def77/
+/.validacoes/20261105T145514Z-3def77/*
+!/.validacoes/20261105T145514Z-3def77/*.py
