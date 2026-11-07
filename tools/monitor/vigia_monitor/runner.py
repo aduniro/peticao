@@ -99,7 +99,9 @@ def ai_run(store,request,task):
  remote=request['kind']=='ai-vps';host='vps' if remote else 'local';rpc=Rpc(['ssh','-o','BatchMode=yes','peticao','/home/adunir/.local/bin/codex','app-server'] if remote else None);rid=request['id'];saved=store.rows('SELECT id FROM threads WHERE task_id=? AND host=?',(task['id'],host));thread_id=saved[0]['id'] if saved else None;turn_id=None;approval_ids=[]
  try:
   rpc.initialize()
-  params={'cwd':task['cwd'],'approvalPolicy':'on-request','sandbox':'workspace-write','developerInstructions':INSTRUCTIONS}
+  context_path=Path('/mnt/dev/peticao/tools/monitor/CONTEXTO.md')
+  context=context_path.read_text() if context_path.is_file() and not context_path.is_symlink() and context_path.stat().st_size<20000 else ''
+  params={'cwd':task['cwd'],'approvalPolicy':'on-request','sandbox':'workspace-write','developerInstructions':INSTRUCTIONS+'\n\nResumo preparado do projeto:\n'+context}
   if thread_id:
    params.update(threadId=thread_id,excludeTurns=True);result=rpc.call('thread/resume',params)
   else:result=rpc.call('thread/start',params)
