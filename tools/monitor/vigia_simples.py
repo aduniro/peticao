@@ -193,7 +193,7 @@ def main(argv=None):
                 live.update(render(data,console.width,console.height,paused),refresh=True)
                 ready,_,_=select.select([sys.stdin],[],[],.5)
                 if ready:
-                    key=sys.stdin.read(1)
+                    key=os.read(sys.stdin.fileno(),1).decode(errors='ignore')
                     if key in ['q','Q','\x03','']:break
                     if key=='j':PROCESS_OFFSET=min(max(0,len(data['processes'])-1),PROCESS_OFFSET+1)
                     if key=='k':PROCESS_OFFSET=max(0,PROCESS_OFFSET-1)

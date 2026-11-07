@@ -27,4 +27,23 @@ class SimpleTests(unittest.TestCase):
   module.register(self.args());data={'at':module.now(),'activities':module.activities(),'processes':[{'pid':1,'name':'QA','port':'3031','cwd':'/mnt/dev/peticao'}],'services':[],'vps':{'state':'desativado'}}
   for width,height in [(80,24),(120,40)]:
    stream=StringIO();Console(file=stream,width=width,height=height).print(module.render(data,width,height));self.assertIn('VIGIA SIMPLES',stream.getvalue())
+ def test_real_pty_handles_rapid_keys_and_quits(self):
+  import os,pty,fcntl,termios,struct,subprocess,time,select,sys
+  master,slave=pty.openpty();fcntl.ioctl(slave,termios.TIOCSWINSZ,struct.pack('HHHH',24,80,0,0))
+  env={**os.environ,'VIGIA_SIMPLES_STATE':self.tmp.name,'TERM':'xterm-256color'}
+  p=subprocess.Popen([sys.executable,str(Path(module.__file__)),'--sem-vps'],stdin=slave,stdout=slave,stderr=slave,start_new_session=True,env=env);os.close(slave)
+  try:
+   output=b'';deadline=time.monotonic()+5
+   while time.monotonic()<deadline:
+    ready,_,_=select.select([master],[],[],.1)
+    if ready:
+     output+=os.read(master,8192)
+     if b'VIGIA SIMPLES' in output:break
+   self.assertIn(b'VIGIA SIMPLES',output);os.write(master,b'jrq');self.assertEqual(p.wait(timeout=5),0)
+  finally:
+   if p.poll() is None:
+    p.terminate()
+    try:p.wait(timeout=2)
+    except subprocess.TimeoutExpired:p.kill();p.wait()
+   os.close(master)
 if __name__=='__main__':unittest.main()

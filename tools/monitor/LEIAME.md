@@ -31,4 +31,4 @@ Use `/mnt/dev/peticao/vigia-simples --register identificador --title 'Título' -
 
 `python3 -m unittest discover -s /mnt/dev/peticao/tools/monitor/tests -p test_simples.py -v`.
 
-Cobertura: escrita atômica, preservação de criação, permissões, validação de total/identificador, filtragem de sequências de terminal, arquivos corrompidos e renderização compacta/detalhada. Também foi exercitada uma sessão PTY real e consulta somente leitura da VPS.
+Cobertura: escrita atômica, preservação de criação, permissões, validação de total/identificador, filtragem de sequências de terminal, arquivos corrompidos e renderização compacta/detalhada. Os seis testes incluem uma sessão PTY real, com teclas em sequência e encerramento. Um travamento causado pelo buffer de entrada foi corrigido e coberto por regressão. A consulta somente leitura da VPS também foi exercitada.
