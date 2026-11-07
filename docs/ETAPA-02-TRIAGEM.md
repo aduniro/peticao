@@ -22,7 +22,7 @@ GET/POST `/api/admin/contato/triagem` exigem Edição. A autoria vem da sessão 
 
 ## Ainda pendente
 
-A integração visual no Contato aguarda AV-8: “Análise automática”, “Reanalisar”, “Evidências”, “Sugestão de resposta” e “Revise a análise antes de responder. Nenhuma resposta é enviada automaticamente”. Não foram inseridos esses textos. Minutas humanas, atualização após novos eventos, informe operacional durável somente ao dono e fluxo de curadoria/aprovação de campus ainda precisam ser integrados; este checkpoint não conclui a Etapa 2. O Vigia externo permanece ligado e não recebe chave/root dentro do app.
+A integração visual no Contato aguarda AV-8: “Análise automática”, “Reanalisar”, “Evidências”, “Sugestão de resposta” e “Revise a análise antes de responder. Nenhuma resposta é enviada automaticamente”. Não foram inseridos esses textos. A atualização das fontes já coletadas foi acrescentada posteriormente em `ETAPA-02-ATUALIZACAO-EVIDENCIAS.md`. Minutas humanas, novas fontes de eventos individuais, informe operacional durável somente ao dono e fluxo de curadoria/aprovação de campus ainda precisam ser integrados; este checkpoint não conclui a Etapa 2. O Vigia externo permanece ligado e não recebe chave/root dentro do app.
 
 O motor atual é `contact-triage-v1`. Alterações futuras do motor precisam definir o tratamento das revisões pendentes antes de mudar essa versão; o ensaio atual não é prova de migração entre motores diferentes. Etapas 3–7 e pendências anteriores continuam no objetivo.
 

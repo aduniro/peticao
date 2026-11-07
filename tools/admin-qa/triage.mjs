@@ -11,7 +11,7 @@ let token;
 try{
  const unknown=(await db.query("SELECT count(*)::int n FROM contact_messages WHERE lower(name) NOT LIKE 'qa %' OR email NOT LIKE '%@example.test'")).rows[0].n;assert.equal(unknown,0,"Refuse to process non-QA contacts");
  const count=async table=>Number((await db.query(`SELECT count(*) n FROM ${table}`)).rows[0].n);
- assert.equal(await count("mail_outbox"),0);assert.equal(await count("contact_replies"),0);
+ assert.equal(await count("mail_outbox"),0);assert.equal(await count("contact_replies"),0);assert.equal(await count("cpf_lookup_cache"),0);
  const signatures=async()=>(await db.query("SELECT id,name,cpf_hash,email_hash,status,seq,created_at,confirmed_at FROM signatures ORDER BY id")).rows;
  const before=await signatures();
  const email="qa-triage-runtime@example.test",message="QA-TRIAGE-RUNTIME: Não recebi o e-mail de confirmação.",name="QA Triagem Runtime";
@@ -33,7 +33,13 @@ try{
  const repeated=await tick(process.env.QA_CRON_SECRET);assert.equal(repeated.status,200);assert.deepEqual((await history())[0],done);
  const again=await request(path,{contato:contact.id});assert.equal(again.status,200);assert.equal((await again.json()).revision,done.revision+1);
  assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);const versions=await history();assert.equal(versions[0].status,"complete");assert.deepEqual(versions[1],done);
+ const previous=(await history())[0];
+ await db.query("INSERT INTO mail_events(ts,provider,type,email,reason,source) VALUES(now(),'brevo','blocked',$1,'QA','api')",[email]);
+ const refreshResponse=await tick(process.env.QA_CRON_SECRET);assert.equal(refreshResponse.status,200);const refreshStats=await refreshResponse.json();assert.equal(refreshStats.contactTriage.refresh.queued,1);
+ assert.equal((await history())[0].status,"queued");assert.equal((await history())[0].revision,previous.revision+1);
+ assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);const refreshed=await history();assert.equal(refreshed[0].status,"complete");assert.deepEqual(refreshed[1],previous);assert.equal(refreshed[0].evidence.events.length,1);
+ assert.equal((await tick(process.env.QA_CRON_SECRET)).status,200);assert.deepEqual(await history(),refreshed);
  assert.deepEqual(await signatures(),before);assert.equal(await count("mail_outbox"),0);assert.equal(await count("contact_replies"),0);
- const report={ok:true,httpAuth:true,cronAuth:true,workerComplete:true,reprocessingVersioned:true,previousVersionPreserved:true,noSignerWrites:true,noParticipantMail:true};
+ const report={ok:true,httpAuth:true,cronAuth:true,workerComplete:true,evidenceChangeCreatesRevision:true,unchangedPollingDoesNotCreateRevision:true,reprocessingVersioned:true,previousVersionPreserved:true,noSignerWrites:true,noParticipantMail:true};
  await writeFile(`${output}/triage.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
 }finally{if(token)await U.encerrarSessao(token);await db._closeDbForTests();}

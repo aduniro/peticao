@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { audit, query, tx } from "../db";
 import { analyze, ENGINE } from "./analyze";
 import { collectEvidence, currentInputHash } from "./evidence";
+import { refreshTriages } from "./refresh";
 const validId = (value: unknown): value is number => Number.isSafeInteger(value) && Number(value) > 0 && Number(value) <= 2_147_483_647;
 
 /** Reprocessing creates a new revision; never mutates completed reviews or reply decisions. */
@@ -90,7 +91,9 @@ export async function drainTriages(limit = 3) {
   const discovered = await discoverTriages(25), results = [];
   const deadline = Date.now() + 10_000;
   for (let i = 0; i < limit && Date.now() < deadline; i++) { const result = await processTriage(); if (result.status === "idle") break; results.push(result); }
-  return { discovered,processed: results.length,results };
+  // Share the existing between-request budget. Freshening only enqueues another immutable revision.
+  try { const refresh=await refreshTriages(2,{deadline});return { discovered,processed: results.length,results,refresh }; }
+  catch { return { discovered,processed: results.length,results,refreshError:"refresh_failed" }; }
 }
 
 export async function triageHistory(contactId: unknown) {
