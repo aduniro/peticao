@@ -328,6 +328,19 @@ const SCHEMA_SQL = `
     CHECK(decision<>'approved' OR source_reviewed)
   );
   CREATE INDEX IF NOT EXISTS contact_campus_review_history ON contact_campus_reviews(contact_id,id DESC);
+  CREATE TABLE IF NOT EXISTS admin_ai_requests (
+    id UUID PRIMARY KEY, request_id UUID NOT NULL, created_by INTEGER NOT NULL REFERENCES admin_users(id),
+    day DATE NOT NULL, purpose TEXT NOT NULL CHECK(purpose IN ('painel','divulgacao','atendimento')),
+    configuration_revision INTEGER NOT NULL, provider TEXT NOT NULL, model TEXT NOT NULL,
+    context_hash TEXT NOT NULL, source_versions JSONB NOT NULL, input_bytes INTEGER NOT NULL CHECK(input_bytes>0),
+    reserved_output_tokens INTEGER NOT NULL CHECK(reserved_output_tokens BETWEEN 16 AND 4096),
+    state TEXT NOT NULL CHECK(state IN ('reserved','completed','rejected','uncertain','discarded')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), finished_at TIMESTAMPTZ,
+    input_tokens INTEGER CHECK(input_tokens>=0), output_tokens INTEGER CHECK(output_tokens>=0),
+    provider_response_id TEXT, error_code TEXT, UNIQUE(created_by,request_id)
+  );
+  CREATE INDEX IF NOT EXISTS admin_ai_request_budget ON admin_ai_requests(day);
+  CREATE INDEX IF NOT EXISTS admin_ai_request_history ON admin_ai_requests(created_at DESC,id);
   CREATE TABLE IF NOT EXISTS admin_acoes (
     id SERIAL PRIMARY KEY,
     ts TIMESTAMPTZ NOT NULL DEFAULT now(),

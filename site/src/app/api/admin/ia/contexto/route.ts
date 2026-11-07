@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
     const r = await prepareAiContext(b.input);
     // Prompt and transient question stay server-side; the API returns only the reviewable context identity.
-    if (r.ok) return reply({ ok: true, purpose: r.purpose, configurationRevision: r.configurationRevision, inputBytes: r.inputBytes, sources: r.sources, proof: r.proof, requiresHumanReview: true, executionAvailable: false, requestedEnabled: r.requestedEnabled, supportContext: r.supportContext });
+    if (r.ok) return reply({ ok: true, purpose: r.purpose, configurationRevision: r.configurationRevision, inputBytes: r.inputBytes, sources: r.sources, proof: r.proof, requiresHumanReview: true, executionAvailable: r.executionAvailable, requestedEnabled: r.requestedEnabled, supportContext: r.supportContext });
     return reply(r, r.ok ? 200 : r.error === "parameters" ? 400 : r.error === "not_found" ? 404 : 409);
   } catch { return reply({ ok: false, error: "unavailable" }, 503); }
 }

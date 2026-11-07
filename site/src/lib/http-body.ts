@@ -1,5 +1,5 @@
 /** Bound bytes before JSON parsing. Content-Length alone is not trusted. */
-export async function readLimitedText(req: Request, maximum=200_000): Promise<{ok:true;raw:string}|{ok:false;status:400|413}> {
+export async function readLimitedText(req: Pick<Request,"body">, maximum=200_000): Promise<{ok:true;raw:string}|{ok:false;status:400|413}> {
   if (!req.body) return {ok:true,raw:""};
   const reader=req.body.getReader();let length=0;const chunks:Uint8Array[]=[];
   try {

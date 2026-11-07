@@ -1,6 +1,6 @@
 # Etapa 5 — contextos, configuração e contrato de geração
 
-07/11/2026. Candidato local, sem nova tabela ou interface ativa. Não há executor de chamadas de IA neste bloco.
+07/11/2026. Registro do checkpoint 03f251c: preparação sem nova tabela ou interface ativa. O complemento posterior está em `ETAPA-05-EXECUTOR.md`: acrescenta executor/reserva durável, mantendo chamadas reais desativadas por padrão. A disponibilidade atual depende das portas de serviço/configuração/credencial, não apenas da preferência solicitada. As limitações e evidências abaixo registram a etapa de preparação.
 
 ## Configuração revisável
 

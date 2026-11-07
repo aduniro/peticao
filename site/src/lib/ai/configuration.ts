@@ -1,6 +1,7 @@
 import type { PoolClient } from "pg";
 import { audit, tx } from "../db";
 import { PURPOSES, type Purpose } from "../knowledge/catalog";
+import { aiExecutionAvailable } from "./execution-gate";
 export const CONFIG_KEY = "admin_ai_profiles_v1";
 export const EFFORTS = ["default", "none", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
 export type Profile = { provider: "openai"; model: string | null; effort: typeof EFFORTS[number] };
@@ -29,7 +30,7 @@ export async function readConfigurationWith(c: PoolClient) {
   try {
     const stored = JSON.parse(row.value), config = parseConfiguration(stored.config);
     if (!exactKeys(stored, ["revision", "config"]) || !integer(stored.revision, 1, 2147483647) || !config) throw new Error("invalid");
-    return { ok: true as const, revision: stored.revision as number, config, executionAvailable: false };
+    return { ok: true as const, revision: stored.revision as number, config, executionAvailable: aiExecutionAvailable(config.enabled) };
   } catch { return { ok: false as const, error: "configuration_invalid" }; }
 }
 export async function aiConfiguration() {
@@ -49,7 +50,7 @@ export async function saveAiConfiguration(raw: unknown, expectedRevision: unknow
     if (before.revision !== expectedRevision) return { ok: false as const, error: "configuration_conflict" };
     const revision = before.revision + 1;
     await c.query("INSERT INTO settings(key,value) VALUES($1,$2) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value", [CONFIG_KEY, JSON.stringify({ revision, config })]);
-    await audit("admin_ai_configuration_changed", null, { revision, previous: before.config, config, userId: actor.userId, por: actor.email.toLowerCase(), executionAvailable: false }, c);
-    return { ok: true as const, revision, config, executionAvailable: false };
+    await audit("admin_ai_configuration_changed", null, { revision, previous: before.config, config, userId: actor.userId, por: actor.email.toLowerCase() }, c);
+    return { ok: true as const, revision, config, executionAvailable: aiExecutionAvailable(config.enabled) };
   });
 }

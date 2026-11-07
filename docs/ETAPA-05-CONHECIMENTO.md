@@ -20,7 +20,7 @@ Cada documento tem ID estável, referência ao campo de origem, versão SHA-256 
 
 ## Limites de execução
 
-Operações de banco são somente leitura, com snapshot consistente, timeout e savepoint para degradação da fonte de campus. Texto de fonte é dado, não autorização para comandos. Não invoca modelo, busca URL, grava consulta, envia e-mail, altera cadastro ou publica referência. Não interpreta disponibilidade de um provedor/modelo nem presume credenciais existentes. Configuração de provedores/modelos/esforço, limites de custo, contexto das três funções, minutas e interfaces continuam pendentes; não rotular esta busca como IA funcionando.
+Operações desta camada de busca são somente leitura, com snapshot consistente, timeout e savepoint para degradação da fonte de campus. Texto de fonte é dado, não autorização para comandos. A busca não invoca modelo, busca URL, grava consulta, envia e-mail, altera cadastro ou publica referência. Não interpreta disponibilidade de provedor/modelo nem presume credencial. Contextos/configuração e o executor foram acrescentados separadamente em `ETAPA-05-CONTEXTOS-CONFIGURACAO.md` e `ETAPA-05-EXECUTOR.md`; demais provedores, minutas/interfaces e validação de uma conta real continuam pendentes. Não rotular esta busca isolada como IA funcionando.
 
 ## Verificação
 

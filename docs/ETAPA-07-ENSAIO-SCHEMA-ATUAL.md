@@ -19,3 +19,7 @@ Mudança restrita ao ensaio e documentação. Não altera DDL/aplicação, não 
 ## Complemento posterior — curadoria de campus
 
 O bloco descrito em `ETAPA-02-CURADORIA-CAMPUS.md` acrescenta `contact_campus_reviews`: o esquema atual passa a **11 tabelas aditivas**. O mesmo roteiro foi atualizado e passou novamente em `stage02-campus-schema.log`, preservando todas as exigências anteriores. Agora também cria duas decisões fictícias encadeadas e comprova preservação integral de propostas, autoria, vínculo anterior e horários com microssegundos após repetir DDL atual e bootstrap anterior. Não alterou assinaturas ou journal de mensagens. O resultado histórico de dez tabelas acima corresponde ao checkpoint 72ec622, não ao esquema acrescido posteriormente.
+
+## Complemento posterior — quota durável de IA
+
+O executor descrito em `ETAPA-05-EXECUTOR.md` acrescenta `admin_ai_requests`: agora são **12 tabelas aditivas**. O roteiro atualizado passou em `stage05-executor-schema.log`. Uma tentativa fictícia incerta conserva UUID, conta, reserva de quota, estado e horários com microssegundos após reaplicar DDL atual e bootstrap anterior. Nenhuma geração é disparada pelo ensaio. Permanecem as verificações de assinantes, journal, curadoria e definições anteriores. Não prova publicação na VPS ou consumo de um provedor real.

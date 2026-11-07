@@ -29,10 +29,10 @@ export async function prepareAiContext(raw: unknown) {
   const profile = configuration.config.profiles[raw.uso];
   const binding = { version: "admin-ai-context-v1", purpose: raw.uso, configurationRevision: configuration.revision, requestedEnabled: configuration.config.enabled, profile, limits: configuration.config.limits, instructions, input, supportProof: support?.ok ? support.proof : null };
   const proof = hmac("admin-ai-context-v1:" + JSON.stringify(canonical(binding)));
-  return { ok: true as const, purpose: raw.uso, configurationRevision: configuration.revision, requestedEnabled: configuration.config.enabled, profile, limits: configuration.config.limits, instructions, input, inputBytes, sources: sources.map(({ id, version }) => ({ id, version })), proof, requiresHumanReview: true, executionAvailable: false, supportContext: support?.ok ? support.context : null };
+  return { ok: true as const, purpose: raw.uso, configurationRevision: configuration.revision, requestedEnabled: configuration.config.enabled, profile, limits: configuration.config.limits, instructions, input, inputBytes, sources: sources.map(({ id, version }) => ({ id, version })), proof, requiresHumanReview: true, executionAvailable: configuration.executionAvailable, supportContext: support?.ok ? support.context : null };
 }
 export async function validateAiContext(input: unknown, proof: unknown) {
   if (typeof proof !== "string" || !/^[a-f0-9]{64}$/.test(proof)) return { ok: false as const, error: "parameters" };
   const current = await prepareAiContext(input); if (!current.ok) return current;
-  return safeEqual(current.proof, proof) ? { ok: true as const, configurationRevision: current.configurationRevision, requiresHumanReview: true, executionAvailable: false } : { ok: false as const, error: "context_changed" };
+  return safeEqual(current.proof, proof) ? { ok: true as const, configurationRevision: current.configurationRevision, requiresHumanReview: true, executionAvailable: current.executionAvailable } : { ok: false as const, error: "context_changed" };
 }

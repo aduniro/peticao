@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { defaultConfiguration, parseConfiguration, CONFIG_KEY } from "./ai/configuration";
 import { openAiDraft, openAiRequest } from "./ai/openai-protocol";
-(process.env as Record<string,string>).NODE_ENV = "test"; process.env.MAIL_PROVIDER = "dev";
+(process.env as Record<string,string>).NODE_ENV = "test"; process.env.MAIL_PROVIDER = "dev"; process.env.AI_EXECUTION_ENABLED = "0";
 async function setup() {
   const db = await import("./db"); await db._openForTests("t_ai_context");
   const C = await import("./ai/configuration"), A = await import("./ai/context"), J = await import("./contact-triage/jobs"), U = await import("./admin-users");

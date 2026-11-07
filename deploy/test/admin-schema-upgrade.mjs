@@ -44,7 +44,7 @@ try{
   {table_name:"mail_log",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null},
   {table_name:"mail_outbox",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null}
  ],"Only the two explicit nullable correlation columns may be added to old tables");
- assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_reset","admin_sessions","admin_stepup","admin_users","contact_campus_reviews","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
+ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_reset","admin_sessions","admin_stepup","admin_users","contact_campus_reviews","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
  const newMailLog=(await c.query("SELECT * FROM mail_log ORDER BY id")).rows,newMailOutbox=(await c.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
  assert.ok([...newMailLog,...newMailOutbox].every(row=>row.message_id===null));
  assert.deepEqual(newMailLog.map(({message_id,...row})=>row),oldMailLog);assert.deepEqual(newMailOutbox.map(({message_id,...row})=>row),oldMailOutbox);
@@ -112,12 +112,21 @@ try{
  const priorCurated=await curated();await c.query(newSql);await c.query(newSql);await c.query(oldSql);
  assert.deepEqual(await curated(),priorCurated,"Curated reference versions, authors, previous links and timestamps survive replay and old bootstrap");
  assert.deepEqual(await rows(),before);assert.deepEqual(await journalSnapshot(),priorJournal);
- console.log("PASS campus curation upgrade: eleven additive tables; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
+ // A rollback/bootstrap must never forget that an AI request may already have reached its provider.
+ await c.query(`INSERT INTO admin_ai_requests(id,request_id,created_by,day,purpose,configuration_revision,provider,model,context_hash,source_versions,input_bytes,reserved_output_tokens,state,created_at,finished_at,error_code)
+   VALUES('00000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000004',$1,'2026-10-01','painel',1,'openai','qa-model-not-real','QA-CONTEXT-HASH','[]',512,1024,'uncertain',
+     '2026-10-01T10:00:07.123456Z','2026-10-01T10:00:08.654321Z','transport_uncertain')`,[reviewer]);
+ const generations=async()=>(await c.query("SELECT row_to_json(r)::text raw FROM admin_ai_requests r ORDER BY id")).rows;
+ const priorGenerations=await generations();await c.query(newSql);await c.query(newSql);await c.query(oldSql);
+ assert.deepEqual(await generations(),priorGenerations,"AI request identity, ownership, budget and uncertainty survive replay and old bootstrap");
+ assert.deepEqual(await rows(),before);assert.deepEqual(await journalSnapshot(),priorJournal);assert.deepEqual(await curated(),priorCurated);
+ console.log("PASS AI ledger upgrade: twelve additive tables; request UUID, actor, quota reservation, uncertain state and microsecond timestamps preserved, no generation dispatched.");
+ console.log("PASS campus curation upgrade: twelve additive tables; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
  console.log("PASS scoped journal upgrade: unknown account stays null, no fabricated events; existing receipt and linked event identity/timestamps preserved on replay.");
  console.log("PASS archive foundation upgrade: existing message identity, fingerprint, state and timestamp preserved; Reply-To left unknown.");
  console.log("PASS legacy action history migration: original rows unchanged, no old record admitted as a new request.");
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
- console.log("PASS real startup on old schema plus DDL replay: eleven additive tables and two nullable correlation columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS real startup on old schema plus DDL replay: twelve additive tables and two nullable correlation columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;
