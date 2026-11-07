@@ -3,7 +3,7 @@ import { useEffect, useRef, type RefObject } from "react";
 import { emitSignDiagnostic } from "@/lib/sign-diagnostic-client";
 const fields = new Set(["name", "email", "cpf", "institution", "role", "campus", "city", "uf", "country", "university", "consent", "regionDeclared", "whatsapp", "whatsappConsent"]);
 /** Renders no nodes; observes field identifiers/events and never reads field values. */
-export default function FormDiagnostics({ formRef, category }: { formRef: RefObject<HTMLFormElement>; category: string }) {
+export default function FormDiagnostics({ formRef, category, errorFields }: { formRef: RefObject<HTMLFormElement>; category: string; errorFields: string[] }) {
   const touched = useRef(new Set<string>()), started = useRef(false);
   useEffect(() => {
     const form = formRef.current; if (!form) return;
@@ -23,5 +23,11 @@ export default function FormDiagnostics({ formRef, category }: { formRef: RefObj
     document.addEventListener("visibilitychange", visibility); window.addEventListener("pagehide", exit);
     return () => { form.removeEventListener("focusin", focus, true); form.removeEventListener("input", input, true); form.removeEventListener("invalid", invalid, true); form.removeEventListener("submit", submit, true); document.removeEventListener("visibilitychange", visibility); window.removeEventListener("pagehide", exit); };
   }, [formRef, category]);
+  const previousErrors = useRef(new Set<string>());
+  useEffect(() => {
+    const current = new Set(errorFields.filter(field => fields.has(field)));
+    for (const field of current) if (!previousErrors.current.has(field)) emitSignDiagnostic("client_invalid", { category, field });
+    previousErrors.current = current;
+  }, [errorFields, category]);
   return null;
 }

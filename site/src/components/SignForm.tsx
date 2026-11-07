@@ -226,7 +226,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   return (
     <>
       <form ref={formRef} onSubmit={onSubmit} className="form" noValidate>
-        <FormDiagnostics formRef={formRef} category={category} />
+        <FormDiagnostics formRef={formRef} category={category} errorFields={[...Object.keys(errors).filter(k => !!errors[k]), ...(issue ? ["email"] : []), ...(cpfBad ? ["cpf"] : [])]} />
         <div className="form-head"><h2 className="form-title">{t("form.title")}</h2><HowTo onYes={() => startTour(category, true)} /></div>
         <div className="segmented three" data-tour="tabs" role="radiogroup" aria-label={t("cat.label")}>
           {cat("servidor", t("cat.servidor"))}{cat("apoiador", t("cat.apoiador"))}{cat("estrangeiro", t("cat.estrangeiro"))}

@@ -6,7 +6,7 @@ export function diagnosticTrace(): string | null {
   try { if (!active) { active = crypto.randomUUID(); count = 0; } return active; } catch { return null; }
 }
 export function emitSignDiagnostic(event: string, details: { category?: string; field?: string; outcome?: string } = {}) {
-  if (!["started", "field_touched", "browser_invalid", "submit_click", "page_hidden", "page_exit", "client_result"].includes(event)) return;
+  if (!["started", "field_touched", "browser_invalid", "client_invalid", "submit_click", "page_hidden", "page_exit", "client_result"].includes(event)) return;
   const trace = diagnosticTrace(); if (!trace || count++ >= 80) return;
   try {
     const body = JSON.stringify({ trace, event,

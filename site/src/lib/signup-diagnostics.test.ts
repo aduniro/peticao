@@ -82,3 +82,22 @@ test("concurrent diagnostic scopes remain independent and frontend never reads f
     const code = readFileSync(new URL("../components/FormDiagnostics.tsx", import.meta.url), "utf8"); assert.ok(!code.includes(".value") && !code.includes("FormData"));
   } finally { await c.db._closeDbForTests(); }
 });
+
+test("gate failures, provider codes and paginated summaries remain value-free", async () => {
+  const c = await setup();
+  try {
+    await c.D.recordSignupGate(randomUUID(), "invalid_json", 400);
+    await c.D.recordSignupGate(randomUUID(), "rate_limited", 429);
+    const { ProviderUnavailable } = await import("./cpf-check");
+    await assert.rejects(c.D.withSignupDiagnostics(randomUUID(), {}, async p => { await p!.lookup("synthetic"); return { status: 200, json: {} }; }, { name: "mock", lookup: async () => { throw new ProviderUnavailable("QUOTA_EXCEEDED"); } }));
+    await assert.rejects(c.D.withSignupDiagnostics(randomUUID(), {}, async p => { await p!.lookup("synthetic"); return { status: 200, json: {} }; }, { name: "mock", lookup: async () => { throw new ProviderUnavailable("PERSONAL_UNKNOWN_CODE"); } }));
+    const page = await c.D.signupDiagnosticPage(2, false, 0);
+    assert.equal(page.total, 4); assert.equal(page.records.length, 2); assert.equal(page.nextOffset, 2);
+    const next = await c.D.signupDiagnosticPage(2, false, 2);
+    assert.equal(next.nextOffset, null); assert.ok(!page.records.some(a => next.records.some(b => a.id === b.id)));
+    assert.equal(page.summary.find(s => s.classification === "invalid_json")?.count, 1);
+    const raw = JSON.stringify((await c.db.query("SELECT metadata FROM signup_diagnostics")).rows);
+    assert.ok(raw.includes("QUOTA_EXCEEDED")); assert.ok(raw.includes("OTHER")); assert.ok(!raw.includes("PERSONAL_UNKNOWN_CODE"));
+    assert.ok(c.D.parseBrowserDiagnostic({ trace: randomUUID(), event: "client_invalid", field: "email" }));
+  } finally { await c.db._closeDbForTests(); }
+});

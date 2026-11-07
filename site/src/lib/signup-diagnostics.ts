@@ -7,7 +7,7 @@ import { SAFE_EMAIL_RE } from "./email-syntax";
 import { encryptCpfCache, decryptCpfCache } from "./cpf-cache-crypto";
 import { classifyCpfName } from "./cpf-name";
 import policy from "@/content/name-validation-policy.json";
-import type { CpfProvider, CpfRecord } from "./cpf-check";
+import { ProviderUnavailable, type CpfProvider, type CpfRecord } from "./cpf-check";
 
 export const DIAGNOSTIC_DAYS = 30;
 export const validTrace = (v: unknown): v is string => typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
@@ -16,10 +16,11 @@ const methods = new Set(["nome", "mae", "nascimento"]);
 const phases = new Set(["name", "identity", "provider", "cache", "submission"]);
 const codes = new Set(["match", "mismatch", "partial", "complete", "identity_required", "name_mismatch", "locked", "unavailable", "method_unavailable", "bad_input", "mock_unknown", "not_found", "found", "hit", "miss", "bypass", "duplicate", "recreated", "created", "queued", "sent", "send_failed", "race_duplicate", "ignored"]);
 const fields = new Set(["name", "email", "cpf", "institution", "role", "campus", "city", "uf", "country", "university", "consent", "regionDeclared", "whatsapp", "whatsappConsent", "identity"]);
-const browserEvents = new Set(["started", "field_touched", "browser_invalid", "submit_click", "page_hidden", "page_exit", "client_result"]);
+const browserEvents = new Set(["started", "field_touched", "browser_invalid", "client_invalid", "submit_click", "page_hidden", "page_exit", "client_result"]);
 const outcomes = new Set(["accepted", "rejected", "identity_required", "network_error"]);
 const version = createHash("sha256").update(JSON.stringify(policy)).digest("hex");
-type Mark = { phase: string; code: string; method?: string; analysis?: ReturnType<typeof explainName> };
+const providerCodes = new Set(["MISSING_API_KEY", "INVALID_API_KEY", "TOKEN_EXPIRED", "PLAN_EXPIRED", "PLAN_INACTIVE", "QUOTA_EXCEEDED", "NO_KEY", "RATE_LIMITED", "DATABASE_ERROR", "DATABASE_UNAVAILABLE", "INVALID_RESPONSE", "EMPTY_RESPONSE", "CPF_RESPONSE_MISMATCH", "NETWORK", "BRIDGE_DOWN"]);
+type Mark = { providerCode?: string; phase: string; code: string; method?: string; analysis?: ReturnType<typeof explainName> };
 type Scope = { marks: Mark[]; };
 const scope = new AsyncLocalStorage<Scope>();
 
@@ -51,7 +52,12 @@ export function diagnosticProvider(provider: CpfProvider | null, declaredName: u
         const current = scope.getStore(); if (current && current.marks.length < 20) { const analysis = explainName(rec.nome, declaredName); current.marks.push({ phase: "name", code: analysis.match, analysis }); }
       }
       return rec;
-    } catch (error) { diagnosticMark("provider", "unavailable"); throw error; }
+    } catch (error) {
+      diagnosticMark("provider", "unavailable");
+      const marks = scope.getStore()?.marks, last = marks?.[marks.length - 1];
+      if (last?.phase === "provider") last.providerCode = error instanceof ProviderUnavailable && (providerCodes.has(error.code) || /^HTTP_[45][0-9]{2}$/.test(error.code)) ? error.code : "OTHER";
+      throw error;
+    }
   } };
 }
 async function schema(c: import("pg").PoolClient) {
@@ -112,5 +118,20 @@ export async function readSignupDiagnostics(limit: number, includeEmail: boolean
     const rows = (await c.query("SELECT id,trace_id,ts,source,classification,category,http_status,duration_ms,learning_index,policy_version,metadata,email_cipher FROM signup_diagnostics WHERE expires_at>now() ORDER BY ts DESC,id LIMIT $1", [Math.min(100,Math.max(1,limit))])).rows;
     await audit("signup_diagnostics_read", null, { count: rows.length, includeEmail }, c);
     return rows.map(({email_cipher,...r}) => ({...r, ...(includeEmail ? { email: email_cipher ? decryptCpfCache(email_cipher,`signup-contact:v1:${r.id}`) : null } : {})}));
+  });
+}
+
+/** Pre-parser failures contain no request body or contact. */
+export async function recordSignupGate(trace: unknown, classification: "rate_limited" | "invalid_json", status: number) {
+  return persistDiagnostic({ trace: validTrace(trace) ? trace : randomUUID(), source: "server", classification, category: null, status, ms: null, metadata: {} });
+}
+export async function signupDiagnosticPage(limit: number, includeEmail: boolean, offset: number) {
+  return tx(async c => {
+    await schema(c);
+    const summary = (await c.query("SELECT source,classification,count(*)::int count,count(DISTINCT trace_id)::int attempts FROM signup_diagnostics WHERE expires_at>now() GROUP BY source,classification ORDER BY source,classification")).rows;
+    const total = (await c.query("SELECT count(*)::int count FROM signup_diagnostics WHERE expires_at>now()")).rows[0].count as number;
+    const records = (await c.query("SELECT id,trace_id,ts,source,classification,category,http_status,duration_ms,learning_index,policy_version,metadata,email_cipher FROM signup_diagnostics WHERE expires_at>now() ORDER BY ts DESC,id LIMIT $1 OFFSET $2", [limit,offset])).rows.map(({email_cipher,...r}) => ({...r, ...(includeEmail ? { email: email_cipher ? decryptCpfCache(email_cipher,`signup-contact:v1:${r.id}`) : null } : {})}));
+    await audit("signup_diagnostics_read", null, { count: records.length, includeEmail, offset }, c);
+    return { records, summary, total, nextOffset: offset + records.length < total ? offset + records.length : null };
   });
 }
