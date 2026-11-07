@@ -71,3 +71,12 @@ Seguem pendentes os avisos em aprovação, feedback de contato/convites, revisã
 Validação atual: **265/265**, tipos e build aprovados (`stage01-cumulative-settings-domains.log`, `stage01-typecheck-settings-domains.log`, `stage01-build-settings-domains.log`). Regressões incluem rollback de auditoria/metadados, preservação dos demais dados, permissões/autor e domínio/subdomínio simultâneos. O teste do navegador passou nas seis larguras para pendência, falha de rede, preservação dos estados, recuperação e auditoria do autor; relatório `visual-settings/settings.json`.
 
 A preferência fictícia foi restaurada e a sessão revogada; servidor temporário 3032 encerrado, prévia 3031 preservada. Nenhuma consulta/curadoria de assinantes reais ou alteração da VPS/SQLite de revisão. Próxima revisão: registro de ações em `acoes/index.ts`, ainda posterior aos efeitos e separado da auditoria; não confundir com o journal do Terminal já corrigido. Demais telas/contratos, avisos em aprovação e Etapas 2–7 continuam no escopo; nenhum deploy autorizado.
+
+
+## Checkpoint seguinte — admissão e resultado da Central
+
+`3b5be27` registra ações de escrita antes dos efeitos, com identificador de pedido persistido, ator e auditoria. Efeitos de banco e resultado final são atômicos; aceite externo é separado de conclusão. Pedidos externos com resultado incerto registrado não são repetidos automaticamente. O aviso pós-commit do Terminal não bloqueia desligamento. Histórico anterior recebe estado legado sem reexecução.
+
+Validação atual: **277/277**, tipos, build e migração aprovados; suíte específica 27/27. Inclui perda simulada de resposta do commit, falhas em auditoria, operações opostas, aviso pendente e correlação do sinal temporário de publicação. Não foi executado deploy/serviço root. O navegador passou nas seis larguras para consultas/simulações, preservando campos e configurações. Relatório `visual-actions/actions.json`; contrato completo `docs/A6-CENTRAL-JOURNAL.md` do candidato.
+
+Ainda falta vincular execução à intenção/simulação única para retries após perda da resposta HTTP, além do histórico/fluxo controlado de conciliação. A trava não substitui essa idempotência. AV-5 e AV-6 foram submetidos ao dono: resultado indeterminado e descrição/dicas da janela. Nenhum desses textos foi inserido; a janela configurada não foi alterada. As demais pendências e Etapas 2–7 continuam no objetivo. Sem deploy ou alteração da VPS/revisão de CPFs; prévia 3031 ativa, servidor temporário 3032 encerrado.
