@@ -92,17 +92,25 @@ export const encerrarSessoesDoUsuario = async (userId: number) => { await query(
 
 // ---- redefinição de senha por e-mail ----
 export type EnviarEmail = (m: { to: string; subject: string; text: string; html: string }) => Promise<unknown>;
-async function enviarPadrao(m: { to: string; subject: string; text: string; html: string }) { const { sendMail } = await import("./mail"); await sendMail(m, "admin"); }
+async function enviarPadrao(m: { to: string; subject: string; text: string; html: string }) { const { sendMail } = await import("./mail"); return sendMail(m, "admin"); }
+
+export type ResetRequestResult = { estado: "sent" | "queued" } | { estado: "skipped"; motivo: "unavailable" | "quota" };
 
 /** Pede a redefinição: se o e-mail tem conta ativa, manda um link de uso único (30 min). Nunca revela se a conta existe. No máximo 3 pedidos por hora por conta. */
-export async function pedirReset(email: string, o: { origin: string; enviar?: EnviarEmail; convite?: boolean }): Promise<void> {
-  const u = (await query<any>("SELECT id, email, nome FROM admin_users WHERE email=$1 AND ativo", [normEmail(email)])).rows[0];
-  if (!u) return;
-  const recentes = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM admin_reset WHERE user_id=$1 AND criado_em > now() - interval '1 hour'", [u.id])).rows[0].n;
-  if (recentes >= 3) return;
-  const token = randomBytes(32).toString("base64url");
-  const minutos = o.convite ? CONVITE_MINUTOS : RESET_MINUTOS;
-  await query("INSERT INTO admin_reset(user_id,token_hash,expira_em) VALUES($1,$2,now() + ($3 || ' minutes')::interval)", [u.id, sha(token), String(minutos)]);
+export async function pedirReset(email: string, o: { origin: string; enviar?: EnviarEmail; convite?: boolean }): Promise<ResetRequestResult> {
+  const reserved = await tx(async c => {
+    const user = (await c.query<{ id: number; email: string; nome: string }>("SELECT id,email,nome FROM admin_users WHERE email=$1 AND ativo FOR UPDATE", [normEmail(email)])).rows[0];
+    if (!user) return { estado: "skipped" as const, motivo: "unavailable" as const };
+    const recentes = (await c.query<{ n: number }>("SELECT COUNT(*)::int n FROM admin_reset WHERE user_id=$1 AND criado_em > now() - interval '1 hour'", [user.id])).rows[0].n;
+    if (recentes >= 3) return { estado: "skipped" as const, motivo: "quota" as const };
+    const token = randomBytes(32).toString("base64url");
+    const minutos = o.convite ? CONVITE_MINUTOS : RESET_MINUTOS;
+    await c.query("INSERT INTO admin_reset(user_id,token_hash,expira_em) VALUES($1,$2,now() + ($3 || ' minutes')::interval)", [user.id, sha(token), String(minutos)]);
+    await audit("admin_reset_reservado", null, { id: user.id, convite: !!o.convite }, c);
+    return { estado: "reserved" as const, user, token };
+  });
+  if (reserved.estado === "skipped") return reserved;
+  const { user: u, token } = reserved;
   const link = `${o.origin.replace(/\/$/, "")}/admin/redefinir?token=${token}`;
   const primeiro = String(u.nome).split(" ")[0];
   const validade = o.convite ? "24 horas" : `${RESET_MINUTOS} minutos`;
@@ -110,8 +118,11 @@ export async function pedirReset(email: string, o: { origin: string; enviar?: En
   const fim = o.convite ? "Se você não esperava este convite, ignore este e-mail." : "Se não foi você, ignore este e-mail: a sua senha continua a mesma.";
   const texto = `Olá, ${primeiro}.\n\n${intro}:\n\n${link}\n\n${fim}`;
   const html = `<p>Olá, <strong>${primeiro.replace(/[<>&"]/g, "")}</strong>.</p><p>${intro.replace(/\(vale.*$/, "")}(vale ${validade} e só funciona uma vez):</p><p><a href="${link}" style="display:inline-block;padding:12px 22px;background:#0b6b45;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">${o.convite ? "Criar a minha senha" : "Redefinir minha senha"}</a></p><p style="color:#5b6b63;font-size:13px;">${fim}</p>`;
-  await (o.enviar ?? enviarPadrao)({ to: u.email, subject: o.convite ? "Convite para o painel da petição: crie a sua senha" : "Redefinir a senha do painel da petição", text: texto, html });
-  await audit(o.convite ? "admin_convite_enviado" : "admin_reset_pedido", null, { id: u.id });
+  const outcome = await (o.enviar ?? enviarPadrao)({ to: u.email, subject: o.convite ? "Convite para o painel da petição: crie a sua senha" : "Redefinir a senha do painel da petição", text: texto, html });
+  if (outcome !== undefined && outcome !== "sent" && outcome !== "queued") throw new Error("Unexpected password reset delivery result");
+  const estado = outcome === "queued" ? "queued" as const : "sent" as const;
+  await audit(o.convite ? "admin_convite_enviado" : "admin_reset_pedido", null, { id: u.id, estado });
+  return { estado };
 }
 
 export async function redefinirSenha(token: string, nova: string): Promise<{ ok: true } | { ok: false; erro: "token_invalido" | "senha_fraca"; detalhe?: string }> {

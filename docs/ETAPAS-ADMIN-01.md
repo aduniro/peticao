@@ -107,3 +107,17 @@ Verificação específica: **24/24** testes de contas/step-up/handler e tipos ap
 Relatório: `/mnt/dev/peticao/.cache/admin-audit-20261106/visual/contact-editor.json`; capturas `contact-editor-*.png`; log `stage01-contact-browser.log`. A captura de 320 px foi inspecionada. As capturas de página inteira conservam a posição de rolagem provocada pela interação; não devem ser usadas como prova de posição do cabeçalho no topo. Essa prova funcional não substitui comparação estética integral, teste de card/entrega real ou matriz de páginas por nível. A prévia foi reiniciada somente depois de o build terminar.
 
 Checkpoint funcional da confirmação extra: `aada17c`. Continuam pendentes os avisos já submetidos à aprovação, o resultado de convites/redefinições na interface, demais controles, QA das outras telas e Etapas 2–7. Nenhum deploy nesta rodada.
+
+## A4 — reserva de convites/redefinições e resultado interno
+
+`pedirReset` agora bloqueia a conta antes de contar os pedidos e grava token em hash + auditoria na mesma transação, antes do transporte. Convites e redefinições compartilham a quota de três pedidos/hora; nove chamadas simultâneas no teste reservaram somente três links distintos. Falha na reserva impede o envio; falha posterior conserva a reserva para auditoria/quota, sem alterar senha ou sessões existentes.
+
+O retorno interno distingue `sent`, `queued` e `skipped` (quota/conta indisponível). O transporte padrão passa a devolver o resultado real da fila; os testes legados com transporte injetado sem retorno continuam compatíveis. O registro de resultado inclui o estado, sem token em texto. A resposta pública de recuperação ignora esse detalhe: conta ausente, quota e falha de reserva produziram o mesmo status, redirecionamento e corpo. Esse ensaio não é uma prova de tempos idênticos.
+
+Validação: **260/260** testes cumulativos, tipos e build aprovados (`stage01-cumulative-reset.log`, `stage01-typecheck-reset.log`, `stage01-build-reset.log`). A suíte específica passou 27/27 antes da revisão final da fixture de segredos vazia; a rodada cumulativa inclui essa revisão. Tudo com dados fictícios, transporte injetado e sem chamadas reais de e-mail/Turnstile.
+
+Ainda falta consumir o resultado na interface administrativa: o handler antigo continua exibindo sucesso genérico em situações em que pode haver fila ou ausência de envio. Os dois novos avisos foram submetidos ao dono e ainda não foram inseridos. Não liberar com essa inconsistência. Continuam pendentes os demais avisos já propostos, controles e QA restantes, e Etapas 2–7.
+
+### Conferência atual da VPS
+
+Inventário por SSH somente leitura: 333 arquivos de código, sem diferenças desde a referência após a restauração dos formulários. Sete arquivos críticos do candidato foram comparados por SHA-256 com a VPS: formulário, consulta/cache CPF, identidade, assinatura e handlers de assinar/confirmar; todos idênticos. Evidência: `/mnt/dev/peticao/.cache/admin-audit-20261106/production-contract-reset.json`. Isso confere código, não dados de assinantes, valores de configuração ou compatibilidade integral de todos os módulos. Nenhuma alteração remota foi realizada.
