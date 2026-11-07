@@ -19,4 +19,8 @@ Evidências: `.cache/form-interaction-20261107/{targeted.log,cumulative.log,buil
 
 ## Publicação
 
-Pendente de registro após manifesto, backup, compilação remota, health interno/externo e verificação da interação publicada. Nenhum resultado de produção é presumido a partir dos testes locais.
+Concluída em **07/11/2026, 18:23:54 UTC (14:23:54 em Porto Velho)**. Backup privado de banco/app/stage validado em `/root/peticao-recovery/form-interaction-deploys/20261107T1825Z/`. Manifesto integral antes/depois confirmou exclusivamente os cinco arquivos listados; as rotas do backend, regras, diagnóstico, CSS, privacidade e configurações permaneceram iguais. Não houve migração, atualização de assinaturas nem restauração de banco.
+
+Build remoto e health interno aprovados: inicial, contador, privacidade e confirmação 200; WhatsApp continua 404. A checagem pública feita pela própria VPS sofreu 403 da Cloudflare e foi tratada como inconclusiva. Verificação externa da máquina local confirmou 200 nas quatro rotas públicas e 401 no diagnóstico administrativo sem sessão.
+
+Navegador no domínio público confirmou página 200, foco/blur/erro matemático de CPF, limpeza de categorias, novo texto institucional e prioridade Gmail. Sem erro de runtime. POSTs de teste foram interceptados, sem enviar assinatura, dados pessoais ou consulta CPF à produção. Evidências adicionais: `deployed-status.json`, `after-manifest.json`, `external-health.json`, `published-browser.json` e `published-browser.log` na pasta de QA. Os servidores temporários de QA serão encerrados; serviços de desenvolvimento anteriores permanecem preservados.
