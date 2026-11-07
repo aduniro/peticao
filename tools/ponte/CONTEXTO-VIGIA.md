@@ -1,5 +1,10 @@
 # Contexto fornecido ao assistente de e-mail
 
+## Formato obrigatório dos e-mails ao dono
+
+Por solicitação explícita de 07/11/2026, sempre enviar o conteúdo em **HTML renderizado**, com tabelas, títulos, listas e destaques formatados. Markdown serve como fonte, nunca como única versão enviada. Preservar alternativa em texto para compatibilidade. `enviar.mjs` converte automaticamente `texto`/Markdown em HTML quando o chamador não fornece HTML pronto; HTML já preparado é preservado. A dependência da Ponte está em `tools/ponte/package.json`/lockfile (`npm ci --prefix /mnt/dev/peticao/tools/ponte --ignore-scripts`, sem scripts). Não alterar textos públicos do app por causa desta regra. Destinatário dos relatórios e respostas continua exclusivamente **operator-1608598f41@example.invalid**, sem CC/BCC a terceiros.
+
+
 ## Estado mais recente — 60331c7
 
 457/457 testes cumulativos finais, migração (12 tabelas aditivas), build, tipos e HTTP compilado aprovados. Correção de e-mail pendente agora revalida a conta e a versão da linha após consultas externas; impede escrita sobre confirmação/edição concorrente; auditoria e gravação são atômicas. Sugestão obsoleta não é aplicada ao endereço novo. Fonte pública permanece igual a 77f33f7; prévia 3031 restaurada com banco/configuração fictícios anteriores e HTTP 200. Sem deploy, envio ou consulta CPF. AV-13 (aviso de conflito) foi perguntado e permanece pendente; usa mensagem já existente. AV-10 aprovado não aprova os demais avisos. Integração inteira continua incompleta: interfaces e versões desde a abertura da edição, histórico/arquivamento recuperável, conversas/editor, IAs/documentos e conferência final com VPS ainda precisam continuar conforme o plano original.

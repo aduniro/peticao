@@ -319,3 +319,12 @@ Passaram sete testes novos e typecheck. Primeira comparação cumulativa com env
 O relatório de experiência foi enviado somente a operator-1608598f41@example.invalid, assunto “Relatório: falhas de assinatura, quantos não concluíram e e-mails registrados”, aceite202 id6aef3b5199ec5ff9bc559ca5. O dono perguntou novamente e já foi informado do assunto, destinatário e link local, sem afirmar entrega confirmada.
 
 Admin-v2 permanece objetivo ativo separado: candidato aa29ea6 com WIP de resiliência da tabela de pendentes (460 cumulativos/build/tipos passaram; browser não iniciou por Node18 e depois socket Unix demasiado longo). Os lançadores restauraram3031; usar Node24 só no harness e TMPDIR curto `/mnt/dev/.qa-tmp`. Não perder esse WIP nem publicar junto ao pacote de logs.
+
+
+## Padrão de e-mail HTML e reenvio do relatório — 07/11
+
+A pedido explícito do dono, a Ponte passa a converter texto/Markdown em HTML automaticamente quando o chamador não fornece HTML pronto. Tabelas semânticas com estilo inline e largura adaptável; títulos, listas, destaques e código renderizados. Conteúdo HTML ativo, links inseguros e imagens de rastreio de origem Markdown são neutralizados; HTML preparado explicitamente pelos chamadores existentes foi preservado. Dependência local marcada/pinada em tools/ponte/package.json e lockfile, compatível com Node18; não altera dependências do site ou a VPS.
+
+Passaram nove testes de formatação/Vigia e renderização do relatório em 390/1000px, sem transbordamento da página. As três tabelas e todas as linhas do original foram preservadas. Artefatos na cache report-html. Serviço de respostas reiniciado quando o processo estava sem filho, ambos os serviços conferidos ativos e nova rodada sem falhas.
+
+Relatório completo reenviado somente a operator-1608598f41@example.invalid, assunto “Relatório em HTML: falhas de assinatura, quantos não concluíram e e-mails registrados”. Provedor aceitou202, ID6aef443ed616a40bbee66bab; não confundir aceite com entrega confirmada. Esta tarefa não publica o backend de diagnóstico em preparação nem o admin-v2.

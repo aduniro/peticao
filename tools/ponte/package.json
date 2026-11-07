@@ -1,0 +1,8 @@
+{
+  "name": "peticao-ponte-mail-format",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "marked": "15.0.12"
+  }
+}

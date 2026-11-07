@@ -1,5 +1,10 @@
 # Ponte de e-mail: protocolo
 
+## Formato obrigatório dos e-mails ao dono
+
+Por solicitação explícita de 07/11/2026, sempre enviar o conteúdo em **HTML renderizado**, com tabelas, títulos, listas e destaques formatados. Markdown serve como fonte, nunca como única versão enviada. Preservar alternativa em texto para compatibilidade. `enviar.mjs` converte automaticamente `texto`/Markdown em HTML quando o chamador não fornece HTML pronto; HTML já preparado é preservado. A dependência da Ponte está em `tools/ponte/package.json`/lockfile (`npm ci --prefix /mnt/dev/peticao/tools/ponte --ignore-scripts`, sem scripts). Não alterar textos públicos do app por causa desta regra. Destinatário dos relatórios e respostas continua exclusivamente **operator-1608598f41@example.invalid**, sem CC/BCC a terceiros.
+
+
 ## Canal e informes do Codex — decisão de 06/11/2026
 
 O dono adiou o WAHA. E-mail é o canal de comunicação remota autorizado.
