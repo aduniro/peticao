@@ -126,3 +126,8 @@ O contrato compilado `batch-reservation` foi revisado com porta 3033/banco 54349
 schema exclusivo, destinatários `.test`, mail dev e assinatura fictícia habilitada
 somente no processo de QA. A lista fechada passa a incluí-lo. Checksum vigente:
 `b4ba9dca7f32842f9f289d9ad4e2e50ae1ec2855b817d1006a207c3a3a7110dd`.
+
+O contrato `batch-reconciliation` foi revisado para conciliar metadados de aceite
+com documentos e provedores fictícios, sem reenvio. Os contratos usam caixas dev
+individuais. Checksum vigente do roteiro Python:
+`8a31d4c02cd11e19d555ac7b4f07134d9976bf25411a49bfc80ea82867cc7930`.

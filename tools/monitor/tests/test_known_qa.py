@@ -19,7 +19,7 @@ def test_changed_helper_is_not_authorized(monkeypatch,tmp_path):
  assert not known_qa.allowed({'command':f'python3 {fake} tests','cwd':str(CANDIDATE)})
 
 
-@pytest.mark.parametrize('args',['--document-tests','--ai-tests','--mail-tests','--contact-tests','--tests','--contracts mail-recovery mail-preview','--contracts ai-executor','--contracts batch-control','--contracts batch-control batch-reservation'])
+@pytest.mark.parametrize('args',['--document-tests','--ai-tests','--mail-tests','--contact-tests','--tests','--contracts mail-recovery mail-preview','--contracts ai-executor','--contracts batch-control','--contracts batch-control batch-reservation','--contracts batch-reservation batch-reconciliation'])
 def test_reviewed_consolidation_exact_scope(args):
  assert allowed({'command':f"/bin/bash -lc 'python3 tools/admin-qa/consolidation.py {args}'",'cwd':str(CANDIDATE)})
 
