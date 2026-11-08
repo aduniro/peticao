@@ -40,6 +40,8 @@ def main(argv=None):
   else:
    if args.plano:p.error('--plano exige tarefa')
    Supervisor(store).scan()
+   from .known_qa import approve_known
+   approve_known(store)
    from .notifications import deliver_one
    deliver_one(store)
   print(json.dumps({'supervision':store.rows('SELECT * FROM supervision'),'workflow':store.rows('SELECT task_id,id,title,state,checkpoint,attempts FROM workflow_steps ORDER BY task_id,position')},ensure_ascii=False));return

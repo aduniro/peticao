@@ -33,6 +33,14 @@ provedor não prova entrega. Resultado inconclusivo de envio não é reenviado
 automaticamente. O temporizador também pode escoar um alerta com o coletor parado.
 O monitor completo e o simples consultam o mesmo estado das tarefas supervisionadas.
 
+Pedidos do sandbox para o helper local `verify_admin_candidate.py` podem usar a
+autorização de QA já concedida: somente comando exato, cinco modos conhecidos,
+candidato específico, checksum fixo do helper e execução vinculada ao plano ativo.
+Cada decisão é auditada; tarefa pausada, helper alterado, comandos compostos,
+outros caminhos, publicação ou mudança de permissões não recebem essa liberação.
+Isso não concede autorização geral ao agente nem aceita pedidos de alteração de
+arquivo ou de ações na VPS.
+
 ## Comandos
 
 ```sh
@@ -71,7 +79,7 @@ Validar com os testes em `tools/monitor/tests/test_supervision.py`, a regressão
 
 ## Validação inicial — 08/11/2026
 
--37 testes Python aprovados (18 de supervisão e19 de regressão), mais oito do
+- 37 testes Python aprovados (18 de supervisão e19 de regressão), mais oito do
   monitor simples; testes de concorrência, perda de executor, PID ainda vivo,
   repetição limitada, pausa, conclusão antecipada, relatórios, argv literal,
   verificador real e envio único/inconclusivo.
@@ -86,3 +94,9 @@ Validar com os testes em `tools/monitor/tests/test_supervision.py`, a regressão
 Esses resultados validam o mecanismo inicial; não concluem o admin-v2 nem provam
 recuperação de todo tipo de falha. Estado do plano e atividade devem continuar
 sendo acompanhados; alterações posteriores exigem regressão correspondente.
+
+No ensaio operacional, o sandbox pediu autorização para o QA local já aprovado.
+Foi acrescentada a regra restrita por checksum/candidato/comando, coberta por três
+testes adicionais (40 testes Python distintos, mais oito do monitor simples).
+A ativação ocorreu pelo detector independente, sem reiniciar o executor admin-v2.
+Comandos fora dessa regra continuam sujeitos às aprovações normais.
