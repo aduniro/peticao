@@ -42,6 +42,8 @@ Informar início, retomada, interrupção e conclusão, além de atualizações 
 
 ## Referências operacionais
 
+Decisão de 08/11/2026: o dono respondeu “Aprovo os textos e escolho 30 dias” às perguntas específicas sobre AV-15 (arquivados, restauração e aviso de conflito de remetentes) e retenção do conteúdo de e-mails, anexos e rascunhos administrativos. Aprovação restrita a esses itens; não se estende aos demais avisos ou ao deploy. Política de conteúdo em `docs/POLITICA-RETENCAO-CONTEUDO-ADMIN.md`. Preservar metadados de auditoria, assinaturas, hashes, datas, decisões e documentos originais.
+
 - Plano integral: `docs/PLANO-INTEGRACAO-ADMIN-VPS.md`.
 - Checkpoints e resultados: `docs/ADMIN-V2-PROGRESSO-20261106.md`.
 - Contexto dos agentes do Vigia: `tools/monitor/CONTEXTO.md`.
