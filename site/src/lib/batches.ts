@@ -81,7 +81,7 @@ export async function createBatch(kind: "partial" | "final"): Promise<Batch | nu
       [seq, kind, nS, rows.length - nS - nE, nE, listHash]
     );
     const id = ins.rows[0].id;
-    await c.query("UPDATE signatures SET batch_id=$1 WHERE status='confirmed' AND batch_id IS NULL", [id]);
+    await c.query("UPDATE signatures SET batch_id=$1 WHERE status='confirmed' AND batch_id IS NULL AND id=ANY($2::int[])", [id, rows.map(row => row.id)]);
     await audit("batch_created", null, { batchId: id, seq, kind, n: rows.length, listHash }, c);
     return { id, seq, rows, nS, nE, listHash };
   });
