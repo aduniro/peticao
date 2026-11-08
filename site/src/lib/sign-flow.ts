@@ -98,17 +98,17 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
   if (await isEmailBlacklisted(input.email)) { await logRequest("email_blocked", ctx.ip, { email: input.email, detail: "tentativa com e-mail da lista negra" }); return invalidEmail(input.email, ctx, "email_not_found", input.category === "estrangeiro"); }
 
 
-  // Only an approved IFES email redirects a supporter to the servidor form.
+  // Approved IFES and exact EBSERH domains redirect to the servidor form.
   if (input.category === "apoiador") {
     const k = await institutionalKind(input.email);
-    if (acceptsServerDomain(k)) return ASK({ errors: { email: "apoiador_institutional_email" } });
+    if (acceptsServerDomain(k, emailDomain(input.email))) return ASK({ errors: { email: "apoiador_institutional_email" } });
   }
 
-  // New servidor requests require a domain explicitly approved as IFES.
+  // New servidor requests require approved IFES or the explicit EBSERH exception.
   // Public-sector suffixes, other curated kinds and generic .edu.br do not qualify.
   if (input.category === "servidor") {
     const kind = await institutionalKind(input.email);
-    if (!acceptsServerDomain(kind)) {
+    if (!acceptsServerDomain(kind, emailDomain(input.email))) {
       const d = emailDomain(input.email);
       const v = await validateEmailField(input.email, "servidor"); // mesmo veredito do formulário: "e-mail institucional inválido" (com sugestão) ou "use e-mail de órgão público"
       const provavelErro = !v.ok && !!v.suggest; // domínio com cara de erro de digitação não vai para a fila de curadoria (evita lixo como "ufpa.edu.bt")

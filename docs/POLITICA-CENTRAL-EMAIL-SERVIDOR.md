@@ -1,6 +1,6 @@
 # Política central de e-mail do formulário Servidor(a)
 
-Versão: `2026-11-08.approved-ifes-only-v1`. Aprovada pelo proprietário em08/11/2026
+Versão: `2026-11-08.approved-ifes-ebserh-v2`. Aprovada pelo proprietário em08/11/2026
 para próximos cadastros. Implementação em candidato isolado; ainda não publicada.
 
 Somente domínio classificado como `ifes`, aprovado na curadoria ou na semente
@@ -9,9 +9,16 @@ aprovação quando aplicável; rejeições específicas e regras de domínio dis
 continuam prevalecendo. Não basta ter .edu.br, .gov.br, .leg.br, .jus.br, .mp.br,
 ser órgão federal/estadual/municipal ou ter aprovação genérica `outro`.
 
+Exceção expressamente solicitada pelo proprietário: Empresa Brasileira de Serviços
+Hospitalares (EBSERH, marca HU Brasil), somente os domínios exatos
+`ebserh.gov.br` e `hubrasil.gov.br`. Não libera subdomínios, sufixos semelhantes
+ou outros .gov.br. A empresa não é reclassificada como IFES. A elegibilidade do
+e-mail não atribui automaticamente um hospital, campus ou município ao assinante.
+O catálogo hospitalar local é independente; o fluxo de escolha será tratado depois.
+
 O endpoint do campo e o processamento do cadastro usam a mesma função central
 `acceptsServerDomain`. Chamada direta à API não contorna a regra. Sugestões do
-backend para Servidor usam apenas a lista aprovada de IFES. Outros domínios podem
+backend para Servidor usam a lista aprovada de IFES e os dois domínios da EBSERH. Outros domínios podem
 seguir como Apoiador(a), sujeitos às validações desse fluxo; o novo enquadramento
 não dispensa CPF, correspondência do nome, nascimento/mãe, consentimento ou limites.
 
@@ -23,6 +30,9 @@ Textos aprovados para campo/modal, com traduções equivalentes:
 
 - “Servidor(a): use o e-mail institucional de uma universidade federal ou instituto federal. Para outros e-mails, assine como Apoiador(a).”
 - “Este e-mail é de uma instituição federal de ensino: assine pelo formulário de Servidor(a).”
+
+A atualização destes dois textos para mencionar EBSERH foi enviada para aprovação
+separada em08/11; os textos públicos não foram alterados nesta etapa.
 
 Não há migração/reclassificação/exclusão de assinaturas existentes, mudança de
 hashes/IDs/datas ou aprovação automática de domínios. Decisões de revisão de CPF
