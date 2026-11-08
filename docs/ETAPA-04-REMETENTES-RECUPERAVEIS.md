@@ -22,3 +22,16 @@ Suíte cumulativa, build e HTTP compilado/navegador estão em execução sequenc
 ## Interface e continuidade
 
 CSS e rótulos existentes preservados. A forma atual de conflito reutiliza “Remetente inválido.” até a aprovação do aviso específico AV-15. A confirmação extra redireciona para a tela existente; não cria outro texto de autenticação. A apresentação de arquivados/restauração e sua validação permanecem pendentes. Ainda não conclui a Etapa4 ou o painel completo. Nenhum deploy, merge ou escrita na VPS/revisão local de CPFs.
+
+## Atualização posterior — AV15 aprovado e restauro consolidado
+
+AV15 foi aprovado explicitamente, conforme `ADMIN-AVISOS-PARA-APROVACAO.md`.
+O código herdado na cadeia local inclui rota/interface de Arquivados/Restaurar e
+conflito aprovado. O ensaio atual deste candidato passou em390/1440px, no banco
+fictício54349: arquivar, filtrar e restaurar o mesmo registro por formulário
+nativo, preservando ID, cifra, data, estado e revisão. Também comprovou rollback,
+confirmação extra/origem, versão obsoleta e conta revogada; zero exceções e nenhum
+e-mail/WhatsApp criado. Relatório lido:
+`/tmp/admin-consolidation-mt5_ik22/whatsapp-senders.json`. A migração estrita13
+preservou catálogo e microssegundos. Nenhum WAHA ativado. Isso encerra este gate
+de restauro do catálogo, não a Etapa4 inteira ou o admin-v2 completo.

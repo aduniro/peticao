@@ -50,6 +50,10 @@ if args.tests:
     files = sorted(str(p) for folder in ['src/lib', 'src/i18n'] for p in (site / folder).glob('*.test.ts'))
     command = ['node', 'scripts/with-db.mjs', 'node', '--import', 'tsx', '--test', '--test-concurrency=1', *files]
 else:
+    # Use the runtime paired with the selected Playwright (requires Node >=20).
+    browser_node = Path('/home/barre/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin')
+    assert (browser_node / 'node').is_file()
+    env['PATH'] = str(browser_node) + os.pathsep + env.get('PATH', '')
     command = ['node', 'scripts/with-db.mjs', 'node', '../tools/admin-qa/consolidation.mjs', *(args.contracts or [])]
 with (scratch / 'validation.log').open('w') as log:
     result = subprocess.run(command, cwd=site, env=env, stdout=log, stderr=subprocess.STDOUT)

@@ -21,3 +21,17 @@ Cinco regressões específicas, total de 35 direcionados e tipos passaram após 
 Minutas persistentes ainda precisam ser implementadas com o mesmo limite, versão e autoria. Cumulativa, build e teste do cron compilado serão conferidos antes de fechar este bloco; não declarar a retenção inteira concluída somente porque os testes de biblioteca passaram.
 
 Somente ambientes fictícios podem habilitar o recurso durante o desenvolvimento. Preparar a configuração de produção para a publicação autorizada; não alterar `/etc/peticao/app.env` nem outros arquivos da VPS agora. As aprovações de AV-15 e retenção não aprovam os demais AVs.
+
+## Consolidação observada no candidato de domínios —08/11
+
+O contrato compilado de cron/prévia passou neste candidato, com fixture de tipo
+`confirmacao` e apenas dados fictícios. Relatório atual lido:
+`/tmp/admin-consolidation-mt5_ik22/content-retention.json`, saída0 no runner.
+Comprovados autenticação, indisponibilidade lógica antes da limpeza, remoção de
+corpos/anexos nas cópias operacionais, preservação de originais/metadados,
+idempotência do expurgo e ausência de envio. Os cinco testes de biblioteca também
+passaram na primeira cumulativa, que falhou em outros nove testes de ambiente;
+a repetição cumulativa corrigida está em execução, sem presumir seu resultado.
+Build/tipos deste candidato já passaram. Minutas persistentes/AV16 e tratamento
+de backups/provedores permanecem fora desta comprovação. Detalhes e falhas
+históricas preservados em `ETAPA-CONSOLIDACAO-CHECKPOINT-20261108.md`.

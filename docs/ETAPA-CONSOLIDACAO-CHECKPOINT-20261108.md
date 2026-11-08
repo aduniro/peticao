@@ -41,9 +41,12 @@ Sem edição em outros worktrees, VPS, avisos públicos ou regras CPF.
    parou antes de abrir o Chromium: senha da conta fictícia continha seu e-mail.
    Corrigida apenas a fixture. Sem evidência visual aprovada ainda.
 4. Execução de retomada de `consolidation.py --contracts referrals-browser
-   content-retention whatsapp-senders` foi recusada na aprovação antes de criar
-   processo. Nenhum novo job iniciou nessa tentativa. As sessões próprias55130
-   e39669 terminaram com saída1; não alegar QA autônomo ativo.
+   content-retention whatsapp-senders` não iniciou após expirar a espera na
+   supervisão. O executor retornou `rejected by user`, mas o responsável esclareceu
+   posteriormente que não houve recusa do dono e reafirmou a autorização local.
+   As sessões próprias55130 e39669 terminaram com saída1; não houve job novo
+   naquela tentativa. Retomada autorizada em execução na sessão33946, evidências
+   em `/tmp/admin-consolidation-qfa9ooqj`; aguardar seu resultado real.
 
 ## Retenção e restauro
 
@@ -69,9 +72,9 @@ Expurgo operacional não comprova exclusão de backups ou cópias dos provedores
 O runner local novo exige portas3033/54349 livres, configuração vazia, banco
 fictício novo por execução, mail dev e Chromium indicado pelo dono. Não reutiliza
 listener desconhecido e encerra apenas o servidor/banco que ele próprio cria.
-Não editar o helper externo nem outro worktree para contornar a recusa.
+Não editar o helper externo nem outro worktree para alterar permissões.
 
-Quando a execução desse roteiro estiver liberada:
+Comandos autorizados pelo responsável, com aprovação técnica do executor se exigida:
 
 ```
 python3 tools/admin-qa/consolidation.py --contracts referrals-browser content-retention whatsapp-senders
@@ -88,5 +91,35 @@ dono (196 testes/build/tipos/4 cenários); nenhuma integração realizada nesta
 etapa. A eventual integração LOCAL exige etapa separada e nova regressão,
 preservando os commits presentes. Nenhuma autorização de deploy/merge com VPS.
 
-Estado: **blocked para os ensaios pendentes pela recusa de execução**, trabalho
-preservado; etapa e admin-v2 completo ainda não concluídos.
+## Ensaios pendentes retomados e aprovados
+
+A execução autorizada em `/tmp/admin-consolidation-qfa9ooqj` encontrou Node18.19.1
+incompatível com o Playwright indicado (exige Node20+). Corrigido apenas o runner
+de HTTP/navegador para usar Node24.22.1 do mesmo runtime. A cumulativa conserva
+Node18.19.1, o runtime dos testes anteriores. Nenhuma guarda foi alterada.
+
+`python3 tools/admin-qa/consolidation.py --contracts referrals-browser
+content-retention whatsapp-senders` passou com saída0. Evidências atuais em
+`/tmp/admin-consolidation-mt5_ik22/`, relatórios lidos e conferidos:
+
+- `referrals-browser.json`:390/1440px, rótulo/UUID preservados após falha anterior
+  ao commit e resposta perdida posterior ao commit. Repetição conclui um único
+  código/evento sem renovar o ledger. Zero exceções e overflow no documento.
+  Capturas `referrals-390.png`/`referrals-1440.png` inspecionadas visualmente;
+  formulário e textos existentes preservados. A tabela móvel conserva o padrão
+  existente de rolagem/contenção, sem intervenção de estética.
+- `content-retention.json`: cron autenticado, leitura logicamente vencida antes
+  da limpeza, remoção de corpo/anexos/cópias operacionais, originais/metadados
+  preservados, expurgo repetido sem efeito extra e nenhum envio.
+- `whatsapp-senders.json`:390/1440px, arquivar/filtrar/restaurar o mesmo registro,
+  versão, cifra, data e estado preservados; rollback de auditoria, origem,
+  confirmação extra, conflito de versão e revogação comprovados. Nenhuma mensagem
+  de e-mail/WhatsApp criada e nenhuma ativação de WAHA.
+
+O runner encerrou seus servidores e banco ao terminar. A próxima execução
+`python3 tools/admin-qa/consolidation.py --tests` iniciou depois, sessão74840,
+log completo em `/tmp/admin-consolidation-okkfug48/validation.log`.
+
+Estado desta retomada: **continue**, aguardando resultado real da cumulativa.
+Etapa e admin-v2 completo ainda não concluídos. A exceção EXATA de `ebserh.gov.br`
+e `hubrasil.gov.br` está em outro candidato, sem integração neste checkpoint.

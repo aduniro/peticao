@@ -42,6 +42,18 @@ conferido nesta sessão; não é inferência baseada no commit.
 
 O navegador dessa rodada parou na criação da conta fictícia: a senha continha
 o local do e-mail e foi corretamente recusada. A fixture foi corrigida, mas a
-repetição não iniciou porque a aprovação da execução foi recusada. Não há prova
+repetição não iniciou porque a espera expirou na supervisão (conforme esclarecido
+pelo responsável; não houve recusa do dono). Não há prova
 de navegador aprovada para o novo formulário neste checkpoint.
 Ver `ETAPA-CONSOLIDACAO-CHECKPOINT-20261108.md` para todas as pendências.
+
+## Retomada autorizada — navegador aprovado
+
+O responsável esclareceu a expiração da espera anterior e autorizou os comandos
+locais. Após adequar apenas o runner ao Node24 do Playwright, o navegador passou
+em390/1440px: erro antes do commit e resposta perdida após gravar preservam o
+rótulo/UUID; a tentativa explícita seguinte devolve o código existente, sem
+duplicar evento nem alterar datas do ledger. Sucesso limpa somente a intenção
+concluída da aba. Zero exceções; capturas inspecionadas, sem mudar estilos/textos.
+Evidências em `/tmp/admin-consolidation-mt5_ik22/referrals-browser.json` e capturas
+na mesma pasta. A cumulativa corrigida ainda está em execução neste checkpoint.
