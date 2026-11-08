@@ -33,3 +33,15 @@ Texto validado só volta na resposta corrente, com revisão humana obrigatória,
 A primeira rodada encontrou alias SQL inválido para o dia UTC; corrigido com alias explícito. Passaram 30 direcionados; mais 12 do executor passaram após acrescentar revogação em andamento. Cobrem concorrência/quota global, UUID repetido, incerteza, contexto/conta alterados, falha de auditoria, corpos inválidos/excessivos e isolamento. Passaram também os 450 testes cumulativos, migração no esquema legado com 12 tabelas aditivas, build e tipos em sequência. Evidências privadas: `stage05-executor-cumulative.log`, `stage05-executor-schema.log`, `stage05-executor-build.log` e `stage05-executor-typecheck-serial.log`, em `.cache/admin-audit-20261106/` do repositório principal.
 
 O HTTP compilado passou: verificou portas desativadas, permissões e metadados persistidos no banco fictício. A geração positiva foi simulada pela biblioteca com dependências internas que o navegador não pode fornecer; a rota HTTP de geração permaneceu desarmada. Evidências: `stage05-executor-runtime.log` e `runtime-ai-executor/ai-executor.json`. A prévia 3031 foi restaurada com o banco e a configuração fictícia anteriores e `/admin` respondeu 200. Não equivale a chamada real ao provedor. Interfaces, outros provedores, minutas/editor/retencão, informes e demais etapas seguem pendentes. AV-10 aprovado; demais textos sem aprovação inferida. Não publicar sem autorização final.
+
+## Complemento08/11 — revisão conferida dentro da conclusão
+
+Fechada a janela entre conferência de contexto e gravação de resultado: a
+finalização toma a mesma trava da configuração e exige revisão/habilitação
+atuais. Mudança tardia descarta texto e conserva uso/quota/UUID, sem nova chamada.
+Fixture de corrida identifica a query exata bloqueada pelo PID controlador e
+limpa snapshot estatístico; mantém timeout e asserção, sem esconder a falha
+inicial36/37. Repetição37/37, build, tipos e contrato HTTP desarmado passaram.
+Detalhes, hashes, commits anteriores separados e matriz de pendências em
+`ETAPA-05-FINALIZACAO-CONFIGURACAO-20261108.md`. Sem alteração de interface ou
+protocolo externo, cofre, credencial real, envio, cobrança ou VPS.

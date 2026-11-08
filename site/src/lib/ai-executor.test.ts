@@ -163,3 +163,46 @@ test("API exige Edição, aceita somente intenção/UUID e não permite armar se
     await c.db._closeDbForTests();
   }
 });
+
+test("configuração alterada depois da conferência do contexto descarta a minuta ao finalizar, sem perder uso nem repetir chamada", async () => {
+  for (const scenario of ["disable", "new_profile"] as const) {
+    const c = await setup();
+    let release!: () => void, pending: ReturnType<typeof c.E.generateAiDraft> | undefined;
+    try {
+      let began!: () => void, calls = 0;
+      const started = new Promise<void>(resolve => { began = resolve; }), held = new Promise<void>(resolve => { release = resolve; });
+      const fetcher: typeof fetch = async (url, init) => { calls++; began(); await held; return c.fetcher(url, init); };
+      const id = randomUUID();
+      pending = c.E.generateAiDraft(c.input, c.prepared.proof, id, c.actor, { ...c.deps, fetch: fetcher });
+      await started;
+      await c.db.tx(async control => {
+        // Finalization checks this actor after validating the context. Hold that exact gate.
+        await control.query("SELECT id FROM admin_users WHERE id=$1 FOR UPDATE", [c.actor.userId]);
+        const controlPid = (await control.query<{ pid: number }>("SELECT pg_backend_pid() pid")).rows[0].pid;
+        const finalizationQuery = "SELECT nivel FROM admin_users WHERE id=$1 AND lower(email)=$2 AND ativo AND nivel IN ('edicao','exclusao','total') FOR SHARE";
+        release();
+        let blocked = false;
+        for (let attempt = 0; attempt < 100; attempt++) {
+          // Statistics are otherwise cached for this entire transaction; poll actual lock ownership.
+          await control.query("SELECT pg_stat_clear_snapshot()");
+          const waiters = await control.query<{ pid: number }>("SELECT pid FROM pg_stat_activity WHERE datname=current_database() AND query=$2 AND wait_event_type='Lock' AND $1::int=ANY(pg_blocking_pids(pid))", [controlPid, finalizationQuery]);
+          blocked = waiters.rowCount === 1 && Number.isInteger(waiters.rows[0].pid) && waiters.rows[0].pid !== controlPid;
+          if (blocked) break;
+          await new Promise(resolve => setTimeout(resolve, 5));
+        }
+        assert.ok(blocked, "finalization reached actor lock after context validation");
+        const next = structuredClone(c.config);
+        if (scenario === "disable") next.enabled = false; else next.profiles.painel.model = "qa-next-model-not-real";
+        assert.ok((await c.C.saveAiConfiguration(next, 1, c.total)).ok);
+      });
+      const result = await pending; assert.ok(!result.ok); assert.equal(result.error, "context_changed");
+      assert.deepEqual((await c.db.query("SELECT state,error_code,input_tokens,output_tokens,reserved_output_tokens FROM admin_ai_requests")).rows[0], { state: "discarded", error_code: "context_changed", input_tokens: 100, output_tokens: 20, reserved_output_tokens: 1024 });
+      const current = await c.A.prepareAiContext(c.input); assert.ok(current.ok);
+      assert.ok(!(await c.E.generateAiDraft(c.input, current.proof, id, c.actor, { ...c.deps, fetch: fetcher })).ok);
+      assert.equal(calls, 1); assert.equal((await c.db.query("SELECT 1 FROM admin_ai_requests")).rowCount, 1);
+      const records = JSON.stringify((await c.db.query("SELECT row_to_json(r) data FROM admin_ai_requests r UNION ALL SELECT row_to_json(a) FROM audit_log a")).rows);
+      assert.ok(!records.includes("QA_GENERATED_NEVER_PERSIST")); assert.ok(!records.includes(FAKE_KEY));
+      assert.ok((await c.db.verifyAuditChain()).ok);
+    } finally { release?.(); await pending?.catch(() => {}); await c.db._closeDbForTests(); }
+  }
+});

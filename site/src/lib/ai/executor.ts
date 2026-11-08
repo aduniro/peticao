@@ -37,16 +37,25 @@ async function reserve(requestId: string, context: Prepared, actor: Actor) {
     return { ok: true as const, id };
   });
 }
-async function finish(id: string, state: "completed" | "rejected" | "uncertain" | "discarded", error: string | null, usage?: Usage, responseId?: string, actor?: Actor) {
+async function finish(id: string, state: "completed" | "rejected" | "uncertain" | "discarded", error: string | null, usage?: Usage, responseId?: string, actor?: Actor, expectedConfigurationRevision?: number) {
   return tx(async c => {
     await c.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='3000ms'");
     const actorChanged = state === "completed" && !!actor && !await actorLevel(c, actor, true);
     if (actorChanged) { state = "discarded"; error = "actor_changed"; }
+    let configurationChanged = false;
+    if (state === "completed") {
+      // Close the gap after context validation: configuration changes serialize with finalization.
+      // Keep the same actor -> configuration lock order as reservation/configuration writes.
+      await c.query("SELECT pg_advisory_xact_lock(hashtext(current_schema()),hashtext($1))", [CONFIG_KEY]);
+      const configuration = await readConfigurationWith(c);
+      configurationChanged = !configuration.ok || !configuration.config.enabled || configuration.revision !== expectedConfigurationRevision;
+      if (configurationChanged) { state = "discarded"; error = "context_changed"; }
+    }
     const changed = await c.query(`UPDATE admin_ai_requests SET state=$2,finished_at=now(),error_code=$3,input_tokens=$4,output_tokens=$5,provider_response_id=$6
       WHERE id=$1 AND state='reserved' RETURNING id`, [id, state, error, usage?.inputTokens ?? null, usage?.outputTokens ?? null, responseId ?? null]);
-    if (!changed.rowCount) return { changed: false, actorChanged: false };
+    if (!changed.rowCount) return { changed: false, actorChanged: false, configurationChanged: false };
     await audit("admin_ai_request_finished", null, { id, state, errorCode: error, inputTokens: usage?.inputTokens ?? null, outputTokens: usage?.outputTokens ?? null }, c);
-    return { changed: true, actorChanged };
+    return { changed: true, actorChanged, configurationChanged };
   });
 }
 type Dependencies = { armed?: boolean; credential?: () => string | null; fetch?: typeof fetch };
@@ -88,9 +97,10 @@ export async function generateAiDraft(input: unknown, proof: unknown, requestId:
     if (!draft.ok) { await finish(reservation.id, "discarded", draft.error, undefined, responseId); return { ok: false as const, error: draft.error, id: reservation.id }; }
     const current = await validateAiContext(input, proof);
     if (!current.ok) { await finish(reservation.id, "discarded", "context_changed", draft.usage, responseId); return { ok: false as const, error: "context_changed", id: reservation.id }; }
-    const finalized = await finish(reservation.id, "completed", null, draft.usage, responseId, actor);
+    const finalized = await finish(reservation.id, "completed", null, draft.usage, responseId, actor, context.configurationRevision);
     if (!finalized.changed) return { ok: false as const, error: "result_uncertain", id: reservation.id };
     if (finalized.actorChanged) return { ok: false as const, error: "forbidden", id: reservation.id };
+    if (finalized.configurationChanged) return { ok: false as const, error: "context_changed", id: reservation.id };
     return { ok: true as const, id: reservation.id, draft: draft.draft, usage: draft.usage, requiresHumanReview: true, persisted: false, sent: false };
   } catch {
     // Could be after provider acceptance or while committing metadata. The durable UUID prevents resending.

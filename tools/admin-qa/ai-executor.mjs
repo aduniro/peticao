@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 const base = new URL(process.env.QA_BASE_URL ?? "http://missing"), database = new URL(process.env.DATABASE_URL ?? "http://missing");
-assert.equal(base.hostname, "127.0.0.1"); assert.equal(base.port, "3032"); assert.equal(database.hostname, "127.0.0.1"); assert.equal(database.port, "54345"); assert.equal(database.pathname, "/peticao");
+assert.equal(base.hostname, "127.0.0.1"); assert.equal(database.hostname, "127.0.0.1"); assert.ok(base.port === "3032" && database.port === "54345" || base.port === "3033" && database.port === "54349"); assert.equal(database.pathname, "/peticao");
 assert.equal(process.env.PREVIEW_MODE, "1"); assert.equal(process.env.ADMIN_NO_PASSWORD, "0"); assert.equal(process.env.MAIL_PROVIDER, "dev"); assert.ok(process.env.QA_CRON_SECRET); assert.ok(process.env.QA_OUTPUT_DIR);
 const bootstrap = await fetch(new URL("/admin", base)); assert.equal(bootstrap.status, 200); assert.ok((await bootstrap.text()).includes("/dev/outbox"));
 const dm = await import("../../site/src/lib/db.ts"), um = await import("../../site/src/lib/admin-users.ts"), cm = await import("../../site/src/lib/ai/configuration.ts"), db = dm.default ?? dm, U = um.default ?? um, C = cm.default ?? cm;
