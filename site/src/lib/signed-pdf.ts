@@ -37,10 +37,11 @@ export async function verifyIcpBrasil(pdf: Buffer, fetchImpl: typeof fetch = fet
   try {
     const r = await fetchImpl(url, { method: "POST", headers: { "content-type": "application/pdf", ...(process.env.ICP_VALIDATOR_TOKEN ? { authorization: `Bearer ${process.env.ICP_VALIDATOR_TOKEN}` } : {}) }, body: new Uint8Array(pdf), signal: AbortSignal.timeout(30_000) });
     if (!r.ok) return { valid: false, reason: `Validador respondeu ${r.status}.` };
-    const j = (await r.json()) as { valid?: boolean; signer?: string; cnpj?: string };
+    const j = (await r.json()) as { valid?: unknown; signer?: string; cnpj?: string };
+    const valid = j.valid === true;
     const want = (process.env.ICP_EXPECTED_CNPJ ?? "15883671000115").replace(/\D/g, ""); // CNPJ da ADUNIR
-    if (j.valid && j.cnpj && j.cnpj.replace(/\D/g, "") !== want) return { valid: false, reason: "A assinatura é válida, mas não é do e-CNPJ da ADUNIR." };
-    return { valid: !!j.valid, signer: j.signer, reason: j.valid ? undefined : "Assinatura inválida segundo o validador." };
+    if (valid && j.cnpj && j.cnpj.replace(/\D/g, "") !== want) return { valid: false, reason: "A assinatura é válida, mas não é do e-CNPJ da ADUNIR." };
+    return { valid, signer: j.signer, reason: valid ? undefined : "Assinatura inválida segundo o validador." };
   } catch {
     return { valid: false, reason: "Validador ICP-Brasil indisponível." };
   }
