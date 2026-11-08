@@ -181,3 +181,24 @@ test("PDF assinado: verificação estrutural, validador plugável e bloqueio em 
   await dbmod._closeDbForTests();
   rmSync(_o, { recursive: true, force: true });
 });
+
+test("preparo do PDF reverte bytes/hash/estado se a auditoria falhar sem avisar o aprovador", async () => {
+  const db = await import("./db"); await db._openForTests("t_batch_prepare_audit_atomicity");
+  const B = await import("./batches"), M = await import("./mail");
+  const outbox = join(tmpdir(), `qa-batch-prepare-${process.pid}`); process.env.MAIL_OUTBOX_DIR = outbox; rmSync(outbox, { recursive: true, force: true });
+  try {
+    await seed(db, 1);
+    const signatures = async () => (await db.query("SELECT row_to_json(s)::jsonb-'batch_id' data FROM signatures s ORDER BY id")).rows;
+    const before = await signatures();
+    await db.query("CREATE FUNCTION qa_prepare_fault() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='batch_prepared' THEN RAISE EXCEPTION 'QA prepare audit fault'; END IF; RETURN NEW; END $$; CREATE TRIGGER qa_prepare_fault BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION qa_prepare_fault()");
+    await assert.rejects(B.createBatch("final"), /QA prepare audit fault/);
+    const row = (await db.query("SELECT id,status,pdf,pdf_sha256,signature_kind FROM batches")).rows[0];
+    assert.equal(row.status, "preparing"); assert.equal(row.pdf === null, true, "PDF must not commit without its audit"); assert.equal(row.pdf_sha256, null); assert.equal(row.signature_kind, null);
+    assert.deepEqual(await signatures(), before);
+    assert.equal((await db.query("SELECT batch_id FROM signatures")).rows[0].batch_id, row.id);
+    assert.equal((await db.query("SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM batch_sends UNION ALL SELECT 1 FROM mail_outbox")).rowCount, 0);
+    assert.equal((await db.query("SELECT 1 FROM audit_log WHERE event='batch_prepared'")).rowCount, 0);
+    assert.equal((await db.query("SELECT 1 FROM audit_log WHERE event='batch_prepare_failed'")).rowCount, 1);
+    assert.ok((await db.verifyAuditChain()).ok);
+  } finally { await M.waitForBackgroundMail(); await db._closeDbForTests(); rmSync(outbox, { recursive: true, force: true }); }
+});

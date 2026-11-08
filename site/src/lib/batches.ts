@@ -92,8 +92,10 @@ export async function createBatch(kind: "partial" | "final"): Promise<Batch | nu
     const unsigned = await buildBatchPdf(rows, { seq, kind, generatedAt: new Date().toISOString(), listHash, nServidor: nS, nApoiador: rows.length - nS - nE, nEstrangeiro: nE, signedNote: signerNote(), origin: config.appUrl(), ...badgeCounts(rows) });
     const signed = await signPdf(unsigned);
     const sha = createHash("sha256").update(signed.bytes).digest("hex"); // hash dos bytes do arquivo, igual ao `sha256sum`
-    await query("UPDATE batches SET pdf=$1, pdf_sha256=$2, signature_kind=$3, status='prepared' WHERE id=$4", [Buffer.from(signed.bytes), sha, signed.kind, id]);
-    await audit("batch_prepared", null, { batchId: id, pdfSha256: sha, signatureKind: signed.kind });
+    await tx(async client => {
+      await client.query("UPDATE batches SET pdf=$1, pdf_sha256=$2, signature_kind=$3, status='prepared' WHERE id=$4", [Buffer.from(signed.bytes), sha, signed.kind, id]);
+      await audit("batch_prepared", null, { batchId: id, pdfSha256: sha, signatureKind: signed.kind }, client);
+    });
   } catch (e) {
     await audit("batch_prepare_failed", null, { batchId: id, error: String(e).slice(0, 200) });
     throw e;
