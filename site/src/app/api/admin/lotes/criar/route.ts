@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 /** Fecha manualmente o lote final (acumulado). */
 export async function POST(req: NextRequest) {
-  const bloqueio = await exigirNivel(req, "total");
+  const bloqueio = await exigirNivel(req, "total", 120, { stepup: true });
   if (bloqueio) return bloqueio;
   const url = new URL("/admin/lotes", requestOrigin(req.headers));
   try {

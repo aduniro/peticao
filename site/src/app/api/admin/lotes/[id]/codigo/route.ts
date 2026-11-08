@@ -7,7 +7,7 @@ import { requestOrigin } from "@/lib/net";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const bloqueio = await exigirNivel(req, "total");
+  const bloqueio = await exigirNivel(req, "total", 120, { stepup: true });
   if (bloqueio) return bloqueio;
   const url = new URL("/admin/lotes", requestOrigin(req.headers));
   if (!rateLimit(`codigo:${params.id}`, 5, 15 * 60_000)) url.searchParams.set("msg", "Aguarde antes de pedir outro código.");

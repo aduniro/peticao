@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 /** Recebe o PDF do lote já assinado pelo responsável (e-CNPJ). */
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const bloqueio = await exigirNivel(req, "total");
+  const bloqueio = await exigirNivel(req, "total", 120, { stepup: true });
   if (bloqueio) return bloqueio;
   const url = new URL("/admin/lotes", requestOrigin(req.headers));
   const file = (await req.formData()).get("file");

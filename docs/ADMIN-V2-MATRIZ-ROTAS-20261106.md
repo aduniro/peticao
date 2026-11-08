@@ -28,13 +28,13 @@ Inventário estático do checkout local; não é prova de publicação ou execu�
 | /api/admin/identidade/zerar | POST | edicao | Não neste handler |
 | /api/admin/indicacoes | POST | edicao | Não neste handler |
 | /api/admin/login | POST | Fluxo próprio: login, recuperação ou saída | Não neste handler |
-| /api/admin/lotes/[id]/aprovar | POST | total | Não neste handler |
-| /api/admin/lotes/[id]/assinado | POST | total | Não neste handler |
-| /api/admin/lotes/[id]/cancelar | POST | total | Não neste handler |
-| /api/admin/lotes/[id]/codigo | POST | total | Não neste handler |
+| /api/admin/lotes/[id]/aprovar | POST | total | Sim — candidato local |
+| /api/admin/lotes/[id]/assinado | POST | total | Sim — candidato local |
+| /api/admin/lotes/[id]/cancelar | POST | total | Sim — candidato local |
+| /api/admin/lotes/[id]/codigo | POST | total | Sim — candidato local |
 | /api/admin/lotes/[id]/pdf | GET | total | Não neste handler |
-| /api/admin/lotes/criar | POST | total | Não neste handler |
-| /api/admin/lotes/pausa | POST | total | Não neste handler |
+| /api/admin/lotes/criar | POST | total | Sim — candidato local |
+| /api/admin/lotes/pausa | POST | total | Sim — candidato local; versão e ator |
 | /api/admin/monitor | GET | leitura | Não neste handler |
 | /api/admin/monitor/visitante/[vid] | GET | leitura | Não neste handler |
 | /api/admin/painel | GET | leitura | Não neste handler |

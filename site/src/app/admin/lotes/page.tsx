@@ -1,6 +1,7 @@
 import { sessaoAdmin } from "@/lib/admin";
-import { nivelOk } from "@/lib/admin-users";
-import { listBatches, sendingEnabled } from "@/lib/batches";
+import { nivelOk, stepupValido } from "@/lib/admin-users";
+import { listBatches } from "@/lib/batches";
+import { batchSendingControl } from "@/lib/batch-sending-control";
 import { config } from "@/lib/config";
 import { redirect } from "next/navigation";
 import { brasilia } from "@/lib/time";
@@ -12,8 +13,9 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
   const sessao = await sessaoAdmin();
   if (!sessao) redirect("/admin");
   if (!nivelOk(sessao.nivel, "total")) redirect("/admin?erro=nivel");
+  if (!stepupValido(sessao)) redirect("/admin/confirmar?volta=/admin/lotes");
   const batches = await listBatches();
-  const enabled = await sendingEnabled();
+  const control = await batchSendingControl(sessao), enabled = control.enabled;
   return (
     <main className="v2-pagina">
       <div className="v2-secao">
@@ -30,7 +32,7 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
       </div>
       <div style={{ margin: "12px 0" }}>
         Envios: <strong>{enabled ? "ativos" : "PAUSADOS"}</strong>{" "}
-        <form method="post" action="/api/admin/lotes/pausa" style={{ display: "inline" }}><button>{enabled ? "Pausar todos os envios" : "Retomar envios"}</button></form>{" "}
+        <form method="post" action="/api/admin/lotes/pausa" style={{ display: "inline" }}><input type="hidden" name="version" value={control.version} /><input type="hidden" name="enabled" value={String(!enabled)} /><button>{enabled ? "Pausar todos os envios" : "Retomar envios"}</button></form>{" "}
         <form method="post" action="/api/admin/lotes/criar" style={{ display: "inline" }}><button>Fechar lote final agora</button></form>
       </div>
       <div className="table-scroll"><table>

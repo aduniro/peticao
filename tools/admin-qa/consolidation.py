@@ -13,7 +13,8 @@ parser.add_argument('--tests', action='store_true')
 parser.add_argument('--contact-tests', action='store_true')
 parser.add_argument('--mail-tests', action='store_true')
 parser.add_argument('--ai-tests', action='store_true')
-parser.add_argument('--contracts', nargs='+', choices=['referrals', 'referrals-browser', 'content-retention', 'whatsapp-senders', 'contact-history', 'mail-recovery', 'mail-preview', 'ai-executor'])
+parser.add_argument('--document-tests', action='store_true')
+parser.add_argument('--contracts', nargs='+', choices=['referrals', 'referrals-browser', 'content-retention', 'whatsapp-senders', 'contact-history', 'mail-recovery', 'mail-preview', 'ai-executor', 'batch-control'])
 args = parser.parse_args()
 assert Path.cwd().resolve() == root
 assert root.parent == Path('/mnt/dev/peticao/.cache/admin-integration')
@@ -44,7 +45,7 @@ env.update(NODE_ENV='production', TMPDIR=str(scratch), DEV_DB_PORT='54349',
 assert len(env['HASH_PEPPER']) >= 32
 env['MAIL_OUTBOX_DIR'] = str(scratch / 'outbox')
 print(f'Fictitious QA evidence: {scratch}', flush=True)
-if args.tests or args.contact_tests or args.mail_tests or args.ai_tests:
+if args.tests or args.contact_tests or args.mail_tests or args.ai_tests or args.document_tests:
     # Preview changes production guards; fixed provider lists override tests' fake adapters.
     # These flags belong to HTTP preview, not to the cumulative test process.
     for key in ['PREVIEW_MODE', 'ADMIN_NO_PASSWORD', 'MAIL_PROVIDERS', 'MAIL_ARCHIVE_RETENTION']:
@@ -57,6 +58,8 @@ if args.tests or args.contact_tests or args.mail_tests or args.ai_tests:
         files = [str(site / 'src/lib' / name) for name in ['mail-recovery.test.ts', 'mail-preview.test.ts', 'mail-archive.test.ts', 'mail-history.test.ts', 'mail-rollback.test.ts', 'admin-content-retention.test.ts']]
     if args.ai_tests:
         files = [str(site / 'src/lib' / name) for name in ['knowledge.test.ts', 'ai-context.test.ts', 'ai-executor.test.ts', 'contact-campus-review.test.ts']]
+    if args.document_tests:
+        files = [str(site / 'src/lib' / name) for name in ['batch-sending-control.test.ts', 'batches.test.ts', 'batches-foreign.test.ts']]
     command = ['node', 'scripts/with-db.mjs', 'node', '--import', 'tsx', '--test', '--test-concurrency=1', *files]
 else:
     # Use the runtime paired with the selected Playwright (requires Node >=20).

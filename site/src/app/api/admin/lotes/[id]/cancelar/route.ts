@@ -6,7 +6,7 @@ import { requestOrigin } from "@/lib/net";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const bloqueio = await exigirNivel(req, "total");
+  const bloqueio = await exigirNivel(req, "total", 120, { stepup: true });
   if (bloqueio) return bloqueio;
   const ok = await cancelBatch(Number(params.id));
   const url = new URL("/admin/lotes", requestOrigin(req.headers));
