@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+"""Control only the isolated VPS/form comparison laboratory."""
+from pathlib import Path
+import json,os,shutil,socket,subprocess,sys,time,urllib.request
+ROOT=Path(__file__).resolve().parent
+COMPOSE=["docker","compose","-p","peticao-laboratorio","-f",str(ROOT/"compose.json")]
+def command(args,**kwargs):return subprocess.run(args,cwd=ROOT,check=True,**kwargs)
+def log_run(args,path,env=None):
+    with path.open("w") as log:
+        process=subprocess.Popen(args,cwd=ROOT,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+        for line in process.stdout:log.write(line);log.flush();print(line,end="",flush=True)
+        if process.wait():raise RuntimeError("Falha; veja "+str(path))
+def prepare():
+    for name,source in [("a",ROOT/"app"),("b",ROOT/"formularios/app")]:
+        target=ROOT/"context"/name
+        if target.exists():shutil.rmtree(target)
+        shutil.copytree(source,target,ignore=shutil.ignore_patterns(".next",".next-dev","node_modules",".env*","*.tsbuildinfo"))
+        for p in [target,*target.rglob("*")]:
+            p.chmod(0o755 if p.is_dir() or p.stat().st_mode&0o111 else 0o644)
+def build():
+    prepare()
+    for variant in ["a","b"]:
+        print("BUILD",variant,flush=True)
+        log_run(["docker","build","--memory","2g","--cpu-period","100000","--cpu-quota","100000","-t","peticao-laboratorio:"+variant,
+                 "-f",str(ROOT/"tools/Dockerfile"),str(ROOT/"context"/variant)],ROOT/"runtime"/("build-"+variant+".log"))
+def fixtures():
+    for variant in ["a","b"]:
+        command(COMPOSE+["exec","-T","app-"+variant,"node","--import","tsx","/lab/fixtures.mjs"])
+def start():
+    state=subprocess.run(COMPOSE+["ps","-q"],capture_output=True,text=True,check=True).stdout.strip()
+    if not state:
+        for port in [3040,3041]:
+            with socket.socket() as s:
+                if s.connect_ex(("127.0.0.1",port))==0:raise RuntimeError("Porta ocupada; não reutilizar outro serviço: "+str(port))
+    command(COMPOSE+["up","-d","--no-build"])
+    for port in [3040,3041]:
+        for _ in range(180):
+            try:
+                if urllib.request.urlopen(f"http://127.0.0.1:{port}/",timeout=3).status==200:break
+            except Exception:time.sleep(.5)
+        else:raise RuntimeError("Timeout aguardando versão "+str(port))
+    print("A — VPS: http://127.0.0.1:3040/\nB — Formulários: http://127.0.0.1:3041/\nRelatório: "+str(ROOT/"reports/index.html"),flush=True)
+def units(variant):
+    service="app-"+variant;dbservice="db-"+variant
+    exists=subprocess.run(COMPOSE+["exec","-T",dbservice,"psql","-U","peticao","-d","postgres","-Atc","SELECT 1 FROM pg_database WHERE datname='qa_unit'"],capture_output=True,text=True,check=True).stdout.strip()
+    if not exists:command(COMPOSE+["exec","-T",dbservice,"createdb","-U","peticao","qa_unit"])
+    site=ROOT/("app" if variant=="a" else "formularios/app")
+    files=sorted(str(p.relative_to(site)) for folder in ["src/lib","src/i18n"] for p in (site/folder).glob("*.test.ts"))
+    args=COMPOSE+["exec","-T",service,"env","-i","PATH=/usr/local/bin:/usr/bin:/bin","HOME=/tmp","NODE_ENV=test","MAIL_PROVIDER=dev",
+                 f"DATABASE_URL=postgres://peticao:QA-LAB-DB-FICTITIOUS@{dbservice}:5432/qa_unit",
+                 "SECRETS_DIR=/empty","PETICAO_CONFIG_DIR=/empty","CREDENTIALS_DIRECTORY=/empty",
+                 "node","--import","tsx","--test","--test-concurrency=1",*files]
+    log_run(args,ROOT/"reports"/("unit-"+variant+".log"))
+def status():command(COMPOSE+["ps"])
+def main():
+    action=sys.argv[1] if len(sys.argv)>1 else "iniciar"
+    if action in ["iniciar","start"]:start()
+    elif action=="build":build()
+    elif action=="status":status()
+    elif action=="parar":command(COMPOSE+["stop"])
+    elif action=="dados":fixtures()
+    elif action=="unitarios":units(sys.argv[2] if len(sys.argv)>2 else "b")
+    elif action=="testes":
+        start();fixtures()
+        command(["/home/barre/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",str(ROOT/"tools/browser.mjs")])
+        command(["python3",str(ROOT/"tools/report.py")])
+    elif action=="relatorio":print(str(ROOT/"reports/index.html"))
+    else:raise SystemExit("Uso: comparar [iniciar|status|parar|build|dados|unitarios a|unitarios b|testes|relatorio]")
+if __name__=="__main__":main()

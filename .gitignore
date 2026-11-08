@@ -6,3 +6,8 @@ private/
 secrets/
 node_modules/
 .next/
+
+/formularios/
+/runtime/
+/reports/
+/context/
