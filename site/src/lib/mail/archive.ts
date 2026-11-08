@@ -6,6 +6,8 @@ import { toStored, fromStored, frozenReplyTo } from "./payload";
 import { contentFingerprint, decryptMail, encryptMail, fitsArchive, serializeMail, validMessageId } from "./archive-codec";
 import { lockEventLinks, reconcileReceiptEvents } from "./message-events";
 import { validAccountScope } from "./event-scope";
+import { ADMIN_CONTENT_RETENTION_DAYS, adminContentDeadline } from "../admin-retention-policy";
+import type { PoolClient } from "pg";
 type Channel = "transactional" | "marketing";
 type State = "prepared" | "sending" | "accepted" | "rejected" | "indeterminate" | "queued";
 /** Explicit content retention; absence archives metadata only. Nothing chooses a policy for the operator. */
@@ -15,8 +17,10 @@ export async function prepareMessage(mail: Mail, kind: string, channel: Channel,
   const id = randomUUID(), request = options.requestKey ? hmac("mail-request-v1:" + options.requestKey) : null;
   const fits = options.archive ? fitsArchive(mail) : false;
   const cipher = options.archive && fits ? encryptMail(id,serializeMail(mail)) : null;
-  const expires = options.archive ? options.archive.until : null;
-  if (expires !== null && (!(expires instanceof Date) || !Number.isFinite(expires.getTime()))) throw new Error("archive_parameters");
+  const requested = options.archive ? options.archive.until : null;
+  if (requested !== null && (!(requested instanceof Date) || !Number.isFinite(requested.getTime()))) throw new Error("archive_parameters");
+  // The approved maximum also applies to old internal callers requesting unlimited retention.
+  const expires = options.archive ? new Date(Math.min(requested?.getTime() ?? Infinity, adminContentDeadline().getTime())) : null;
   return tx(async c => {
     if (request) await c.query("SELECT pg_advisory_xact_lock(hashtext(current_schema()),hashtext($1))", ["mail-request:" + request]);
     if (request) {
@@ -98,7 +102,7 @@ export async function linkOutbox(outboxId: number, messageId: string, options: {
 /** Internal only: callers must authorize before decrypting; no plaintext API is provided here. */
 export async function archivedContent(id: string) {
   if (!validMessageId(id)) return {state:"not_found" as const};
-  const row = (await query<{content_state:string;content_cipher:string|null;valid:boolean}>("SELECT content_state,content_cipher,(content_expires_at IS NULL OR content_expires_at>clock_timestamp()) valid FROM mail_messages WHERE id=$1",[id])).rows[0];
+  const row = (await query<{content_state:string;content_cipher:string|null;valid:boolean}>("SELECT content_state,content_cipher,LEAST(COALESCE(content_expires_at,created_at+make_interval(days=>$2)),created_at+make_interval(days=>$2))>clock_timestamp() valid FROM mail_messages WHERE id=$1",[id,ADMIN_CONTENT_RETENTION_DAYS])).rows[0];
   if (!row) return {state:"not_found" as const};
   if (!row.valid || row.content_state==="expired") return {state:"expired" as const};
   if (row.content_state==="oversize") return {state:"oversize" as const};
@@ -106,14 +110,17 @@ export async function archivedContent(id: string) {
   try { return {state:"stored" as const,mail:decryptMail(id,row.content_cipher)}; } catch { return {state:"unreadable" as const}; }
 }
 
-export async function purgeArchivedContent(limit=100) {
+export async function purgeArchivedContent(limit=100, client?: PoolClient) {
   if (!Number.isInteger(limit)||limit<1||limit>1000) throw new Error("archive_parameters");
-  return tx(async c=>{
-    const rows=(await c.query<{id:string}>(`WITH expired AS (SELECT id FROM mail_messages WHERE content_state='stored' AND content_expires_at<=clock_timestamp() ORDER BY content_expires_at LIMIT $1 FOR UPDATE SKIP LOCKED)
-      UPDATE mail_messages m SET content_cipher=NULL,content_state='expired' FROM expired WHERE m.id=expired.id RETURNING m.id`,[limit])).rows;
+  const work = async (c: PoolClient) => {
+    const rows=(await c.query<{id:string}>(`WITH expired AS (SELECT id FROM mail_messages WHERE content_state='stored'
+      AND LEAST(COALESCE(content_expires_at,created_at+make_interval(days=>$2)),created_at+make_interval(days=>$2))<=clock_timestamp()
+      ORDER BY created_at,id LIMIT $1 FOR UPDATE SKIP LOCKED)
+      UPDATE mail_messages m SET content_cipher=NULL,content_state='expired' FROM expired WHERE m.id=expired.id RETURNING m.id`,[limit,ADMIN_CONTENT_RETENTION_DAYS])).rows;
     if(rows.length)await audit("mail_message_content_expired",null,{messages:rows.map(r=>r.id)},c);
     return rows.length;
-  });
+  };
+  return client ? work(client) : tx(work);
 }
 
 

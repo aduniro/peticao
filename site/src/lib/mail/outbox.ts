@@ -2,6 +2,7 @@ import { query, tx } from "../db";
 import type { Mail } from "./index";
 import { fromStored, toStored, type Stored } from "./payload";
 import { queueMessage } from "./archive";
+import { ADMIN_CONTENT_RETENTION_DAYS } from "../admin-retention-policy";
 
 /**
  * Fila de reenvio: e-mail que nenhum provedor conseguiu enviar fica guardado e é tentado de novo, com intervalos crescentes,
@@ -26,7 +27,8 @@ export async function drainOutbox(send: (m: Mail, kind: string, context?: {id:nu
   const out: DrainResult = { tried: 0, sent: 0, failed: 0, pending: 0 };
   const due = await tx(async (c) => {
     const r = await c.query<{ id: number; kind: string; payload: Stored; message_id: string|null; attempts: number; created_at: string }>(
-      `SELECT id,kind,payload,message_id,attempts,created_at FROM mail_outbox WHERE status='pending' AND next_attempt_at <= now() ORDER BY id LIMIT $1 FOR UPDATE SKIP LOCKED`, [limit]);
+      `SELECT id,kind,payload,message_id,attempts,created_at FROM mail_outbox WHERE status='pending' AND next_attempt_at <= now()
+        AND created_at>now()-make_interval(days=>$2) ORDER BY id LIMIT $1 FOR UPDATE SKIP LOCKED`, [limit, ADMIN_CONTENT_RETENTION_DAYS]);
     // "reserva" cada item por 2 minutos, para duas execuções simultâneas não enviarem duas vezes
     if (r.rows.length) await c.query("UPDATE mail_outbox SET next_attempt_at = now() + interval '2 minutes' WHERE id = ANY($1::int[])", [r.rows.map((x) => x.id)]);
     return r.rows;
@@ -35,7 +37,7 @@ export async function drainOutbox(send: (m: Mail, kind: string, context?: {id:nu
     out.tried++;
     try {
       await send(fromStored(row.payload), row.kind, {id:row.id,messageId:row.message_id});
-      const changed = await query("UPDATE mail_outbox SET status='sent', sent_at=now(), attempts=attempts+1, last_error=NULL WHERE id=$1 AND status='pending'", [row.id]);
+      const changed = await query("UPDATE mail_outbox SET status='sent', sent_at=now(), attempts=attempts+1, last_error=NULL WHERE id=$1 AND (status='pending' OR status='failed' AND last_error='content_expired' AND payload='{}'::jsonb)", [row.id]);
       if (changed.rowCount) out.sent++;
     } catch (e) {
       const attempts = row.attempts + 1;

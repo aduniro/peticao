@@ -3,6 +3,7 @@ import { contentFingerprint } from "./archive-codec";
 import { frozenReplyTo,withReplyTo } from "./payload";
 import type { Mail } from "./index";
 import type { TransportReceipt } from "./receipt";
+import { ADMIN_CONTENT_RETENTION_DAYS, adminContentDeadline } from "../admin-retention-policy";
 export class MailJournalError extends Error {}
 export class MailTransportRejected extends Error {}
 export type DeliveryJournal = {begin(provider:string,from:string):Promise<{id?:string;alreadyAccepted?:boolean}>;finish(id:string,accepted:boolean,error?:unknown,receipt?:TransportReceipt):Promise<void>};
@@ -10,9 +11,8 @@ export type DeliveryJournal = {begin(provider:string,from:string):Promise<{id?:s
 export function archivePolicy() {
   const value=process.env.MAIL_ARCHIVE_RETENTION;
   if (!value) return undefined;
-  if (value==="forever") return {until:null};
-  if (value!=="30"&&value!=="90") throw new MailJournalError("archive_policy_invalid");
-  return {until:new Date(Date.now()+Number(value)*86400000)};
+  if (value!==String(ADMIN_CONTENT_RETENTION_DAYS)) throw new MailJournalError("archive_policy_invalid");
+  return {until:adminContentDeadline()};
 }
 export async function prepareRecorded(mail:Mail,kind:string,channel:"transactional"|"marketing",requestKey?:string) {
   return prepareMessage(mail,kind,channel,{requestKey,archive:archivePolicy()});

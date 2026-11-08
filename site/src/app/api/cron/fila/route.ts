@@ -6,6 +6,7 @@ import { config } from "@/lib/config";
 import { safeEqual } from "@/lib/security";
 import { purgeExpiredCpfCache } from "@/lib/cpf-cache";
 import { drainTriages } from "@/lib/contact-triage/jobs";
+import { purgeAdminContent } from "@/lib/admin-content-retention";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +15,10 @@ export async function POST(req: NextRequest) {
   const secret = config.cronSecret();
   const got = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
   if (!secret || !safeEqual(got, secret)) return new NextResponse("Não autorizado", { status: 401 });
+  const contentExpired = await purgeAdminContent(200).catch(() => ({ error: "retention_unavailable" }));
   const r = await drainMailOutbox(30);
   const contactReplies = await drainContactReplies(5);
   const cacheExpired = await purgeExpiredCpfCache().catch(() => null);
   const contactTriage = await drainTriages(3).catch(() => ({ error: "triage_unavailable" }));
-  return NextResponse.json({ ...r, contactTriage, stats: await outboxStats(), cpfCacheExpired: cacheExpired, contactReplies });
+  return NextResponse.json({ ...r, contactTriage, stats: await outboxStats(), cpfCacheExpired: cacheExpired, contactReplies, contentExpired });
 }

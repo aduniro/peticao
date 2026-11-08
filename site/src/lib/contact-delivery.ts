@@ -4,6 +4,7 @@ import { sendMail, type Mail } from "./mail";
 import { assertSendAllowed, MailBlockedError } from "./mail/guard";
 import { isSuppressed, MailSuppressedError } from "./mail/suppression";
 import { SAFE_EMAIL_RE } from "./email-syntax";
+import { ADMIN_CONTENT_RETENTION_DAYS } from "./admin-retention-policy";
 
 export type ContactDeliveryState = "legacy" | "prepared" | "blocked" | "sending" | "accepted" | "uncertain" | "rejected";
 type Job = { id: number; contact_id: number; rodada: number; versao: "texto" | "card"; por: string; payload: Mail; attempt_id: string; estado: ContactDeliveryState };
@@ -19,8 +20,9 @@ function validPayload(value: unknown): value is Mail {
 async function claim(id?: number): Promise<Job | null> {
   return tx(async c => {
     const row = (await c.query<Job>(`SELECT r.* FROM contact_replies r WHERE r.estado='prepared' AND r.due_at <= now()
+      AND r.criada_em>now()-make_interval(days=>$2)
       AND ($1::int IS NULL OR r.id=$1) AND (r.versao='texto' OR EXISTS(SELECT 1 FROM contact_replies t WHERE t.contact_id=r.contact_id AND t.rodada=r.rodada AND t.versao='texto' AND t.estado='accepted'))
-      ORDER BY r.due_at,r.id LIMIT 1 FOR UPDATE OF r SKIP LOCKED`, [id ?? null])).rows[0];
+      ORDER BY r.due_at,r.id LIMIT 1 FOR UPDATE OF r SKIP LOCKED`, [id ?? null, ADMIN_CONTENT_RETENTION_DAYS])).rows[0];
     if (!row) return null;
     const attempt = randomBytes(16).toString("hex");
     await c.query("UPDATE contact_replies SET estado='sending',started_at=now(),attempt_id=$2,attempts=attempts+1 WHERE id=$1", [row.id, attempt]);

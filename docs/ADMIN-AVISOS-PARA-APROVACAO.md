@@ -82,4 +82,4 @@ Objetivo: substituir códigos no resumo por legenda compreensível, preservando 
 
 ## AV-15 — remetentes arquivados e conflito de versão (aprovado em08/11/2026)
 
-Pergunta nativa enviada em08/11 antes de alterar textos: “Arquivados”, “Restaurar”, “Remetente restaurado.” e “Este registro mudou desde que a página foi aberta. Atualize a página antes de tentar novamente.” Resposta explícita: “Aprovo os textos e escolho30dias”. O contexto eram estes quatro textos e a pergunta separada de retenção. Autoriza integrar e testar estes controles no candidato; não aprova outros AVs, avisos públicos, WAHA, envio, deploy ou merge com a VPS.
+Pergunta nativa enviada em08/11 antes de alterar textos: “Arquivados”, “Restaurar”, “Remetente restaurado.” e “Este registro mudou desde que a página foi aberta. Atualize a página antes de tentar novamente.” Resposta explícita: “Aprovo os textos e escolho 30 dias”. O contexto eram estes quatro textos e a pergunta separada de retenção. Autoriza integrar e testar estes controles no candidato; não aprova outros AVs, avisos públicos, WAHA, envio, deploy ou merge com a VPS.

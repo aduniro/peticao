@@ -1,6 +1,6 @@
 # Retenção de conteúdo do admin-v2
 
-Decisão explícita do responsável em08/11/2026: “Aprovo os textos e escolho30dias”, após pergunta sobre conteúdo de e-mails, anexos e rascunhos do admin-v2. Os30dias dizem respeito a esse conteúdo; metadados de auditoria são separados. Não é aprovação de textos públicos ou de deploy.
+Decisão explícita do responsável em 08/11/2026: “Aprovo os textos e escolho 30 dias”, após pergunta sobre conteúdo de e-mails, anexos e rascunhos do admin-v2. Os 30 dias dizem respeito a esse conteúdo; metadados de auditoria são separados. Não é aprovação de textos públicos ou de deploy.
 
 ## Política aprovada
 
@@ -10,6 +10,14 @@ Preservar metadados necessários à auditoria, vínculo de mensagens e resultado
 
 ## Implementação e gates
 
-A fundação já aceita retenção explícita de30dias e recusa leitura de conteúdo expirado. Ainda é necessário ligar o expurgo ao agendador e cobrir as cópias de conteúdo em filas/respostas; a retenção não se resume à limpeza de `mail_messages`. Minutas persistentes devem usar o mesmo limite, com versão e autoria. Testar expiração, preservação de metadados, bloqueio de transporte de conteúdo expirado, ausência de renovação por retry, rollback e migração.
+A implementação em desenvolvimento limita o arquivo cifrado a 30 dias, inclusive chamadas internas antigas sem prazo. A leitura aplica também o limite por data de criação a registros antigos. Configurações de 90 dias ou permanentes são recusadas; ausência da variável continua gerando somente metadados. Para ativar o arquivo no deploy autorizado, configurar `MAIL_ARCHIVE_RETENTION=30`, conforme `deploy/admin-v2-runtime.example.conf`. Não alegar que o arquivo já está habilitado na VPS.
+
+O agendador de fila chama o expurgo antes dos workers. Arquivo cifrado e cópias de corpo/anexos em `mail_outbox.payload` e `contact_replies.payload` são limpos na mesma transação com auditoria. Filas vencidas deixam de ser elegíveis para envio mesmo se a limpeza falhar. Uma confirmação externa iniciada antes do prazo pode concluir depois: registrar o resultado sem restaurar o corpo eliminado. Retenção não é só limpeza de `mail_messages`.
+
+Destinatário, assunto já registrado no histórico de contato, autoria, IDs, datas, resultados e vínculos de auditoria permanecem como metadados. O contato original recebido pelo formulário não é uma cópia do e-mail enviado e não é alterado por este expurgo. Documentos originais da petição também são preservados. O expurgo remove os campos ativos no banco; não gerencia cópias de segurança nem o armazenamento do provedor externo. O conteúdo em envio de contato é reconciliado antes de se tornar elegível à limpeza em rodada posterior; a leitura do arquivo expirado é recusada desde o prazo.
+
+Cinco regressões específicas, total de 35 direcionados e tipos passaram após corrigir a fixture de PDF para informar o tipo obrigatório de lote. A falha inicial está preservada em `content-retention-targeted.log`; repetição em `content-retention-targeted-retry.log`, na pasta privada de QA. Cobrem expiração, anexos, preservação de metadados/originais, bloqueio de transporte, resultado em andamento, idempotência e rollback completo. Nenhum DDL foi acrescentado neste bloco; o esquema de remetentes é o já ensaiado.
+
+Minutas persistentes ainda precisam ser implementadas com o mesmo limite, versão e autoria. Cumulativa, build e teste do cron compilado serão conferidos antes de fechar este bloco; não declarar a retenção inteira concluída somente porque os testes de biblioteca passaram.
 
 Somente ambientes fictícios podem habilitar o recurso durante o desenvolvimento. Preparar a configuração de produção para a publicação autorizada; não alterar `/etc/peticao/app.env` nem outros arquivos da VPS agora. As aprovações de AV-15 e retenção não aprovam os demais AVs.
