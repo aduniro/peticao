@@ -1,0 +1,34 @@
+{
+  "version": "2026-11-06.count-based-exact-name-v6",
+  "ignore_case": true,
+  "ignore_accents": true,
+  "ignored_particles": [
+    "da",
+    "de",
+    "do",
+    "das",
+    "dos",
+    "e"
+  ],
+  "forbidden_name_words": ["docente", "professor", "tecnico", "servidor", "federal", "apoiador"],
+  "minimum_exact_words_by_api_word_count": {"2": 2, "3": 2, "4": 3, "5_or_more": 3},
+  "minimum_api_word_count": 2,
+  "match_complete_words": true,
+  "require_order": true,
+  "allow_typo_tolerance": false,
+  "allow_word_splitting": false,
+  "allow_word_joining": false,
+  "allow_initials": false,
+  "allow_extra_words_not_in_api": false,
+  "partial_names": "ordered_exact_words_meeting_count_threshold_with_identity_challenge",
+  "identity_challenge_overrides_name_mismatch": false,
+  "print_name_policy": "name-print-policy.json",
+  "allow_exact_compound_hyphen_variants": true,
+  "family_name_change": {
+    "requires_explicit_declaration": true,
+    "requires_additional_identity_check": true,
+    "exact_api_match": false,
+    "requires_review": true,
+    "notify_by_email": true
+  }
+}

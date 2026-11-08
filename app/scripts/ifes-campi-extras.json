@@ -1,0 +1,299 @@
+{
+  "_nota": "Acréscimos à base de IFES (public/data/ifes.json) que o Censo da Educação Superior não traz: instituições novas e campi só de ensino técnico, em implantação ou autorizados. Cada campus tem fonte e situação. Aplicar com: node scripts/aplicar-campi-extras.mjs (idempotente). O gerador build-ifes-data.py também lê este arquivo.",
+  "instituicoes": [
+    {
+      "s": "UFFN",
+      "n": "Universidade Federal da Fronteira Norte",
+      "k": "U",
+      "u": "AP",
+      "m": 1600501,
+      "c": [
+        1600501
+      ],
+      "fonte_url": "https://legis.senado.leg.br/norma/44044964/publicacao/44046874",
+      "observacao": "Lei 15.520, de 24/09/2026: criada por desmembramento da Unifap, sede em Oiapoque (AP); só o Campus Oiapoque da Unifap passa a integrá-la (art. 4º). Ainda sem domínio de e-mail próprio: seus servidores usam unifap.br (já aprovado). O Campus Oiapoque continua na lista da UNIFAP durante a transição (art. 3º, parágrafo único: vale o regimento da Unifap até a aprovação do estatuto)."
+    }
+  ],
+  "campi": [
+    {
+      "sigla": "IFAM",
+      "ibge": 1302702,
+      "municipio": "Manicoré",
+      "uf": "AM",
+      "nome_do_campus": "IFAM Campus Manicoré",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.apufsc.org.br/2026/07/07/mec-autoriza-funcionamento-de-24-novos-campi-de-institutos-federais/",
+      "observacao": "Um dos 100 novos campi dos IFs (Agência Gov, 03/2024); funcionamento autorizado pela Portaria MEC nº 591/2026."
+    },
+    {
+      "sigla": "IFAM",
+      "ibge": 1303700,
+      "municipio": "Santo Antônio do Içá",
+      "uf": "AM",
+      "nome_do_campus": "IFAM Campus Santo Antônio do Içá",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.apufsc.org.br/2026/07/07/mec-autoriza-funcionamento-de-24-novos-campi-de-institutos-federais/",
+      "observacao": "Um dos 100 novos campi dos IFs (Agência Gov, 03/2024); funcionamento autorizado pela Portaria MEC nº 591/2026."
+    },
+    {
+      "sigla": "UFAM",
+      "ibge": 1303809,
+      "municipio": "São Gabriel da Cachoeira",
+      "uf": "AM",
+      "nome_do_campus": "Campus São Gabriel da Cachoeira",
+      "situacao": "em_implantacao",
+      "fonte_url": "https://www.gov.br/mec/pt-br/assuntos/noticias/2025/novembro/mec-credencia-dez-novos-campi-de-universidades-federais",
+      "observacao": "Credenciado pelo MEC em 26/11/2025 (Novo PAC). Segundo nota do MEC de jul/2026 (via busca; página exige login), aulas previstas para o 2º semestre de 2026 (licenciatura para professores indígenas); funcionamento provisório."
+    },
+    {
+      "sigla": "UFOPA",
+      "ibge": 1506195,
+      "municipio": "Rurópolis",
+      "uf": "PA",
+      "nome_do_campus": "Campus Rurópolis",
+      "situacao": "em_funcionamento",
+      "fonte_url": "https://www.gov.br/mec/pt-br/assuntos/noticias/2025/novembro/mec-credencia-dez-novos-campi-de-universidades-federais",
+      "observacao": "Credenciado em 26/11/2025 (Novo PAC); atividades iniciadas em 2025 segundo nota MEC jul/2026 (via busca); Ufopa oferece cursos em Rurópolis desde 2026 (edital 2027 inclui o campus). Estrutura provisória; obras da sede em andamento."
+    },
+    {
+      "sigla": "UFMT",
+      "ibge": 5105259,
+      "municipio": "Lucas do Rio Verde",
+      "uf": "MT",
+      "nome_do_campus": "Campus Lucas do Rio Verde",
+      "situacao": "em_implantacao",
+      "fonte_url": "https://www.gov.br/mec/pt-br/assuntos/noticias/2025/novembro/mec-credencia-dez-novos-campi-de-universidades-federais",
+      "observacao": "Credenciado em 26/11/2025 (Novo PAC). Início das aulas em preparação (previsão: engenharia de software, IA, letras) segundo nota MEC jul/2026 (via busca)."
+    },
+    {
+      "sigla": "UFPA",
+      "ibge": 1502202,
+      "municipio": "Capanema",
+      "uf": "PA",
+      "nome_do_campus": "Campus Capanema",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.gov.br/mec/pt-br/assuntos/noticias/2025/novembro/mec-credencia-dez-novos-campi-de-universidades-federais",
+      "observacao": "Credenciado em 26/11/2025 (não é Novo PAC). Dúvida: a UFPA já teve Campus/Núcleo de Capanema criado em 2009 (Resolução Consun 690/2011 no sege.ufpa.br) e a UFRA também tem campus ali; o status do início das aulas não foi encontrado."
+    },
+    {
+      "sigla": "UNIFESSPA",
+      "ibge": 1502152,
+      "municipio": "Canaã dos Carajás",
+      "uf": "PA",
+      "nome_do_campus": "Campus Canaã dos Carajás",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.gov.br/mec/pt-br/assuntos/noticias/2026/junho/mec-credencia-novos-campi-da-ufrgs-e-da-unifesspa",
+      "observacao": "Credenciado pela Portaria Seres/MEC nº 255/2026 (18/06/2026, DOU 19/06/2026); imóvel cedido pela prefeitura (convênio mar/2026 a set/2027); início das aulas previsto para 2026. Criação provisória pela Unifesspa (Portaria 0011/2026), a ser apreciada pelo Consun. Pareamento portaria-campus inferido da ordem do texto."
+    },
+    {
+      "sigla": "UFRR",
+      "ibge": 1400506,
+      "municipio": "São João da Baliza",
+      "uf": "RR",
+      "nome_do_campus": "Campus Avançado São João da Baliza",
+      "situacao": "em_funcionamento",
+      "fonte_url": "https://www.folhabv.com.br/?p=506636",
+      "observacao": "Inaugurado em 21/03/2025 com Enfermagem (desde 2023) e Pedagogia (2024). Fonte é imprensa local (Folha BV); não localizei página oficial da UFRR. Não consta no Censo 2023 como município da UFRR. O Censo da Educação Superior 2024 (INEP) não registra curso presencial da UFRR neste município (só polos de ensino a distância); a inclusão se baseia na imprensa local."
+    },
+    {
+      "sigla": "UNIFAP",
+      "ibge": 1600204,
+      "municipio": "Calçoene",
+      "uf": "AP",
+      "nome_do_campus": "Salas de aula Unifap em Calçoene",
+      "situacao": "em_implantacao",
+      "fonte_url": "https://www.gov.br/mec/pt-br/aqui-tem-mec/amapa/entregas-mec.pdf",
+      "observacao": "Incluído por determinação da ADUNIR (05/11/2026); a fonte NÃO confirma campus formal. INCERTO: folheto MEC/Novo PAC lista obra de salas de aula da Unifap em Calçoene; não confirmei se é campus/núcleo formal nem se há curso presencial."
+    },
+    {
+      "sigla": "UNIFAP",
+      "ibge": 1600709,
+      "municipio": "Tartarugalzinho",
+      "uf": "AP",
+      "nome_do_campus": "Salas de aula Unifap em Tartarugalzinho",
+      "situacao": "em_implantacao",
+      "fonte_url": "https://www.gov.br/mec/pt-br/aqui-tem-mec/amapa/entregas-mec.pdf",
+      "observacao": "Incluído por determinação da ADUNIR (05/11/2026); a fonte NÃO confirma campus formal. INCERTO: idem Calçoene (obra Novo PAC de salas de aula da Unifap)."
+    },
+    {
+      "sigla": "UFGD",
+      "ibge": 5006606,
+      "municipio": "Ponta Porã",
+      "uf": "MS",
+      "nome_do_campus": "Base de estudos/unidade UFGD Ponta Porã",
+      "situacao": "em_funcionamento",
+      "fonte_url": "https://files.ufgd.edu.br/arquivos/arquivos/78/REITORIA/Relato institucional UFGD 2024.pdf",
+      "observacao": "Incluído por determinação da ADUNIR (05/11/2026); a fonte NÃO confirma campus formal. INCERTO: relato institucional cita duas bases de estudos fora de Dourados (Ponta Porã e Ladário); pode não ser campus com curso presencial. Verificar."
+    },
+    {
+      "sigla": "UFGD",
+      "ibge": 5005202,
+      "municipio": "Ladário",
+      "uf": "MS",
+      "nome_do_campus": "Base de estudos/unidade UFGD Ladário",
+      "situacao": "em_funcionamento",
+      "fonte_url": "https://files.ufgd.edu.br/arquivos/arquivos/78/REITORIA/Relato institucional UFGD 2024.pdf",
+      "observacao": "Incluído por determinação da ADUNIR (05/11/2026); a fonte NÃO confirma campus formal. INCERTO: idem Ponta Porã."
+    },
+    {
+      "sigla": "IFMA",
+      "ibge": 2106805,
+      "municipio": "Mirinzal",
+      "uf": "MA",
+      "nome_do_campus": "Campus Mirinzal",
+      "situacao": "em_funcionamento",
+      "fonte_url": "https://www.gov.br/mec/pt-br/assuntos/ept/rede-federal/maranhao",
+      "observacao": "Campus já em funcionamento, listado na página do MEC da Rede Federal no estado e ausente do Censo da Educação Superior (sem curso superior presencial)."
+    },
+    {
+      "sigla": "IFMA",
+      "ibge": 2113009,
+      "municipio": "Vitorino Freire",
+      "uf": "MA",
+      "nome_do_campus": "Campus Vitorino Freire",
+      "situacao": "em_funcionamento",
+      "fonte_url": "https://www.gov.br/mec/pt-br/assuntos/ept/rede-federal/maranhao",
+      "observacao": "Campus já em funcionamento, listado na página do MEC da Rede Federal no estado e ausente do Censo da Educação Superior (sem curso superior presencial)."
+    },
+    {
+      "sigla": "IFAC",
+      "ibge": 1200302,
+      "municipio": "Feijó",
+      "uf": "AC",
+      "nome_do_campus": "Campus Feijó",
+      "situacao": "em_implantacao",
+      "fonte_url": "https://www.portaltela.com/brasil/2026/02/24/mec-autoriza-obras-no-campus-feijo-do-ifac/",
+      "observacao": "Expansão (mapa oficial dos 111 novos IFs). MEC autorizou obras em fev/2026; licitação 1º sem/2026, término previsto início de 2027; portaria de autorização de funcionamento não localizada (não consta nas Portarias 267, 268, 591, 733/2026). Mapa oficial: https://www.gov.br/mec/pt-br/100-novos-ifs/arquivos/mapa-111-institutos-federais-localizacao"
+    },
+    {
+      "sigla": "IFMA",
+      "ibge": 2100600,
+      "municipio": "Amarante do Maranhão",
+      "uf": "MA",
+      "nome_do_campus": "Campus Amarante do Maranhão",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/web/dou/-/portaria-mec-n-733-de-26-de-setembro-de-2026-735120811",
+      "observacao": "Portaria MEC 733/2026 (26/09/2026), tipologia 40/26."
+    },
+    {
+      "sigla": "IFMA",
+      "ibge": 2101400,
+      "municipio": "Balsas",
+      "uf": "MA",
+      "nome_do_campus": "Campus Balsas",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/web/dou/-/portaria-mec-n-733-de-26-de-setembro-de-2026-735120811",
+      "observacao": "Portaria MEC 733/2026 (26/09/2026), tipologia 70/45."
+    },
+    {
+      "sigla": "IFMA",
+      "ibge": 2103505,
+      "municipio": "Colinas",
+      "uf": "MA",
+      "nome_do_campus": "Campus Colinas",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/en/web/dou/-/portaria-mec-n-267-de-24-de-marco-de-2026-695323140",
+      "observacao": "Portaria MEC 267/2026 (24/03/2026), tipologia 70/45."
+    },
+    {
+      "sigla": "IFMT",
+      "ibge": 5100201,
+      "municipio": "Água Boa",
+      "uf": "MT",
+      "nome_do_campus": "Campus Água Boa",
+      "situacao": "aprovado",
+      "fonte_url": "https://www.gov.br/mec/pt-br/100-novos-ifs/arquivos/mapa-111-institutos-federais-localizacao",
+      "observacao": "Expansão (mapa oficial dos 111 novos IFs). Sem portaria de autorização nem notícia de obra localizadas; situação exata incerta."
+    },
+    {
+      "sigla": "IFMT",
+      "ibge": 5102702,
+      "municipio": "Canarana",
+      "uf": "MT",
+      "nome_do_campus": "Campus Canarana",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/web/dou/-/portaria-mec-n-733-de-26-de-setembro-de-2026-735120811",
+      "observacao": "Portaria MEC 733/2026 (26/09/2026), tipologia 40/26."
+    },
+    {
+      "sigla": "IFMT",
+      "ibge": 5103254,
+      "municipio": "Colniza",
+      "uf": "MT",
+      "nome_do_campus": "Campus Colniza",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/en/web/dou/-/portaria-mec-n-267-de-24-de-marco-de-2026-695323140",
+      "observacao": "Portaria MEC 267/2026 (24/03/2026), tipologia 40/26."
+    },
+    {
+      "sigla": "IFPA",
+      "ibge": 1500404,
+      "municipio": "Alenquer",
+      "uf": "PA",
+      "nome_do_campus": "Campus Alenquer",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/web/dou/-/portaria-mec-n-591-de-3-de-julho-de-2026-716869946",
+      "observacao": "Portaria MEC 591/2026, tipologia 70/45."
+    },
+    {
+      "sigla": "IFPA",
+      "ibge": 1501303,
+      "municipio": "Barcarena",
+      "uf": "PA",
+      "nome_do_campus": "Campus Barcarena",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/web/dou/-/portaria-mec-n-591-de-3-de-julho-de-2026-716869946",
+      "observacao": "Portaria MEC 591/2026, tipologia 70/45."
+    },
+    {
+      "sigla": "IFPA",
+      "ibge": 1506138,
+      "municipio": "Redenção",
+      "uf": "PA",
+      "nome_do_campus": "Campus Redenção",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/web/dou/-/portaria-mec-n-591-de-3-de-julho-de-2026-716869946",
+      "observacao": "Portaria MEC 591/2026, tipologia 70/45. (Redenção/PA, homônimo no CE)."
+    },
+    {
+      "sigla": "IFPA",
+      "ibge": 1507953,
+      "municipio": "Tailândia",
+      "uf": "PA",
+      "nome_do_campus": "Campus Tailândia",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/web/dou/-/portaria-mec-n-591-de-3-de-julho-de-2026-716869946",
+      "observacao": "Portaria MEC 591/2026, tipologia 70/45."
+    },
+    {
+      "sigla": "IFPA",
+      "ibge": 1508308,
+      "municipio": "Viseu",
+      "uf": "PA",
+      "nome_do_campus": "Campus Viseu",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/web/dou/-/portaria-mec-n-591-de-3-de-julho-de-2026-716869946",
+      "observacao": "Portaria MEC 591/2026, tipologia 70/45."
+    },
+    {
+      "sigla": "IFRR",
+      "ibge": 1400472,
+      "municipio": "Rorainópolis",
+      "uf": "RR",
+      "nome_do_campus": "Campus Rorainópolis",
+      "situacao": "em_implantacao",
+      "fonte_url": "https://www.folhabv.com.br/?p=566516",
+      "observacao": "Expansão (mapa oficial: https://www.gov.br/mec/pt-br/100-novos-ifs/arquivos/mapa-111-institutos-federais-localizacao). Obras com início previsto 01/07/2026 e conclusão até 01/01/2028 (imprensa local); portaria de autorização de funcionamento não localizada. Fonte da obra: imprensa (Folha BV), confirmar com IFRR."
+    },
+    {
+      "sigla": "IFSul",
+      "ibge": 4316402,
+      "municipio": "Rosário do Sul",
+      "uf": "RS",
+      "nome_do_campus": "Campus Rosário do Sul",
+      "situacao": "autorizado",
+      "fonte_url": "https://www.in.gov.br/web/dou/-/portaria-mec-n-591-de-3-de-julho-de-2026-716869946",
+      "observacao": "Portaria MEC 591/2026, tipologia 40/26."
+    }
+  ]
+}

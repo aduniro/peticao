@@ -1,0 +1,617 @@
+[
+{
+"domain": "furg.br",
+"acronym": "FURG",
+"institution": "Universidade Federal do Rio Grande"
+},
+{
+"domain": "furg.edu.br",
+"acronym": "FURG",
+"institution": "Universidade Federal do Rio Grande"
+},
+{
+"domain": "ufabc.edu.br",
+"acronym": "UFABC",
+"institution": "Fundação Universidade Federal do Abc"
+},
+{
+"domain": "ufac.br",
+"acronym": "UFAC",
+"institution": "Universidade Federal do Acre"
+},
+{
+"domain": "ufal.br",
+"acronym": "UFAL",
+"institution": "Universidade Federal de Alagoas"
+},
+{
+"domain": "ufal.edu.br",
+"acronym": "UFAL",
+"institution": "Universidade Federal de Alagoas"
+},
+{
+"domain": "ufam.edu.br",
+"acronym": "UFAM",
+"institution": "Universidade Federal do Amazonas"
+},
+{
+"domain": "ufape.edu.br",
+"acronym": "UFAPE",
+"institution": "Universidade Federal do Agreste de Pernambuco"
+},
+{
+"domain": "ufba.br",
+"acronym": "UFBA",
+"institution": "Universidade Federal da Bahia"
+},
+{
+"domain": "ufba.edu.br",
+"acronym": "UFBA",
+"institution": "Universidade Federal da Bahia"
+},
+{
+"domain": "ufc.br",
+"acronym": "UFC",
+"institution": "Universidade Federal do Ceará"
+},
+{
+"domain": "ufc.edu.br",
+"acronym": "UFC",
+"institution": "Universidade Federal do Ceará"
+},
+{
+"domain": "ufca.edu.br",
+"acronym": "UFCA",
+"institution": "Universidade Federal do Cariri"
+},
+{
+"domain": "ufcat.edu.br",
+"acronym": "UFCAT",
+"institution": "Universidade Federal de Catalão"
+},
+{
+"domain": "ufcg.edu.br",
+"acronym": "UFCG",
+"institution": "Universidade Federal de Campina Grande"
+},
+{
+"domain": "ufcspa.edu.br",
+"acronym": "UFCSPA",
+"institution": "Fundação Universidade Federal de Ciências da Saúde de Porto Alegre"
+},
+{
+"domain": "ufdpar.edu.br",
+"acronym": "UFDPAR",
+"institution": "Universidade Federal do Delta do Parnaiba"
+},
+{
+"domain": "ufersa.edu.br",
+"acronym": "UFERSA",
+"institution": "Universidade Federal Rural do Semi-árido"
+},
+{
+"domain": "ufes.br",
+"acronym": "UFES",
+"institution": "Universidade Federal do Espírito Santo"
+},
+{
+"domain": "uff.br",
+"acronym": "UFF",
+"institution": "Universidade Federal Fluminense"
+},
+{
+"domain": "uffs.edu.br",
+"acronym": "UFFS",
+"institution": "Universidade Federal da Fronteira Sul"
+},
+{
+"domain": "ufg.br",
+"acronym": "UFG",
+"institution": "Universidade Federal de Goiás"
+},
+{
+"domain": "ufgd.edu.br",
+"acronym": "UFGD",
+"institution": "Fundação Universidade Federal da Grande Dourados"
+},
+{
+"domain": "ufj.edu.br",
+"acronym": "UFJ",
+"institution": "Universidade Federal de Jataí"
+},
+{
+"domain": "ufjf.br",
+"acronym": "UFJF",
+"institution": "Universidade Federal de Juiz de Fora"
+},
+{
+"domain": "ufjf.edu.br",
+"acronym": "UFJF",
+"institution": "Universidade Federal de Juiz de Fora"
+},
+{
+"domain": "ufla.br",
+"acronym": "UFLA",
+"institution": "Universidade Federal de Lavras"
+},
+{
+"domain": "ufma.br",
+"acronym": "UFMA",
+"institution": "Universidade Federal do Maranhão"
+},
+{
+"domain": "ufmg.br",
+"acronym": "UFMG",
+"institution": "Universidade Federal de Minas Gerais"
+},
+{
+"domain": "ufms.br",
+"acronym": "UFMS",
+"institution": "Universidade Federal de Mato Grosso do Sul"
+},
+{
+"domain": "ufmt.br",
+"acronym": "UFMT",
+"institution": "Universidade Federal de Mato Grosso"
+},
+{
+"domain": "ufnt.edu.br",
+"acronym": "UFNT",
+"institution": "Universidade Federal do Norte do Tocantins"
+},
+{
+"domain": "ufob.edu.br",
+"acronym": "UFOB",
+"institution": "Universidade Federal do Oeste da Bahia"
+},
+{
+"domain": "ufop.br",
+"acronym": "UFOP",
+"institution": "Universidade Federal de Ouro Preto"
+},
+{
+"domain": "ufop.edu.br",
+"acronym": "UFOP",
+"institution": "Universidade Federal de Ouro Preto"
+},
+{
+"domain": "ufopa.edu.br",
+"acronym": "UFOPA",
+"institution": "Universidade Federal do Oeste do Pará"
+},
+{
+"domain": "ufpa.br",
+"acronym": "UFPA",
+"institution": "Universidade Federal do Pará"
+},
+{
+"domain": "ufpa.edu.br",
+"acronym": "UFPA",
+"institution": "Universidade Federal do Pará"
+},
+{
+"domain": "ufpb.br",
+"acronym": "UFPB",
+"institution": "Universidade Federal da Paraíba"
+},
+{
+"domain": "ufpe.br",
+"acronym": "UFPE",
+"institution": "Universidade Federal de Pernambuco"
+},
+{
+"domain": "ufpel.edu.br",
+"acronym": "UFPEL",
+"institution": "Universidade Federal de Pelotas"
+},
+{
+"domain": "ufpi.br",
+"acronym": "UFPI",
+"institution": "Universidade Federal do Piauí"
+},
+{
+"domain": "ufpi.edu.br",
+"acronym": "UFPI",
+"institution": "Universidade Federal do Piauí"
+},
+{
+"domain": "ufpr.br",
+"acronym": "UFPR",
+"institution": "Universidade Federal do Paraná"
+},
+{
+"domain": "ufr.edu.br",
+"acronym": "UFR",
+"institution": "Universidade Federal de Rondonópolis"
+},
+{
+"domain": "ufra.edu.br",
+"acronym": "UFRA",
+"institution": "Universidade Federal Rural da Amazônia"
+},
+{
+"domain": "ufrb.edu.br",
+"acronym": "UFRB",
+"institution": "Universidade Federal do Recôncavo da Bahia"
+},
+{
+"domain": "ufrgs.br",
+"acronym": "UFRGS",
+"institution": "Universidade Federal do Rio Grande do Sul"
+},
+{
+"domain": "ufrj.br",
+"acronym": "UFRJ",
+"institution": "Universidade Federal do Rio de Janeiro"
+},
+{
+"domain": "ufrj.edu.br",
+"acronym": "UFRJ",
+"institution": "Universidade Federal do Rio de Janeiro"
+},
+{
+"domain": "ufrn.br",
+"acronym": "UFRN",
+"institution": "Universidade Federal do Rio Grande do Norte"
+},
+{
+"domain": "ufrn.edu.br",
+"acronym": "UFRN",
+"institution": "Universidade Federal do Rio Grande do Norte"
+},
+{
+"domain": "ufrpe.br",
+"acronym": "UFRPE",
+"institution": "Universidade Federal Rural de Pernambuco"
+},
+{
+"domain": "ufrr.br",
+"acronym": "UFRR",
+"institution": "Universidade Federal de Roraima"
+},
+{
+"domain": "ufrrj.br",
+"acronym": "UFRRJ",
+"institution": "Universidade Federal Rural do Rio de Janeiro"
+},
+{
+"domain": "ufs.br",
+"acronym": "UFS",
+"institution": "Universidade Federal de Sergipe"
+},
+{
+"domain": "ufsb.edu.br",
+"acronym": "UFSB",
+"institution": "Universidade Federal do Sul da Bahia"
+},
+{
+"domain": "ufsc.br",
+"acronym": "UFSC",
+"institution": "Universidade Federal de Santa Catarina"
+},
+{
+"domain": "ufscar.br",
+"acronym": "UFSCAR",
+"institution": "Universidade Federal de São Carlos"
+},
+{
+"domain": "ufsj.edu.br",
+"acronym": "UFSJ",
+"institution": "Universidade Federal de São João Del Rei"
+},
+{
+"domain": "ufsm.br",
+"acronym": "UFSM",
+"institution": "Universidade Federal de Santa Maria"
+},
+{
+"domain": "uft.edu.br",
+"acronym": "UFT",
+"institution": "Fundação Universidade Federal do Tocantins"
+},
+{
+"domain": "uftm.edu.br",
+"acronym": "UFTM",
+"institution": "Universidade Federal do Triângulo Mineiro"
+},
+{
+"domain": "ufu.br",
+"acronym": "UFU",
+"institution": "Universidade Federal de Uberlândia"
+},
+{
+"domain": "ufv.br",
+"acronym": "UFV",
+"institution": "Universidade Federal de Viçosa"
+},
+{
+"domain": "ufvjm.edu.br",
+"acronym": "UFVJM",
+"institution": "Universidade Federal dos Vales do Jequitinhonha e Mucuri"
+},
+{
+"domain": "unb.br",
+"acronym": "UNB",
+"institution": "Universidade de Brasília"
+},
+{
+"domain": "unifap.br",
+"acronym": "UNIFAP",
+"institution": "Universidade Federal do Amapá"
+},
+{
+"domain": "unifei.edu.br",
+"acronym": "UNIFEI",
+"institution": "Universidade Federal de Itajubá - Unifei"
+},
+{
+"domain": "unifesp.br",
+"acronym": "UNIFESP",
+"institution": "Universidade Federal de São Paulo"
+},
+{
+"domain": "unifesp.edu.br",
+"acronym": "UNIFESP",
+"institution": "Universidade Federal de São Paulo"
+},
+{
+"domain": "unifesspa.edu.br",
+"acronym": "UNIFESSPA",
+"institution": "Universidade Federal do Sul e Sudeste do Pará"
+},
+{
+"domain": "unila.edu.br",
+"acronym": "UNILA",
+"institution": "Universidade Federal da Integração Latino-americana"
+},
+{
+"domain": "unilab.edu.br",
+"acronym": "UNILAB",
+"institution": "Universidade da Integração Internacional da Lusofonia Afro-brasileira"
+},
+{
+"domain": "unipampa.edu.br",
+"acronym": "UNIPAMPA",
+"institution": "Fundação Universidade Federal do Pampa - Unipampa"
+},
+{
+"domain": "unir.br",
+"acronym": "UNIR",
+"institution": "Fundação Universidade Federal de Rondônia"
+},
+{
+"domain": "unirio.br",
+"acronym": "UNIRIO",
+"institution": "Universidade Federal do Estado do Rio de Janeiro"
+},
+{
+"domain": "univasf.edu.br",
+"acronym": "UNIVASF",
+"institution": "Fundação Universidade Federal do Vale do São Francisco"
+},
+{
+"domain": "utfpr.edu.br",
+"acronym": "UTFPR",
+"institution": "Universidade Tecnológica Federal do Paraná"
+},
+{
+"domain": "cefetmg.br",
+"acronym": "CEFET/MG",
+"institution": "Centro Federal de Educação Tecnológica de Minas Gerais"
+},
+{
+"domain": "ifc.edu.br",
+"acronym": "IF Catarinense",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia Catarinense"
+},
+{
+"domain": "ifcatarinense.edu.br",
+"acronym": "IF Catarinense",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia Catarinense"
+},
+{
+"domain": "ifgoiano.edu.br",
+"acronym": "IF Goiano",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia Goiano"
+},
+{
+"domain": "ifsuldeminas.edu.br",
+"acronym": "IF SUL DE MINAS",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Sul de Minas Gerais"
+},
+{
+"domain": "ifac.edu.br",
+"acronym": "IFAC",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Acre"
+},
+{
+"domain": "ifal.edu.br",
+"acronym": "IFAL",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia de Alagoas"
+},
+{
+"domain": "ifam.edu.br",
+"acronym": "IFAM",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Amazonas"
+},
+{
+"domain": "ifap.edu.br",
+"acronym": "IFAP",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Amapá"
+},
+{
+"domain": "ifb.edu.br",
+"acronym": "IFB",
+"institution": "Instituto Federal de Educação, Ciencia e Tecnologia de Brasilia"
+},
+{
+"domain": "ifba.edu.br",
+"acronym": "IFBA",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia da Bahia"
+},
+{
+"domain": "ifbaiano.edu.br",
+"acronym": "IFBAIANO",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia Baiano"
+},
+{
+"domain": "ifce.edu.br",
+"acronym": "IFCE",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Ceará"
+},
+{
+"domain": "ifes.edu.br",
+"acronym": "IFES",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo"
+},
+{
+"domain": "iffarroupilha.edu.br",
+"acronym": "IFFarroupilha",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia Farroupilha"
+},
+{
+"domain": "ifg.edu.br",
+"acronym": "IFG",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia de Goiás"
+},
+{
+"domain": "ifma.edu.br",
+"acronym": "IFMA",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Maranhão"
+},
+{
+"domain": "ifmg.edu.br",
+"acronym": "IFMG",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais"
+},
+{
+"domain": "ifms.edu.br",
+"acronym": "IFMS",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul"
+},
+{
+"domain": "ifmt.edu.br",
+"acronym": "IFMT",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso"
+},
+{
+"domain": "ifnmg.edu.br",
+"acronym": "IFNMG",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais"
+},
+{
+"domain": "ifpa.edu.br",
+"acronym": "IFPA",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Pará"
+},
+{
+"domain": "ifpb.edu.br",
+"acronym": "IFPB",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia da Paraíba"
+},
+{
+"domain": "ifpe.edu.br",
+"acronym": "IFPE",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco"
+},
+{
+"domain": "ifpi.edu.br",
+"acronym": "IFPI",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Piauí"
+},
+{
+"domain": "ifpr.edu.br",
+"acronym": "IFPR",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Paraná"
+},
+{
+"domain": "ifrj.edu.br",
+"acronym": "IFRJ",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Rio de Janeiro"
+},
+{
+"domain": "ifrn.edu.br",
+"acronym": "IFRN",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte"
+},
+{
+"domain": "ifro.edu.br",
+"acronym": "IFRO",
+"institution": "Instituto Federal de Educação Ciência e Tecnologia de Rondônia"
+},
+{
+"domain": "ifrr.edu.br",
+"acronym": "IFRR",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia de Roraima"
+},
+{
+"domain": "ifrs.edu.br",
+"acronym": "IFRS",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul"
+},
+{
+"domain": "ifs.edu.br",
+"acronym": "IFS",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia de Sergipe"
+},
+{
+"domain": "ifsc.edu.br",
+"acronym": "IFSC",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina"
+},
+{
+"domain": "ifsp.edu.br",
+"acronym": "IFSP",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia de São Paulo"
+},
+{
+"domain": "ifsul.edu.br",
+"acronym": "IFSul",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense"
+},
+{
+"domain": "iftm.edu.br",
+"acronym": "IFTM",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Triângulo Mineiro"
+},
+{
+"domain": "ifto.edu.br",
+"acronym": "IFTO",
+"institution": "Instituto Federal de Educação, Ciência e Tecnologia do Tocantins"
+},
+{
+"domain": "iscp.edu.br",
+"acronym": "ISCP",
+"institution": "Instituto Superior de Ciencias Policiais"
+},
+{
+"domain": "ita.br",
+"acronym": "ITA",
+"institution": "Instituto Tecnológico de Aeronáutica"
+},
+{
+"domain": "unifal-mg.edu.br",
+"acronym": "UNIFAL-MG",
+"institution": "Universidade Federal de Alfenas"
+},
+{
+"domain": "ifsertao-pe.edu.br",
+"acronym": "IF SERTÃO-PE",
+"institution": "Instituto Federal do Sertão Pernambucano"
+},
+{
+"domain": "iff.edu.br",
+"acronym": "IF Fluminense",
+"institution": "Instituto Federal Fluminense"
+},
+{
+"domain": "ifsudestemg.edu.br",
+"acronym": "IFSEMG",
+"institution": "Instituto Federal do Sudeste de Minas Gerais"
+},
+{
+"domain": "cefet-rj.br",
+"acronym": "CEFET/RJ",
+"institution": "Centro Federal de Educação Tecnológica Celso Suckow da Fonseca"
+}
+]

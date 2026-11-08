@@ -1,0 +1,8 @@
+node_modules
+.next
+data/outbox
+.env
+.env.local
+.cache
+.pgdata
+.next-dev

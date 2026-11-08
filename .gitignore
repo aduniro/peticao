@@ -1,0 +1,8 @@
+private/
+*.dump
+*.sql
+*.tar*
+.env*
+secrets/
+node_modules/
+.next/
