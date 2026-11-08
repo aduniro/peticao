@@ -9,6 +9,9 @@ def main(argv=None):
  sub=p.add_subparsers(dest='command')
  d=sub.add_parser('coletor');d.add_argument('--sem-vps',action='store_true');d.add_argument('--sem-email',action='store_true')
  sub.add_parser('estado');diag=sub.add_parser('diagnostico');diag.add_argument('--vps',action='store_true')
+ x=sub.add_parser('execucao');x.add_argument('id');x.add_argument('--limite',type=int,default=12000)
+ q=sub.add_parser('retomar');q.add_argument('task');q.add_argument('step');q.add_argument('--contexto',required=True)
+ w=sub.add_parser('supervisionar');w.add_argument('task',nargs='?');w.add_argument('--intervalo',type=int,default=300);w.add_argument('--desativar',action='store_true');w.add_argument('--plano',type=Path)
  t=sub.add_parser('tarefa');t.add_argument('id');t.add_argument('--titulo');t.add_argument('--estado');t.add_argument('--etapa');t.add_argument('--escopo');t.add_argument('--ambiente');t.add_argument('--diretorio');t.add_argument('--detalhe');t.add_argument('--estimativa')
  s=sub.add_parser('etapa');s.add_argument('task');s.add_argument('id');s.add_argument('titulo');s.add_argument('--estado',default='queued');s.add_argument('--peso',type=float,default=1);s.add_argument('--pai');s.add_argument('--detalhe',default='');s.add_argument('--estimativa')
  r=sub.add_parser('pedir');r.add_argument('task');r.add_argument('--tipo',choices=['ai','shell','vps','ai-vps'],default='ai');r.add_argument('texto');r.add_argument('--diretorio')
@@ -16,6 +19,30 @@ def main(argv=None):
  a=sub.add_parser('aprovar');a.add_argument('id');a.add_argument('--recusar',action='store_true')
  c=sub.add_parser('controlar');c.add_argument('id');c.add_argument('acao',choices=['cancel','pause','resume','stdin','steer']);c.add_argument('--texto')
  args=p.parse_args(argv);store=Store()
+ if args.command=='retomar':
+  with store.connect() as db:
+   db.execute('BEGIN IMMEDIATE')
+   changed=db.execute("UPDATE workflow_steps SET state='queued',checkpoint=?,updated_at=? WHERE task_id=? AND id=? AND state='waiting'",(args.contexto,now(),args.task,args.step))
+   if changed.rowcount!=1:raise ValueError('Etapa não está aguardando retomada')
+   db.execute("UPDATE tasks SET state='running',updated_at=? WHERE id=?",(now(),args.task))
+  store.event('workflow_resumed','Etapa retomada explicitamente',args.task,{'step':args.step,'context':args.contexto});print('Retomada registrada');return
+ if args.command=='execucao':
+  if not 1<=args.limite<=50000:p.error('Limite entre 1 e 50000')
+  rows=store.rows('SELECT id,task_id,kind,state,at,updated_at,exit_code,failure_class,run_report FROM requests WHERE id=?',(args.id,))
+  if not rows:p.error('Execução inexistente')
+  output=store.rows('SELECT kind,text FROM output WHERE request_id=? ORDER BY seq DESC LIMIT 200',(args.id,))
+  print(json.dumps({'execution':rows[0],'output':'\n'.join(r['text'] for r in reversed(output))[-args.limite:]},ensure_ascii=False));return
+ if args.command=='supervisionar':
+  from .supervision import Supervisor,watch,install_plan
+  if args.task:
+   if args.plano:install_plan(store,args.task,json.loads(args.plano.read_text()))
+   watch(store,args.task,args.intervalo,not args.desativar)
+  else:
+   if args.plano:p.error('--plano exige tarefa')
+   Supervisor(store).scan()
+   from .notifications import deliver_one
+   deliver_one(store)
+  print(json.dumps({'supervision':store.rows('SELECT * FROM supervision'),'workflow':store.rows('SELECT task_id,id,title,state,checkpoint,attempts FROM workflow_steps ORDER BY task_id,position')},ensure_ascii=False));return
  if args.command=='coletor':
   from .daemon import Daemon
   return Daemon(store,not args.sem_vps,not args.sem_email).run()

@@ -48,3 +48,10 @@ Decisão de 08/11/2026: o dono respondeu “Aprovo os textos e escolho 30 dias�
 - Checkpoints e resultados: `docs/ADMIN-V2-PROGRESSO-20261106.md`.
 - Contexto dos agentes do Vigia: `tools/monitor/CONTEXTO.md`.
 - `AGENTS.md`, aprovações existentes e as demais políticas continuam aplicáveis. Preservar assinaturas, hashes, datas, decisões locais, segredos e versões anteriores.
+# Supervisão de continuidade — autorização de 08/11/2026
+
+Aplicar [VIGIA-CONTINUIDADE.md](VIGIA-CONTINUIDADE.md): fila persistente, detector
+independente, alertas em HTML, retomada limitada e conclusão por evidências.
+Nunca registrar o pulso do monitor como progresso do agente. Uma interrupção deve
+ficar explícita, com checkpoint e aviso; não apresentar um teste encerrado como
+desenvolvimento ativo. A supervisão não concede autorização de deploy/merge VPS.

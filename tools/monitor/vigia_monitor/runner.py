@@ -1,5 +1,5 @@
 from __future__ import annotations
-import json, os, pty, select, shlex, signal, subprocess, threading, time
+import json, os, pty, re, select, shlex, signal, subprocess, threading, time
 from pathlib import Path
 from .store import Store, now, uid
 from .sources import clean
@@ -97,6 +97,8 @@ def command_run(store,request,task):
 
 def ai_run(store,request,task):
  remote=request['kind']=='ai-vps';host='vps' if remote else 'local';rpc=Rpc(['ssh','-o','BatchMode=yes','peticao','/home/adunir/.local/bin/codex','app-server'] if remote else None);rid=request['id'];saved=store.rows('SELECT id FROM threads WHERE task_id=? AND host=?',(task['id'],host));thread_id=saved[0]['id'] if saved else None;turn_id=None;approval_ids=[]
+ report_text=''
+ store.execute('UPDATE requests SET pid=? WHERE id=?',(rpc.proc.pid,rid))
  try:
   rpc.initialize()
   context_path=Path('/mnt/dev/peticao/tools/monitor/CONTEXTO.md')
@@ -128,14 +130,23 @@ def ai_run(store,request,task):
      store.event('approval','Aprovação solicitada',task['id'],{'id':aid,'request_id':rid})
      store.queue_mail('approval:'+aid,'Vigia: aprovação solicitada — '+task['title'],f"# Aprovação pendente\n\nTarefa: {task['title']}\n\nAmbiente: {task['environment']}\n\nAbra a aba Aprovações do Vigia para conferir a ação e decidir. Pedido {aid}, válido por 20 minutos. Nenhuma aprovação permanente será concedida.")
     else:rpc.send({'id':msg['id'],'error':{'code':-32601,'message':'Interface não suporta esse pedido; peça esclarecimento ao usuário por mensagem.'}})
-   elif method=='item/agentMessage/delta':store.out(rid,clean(p.get('delta',''),10000),'assistant')
+   elif method=='item/agentMessage/delta':
+    report_text=(report_text+p.get('delta',''))[-40000:];store.out(rid,clean(p.get('delta',''),10000),'assistant')
    elif method=='item/commandExecution/outputDelta':store.out(rid,clean(p.get('delta',''),10000),'output')
    elif method in ('item/started','item/completed'):
     item=p.get('item',{});kind=item.get('type','')
     if kind in ('commandExecution','fileChange'):store.out(rid,clean(json.dumps(item,ensure_ascii=False),15000),kind)
+    if method=='item/completed' and kind in ('commandExecution','fileChange'):store.execute('UPDATE requests SET activity_count=activity_count+1 WHERE id=?',(rid,))
+    if method=='item/completed' and kind=='agentMessage':report_text=(report_text+'\n'+item.get('text',''))[-40000:]
    elif method=='turn/completed':
     status=p['turn']['status'];error=p['turn'].get('error')
     if error:store.out(rid,clean(json.dumps(error),2000),'error')
+    reports=re.findall(r'<vigia-result>(.*?)</vigia-result>',report_text,re.S)
+    if reports:
+     try:
+      report=json.loads(reports[-1])
+      if report.get('status') in ('completed','continue','blocked') and isinstance(report.get('checkpoint'),str):store.execute('UPDATE requests SET run_report=? WHERE id=?',(json.dumps({'status':report['status'],'checkpoint':clean(report['checkpoint'],6000)}),rid))
+     except (ValueError,AttributeError):pass
     return ('completed' if status=='completed' else 'interrupted' if status=='interrupted' else 'failed',None)
    elif method=='error':store.out(rid,clean(json.dumps(p),3000),'error')
  finally:
@@ -146,13 +157,15 @@ def execute_request(store,request,stop=None):
  if request.get('context'):task.update(json.loads(request['context']))
  store.event('run_started','Execução iniciada',task['id'],{'id':request['id'],'kind':request['kind']})
  store.queue_mail('start:'+request['id'],'Vigia: execução iniciada — '+task['title'],f"# Execução iniciada\n\nTarefa: {task['title']}\n\nCanal: {request['kind']}\n\nAmbiente: {task['environment']}.\n\nAcompanhe no prompt da tarefa. Estimativa de término ainda não informada.")
+ failure_class=None
  try:
   if request['kind'] in ('ai','ai-vps'):state,code=ai_run(store,request,task)
   elif request['kind']=='vps':
    from .remote import run
    state,code=run(store,request,task,stop)
   else:state,code=command_run(store,request,task)
- except Exception as error:state,code='failed',None;store.out(request['id'],clean(str(error),1500),'error')
- store.execute('UPDATE requests SET state=?,exit_code=?,updated_at=? WHERE id=?',(state,code,now(),request['id']))
+ except Exception as error:
+  state,code='failed',None;failure_class='transport' if isinstance(error,(TimeoutError,ConnectionError)) else 'unknown';store.out(request['id'],clean(str(error),1500),'error')
+ store.execute('UPDATE requests SET state=?,exit_code=?,updated_at=?,failure_class=? WHERE id=?',(state,code,now(),failure_class,request['id']))
  store.event('observation_paused' if state=='waiting' else 'run_finished','Observação suspensa; job remoto preservado' if state=='waiting' else 'Execução '+state,task['id'],{'id':request['id'],'exit_code':code})
  store.queue_mail('run:'+request['id'],'Vigia: execução '+state+' — '+task['title'],f"# Execução {state}\n\nTarefa: {task['title']}\n\nAmbiente: {task['environment']}\n\nTipo: {request['kind']}\n\nCódigo de saída: {code if code is not None else 'não aplicável'}.\n\nConsulte o prompt da tarefa no Vigia para saída e próximos passos.")

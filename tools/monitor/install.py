@@ -26,6 +26,26 @@ Environment=PATH={HOME}/.local/bin:/usr/local/bin:/usr/bin:/bin
 WantedBy=default.target
 ''')
  unit.chmod(0o600)
+ for name,content in {
+  'peticao-monitor-watchdog.service':f'''[Unit]
+Description=Detect stalled Vigia tasks independently of the collector
+[Service]
+Type=oneshot
+WorkingDirectory={ROOT}
+ExecStart={VENV}/bin/python {ROOT}/tools/monitor/main.py supervisionar
+UMask=0077
+''',
+  'peticao-monitor-watchdog.timer':'''[Unit]
+Description=Check task activity every minute
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+Persistent=true
+[Install]
+WantedBy=timers.target
+''',
+ }.items():
+  path=directory/name;backup(path);path.write_text(content);path.chmod(0o600)
  aliases=HOME/'.bash_aliases';line="alias vigia='/mnt/dev/peticao/vigia'"
  old=aliases.read_text() if aliases.exists() else ''
  if line not in old.splitlines():backup(aliases);aliases.write_text(old.rstrip()+'\n\n# Monitor de tarefas da petição\n'+line+'\n')
@@ -35,6 +55,7 @@ WantedBy=default.target
  if not binary.is_symlink():binary.symlink_to(ROOT/'vigia')
  subprocess.run(['systemd-analyze','--user','verify',str(unit)],check=True,capture_output=True)
  subprocess.run(['systemctl','--user','daemon-reload'],check=True);subprocess.run(['systemctl','--user','enable','--now','peticao-monitor.service'],check=True)
+ subprocess.run(['systemctl','--user','enable','--now','peticao-monitor-watchdog.timer'],check=True)
  print('Vigia local instalado; serviços anteriores preservados.')
 def remote():
  files={name:base64.b64encode((ROOT/'tools/monitor'/name).read_bytes()).decode() for name in ['remote_collector.py','remote_executor.py']}

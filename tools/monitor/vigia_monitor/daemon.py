@@ -4,6 +4,7 @@ from pathlib import Path
 from .store import Store, STATE, now
 from .sources import Collector, ROOT, clean
 from .runner import execute_request
+from .supervision import Supervisor
 
 class Daemon:
  def __init__(self,store=None,remote=True,mail=True):
@@ -16,14 +17,8 @@ class Daemon:
     body='# Andamento das tarefas\n\n'+'\n\n'.join(f"## {r['title']}\n\nEstado: {r['state']}. Etapa: {r['stage']}.\n\n{r['detail']}\n\nAmbiente: {r['environment']}. Estimativa informada: {r['eta'] or 'não informada'}." for r in tasks)
     self.store.queue_mail('progress:'+str(int(time.time()//1800)),'Vigia: atualização de andamento',body)
    self.last_progress=time.monotonic()
-  for row in self.store.rows("SELECT * FROM outbox WHERE state='queued' ORDER BY at LIMIT 1"):
-   self.store.execute("UPDATE outbox SET state='sending',updated_at=? WHERE id=?",(now(),row['id']))
-   try:
-    result=subprocess.run(['/usr/bin/node',str(ROOT/'tools/monitor/mail.mjs')],input=json.dumps({'subject':row['subject'],'body':row['body']}),capture_output=True,text=True,timeout=40)
-    data=json.loads(result.stdout);status=int(data.get('status',0));state='accepted' if 200<=status<300 else 'failed';provider=data.get('id')
-   except (OSError,ValueError,subprocess.TimeoutExpired):state='uncertain';provider=None
-   self.store.execute('UPDATE outbox SET state=?,updated_at=? WHERE id=?',(state,now(),row['id']))
-   self.store.execute('INSERT OR REPLACE INTO mail VALUES(?,?,?,?,?,?)',(provider or row['id'],now(),row['subject'],state,provider,'Aceite do provedor não comprova entrega.'))
+  from .notifications import deliver_one
+  deliver_one(self.store)
  def run(self):
   STATE.mkdir(parents=True,exist_ok=True,mode=0o700);lock=(STATE/'daemon.lock').open('a')
   try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -37,6 +32,8 @@ class Daemon:
     try:self.collector.collect(slow=tick%5==0)
     except Exception as e:self.store.event('collector_error','Falha de coleta',data={'type':type(e).__name__})
     self.store.snapshot('daemon',{'pid':os.getpid(),'alive':True})
+    try:Supervisor(self.store).advance()
+    except Exception as error:self.store.event('supervisor_error','Falha na supervisão; não declarar conclusão',data={'type':type(error).__name__})
     self.work={key:f for key,f in self.work.items() if not f.done()}
     if len(self.work)<2:
      request=self.store.claim()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Single-screen, read-only observer. Agent updates are distinct from OS evidence."""
 from __future__ import annotations
-import argparse, datetime as dt, json, os, re, select, shutil, subprocess, sys, tempfile, threading, time
+import argparse, datetime as dt, json, os, re, select, shutil, sqlite3, subprocess, sys, tempfile, threading, time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 ROOT = Path('/mnt/dev/peticao')
@@ -10,7 +10,7 @@ ZONE = ZoneInfo('America/Porto_Velho')
 PROCESS_OFFSET = 0
 ACTIVE_TAB = "running"
 TASK_OFFSET = 0
-STATES = {'running':'em execução','waiting':'aguardando','completed':'concluída','failed':'falhou','interrupted':'interrompida','queued':'na fila'}
+STATES = {'running':'em execução','waiting':'aguardando','completed':'concluída','failed':'falhou','interrupted':'interrompida','queued':'na fila','paused':'pausada'}
 FIELDS = {'id','title','stage','environment','scope','state','updated_at','created_at','done','total','eta','detail'}
 
 def now(): return dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
@@ -65,6 +65,16 @@ def activities():
             row={k:v for k,v in raw.items() if k in FIELDS}
             if row.get('state') in STATES:rows.append(row)
         except (OSError,ValueError,TypeError):pass
+    # Supervised tasks use the canonical SQLite state, including watchdog incidents.
+    database=STATE.parent/'monitor.sqlite'
+    if database.is_file():
+        try:
+            with sqlite3.connect(database.as_uri()+'?mode=ro',uri=True,timeout=1) as db:
+                db.row_factory=sqlite3.Row;db.execute('PRAGMA query_only=ON')
+                supervised=[dict(r) for r in db.execute('SELECT t.* FROM tasks t JOIN supervision s ON s.task_id=t.id WHERE s.enabled=1')]
+            ids={r['id'] for r in supervised};rows=[r for r in rows if r['id'] not in ids]
+            rows.extend({k:v for k,v in r.items() if k in FIELDS} for r in supervised)
+        except (sqlite3.Error,ValueError):pass
     return sorted(rows,key=lambda r:(r.get('state')=='completed',r.get('created_at','')))
 
 def processes():

@@ -1,5 +1,13 @@
 # Vigia
 
+## Continuidade supervisionada
+
+A fila com dependências, checkpoints, verificações independentes e detector de
+paralisação está descrita em [VIGIA-CONTINUIDADE.md](../../docs/VIGIA-CONTINUIDADE.md).
+O temporizador local `peticao-monitor-watchdog.timer` verifica atividade a cada
+minuto. A supervisão é habilitada por tarefa com `vigia supervisionar ID` e não
+repete comandos shell interrompidos nem autoriza deploy.
+
 ## Painel com abas
 
 Execute **`vigia`** ou `/mnt/dev/peticao/vigia`. A instalação registra o alias em `/home/barre/.bash_aliases` e o executável em `/home/barre/.local/bin/vigia`, preservando cópia do arquivo anterior.

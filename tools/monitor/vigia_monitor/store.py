@@ -30,10 +30,15 @@ class Store:
    CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY,at TEXT,subject TEXT,body TEXT,state TEXT,updated_at TEXT);
    CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY,value TEXT);
    ''')
+   from .supervision import initialize
+   initialize(db)
    existing={r[1] for r in db.execute('PRAGMA table_info(steps)')}
    for column in ['started_at','finished_at','updated_at','eta']:
     if column not in existing:db.execute(f'ALTER TABLE steps ADD COLUMN {column} TEXT')
    if 'context' not in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:db.execute('ALTER TABLE requests ADD COLUMN context TEXT')
+   if 'failure_class' not in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:db.execute('ALTER TABLE requests ADD COLUMN failure_class TEXT')
+   for column,definition in [('run_report','TEXT'),('activity_count','INTEGER NOT NULL DEFAULT 0')]:
+    if column not in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:db.execute(f'ALTER TABLE requests ADD COLUMN {column} {definition}')
   self.path.chmod(0o600)
   for suffix in ('-wal','-shm'):
    sidecar=Path(str(self.path)+suffix)
@@ -62,6 +67,9 @@ class Store:
    row[k]=v
   row['updated_at']=values.get('updated_at',now())
   with self.connect() as db:
+   if row['state']=='completed' and db.execute('SELECT 1 FROM supervision WHERE task_id=? AND enabled=1',(task_id,)).fetchone():
+    plan=db.execute('SELECT state,check_request FROM workflow_steps WHERE task_id=?',(task_id,)).fetchall()
+    if not plan or any(s['state']!='completed' or not s['check_request'] for s in plan):raise ValueError('Conclusão exige plano e verificações aprovadas')
    keys=','.join(row);db.execute(f"INSERT OR REPLACE INTO tasks({keys}) VALUES({','.join('?' for _ in row)})",tuple(row.values()))
   return row
  def step(self,task_id,step_id,title,state='queued',weight=1,parent=None,detail='',eta=None):
@@ -79,6 +87,9 @@ class Store:
    if state in {'completed','failed','interrupted'} and not finished:finished=now()
    db.execute('INSERT OR REPLACE INTO steps(task_id,id,parent,title,state,weight,detail,started_at,finished_at,updated_at,eta) VALUES(?,?,?,?,?,?,?,?,?,?,?)',(task_id,step_id,parent,title,state,weight,detail,started,finished,now(),eta if eta is not None else previous.get('eta')))
  def progress(self,task_id,parent=None):
+  if parent is None:
+   workflow=self.rows('SELECT state FROM workflow_steps WHERE task_id=?',(task_id,))
+   if workflow:return round(100*sum(s['state']=='completed' for s in workflow)/len(workflow),1)
   rows=self.rows('SELECT * FROM steps WHERE task_id=?',(task_id,))
   if parent is not None:
    selected={parent}
@@ -106,7 +117,16 @@ class Store:
    if not r:return None
    db.execute("UPDATE requests SET state='running',updated_at=? WHERE id=?",(now(),r['id']));return dict(r)
  def out(self,request_id,text,kind='output'):
-  self.execute('INSERT INTO output(request_id,at,kind,text) VALUES(?,?,?,?)',(request_id,now(),kind,text[-30000:]))
+  with self.connect() as db:
+   db.execute('INSERT INTO output(request_id,at,kind,text) VALUES(?,?,?,?)',(request_id,now(),kind,text[-30000:]))
+   if text.strip():
+    db.execute('UPDATE requests SET updated_at=? WHERE id=?',(now(),request_id))
+    row=db.execute("SELECT t.id,s.incident,s.saved_context FROM requests r JOIN tasks t ON t.id=r.task_id JOIN supervision s ON s.task_id=t.id WHERE r.id=? AND r.state='running' AND t.state='interrupted' AND s.incident IS NOT NULL AND s.enabled=1",(request_id,)).fetchone()
+    if row:
+     saved=json.loads(row['saved_context'] or '{}')
+     db.execute("UPDATE tasks SET state='running',stage=?,detail=?,updated_at=? WHERE id=?",(saved.get('stage','Atividade retomada'),saved.get('detail','Saída verificável retomada na execução.'),now(),row['id']))
+     db.execute('UPDATE supervision SET incident=NULL WHERE task_id=?',(row['id'],))
+     db.execute('INSERT OR IGNORE INTO outbox VALUES(?,?,?,?,?,?)',('resumed:'+row['incident'],now(),'Vigia: atividade retomada','A execução vinculada à tarefa '+row['id']+' voltou a produzir saída verificável.','queued',now()))
  def queue_mail(self,event_id,subject,body):
   self.execute('INSERT OR IGNORE INTO outbox VALUES(?,?,?,?,?,?)',(event_id,now(),subject,body,'queued',now()))
  def decide(self,approval_id,decision):
@@ -117,9 +137,17 @@ class Store:
    if result.rowcount!=1:raise ValueError('Pedido expirado ou já decidido')
  def recover(self):
   with self.connect() as db:
-   changed=[dict(r) for r in db.execute("SELECT id,task_id,kind FROM requests WHERE state IN ('running','paused','waiting')")]
+   changed=[dict(r) for r in db.execute("SELECT id,task_id,kind,pid FROM requests WHERE state IN ('running','paused','waiting')")]
    # Never replay a possibly executed command or a possibly sent email automatically.
    db.execute("UPDATE requests SET state='interrupted',updated_at=? WHERE kind!='vps' AND state IN ('running','paused','waiting')",(now(),))
+   for row in changed:
+    if row['kind']!='ai' or not row['pid']:continue
+    # Only resume a managed AI thread after its old executor is demonstrably gone.
+    try:os.kill(row['pid'],0)
+    except ProcessLookupError:
+     managed=db.execute("SELECT 1 FROM workflow_steps w JOIN supervision s ON s.task_id=w.task_id WHERE w.work_request=? AND w.state='working' AND s.enabled=1",(row['id'],)).fetchone()
+     if managed:db.execute("UPDATE requests SET failure_class='executor_restart' WHERE id=?",(row['id'],))
+    except PermissionError:pass
    db.execute("UPDATE requests SET state='queued',updated_at=? WHERE kind='vps' AND state IN ('running','paused','waiting')",(now(),))
    db.execute("UPDATE approvals SET decision='decline',answered=1 WHERE answered=0")
    pending_mail=[dict(r) for r in db.execute("SELECT id,subject FROM outbox WHERE state='sending'")]
