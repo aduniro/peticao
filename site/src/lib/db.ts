@@ -113,6 +113,8 @@ const SCHEMA_SQL = `
   CREATE INDEX IF NOT EXISTS signatures_wa_token ON signatures(wa_token_hash) WHERE wa_token_hash IS NOT NULL;
   CREATE TABLE IF NOT EXISTS whatsapp_senders (
     id SERIAL PRIMARY KEY, label TEXT NOT NULL, phone_cipher TEXT NOT NULL, phone_last4 TEXT NOT NULL, active BOOLEAN NOT NULL DEFAULT true, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  ALTER TABLE whatsapp_senders ADD COLUMN IF NOT EXISTS revision INTEGER NOT NULL DEFAULT 1;
+  ALTER TABLE whatsapp_senders ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
   CREATE TABLE IF NOT EXISTS whatsapp_messages (
     id SERIAL PRIMARY KEY, signature_id INTEGER, kind TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', provider_id TEXT, error TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());

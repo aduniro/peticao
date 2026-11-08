@@ -1,5 +1,5 @@
 import { sessaoAdmin } from "@/lib/admin";
-import { nivelOk } from "@/lib/admin-users";
+import { nivelOk, stepupValido } from "@/lib/admin-users";
 import { redirect } from "next/navigation";
 import { query } from "@/lib/db";
 import { decifrar } from "@/lib/crypto-dados";
@@ -18,8 +18,9 @@ export default async function WhatsApp({ searchParams }: { searchParams: { msg?:
   const sessao = await sessaoAdmin();
   if (!sessao) redirect("/admin");
   if (!nivelOk(sessao.nivel, "total")) redirect("/admin?erro=nivel");
+  if (!stepupValido(sessao)) redirect("/admin/confirmar?volta=/admin/whatsapp");
   const est = waEstado();
-  const senders = (await query<{ id: number; label: string; phone_cipher: string; phone_last4: string; active: boolean; created_at: string }>("SELECT * FROM whatsapp_senders ORDER BY id")).rows;
+  const senders = (await query<{ id: number; revision: number; label: string; phone_cipher: string; phone_last4: string; active: boolean; created_at: string }>("SELECT * FROM whatsapp_senders WHERE archived_at IS NULL ORDER BY id")).rows;
   const q = (searchParams.q ?? "").trim().slice(0, 60);
   const status = ["pending", "confirmed"].includes(searchParams.status ?? "") ? searchParams.status! : "";
   const params: unknown[] = []; const w = ["s.wa_cipher IS NOT NULL"];
@@ -60,6 +61,7 @@ export default async function WhatsApp({ searchParams }: { searchParams: { msg?:
               <td data-l="Nome">{s.label}</td><td data-l="Número">{formatarTelefone(decifrar(s.phone_cipher, `wa-sender:${s.id}`) ?? "") || `•••• ${s.phone_last4}`}</td>
               <td data-l="Situação">{s.active ? "ativo" : "pausado"}</td><td data-l="Desde">{brasilia(s.created_at, true)}</td>
               <td><form method="post" action="/api/admin/whatsapp/remetentes" className="adm-bar"><input type="hidden" name="id" value={s.id} />
+                <input type="hidden" name="revision" value={s.revision} />
                 <button name="acao" value="toggle" className="adm-btn">{s.active ? "Pausar" : "Ativar"}</button> <button name="acao" value="remove" className="adm-btn">Remover</button></form></td>
             </tr>))}
           {senders.length === 0 ? <tr><td colSpan={5}>Nenhum remetente cadastrado.</td></tr> : null}

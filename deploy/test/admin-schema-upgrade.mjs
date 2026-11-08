@@ -34,6 +34,8 @@ try{
  (201,'Pessoa Confirmada','confirmed@example.test','hash-email-1','hash-cpf-1','apoiador','fixture','2026-10-01T10:00:00Z','confirmed','2026-10-01T10:00:00Z','2026-10-01T10:10:00Z',42,'ABCDEF123456'),
  (202,'Pessoa Pendente','pending@example.test','hash-email-2','hash-cpf-2','apoiador','fixture','2026-10-02T10:00:00Z','pending','2026-10-02T10:00:00Z',null,null,null)`);
  await c.query("INSERT INTO settings(key,value) VALUES('rehearsal','preserve')");
+ await c.query("INSERT INTO whatsapp_senders(label,phone_cipher,phone_last4,active,created_at) VALUES('QA legacy sender','QA-NOT-A-REAL-CIPHER','0000',false,'2026-10-01T10:00:00.123456Z')");
+ const oldSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows.map(r=>JSON.parse(r.raw));
  await c.query("INSERT INTO mail_log(kind,provider,to_addr,status,ts) VALUES('confirmacao','legacy','legacy@example.test','sent','2026-10-01T10:00:00Z')");
  await c.query("INSERT INTO mail_outbox(kind,to_addr,payload) VALUES('confirmacao','legacy@example.test','{\"to\":\"legacy@example.test\",\"subject\":\"legacy\",\"text\":\"do-not-send-legacy-fixture\"}')");
  const oldMailLog=(await c.query("SELECT * FROM mail_log ORDER BY id")).rows,oldMailOutbox=(await c.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
@@ -50,8 +52,17 @@ try{
  assert.deepEqual(afterColumns.filter(row=>originalKeys.has(`${row.table_name}.${row.column_name}`)),definition,"Original column definitions must not change");
  assert.deepEqual(afterColumns.filter(row=>existing.includes(row.table_name)&&!originalKeys.has(`${row.table_name}.${row.column_name}`)),[
   {table_name:"mail_log",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null},
-  {table_name:"mail_outbox",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null}
- ],"Only the two explicit nullable correlation columns may be added to old tables");
+  {table_name:"mail_outbox",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null},
+  {table_name:"whatsapp_senders",column_name:"revision",data_type:"integer",is_nullable:"NO",column_default:"1"},
+  {table_name:"whatsapp_senders",column_name:"archived_at",data_type:"timestamp with time zone",is_nullable:"YES",column_default:null}
+ ],"Only the explicit message correlation and sender revision/archive columns may be added to old tables");
+ const upgradedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows.map(r=>JSON.parse(r.raw));
+ assert.deepEqual(upgradedSenders.map(({revision,archived_at,...row})=>row),oldSenders,"Sender identity, ciphertext, status and microsecond timestamps survive upgrade");
+ assert.ok(upgradedSenders.every(row=>row.revision===1&&row.archived_at===null));
+ await c.query("UPDATE whatsapp_senders SET revision=2,archived_at='2026-11-08T08:00:00.654321Z'");
+ const archivedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows;
+ await c.query(newSql);await c.query(newSql);await c.query(oldSql);
+ assert.deepEqual((await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows,archivedSenders,"DDL replay and old bootstrap must not reset archive decisions or revisions");
  assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_reset","admin_sessions","admin_stepup","admin_users","contact_campus_reviews","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
  const newMailLog=(await c.query("SELECT * FROM mail_log ORDER BY id")).rows,newMailOutbox=(await c.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
  assert.ok([...newMailLog,...newMailOutbox].every(row=>row.message_id===null));
@@ -138,7 +149,8 @@ try{
  console.log("PASS archive foundation upgrade: existing message identity, fingerprint, state and timestamp preserved; Reply-To left unknown.");
  console.log("PASS legacy action history migration: original rows unchanged, no old record admitted as a new request.");
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
- console.log("PASS real startup on old schema plus DDL replay: twelve additive tables and two nullable correlation columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS sender catalogue upgrade: ciphertext, identity, paused state, archive revision and microsecond timestamps survive replay and old bootstrap.");
+ console.log("PASS real startup on old schema plus DDL replay: twelve additive tables, two nullable message correlation columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;
