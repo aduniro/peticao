@@ -1,5 +1,15 @@
 # Contexto do Vigia
 
+Decisão adicional de08/11: novos cadastros Servidor somente com domínio aprovado
+como IFES; outros órgãos públicos não bastam. Recuperação do honeypot, essa política
+e dois textos foram aprovados e implementados isoladamente na branch
+`signup-honeypot-recovery-20261108`: implementação f4f3528, evidência f8b7368, em
+`/mnt/dev/peticao/.cache/signup-honeypot-20261108/candidate`.194 testes e4 cenários
+de navegador aprovados, build/types aprovados. Ainda NÃO publicado. Integrar
+localmente no admin-v2 somente entre etapas, preservando mudanças existentes e
+revalidando o conjunto; sem merge/deploy com VPS. Política e evidências em docs/
+do candidato. Não reintroduzir o frontend antigo durante essa integração.
+
 Continuidade persistente autorizada em08/11: seguir
 `/mnt/dev/peticao/docs/VIGIA-CONTINUIDADE.md` e o checkpoint atual em
 `/mnt/dev/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md`. O plano registrado
