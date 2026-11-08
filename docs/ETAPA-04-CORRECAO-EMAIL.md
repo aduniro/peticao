@@ -28,7 +28,9 @@ Sugestões individuais e em lote enviam a versão de cada linha. Linhas obsoleta
 
 API e frontend precisam ser publicados como um único candidato após autorização: um cliente antigo sem versão recebe409, sem sobrescrever o cadastro. Não publicar só a API nem contornar a guarda para acomodar uma página antiga. Não acrescenta DDL nem retenção de conteúdo, e não modifica CSS ou textos públicos. AV-13 segue pendente; o aviso genérico existente é preservado.
 
-Passaram14 direcionados e tipos. A suíte cumulativa está em execução no checkout isolado `candidate-stage02-email-version`. O ensaio HTTP existente foi atualizado para transmitir a versão, e o navegador agora também força conflito após abertura, verifica rascunho preservado e salvamento depois de recarregar. Esses gates ainda devem ser executados sobre o build novo; não inferir aprovação a partir dos testes anteriores.
+Passaram14 direcionados, **495/495 cumulativos**, build, tipos após build e HTTP compilado. O navegador passou em320/390/768/992/1280/1920px: falha de rede sem repetição, preservação do rascunho, conflito após abertura com409, recarregamento e salvamento real posterior, seleção preservada, ausência de exceção/transbordamento e nenhuma mensagem enviada. A captura390px foi inspecionada; CSS e textos públicos não foram alterados.
+
+Código `6095ce4` no checkout isolado `candidate-stage02-email-version`. Evidências privadas em `/home/barre/.cache/peticao-admin-mirror-qa/20261108/`: `email-version-tests-20261108T082711Z.log`, `email-version-final-status.json`, `runtime-email-version-atomic/email-atomic.json` e `runtime-email-version-pending/pending-network.json`. Dois bancos fictícios novos para os ensaios HTTP; runtime3032/54345 encerrado, prévia3031/Tailnet preservada. Ainda não conclui histórico recuperável nem a Etapa4 inteira. Nenhuma publicação na VPS.
 
 ## Verificação
 
