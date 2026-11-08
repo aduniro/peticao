@@ -1,3 +1,4 @@
+import { makeTicket } from "./identity";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { rmSync, readdirSync, readFileSync } from "node:fs";
@@ -106,7 +107,7 @@ test("estrangeiro: base de universidades, país, domínio listado, fora da lista
   assert.equal(br.status, 200);
   const b = (await dbmod.query<any>("SELECT ifes_acronym, campus, campus_ibge, campus_listed, region_declared, region_validated, region_criteria, country, institution_listed FROM signatures WHERE email='maria@unir.br'")).rows[0];
   assert.deepEqual(b, { ifes_acronym: "UNIR", campus: "Ji-Paraná", campus_ibge: 1100122, campus_listed: true, region_declared: true, region_validated: true, region_criteria: "amazonia_legal", country: "BR", institution_listed: true });
-  const ap = await handleSign({ name: "João Pereira", email: "joao.pereira@gmail.com", cpf: "111.444.777-35", category: "apoiador", uf: "ro", city: "ji parana", consent: true }, ctx, null);
+  const ap = await handleSign({ name: "João Pereira", email: "joao.pereira@gmail.com", cpf: "111.444.777-35", category: "apoiador", uf: "ro", city: "ji parana", consent: true, ticket: makeTicket("11144477735", "joao.pereira@gmail.com"), identity: { method: "nascimento", value: "01/02/1990" } }, ctx, { name: "synthetic", lookup: async () => ({ nome: "JOÃO PEREIRA", nasc: "01/02/1990", mae: null }) });
   assert.equal(ap.status, 200);
   assert.deepEqual((await dbmod.query<any>("SELECT city, uf, city_ibge FROM signatures WHERE email='joao.pereira@gmail.com'")).rows[0], { city: "Ji-Paraná", uf: "RO", city_ibge: 1100122 });
 
