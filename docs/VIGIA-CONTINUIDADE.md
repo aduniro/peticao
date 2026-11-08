@@ -111,7 +111,7 @@ roteiro, usar symlink, outro checkout ou contrato desconhecido exige nova revis�
 Pausa explícita continua impedindo a liberação. Isso não aprova commits, SSH,
 envios reais, avisos pendentes, deploy ou merge com a VPS.
 
-Revisão seguinte: contrato `batch-control` conferido para3033/54349, contas e
+Revisão seguinte: contrato `batch-control` conferido para 3033/54349, contas e
 documentos fictícios, nenhuma chamada de transporte. Checksum vigente do roteiro:
 `7b2ad95fb99d9a160b8aa2690e0b5664b6ae981ec1e9d4f19dfc11067c66734f`.
 A revisão anterior fica registrada acima; a regra não aceita roteiros alterados.
@@ -121,3 +121,8 @@ documentos, o grupo dirigido inclui `batch-mutation-atomicity.test.ts` e
 `batch-document-reservation.test.ts`. Nenhum parâmetro de execução foi ampliado.
 Checksum vigente após essa revisão:
 `2609b70607a572ad6c14b0c43e08dd69b144dbd912f5b44af67051d6a02530d5`.
+
+O contrato compilado `batch-reservation` foi revisado com porta 3033/banco 54349,
+schema exclusivo, destinatários `.test`, mail dev e assinatura fictícia habilitada
+somente no processo de QA. A lista fechada passa a incluí-lo. Checksum vigente:
+`b4ba9dca7f32842f9f289d9ad4e2e50ae1ec2855b817d1006a207c3a3a7110dd`.
