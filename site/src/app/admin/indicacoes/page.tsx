@@ -3,11 +3,13 @@ import { sessaoAdmin } from "@/lib/admin";
 import { nivelOk } from "@/lib/admin-users";
 import { allReferrerStats, signersOf } from "@/lib/referrals";
 import { config } from "@/lib/config";
+import { randomUUID } from "node:crypto";
+import CriarIndicacao from "@/components/admin/CriarIndicacao";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Indicações", robots: { index: false } };
 
-export default async function Indicacoes({ searchParams }: { searchParams: { msg?: string } }) {
+export default async function Indicacoes({ searchParams }: { searchParams: { msg?: string; completedRequestId?: string } }) {
   const sessao = await sessaoAdmin();
   if (!sessao) redirect("/admin");
   if (!nivelOk(sessao.nivel, "leitura")) redirect("/admin?erro=nivel");
@@ -24,9 +26,7 @@ export default async function Indicacoes({ searchParams }: { searchParams: { msg
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p>{rows.length} códigos · <strong>{total.v}</strong> acessos por indicação · <strong>{total.s}</strong> assinaturas confirmadas por indicação.
         Quem indica vê só os próprios totais; os nomes abaixo são visíveis apenas aqui.</p>
-      {nivelOk(sessao.nivel, "edicao") && <form method="post" action="/api/admin/indicacoes" style={{ display: "flex", gap: 6, flexWrap: "wrap", margin: "12px 0" }}>
-        <input name="label" placeholder="Código da organização (ex.: Sindicato X, Grupo Y)" size={42} required /><button>Criar código</button>
-      </form>}
+      {nivelOk(sessao.nivel, "edicao") && <CriarIndicacao scope={`${sessao.userId}:${sessao.sessaoId}`} initialRequestId={randomUUID()} completedRequestId={searchParams.completedRequestId} />}
       <table>
         <thead><tr><th>Código</th><th>Quem</th><th>Acessos</th><th>Assinaram</th><th>Aguardando</th><th>Link</th></tr></thead>
         <tbody>

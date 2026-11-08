@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 
 (process.env as Record<string, string>).NODE_ENV = "test";
 delete process.env.PREVIEW_MODE;
@@ -66,12 +67,21 @@ test("referral HTTP keeps existing redirect and messages while denying anonymous
   try {
     const { NextRequest } = await import("next/server"), { POST } = await import("../app/api/admin/indicacoes/route"), { ADMIN_COOKIE } = await import("./admin");
     const { token } = await c.U.abrirSessao(c.actor.userId, "127.0.0.1");
-    const request = (authenticated: boolean, label: string) => new NextRequest("http://localhost/api/admin/indicacoes", { method: "POST", headers: { host: "localhost", origin: "http://localhost", cookie: authenticated ? `${ADMIN_COOKIE}=${token}` : "", "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ label }) });
+    const request = (authenticated: boolean, label: string, requestId: string = randomUUID()) => new NextRequest("http://localhost/api/admin/indicacoes", { method: "POST", headers: { host: "localhost", origin: "http://localhost", cookie: authenticated ? `${ADMIN_COOKIE}=${token}` : "", "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ label, requestId }) });
     assert.equal((await POST(request(false, "QA Anonymous"))).status, 401);
     const invalid = await POST(request(true, "x")); assert.equal(invalid.status, 303);
     assert.equal(new URL(invalid.headers.get("location")!).searchParams.get("msg"), "Informe um nome para o código (ex.: Sindicato X).");
-    const result = await POST(request(true, "QA HTTP")); assert.equal(result.status, 303);
+    assert.equal((await POST(request(true, "QA HTTP", ""))).status, 400);
+    const requestId = randomUUID();
+    const result = await POST(request(true, "QA HTTP", requestId)); assert.equal(result.status, 303);
     assert.match(new URL(result.headers.get("location")!).searchParams.get("msg")!, /^Código criado: [2-9A-HJKMNP-Z]{7}$/);
+    assert.equal(new URL(result.headers.get("location")!).searchParams.get("completedRequestId"), requestId);
+    const before = (await c.db.query("SELECT row_to_json(q)::text raw FROM admin_referral_requests q")).rows;
+    const replay = await Promise.all([POST(request(true, "QA HTTP", requestId)), POST(request(true, "QA HTTP", requestId))]);
+    assert.ok(replay.every(r => r.headers.get("location") === result.headers.get("location")));
+    assert.equal((await POST(request(true, "QA Different", requestId))).status, 409);
+    assert.deepEqual((await c.db.query("SELECT row_to_json(q)::text raw FROM admin_referral_requests q")).rows, before);
+    assert.equal((await c.db.query("SELECT 1 FROM audit_log WHERE event='referrer_created'")).rowCount, 1);
     await c.db.query("UPDATE admin_users SET nivel='leitura' WHERE id=$1", [c.actor.userId]);
     assert.equal((await POST(request(true, "QA Reader"))).status, 403);
     assert.equal((await c.db.query("SELECT 1 FROM referrers")).rowCount, 1);

@@ -23,3 +23,20 @@ O bloco descrito em `ETAPA-02-CURADORIA-CAMPUS.md` acrescenta `contact_campus_re
 ## Complemento posterior — quota durável de IA
 
 O executor descrito em `ETAPA-05-EXECUTOR.md` acrescenta `admin_ai_requests`: agora são **12 tabelas aditivas**. O roteiro atualizado passou em `stage05-executor-schema.log`. Uma tentativa fictícia incerta conserva UUID, conta, reserva de quota, estado e horários com microssegundos após reaplicar DDL atual e bootstrap anterior. Nenhuma geração é disparada pelo ensaio. Permanecem as verificações de assinantes, journal, curadoria e definições anteriores. Não prova publicação na VPS ou consumo de um provedor real.
+
+## Complemento08/11 — intenção de indicação
+
+`admin_referral_requests` é a13ª tabela aditiva. No candidato
+`candidate-stage02-domains`, o comando independente
+`/usr/bin/python3 /mnt/dev/peticao/tools/monitor/verify_admin_candidate.py schema`
+passou nesta continuidade, com saída0. Preserva conta, UUID, fingerprint, referência
+do código e timestamp com microssegundos após DDL atual e bootstrap anterior.
+A lista exata de13 tabelas continua estrita; não foi substituída por contagem mínima.
+
+Também passaram as provas anteriores de diagnósticos, journal, quota, curadoria,
+histórico e originais. O catálogo de remetentes mantém cifra, identidade, estado
+pausado, revisão e decisão de arquivar; só as duas colunas aditivas declaradas
+(`revision`, `archived_at`) são admitidas além das correlações já previstas.
+Restauro na aplicação exige sua própria prova HTTP/navegador; reaplicar DDL antigo
+não prova que o aplicativo antigo respeita o filtro de arquivados.
+Somente PostgreSQL fictício54349; nenhuma leitura ou escrita na VPS.
