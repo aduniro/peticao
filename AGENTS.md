@@ -4,7 +4,7 @@
 
 **NUNCA PARAR UMA TAREFA DADA COMO PRIORITÁRIA, A NÃO SER QUE SEJA SOLICITADA A INTERRUPÇÃO.**
 
-Manter foco na tarefa prioritária até concluir o escopo aprovado. Perguntas, pedidos de status e tarefas secundárias não autorizam interrompê-la. Não encerrar o trabalho apenas por concluir uma etapa intermediária; continuar as etapas independentes enquanto aguarda aprovações. O admin-v2, atualmente sua prévia isolada somente leitura, permanece prioritário.
+Manter foco na tarefa prioritária até concluir o escopo aprovado. Perguntas, pedidos de status e tarefas secundárias não autorizam interrompê-la. Não encerrar o trabalho apenas por concluir uma etapa intermediária; continuar as etapas independentes enquanto aguarda aprovações. O admin-v2 completo é a prioridade número 1; a prévia isolada somente leitura já foi concluída e deve ser preservada para avaliação.
 
 Registrar etapas, commits, testes e atividade real no Vigia. Se houver interrupção externa ou impedimento técnico, informar imediatamente, preservar um checkpoint e retomar assim que possível; nunca apresentar trabalho parado como execução em segundo plano. Seguir `docs/POLITICA-CENTRAL-EXECUCAO.md`. A prioridade não autoriza deploy ou merge sem permissão explícita.
 
