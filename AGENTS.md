@@ -1,5 +1,13 @@
 # Repository Guidelines
 
+## Execução de tarefas prioritárias
+
+**NUNCA PARAR UMA TAREFA DADA COMO PRIORITÁRIA, A NÃO SER QUE SEJA SOLICITADA A INTERRUPÇÃO.**
+
+Manter foco na tarefa prioritária até concluir o escopo aprovado. Perguntas, pedidos de status e tarefas secundárias não autorizam interrompê-la. Não encerrar o trabalho apenas por concluir uma etapa intermediária; continuar as etapas independentes enquanto aguarda aprovações. O admin-v2, atualmente sua prévia isolada somente leitura, permanece prioritário.
+
+Registrar etapas, commits, testes e atividade real no Vigia. Se houver interrupção externa ou impedimento técnico, informar imediatamente, preservar um checkpoint e retomar assim que possível; nunca apresentar trabalho parado como execução em segundo plano. Seguir `docs/POLITICA-CENTRAL-EXECUCAO.md`. A prioridade não autoriza deploy ou merge sem permissão explícita.
+
 ## Project Structure & Module Organization
 `site/` contains the Next.js 14, React, TypeScript, and PostgreSQL application. Routes and API handlers live in `site/src/app/`; reusable UI in `src/components/`; business logic in `src/lib/`; petition and sharing copy in `src/content/`; translations in `src/i18n/`. Paths in this sentence are relative to `site/` unless fully qualified. Assets live in `site/assets/` and `site/public/`.
 
