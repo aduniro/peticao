@@ -131,3 +131,8 @@ O contrato `batch-reconciliation` foi revisado para conciliar metadados de aceit
 com documentos e provedores fictícios, sem reenvio. Os contratos usam caixas dev
 individuais. Checksum vigente do roteiro Python:
 `8a31d4c02cd11e19d555ac7b4f07134d9976bf25411a49bfc80ea82867cc7930`.
+
+O grupo dirigido de documentos inclui agora as regressões revisadas de rejeição
+conclusiva e de atribuição somente à lista capturada, com banco fictício/mail dev.
+Checksum vigente:
+`5436a65ee6844106e1896311cf0acfc45c8ddc57e61624add6586b274b5282a0`.

@@ -8,7 +8,7 @@ HELPER=Path('/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py')
 DIGEST='251fae6b0854b8eaf5ab613dbc085ebe7873d7207781988af70dcf56b4b5fdcf'
 CANDIDATE=Path('/mnt/dev/peticao/.cache/admin-integration/candidate-stage02-domains')
 CONSOLIDATION=CANDIDATE/'tools/admin-qa/consolidation.py'
-CONSOLIDATION_DIGEST='8a31d4c02cd11e19d555ac7b4f07134d9976bf25411a49bfc80ea82867cc7930'
+CONSOLIDATION_DIGEST='5436a65ee6844106e1896311cf0acfc45c8ddc57e61624add6586b274b5282a0'
 TEST_FLAGS={'--tests','--contact-tests','--mail-tests','--ai-tests','--document-tests'}
 CONTRACTS={'referrals','referrals-browser','content-retention','whatsapp-senders','contact-history','mail-recovery','mail-preview','ai-executor','batch-control','batch-reservation','batch-reconciliation'}
 
