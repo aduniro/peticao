@@ -76,7 +76,14 @@ def units(variant,selected=None):
                  "MAIL_OUTBOX_DIR=/tmp/lab-unit-outbox",
                  "node","--import","tsx","--test","--test-concurrency=1",*files]
     log_run(args,ROOT/"reports"/("unit-targeted-"+variant+".log" if selected else "unit-"+variant+".log"))
-def status():command(COMPOSE+["ps"])
+def status():
+    command(COMPOSE+["ps"])
+    print("Proxy local:", "ativo" if proxy_alive() else "parado")
+    for port in [3040,3041]:
+        try:
+            code=urllib.request.urlopen(f"http://127.0.0.1:{port}/",timeout=5).status
+            print(f"http://127.0.0.1:{port}/ — HTTP {code}")
+        except Exception:print(f"http://127.0.0.1:{port}/ — indisponível")
 def main():
     action=sys.argv[1] if len(sys.argv)>1 else "iniciar"
     if action in ["iniciar","start"]:start()

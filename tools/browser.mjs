@@ -45,7 +45,7 @@ async function fillSupporter(p, name = "Pessoa Ficticia Teste", email = "qa-lab-
 }
 try {
   // Capture the same untouched fixtures before any submit changes the counters.
-  for (const width of [390,768,1440]) for (const version of ["a","b"]) {
+  for (const width of (process.env.LAB_BROWSER_FLOWS_ONLY ? [] : [390,768,1440])) for (const version of ["a","b"]) {
     const {ctx,p} = await context(version,width,false);
     try { await record("visual-"+width,version,async()=>{
       await capture(p,version,"home-"+width,true);
@@ -56,7 +56,7 @@ try {
       return { width, screenshots: 4 };
     }); } finally { await ctx.close(); }
   }
-  for (const version of ["a","b"]) {
+  for (const version of (process.env.LAB_BROWSER_FLOWS_ONLY ? [] : ["a","b"])) {
     const {ctx,p} = await context(version,390);
     try {
       await record("cpf-blur-focus-mathematical",version,async()=>{
@@ -100,8 +100,40 @@ try {
       });
     } finally {await ctx.close();}
   }
-  // Real backend routes, with synthetic adapters and completely separate databases.
   for (const version of ["a","b"]) {
+    const {ctx,p}=await context(version,390);
+    try {
+      if(!process.env.LAB_BROWSER_FOREIGN_ONLY)await record("server-campus-correction-and-submit",version,async()=>{
+        await field(p,"name").fill("Pessoa Ficticia Teste");await field(p,"email").fill("qa-lab-server@unir.br");
+        await field(p,"cpf").fill("11144477735");await field(p,"institution").fill("UNIR");await field(p,"institution").press("Escape");
+        await p.locator("form.form select[name=role]").selectOption("docente");
+        await p.locator("form.form input[name=region]").check();await p.locator("form.form input[name=consent]").check();
+        let response=p.waitForResponse(r=>new URL(r.url()).pathname==="/api/assinar");await submit(p);
+        let data=await(await response).json();assert.ok(data.errors?.campus,JSON.stringify(data));await p.waitForSelector("dialog[open]");
+        await capture(p,version,"servidor-campus-modal-390");await close(p);
+        assert.equal(await field(p,"name").inputValue(),"Pessoa Ficticia Teste");
+        await field(p,"campus").fill("Porto Velho");await field(p,"campus").press("Escape");await field(p,"name").click();
+        response=p.waitForResponse(r=>new URL(r.url()).pathname==="/api/assinar");await submit(p);data=await(await response).json();
+        assert.equal(data.ok,true,JSON.stringify(data));await close(p);return {registered:true};
+      });
+      await p.reload({waitUntil:"networkidle"});await p.evaluate(()=>window.dispatchEvent(new CustomEvent("peticao:open",{detail:"sign"})));await p.locator("form.form").waitFor();
+      await record("foreign-security-retry-and-submit",version,async()=>{
+        await tab(p,"Estrangeiro(a)");await field(p,"name").fill("Anna Beispiel");await field(p,"email").fill("qa-lab-foreign@uni-heidelberg.de");
+        await p.locator("form.form select[name=country]").selectOption("DE");await field(p,"university").fill("Universität Heidelberg");
+        await field(p,"university").press("Escape");await field(p,"name").click();await p.locator("form.form input[name=consent]").check();
+        await p.evaluate(()=>{window.__labTurnstileMode="invalid";window.turnstile.reset(document.querySelector("[data-lab-widget]").dataset.labWidget);});
+        let response=p.waitForResponse(r=>new URL(r.url()).pathname==="/api/assinar");await submit(p);let data=await(await response).json();
+        assert.ok(!data.ok,JSON.stringify(data));assert.equal(data.errorCode,"robot",JSON.stringify(data));
+        await p.locator("form.form p.err[role=alert]").waitFor();assert.equal(await p.locator("dialog[open]").count(),0);await capture(p,version,"estrangeiro-seguranca-inline-390");
+        assert.equal(await field(p,"name").inputValue(),"Anna Beispiel");assert.equal(await p.locator("form.form select[name=country]").inputValue(),"DE");
+        await p.evaluate(()=>{window.__labTurnstileMode="valid";window.turnstile.reset(document.querySelector("[data-lab-widget]").dataset.labWidget);});
+        response=p.waitForResponse(r=>new URL(r.url()).pathname==="/api/assinar");await submit(p);data=await(await response).json();assert.equal(data.ok,true,JSON.stringify(data));
+        assert.equal(await field(p,"cpf").count(),0);return {registered:true};
+      });
+    } finally {await ctx.close();}
+  }
+  // Real backend routes, with synthetic adapters and completely separate databases.
+  for (const version of (process.env.LAB_BROWSER_FLOWS_ONLY ? [] : ["a","b"])) {
     const base="http://127.0.0.1:"+(version==="a"?3040:3041);
     const post=async(path,body)=>{const r=await fetch(base+path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};};
     await record("email-eligibility-api",version,async()=>{
@@ -131,6 +163,12 @@ try {
   results.errors.push({version:"harness",message:String(error)});console.log("FAIL HARNESS",String(error));
 } finally {
   await browser.close();
+  if(process.env.LAB_BROWSER_FLOWS_ONLY){
+    const previous=JSON.parse(await fs.readFile(root+"/reports/browser-results.json","utf8"));
+    const names=new Set(results.cases.map(c=>c.name+"/"+c.version));
+    results.cases=[...previous.cases.filter(c=>!names.has(c.name+"/"+c.version)),...results.cases];
+    results.errors=[...previous.errors,...results.errors];
+  }
   await fs.writeFile(root+"/reports/browser-results.json",JSON.stringify(results,null,2));
 }
 if(results.errors.length||results.cases.some(c=>c.status==="failed"))process.exitCode=1;
