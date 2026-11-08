@@ -59,7 +59,7 @@ if args.tests or args.contact_tests or args.mail_tests or args.ai_tests or args.
     if args.ai_tests:
         files = [str(site / 'src/lib' / name) for name in ['knowledge.test.ts', 'ai-context.test.ts', 'ai-executor.test.ts', 'contact-campus-review.test.ts']]
     if args.document_tests:
-        files = [str(site / 'src/lib' / name) for name in ['batch-sending-control.test.ts', 'batch-mutation-atomicity.test.ts', 'batch-document-reservation.test.ts', 'batch-rejection-recovery.test.ts', 'batch-snapshot-reservation.test.ts', 'signed-pdf.test.ts', 'batches.test.ts', 'batches-foreign.test.ts']]
+        files = [str(site / 'src/lib' / name) for name in ['batch-creation-actor.test.ts', 'batch-sending-control.test.ts', 'batch-mutation-atomicity.test.ts', 'batch-document-reservation.test.ts', 'batch-rejection-recovery.test.ts', 'batch-snapshot-reservation.test.ts', 'signed-pdf.test.ts', 'batches.test.ts', 'batches-foreign.test.ts']]
     command = ['node', 'scripts/with-db.mjs', 'node', '--import', 'tsx', '--test', '--test-concurrency=1', *files]
 else:
     # Use the runtime paired with the selected Playwright (requires Node >=20).

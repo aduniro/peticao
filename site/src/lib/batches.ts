@@ -62,8 +62,15 @@ export async function getBatch(id: number): Promise<Batch | null> {
  * Os dois PDFs são acumulados: cada versão enviada ao Governo traz todas as assinaturas confirmadas até ali (as "novas" só marcam o lote em que cada uma entrou).
  * Retorna null se não houver o que fechar.
  */
-export async function createBatch(kind: "partial" | "final"): Promise<Batch | null> {
+type CreationSource = { kind: "scheduler" } | { kind: "admin"; actor: BatchActor };
+const creationData = (source: CreationSource) => source.kind === "admin" ? { source: "admin", ...actorData(source.actor) } : { source: "scheduler" };
+/** Internal scheduler path; manual HTTP creation must use createBatchForAdmin. */
+export const createBatch = (kind: "partial" | "final") => createBatchFrom(kind, { kind: "scheduler" });
+export const createBatchForAdmin = (kind: "partial" | "final", actor: BatchActor) => createBatchFrom(kind, { kind: "admin", actor });
+
+async function createBatchFrom(kind: "partial" | "final", source: CreationSource): Promise<Batch | null> {
   const created = await tx(async (c) => {
+    if (source.kind === "admin" && !(await authorizeBatchActor(c, source.actor))) throw new Error("Lote não está pronto para aprovação.");
     await c.query("SELECT pg_advisory_xact_lock(7002)");
     if (kind === "final") {
       const f = await c.query("SELECT 1 FROM batches WHERE kind='final' AND status <> 'cancelled'");
@@ -84,7 +91,7 @@ export async function createBatch(kind: "partial" | "final"): Promise<Batch | nu
     );
     const id = ins.rows[0].id;
     await c.query("UPDATE signatures SET batch_id=$1 WHERE status='confirmed' AND batch_id IS NULL AND id=ANY($2::int[])", [id, rows.map(row => row.id)]);
-    await audit("batch_created", null, { batchId: id, seq, kind, n: rows.length, listHash }, c);
+    await audit("batch_created", null, { batchId: id, seq, kind, n: rows.length, listHash, ...creationData(source) }, c);
     return { id, seq, rows, nS, nE, listHash };
   });
   if (!created) return null;
@@ -95,11 +102,12 @@ export async function createBatch(kind: "partial" | "final"): Promise<Batch | nu
     const signed = await signPdf(unsigned);
     const sha = createHash("sha256").update(signed.bytes).digest("hex"); // hash dos bytes do arquivo, igual ao `sha256sum`
     await tx(async client => {
+      if (source.kind === "admin" && !(await authorizeBatchActor(client, source.actor))) throw new Error("Lote não está pronto para aprovação.");
       await client.query("UPDATE batches SET pdf=$1, pdf_sha256=$2, signature_kind=$3, status='prepared' WHERE id=$4", [Buffer.from(signed.bytes), sha, signed.kind, id]);
-      await audit("batch_prepared", null, { batchId: id, pdfSha256: sha, signatureKind: signed.kind }, client);
+      await audit("batch_prepared", null, { batchId: id, pdfSha256: sha, signatureKind: signed.kind, ...creationData(source) }, client);
     });
   } catch (e) {
-    await audit("batch_prepare_failed", null, { batchId: id, error: String(e).slice(0, 200) });
+    await audit("batch_prepare_failed", null, { batchId: id, error: String(e).slice(0, 200), ...creationData(source) });
     throw e;
   }
   await notifyApprover(id).catch((e) => console.error("aviso ao aprovador falhou", e));

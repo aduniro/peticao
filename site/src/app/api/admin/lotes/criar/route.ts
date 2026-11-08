@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exigirNivel } from "@/lib/admin-api";
-import { createBatch } from "@/lib/batches";
+import { exigirNivel, quemAge } from "@/lib/admin-api";
+import { createBatchForAdmin } from "@/lib/batches";
 import { requestOrigin } from "@/lib/net";
 
 export const dynamic = "force-dynamic";
@@ -9,9 +9,11 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
   const bloqueio = await exigirNivel(req, "total", 120, { stepup: true });
   if (bloqueio) return bloqueio;
+  const actor = await quemAge(req);
+  if (!actor) return NextResponse.json({ ok: false }, { status: 401 });
   const url = new URL("/admin/lotes", requestOrigin(req.headers));
   try {
-    const b = await createBatch("final");
+    const b = await createBatchForAdmin("final", actor);
     url.searchParams.set("msg", b ? `Lote final ${b.seq} criado.` : "Nada a fechar (já existe lote final ou não há assinaturas).");
   } catch (e) { url.searchParams.set("msg", (e as Error).message); }
   return NextResponse.redirect(url, 303);
