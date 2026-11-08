@@ -28,3 +28,11 @@ Não há migração/reclassificação/exclusão de assinaturas existentes, mudan
 hashes/IDs/datas ou aprovação automática de domínios. Decisões de revisão de CPF
 não são promovidas para produção. O domínio sou.ucpel.edu.br não é de IFES e não
 foi aprovado; ufpel.edu.br pertence à Universidade Federal de Pelotas.
+
+## Domínios reconhecidos no Apoiador
+
+A pedido do proprietário em08/11/2026, `ucpel.edu.br` e `sou.ucpel.edu.br` constam
+explicitamente em `SUPPORTER_KNOWN_DOMAINS`. O reconhecimento evita sugerir troca
+por outra universidade quando o endereço está correto. Não é aprovação IFES nem
+exceção a sintaxe, MX, consentimento, CPF, identidade, duplicidade ou antirrobô.
+Não altera a curadoria da VPS e não libera esses domínios no formulário Servidor.

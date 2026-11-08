@@ -16,6 +16,7 @@ import { CountryUniversityFields, IfesCampusFields, UfCityFields, type ServerSta
 import { maskCpf } from "@/lib/cpf-mask";
 import { showCpfError } from "@/lib/cpf-feedback";
 import { supporterEmailSuggestion } from "@/lib/supporter-email-suggestion";
+import { isKnownSupporterEmail } from "@/lib/supporter-known-domains";
 import { formValidationNotice } from "@/lib/form-validation-notice";
 import { signRequest } from "@/lib/sign-request";
 import { useI18n } from "@/i18n/client";
@@ -73,9 +74,10 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       return j as Record<string, any>;
     } catch { /* sem rede: o servidor valida de novo ao enviar */ }
   }
-  const emailSuggestion = emailSuggestionForCategory(category, (category === "apoiador" ? supporterEmailSuggestion(emailV) : null) || issue?.suggest || sugg || fix?.sugestao, issue?.code);
+  const recognizedSupporter = category === "apoiador" && isKnownSupporterEmail(emailV);
+  const emailSuggestion = recognizedSupporter ? null : emailSuggestionForCategory(category, (category === "apoiador" ? supporterEmailSuggestion(emailV) : null) || issue?.suggest || sugg || fix?.sugestao, issue?.code);
   const rankedFix = category === "apoiador" && emailSuggestion ? detalheDeSugestao(emailV, emailSuggestion) : null;
-  const emailFix = rankedFix ?? (fix && (!fix.sugestao || emailSuggestionForCategory(category, fix.sugestao, issue?.code)) ? fix : null);
+  const emailFix = recognizedSupporter ? null : rankedFix ?? (fix && (!fix.sugestao || emailSuggestionForCategory(category, fix.sugestao, issue?.code)) ? fix : null);
   const BAD_EMAIL = new Set(["email_not_found", "email_undeliverable", "email_invalid_domain", "email_invalid"]);
   const cpfBad = showCpfError(cpf, cpfTouched); // checagem matemática no navegador: CPF inválido nunca chega à CPF Brasil
   const [srv, setSrv] = useState<ServerState>(EMPTY_SERVER);

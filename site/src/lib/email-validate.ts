@@ -5,6 +5,7 @@ import { SAFE_EMAIL_RE } from "./email-syntax";
 import { detalheDeSugestao, diagnosticar, type Diagnostico } from "./email-diagnostico";
 import { dominiosConhecidos, dominiosIfes } from "./email-sugestao";
 import { acceptsServerDomain } from "./server-email-policy";
+import { SUPPORTER_KNOWN_DOMAINS } from "./supporter-known-domains";
 
 export type EmailVerdict =
   | { ok: true; soft?: Diagnostico }
@@ -30,7 +31,8 @@ const comDetalhe = (e: string, s: string | null | undefined): { suggest?: string
  */
 export async function validateEmailField(email: string, category: "servidor" | "apoiador", known?: readonly string[]): Promise<EmailVerdict> {
   const e = email.trim().toLowerCase();
-  const kn = known ?? (category === "servidor" ? await dominiosIfes().catch(() => []) : await dominiosConhecidos().catch(() => [...KNOWN_DOMAINS]));
+  const configured = known ?? (category === "servidor" ? await dominiosIfes().catch(() => []) : await dominiosConhecidos().catch(() => [...KNOWN_DOMAINS]));
+  const kn = category === "apoiador" ? [...configured, ...SUPPORTER_KNOWN_DOMAINS] : configured;
   const diag = diagnosticar(e, kn);
   if (!SAFE_EMAIL_RE.test(e)) return { ok: false, code: diag ? "email_typo" : "email_invalid", ...(diag ? { suggest: diag.sugestao ?? undefined, detail: diag } : {}) };
   const d = emailDomain(e) ?? "";
