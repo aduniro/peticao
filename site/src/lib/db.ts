@@ -276,6 +276,11 @@ const SCHEMA_SQL = `
     ip_hash TEXT
   );
   CREATE INDEX IF NOT EXISTS admin_sessions_user ON admin_sessions(user_id);
+  CREATE TABLE IF NOT EXISTS admin_referral_requests (
+    actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
+    input_hash TEXT NOT NULL, referrer_id INTEGER NOT NULL REFERENCES referrers(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY(actor_id,request_id)
+  );
   CREATE TABLE IF NOT EXISTS admin_reset (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,

@@ -77,3 +77,49 @@ test("referral HTTP keeps existing redirect and messages while denying anonymous
     assert.equal((await c.db.query("SELECT 1 FROM referrers")).rowCount, 1);
   } finally { await c.db._closeDbForTests(); }
 });
+
+test("mesma intenção concorrente cria um único código e não renova os metadados na repetição", async () => {
+  const c = await setup("t_admin_referrals_intent");
+  const requestId = "00000000-0000-4000-8000-000000000001";
+  try {
+    const results = await Promise.all(Array.from({ length: 4 }, () => c.create("QA Same Intent", c.actor, { requestId })));
+    assert.ok(results.every(r => r.ok));
+    const good = results.filter(r => r.ok); assert.equal(new Set(good.map(r => r.code)).size, 1);
+    assert.equal(good.filter(r => !r.existing).length, 1);
+    assert.equal((await c.db.query("SELECT count(*)::int n FROM referrers")).rows[0].n, 1);
+    assert.equal((await c.db.query("SELECT count(*)::int n FROM audit_log WHERE event='referrer_created'")).rows[0].n, 1);
+    const before = (await c.db.query("SELECT row_to_json(q)::text raw FROM admin_referral_requests q")).rows;
+    const replay = await c.create("  QA Same Intent  ", c.actor, { requestId }); assert.ok(replay.ok && replay.existing);
+    assert.deepEqual((await c.db.query("SELECT row_to_json(q)::text raw FROM admin_referral_requests q")).rows, before);
+    assert.deepEqual(await c.create("QA Different Intent Body", c.actor, { requestId }), { ok: false, error: "conflict" });
+    assert.ok((await c.db.verifyAuditChain()).ok);
+  } finally { await c.db._closeDbForTests(); }
+});
+
+test("intenção é vinculada à conta atual e falha de auditoria reverte a reserva", async () => {
+  const c = await setup("t_admin_referrals_intent_audit");
+  const requestId = "00000000-0000-4000-8000-000000000002";
+  try {
+    await c.db.query("CREATE FUNCTION fail_intent_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='referrer_created' THEN RAISE EXCEPTION 'QA intent audit failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER fail_intent_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION fail_intent_audit()");
+    await assert.rejects(c.create("QA Rollback Intent", c.actor, { requestId }), /QA intent audit failure/);
+    assert.equal((await c.db.query("SELECT count(*)::int n FROM referrers")).rows[0].n, 0);
+    assert.equal((await c.db.query("SELECT count(*)::int n FROM admin_referral_requests")).rows[0].n, 0);
+    await c.db.query("DROP TRIGGER fail_intent_audit ON audit_log");
+    const created = await c.create("QA Rollback Intent", c.actor, { requestId }); assert.ok(created.ok);
+    const second = await c.U.criarUsuario({ email: "second-editor@example.test", nome: "Editor Dois QA", nivel: "edicao", senha: "QA-Other-Referral-Strong-2026" }); assert.ok(second.ok);
+    const own = await c.create("QA Rollback Intent", { userId: second.usuario.id, email: second.usuario.email }, { requestId }); assert.ok(own.ok);
+    assert.notEqual(own.code, created.code);
+    await c.db.query("UPDATE admin_users SET ativo=false WHERE id=$1", [c.actor.userId]);
+    assert.deepEqual(await c.create("QA Rollback Intent", c.actor, { requestId }), { ok: false, error: "forbidden" });
+    assert.equal((await c.db.query("SELECT count(*)::int n FROM admin_referral_requests")).rows[0].n, 2);
+  } finally { await c.db._closeDbForTests(); }
+});
+
+test("intenção malformada não cria código nem metadados", async () => {
+  const c = await setup("t_admin_referrals_intent_parameters");
+  try {
+    for (const requestId of ["", "wrong-id", "00000000-0000-0000-0000-000000000000"]) assert.deepEqual(await c.create("QA Intent", c.actor, { requestId }), { ok: false, error: "request" });
+    assert.equal((await c.db.query("SELECT count(*)::int n FROM referrers")).rows[0].n, 0);
+    assert.equal((await c.db.query("SELECT count(*)::int n FROM admin_referral_requests")).rows[0].n, 0);
+  } finally { await c.db._closeDbForTests(); }
+});
