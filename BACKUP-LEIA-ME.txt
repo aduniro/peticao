@@ -1,0 +1,55 @@
+BACKUP DA PLATAFORMA PUBLICADA — 08/11/2026
+
+Aplicação, configurações e bancos capturados diretamente da VPS. Nenhum deploy,
+merge ou alteração de código/dados de produção foi realizado. Serviços com os
+mesmos PIDs e horários de início; identificador do build preservado.
+
+CONTEÚDO
+private/platform-full.tar.gz — aplicação integral /opt/peticao/app, incluindo
+build/dependências, configurações /etc/peticao, Caddy, systemd, scripts operacionais,
+estado auxiliar e configurações PostgreSQL. Lista exata de raízes no manifesto.
+Preserva arquivos ocultos, UID/GID numéricos, permissões, datas e links.
+
+private/peticao.dump — banco principal, pg_dump custom de snapshot consistente.
+private/cpf_audit_20261106_104518.dump — banco auxiliar de auditoria.
+private/postgres-globals.sql — papéis/permissões globais PostgreSQL.
+Esses arquivos e o tar contêm dados pessoais e segredos. Permanecem fora do Git,
+com diretórios privados e arquivos600. NÃO enviar para repositórios remotos.
+
+source-git/ — repositório Git NOVO e independente, sem remoto, com681 arquivos de
+código/configuração de build e manifestos. Sem merge com o desenvolvimento.
+
+VERIFICAÇÃO
+13.426 entradas:12.014 arquivos,1.408 diretórios e4 links simbólicos. Nenhum
+arquivo especial apareceu no escopo. Inventários antes/depois idênticos; todos
+os conteúdos SHA-256, tamanhos, tipos, modos, UID/GID, datas e links conferidos.
+Nenhum ACL/xattr estava presente nos arquivos do escopo; tar preparado para ambos.
+
+Restauração real dos DOIS dumps em PostgreSQL17 isolado, rede desabilitada,
+sem aplicativo nem workers de e-mail. Todas as27+25 tabelas e contagens conferidas
+com o MESMO snapshot de cada dump. Nenhum índice inválido. Contêiner/volume de
+teste removidos. O ensaio usa --no-owner/--no-privileges; os papéis e privilégios
+originais permanecem no dump/globals e não foram aplicados à instância de teste.
+
+capture-manifest.json — evidências da captura e hashes originais dos artefatos.
+verification.json — resultado consolidado e hashes finais dos arquivos privados.
+private/restore-report.json — detalhes da restauração e contagens por tabela.
+private/files-before.json e files-after.json — inventário completo de arquivos.
+private/capture-tools/ — scripts executados, para auditoria/reprodução.
+
+LIMITES
+É backup da plataforma, não imagem do disco inteiro da VPS. Os dois bancos têm
+snapshots consistentes próprios; aplicação/configurações e bancos foram capturados
+em janelas registradas, sem parar as assinaturas. Novas assinaturas posteriores
+não fazem parte dos dumps. Nada foi copiado diretamente de PGDATA em produção.
+Credenciais systemd e chave do host preservadas em arquivo protegido; eventual
+restauração em outra máquina requer planejar usuários/grupos, segredos e serviços.
+
+A primeira tentativa de validação do dump encontrou somente permissão de leitura
+do cliente de teste; a segunda passou sem afrouxar os arquivos do backup. Logs da
+primeira tentativa preservados. A conferência do tar foi retomada com leitura
+sequencial para evitar buscas custosas em gzip; o mesmo tar foi validado inteiro.
+
+NÃO RESTAURAR SOBRE A VPS EM EXECUÇÃO SEM PLANO E AUTORIZAÇÃO. Para consulta,
+utilizar o source-git. Para restaurar dados, sempre usar primeiro um banco novo e
+isolado. Não iniciar o aplicativo restaurado com e-mail/configuração de produção.

@@ -1,0 +1,162 @@
+{
+  "archive_and_database_bytes": 597953480,
+  "artifacts": {
+    "private/capture-tools/capture.py": {
+      "bytes": 7214,
+      "sha256": "420ceeee603529b7542fc8835b2cf2e3063a3260d88d79b76becc81eb41d3fef"
+    },
+    "private/capture-tools/remote.py": {
+      "bytes": 6173,
+      "sha256": "6ee6bc8c6481afbe3b1d708019538d26af7bc2cf475e6c7ee88c77ef3db44542"
+    },
+    "private/capture-tools/restore.py": {
+      "bytes": 4303,
+      "sha256": "d6d6f08161e7cb2577e634f640a0a5ab89d04eadfcc8210e89f2b48f1bcb9f8e"
+    },
+    "private/capture-tools/source_git.py": {
+      "bytes": 4619,
+      "sha256": "ea8a340f113d072d7e8165501ac5bb674c76fef7709ae648b4cd81d11fe8ccde"
+    },
+    "private/cpf_audit_20261106_104518-snapshot.json": {
+      "bytes": 2457,
+      "sha256": "e3197069dd435378dc6dbbb9ba76266a1331469d4423f120feae276801d5ed72"
+    },
+    "private/cpf_audit_20261106_104518-toc.txt": {
+      "bytes": 11367,
+      "sha256": "63b4e3ef78fae8093d000b8c3e8aa8885a9df4ee25dd12e81f25faf4eff656e5"
+    },
+    "private/cpf_audit_20261106_104518.dump": {
+      "bytes": 150699497,
+      "sha256": "a9f52aa15dfed3b841befb1aee6aaa5536fd4d10d4b800f8d946e2b3d2622486"
+    },
+    "private/cpf_audit_20261106_104518.dump.stderr": {
+      "bytes": 1751,
+      "sha256": "a445e6ab4c03f0abb30e6ba1043f28f685080cadf6641589c3cdd3a574581ac9"
+    },
+    "private/files-after.json": {
+      "bytes": 4292411,
+      "sha256": "b9820a11ed454b3ce7c7550b6788a03fa5abf7cf82759897059237a08e60b7b8"
+    },
+    "private/files-after.json.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "private/files-before.json": {
+      "bytes": 4292411,
+      "sha256": "18f627e5b5c361a6570dedfbde0530964e08e357a73d875445ee1f8996490aac"
+    },
+    "private/files-before.json.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "private/peticao-snapshot.json": {
+      "bytes": 2628,
+      "sha256": "8ba35554fb26828a8646c5a190807ee70c25b81bf40bc35a8e6ded3b6fa98b56"
+    },
+    "private/peticao-toc.txt": {
+      "bytes": 11880,
+      "sha256": "ef9fd146d288f0bff5f2a27801fb24756a2df26466860763c4c4b8abeb8cb9e8"
+    },
+    "private/peticao.dump": {
+      "bytes": 188440366,
+      "sha256": "ffc4e86eb13f2b183cc113ed66aa5838f716d0a2afdf3ab02496bc1614957d82"
+    },
+    "private/peticao.dump.stderr": {
+      "bytes": 1866,
+      "sha256": "511c893473dd4830925e862524741c3f90327acacf51c692209c0817aa8b7d77"
+    },
+    "private/platform-full.tar.gz": {
+      "bytes": 258813617,
+      "sha256": "d2688ac943db224aac619b119dca85968612420d84fb9eed9306abd8357b64c2"
+    },
+    "private/platform-full.tar.gz.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "private/postgres-globals.sql": {
+      "bytes": 793,
+      "sha256": "82c4ef13f0705628540727341a7617ce2996c9595f29dbc76563dd7f054833d0"
+    },
+    "private/postgres-globals.sql.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "private/restore-attempt-1/peticao-toc.txt": {
+      "bytes": 11880,
+      "sha256": "ef9fd146d288f0bff5f2a27801fb24756a2df26466860763c4c4b8abeb8cb9e8"
+    },
+    "private/restore-attempt-1/restore-report.json": {
+      "bytes": 265,
+      "sha256": "2ae7c038fca687843d71dce5e423f446efc7b522a4505fb012a89770a97ae52f"
+    },
+    "private/restore-attempt-1/restore-validation.log": {
+      "bytes": 253,
+      "sha256": "7c5227f514d93dad31032312961dbbcee513ad56f92471a4e6a04ace37f2d7c2"
+    },
+    "private/restore-report.json": {
+      "bytes": 6400,
+      "sha256": "7969aceef313dff9214f959da64a9e7bd77efa074f0074477cb9f1087f7b13df"
+    },
+    "private/restore-validation.log": {
+      "bytes": 205,
+      "sha256": "c9f51ae938172f419fa79fd65cb62c4d4539a075e766c974710ab975086d477e"
+    },
+    "private/source-differences.json": {
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "private/source-quarantine.json": {
+      "bytes": 3,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "private/state-after.json": {
+      "bytes": 26564,
+      "sha256": "3a8dea637ed274dc506f0ca4e9b209d015dc48f62fcac02c478c59b0893c7b8f"
+    },
+    "private/state-after.json.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "private/state-before.json": {
+      "bytes": 26564,
+      "sha256": "b538ba07e119ac2e6b46abce08f7caf1a91d64e1294318d6c3b9452fc820859a"
+    },
+    "private/state-before.json.stderr": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "private/state-final.json": {
+      "bytes": 26564,
+      "sha256": "f5bd6872d9b803e0df251ceafe79cc361246c766176fe8be674f46237bcc7ce9"
+    }
+  },
+  "backup_directory": "/mnt/dev/backups/peticao-vps/20261108T182956Z",
+  "database_restore": {
+    "cpf_audit_20261106_104518": {
+      "all_table_counts_match": true,
+      "invalid_indexes": 0,
+      "restored": true,
+      "rows": 314579,
+      "tables": 25
+    },
+    "peticao": {
+      "all_table_counts_match": true,
+      "invalid_indexes": 0,
+      "restored": true,
+      "rows": 386728,
+      "tables": 27
+    }
+  },
+  "directories": 1408,
+  "entries": 13426,
+  "file_contents_and_metadata_verified": true,
+  "files": 12014,
+  "finished_at": "2026-11-08T18:37:07.089706+00:00",
+  "live_services_and_build_unchanged": true,
+  "restore_application_started": false,
+  "restore_container_removed": true,
+  "restore_network": "none",
+  "source_files": 681,
+  "status": "complete",
+  "symlinks": 4
+}
