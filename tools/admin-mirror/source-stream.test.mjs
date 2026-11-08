@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { collectSource, exportProgram } from "./source-stream.mjs";
-import { digest, validateContract } from "./snapshot.mjs";
+import { digest, deltaDigest, validateContract } from "./snapshot.mjs";
 const contract = [{ name: "signatures", columns: [{ name: "id", type: "integer" }], primaryKey: ["id"] }];
 function stream(records, code = 0) {
   return () => {
@@ -37,7 +37,7 @@ test("production metadata contract contains only approved tables and a syntactic
   assert.equal(checked.status, 0, checked.stderr.toString());
   assert(program.includes("BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY"));
   assert(!program.includes("HASH_PEPPER"));
-  assert(!program.includes("CPF_CACHE_ENCRYPTION_KEY"));
+  assert(program.includes("CPF_CACHE_ENCRYPTION_KEY")); // consumed only inside the VPS process
 });
 test("complete source stream is verified without exposing row data to logs", async () => {
   const packet = await collectSource(contract, {}, stream(records()));
@@ -54,6 +54,23 @@ test("blob chunks are hashed before becoming reusable cached documents", async (
   assert.deepEqual(Buffer.concat(received), bytes); assert(complete);
   input[2].bytes++;
   await assert.rejects(collectSource(contract, { onBlob: async () => {} }, stream(input)), /BLOB_CHECKSUM/);
+});
+test("unchanged tables and verified append-only prefixes need no retransmission of old rows", async () => {
+  const previous = { fingerprint: digest("fixture-fingerprint"), sha256: digest([{ id: 1 }]), count: 1, lastKey: [1] };
+  const options = { knownTables: { signatures: previous }, onReuse: async () => {}, onRow: async () => {} };
+  const header = records()[0];
+  const reused = await collectSource(contract, options, stream([header, { type: "reuse", mode: "reuse", name: "signatures", ...previous, baseSha256: previous.sha256, baseCount: 1 }, { type: "complete" }]));
+  assert.equal(reused.tables[0].mode, "reuse"); assert.equal(reused.tables[0].count, 1);
+  const fields = { mode: "delta", baseSha256: previous.sha256, baseCount: 1, addedCount: 1, addedSha256: digest([{ id: 2 }]), count: 2 };
+  const input = [header,
+    { type: "delta", name: "signatures", baseSha256: previous.sha256, baseCount: 1 },
+    { type: "row", table: "signatures", row: { id: 2 } },
+    { type: "table", name: "signatures", ...fields, sha256: deltaDigest(fields), fingerprint: digest("new-fingerprint"), lastKey: [2] },
+    { type: "complete" }];
+  const delta = await collectSource(contract, options, stream(input));
+  assert.equal(delta.tables[0].mode, "delta"); assert.equal(delta.tables[0].addedCount, 1); assert.equal(delta.tables[0].count, 2);
+  input[1].baseCount = 5;
+  await assert.rejects(collectSource(contract, options, stream(input)), /BASE_MISMATCH/);
 });
 test("interrupted SSH, missing footer, trailing rows and corruption cannot become a published packet", async () => {
   await assert.rejects(collectSource(contract, {}, stream(records(), 1)));

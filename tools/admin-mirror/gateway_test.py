@@ -54,6 +54,10 @@ class AccessTests(unittest.TestCase):
             self.assertEqual(authenticated[0],200);self.assertEqual(authenticated[2],b'fixture')
             self.assertEqual(request('POST','/api/admin/emails/sincronizar','{}',{'Cookie':cookie,'Origin':'http://localhost:3031'})[0],403)
             self.assertEqual(calls,['/api/admin/dashboard'])
+            logout=request('POST','/api/admin/sair','',{'Cookie':cookie,'Origin':'http://localhost:3031'})
+            self.assertEqual(logout[0],303)
+            self.assertIn('Max-Age=0',logout[1]['Set-Cookie'])
+            self.assertEqual(request('GET','/admin',headers={'Cookie':cookie})[0],303)
         finally:
             for s in [server,backend]:s.shutdown();s.server_close()
 

@@ -19,6 +19,13 @@ CREATE TABLE IF NOT EXISTS public.admin_mirror_access_log (
   signature_id integer,
   data jsonb NOT NULL
 );
+ALTER TABLE public.admin_mirror_state ADD COLUMN IF NOT EXISTS tables jsonb NOT NULL DEFAULT '[]';
+ALTER TABLE public.admin_mirror_state ADD COLUMN IF NOT EXISTS contract_hash text;
+CREATE TABLE IF NOT EXISTS public.admin_mirror_documents (
+  sha256 text PRIMARY KEY CHECK (sha256 ~ '^[a-f0-9]{64}$'),
+  content bytea NOT NULL,
+  CHECK (sha256 = encode(pg_catalog.sha256(content),'hex'))
+);
 GRANT USAGE ON SCHEMA public TO admin_mirror_reader;
 GRANT SELECT ON public.admin_mirror_state TO admin_mirror_reader;
 GRANT INSERT(ts,event,signature_id,data) ON public.admin_mirror_access_log TO admin_mirror_reader;

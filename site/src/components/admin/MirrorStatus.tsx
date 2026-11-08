@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MIRROR_REVISION_EVENT } from "./useMirrorRevision";
 
 export default function MirrorStatus() {
   const router = useRouter();
@@ -20,7 +21,10 @@ export default function MirrorStatus() {
         if (typeof data.revision !== "string" || !Number.isFinite(Date.parse(data.syncedAt)) || !Number.isFinite(Date.parse(data.capturedAt))) throw new Error("MIRROR_STATUS_INVALID");
         if (!disposed) {
           setAt(data.capturedAt); setUnavailable(Date.now() - Math.min(Date.parse(data.syncedAt), Date.parse(data.capturedAt)) > 90_000);
-          if (revision.current && revision.current !== data.revision) router.refresh();
+          if (revision.current && revision.current !== data.revision) {
+            window.dispatchEvent(new Event(MIRROR_REVISION_EVENT));
+            router.refresh();
+          }
           revision.current = data.revision;
         }
       } catch { if (!disposed) setUnavailable(true); }

@@ -1,4 +1,5 @@
 "use client";
+import { useMirrorRevision } from "./useMirrorRevision";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { filtrosParaQuery, filtrosVazios, type Filtros } from "@/lib/assinaturas-filtros";
 import type { Faceta, Ponto } from "@/lib/assinaturas-explorar";
@@ -22,6 +23,7 @@ const brData = (d: string) => d.split("-").reverse().join("/");
 
 /** Painel de entrada: KPIs, gráficos (Chart.js), mapa de estados em degradê, campi e controles interativos. */
 export default function Dashboard() {
+  const mirrorRevision = useMirrorRevision();
   const [f, setF] = useState<Filtros>(filtrosVazios());
   const [dados, setDados] = useState<Dados | null>(null);
   const [erro, setErro] = useState("");
@@ -49,7 +51,7 @@ export default function Dashboard() {
     if (id === seq.current) setCarregando(false);
   }, [qs]);
 
-  useEffect(() => { const t = setTimeout(carregar, 150); return () => clearTimeout(t); }, [carregar]);
+  useEffect(() => { const t = setTimeout(carregar, 150); return () => clearTimeout(t); }, [carregar, mirrorRevision]);
   useEffect(() => { if (!auto) return; const t = setInterval(carregar, 60_000); return () => clearInterval(t); }, [auto, carregar]);
   // opções dos dropdowns (sem filtro de data): uma vez
   useEffect(() => {

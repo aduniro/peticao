@@ -3,6 +3,7 @@ import { join, resolve } from "node:path";
 import { homedir } from "node:os";
 import { randomUUID } from "node:crypto";
 import { collectSource } from "./source-stream.mjs";
+import { knownTables } from "./known-tables.mjs";
 
 process.umask(0o077);
 const directory = resolve(process.env.ADMIN_MIRROR_STATE ?? join(homedir(), ".local/share/peticao-admin-mirror"));
@@ -17,6 +18,9 @@ mkdirSync(blobDirectory, { recursive: true, mode: 0o700 });
 try {
   for (const table of contract) files.set(table.name, openSync(join(output, table.name + ".jsonl"), constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600));
   const packet = await collectSource(contract, {
+    knownTables: await knownTables(directory, contract),
+    onReuse: async () => {},
+    receiverPublicKey: readFileSync(join(directory, "receiver-public.pem"), "utf8"),
     knownBlobs: readdirSync(blobDirectory).filter(name => /^[a-f0-9]{64}\.bin$/.test(name)).map(name => name.slice(0, -4)),
     onBlob: async (hash, content) => {
       if (!blobFiles.has(hash)) blobFiles.set(hash, openSync(join(blobDirectory, hash + ".part"), constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW, 0o600));
@@ -27,8 +31,8 @@ try {
       renameSync(join(blobDirectory, hash + ".part"), join(blobDirectory, hash + ".bin"));
     },
     onRow: async (table, row) => { writeSync(files.get(table), JSON.stringify(row) + "\n"); },
-    onProgress: async (table, count, bytes) => {
-      const state = { phase: "capturing", table, count, bytes, at: new Date().toISOString() };
+    onProgress: async (table, count, bytes, mode) => {
+      const state = { phase: "capturing", table, count, bytes, mode, at: new Date().toISOString() };
       writeFileSync(join(directory, "capture-status.json"), JSON.stringify(state), { mode: 0o600 });
       console.log(JSON.stringify(state));
     },

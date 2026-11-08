@@ -3,7 +3,7 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants.js";
 /** O servidor de desenvolvimento usa .next-dev; o build de produção usa .next (assim um não quebra o outro). */
 export default (phase) => ({
   distDir: phase === PHASE_DEVELOPMENT_SERVER ? ".next-dev" : ".next",
-  experimental: { serverComponentsExternalPackages: ["pg", "nodemailer", "@resvg/resvg-js", "maxmind"] },
+  experimental: { serverComponentsExternalPackages: ["pg", "nodemailer", "@resvg/resvg-js", "maxmind"], ...(process.env.ADMIN_MIRROR_BUILD === "1" ? { cpus: 2 } : {}) },
   poweredByHeader: false,
   // Cabeçalhos de segurança (o HSTS é ligado na Cloudflare). Sem CSP por enquanto: o site usa mapa (Leaflet) e o Turnstile.
   async headers() {

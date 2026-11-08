@@ -1,4 +1,5 @@
 "use client";
+import { useMirrorRevision } from "../useMirrorRevision";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MapaSVG, { type Geo, type UfDado } from "./MapaSVG";
 import DetalheLocal, { type EstadoApoio, type Resumo } from "./DetalheLocal";
@@ -18,6 +19,7 @@ const ORDEM = ["N", "NE", "CO", "SE", "S"];
 
 /** Painel ao vivo (estilo "apuração"): cartões-herói, faixa de UFs, mapa do Brasil com popups e barras por região. Atualiza a cada 20 s. */
 export default function Painel({ podeVerEmails = false }: { podeVerEmails?: boolean }) {
+  const mirrorRevision = useMirrorRevision();
   const [d, setD] = useState<Dados | null>(null);
   const [geo, setGeo] = useState<Geo | null>(null);
   const [erro, setErro] = useState(false);
@@ -30,7 +32,7 @@ export default function Painel({ podeVerEmails = false }: { podeVerEmails?: bool
   const carregar = useCallback(async () => {
     try { const r = await fetch("/api/admin/painel", { cache: "no-store" }); const j = await r.json(); if (j.ok) { setD(j); ultimo.current = Date.now(); setErro(false); } else setErro(true); } catch { setErro(true); }
   }, []);
-  useEffect(() => { carregar(); const t = setInterval(carregar, 20_000); return () => clearInterval(t); }, [carregar]);
+  useEffect(() => { carregar(); const t = setInterval(carregar, 20_000); return () => clearInterval(t); }, [carregar, mirrorRevision]);
   useEffect(() => { fetch("/data/geo/brasil-svg.json").then((r) => r.json()).then(setGeo).catch(() => {}); }, []);
   useEffect(() => { const t = setInterval(() => setAgora(Date.now()), 5000); return () => clearInterval(t); }, []);
 

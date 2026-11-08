@@ -1,6 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useMirrorRevision } from "./useMirrorRevision";
 import { filtrosParaQuery, filtrosVazios, parseFiltros, type Filtros } from "@/lib/assinaturas-filtros";
 import type { Faceta, Ponto, Resultado } from "@/lib/assinaturas-explorar";
 import { Multi as MultiBase } from "./controles";
@@ -24,6 +25,7 @@ const ORDENAVEIS = new Set(["nome", "categoria", "instituicao", "cargo", "campus
 
 /** Mapa + tabela com um só conjunto de filtros (sincronizado com a URL). `tela` = modo janela cheia, só o mapa. */
 export default function Explorador({ inicial, tela = false, cheio = false }: { inicial: string; tela?: boolean; cheio?: boolean }) {
+  const mirrorRevision = useMirrorRevision();
   const [f, setF] = useState<Filtros>(() => parseFiltros(new URLSearchParams(inicial)));
   const [pagina, setPagina] = useState(1);
   const [ordem, setOrdem] = useState({ k: "criada", dir: "desc" });
@@ -43,13 +45,13 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
     let vivo = true;
     fetch(`/api/admin/monitor?w=${janela === "all" ? "30d" : janela}`).then((r) => r.json()).then((j) => { if (vivo) setAcessos(j.requestPoints ?? []); }).catch(() => {});
     return () => { vivo = false; };
-  }, [camada, janela]);
+  }, [camada, janela, mirrorRevision]);
   useEffect(() => {
     if (camada !== "visitas") { setVisitas(null); return; }
     let vivo = true;
     fetch(`/api/admin/assinaturas/visitas?janela=${janela}`).then((r) => r.json()).then((j) => { if (vivo && j.ok) setVisitas(j.pontos); }).catch(() => {});
     return () => { vivo = false; };
-  }, [camada, janela]);
+  }, [camada, janela, mirrorRevision]);
   useEffect(() => { if (window.innerWidth <= 768) setAberto(false); }, []);
   const seq = useRef(0);
   const qs = filtrosParaQuery(f);
@@ -67,7 +69,7 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
       if (id === seq.current) setBuscando(false);
     }, 200);
     return () => clearTimeout(t);
-  }, [qs, pagina, ordem]);
+  }, [qs, pagina, ordem, mirrorRevision]);
 
   useEffect(() => { if (tela) return; const e = new URLSearchParams(qs); if (camada !== "assinaturas") { e.set("camada", camada); e.set("janela", janela); } const t = e.toString(); history.replaceState(null, "", t ? `?${t}` : location.pathname); }, [qs, tela, camada, janela]);
 

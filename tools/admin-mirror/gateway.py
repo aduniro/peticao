@@ -101,6 +101,11 @@ class Handler(BaseHTTPRequestHandler):
             authorized = False
         if not authorized:
             return self.send(303, headers={'Location':'/login'})
+        if self.command == 'POST' and path.path == '/api/admin/sair':
+            with connect() as db:
+                db.execute('DELETE FROM sessions WHERE digest=? AND origin=?', (hashlib.sha256(jar[cookie].value.encode()).hexdigest(), origin))
+            secure = '; Secure' if origin.startswith('https:') else ''
+            return self.send(303, headers={'Location':'/login','Set-Cookie':f'{cookie}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0{secure}'})
         if self.command not in ('GET','HEAD'):
             return self.send(403)
         if self.headers.get('Content-Length') not in (None, '0') or self.headers.get('Transfer-Encoding'):

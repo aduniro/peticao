@@ -117,8 +117,7 @@
       },
       {
         "name": "approval_code_expires_at",
-        "type": "text",
-        "redact": true
+        "type": "text"
       },
       {
         "name": "approval_attempts",
@@ -202,7 +201,8 @@
       },
       {
         "name": "created_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
@@ -218,7 +218,8 @@
       },
       {
         "name": "ts",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "via",
@@ -262,11 +263,13 @@
       },
       {
         "name": "created_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "updated_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
@@ -454,7 +457,8 @@
       },
       {
         "name": "ts",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
@@ -474,11 +478,13 @@
       },
       {
         "name": "created_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "expires_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
@@ -498,19 +504,23 @@
       },
       {
         "name": "delivered_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "opened_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "clicked_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "updated_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
@@ -527,7 +537,8 @@
       },
       {
         "name": "ts",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "provider",
@@ -551,7 +562,8 @@
       },
       {
         "name": "created_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
@@ -567,7 +579,8 @@
       },
       {
         "name": "ts",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "kind",
@@ -632,7 +645,8 @@
       },
       {
         "name": "next_attempt_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "last_error",
@@ -640,11 +654,13 @@
       },
       {
         "name": "created_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "sent_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
@@ -664,7 +680,8 @@
       },
       {
         "name": "at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
@@ -680,7 +697,8 @@
       },
       {
         "name": "enviado_em",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "provider",
@@ -749,7 +767,8 @@
       },
       {
         "name": "ts",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "kind",
@@ -882,8 +901,7 @@
       },
       {
         "name": "token_expires_at",
-        "type": "text",
-        "redact": true
+        "type": "text"
       },
       {
         "name": "confirmed_at",
@@ -1013,7 +1031,8 @@
       },
       {
         "name": "wa_optin_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "wa_token_hash",
@@ -1023,11 +1042,12 @@
       {
         "name": "wa_token_expires_at",
         "type": "timestamp with time zone",
-        "redact": true
+        "encoding": "postgres-text"
       },
       {
         "name": "wa_confirmed_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
@@ -1047,11 +1067,13 @@
       },
       {
         "name": "ts",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "expires_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "source",
@@ -1088,7 +1110,7 @@
       {
         "name": "email_cipher",
         "type": "text",
-        "redact": true
+        "localProtection": "email-transfer-v1"
       },
       {
         "name": "email_hash",
@@ -1116,7 +1138,8 @@
       },
       {
         "name": "at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
@@ -1154,11 +1177,13 @@
       },
       {
         "name": "created_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       },
       {
         "name": "updated_at",
-        "type": "timestamp with time zone"
+        "type": "timestamp with time zone",
+        "encoding": "postgres-text"
       }
     ],
     "primaryKey": [
