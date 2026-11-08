@@ -43,13 +43,13 @@ export async function eventosResumo(): Promise<EventSummary[]> {
       FROM mail_events GROUP BY provider, type ORDER BY provider, type`)).rows;
 }
 
-export type SemEmail = { id: number; name: string; email: string; category: string; instituicao: string; criada: string; motivo: string; detalhe: string; provedor: string; dominio: string };
+export type SemEmail = { id: number; version: string; name: string; email: string; category: string; instituicao: string; criada: string; motivo: string; detalhe: string; provedor: string; dominio: string };
 /**
  * Cadastros ainda pendentes cujo e-mail de confirmação provavelmente NÃO chegou: o endereço devolveu/foi bloqueado/está suprimido,
  * está parado na fila de reenvio, ou (depois que o registro de envios começou) nenhum provedor chegou a aceitar a mensagem.
  */
 export async function semEmailEntregue(limit = 500): Promise<SemEmail[]> {
-  const rows = (await query<any>(`SELECT s.id, s.name, s.email, s.category, COALESCE(s.institution, s.university, '') inst, s.created_at,
+  const rows = (await query<any>(`SELECT s.id, s.xmin::text AS version, s.name, s.email, s.category, COALESCE(s.institution, s.university, '') inst, s.created_at,
       (SELECT e.type || ' (' || e.provider || '): ' || COALESCE(e.reason,'') FROM mail_events e WHERE lower(e.email)=lower(s.email) AND e.type IN ('hard_bounce','soft_bounce','blocked','complaint') ORDER BY e.ts DESC LIMIT 1) AS evento,
       (SELECT e.provider FROM mail_events e WHERE lower(e.email)=lower(s.email) AND e.type IN ('hard_bounce','soft_bounce','blocked','complaint') ORDER BY e.ts DESC LIMIT 1) AS provedor,
       (SELECT x.reason FROM email_suppressions x WHERE lower(x.email)=lower(s.email) LIMIT 1) AS supressao,
@@ -64,7 +64,7 @@ export async function semEmailEntregue(limit = 500): Promise<SemEmail[]> {
     else if (r.supressao) { motivo = "suprimido"; detalhe = `lista de supressão (${r.supressao})`; }
     else if (r.na_fila) { motivo = "na fila"; detalhe = "parado na fila de reenvio"; }
     else if (r.depois_do_registro && !r.enviado) { motivo = "sem envio"; detalhe = "nenhum provedor aceitou a mensagem"; }
-    if (motivo) out.push({ id: r.id, name: r.name, email: r.email, category: r.category, instituicao: r.inst, criada: r.created_at, motivo, detalhe, provedor: r.provedor ?? "", dominio: String(r.email).split("@")[1]?.toLowerCase() ?? "" });
+    if (motivo) out.push({ id: r.id, version: r.version, name: r.name, email: r.email, category: r.category, instituicao: r.inst, criada: r.created_at, motivo, detalhe, provedor: r.provedor ?? "", dominio: String(r.email).split("@")[1]?.toLowerCase() ?? "" });
     if (out.length >= limit) break;
   }
   return out;

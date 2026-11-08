@@ -2,7 +2,7 @@
 import { useMemo, useRef, useState } from "react";
 import { adminJsonRequest as chamar } from "@/lib/admin-request";
 
-export type Linha = { id: number; name: string; email: string; category: string; instituicao: string; criada: string; criadaTxt: string; motivo: string; detalhe: string; provedor: string; dominio: string; sugestao: string | null; motivoSugestao: string | null };
+export type Linha = { id: number; version: string; name: string; email: string; category: string; instituicao: string; criada: string; criadaTxt: string; motivo: string; detalhe: string; provedor: string; dominio: string; sugestao: string | null; motivoSugestao: string | null };
 type Msg = { texto: string; erro?: boolean };
 const CAT: Record<string, string> = { servidor: "Servidor", apoiador: "Apoiador", estrangeiro: "Estrangeiro" };
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -42,10 +42,10 @@ export default function PendentesTable({ linhas: inicial }: { linhas: Linha[] })
   async function salvar(r: Linha) {
     const novo = (edit[r.id] ?? "").trim();
     if (!begin([r.id])) return;
-    const j = await chamar(`/api/admin/assinaturas/${r.id}/email`, "PATCH", { email: novo });
+    const j = await chamar(`/api/admin/assinaturas/${r.id}/email`, "PATCH", { email: novo, version: r.version });
     end([r.id]);
     if (!j.ok) return mostrar(j.erro ?? "Não foi possível salvar.", true);
-    atualizar(r.id, { email: j.email, dominio: String(j.email).split("@")[1] ?? "", sugestao: null, motivoSugestao: null, motivo: "corrigido", detalhe: "e-mail corrigido: falta reenviar a confirmação" });
+    atualizar(r.id, { email: j.email, version: j.version, dominio: String(j.email).split("@")[1] ?? "", sugestao: null, motivoSugestao: null, motivo: "corrigido", detalhe: "e-mail corrigido: falta reenviar a confirmação" });
     setEdit((e) => { const n = { ...e }; delete n[r.id]; return n; });
     mostrar(`E-mail de ${r.name} corrigido para ${j.email}. Use "Reenviar" para mandar a confirmação.`);
   }
@@ -59,25 +59,25 @@ export default function PendentesTable({ linhas: inicial }: { linhas: Linha[] })
   }
   async function aplicarSug(r: Linha) {
     if (!begin([r.id])) return;
-    const j = await chamar("/api/admin/assinaturas/lote", "POST", { acao: "sugestoes", ids: [r.id] });
+    const j = await chamar("/api/admin/assinaturas/lote", "POST", { acao: "sugestoes", ids: [r.id], versions: { [r.id]: r.version } });
     end([r.id]);
     const x = j.resultados?.[0]?.r;
     if (!x?.ok) return mostrar(x?.erro ?? j.erro ?? "Não foi possível aplicar a sugestão.", true);
-    atualizar(r.id, { email: x.email, dominio: String(x.email).split("@")[1] ?? "", sugestao: null, motivoSugestao: null, motivo: "corrigido", detalhe: "sugestão aplicada: falta reenviar a confirmação" });
+    atualizar(r.id, { email: x.email, version: x.version, dominio: String(x.email).split("@")[1] ?? "", sugestao: null, motivoSugestao: null, motivo: "corrigido", detalhe: "sugestão aplicada: falta reenviar a confirmação" });
     mostrar(`Sugestão aplicada: ${x.email}.`);
   }
   async function confirmarLote() {
     if (!modal) return;
     const ids = modal.alvo.map((r) => r.id); if (!begin(ids)) return;
-    const j = await chamar("/api/admin/assinaturas/lote", "POST", { acao: modal.acao, ids });
+    const j = await chamar("/api/admin/assinaturas/lote", "POST", { acao: modal.acao, ids, ...(modal.acao === "sugestoes" ? { versions: Object.fromEntries(modal.alvo.map(r => [r.id, r.version])) } : {}) });
     end(ids); setModal(null); dlg.current?.close();
     if (!j.ok || !Array.isArray(j.resultados)) return mostrar(j.erro ?? "Falha na ação em lote.", true);
     for (const x of j.resultados as { id: number; r: any }[]) {
       if (!x.r.ok) continue;
-      if (modal.acao === "sugestoes") atualizar(x.id, { email: x.r.email, dominio: String(x.r.email).split("@")[1] ?? "", sugestao: null, motivoSugestao: null, motivo: "corrigido", detalhe: "sugestão aplicada: falta reenviar a confirmação" });
+      if (modal.acao === "sugestoes") atualizar(x.id, { email: x.r.email, version: x.r.version, dominio: String(x.r.email).split("@")[1] ?? "", sugestao: null, motivoSugestao: null, motivo: "corrigido", detalhe: "sugestão aplicada: falta reenviar a confirmação" });
       else atualizar(x.id, { motivo: "reenviado", detalhe: x.r.envio === "queued" ? "na fila de reenvio" : "confirmação reenviada agora" });
     }
-    setSel(new Set());
+    setSel(new Set((j.resultados as { id: number; r: { ok: boolean } }[]).filter(x => !x.r.ok).map(x => x.id)));
     const falhas = (j.resultados as { r: any }[]).filter((x) => !x.r.ok).map((x) => x.r.erro);
     mostrar(`${j.aplicados} de ${j.total} concluídos${falhas.length ? `. Falhas: ${[...new Set(falhas)].slice(0, 3).join(" · ")}` : "."}`, falhas.length > 0 && j.aplicados === 0);
   }

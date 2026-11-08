@@ -40,6 +40,21 @@ try {
       await page.unroute(patch); await row.getByRole("button", { name: "Salvar", exact: true }).click();
       await page.getByRole("status").filter({ hasText: "corrigido para" }).waitFor(); assert.equal(await input.count(), 0);
       assert.equal((await db.query("SELECT email FROM signatures WHERE id=$1", [id])).rows[0].email, newEmail); assert.deepEqual(await proof(), before);
+      // Another editor changes the row after this page was loaded: preserve the local draft.
+      await row.getByRole("button", { name: "Editar", exact: true }).click();
+      const staleInput = row.locator('input[type="email"]'); await staleInput.fill("qa-pending-stale@example.test");
+      await db.query("UPDATE signatures SET campus='QA concurrent edit' WHERE id=$1", [id]);
+      const conflict = page.waitForResponse(r => new URL(r.url()).pathname === `/api/admin/assinaturas/${id}/email` && r.status() === 409);
+      await row.getByRole("button", { name: "Salvar", exact: true }).click(); await conflict;
+      await page.getByRole("status").filter({ hasText: "Não foi possível salvar." }).waitFor();
+      assert.equal(await staleInput.inputValue(), "qa-pending-stale@example.test");
+      assert.equal(await row.getByRole("button", { name: "Salvar", exact: true }).isEnabled(), true);
+      assert.equal((await db.query("SELECT email FROM signatures WHERE id=$1", [id])).rows[0].email, newEmail);
+      await page.reload({ waitUntil: "networkidle" });
+      await row.getByRole("button", { name: "Editar", exact: true }).click(); await row.locator('input[type="email"]').fill(newEmail);
+      await row.getByRole("button", { name: "Salvar", exact: true }).click();
+      await page.getByRole("status").filter({ hasText: "corrigido para" }).waitFor();
+      assert.equal(await row.locator('input[type="email"]').count(), 0);
       let resends = 0;
       await page.route(`**/api/admin/assinaturas/${id}/reenviar`, async route => { resends++; await route.abort("failed"); });
       await row.getByRole("button", { name: "Reenviar", exact: true }).click(); await page.getByRole("status").filter({ hasText: "Não foi possível reenviar." }).waitFor();
@@ -55,7 +70,7 @@ try {
       assert.equal((await db.query("SELECT 1 FROM mail_outbox UNION ALL SELECT 1 FROM mail_messages")).rowCount, 0);
       assert.equal((await db.query("SELECT count(*)::int n FROM mail_log")).rows[0].n, 1);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2), false);
-      await page.screenshot({ path: `${output}/pending-network-${width}.png`, fullPage: true }); results.push({ width, ok: true, draftPreserved: true, realSaveAfterFailure: true, singleFlight: true, selectionPreserved: true, noMail: true });
+      await page.screenshot({ path: `${output}/pending-network-${width}.png`, fullPage: true }); results.push({ width, ok: true, draftPreserved: true, staleDraftPreserved: true, freshSaveAfterReload: true, realSaveAfterFailure: true, singleFlight: true, selectionPreserved: true, noMail: true });
     } catch (error) { results.push({ width, ok: false, error: error.message, exceptions }); }
     finally { await context.close(); }
   }

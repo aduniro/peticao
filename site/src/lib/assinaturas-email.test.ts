@@ -81,10 +81,12 @@ test("rotas de correção e reenvio registram o usuário autenticado e preservam
     const id=await make("teste-actor@unir.bf",1);
     const proof=async()=> (await db.query("SELECT id,name,cpf_hash,consent_at,created_at,confirmed_at,seq,verify_code FROM signatures WHERE id=$1",[id])).rows[0];
     const before=await proof();
-    assert.equal((await PATCH(request(`/api/admin/assinaturas/${id}/email`,"PATCH",{email:"teste-actor@unir.br"}),{params:{id:String(id)}})).status,200);
+    const version=(await db.query("SELECT xmin::text version FROM signatures WHERE id=$1",[id])).rows[0].version;
+    assert.equal((await PATCH(request(`/api/admin/assinaturas/${id}/email`,"PATCH",{email:"teste-actor@unir.br",version}),{params:{id:String(id)}})).status,200);
     assert.equal((await resend(request(`/api/admin/assinaturas/${id}/reenviar`,"POST",{}),{params:{id:String(id)}})).status,200);
     const suggested=await make("teste-suggestion@unir.bf",2);
-    assert.equal((await bulk(request("/api/admin/assinaturas/lote","POST",{acao:"sugestoes",ids:[suggested]}))).status,200);
+    const suggestedVersion=(await db.query("SELECT xmin::text version FROM signatures WHERE id=$1",[suggested])).rows[0].version;
+    assert.equal((await bulk(request("/api/admin/assinaturas/lote","POST",{acao:"sugestoes",ids:[suggested],versions:{[suggested]:suggestedVersion}}))).status,200);
     const batch=await make("teste-bulk@unir.br",3);
     assert.equal((await bulk(request("/api/admin/assinaturas/lote","POST",{acao:"reenviar",ids:[batch]}))).status,200);
     const audit=(await db.query<{data:string}>("SELECT data FROM audit_log WHERE event IN ('email_corrigido','confirmacao_reenviada') ORDER BY id")).rows;

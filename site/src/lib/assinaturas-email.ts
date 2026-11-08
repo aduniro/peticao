@@ -12,7 +12,7 @@ import { sugerir } from "./email-sugestao";
 
 const mask = (e: string) => e.replace(/^(.{2}).*(@.+)$/, "$1***$2");
 export type EmailActor = string | { userId: number; email: string };
-export type Resultado = { ok: true; email?: string; envio?: "sent" | "queued" } | { ok: false; erro: string; code?: string };
+export type Resultado = { ok: true; email?: string; version?: string; envio?: "sent" | "queued" } | { ok: false; erro: string; code?: string };
 
 /**
  * Corrige o e-mail de um cadastro PENDENTE (erro de digitação). Só mexe em e-mail, hash do e-mail e selo institucional:
@@ -48,9 +48,9 @@ export async function corrigirEmail(id: number, novo: string, actor: EmailActor 
       if (current.status !== "pending") return { ok: false, erro: "Só dá para corrigir o e-mail de cadastros pendentes." };
       // Existing UI fallback until the more specific conflict notice is approved.
       if (current.version !== r.version) return { ok: false, erro: "Não foi possível salvar.", code: "conflict" };
-      await c.query("UPDATE signatures SET email=$1, email_hash=$2, email_domain_kind=$3, email_domain=$4, email_institution=$5 WHERE id=$6", [email, h, kind, inst.domain, inst.institution, id]);
+      const changed = await c.query<{ version: string }>("UPDATE signatures SET email=$1, email_hash=$2, email_domain_kind=$3, email_domain=$4, email_institution=$5 WHERE id=$6 RETURNING xmin::text AS version", [email, h, kind, inst.domain, inst.institution, id]);
       await audit("email_corrigido", id, { de: mask(r.email), para: mask(email), por: typeof actor === "string" ? actor : actor.email.toLowerCase(), ...(typeof actor === "string" ? {} : { userId: actor.userId }) }, c);
-      return { ok: true, email };
+      return { ok: true, email, version: changed.rows[0].version };
     });
   } catch (error) {
     // A concurrent signup can acquire the same hash after the preliminary duplicate check.
@@ -60,9 +60,10 @@ export async function corrigirEmail(id: number, novo: string, actor: EmailActor 
 }
 
 /** Aplica a sugestão calculada AGORA no servidor (nunca confia no que o navegador mostrou). */
-export async function aceitarSugestao(id: number, actor: EmailActor = "admin"): Promise<Resultado> {
+export async function aceitarSugestao(id: number, actor: EmailActor = "admin", expectedVersion?: string): Promise<Resultado> {
   const r = (await query<{ email: string; version: string }>("SELECT email,xmin::text AS version FROM signatures WHERE id=$1 AND status='pending'", [id])).rows[0];
   if (!r) return { ok: false, erro: "Cadastro pendente não encontrado." };
+  if (expectedVersion !== undefined && expectedVersion !== r.version) return { ok: false, erro: "Não foi possível salvar.", code: "conflict" };
   const s = await sugerir(r.email);
   if (!s.sugestao) return { ok: false, erro: "Não há sugestão para este e-mail." };
   return corrigirEmail(id, s.sugestao, actor, r.version);

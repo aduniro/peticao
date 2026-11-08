@@ -14,7 +14,10 @@ try {
   };
   const editor = await actor("edicao"), reader = await actor("leitura");
   const make = async n => (await db.query(`INSERT INTO signatures(name,email,email_hash,cpf_hash,category,text_version,consent_at,created_at,seq,verify_code,token_hash) VALUES('QA Pessoa Fictícia',$1,$2,$3,'estrangeiro','QA','2026-10-01T00:00:00Z','2026-10-01T00:00:00Z',$4,$5,$6) RETURNING id`, [`qa-old-${n}@example.test`, S.hmac(M.dedupEmail(`qa-old-${n}@example.test`)), `QA_CPF_${n}`, n + 700, `QA_VERIFY_${n}`, `QA_TOKEN_${n}`])).rows[0].id;
-  const request = (id, actor, body, origin = base.origin) => fetch(new URL(`/api/admin/assinaturas/${id}/email`, base), { method: "PATCH", headers: { origin, cookie: actor ? `adm=${actor.token}` : "", "content-type": "application/json" }, body: JSON.stringify(body) });
+  const request = async (id, actor, body, origin = base.origin) => {
+    const version = (await db.query("SELECT xmin::text version FROM signatures WHERE id=$1", [id])).rows[0]?.version;
+    return fetch(new URL(`/api/admin/assinaturas/${id}/email`, base), { method: "PATCH", headers: { origin, cookie: actor ? `adm=${actor.token}` : "", "content-type": "application/json" }, body: JSON.stringify({ version, ...body }) });
+  };
   const snapshot = async id => (await db.query("SELECT row_to_json(s)::text value FROM signatures s WHERE id=$1", [id])).rows[0].value;
   const evidence = async id => (await db.query("SELECT id,name,cpf_hash,category,text_version,consent_at,created_at,confirmed_at,seq,verify_code,token_hash FROM signatures WHERE id=$1", [id])).rows[0];
   const id = await make(1), before = await evidence(id);
