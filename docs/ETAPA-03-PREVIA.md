@@ -43,3 +43,13 @@ Continuam pendentes interface, política de arquivo/retenção de todas as cópi
 A comparação de dependências (`stage03-preview-dependency-comparison.json`) confirma 150 versões anteriores preservadas, sem pacotes removidos/atualizados; só parse5/entities foram acrescentados. O build final é `stage03-preview-build.log`; os logs de tentativa de preparação/interrupção anteriores não são certificação de build. O aviso de CSS já existente foi conservado sem alteração visual solicitada.
 
 AV-9 foi perguntado e continua pendente; não houve ativação de novo botão/aviso. Nenhum schema, banco real, regra pública, revisão local ou arquivo da VPS alterado. As demais prévias existentes, incluindo o card de contato, ainda devem ser conferidas antes da integração visual final; este ensaio certifica o contrato novo, não todos os iframes do painel.
+
+## Revalidação08/11 na central
+
+Backend e isolamento da prévia foram revalidados no candidato de domínios:
+45 testes direcionados do conjunto de e-mails, build/tipos e endpoint compilado
+com navegador em seis larguras passaram. Sem rastreadores, scripts executados,
+acesso ao pai ou envio. Captura320px inspecionada; originais preservados.
+Relatório atual e hashes em `ETAPA-03-CENTRAL-CONTINUIDADE-20261108.md`.
+AV9 continua pendente e foi reapresentado literalmente em pergunta nativa;
+sem resposta observada, o botão/aviso permanecem fora da interface.

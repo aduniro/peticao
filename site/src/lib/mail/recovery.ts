@@ -12,9 +12,11 @@ async function inspect(c:PoolClient, id:number, lock=false) {
   const m=(await c.query(`SELECT id,status,kind,channel,to_addr,content_fingerprint,reply_to FROM mail_messages WHERE id=$1${lock?" FOR UPDATE":""}`,[base.message_id])).rows[0];
   const q=(await c.query(`SELECT id,status,message_id,kind,to_addr,payload,sent_at FROM mail_outbox WHERE id=$1${lock?" FOR UPDATE":""}`,[id])).rows[0];
   if(!m||!q||q.message_id!==base.message_id||m.channel!=="transactional"||m.kind!==q.kind||m.to_addr!==q.to_addr.toLowerCase())return{ok:true as const,eligible:false as const,reason:"identity_conflict"};
+  // Settled is an existing queue state, not a new acceptance/content verdict.
+  // Retention may already have erased its payload; never require or restore it for a replay.
+  if(q.status==="sent")return{ok:true as const,eligible:false as const,reason:"already_settled"};
   try {if(contentFingerprint(frozenReplyTo(fromStored(q.payload),m.reply_to))!==m.content_fingerprint)return{ok:true as const,eligible:false as const,reason:"content_conflict"};}
   catch{return{ok:true as const,eligible:false as const,reason:"content_conflict"};}
-  if(q.status==="sent")return{ok:true as const,eligible:false as const,reason:"already_settled"};
   if(m.status!=="accepted")return{ok:true as const,eligible:false as const,reason:"acceptance_unproven"};
   const active=(await c.query("SELECT 1 FROM mail_message_attempts WHERE message_id=$1 AND state='prepared' LIMIT 1",[m.id])).rowCount;
   if(active)return{ok:true as const,eligible:false as const,reason:"attempt_unfinished"};

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 const base = new URL(process.env.QA_BASE_URL ?? "http://127.0.0.1:3032"), database = new URL(process.env.DATABASE_URL ?? "http://missing");
-assert.equal(base.hostname, "127.0.0.1"); assert.equal(base.port, "3032"); assert.equal(database.hostname, "127.0.0.1"); assert.equal(database.port, "54345"); assert.equal(database.pathname, "/peticao");
+assert.equal(base.hostname, "127.0.0.1"); assert.equal(database.hostname, "127.0.0.1"); assert.ok(base.port === "3032" && database.port === "54345" || base.port === "3033" && database.port === "54349"); assert.equal(database.pathname, "/peticao");
 assert.equal(process.env.PREVIEW_MODE, "1"); assert.equal(process.env.ADMIN_NO_PASSWORD, "0"); assert.equal(process.env.MAIL_PROVIDER, "dev");
 const output = process.env.QA_OUTPUT_DIR; assert.ok(output); await mkdir(output, { recursive: true });
 const boot = await fetch(new URL("/admin", base)); assert.equal(boot.status, 200); assert.ok((await boot.text()).includes("/dev/outbox"));

@@ -23,3 +23,15 @@ Seis testes novos cobrem prova, preservação de dados, microdatas, concorrênci
 ## Pendências e interface
 
 O diagnóstico não resolve automaticamente tentativas interrompidas sem prova, conteúdo perdido ou cópias incertas. Retenção, conversas/editor, interface da recuperação e demais Etapas 2–7 continuam no objetivo. Não houve alteração da revisão local de CPFs ou da VPS. AV-10 foi submetido ao dono antes de ativar botão/aviso, conforme sua regra, e aprovado explicitamente em 07/11/2026 (“Aprovar estes textos”). Apenas esses dois textos foram aprovados; a interface ainda precisa ser integrada e validada. Retenção e avisos anteriores continuam pendentes.
+
+## Complemento08/11 — repetição após retenção e limites HTTP
+
+Corrigida a consulta/repetição de fila já `sent` após o payload ter sido apagado
+pelo expurgo30dias. Identidade ainda é conferida; reconhecer conclusão existente
+não restaura corpo, não escreve outro evento nem cria prova de entrega. Filas
+pendentes/failed sem conteúdo exato continuam sem elegibilidade. POST limitado a
+256bytes antes do JSON; GET indisponível retorna503 sem detalhes internos.
+45 direcionados, build/tipos e HTTP compilado com expurgo real/repetição
+concorrente aprovados. Contrato, logs, hashes e limites em
+`ETAPA-03-CENTRAL-CONTINUIDADE-20261108.md`. AV11/AV12 ainda não aprovados;
+interface não conectada, sem envio ou VPS.

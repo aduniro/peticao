@@ -103,3 +103,68 @@ test("listagem HTTP mantém Total/stepup e valida cursor, limite e combinações
   await c.db.query("UPDATE admin_users SET nivel='edicao' WHERE id=$1",[c.actor.userId]);assert.equal((await GET(request())).status,403);await c.U.encerrarSessao(s.token);
  }finally{await c.db._closeDbForTests();}
 });
+
+test("fila concluída continua idempotente após expurgo real; fila vencida sem conclusão não ganha aceite",async()=>{
+ const c=await setup();try{
+  const settled=await pair(c,"accepted"),pending=await pair(c,"accepted");
+  assert.deepEqual(await c.R.settleAcceptedQueue(settled.q,c.actor),{ok:true,existing:false,queueId:settled.q});
+  await c.db.query("UPDATE mail_outbox SET created_at=now()-interval '31 days' WHERE id=ANY($1::int[])",[[settled.q,pending.q]]);
+  const {purgeAdminContent}=await import("./admin-content-retention");
+  assert.equal((await purgeAdminContent()).outbox,2);
+  const before=await snapshot(c),audit=(await c.db.query("SELECT row_to_json(a)::text raw FROM audit_log a ORDER BY id")).rows;
+  const results=await Promise.all(Array.from({length:4},()=>c.R.settleAcceptedQueue(settled.q,c.actor)));
+  assert.ok(results.every(r=>r.ok&&r.existing));
+  assert.deepEqual(await c.R.mailRecoveryStatus(settled.q),{ok:true,eligible:false,reason:"already_settled"});
+  assert.deepEqual(await c.R.settleAcceptedQueue(pending.q,c.actor),{ok:false,error:"content_conflict"});
+  assert.deepEqual(await snapshot(c),before);
+  assert.deepEqual((await c.db.query("SELECT row_to_json(a)::text raw FROM audit_log a ORDER BY id")).rows,audit);
+  const listing=await c.R.listMailRecovery();assert.ok(listing.ok);assert.deepEqual(listing.records,[]);
+  assert.equal((await c.db.query("SELECT count(*)::int n FROM audit_log WHERE event='mail_queue_acceptance_recovered'")).rows[0].n,1);
+  assert.ok((await c.db.verifyAuditChain()).ok);
+ }finally{await c.db._closeDbForTests();}
+});
+
+test("repetição de fila concluída ainda recusa vínculo, tipo ou destinatário divergentes após expurgo",async()=>{
+ const c=await setup();try{
+  const p=await pair(c,"accepted");assert.ok((await c.R.settleAcceptedQueue(p.q,c.actor)).ok);
+  await c.db.query("UPDATE mail_outbox SET payload='{}'::jsonb WHERE id=$1",[p.q]);
+  for(const mutation of ["kind='outro'","kind='confirmacao',to_addr='other@example.test'","to_addr='qa-recovery@example.test',message_id=NULL"]){
+   await c.db.query(`UPDATE mail_outbox SET ${mutation} WHERE id=$1`,[p.q]);
+   assert.equal((await c.R.settleAcceptedQueue(p.q,c.actor)).ok,false);
+  }
+  assert.equal((await c.db.query("SELECT count(*)::int n FROM audit_log WHERE event='mail_queue_acceptance_recovered'")).rows[0].n,1);
+ }finally{await c.db._closeDbForTests();}
+});
+
+test("POST de recuperação limita bytes, cancela stream excessivo e recusa UTF8 inválido sem alterar a fila",async()=>{
+ const c=await setup();try{
+  process.env.ADMIN_NO_PASSWORD="0";delete process.env.PREVIEW_MODE;
+  const {NextRequest}=await import("next/server"),{POST}=await import("../app/api/admin/emails/recuperacao/route");
+  const p=await pair(c,"accepted"),s=await c.U.abrirSessao(c.actor.userId,"127.0.0.1");
+  await c.db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '10 minutes' WHERE user_id=$1",[c.actor.userId]);
+  const before=await snapshot(c),headers={host:"localhost",origin:"http://localhost",cookie:`adm=${s.token}`};
+  let cancelled=false;
+  const body=new ReadableStream<Uint8Array>({start(controller){controller.enqueue(new TextEncoder().encode("x".repeat(257)));},cancel(){cancelled=true;}});
+  const init={method:"POST",headers,body,duplex:"half"};
+  const req=new NextRequest("http://localhost/api/admin/emails/recuperacao",init);
+  assert.equal((await POST(req)).status,413);assert.equal(cancelled,true);
+  const invalid=new NextRequest("http://localhost/api/admin/emails/recuperacao",{method:"POST",headers,body:Buffer.from([0xff])});
+  assert.equal((await POST(invalid)).status,400);assert.deepEqual(await snapshot(c),before);
+  assert.equal((await c.db.query("SELECT count(*)::int n FROM audit_log WHERE event='mail_queue_acceptance_recovered'")).rows[0].n,0);
+ }finally{await c.db._closeDbForTests();}
+});
+
+test("GET de recuperação falha fechado sem detalhes internos e volta a funcionar após fonte recuperada",async()=>{
+ const c=await setup();try{
+  process.env.ADMIN_NO_PASSWORD="0";delete process.env.PREVIEW_MODE;
+  const {NextRequest}=await import("next/server"),{GET}=await import("../app/api/admin/emails/recuperacao/route");
+  const p=await pair(c,"accepted"),s=await c.U.abrirSessao(c.actor.userId,"127.0.0.1");
+  await c.db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '10 minutes' WHERE user_id=$1",[c.actor.userId]);
+  const req=(q="")=>new NextRequest(`http://localhost/api/admin/emails/recuperacao${q}`,{headers:{host:"localhost",origin:"http://localhost",cookie:`adm=${s.token}`}});
+  const before=await snapshot(c);
+  await c.db.query("ALTER TABLE mail_message_attempts RENAME TO qa_unavailable_attempts");
+  try{for(const q of ["",`?id=${p.q}`]){const failed=await GET(req(q));assert.equal(failed.status,503);assert.deepEqual(await failed.json(),{ok:false,error:"unavailable"});}}
+  finally{await c.db.query("ALTER TABLE qa_unavailable_attempts RENAME TO mail_message_attempts");}
+  assert.equal((await GET(req())).status,200);assert.deepEqual(await snapshot(c),before);
+ }finally{await c.db._closeDbForTests();}
+});

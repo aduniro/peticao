@@ -8,7 +8,7 @@ assert.equal(process.env.DEV_DB_PORT, "54349");
 assert.equal(process.env.MAIL_PROVIDER, "dev");
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const contracts = process.argv.slice(2).length ? process.argv.slice(2) : ["referrals", "referrals-browser", "content-retention", "whatsapp-senders"];
-assert.ok(contracts.every(name => ["referrals", "referrals-browser", "content-retention", "whatsapp-senders", "contact-history"].includes(name)));
+assert.ok(contracts.every(name => ["referrals", "referrals-browser", "content-retention", "whatsapp-senders", "contact-history", "mail-recovery", "mail-preview"].includes(name)));
 try {
   for (const name of contracts) {
     const schema = `qa_consolidation_${name.replaceAll("-", "_")}_${process.pid}`;
