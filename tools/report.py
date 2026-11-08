@@ -19,6 +19,7 @@ for name in sorted(set(ia)|set(ib)):
                                         (b/name).read_text().splitlines(True) if name in ib else [],fromfile="A/"+name,tofile="B/"+name))
 (OUT/"source.diff").write_text("".join(patch))
 screens=[];image_results=[]
+reviews=json.loads((OUT/"visual-review.json").read_text()) if (OUT/"visual-review.json").exists() else {}
 for image_a in sorted(OUT.glob("a-*.png")):
     name=image_a.name[2:];image_b=OUT/("b-"+name)
     if not image_b.exists():continue
@@ -27,7 +28,9 @@ for image_a in sorted(OUT.glob("a-*.png")):
         delta=ImageChops.difference(aa,bb);count=sum(p!=(0,0,0) for p in delta.getdata());percent=count*100/(aa.width*aa.height)
         delta.point(lambda n:min(255,n*4)).save(OUT/("diff-"+name));same=count==0
     else:count=None;percent=None;same=False
-    classification="Idêntica" if same else "Configuração local: porta3040 versus3041" if name.startswith("home-") else "Sobreposição do botão fechar; controle ampliado idêntico" if name=="cpf-incompleto-focus-390.png" else "A revisar"
+    review=reviews.get(name,{})
+    reviewed=review.get("a_sha256")==hashlib.sha256(image_a.read_bytes()).hexdigest() and review.get("b_sha256")==hashlib.sha256(image_b.read_bytes()).hexdigest()
+    classification="Idêntica" if same else review["classification"] if reviewed else "A revisar"
     image_results.append({"scenario":name,"same_size":aa.size==bb.size,"identical":same,"different_pixels":count,"percent":percent,"classification":classification})
     screens.append((name,image_a.name,image_b.name,("diff-"+name) if aa.size==bb.size else None,percent))
 results=json.loads((OUT/"browser-results.json").read_text()) if (OUT/"browser-results.json").exists() else {"cases":[]}
