@@ -125,3 +125,40 @@ test("decisões simultâneas sobre domínio e subdomínio deixam metadados coere
     assert.ok((await c.db.verifyAuditChain()).ok);
   } finally { c.I._clearDomainCache(); await c.db._closeDbForTests(); }
 });
+
+test("curadoria revalida a conta e não grava domínio ou selo após revogação", async () => {
+  const c = await setup();
+  try {
+    await signers(c);
+    const before = (await c.db.query("SELECT row_to_json(s)::text raw FROM signatures s ORDER BY id")).rows;
+    const actor = { userId: c.user.id, email: c.user.email };
+    for (const update of ["nivel='leitura'", "nivel='total',ativo=false", "nivel='total',ativo=true,email='changed@example.test'"]) {
+      await c.db.query(`UPDATE admin_users SET ${update} WHERE id=$1`, [c.user.id]);
+      await assert.rejects(c.I.decideDomain("atomic-college.example", "approved", { kind: "ifes", by: "forged", actor }), c.I.DomainDecisionDenied);
+    }
+    assert.deepEqual((await c.db.query("SELECT row_to_json(s)::text raw FROM signatures s ORDER BY id")).rows, before);
+    assert.equal((await c.db.query("SELECT 1 FROM institutional_domains WHERE domain='atomic-college.example'")).rowCount, 0);
+    assert.equal((await c.db.query("SELECT count(*)::int n FROM audit_log WHERE event='domain_approved'")).rows[0].n, 0);
+    await c.db.query("UPDATE admin_users SET email=$2,nivel='edicao',ativo=true WHERE id=$1", [c.user.id, c.user.email]);
+    assert.equal(await c.I.decideDomain("atomic-college.example", "approved", { kind: "ifes", institution: "Instituição QA", by: "forged", actor }), 2);
+    const stored = (await c.db.query("SELECT decided_by FROM institutional_domains WHERE domain='atomic-college.example'")).rows[0]; assert.equal(stored.decided_by, actor.email);
+    const audit = JSON.parse((await c.db.query("SELECT data FROM audit_log WHERE event='domain_approved'")).rows[0].data);
+    assert.equal(audit.by, actor.email); assert.equal(audit.userId, actor.userId);
+    assert.ok((await c.db.verifyAuditChain()).ok);
+  } finally { c.I._clearDomainCache(); await c.db._closeDbForTests(); }
+});
+
+test("curadoria aguarda mudança de conta e recusa a identidade obsoleta no momento da escrita", async () => {
+  const c = await setup();
+  let pending: Promise<number> | undefined;
+  try {
+    const actor = { userId: c.user.id, email: c.user.email };
+    await c.db.tx(async control => {
+      await control.query("SELECT pg_advisory_xact_lock(7003)");
+      pending = c.I.decideDomain("waiting-actor.example", "approved", { by: "forged", actor });
+      await control.query("UPDATE admin_users SET nivel='leitura' WHERE id=$1", [actor.userId]);
+    });
+    await assert.rejects(pending!, c.I.DomainDecisionDenied);
+    assert.equal((await c.db.query("SELECT 1 FROM institutional_domains WHERE domain='waiting-actor.example'")).rowCount, 0);
+  } finally { await pending?.catch(() => {}); c.I._clearDomainCache(); await c.db._closeDbForTests(); }
+});

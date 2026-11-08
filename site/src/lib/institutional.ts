@@ -103,11 +103,20 @@ export async function notePendingDomain(domain: string): Promise<void> {
   );
 }
 
-export async function decideDomain(domain: string, status: "approved" | "rejected", opts: { kind?: DomainKind; institution?: string; evidenceUrl?: string; by: string }): Promise<number> {
+export class DomainDecisionDenied extends Error {}
+export async function decideDomain(domain: string, status: "approved" | "rejected", opts: { kind?: DomainKind; institution?: string; evidenceUrl?: string; by: string; actor?: { userId: number; email: string } }): Promise<number> {
   const d = domainToASCII(domain.trim().toLowerCase());
   if (!d || !d.includes(".")) throw new Error("Domínio inválido.");
   if ([...FREEMAIL].some((f) => domainMatches(d, f))) throw new Error("Provedores de e-mail gratuitos não podem ser institucionais.");
   const updated = await tx(async client => {
+    if (opts.actor !== undefined) {
+      const actor = opts.actor;
+      if (!Number.isInteger(actor?.userId) || actor.userId <= 0 || actor.userId > 2147483647 || typeof actor.email !== "string") throw new DomainDecisionDenied("Não autorizado.");
+      await client.query("SELECT pg_advisory_xact_lock(7003)");
+      const current = await client.query("SELECT id FROM admin_users WHERE id=$1 AND email=$2 AND ativo AND nivel IN ('edicao','exclusao','total') FOR SHARE", [actor.userId, actor.email.trim().toLowerCase()]);
+      if (!current.rowCount) throw new DomainDecisionDenied("Não autorizado.");
+    }
+    const by = opts.actor ? opts.actor.email.trim().toLowerCase() : opts.by;
     // Manual decisions overlap for parent/subdomains; serialize them before touching signer metadata.
     await client.query("SELECT pg_advisory_xact_lock(hashtext('institutional-domain-decision'))");
     await client.query(
@@ -115,7 +124,7 @@ export async function decideDomain(domain: string, status: "approved" | "rejecte
        VALUES($1,$2,$3,'manual',$4,$5,$6,$7)
        ON CONFLICT (domain) DO UPDATE SET kind=EXCLUDED.kind, institution=COALESCE(EXCLUDED.institution, institutional_domains.institution),
          status=EXCLUDED.status, evidence_url=COALESCE(EXCLUDED.evidence_url, institutional_domains.evidence_url), decided_by=EXCLUDED.decided_by, updated_at=EXCLUDED.updated_at`,
-      [d, opts.kind ?? "outro", opts.institution ?? null, status, opts.evidenceUrl ?? null, opts.by, new Date().toISOString()]
+      [d, opts.kind ?? "outro", opts.institution ?? null, status, opts.evidenceUrl ?? null, by, new Date().toISOString()]
     );
     let count = 0;
     if (status === "approved") {
@@ -129,7 +138,7 @@ export async function decideDomain(domain: string, status: "approved" | "rejecte
         count++;
       }
     }
-    await audit(status === "approved" ? "domain_approved" : "domain_rejected", null, { domain: d, kind: opts.kind ?? "outro", by: opts.by, updated: count }, client);
+    await audit(status === "approved" ? "domain_approved" : "domain_rejected", null, { domain: d, kind: opts.kind ?? "outro", by, updated: count, ...(opts.actor ? { userId: opts.actor.userId } : {}) }, client);
     return count;
   });
   _clearDomainCache();
