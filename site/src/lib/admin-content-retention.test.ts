@@ -55,7 +55,7 @@ test("expurgo remove cópias e anexos sem apagar metadados, contatos, assinatura
     const before = await proof();
     const outboxBefore = (await c.db.query("SELECT id,to_addr,kind,created_at,sent_at,attempts FROM mail_outbox ORDER BY id")).rows;
     const repliesBefore = (await c.db.query("SELECT id,contact_id,rodada,versao,por,assunto,criada_em FROM contact_replies ORDER BY id")).rows;
-    assert.deepEqual(await c.R.purgeAdminContent(), { messages: 1, outbox: 2, replies: 2 });
+    assert.deepEqual(await c.R.purgeAdminContent(), { messages: 1, outbox: 2, replies: 2, drafts: 0 });
     assert.equal((await c.db.query("SELECT content_cipher FROM mail_messages WHERE id=$1", [old.id])).rows[0].content_cipher, null);
     assert.equal((await c.A.archivedContent(recent.id)).state, "stored");
     const queues = (await c.db.query("SELECT status,payload,last_error FROM mail_outbox ORDER BY id")).rows;
@@ -67,7 +67,7 @@ test("expurgo remove cópias e anexos sem apagar metadados, contatos, assinatura
     assert.deepEqual(replies.map(r => r.payload), [null, null]); assert.deepEqual(replies.map(r => r.estado), ["accepted", "rejected"]);
     assert.equal(replies[0].ok, true); assert.equal(replies[1].error_code, "content_expired");
     assert.deepEqual(await proof(), before);
-    assert.deepEqual(await c.R.purgeAdminContent(), { messages: 0, outbox: 0, replies: 0 });
+    assert.deepEqual(await c.R.purgeAdminContent(), { messages: 0, outbox: 0, replies: 0, drafts: 0 });
     const audit = JSON.stringify((await c.db.query("SELECT data FROM audit_log")).rows);
     assert.ok(!audit.includes(mail().text)); assert.ok(!audit.includes("QA-PRIVATE-ATTACHMENT")); assert.ok((await c.db.verifyAuditChain()).ok);
   } finally { await c.db._closeDbForTests(); }
@@ -85,7 +85,7 @@ test("falha na auditoria do expurgo reverte também a exclusão do arquivo cifra
       CREATE TRIGGER fail_retention_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION fail_retention_audit()`);
     await assert.rejects(c.R.purgeAdminContent(), /QA retention audit failure/); assert.deepEqual(await proof(), before);
     await c.db.query("DROP TRIGGER fail_retention_audit ON audit_log");
-    assert.deepEqual(await c.R.purgeAdminContent(), { messages: 1, outbox: 1, replies: 0 });
+    assert.deepEqual(await c.R.purgeAdminContent(), { messages: 1, outbox: 1, replies: 0, drafts: 0 });
     assert.ok((await c.db.verifyAuditChain()).ok);
   } finally { await c.db._closeDbForTests(); }
 });
@@ -100,7 +100,7 @@ test("workers não despacham conteúdo vencido mesmo antes do expurgo", async ()
     const contact = (await c.db.query("INSERT INTO contact_messages(name,email,kind,message) VALUES('QA','qa@example.test','duvida','QA') RETURNING id")).rows[0].id;
     const reply = (await c.db.query("INSERT INTO contact_replies(contact_id,rodada,versao,por,assunto,estado,payload,criada_em,due_at) VALUES($1,1,'texto','qa-owner@example.test','QA','prepared',$2,now()-interval '31 days',now()-interval '1 day') RETURNING id", [contact, JSON.stringify({ to: mail().to, subject: mail().subject, text: mail().text })])).rows[0].id;
     await c.D.dispatchContactReply(reply, { enviar: async () => { sends++; return "sent"; } }); assert.equal(sends, 0);
-    assert.deepEqual(await c.R.purgeAdminContent(), { messages: 0, outbox: 1, replies: 1 });
+    assert.deepEqual(await c.R.purgeAdminContent(), { messages: 0, outbox: 1, replies: 1, drafts: 0 });
   } finally { await c.db._closeDbForTests(); }
 });
 
@@ -115,7 +115,7 @@ test("aceite iniciado antes do prazo conserva o resultado sem restaurar o conte�
     const draining = c.O.drainOutbox(async () => { start(); await gate; return "sent"; });
     await started;
     await c.db.query("UPDATE mail_outbox SET created_at=now()-interval '31 days' WHERE id=$1", [id]);
-    try { assert.deepEqual(await c.R.purgeAdminContent(), { messages: 0, outbox: 1, replies: 0 }); }
+    try { assert.deepEqual(await c.R.purgeAdminContent(), { messages: 0, outbox: 1, replies: 0, drafts: 0 }); }
     finally { release(); }
     assert.equal((await draining).sent, 1);
     const row = (await c.db.query("SELECT status,payload,sent_at FROM mail_outbox WHERE id=$1", [id])).rows[0];

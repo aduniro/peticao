@@ -23,7 +23,13 @@ export async function purgeAdminContent(limit = 100) {
       ok=CASE WHEN r.estado IN ('prepared','blocked') THEN false ELSE r.ok END,
       estado=CASE WHEN r.estado IN ('prepared','blocked') THEN 'rejected' ELSE r.estado END
       FROM expired WHERE r.id=expired.id RETURNING r.id`, [limit, ADMIN_CONTENT_RETENTION_DAYS])).rows;
-    if (outbox.length || replies.length) await audit("admin_content_expired", null, { outbox: outbox.map(r => r.id), replies: replies.map(r => r.id), days: ADMIN_CONTENT_RETENTION_DAYS }, c);
-    return { messages, outbox: outbox.length, replies: replies.length };
+    const drafts = (await c.query<{ contact_id: number; revision: number }>(`WITH expired AS (
+      SELECT contact_id FROM contact_drafts WHERE state='stored' AND expires_at<=clock_timestamp()
+        ORDER BY expires_at,contact_id LIMIT $1 FOR UPDATE SKIP LOCKED
+    ) UPDATE contact_drafts d SET content_cipher=NULL,state='expired',updated_at=clock_timestamp(),
+      revision=CASE WHEN d.revision<2147483647 THEN d.revision+1 ELSE d.revision END
+      FROM expired WHERE d.contact_id=expired.contact_id RETURNING d.contact_id,d.revision`, [limit])).rows;
+    if (outbox.length || replies.length || drafts.length) await audit("admin_content_expired", null, { outbox: outbox.map(r => r.id), replies: replies.map(r => r.id), drafts, days: ADMIN_CONTENT_RETENTION_DAYS }, c);
+    return { messages, outbox: outbox.length, replies: replies.length, drafts: drafts.length };
   });
 }

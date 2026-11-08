@@ -325,6 +325,14 @@ const SCHEMA_SQL = `
   ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0;
   ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS error_code TEXT;
   CREATE INDEX IF NOT EXISTS contact_replies_due ON contact_replies(estado,due_at);
+  CREATE TABLE IF NOT EXISTS contact_drafts (
+    contact_id INTEGER PRIMARY KEY REFERENCES contact_messages(id), id UUID NOT NULL UNIQUE,
+    revision INTEGER NOT NULL CHECK(revision>0), state TEXT NOT NULL CHECK(state IN ('stored','discarded','expired')),
+    content_cipher TEXT, created_by INTEGER NOT NULL REFERENCES admin_users(id), updated_by INTEGER NOT NULL REFERENCES admin_users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL,
+    CHECK((state='stored' AND content_cipher IS NOT NULL) OR (state<>'stored' AND content_cipher IS NULL))
+  );
+  CREATE INDEX IF NOT EXISTS contact_drafts_expiry ON contact_drafts(expires_at) WHERE state='stored';
   CREATE TABLE IF NOT EXISTS contact_campus_reviews (
     id SERIAL PRIMARY KEY, contact_id INTEGER NOT NULL REFERENCES contact_messages(id),
     triage_job_id INTEGER NOT NULL REFERENCES contact_triage_jobs(id), revision INTEGER NOT NULL,

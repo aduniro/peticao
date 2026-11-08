@@ -32,12 +32,12 @@ try {
   assert.equal((await request()).status, 401); assert.equal((await request("wrong")).status, 401);
   assert.ok((await db.query("SELECT content_cipher FROM mail_messages WHERE id=$1", [message.id])).rows[0].content_cipher);
   const response = await request(process.env.QA_CRON_SECRET); assert.equal(response.status, 200);
-  const result = await response.json(); assert.deepEqual(result.contentExpired, { messages: 1, outbox: 1, replies: 1 }); assert.equal(result.tried, 0);
+  const result = await response.json(); assert.deepEqual(result.contentExpired, { messages: 1, outbox: 1, replies: 1, drafts: 0 }); assert.equal(result.tried, 0);
   assert.equal((await db.query("SELECT content_cipher FROM mail_messages WHERE id=$1", [message.id])).rows[0].content_cipher, null);
   assert.deepEqual((await db.query("SELECT payload FROM mail_outbox WHERE id=$1", [queue])).rows[0].payload, {});
   assert.equal((await db.query("SELECT payload FROM contact_replies")).rows[0].payload, null);
   const again = await request(process.env.QA_CRON_SECRET); assert.equal(again.status, 200);
-  assert.deepEqual((await again.json()).contentExpired, { messages: 0, outbox: 0, replies: 0 });
+  assert.deepEqual((await again.json()).contentExpired, { messages: 0, outbox: 0, replies: 0, drafts: 0 });
   assert.deepEqual(await proof(), before);
   assert.equal((await db.query("SELECT count(*)::int n FROM mail_log")).rows[0].n, 0);
   assert.ok((await db.verifyAuditChain()).ok); assert.ok(process.env.QA_OUTPUT_DIR);

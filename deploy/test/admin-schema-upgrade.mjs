@@ -63,7 +63,7 @@ try{
  const archivedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows;
  await c.query(newSql);await c.query(newSql);await c.query(oldSql);
  assert.deepEqual((await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows,archivedSenders,"DDL replay and old bootstrap must not reset archive decisions or revisions");
- assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","contact_campus_reviews","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
+ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","contact_campus_reviews","contact_drafts","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
  const newMailLog=(await c.query("SELECT * FROM mail_log ORDER BY id")).rows,newMailOutbox=(await c.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
  assert.ok([...newMailLog,...newMailOutbox].every(row=>row.message_id===null));
  assert.deepEqual(newMailLog.map(({message_id,...row})=>row),oldMailLog);assert.deepEqual(newMailOutbox.map(({message_id,...row})=>row),oldMailOutbox);
@@ -122,6 +122,14 @@ try{
  assert.ok((await c.query("SELECT indexname FROM pg_indexes WHERE schemaname=current_schema() AND indexname IN ('mail_message_receipt','mail_message_event_identity','mail_message_event_history')")).rowCount===3,"Correlation indexes must survive the foundation upgrade");
  // Curated reference decisions are additive and remain recoverable across a code rollback.
  const reviewer=(await c.query("INSERT INTO admin_users(email,nome,nivel,senha_hash) VALUES('qa-curator@example.test','QA Curator','total','QA-NOT-A-LOGIN-HASH') RETURNING id")).rows[0].id;
+ await c.query(`INSERT INTO contact_drafts(contact_id,id,revision,state,content_cipher,created_by,updated_by,created_at,updated_at,expires_at)
+   VALUES($1,'00000000-0000-4000-8000-000000000030',7,'stored','QA-NOT-A-REAL-CIPHER',$2,$2,'2026-11-08T08:00:00.123456Z','2026-11-08T09:00:00.654321Z','2026-12-08T08:00:00.123456Z')`,[contact,reviewer]);
+ const drafts=async()=>(await c.query("SELECT row_to_json(d)::text raw FROM contact_drafts d ORDER BY contact_id")).rows;
+ const priorDrafts=await drafts();await c.query(newSql);await c.query(newSql);await c.query(oldSql);
+ assert.deepEqual(await drafts(),priorDrafts,"Shared draft identity, ciphertext, authorship, revision and fixed expiry survive DDL replay and old bootstrap");
+ await c.query("UPDATE contact_drafts SET state='expired',content_cipher=NULL,revision=8");
+ const expiredDrafts=await drafts();await c.query(newSql);await c.query(oldSql);
+ assert.deepEqual(await drafts(),expiredDrafts,"Expired draft tombstone and revision must not reset or resurrect content after rollback/bootstrap");
  const referral=(await c.query("INSERT INTO referrers(code,label,manage_token_hash) VALUES('QATEST7','QA Intent','QA-NOT-A-REAL-TOKEN-HASH') RETURNING id")).rows[0].id;
  await c.query("INSERT INTO admin_referral_requests(actor_id,request_id,input_hash,referrer_id,created_at) VALUES($1,'00000000-0000-4000-8000-000000000020',$2,$3,'2026-11-08T08:00:00.123456Z')",[reviewer,'e'.repeat(64),referral]);
  const referralRequests=async()=>(await c.query("SELECT row_to_json(q)::text raw FROM admin_referral_requests q ORDER BY actor_id,request_id")).rows;
@@ -148,15 +156,16 @@ try{
  assert.deepEqual(await diagnosticsSnapshot(),originalDiagnostics,"Published diagnostic identity, encrypted payload, metadata, expiry and microsecond timestamps survive upgrade/replay/old bootstrap");
  assert.equal((await c.query("SELECT count(*)::int n FROM pg_indexes WHERE schemaname=current_schema() AND tablename='signup_diagnostics'")).rows[0].n,5);
  console.log("PASS currently published diagnostics survive additive admin upgrade and code rollback bootstrap; no contact decryption or signer writes.");
- console.log("PASS AI ledger upgrade: thirteen additive tables; request UUID, actor, quota reservation, uncertain state and microsecond timestamps preserved, no generation dispatched.");
- console.log("PASS campus curation upgrade: thirteen additive tables; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
+ console.log("PASS shared draft upgrade: ciphertext, identity, actors, revision, expiry and expired tombstone survive replay and old bootstrap without decrypting or sending.");
+ console.log("PASS AI ledger upgrade: fourteen additive tables; request UUID, actor, quota reservation, uncertain state and microsecond timestamps preserved, no generation dispatched.");
+ console.log("PASS campus curation upgrade: fourteen additive tables; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
  console.log("PASS scoped journal upgrade: unknown account stays null, no fabricated events; existing receipt and linked event identity/timestamps preserved on replay.");
  console.log("PASS archive foundation upgrade: existing message identity, fingerprint, state and timestamp preserved; Reply-To left unknown.");
  console.log("PASS legacy action history migration: original rows unchanged, no old record admitted as a new request.");
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS sender catalogue upgrade: ciphertext, identity, paused state, archive revision and microsecond timestamps survive replay and old bootstrap.");
  console.log("PASS referral intent upgrade: request ownership, allocation, fingerprint and microsecond timestamp preserved.");
- console.log("PASS real startup on old schema plus DDL replay: thirteen additive tables, two nullable message correlation columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS real startup on old schema plus DDL replay: fourteen additive tables, two nullable message correlation columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;
