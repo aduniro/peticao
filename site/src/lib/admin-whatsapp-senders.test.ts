@@ -143,6 +143,14 @@ test("handler real exige sessão, nível, origem e confirmação extra e preserv
     assert.equal((await c.db.query("SELECT archived_at FROM whatsapp_senders")).rows[0].archived_at, null);
     assert.equal((await POST(request("remove", token, { id: String(sender.id), revision: "1" }))).status, 303);
     assert.ok((await c.db.query("SELECT archived_at FROM whatsapp_senders")).rows[0].archived_at);
+    const oldRestore = await POST(request("restore", token, { id: String(sender.id), revision: "1", arquivados: "1" }));
+    assert.equal(new URL(oldRestore.headers.get("location")!).searchParams.get("arquivados"), "1");
+    assert.equal(new URL(oldRestore.headers.get("location")!).searchParams.get("msg"), "Este registro mudou desde que a página foi aberta. Atualize a página antes de tentar novamente.");
+    const restored = await POST(request("restore", token, { id: String(sender.id), revision: "2", arquivados: "1" }));
+    assert.equal(restored.status, 303);
+    assert.equal(new URL(restored.headers.get("location")!).searchParams.get("msg"), "Remetente restaurado.");
+    assert.equal(new URL(restored.headers.get("location")!).searchParams.get("arquivados"), null);
+    assert.equal((await c.db.query("SELECT archived_at FROM whatsapp_senders")).rows[0].archived_at, null);
     await c.db.query("UPDATE admin_users SET nivel='leitura' WHERE id=$1", [c.actor.userId]);
     assert.equal((await POST(request("add"))).status, 403);
     assert.equal((await c.db.query("SELECT count(*)::int n FROM whatsapp_senders")).rows[0].n, 1);

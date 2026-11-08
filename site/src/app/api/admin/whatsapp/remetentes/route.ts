@@ -12,15 +12,17 @@ export async function POST(req: NextRequest) {
   const session = await quemAge(req);
   if (!session) return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 401 });
   const f = await req.formData();
-  const volta = (msg: string) => NextResponse.redirect(new URL(`/admin/whatsapp?msg=${encodeURIComponent(msg)}`, requestOrigin(req.headers)), 303);
+  const volta = (msg: string, keepArchive = true) => NextResponse.redirect(new URL(`/admin/whatsapp?msg=${encodeURIComponent(msg)}${keepArchive && f.get("arquivados") === "1" ? "&arquivados=1" : ""}`, requestOrigin(req.headers)), 303);
   const acao = String(f.get("acao") ?? "");
-  if (!["add", "toggle", "remove"].includes(acao)) return volta("Ação desconhecida.");
+  if (!["add", "toggle", "remove", "restore"].includes(acao)) return volta("Ação desconhecida.");
   const result = await manageSender({ userId: session.userId, email: session.email }, acao === "add"
     ? { action: "add", label: String(f.get("rotulo") ?? ""), ddi: f.get("ddi"), number: f.get("numero") }
-    : { action: acao as "toggle" | "remove", id: Number(f.get("id")), revision: Number(f.get("revision")) });
+    : { action: acao as "toggle" | "remove" | "restore", id: Number(f.get("id")), revision: Number(f.get("revision")) });
   if (!result.ok) {
     if (result.erro === "forbidden") return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 403 });
+    if (result.erro === "conflict") return volta("Este registro mudou desde que a página foi aberta. Atualize a página antes de tentar novamente.");
     return volta(result.erro === "label" ? "Informe um nome para o remetente." : result.erro === "phone" ? "Número inválido: confira o DDI e o número." : result.erro === "limit" ? "Limite de 20 remetentes." : "Remetente inválido.");
   }
+  if (acao === "restore") return volta("Remetente restaurado.", false);
   return volta(acao === "add" ? "Remetente cadastrado." : acao === "remove" ? "Remetente removido." : "Remetente atualizado.");
 }

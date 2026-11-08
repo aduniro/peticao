@@ -80,6 +80,6 @@ Perguntado após a aprovação do AV-8, antes de adicionar legenda/novas mensage
 
 Objetivo: substituir códigos no resumo por legenda compreensível, preservando evidências técnicas completas e os limites do diagnóstico. Não altera o formulário público, não aprova identidade nem conclui que a mensagem chegou ao destinatário. Até resposta explícita, a interface usa os textos do AV-8 e dados estruturados recebidos, sem essas novas legendas. Não aprova outros AVs, envio, deploy ou merge com a VPS.
 
-## AV-15 — remetentes arquivados e conflito de versão (pendente)
+## AV-15 — remetentes arquivados e conflito de versão (aprovado em08/11/2026)
 
-Pergunta nativa enviada em08/11 antes de alterar textos: “Arquivados”, “Restaurar”, “Remetente restaurado.” e “Este registro mudou desde que a página foi aberta. Atualize a página antes de tentar novamente.” Até aprovação, a biblioteca local permite restauração em testes, mas a interface e a rota não expõem a nova ação. O conflito usa o aviso existente “Remetente inválido.”; a apresentação específica continua pendente. Não interpretar autorização de continuar o desenvolvimento como aprovação automática dessa redação. Nenhuma alteração de avisos públicos, WAHA ou envio de mensagens.
+Pergunta nativa enviada em08/11 antes de alterar textos: “Arquivados”, “Restaurar”, “Remetente restaurado.” e “Este registro mudou desde que a página foi aberta. Atualize a página antes de tentar novamente.” Resposta explícita: “Aprovo os textos e escolho30dias”. O contexto eram estes quatro textos e a pergunta separada de retenção. Autoriza integrar e testar estes controles no candidato; não aprova outros AVs, avisos públicos, WAHA, envio, deploy ou merge com a VPS.

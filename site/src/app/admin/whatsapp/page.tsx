@@ -13,14 +13,16 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "WhatsApp", robots: { index: false } };
 
 const CAT: Record<string, string> = { servidor: "Servidor", apoiador: "Apoiador", estrangeiro: "Estrangeiro" };
+const SUCCESS = new Set(["Remetente cadastrado.", "Remetente atualizado.", "Remetente removido.", "Remetente restaurado."]);
 
-export default async function WhatsApp({ searchParams }: { searchParams: { msg?: string; q?: string; status?: string } }) {
+export default async function WhatsApp({ searchParams }: { searchParams: { msg?: string; q?: string; status?: string; arquivados?: string } }) {
   const sessao = await sessaoAdmin();
   if (!sessao) redirect("/admin");
   if (!nivelOk(sessao.nivel, "total")) redirect("/admin?erro=nivel");
   if (!stepupValido(sessao)) redirect("/admin/confirmar?volta=/admin/whatsapp");
   const est = waEstado();
-  const senders = (await query<{ id: number; revision: number; label: string; phone_cipher: string; phone_last4: string; active: boolean; created_at: string }>("SELECT * FROM whatsapp_senders WHERE archived_at IS NULL ORDER BY id")).rows;
+  const archived = searchParams.arquivados === "1";
+  const senders = (await query<{ id: number; revision: number; label: string; phone_cipher: string; phone_last4: string; active: boolean; created_at: string }>(`SELECT * FROM whatsapp_senders WHERE archived_at IS ${archived ? "NOT " : ""}NULL ORDER BY id`)).rows;
   const q = (searchParams.q ?? "").trim().slice(0, 60);
   const status = ["pending", "confirmed"].includes(searchParams.status ?? "") ? searchParams.status! : "";
   const params: unknown[] = []; const w = ["s.wa_cipher IS NOT NULL"];
@@ -36,7 +38,7 @@ export default async function WhatsApp({ searchParams }: { searchParams: { msg?:
     <main className="v2-pagina">
       <div className="v2-secao">
       <h1>WhatsApp</h1>
-      {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
+      {searchParams.msg && <p className={`box ${SUCCESS.has(searchParams.msg) ? "ok" : "err"}`} role="status">{searchParams.msg}</p>}
 
       <h2>Situação do recurso</h2>
       <div className={`box ${est.pronto ? "ok" : ""}`}>
@@ -53,16 +55,22 @@ export default async function WhatsApp({ searchParams }: { searchParams: { msg?:
 
       <h2>Nossos números remetentes</h2>
       <p className="small">Cadastro para controle. O número que realmente envia é o conectado no painel do MailerSend (WhatsApp → Phone numbers).</p>
+      <form method="get" className="adm-bar">
+        <input type="hidden" name="q" value={q} /><input type="hidden" name="status" value={status} />
+        <label><input type="checkbox" name="arquivados" value="1" defaultChecked={archived} /> Arquivados</label>
+        <button className="adm-btn">Filtrar</button>
+      </form>
       <div className="adm-tablewrap"><table className="adm-table">
         <thead><tr><th>Nome</th><th>Número</th><th>Situação</th><th>Desde</th><th></th></tr></thead>
         <tbody>
           {senders.map((s) => (
             <tr key={s.id}>
               <td data-l="Nome">{s.label}</td><td data-l="Número">{formatarTelefone(decifrar(s.phone_cipher, `wa-sender:${s.id}`) ?? "") || `•••• ${s.phone_last4}`}</td>
-              <td data-l="Situação">{s.active ? "ativo" : "pausado"}</td><td data-l="Desde">{brasilia(s.created_at, true)}</td>
+              <td data-l="Situação">{archived ? "Arquivados" : s.active ? "ativo" : "pausado"}</td><td data-l="Desde">{brasilia(s.created_at, true)}</td>
               <td><form method="post" action="/api/admin/whatsapp/remetentes" className="adm-bar"><input type="hidden" name="id" value={s.id} />
                 <input type="hidden" name="revision" value={s.revision} />
-                <button name="acao" value="toggle" className="adm-btn">{s.active ? "Pausar" : "Ativar"}</button> <button name="acao" value="remove" className="adm-btn">Remover</button></form></td>
+                {archived && <input type="hidden" name="arquivados" value="1" />}
+                {archived ? <button name="acao" value="restore" className="adm-btn">Restaurar</button> : <><button name="acao" value="toggle" className="adm-btn">{s.active ? "Pausar" : "Ativar"}</button> <button name="acao" value="remove" className="adm-btn">Remover</button></>}</form></td>
             </tr>))}
           {senders.length === 0 ? <tr><td colSpan={5}>Nenhum remetente cadastrado.</td></tr> : null}
         </tbody></table></div>
@@ -77,6 +85,7 @@ export default async function WhatsApp({ searchParams }: { searchParams: { msg?:
       <h2>Destinatários ({total})</h2>
       <p className="small">Quem informou WhatsApp e aceitou o uso. Quem pediu a assinatura antes de o recurso existir não aparece aqui (segue só pelo e-mail).</p>
       <form method="get" className="adm-bar" style={{ flexWrap: "wrap", gap: 8 }}>
+        {archived && <input type="hidden" name="arquivados" value="1" />}
         <input type="search" name="q" defaultValue={q} placeholder="Buscar nome…" />
         <select name="status" defaultValue={status}><option value="">Todos</option><option value="confirmed">Confirmadas</option><option value="pending">Aguardando</option></select>
         <button className="adm-btn">Filtrar</button>
