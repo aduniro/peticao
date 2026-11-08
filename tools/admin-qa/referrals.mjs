@@ -54,13 +54,36 @@ try {
   assert.equal(domain.decided_by, editor.usuario.email);
   const domainAudit = JSON.parse((await db.query("SELECT data FROM audit_log WHERE event='domain_approved' ORDER BY id DESC LIMIT 1")).rows[0].data);
   assert.equal(domainAudit.by, editor.usuario.email); assert.equal(domainAudit.userId, editor.usuario.id);
+  const im = await import("../../site/src/lib/institutional.ts"), I = im.default ?? im;
+  await db.query("INSERT INTO institutional_domains(domain,kind,source,status) VALUES('qa-source-a.example','outro','QA-source-http','pending'),('qa-source-b.example','outro','QA-source-http','pending')");
+  const sourceActor = { userId: editor.usuario.id, email: editor.usuario.email };
+  const version = async () => I.domainSourceVersion("QA-source-http", (await db.query("SELECT * FROM institutional_domains WHERE source='QA-source-http' ORDER BY domain")).rows, sourceActor);
+  const sourcePost = stamp => fetch(new URL("/api/admin/dominios", base), { method: "POST", redirect: "manual", headers: { cookie: `adm=${editToken}`, origin: base.origin, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ action: "approve_source", source: "QA-source-http", kind: "ifes", version: stamp }) });
+  const firstVersion = await version();
+  const rendered = await fetch(new URL("/admin/dominios", base), { headers: { cookie: `adm=${editToken}` } }); assert.equal(rendered.status, 200);
+  const html = await rendered.text(); assert.ok(html.includes(`name="version" value="${firstVersion}"`));
+  assert.ok(html.includes("Aprovar em lote"));
+  assert.equal((await sourcePost("")).status, 409);
+  await db.query("INSERT INTO institutional_domains(domain,kind,source,status) VALUES('qa-source-c.example','outro','QA-source-http','pending')");
+  assert.equal((await sourcePost(firstVersion)).status, 409);
+  const currentVersion = await version();
+  const sourceBefore = (await db.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE source='QA-source-http' ORDER BY domain")).rows;
+  await db.query("CREATE FUNCTION qa_fail_source_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='domain_approved' AND NEW.data::jsonb->>'domain'='qa-source-b.example' THEN RAISE EXCEPTION 'QA expected source audit failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER qa_fail_source_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION qa_fail_source_audit()");
+  try { assert.equal((await sourcePost(currentVersion)).status, 303); assert.deepEqual((await db.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE source='QA-source-http' ORDER BY domain")).rows, sourceBefore); }
+  finally { await db.query("DROP TRIGGER qa_fail_source_audit ON audit_log; DROP FUNCTION qa_fail_source_audit()"); }
+  const sourceResults = await Promise.all([sourcePost(currentVersion), sourcePost(currentVersion)]);
+  assert.deepEqual(sourceResults.map(r => r.status).sort(), [303, 409]);
+  assert.equal((await db.query("SELECT 1 FROM institutional_domains WHERE source='QA-source-http' AND status='approved'")).rowCount, 3);
+  const sourceAudits = (await db.query("SELECT data FROM audit_log WHERE event='domain_approved' AND data::jsonb->>'domain' LIKE 'qa-source-%'")).rows.map(r => JSON.parse(r.data));
+  assert.equal(sourceAudits.length, 3); assert.ok(sourceAudits.every(r => r.userId === editor.usuario.id && r.by === editor.usuario.email));
+  assert.ok((await db.verifyAuditChain()).ok);
   await db.query("UPDATE admin_users SET nivel='leitura' WHERE id=$1", [editor.usuario.id]);
   assert.equal((await post(editToken, "QA Stale Role")).status, 403);
   assert.equal((await domainPost(editToken)).status, 403);
   assert.equal((await db.query("SELECT 1 FROM referrers")).rowCount, 2);
   assert.deepEqual(await proof(), before);
   assert.equal((await db.query("SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox")).rowCount, 0);
-  results.push({ compiledHttp: true, concurrentIntentReplay: true, intentConflict: true, intentRollback: true, domainActor: true, roleAndOriginGuards: true, redirectPreserved: true, namedAudit: true, auditFailureRolledBack: true, recoveryAfterFault: true, revokedRoleRejected: true, signaturesPreserved: true, noMail: true });
+  results.push({ compiledHttp: true, concurrentIntentReplay: true, intentConflict: true, intentRollback: true, domainActor: true, sourceVersionRendered: true, staleSourceRejected: true, atomicSourceRollback: true, concurrentSourceOnce: true, roleAndOriginGuards: true, redirectPreserved: true, namedAudit: true, auditFailureRolledBack: true, recoveryAfterFault: true, revokedRoleRejected: true, signaturesPreserved: true, noMail: true });
 } finally {
   for (const token of sessions) await U.encerrarSessao(token);
   await db._closeDbForTests();

@@ -162,3 +162,77 @@ test("curadoria aguarda mudança de conta e recusa a identidade obsoleta no mome
     assert.equal((await c.db.query("SELECT 1 FROM institutional_domains WHERE domain='waiting-actor.example'")).rowCount, 0);
   } finally { await pending?.catch(() => {}); c.I._clearDomainCache(); await c.db._closeDbForTests(); }
 });
+
+async function sourceFixture(c: Awaited<ReturnType<typeof setup>>) {
+  await signers(c);
+  await c.db.query("INSERT INTO institutional_domains(domain,kind,source,status,institution,updated_at) VALUES('atomic-college.example','outro','QA-source','pending','Instituição Fictícia','2026-11-08T10:00:00.123456Z'),('other-college.example','outro','QA-source','pending','Outro QA','2026-11-08T10:00:00.123457Z')");
+  const actor = { userId: c.user.id, email: c.user.email };
+  const version = async () => c.I.domainSourceVersion("QA-source", (await c.db.query<import("./institutional").DomainSourceRow>("SELECT * FROM institutional_domains WHERE source='QA-source' ORDER BY domain")).rows, actor);
+  const snapshot = async () => (await c.db.query("SELECT 'domain' kind,row_to_json(d)::text raw FROM institutional_domains d UNION ALL SELECT 'signer',row_to_json(s)::text FROM signatures s UNION ALL SELECT 'audit',row_to_json(a)::text FROM audit_log a ORDER BY kind,raw")).rows;
+  return { actor, version, snapshot };
+}
+
+test("lote de fonte reverte todas as decisões, selos e eventos se a última auditoria falhar", async () => {
+  const c = await setup();
+  try {
+    const f = await sourceFixture(c), version = await f.version(), before = await f.snapshot();
+    await c.db.query("CREATE FUNCTION fail_source_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='domain_approved' AND NEW.data::jsonb->>'domain'='other-college.example' THEN RAISE EXCEPTION 'QA source audit failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER fail_source_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION fail_source_audit()");
+    await assert.rejects(c.I.approveDomainSource("QA-source", "ifes", f.actor, version), /QA source audit failure/);
+    assert.deepEqual(await f.snapshot(), before);
+    await c.db.query("DROP TRIGGER fail_source_audit ON audit_log");
+    assert.deepEqual(await c.I.approveDomainSource("QA-source", "ifes", f.actor, version), { domains: 2, updated: 2 });
+    const events = (await c.db.query("SELECT data FROM audit_log WHERE event='domain_approved'")).rows.map(row => JSON.parse(row.data));
+    assert.equal(events.length, 2); assert.ok(events.every(e => e.by === c.user.email && e.userId === c.user.id));
+    assert.ok((await c.db.verifyAuditChain()).ok);
+    assert.equal((await c.db.query("SELECT 1 FROM mail_outbox UNION ALL SELECT 1 FROM contact_replies")).rowCount, 0);
+  } finally { c.I._clearDomainCache(); await c.db._closeDbForTests(); }
+});
+
+test("versão do lote recusa candidato novo, alteração de metadados e aprovação parcial não exibida", async () => {
+  const c = await setup();
+  try {
+    const f = await sourceFixture(c), version = await f.version();
+    await c.db.query("INSERT INTO institutional_domains(domain,source,status) VALUES('new-college.example','QA-source','pending')");
+    let before = await f.snapshot();
+    await assert.rejects(c.I.approveDomainSource("QA-source", "ifes", f.actor, version), c.I.DomainDecisionConflict);
+    assert.deepEqual(await f.snapshot(), before);
+    const partial = (await c.db.query<import("./institutional").DomainSourceRow>("SELECT * FROM institutional_domains WHERE source='QA-source' ORDER BY domain LIMIT 1")).rows;
+    await assert.rejects(c.I.approveDomainSource("QA-source", "ifes", f.actor, c.I.domainSourceVersion("QA-source", partial, f.actor)), c.I.DomainDecisionConflict);
+    const latest = await f.version();
+    await c.db.query("UPDATE institutional_domains SET institution='Nome QA alterado' WHERE domain='atomic-college.example'");
+    before = await f.snapshot();
+    await assert.rejects(c.I.approveDomainSource("QA-source", "ifes", f.actor, latest), c.I.DomainDecisionConflict);
+    assert.deepEqual(await f.snapshot(), before);
+  } finally { c.I._clearDomainCache(); await c.db._closeDbForTests(); }
+});
+
+test("lote concorrente é aprovado uma vez e revalida autoria/nível em vez de reutilizar versão de outra conta", async () => {
+  const c = await setup();
+  try {
+    const f = await sourceFixture(c), version = await f.version();
+    const other = await c.U.criarUsuario({ email: "source-other@example.test", nome: "QA Outro", nivel: "edicao", senha: PASSWORD }); assert.ok(other.ok);
+    await assert.rejects(c.I.approveDomainSource("QA-source", "ifes", { userId: other.usuario.id, email: other.usuario.email }, version), c.I.DomainDecisionConflict);
+    await c.db.query("UPDATE admin_users SET nivel='leitura' WHERE id=$1", [c.user.id]);
+    await assert.rejects(c.I.approveDomainSource("QA-source", "ifes", f.actor, version), c.I.DomainDecisionDenied);
+    await c.db.query("UPDATE admin_users SET nivel='edicao' WHERE id=$1", [c.user.id]);
+    const results = await Promise.allSettled([c.I.approveDomainSource("QA-source", "ifes", f.actor, version), c.I.approveDomainSource("QA-source", "ifes", f.actor, version)]);
+    assert.equal(results.filter(r => r.status === "fulfilled").length, 1);
+    const failed = results.find(r => r.status === "rejected"); assert.ok(failed?.status === "rejected" && failed.reason instanceof c.I.DomainDecisionConflict);
+    assert.equal((await c.db.query("SELECT 1 FROM audit_log WHERE event='domain_approved'")).rowCount, 2);
+    assert.ok((await c.db.verifyAuditChain()).ok);
+  } finally { c.I._clearDomainCache(); await c.db._closeDbForTests(); }
+});
+
+test("rota de fonte exige versão opaca e mantém mensagens/redirect existentes sem escrita em conflito", async () => {
+  const c = await setup();
+  try {
+    const f = await sourceFixture(c), version = await f.version(), { POST } = await import("../app/api/admin/dominios/route");
+    const body = (stamp: string) => { const form = new FormData(); for (const [key, value] of Object.entries({ action: "approve_source", source: "QA-source", kind: "ifes", version: stamp, by: "forged@example.test" })) form.set(key, value); return form; };
+    const before = await f.snapshot();
+    assert.equal((await POST(c.request("/api/admin/dominios", body("")))).status, 409);
+    assert.deepEqual(await f.snapshot(), before);
+    const response = await POST(c.request("/api/admin/dominios", body(version))); assert.equal(response.status, 303);
+    assert.equal(new URL(response.headers.get("location")!).searchParams.get("msg"), '2 domínio(s) da fonte "QA-source" aprovados como "Instituição federal de ensino". 2 assinatura(s) atualizada(s).');
+    const after = await f.snapshot(); assert.equal((await POST(c.request("/api/admin/dominios", body(version)))).status, 409); assert.deepEqual(await f.snapshot(), after);
+  } finally { c.I._clearDomainCache(); await c.db._closeDbForTests(); }
+});

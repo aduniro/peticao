@@ -2,12 +2,12 @@ import { redirect } from "next/navigation";
 import { sessaoAdmin } from "@/lib/admin";
 import { nivelOk } from "@/lib/admin-users";
 import { query } from "@/lib/db";
-import { KIND_LABELS } from "@/lib/institutional";
+import { KIND_LABELS, domainSourceVersion, type DomainSourceRow } from "@/lib/institutional";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Domínios institucionais", robots: { index: false } };
 
-type Row = { domain: string; kind: string; institution: string | null; source: string; status: string; seen_count: number; evidence_url: string | null };
+type Row = DomainSourceRow & { seen_count: number };
 
 const KindSelect = ({ def = "ifes" }: { def?: string }) => (
   <select name="kind" defaultValue={def}>
@@ -19,7 +19,7 @@ export default async function Dominios({ searchParams }: { searchParams: { msg?:
   const sessao = await sessaoAdmin();
   if (!sessao) redirect("/admin");
   if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
-  const rows = (await query<Row>("SELECT domain,kind,institution,source,status,seen_count,evidence_url FROM institutional_domains ORDER BY seen_count DESC, domain LIMIT 1500")).rows;
+  const rows = (await query<Row>("SELECT domain,kind,institution,source,status,seen_count,evidence_url,decided_by,updated_at FROM institutional_domains ORDER BY seen_count DESC, domain LIMIT 1500")).rows;
   const pend = rows.filter((r) => r.status === "pending"), appr = rows.filter((r) => r.status === "approved"), rej = rows.filter((r) => r.status === "rejected");
   const bySource = new Map<string, number>();
   for (const r of pend) bySource.set(r.source, (bySource.get(r.source) ?? 0) + 1);
@@ -41,6 +41,7 @@ export default async function Dominios({ searchParams }: { searchParams: { msg?:
       {[...bySource].map(([src, n]) => (
         <form key={src} method="post" action="/api/admin/dominios" style={{ marginBottom: 8 }}>
           <input type="hidden" name="action" value="approve_source" /><input type="hidden" name="source" value={src} />
+          <input type="hidden" name="version" value={domainSourceVersion(src, pend, sessao)} />
           Aprovar <strong>todos os {n}</strong> pendentes da fonte <code>{src}</code> como <KindSelect /> <button>Aprovar em lote</button>
           <span className="small"> {src === "cnpj" || src === "visitante" ? " (confira antes: esta fonte traz muito ruído)" : ""}</span>
         </form>
