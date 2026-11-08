@@ -70,6 +70,31 @@ test("resultado interno distingue aceite, fila e ausência de envio; não promet
   } finally { await c.db._closeDbForTests(); }
 });
 
+test("redefinição administrativa confere gestor na reserva e identifica autoria sem enviar após revogação", async () => {
+  const c = await setup();
+  try {
+    const target = await c.U.criarUsuario({ email: "target-reset@example.test", nome: "Pessoa QA", nivel: "leitura", senha: PASSWORD });
+    assert.ok(target.ok);
+    const actor = { userId: c.user.id, email: c.user.email };
+    let deliveries = 0;
+    const request = { origin: "https://site.test", actor, enviar: async () => { deliveries++; return "queued"; } };
+    for (const update of ["nivel='leitura'", "nivel='total',ativo=false", "nivel='total',ativo=true,email='changed@example.test'"]) {
+      await c.db.query(`UPDATE admin_users SET ${update} WHERE id=$1`, [actor.userId]);
+      assert.deepEqual(await c.U.pedirReset(target.usuario.email, request), { estado: "skipped", motivo: "unauthorized" });
+    }
+    assert.equal(deliveries, 0);
+    assert.equal((await c.db.query("SELECT count(*)::int n FROM admin_reset")).rows[0].n, 0);
+    await c.db.query("UPDATE admin_users SET email=$2,ativo=true,nivel='total' WHERE id=$1", [actor.userId, actor.email]);
+    assert.deepEqual(await c.U.pedirReset(target.usuario.email, request), { estado: "queued" });
+    assert.equal(deliveries, 1);
+    const events = (await c.db.query("SELECT data FROM audit_log WHERE event IN ('admin_reset_reservado','admin_reset_pedido') ORDER BY id")).rows.map(r => JSON.parse(r.data));
+    assert.equal(events.length, 2);
+    for (const event of events) { assert.equal(event.por, actor.email); assert.equal(event.userId, actor.userId); assert.equal(event.id, target.usuario.id); }
+    assert.ok(await c.U.sessaoPorToken(c.session.token));
+    assert.ok((await c.db.verifyAuditChain()).ok);
+  } finally { await c.db._closeDbForTests(); }
+});
+
 test("esqueci a senha mantém resposta pública uniforme sem expor resultado interno", async () => {
   const c = await setup();
   const { mkdtempSync, rmSync } = await import("node:fs");

@@ -18,4 +18,12 @@ O hash da senha é calculado antes de obter os bloqueios. Nenhuma senha/hash é 
 
 ## Limites
 
-Este bloco fecha somente a criação. Alteração de nível, ativação/desativação e redefinição ainda precisam da revisão final de autoria atual no momento da escrita. Não transforma convite e criação em uma única transação externa; falha de entrega após commit conserva a conta e segue o tratamento existente. A página ainda mostra o aviso de sessões cuja revisão depende de AV-1; nenhum texto foi alterado por inferência. Não conclui a Etapa4 ou o painel completo.
+O checkpoint acima fecha somente a criação. A revisão das demais escritas foi retomada em08/11, conforme o bloco abaixo. Não transforma convite e criação em uma única transação externa; falha de entrega após commit conserva a conta e segue o tratamento existente. A página ainda mostra o aviso de sessões cuja revisão depende de AV-1; nenhum texto foi alterado por inferência. Não conclui a Etapa4 ou o painel completo.
+
+## Continuidade de08/11: nível, ativação e redefinição
+
+O handler transmite a identidade da sessão também para alteração de nível, ativação/desativação e reserva de redefinição/convite. O helper confere ID/e-mail, conta ativa e nível Total dentro da transação, após o bloqueio7003. A autoria vem da conta conferida; o argumento textual `por` não a substitui. Conta inexistente, rebaixada, desativada ou com e-mail divergente não modifica o alvo e não reserva nem envia link. A API mantém a resposta existente de não autorizado.
+
+Alteração, revogação de sessões e auditoria permanecem na mesma transação. A reserva de reset registra autoria antes de solicitar transporte; o resultado do transporte é outro fato, sem alegar entrega ao destinatário. A recuperação pública de senha preserva seu comportamento uniforme e sua quota. O uso por CLI permanece disponível; a rota não pode usar esse modo como fallback para sessão ausente.
+
+Passaram24 testes direcionados e tipos. Regressões novas verificam autoria atual, ausência de escrita/envio após revogação, rollback de nível/ativação/sessões quando a auditoria falha e autoria nos eventos de reset. A suíte cumulativa usa o banco fictício independente `stage02_qa`; não compartilha schemas com a validação do espelho. Build e teste HTTP compilado com dados fictícios estão programados em sequência, sem tocar na prévia3031 ou na VPS. Ainda não declarar concluído esse bloco até conferir seus resultados.

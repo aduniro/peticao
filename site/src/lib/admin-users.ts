@@ -4,6 +4,7 @@ import { hmac } from "./security";
 import { ehNivel, type Nivel } from "./admin-levels";
 import { SAFE_EMAIL_RE } from "./email-syntax";
 import { HASH_FALSO, gerarSenha, hashSenha, problemaNaSenha, verificarHash } from "./senha";
+import type { PoolClient } from "pg";
 
 /**
  * Usuários do painel, com quatro níveis (cada um inclui os de baixo): leitura < edição < exclusão < total.
@@ -19,6 +20,12 @@ export type SessaoAdmin = { userId: number; email: string; nome: string; nivel: 
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 export const normEmail = (e: string) => e.trim().toLowerCase();
+export type AdminActor = { userId: number; email: string };
+/** Call after management lock 7003, before changing any account. */
+async function currentOwner(c: PoolClient, actor: AdminActor): Promise<boolean> {
+  if (!Number.isInteger(actor?.userId) || actor.userId <= 0 || actor.userId > 2147483647 || typeof actor.email !== "string") return false;
+  return !!(await c.query("SELECT id FROM admin_users WHERE id=$1 AND email=$2 AND ativo AND nivel='total' FOR SHARE", [actor.userId, normEmail(actor.email)])).rowCount;
+}
 const doUsuario = (r: any): Usuario => ({ id: r.id, email: r.email, nome: r.nome, nivel: r.nivel, ativo: r.ativo, trocarSenha: r.trocar_senha, criadoEm: new Date(r.criado_em).toISOString(), ultimoAcesso: r.ultimo_acesso ? new Date(r.ultimo_acesso).toISOString() : null });
 
 /** Já existe algum usuário cadastrado? Enquanto não existir, vale a senha única antiga. Falha no banco conta como "existe" (nunca libera a senha antiga por engano). */
@@ -39,12 +46,7 @@ export async function criarUsuario(o: { email: string; nome: string; nivel: Nive
   return tx(async c => {
     // Use the same lock order as role/deactivation changes. CLI bootstrap has no actor.
     await c.query("SELECT pg_advisory_xact_lock(7003)");
-    if (o.actor !== undefined) {
-      const actor = o.actor;
-      if (!Number.isInteger(actor?.userId) || actor.userId <= 0 || actor.userId > 2147483647 || typeof actor.email !== "string") return { ok: false as const, erro: "nao_autorizado" as const };
-      const current = await c.query("SELECT id FROM admin_users WHERE id=$1 AND email=$2 AND ativo AND nivel='total' FOR SHARE", [actor.userId, normEmail(actor.email)]);
-      if (!current.rowCount) return { ok: false as const, erro: "nao_autorizado" as const };
-    }
+    if (o.actor !== undefined && !await currentOwner(c, o.actor)) return { ok: false as const, erro: "nao_autorizado" as const };
     const r = await c.query("INSERT INTO admin_users(email,nome,nivel,senha_hash,trocar_senha) VALUES($1,$2,$3,$4,$5) ON CONFLICT(email) DO NOTHING RETURNING *", [email, nome, o.nivel, senhaHash, o.trocarSenha ?? !o.senha]);
     if (!r.rowCount) return { ok: false as const, erro: "email_ja_existe" as const };
     const usuario = doUsuario(r.rows[0]);
@@ -98,11 +100,15 @@ export const encerrarSessoesDoUsuario = async (userId: number) => { await query(
 export type EnviarEmail = (m: { to: string; subject: string; text: string; html: string }) => Promise<unknown>;
 async function enviarPadrao(m: { to: string; subject: string; text: string; html: string }) { const { sendMail } = await import("./mail"); return sendMail(m, "admin"); }
 
-export type ResetRequestResult = { estado: "sent" | "queued" } | { estado: "skipped"; motivo: "unavailable" | "quota" };
+export type ResetRequestResult = { estado: "sent" | "queued" } | { estado: "skipped"; motivo: "unavailable" | "quota" | "unauthorized" };
 
 /** Pede a redefinição: se o e-mail tem conta ativa, manda um link de uso único (30 min). Nunca revela se a conta existe. No máximo 3 pedidos por hora por conta. */
-export async function pedirReset(email: string, o: { origin: string; enviar?: EnviarEmail; convite?: boolean }): Promise<ResetRequestResult> {
+export async function pedirReset(email: string, o: { origin: string; enviar?: EnviarEmail; convite?: boolean; actor?: AdminActor }): Promise<ResetRequestResult> {
   const reserved = await tx(async c => {
+    if (o.actor !== undefined) {
+      await c.query("SELECT pg_advisory_xact_lock(7003)");
+      if (!await currentOwner(c, o.actor)) return { estado: "skipped" as const, motivo: "unauthorized" as const };
+    }
     const user = (await c.query<{ id: number; email: string; nome: string }>("SELECT id,email,nome FROM admin_users WHERE email=$1 AND ativo FOR UPDATE", [normEmail(email)])).rows[0];
     if (!user) return { estado: "skipped" as const, motivo: "unavailable" as const };
     const recentes = (await c.query<{ n: number }>("SELECT COUNT(*)::int n FROM admin_reset WHERE user_id=$1 AND criado_em > now() - interval '1 hour'", [user.id])).rows[0].n;
@@ -110,7 +116,7 @@ export async function pedirReset(email: string, o: { origin: string; enviar?: En
     const token = randomBytes(32).toString("base64url");
     const minutos = o.convite ? CONVITE_MINUTOS : RESET_MINUTOS;
     await c.query("INSERT INTO admin_reset(user_id,token_hash,expira_em) VALUES($1,$2,now() + ($3 || ' minutes')::interval)", [user.id, sha(token), String(minutos)]);
-    await audit("admin_reset_reservado", null, { id: user.id, convite: !!o.convite }, c);
+    await audit("admin_reset_reservado", null, { id: user.id, convite: !!o.convite, ...(o.actor ? { por: normEmail(o.actor.email), userId: o.actor.userId } : {}) }, c);
     return { estado: "reserved" as const, user, token };
   });
   if (reserved.estado === "skipped") return reserved;
@@ -125,7 +131,7 @@ export async function pedirReset(email: string, o: { origin: string; enviar?: En
   const outcome = await (o.enviar ?? enviarPadrao)({ to: u.email, subject: o.convite ? "Convite para o painel da petição: crie a sua senha" : "Redefinir a senha do painel da petição", text: texto, html });
   if (outcome !== undefined && outcome !== "sent" && outcome !== "queued") throw new Error("Unexpected password reset delivery result");
   const estado = outcome === "queued" ? "queued" as const : "sent" as const;
-  await audit(o.convite ? "admin_convite_enviado" : "admin_reset_pedido", null, { id: u.id, estado });
+  await audit(o.convite ? "admin_convite_enviado" : "admin_reset_pedido", null, { id: u.id, estado, ...(o.actor ? { por: normEmail(o.actor.email), userId: o.actor.userId } : {}) });
   return { estado };
 }
 
@@ -154,29 +160,31 @@ export async function listarUsuarios(): Promise<Usuario[]> {
   return (await query<any>("SELECT * FROM admin_users ORDER BY ativo DESC, nivel DESC, nome")).rows.map(doUsuario);
 }
 /** Account management shares a transaction lock so two requests cannot remove both owners. */
-export async function alterarNivel(id: number, nivel: Nivel, por: string): Promise<{ ok: true } | { ok: false; erro: "ultimo_total" | "nao_existe" | "nivel_invalido" }> {
+export async function alterarNivel(id: number, nivel: Nivel, por: string, actor?: AdminActor): Promise<{ ok: true } | { ok: false; erro: "ultimo_total" | "nao_existe" | "nivel_invalido" | "nao_autorizado" }> {
   if (!ehNivel(nivel)) return { ok: false, erro: "nivel_invalido" };
   return tx(async (c) => {
     await c.query("SELECT pg_advisory_xact_lock(7003)");
+    if (actor !== undefined && !await currentOwner(c, actor)) return { ok: false as const, erro: "nao_autorizado" as const };
     const u = (await c.query("SELECT nivel, ativo FROM admin_users WHERE id=$1 FOR UPDATE", [id])).rows[0];
     if (!u) return { ok: false as const, erro: "nao_existe" as const };
     const remaining = (await c.query("SELECT COUNT(*)::int n FROM admin_users WHERE ativo AND nivel='total' AND id<>$1", [id])).rows[0].n;
     if (u.nivel === "total" && u.ativo && nivel !== "total" && remaining === 0) return { ok: false as const, erro: "ultimo_total" as const };
     await c.query("UPDATE admin_users SET nivel=$2 WHERE id=$1", [id, nivel]);
-    await audit("admin_usuario_nivel", null, { id, de: u.nivel, para: nivel, por }, c);
+    await audit("admin_usuario_nivel", null, { id, de: u.nivel, para: nivel, por: actor ? normEmail(actor.email) : por, ...(actor ? { userId: actor.userId } : {}) }, c);
     return { ok: true as const };
   });
 }
-export async function definirAtivo(id: number, ativo: boolean, por: string): Promise<{ ok: true } | { ok: false; erro: "ultimo_total" | "nao_existe" }> {
+export async function definirAtivo(id: number, ativo: boolean, por: string, actor?: AdminActor): Promise<{ ok: true } | { ok: false; erro: "ultimo_total" | "nao_existe" | "nao_autorizado" }> {
   return tx(async (c) => {
     await c.query("SELECT pg_advisory_xact_lock(7003)");
+    if (actor !== undefined && !await currentOwner(c, actor)) return { ok: false as const, erro: "nao_autorizado" as const };
     const u = (await c.query("SELECT nivel, ativo FROM admin_users WHERE id=$1 FOR UPDATE", [id])).rows[0];
     if (!u) return { ok: false as const, erro: "nao_existe" as const };
     const remaining = (await c.query("SELECT COUNT(*)::int n FROM admin_users WHERE ativo AND nivel='total' AND id<>$1", [id])).rows[0].n;
     if (!ativo && u.nivel === "total" && u.ativo && remaining === 0) return { ok: false as const, erro: "ultimo_total" as const };
     await c.query("UPDATE admin_users SET ativo=$2 WHERE id=$1", [id, ativo]);
     if (!ativo) await c.query("DELETE FROM admin_sessions WHERE user_id=$1", [id]);
-    await audit(ativo ? "admin_usuario_ativado" : "admin_usuario_desativado", null, { id, por }, c);
+    await audit(ativo ? "admin_usuario_ativado" : "admin_usuario_desativado", null, { id, por: actor ? normEmail(actor.email) : por, ...(actor ? { userId: actor.userId } : {}) }, c);
     return { ok: true as const };
   });
 }

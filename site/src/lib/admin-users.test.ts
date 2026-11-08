@@ -228,6 +228,64 @@ test("alterações simultâneas preservam um Total ativo e suas auditorias", asy
   } finally { await dbmod._closeDbForTests(); }
 });
 
+test("gestão revalida autoria atual e recusa operador revogado sem alterar a conta", async () => {
+  const { U, dbmod } = await um();
+  try {
+    const owner = await U.criarUsuario({ email: "manager@example.test", nome: "Gestor QA", nivel: "total", senha: SENHA });
+    const target = await U.criarUsuario({ email: "managed@example.test", nome: "Pessoa QA", nivel: "leitura", senha: SENHA });
+    assert.ok(owner.ok && target.ok);
+    const actor = { userId: owner.usuario.id, email: owner.usuario.email };
+    const denied = { ok: false, erro: "nao_autorizado" };
+    const before = (await dbmod.query("SELECT nivel,ativo FROM admin_users WHERE id=$1", [target.usuario.id])).rows;
+    for (const status of ["nivel='leitura'", "nivel='total',ativo=false", "nivel='total',ativo=true,email='changed@example.test'"]) {
+      await dbmod.query(`UPDATE admin_users SET ${status} WHERE id=$1`, [owner.usuario.id]);
+      assert.deepEqual(await U.alterarNivel(target.usuario.id, "edicao", "spoofed", actor), denied);
+      assert.deepEqual(await U.definirAtivo(target.usuario.id, false, "spoofed", actor), denied);
+    }
+    await dbmod.query("UPDATE admin_users SET email=$2,ativo=true,nivel='total' WHERE id=$1", [owner.usuario.id, owner.usuario.email]);
+    for (const invalid of [{ ...actor, userId: 2147483648 }, { ...actor, userId: 0 }, { ...actor, userId: -1 }, { ...actor, email: "other@example.test" }]) {
+      assert.deepEqual(await U.alterarNivel(target.usuario.id, "edicao", "spoofed", invalid), denied);
+      assert.deepEqual(await U.definirAtivo(target.usuario.id, false, "spoofed", invalid), denied);
+    }
+    assert.deepEqual((await dbmod.query("SELECT nivel,ativo FROM admin_users WHERE id=$1", [target.usuario.id])).rows, before);
+    assert.equal((await dbmod.query("SELECT count(*)::int n FROM audit_log WHERE event IN ('admin_usuario_nivel','admin_usuario_desativado')")).rows[0].n, 0);
+    assert.deepEqual(await U.alterarNivel(target.usuario.id, "edicao", "spoofed", actor), { ok: true });
+    const event = JSON.parse((await dbmod.query("SELECT data FROM audit_log WHERE event='admin_usuario_nivel'")).rows[0].data);
+    assert.equal(event.por, actor.email); assert.equal(event.userId, actor.userId);
+    assert.ok((await dbmod.verifyAuditChain()).ok);
+  } finally { await dbmod._closeDbForTests(); }
+});
+
+test("falha na auditoria reverte nível, ativação e revogação de sessões", async () => {
+  const { U, dbmod } = await um();
+  try {
+    const owner = await U.criarUsuario({ email: "owner-rollback@example.test", nome: "Gestor QA", nivel: "total", senha: SENHA });
+    const target = await U.criarUsuario({ email: "target-rollback@example.test", nome: "Pessoa QA", nivel: "leitura", senha: SENHA });
+    assert.ok(owner.ok && target.ok);
+    const actor = { userId: owner.usuario.id, email: owner.usuario.email };
+    const session = await U.abrirSessao(target.usuario.id, "127.0.0.1");
+    await dbmod.query(`CREATE FUNCTION fail_management_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event IN ('admin_usuario_nivel','admin_usuario_desativado','admin_usuario_ativado') THEN RAISE EXCEPTION 'simulated management audit failure'; END IF; RETURN NEW; END $$;
+      CREATE TRIGGER fail_management_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION fail_management_audit();`);
+    await assert.rejects(U.alterarNivel(target.usuario.id, "total", "spoofed", actor), /simulated management audit failure/);
+    assert.equal((await dbmod.query("SELECT nivel FROM admin_users WHERE id=$1", [target.usuario.id])).rows[0].nivel, "leitura");
+    await assert.rejects(U.definirAtivo(target.usuario.id, false, "spoofed", actor), /simulated management audit failure/);
+    assert.ok(await U.sessaoPorToken(session.token));
+    await dbmod.query("DROP TRIGGER fail_management_audit ON audit_log");
+    assert.deepEqual(await U.definirAtivo(target.usuario.id, false, "spoofed", actor), { ok: true });
+    assert.equal(await U.sessaoPorToken(session.token), null);
+    await dbmod.query("CREATE TRIGGER fail_management_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION fail_management_audit()");
+    await assert.rejects(U.definirAtivo(target.usuario.id, true, "spoofed", actor), /simulated management audit failure/);
+    assert.equal((await dbmod.query("SELECT ativo FROM admin_users WHERE id=$1", [target.usuario.id])).rows[0].ativo, false);
+    await dbmod.query("DROP TRIGGER fail_management_audit ON audit_log");
+    assert.deepEqual(await U.definirAtivo(target.usuario.id, true, "spoofed", actor), { ok: true });
+    assert.equal(await U.sessaoPorToken(session.token), null);
+    const events = (await dbmod.query("SELECT data FROM audit_log WHERE event IN ('admin_usuario_desativado','admin_usuario_ativado') ORDER BY id")).rows.map(r => JSON.parse(r.data));
+    assert.equal(events.length, 2);
+    for (const event of events) { assert.equal(event.por, actor.email); assert.equal(event.userId, actor.userId); }
+    assert.ok((await dbmod.verifyAuditChain()).ok);
+  } finally { await dbmod._closeDbForTests(); }
+});
+
 test("redefinições concorrentes do mesmo link só consomem o token uma vez", async () => {
   const { U, dbmod } = await um();
   try {

@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
   if (bloqueio) return bloqueio;
   const eu = await quemAge(req);
   if (!eu) return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 401 });
+  const actor = { userId: eu.userId, email: eu.email };
+  const denied = () => NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 403 });
   const origem = requestOrigin(req.headers);
   const volta = (q: string) => NextResponse.redirect(new URL("/admin/usuarios?" + q, origem), 303);
   const f = await req.formData();
@@ -26,17 +28,18 @@ export async function POST(req: NextRequest) {
       if (r.erro === "nao_autorizado") return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 403 });
       return volta(`erro=${r.erro}`);
     }
-    await pedirReset(r.usuario.email, { origin: origem, convite: true }).catch((e) => console.error("convite falhou:", e instanceof Error ? e.message : e));
+    await pedirReset(r.usuario.email, { origin: origem, convite: true, actor }).catch((e) => console.error("convite falhou:", e instanceof Error ? e.message : e));
     return volta("msg=criado");
   }
   if (!Number.isInteger(id) || id < 1) return volta("erro=nao_existe");
-  if (acao === "nivel") { const n = String(f.get("nivel") ?? ""); const r = await alterarNivel(id, n as never, por); return volta(r.ok ? "msg=nivel" : `erro=${r.erro}`); }
-  if (acao === "ativar" || acao === "desativar") { const r = await definirAtivo(id, acao === "ativar", por); return volta(r.ok ? `msg=${acao === "ativar" ? "ativado" : "desativado"}` : `erro=${r.erro}`); }
+  if (acao === "nivel") { const n = String(f.get("nivel") ?? ""); const r = await alterarNivel(id, n as never, por, actor); if (!r.ok && r.erro === "nao_autorizado") return denied(); return volta(r.ok ? "msg=nivel" : `erro=${r.erro}`); }
+  if (acao === "ativar" || acao === "desativar") { const r = await definirAtivo(id, acao === "ativar", por, actor); if (!r.ok && r.erro === "nao_autorizado") return denied(); return volta(r.ok ? `msg=${acao === "ativar" ? "ativado" : "desativado"}` : `erro=${r.erro}`); }
   if (acao === "redefinir") {
     const { query } = await import("@/lib/db");
     const u = (await query<{ email: string }>("SELECT email FROM admin_users WHERE id=$1 AND ativo", [id])).rows[0];
     if (!u) return volta("erro=nao_existe");
-    await pedirReset(u.email, { origin: origem }).catch(() => {});
+    const outcome = await pedirReset(u.email, { origin: origem, actor }).catch(() => null);
+    if (outcome?.estado === "skipped" && outcome.motivo === "unauthorized") return denied();
     return volta("msg=link_enviado");
   }
   return volta("erro=acao_invalida");
