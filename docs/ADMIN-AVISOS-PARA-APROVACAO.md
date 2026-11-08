@@ -8,19 +8,19 @@ Proposta: “Pelo menos 12 caracteres. Ao trocar a senha, todas as sessões ser�
 
 Motivo: a troca agora revoga as sessões atomicamente; o aviso anterior precisa refletir esse comportamento. Nenhuma redação alterada até a aprovação.
 
-## AV-2 — Resposta de contato sem resultado confirmado
+## AV-2 — Resposta de contato sem resultado confirmado (aprovado em08/11/2026)
 
 Proposta: “Não foi possível confirmar o resultado do envio. Para evitar duplicação, a mensagem não será reenviada automaticamente. Confira o histórico antes de enviar outra resposta.”
 
 Motivo: timeout ou falha após possível aceite não significa rejeição pelo provedor; o backend conserva a reserva e não reenvia automaticamente.
 
-## AV-3 — Estados do histórico de contato
+## AV-3 — Estados do histórico de contato (aprovado em08/11/2026)
 
 Propostas: “Aguardando envio”, “Aguardando o texto”, “Envio em andamento”, “Aceita pelo provedor”, “Resultado a conferir” e “Recusada”.
 
 Motivo: o histórico antigo distingue apenas enviada/agendada/falhou e classifica incorretamente os estados novos. Aceite pelo provedor não equivale a entrega na caixa de entrada. Linhas antigas precisam conservar a identificação de histórico anterior, sem inventar estados que não foram gravados.
 
-## AV-4 — Convites e redefinições no painel
+## AV-4 — Convites e redefinições no painel (aprovado em08/11/2026)
 
 Propostas: “Solicitação registrada. O e-mail está na fila de envio.” e “Não foi possível confirmar o envio do e-mail. Confira a situação do usuário antes de tentar novamente.”
 
@@ -51,9 +51,9 @@ Propostas perguntadas no chat, ainda pendentes: “Histórico de ações”, “
 
 Aprovação explícita recebida por pergunta nativa: “Aprovar estes textos”. Autorizados somente “Análise automática”, “Reanalisar”, “Evidências”, “Sugestão de resposta” e “Revise a análise antes de responder. Nenhuma resposta é enviada automaticamente”. Não autoriza outros AVs, envio automático, deploy ou merge com a VPS. A integração visual local desses cinco textos está em validação. Os dados estruturados e as sugestões são apresentados como revisão; nenhuma proposta é confirmação ou ação executada. Não amplia aprovação dos demais avisos.
 
-## AV-9 — prévia protegida de mensagens (pendente)
+## AV-9 — prévia protegida de mensagens (aprovado em08/11/2026)
 
-Perguntado no chat após preparar o backend e o ensaio visual com mensagem fictícia. Botão proposto: “Ver prévia protegida”. Aviso proposto: “Esta prévia oculta links, imagens e códigos e simplifica a formatação. O e-mail original foi preservado.” A máscara de exibição usa `[restrito]`. Ainda não há controle novo na interface. Não interpretar o sucesso do QA, passagem do tempo ou aprovação geral do plano como aprovação desses avisos. AV-1–AV-8 permanecem independentes.
+Perguntado no chat após preparar o backend e o ensaio visual com mensagem fictícia. Botão aprovado: “Ver prévia protegida”. Aviso aprovado: “Esta prévia oculta links, imagens e códigos e simplifica a formatação. O e-mail original foi preservado.” A máscara de exibição usa `[restrito]`. A integração visual local pode prosseguir; aprovação não equivale a implementação, validação ou deploy.
 
 ## AV-10 — recuperação de fila com aceite comprovado (aprovado em 07/11/2026)
 
@@ -61,13 +61,17 @@ Botão proposto: “Concluir fila sem reenviar”. Aviso proposto: “A fila ser
 
 Submetidos ao dono antes de qualquer mudança visível, por solicitação nativa assíncrona. Resposta explícita recebida: “Aprovar estes textos”. Aprovação restrita ao botão e aviso acima; não aprova os demais AVs nem o deploy. Backend permite apenas concluir metadados com prova exata e Total + confirmação extra; não reenvia, não altera assinatura e não libera resultado incerto. A interface não foi ativada. Contrato em `ETAPA-03-RECUPERACAO.md`.
 
-## AV-11 — complementos da tabela de recuperação (pendente)
+## AV-11 — complementos da tabela de recuperação (aprovado em08/11/2026)
 
-Propostos: colunas “ID”, “Tipo”, “E-mail”, “Data do aceite”; botões “Cancelar”, “Carregar mais”; falhas “Falha de rede. Confira o estado da fila antes de tentar novamente.” e “Não foi possível concluir a fila. Atualize a página para conferir o estado atual.” Submetidos por pergunta nativa assíncrona e e-mail somente ao dono. A aprovação anterior do AV-10 não foi ampliada automaticamente.
+Aprovados: colunas “ID”, “Tipo”, “E-mail”, “Data do aceite”; botões “Cancelar”, “Carregar mais”; falhas “Falha de rede. Confira o estado da fila antes de tentar novamente.” e “Não foi possível concluir a fila. Atualize a página para conferir o estado atual.” Submetidos novamente por pergunta nativa assíncrona e aprovados explicitamente no grupo de e-mail. A aprovação anterior do AV-10 não foi ampliada automaticamente.
 
-## AV-12 — erro de paginação da recuperação (pendente)
+## AV-12 — erro de paginação da recuperação (aprovado em08/11/2026)
 
-Proposto: “Não foi possível carregar a lista. Tente novamente.” Submetido por pergunta nativa e incluído no mesmo e-mail de AV-11. A falha deve conservar os itens já carregados. Sem aprovação inferida: o componente está preparado, mas não foi conectado à página.
+Aprovado: “Não foi possível carregar a lista. Tente novamente.” Submetido novamente por pergunta nativa no grupo de e-mail. A falha deve conservar os itens já carregados. O componente preparado pode ser integrado e validado localmente.
+
+### Registro da aprovação do grupo de e-mail
+
+Em08/11/2026 o dono respondeu à pergunta nativa `call_95ede63ed05d4fe39193934dd4f388ff`, item0, com “Aprovar este grupo de textos”. A pergunta listava integralmente AV2, AV3, AV4, AV9, AV11 e AV12. Autoriza somente esses textos e sua integração/teste no candidato. AV1, AV5, AV6, AV7, AV13, AV14 e a decisão AV16 continuam independentes e pendentes. Não altera textos públicos ou privacidade, não autoriza envios reais, deploy ou merge.
 
 ## AV-13 — conflito na correção administrativa de e-mail (pendente)
 
