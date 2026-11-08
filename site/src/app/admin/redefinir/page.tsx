@@ -1,5 +1,6 @@
 import LoginMoldura from "@/components/admin/LoginMoldura";
 import CampoSenha from "@/components/admin/CampoSenha";
+import { ADMIN_PASSWORD_MIN_LENGTH, ADMIN_PASSWORD_MAX_LENGTH } from "@/lib/admin-password-policy.mjs";
 export const dynamic = "force-dynamic";
 // "same-origin": o link com o token nunca vaza para outro site pelo cabeçalho Referer, MAS o formulário continua enviando o Origin verdadeiro.
 // ("no-referrer" faria o navegador enviar "Origin: null" em todo POST, e a rota recusaria a redefinição.)
@@ -20,9 +21,9 @@ export default function Redefinir({ searchParams }: { searchParams: { token?: st
       {!token ? <p className="err" role="alert">{ERRO.token}</p> : (
         <form method="post" action="/api/admin/redefinir">
           <input type="hidden" name="token" value={token} />
-          <label>Nova senha<CampoSenha name="senha" required minLength={12} maxLength={200} autoComplete="new-password" /></label>
-          <label>Repita a nova senha<CampoSenha name="senha2" required minLength={12} maxLength={200} autoComplete="new-password" /></label>
-          <p className="v2-login-sub">Use pelo menos 12 caracteres. Evite o seu e-mail e senhas comuns.</p>
+          <label>Nova senha<CampoSenha name="senha" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} autoComplete="new-password" /></label>
+          <label>Repita a nova senha<CampoSenha name="senha2" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} autoComplete="new-password" /></label>
+          <p className="v2-login-sub">Use pelo menos {ADMIN_PASSWORD_MIN_LENGTH} caracteres. Evite o seu e-mail e senhas comuns.</p>
           {erro ? <p className="err" role="alert">{erro}</p> : null}
           <button className="v2-login-btn">Salvar a nova senha</button>
         </form>

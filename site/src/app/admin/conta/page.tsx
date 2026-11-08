@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { sessaoAdmin } from "@/lib/admin";
 import { ROTULO_NIVEL } from "@/lib/admin-users";
+import { ADMIN_PASSWORD_MIN_LENGTH, ADMIN_PASSWORD_MAX_LENGTH } from "@/lib/admin-password-policy.mjs";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Minha conta", robots: { index: false } };
@@ -24,9 +25,9 @@ export default async function Conta({ searchParams }: { searchParams: { erro?: s
         <form method="post" action="/api/admin/conta" className="form" style={{ maxWidth: 420 }}>
           <h2>Trocar a senha</h2>
           <label>Senha atual<input type="password" name="atual" required autoComplete="current-password" /></label>
-          <label>Nova senha<input type="password" name="nova" required minLength={12} maxLength={200} autoComplete="new-password" /></label>
-          <label>Repita a nova senha<input type="password" name="nova2" required minLength={12} maxLength={200} autoComplete="new-password" /></label>
-          <p className="small">Pelo menos 12 caracteres. Ao trocar, as outras sessões abertas continuam; para encerrar todas, use "Esqueci minha senha".</p>
+          <label>Nova senha<input type="password" name="nova" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} autoComplete="new-password" /></label>
+          <label>Repita a nova senha<input type="password" name="nova2" required minLength={ADMIN_PASSWORD_MIN_LENGTH} maxLength={ADMIN_PASSWORD_MAX_LENGTH} autoComplete="new-password" /></label>
+          <p className="small">Pelo menos {ADMIN_PASSWORD_MIN_LENGTH} caracteres. Ao trocar a senha, todas as sessões serão encerradas. Entre novamente com a nova senha.</p>
           {erro ? <p className="err" role="alert">{erro}</p> : null}
           <button>Trocar a senha</button>
         </form>

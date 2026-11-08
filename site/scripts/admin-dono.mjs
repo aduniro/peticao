@@ -7,6 +7,7 @@ import pg from "pg";
 import { randomBytes, scryptSync } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { askHidden, closePrompt } from "./lib-prompt.mjs";
+import { ADMIN_PASSWORD_MIN_LENGTH, problemaNaSenha } from "../src/lib/admin-password-policy.mjs";
 
 const [email0, ...resto] = process.argv.slice(2);
 const email = (email0 ?? "").trim().toLowerCase(), nome = resto.join(" ").trim();
@@ -23,11 +24,10 @@ function databaseUrl() {
 const url = databaseUrl();
 if (!url) { console.error("Não achei a DATABASE_URL (ambiente ou /etc/peticao/app.env)."); process.exit(1); }
 
-const problema = (s) => (s.length < 12 ? "A senha precisa ter pelo menos 12 caracteres." : s.length > 200 ? "Senha longa demais." : new Set(s).size < 5 ? "Caracteres repetidos demais." : s.toLowerCase().includes(email.split("@")[0]) && email.split("@")[0].length >= 4 ? "A senha não pode conter o seu e-mail." : null);
 const hash = (s) => { const sal = randomBytes(16); return `scrypt$16384$8$1$${sal.toString("hex")}$${scryptSync(s, sal, 32, { N: 16384, r: 8, p: 1, maxmem: 256 * 1024 * 1024 }).toString("hex")}`; };
 
-const senha = await askHidden("Senha do dono (12+ caracteres): ");
-const problemaSenha = problema(senha);
+const senha = await askHidden(`Senha do dono (${ADMIN_PASSWORD_MIN_LENGTH}+ caracteres): `);
+const problemaSenha = problemaNaSenha(senha, email);
 if (problemaSenha) { closePrompt(); console.error(problemaSenha); process.exit(1); }
 if ((await askHidden("Repita a senha: ")) !== senha) { closePrompt(); console.error("As senhas não são iguais. Nada foi gravado."); process.exit(1); }
 closePrompt();
