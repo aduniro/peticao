@@ -3,6 +3,7 @@ import { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
 import { createHash } from "node:crypto";
 import { config } from "./config";
 import { newVerifyCode } from "./verify-code";
+import { adminMirrorEnabled } from "./admin-mirror";
 
 /** Pool compartilhado (sobrevive ao hot reload do Next em desenvolvimento). */
 const g = globalThis as unknown as { __pool?: Pool | null; __ready?: Promise<void> | null };
@@ -450,6 +451,17 @@ async function backfillSignatureIds(): Promise<void> {
 
 function init(): Promise<void> {
   if (!g.__ready) {
+    if (adminMirrorEnabled()) {
+      // The importer provisions this local database. Never migrate, seed or renumber it.
+      g.__ready = getPool().query("SELECT revision FROM admin_mirror_state WHERE singleton = true")
+        .then((result) => {
+          if (result.rowCount !== 1) throw new Error("ADMIN_MIRROR_NOT_READY");
+        }).catch((e) => {
+          g.__ready = null;
+          throw e;
+        });
+      return g.__ready;
+    }
     g.__ready = getPool()
       .query(SCHEMA_SQL)
       .then(() => seedIfesDomains())

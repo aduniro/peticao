@@ -3,6 +3,7 @@ import { ADMIN_COOKIE, sessaoDoCookie } from "./admin";
 import { nivelOk, stepupValido, type Nivel, type SessaoAdmin } from "./admin-users";
 import { clientIp } from "./net";
 import { rateLimit } from "./ratelimit";
+import { adminMirrorEnabled, mirrorRequestAllowed } from "./admin-mirror";
 
 /**
  * Porteiro das rotas do painel. TODA rota de /api/admin precisa chamá-lo com o nível mínimo exigido (um teste varre as rotas e falha se alguma não chamar):
@@ -13,6 +14,9 @@ import { rateLimit } from "./ratelimit";
  * Devolve a resposta de erro (401 sem sessão, 403 sem nível) ou null se pode seguir.
  */
 export async function exigirNivel(req: NextRequest, nivel: Nivel, limite = 120, opcoes: { stepup?: boolean } = {}): Promise<NextResponse | null> {
+  if (adminMirrorEnabled() && !mirrorRequestAllowed(req.method, req.nextUrl.pathname)) {
+    return NextResponse.json({ ok: false, code: "ADMIN_MIRROR_READ_ONLY" }, { status: 403 });
+  }
   const s = await quemAge(req);
   if (!s) return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 401 });
   if (!nivelOk(s.nivel, nivel)) return NextResponse.json({ ok: false, erro: "O seu nível de acesso não permite esta ação." }, { status: 403 });

@@ -1,6 +1,7 @@
 import { query } from "../db";
 import { readCredentialText } from "./smtp-credential";
 import { pollProviders, providerCreds, type PollReport } from "./events";
+import { adminMirrorEnabled } from "../admin-mirror";
 
 type F = typeof fetch;
 const put = (provider: string, data: unknown) => query("INSERT INTO provider_status(provider,data) VALUES($1,$2) ON CONFLICT (provider) DO UPDATE SET data=$2, at=now()", [provider, JSON.stringify(data)]);
@@ -11,7 +12,9 @@ const jget = async (f: F, url: string, headers: Record<string, string>, init: Re
 };
 
 /** Saldo e limites de cada provedor, lidos pela API de cada um (o SES e o Mailrelay não informam cota pela API: valores conhecidos). */
-export async function refreshProviderStatus(f: F = fetch, creds = providerCreds()): Promise<void> {
+export async function refreshProviderStatus(f: F = fetch, creds?: ReturnType<typeof providerCreds>): Promise<void> {
+  if (adminMirrorEnabled()) return;
+  creds ??= providerCreds();
   const tryit = async (nome: string, fn: () => Promise<unknown>) => { try { await put(nome, { ok: true, ...(await fn() as object) }); } catch (e) { await put(nome, { ok: false, erro: String((e as Error).message).slice(0, 120) }).catch(() => {}); } };
   if (creds.brevo) await tryit("brevo", async () => {
     const a = await jget(f, "https://api.brevo.com/v3/account", { "api-key": creds.brevo! });
@@ -34,7 +37,9 @@ export async function refreshProviderStatus(f: F = fetch, creds = providerCreds(
 }
 
 /** Respostas recebidas pelo Email Routing da Cloudflare (7 dias), pelo token SÓ de leitura de estatísticas. Sem o token, avisa que falta configurar. */
-export async function refreshReplies(f: F = fetch, token = process.env.CLOUDFLARE_ANALYTICS_TOKEN ?? readCredentialText("cloudflare-analytics"), zone = process.env.CLOUDFLARE_ZONE_ID ?? "83a93e98d84ddcbc1417d93df4d0094b"): Promise<void> {
+export async function refreshReplies(f: F = fetch, token?: string | null, zone = process.env.CLOUDFLARE_ZONE_ID ?? "83a93e98d84ddcbc1417d93df4d0094b"): Promise<void> {
+  if (adminMirrorEnabled()) return;
+  if (token === undefined) token = process.env.CLOUDFLARE_ANALYTICS_TOKEN ?? readCredentialText("cloudflare-analytics");
   if (!token) { await put("respostas", { ok: false, erro: "token de estatísticas da Cloudflare não configurado" }); return; }
   try {
     const since = new Date(Date.now() - 7 * 86400_000).toISOString(), now = new Date().toISOString();
@@ -49,6 +54,7 @@ export async function refreshReplies(f: F = fetch, token = process.env.CLOUDFLAR
 
 /** Sincroniza tudo (devoluções + saldos + respostas). Sem `force`, no máximo a cada 10 minutos. */
 export async function syncMail(force = false, days = 3): Promise<{ ran: boolean; report?: PollReport }> {
+  if (adminMirrorEnabled()) return { ran: false };
   if (!force) {
     const r = await query<{ at: string }>("SELECT at FROM provider_status WHERE provider='_poll'");
     if (r.rows[0] && Date.now() - new Date(r.rows[0].at).getTime() < 10 * 60_000) return { ran: false };
