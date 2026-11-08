@@ -8,6 +8,7 @@ import { defaultProvider, type CpfProvider } from "./cpf-check";
 import { MailBlockedError } from "./mail/guard";
 import { verifyTurnstile, turnstileEnabled } from "./turnstile";
 import { rateLimit } from "./ratelimit";
+import { makeSignupSecurityProof, checkSignupSecurityProof, signupSecurityProofFromTicket } from "./signup-security-proof";
 import { validateUniversityEmail, type Probe } from "./university-check";
 import { whatsappAtivo } from "./whatsapp/provider";
 import { normalizarTelefone } from "./whatsapp/telefone";
@@ -19,7 +20,8 @@ export type FlowResult = { status: number; json: Record<string, unknown> };
 import { suggestEmail } from "./email-typos";
 import { dominiosConhecidos } from "./email-sugestao";
 import { detalheDeSugestao, diagnosticar } from "./email-diagnostico";
-import { SERVER_REJECT, validateEmailField } from "./email-validate";
+import { validateEmailField } from "./email-validate";
+import { acceptsServerDomain } from "./server-email-policy";
 const ASK = (json: Record<string, unknown>, status = 422): FlowResult => ({ status, json });
 const ROBOT = { error: "Não foi possível confirmar que você não é um robô. Recarregue a página e tente de novo.", errorCode: "robot" };
 
@@ -65,10 +67,25 @@ async function invalidEmail(email: string, ctx: SignCtx, code: string, estrangei
 
 
 export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider | null = defaultProvider(), probe?: Probe): Promise<FlowResult> {
-  if (typeof body?.website === "string" && body.website.length > 0) { diagnosticMark("submission", "ignored"); return { status: 200, json: { ok: true } }; } // honeypot
+  const suspected = typeof body?.website === "string" && body.website.length > 0;
+  if (suspected) diagnosticMark("submission", "honeypot_detected");
   const v = validate(body);
   if (!v.ok) return ASK({ errors: v.errors });
   const input = v.value;
+  // A challenge is consumed at most once per HTTP request. Identity continuation
+  // uses a separate proof bound to its ticket/input, never a reused Turnstile token.
+  let challengeChecked = false, challengePassed = false;
+  const checkChallenge = async () => {
+    if (!challengeChecked) {
+      challengeChecked = true;
+      challengePassed = turnstileEnabled() && (
+        !!body?.identity && checkTicket(body?.ticket, input.cpf ?? "", input.email) &&
+          checkSignupSecurityProof(body?.securityProof ?? signupSecurityProofFromTicket(body?.ticket), input, body?.ticket) ||
+        await verifyTurnstile(body?.turnstileToken, ctx.ip)
+      );
+    }
+    return challengePassed;
+  };
   // WhatsApp opcional: só existe quando o recurso está ligado e configurado; senão o campo é ignorado (o site age como se não existisse).
   let wa: string | null = null;
   if (whatsappAtivo() && String(body?.whatsapp?.numero ?? "").trim()) {
@@ -81,17 +98,17 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
   if (await isEmailBlacklisted(input.email)) { await logRequest("email_blocked", ctx.ip, { email: input.email, detail: "tentativa com e-mail da lista negra" }); return invalidEmail(input.email, ctx, "email_not_found", input.category === "estrangeiro"); }
 
 
-  // Apoiador não usa e-mail institucional (órgão público/IFES da lista do site): quem tem um deve assinar pelo formulário de Servidor.
+  // Only an approved IFES email redirects a supporter to the servidor form.
   if (input.category === "apoiador") {
     const k = await institutionalKind(input.email);
-    if (k && !SERVER_REJECT.has(k)) return ASK({ errors: { email: "apoiador_institutional_email" } });
+    if (acceptsServerDomain(k)) return ASK({ errors: { email: "apoiador_institutional_email" } });
   }
 
-  // Servidor: só e-mail institucional de órgão público (governo, legislativo, judiciário, MP, IFES, federal/estadual/municipal ou domínio aprovado pela ADUNIR).
-  // Recusa provedores gratuitos, discentes, .edu.br genérico (pode ser faculdade privada) e domínio desconhecido; este vai para a fila de revisão.
+  // New servidor requests require a domain explicitly approved as IFES.
+  // Public-sector suffixes, other curated kinds and generic .edu.br do not qualify.
   if (input.category === "servidor") {
     const kind = await institutionalKind(input.email);
-    if (!kind || SERVER_REJECT.has(kind)) {
+    if (!acceptsServerDomain(kind)) {
       const d = emailDomain(input.email);
       const v = await validateEmailField(input.email, "servidor"); // mesmo veredito do formulário: "e-mail institucional inválido" (com sugestão) ou "use e-mail de órgão público"
       const provavelErro = !v.ok && !!v.suggest; // domínio com cara de erro de digitação não vai para a fila de curadoria (evita lixo como "ufpa.edu.bt")
@@ -110,8 +127,16 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
 
   if ((await checkMx(input.email)) === "none") return invalidEmail(input.email, ctx, "email_undeliverable", input.category === "estrangeiro");
 
+  if (suspected) {
+    if (!(await checkChallenge())) {
+      diagnosticMark("submission", "security_failed");
+      return ASK({ securityRetry: true, errorCode: "security_retry", error: "Não foi possível concluir a verificação de segurança. Seus dados foram mantidos. Tente novamente." });
+    }
+    diagnosticMark("submission", "honeypot_recovered");
+  }
+
   if (input.category === "estrangeiro") {
-    if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
+    if (turnstileEnabled() && !(await checkChallenge())) return ASK(ROBOT);
     if (!rateLimit(`uni:${ctx.ip}`, 20, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
     const fdom = emailDomain(input.email) ?? "";
     const reject = async (code: string, detail?: string) => { await logRequest("foreign_rejected", ctx.ip, { email: input.email, detail: `${fdom} | país ${input.country ?? "?"} | ${code}${detail ? ` (${detail})` : ""}`.slice(0, 200) }); };
@@ -150,7 +175,7 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
   let preflightDone = false;
   const checkCpfBeforeIdentity = input.category === "apoiador" || !!provider && identityMode(provider) === "required";
   if (!identity && checkCpfBeforeIdentity) {
-    if (turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
+    if (turnstileEnabled() && !(await checkChallenge())) return ASK(ROBOT);
     const gS = await emailExistsGate(input, ctx); if (gS) return gS;
     if (!provider) return ASK({ error: "Não conseguimos conferir o CPF agora. Tente de novo em alguns minutos.", errorCode: "cpf_check_unavailable" }, 503);
     {
@@ -177,9 +202,11 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
 
   if (needs) {
     if (!identity) {
-      if (!preflightDone && turnstileEnabled() && !(await verifyTurnstile(body?.turnstileToken, ctx.ip))) return ASK(ROBOT);
+      if (!preflightDone && turnstileEnabled() && !(await checkChallenge())) return ASK(ROBOT);
       if (!preflightDone) { const gN = await emailExistsGate(input, ctx); if (gN) return gN; } // antes de a pessoa gastar a janela de identidade (e a CPF Brasil)
-      return { status: 200, json: { identityRequired: true, ticket: makeTicket(input.cpf!, input.email), methods: ["mae", "nascimento"] } };
+      const ticket = makeTicket(input.cpf!, input.email);
+      const securityProof = challengePassed ? makeSignupSecurityProof(input, ticket) : null;
+      return { status: 200, json: { identityRequired: true, ticket: securityProof ? `${ticket}.${securityProof}` : ticket, ...(securityProof ? { securityProof } : {}), methods: ["mae", "nascimento"] } };
     }
     if (!rateLimit(`ident:${ctx.ip}`, 15, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
 

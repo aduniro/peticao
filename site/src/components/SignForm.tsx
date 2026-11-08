@@ -57,6 +57,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   const emailBad = (v: string) => (v.trim() && !SAFE_EMAIL_RE.test(v.trim()) ? t("f.emailInvalid") : "");
   const [issue, setIssue] = useState<{ code: string; suggest: string } | null>(null); // problema do e-mail (domínio inválido…): campo vermelho até o e-mail validar
   const issueTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const emailVerdict = useRef<{ email: string; category: Category; at: number; value: Record<string, any> } | null>(null);
   const ISSUE = new Set(["email_typo", "email_institutional_invalid", "email_provider_invalid", "server_email_not_institutional", "apoiador_institutional_email"]);
   async function checkRemote(v: string) {
     if (!v || !SAFE_EMAIL_RE.test(v) || (category !== "servidor" && category !== "apoiador")) { setIssue(null); return; }
@@ -68,6 +69,8 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       setIssue(j.ok ? null : { code: String(j.code), suggest: typeof j.suggest === "string" ? j.suggest : "" });
       setFix((j.ok ? j.soft : j.fix) ?? null);
       if (j.ok) setSugg(j.soft?.sugestao ?? suggestEmail(v) ?? "");
+      emailVerdict.current = { email: v, category, at: Date.now(), value: j };
+      return j as Record<string, any>;
     } catch { /* sem rede: o servidor valida de novo ao enviar */ }
   }
   const emailSuggestion = emailSuggestionForCategory(category, (category === "apoiador" ? supporterEmailSuggestion(emailV) : null) || issue?.suggest || sugg || fix?.sugestao, issue?.code);
@@ -135,6 +138,13 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     return signRequest(body);
   }
 
+  function securityRetryNotice() {
+    pending.current = null;
+    setIdOpen(false); setState("idle"); resetTs();
+    setFieldNotice({ title: t("field.validationTitle"), text: t("err.security_retry"), buttonKey: "field.correct" });
+    setNotice("field");
+  }
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -142,6 +152,20 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     if (eb || !emailV.trim()) { const error = eb || t("f.emailInvalid"); setErrors({ email: error }); showFieldNotice({ email: error }); setMsg(""); return; }
     if ((category === "servidor" || category === "apoiador") && !isValidCpf(cpf)) { const error = t("err.cpf_invalid"); setErrors({ cpf: error }); showFieldNotice({ cpf: error }); setMsg(""); return; } // não envia nada: nem ao servidor, nem à CPF Brasil
     setState("sending"); setErrors({}); setMsg("");
+    if (category === "servidor") {
+      const requestGeneration = generation.current, submittedEmail = emailMask(emailV, true);
+      const cached = emailVerdict.current;
+      const verdict = cached && cached.email === submittedEmail && cached.category === category && Date.now() - cached.at < 60_000
+        ? cached.value : await checkRemote(submittedEmail);
+      if (requestGeneration !== generation.current) return;
+      if (submittedEmail !== emailMask(emailRef.current, true)) { setState("idle"); return; }
+      if (verdict?.ok === false) {
+        const code = typeof verdict.code === "string" ? verdict.code : "server_email_not_institutional";
+        if (ISSUE.has(code)) { setIssue({ code, suggest: typeof verdict.suggest === "string" ? verdict.suggest : "" }); setFix(verdict.fix ?? null); }
+        else { setIssue(null); setErrors(trAll({ email: code })); }
+        showFieldNotice({ email: code }); setState("idle"); return;
+      }
+    }
     const body: Body = { name: nameMask(nameV, true), email: emailMask(emailV, true), category, consent: f.get("consent") === "on", website: f.get("website"), turnstileToken: tsToken.current, locale: lang };
     if (category === "servidor") Object.assign(body, { cpf, institution: srv.institution, role: srv.role, campus: srv.campus, campusIbge: srv.campusIbge, regionDeclared: srv.region });
     else if (category === "apoiador") Object.assign(body, { cpf, uf, city });
@@ -150,6 +174,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     const requestGeneration = generation.current;
     const { status, data } = await post(body);
     if (requestGeneration !== generation.current) return;
+    if (data.securityRetry) { securityRetryNotice(); return; }
     if (data.transportError) {
       setState("idle"); resetTs();
       setFieldNotice({ title: t("field.validationTitle"), text: t("contact.err.generic"), buttonKey: "field.correct" });
@@ -157,7 +182,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       return;
     }
     if (data.identityRequired) {
-      pending.current = { body, ticket: data.ticket };
+      pending.current = { body: { ...body, ...(typeof data.securityProof === "string" ? { securityProof: data.securityProof } : {}) }, ticket: data.ticket };
       setIdError(""); setIdLeft(null); setIdLocked(false); setState("idle"); setIdOpen(true);
       window.dispatchEvent(new CustomEvent("peticao:event", { detail: { type: "identity_open" } }));
       return;
@@ -187,6 +212,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     const { status, data } = await post({ ...pending.current.body, ticket: pending.current.ticket, identity: { method, value } });
     if (requestGeneration !== generation.current) return;
     setIdBusy(false);
+    if (data.securityRetry) { securityRetryNotice(); return; }
     if (data.transportError) { setIdError(t("contact.err.generic")); return; }
     if (data.ok) { setIdOpen(false); resetTs(); setSentTo(emailMask(emailV, true)); setNotice("sent"); return setState("sent"); }
     if (data.restart) { setIdOpen(false); setMsg(tr(data.errorCode, data.error)); return; }

@@ -1,7 +1,7 @@
 import { query } from "./db";
 import { checkMx } from "./email-check";
 import { KNOWN_DOMAINS, suggestEmail } from "./email-typos";
-import { emailDomain } from "./institutional";
+import { emailDomain, approvedDomains, classifyDomain } from "./institutional";
 
 /**
  * Domínios que o banco já conhece, usados nos avisos "você quis dizer…?" e na política central de e-mail (lib/email-diagnostico.ts):
@@ -26,6 +26,12 @@ export async function dominiosConhecidos(estrangeiro = false): Promise<string[]>
   return list;
 }
 export const _limparDominios = () => { g.__domSug = undefined; };
+
+/** Suggestions for servidor must be from the currently approved IFES allowlist. */
+export async function dominiosIfes(): Promise<string[]> {
+  const rules = await approvedDomains();
+  return rules.filter(r => r.status === "approved" && r.kind === "ifes" && classifyDomain(r.domain, rules)?.kind === "ifes").map(r => r.domain);
+}
 
 export type Sugestao = { sugestao: string | null; motivo: string | null };
 
