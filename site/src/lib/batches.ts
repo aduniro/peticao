@@ -14,7 +14,7 @@ import type { PoolClient } from "pg";
 
 export type BatchActor = { userId: number; email: string };
 const actorData = (actor: BatchActor) => ({ userId: actor.userId, por: actor.email.trim().toLowerCase() });
-async function authorizeBatchActor(client: PoolClient, actor: BatchActor) {
+export async function authorizeBatchActor(client: PoolClient, actor: BatchActor) {
   if (!actor || !Number.isInteger(actor.userId) || actor.userId <= 0 || actor.userId > 2147483647 || typeof actor.email !== "string" || actor.email.length > 254) return false;
   await client.query("SELECT pg_advisory_xact_lock(7003)");
   return !!(await client.query("SELECT 1 FROM admin_users WHERE id=$1 AND email=$2 AND ativo AND nivel='total' FOR SHARE", [actor.userId, actor.email.trim().toLowerCase()])).rowCount;
@@ -134,10 +134,25 @@ export async function tick(now = new Date()): Promise<{ created: number[] }> {
 
 // --- aprovação em duas etapas: senha do painel + código de 6 dígitos enviado ao aprovador ---
 
-type ApprovalRow = Batch & { pdf: Buffer | null; signed_pdf: Buffer | null; signed_pdf_sha256: string | null; approval_code_hash: string | null; approval_code_expires_at: string | null; approval_attempts: number };
+export type ApprovalRow = Batch & { pdf: Buffer | null; signed_pdf: Buffer | null; signed_pdf_sha256: string | null; approval_code_hash: string | null; approval_code_expires_at: string | null; approval_attempts: number };
 /** Bind approval to the exact bytes and classification, without rewriting published data. */
 const pdfDigest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
-const documentVersion = (b: ApprovalRow) => sha256(JSON.stringify([b.id, b.seq, b.kind, b.n_servidor, b.n_apoiador, b.n_estrangeiro, b.list_hash, b.pdf_sha256, b.signed_pdf_sha256, b.signature_kind, b.pdf && pdfDigest(b.pdf), b.signed_pdf && pdfDigest(b.signed_pdf)]));
+export const documentVersion = (b: ApprovalRow) => sha256(JSON.stringify([b.id, b.seq, b.kind, b.n_servidor, b.n_apoiador, b.n_estrangeiro, b.list_hash, b.pdf_sha256, b.signed_pdf_sha256, b.signature_kind, b.pdf && pdfDigest(b.pdf), b.signed_pdf && pdfDigest(b.signed_pdf)]));
+export const batchMessageKey = (id: number, sha: string, to: string) => `batch-send:v1:${id}:${sha}:${hmac(to)}`;
+/** Shared exact envelope for transport and metadata-only reconciliation. */
+export function batchEnvelope(row: ApprovalRow, to: string, pdf: Buffer, sentSha: string): Mail {
+  return {
+        to,
+        subject: `Petição pela sanção integral do PLV nº 12/2026 - lote ${row.seq}${row.kind === "final" ? " (final)" : ""}`,
+        text:
+          `Excelentíssimas autoridades,\n\nEncaminhamos, em anexo, a lista de apoiadores da petição pela sanção integral do PLV nº 12/2026 (lote ${row.seq}): ` +
+          `${row.n_servidor} servidores de Instituições Federais de Ensino, ${row.n_apoiador} apoiadores da sociedade civil${row.n_estrangeiro ? ` e ${row.n_estrangeiro} professores, técnicos e acadêmicos de universidades do exterior` : ""}.\n\n` +
+          `${row.signature_kind === "icp-brasil" ? "Documento assinado digitalmente (ICP-Brasil) pela" : "Versão de TESTE, sem assinatura digital válida, da"} ADUNIR – Seção Sindical do ANDES-SN (CNPJ 15.883.671/0001-15). sha256 do PDF: ${sentSha}\n\n` +
+          `Respeitosamente,\nADUNIR – Seção Sindical do ANDES-SN`,
+        attachments: [{ filename: `peticao-plv12-2026-lote-${row.seq}${row.signed_pdf ? "-assinado" : ""}.pdf`, content: pdf, contentType: "application/pdf" }],
+      };
+}
+
 const approvalHash = (b: ApprovalRow, code: string) => hmac(`code:v2:${b.id}:${documentVersion(b)}:${code}`);
 
 export async function requestApprovalCode(id: number, actor: BatchActor): Promise<void> {
@@ -193,16 +208,7 @@ export async function approveAndSend(id: number, code: string, approvedBy: strin
     let error: unknown;
     try {
       if (!(await sendingEnabled())) throw new Error("envios pausados durante o disparo");
-      await sendNow({
-        to,
-        subject: `Petição pela sanção integral do PLV nº 12/2026 - lote ${row.seq}${row.kind === "final" ? " (final)" : ""}`,
-        text:
-          `Excelentíssimas autoridades,\n\nEncaminhamos, em anexo, a lista de apoiadores da petição pela sanção integral do PLV nº 12/2026 (lote ${row.seq}): ` +
-          `${row.n_servidor} servidores de Instituições Federais de Ensino, ${row.n_apoiador} apoiadores da sociedade civil${row.n_estrangeiro ? ` e ${row.n_estrangeiro} professores, técnicos e acadêmicos de universidades do exterior` : ""}.\n\n` +
-          `${row.signature_kind === "icp-brasil" ? "Documento assinado digitalmente (ICP-Brasil) pela" : "Versão de TESTE, sem assinatura digital válida, da"} ADUNIR – Seção Sindical do ANDES-SN (CNPJ 15.883.671/0001-15). sha256 do PDF: ${sentSha}\n\n` +
-          `Respeitosamente,\nADUNIR – Seção Sindical do ANDES-SN`,
-        attachments: [{ filename: `peticao-plv12-2026-lote-${row.seq}${row.signed_pdf ? "-assinado" : ""}.pdf`, content: pdf, contentType: "application/pdf" }],
-      }, "lote", `batch-send:v1:${id}:${sentSha}:${hmac(to)}`);
+      await sendNow(batchEnvelope(row, to, pdf, sentSha), "lote", batchMessageKey(id, sentSha, to));
     } catch (e) {
       error = e;
     }
@@ -215,7 +221,7 @@ export async function approveAndSend(id: number, code: string, approvedBy: strin
   }
   const status = failed === 0 ? "sent" : "failed";
   await tx(async client => {
-    await client.query("UPDATE batches SET status=$1, sent_at=CASE WHEN $1='sent' THEN $2 ELSE sent_at END WHERE id=$3", [status, new Date().toISOString(), id]);
+    await client.query("UPDATE batches SET status=$1, sent_at=CASE WHEN $1='sent' THEN COALESCE(sent_at,$2) ELSE sent_at END WHERE id=$3", [status, new Date().toISOString(), id]);
     await audit("batch_send_result", null, { batchId: id, sent, failed, ...actorData(actor) }, client);
   });
   return { ok: true, sent, failed };

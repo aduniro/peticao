@@ -7,6 +7,14 @@ process.env.MAIL_PROVIDER = "dev";
 delete process.env.PREVIEW_MODE;
 delete process.env.ADMIN_NO_PASSWORD;
 
+test("AV17 preserva contagens e usa aviso aprovado sem pontuação duplicada", async () => {
+  const { batchResultSummary } = await import("./batch-result-summary");
+  assert.equal(batchResultSummary({ ok: true, sent: 2, failed: 3 }), "Enviado a 2 destinatário(s); 3 falha(s). Resultado do envio a conferir. Verifique o histórico antes de tentar outra ação.");
+  assert.equal(batchResultSummary({ ok: true, sent: 0, failed: 1 }), "Enviado a 0 destinatário(s); 1 falha(s). Resultado do envio a conferir. Verifique o histórico antes de tentar outra ação.");
+  assert.equal(batchResultSummary({ ok: true, sent: 2, failed: 0 }), "Enviado a 2 destinatário(s).");
+  assert.equal(batchResultSummary({ ok: false, reason: "Código incorreto." }), "Código incorreto.");
+});
+
 async function setup(schema: string) {
   const db = await import("./db"); await db._openForTests(schema);
   const U = await import("./admin-users"), C = await import("./batch-sending-control");

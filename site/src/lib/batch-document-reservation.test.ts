@@ -155,3 +155,50 @@ test("identidade estável conserva aceite e retenção em replay sem novo transp
     assert.equal((await c.db.query("SELECT 1 FROM mail_message_attempts a JOIN mail_messages m ON m.id=a.message_id WHERE m.kind='lote'")).rowCount, 1);
   } finally { if (previousRetention === undefined) delete process.env.MAIL_ARCHIVE_RETENTION; else process.env.MAIL_ARCHIVE_RETENTION = previousRetention; await c.close(); }
 });
+
+test("conciliação recupera aceite não persistido sem transporte e preserva data/expurgo no replay", async () => {
+  const c = await setup("t_batch_reconcile_accepted"), previousRetention = process.env.MAIL_ARCHIVE_RETENTION;
+  try {
+    process.env.MAIL_ARCHIVE_RETENTION = "30";
+    const R = await import("./batch-reconciliation"), code = await c.code(); await c.fault("batch_recipient_result");
+    await assert.rejects(c.B.approveAndSend(c.id, code, "qa-president@example.test", c.actor), /QA audit fault/);
+    await c.db.query("DROP TRIGGER qa_batch_fault ON audit_log; DROP FUNCTION qa_batch_fault()");
+    await c.db.query("UPDATE mail_message_attempts SET finished_at='2026-11-08T12:34:56.123456Z' WHERE message_id IN (SELECT id FROM mail_messages WHERE kind='lote')");
+    await c.db.query("UPDATE mail_messages SET created_at=now()-interval '31 days' WHERE kind='lote'");
+    const archive = await import("./mail/archive"); assert.equal(await archive.purgeArchivedContent(), 1);
+    assert.deepEqual((await c.db.query("SELECT content_state,content_cipher FROM mail_messages WHERE kind='lote'")).rows[0], { content_state: "expired", content_cipher: null });
+    const documents = (await c.db.query("SELECT pdf,pdf_sha256,approved_at,approved_by FROM batches WHERE id=$1", [c.id])).rows[0];
+    const metadata = async () => (await c.db.query("SELECT row_to_json(m)::text raw FROM mail_messages m UNION ALL SELECT row_to_json(a)::text FROM mail_message_attempts a")).rows;
+    const before = await metadata(), files = readdirSync(c.dir);
+    const inspected = await R.inspectBatchAcceptance(c.id, c.actor); assert.ok(inspected.ok); assert.equal(inspected.recipients[0].state, "accepted");
+    await c.fault("batch_acceptance_reconciled");
+    await assert.rejects(R.reconcileBatchAcceptance(c.id, inspected.proof, c.actor), /QA audit fault/);
+    assert.equal((await c.db.query("SELECT 1 FROM batch_sends")).rowCount, 0); assert.equal((await c.B.getBatch(c.id))!.sent_at, null);
+    await c.db.query("DROP TRIGGER qa_batch_fault ON audit_log");
+    const results = await Promise.all([R.reconcileBatchAcceptance(c.id, inspected.proof, c.actor), R.reconcileBatchAcceptance(c.id, inspected.proof, c.actor)]);
+    assert.ok(results.every(r => r.ok && r.complete)); assert.equal(results.filter(r => r.ok && r.updated > 0).length, 1);
+    const settled = await c.snapshot(); assert.deepEqual(await R.reconcileBatchAcceptance(c.id, inspected.proof, c.actor), { ok: true, updated: 0, complete: true });
+    assert.deepEqual(await c.snapshot(), settled); assert.deepEqual(await metadata(), before); assert.deepEqual(readdirSync(c.dir), files);
+    const acceptedAt = inspected.recipients[0].acceptedAt;
+    assert.equal(acceptedAt, "2026-11-08T12:34:56.123456Z");
+    assert.equal((await c.B.getBatch(c.id))!.sent_at, acceptedAt); assert.equal((await c.db.query("SELECT at FROM batch_sends")).rows[0].at, acceptedAt);
+    assert.deepEqual((await c.db.query("SELECT pdf,pdf_sha256,approved_at,approved_by FROM batches WHERE id=$1", [c.id])).rows[0], documents);
+    assert.equal((await c.db.query("SELECT 1 FROM audit_log WHERE event='batch_acceptance_reconciled'")).rowCount, 1); assert.ok((await c.db.verifyAuditChain()).ok);
+  } finally { if (previousRetention === undefined) delete process.env.MAIL_ARCHIVE_RETENTION; else process.env.MAIL_ARCHIVE_RETENTION = previousRetention; await c.close(); }
+});
+
+test("conciliação não promove incerteza e recusa ator revogado, documento ou prova divergentes", async () => {
+  const c = await setup("t_batch_reconcile_uncertain");
+  try {
+    const R = await import("./batch-reconciliation"), code = await c.code(), blocked = join(c.dir, "qa-not-a-directory"); writeFileSync(blocked, "QA"); process.env.MAIL_OUTBOX_DIR = blocked;
+    await c.B.approveAndSend(c.id, code, "qa-president@example.test", c.actor); process.env.MAIL_OUTBOX_DIR = c.dir;
+    const inspected = await R.inspectBatchAcceptance(c.id, c.actor); assert.ok(inspected.ok); assert.equal(inspected.recipients[0].state, "indeterminate");
+    const before = await c.snapshot(); assert.deepEqual(await R.reconcileBatchAcceptance(c.id, inspected.proof, c.actor), { ok: true, updated: 0, complete: false }); assert.deepEqual(await c.snapshot(), before);
+    assert.deepEqual(await R.reconcileBatchAcceptance(c.id, "0".repeat(64), c.actor), { ok: false, error: "conflict" });
+    await c.db.query("UPDATE admin_users SET ativo=false WHERE id=$1", [c.actor.userId]); assert.deepEqual(await R.reconcileBatchAcceptance(c.id, inspected.proof, c.actor), { ok: false, error: "forbidden" });
+    await c.db.query("UPDATE admin_users SET ativo=true WHERE id=$1", [c.actor.userId]);
+    await c.db.query("UPDATE batches SET list_hash='QA-OTHER-LIST' WHERE id=$1", [c.id]); assert.deepEqual(await R.reconcileBatchAcceptance(c.id, inspected.proof, c.actor), { ok: false, error: "conflict" });
+    assert.equal((await c.db.query("SELECT 1 FROM audit_log WHERE event='batch_acceptance_reconciled'")).rowCount, 0);
+    assert.equal((await c.db.query("SELECT 1 FROM mail_message_attempts a JOIN mail_messages m ON m.id=a.message_id WHERE m.kind='lote'")).rowCount, 1);
+  } finally { await c.close(); }
+});

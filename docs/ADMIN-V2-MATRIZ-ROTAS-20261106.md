@@ -32,6 +32,7 @@ Inventário estático do checkout local; não é prova de publicação ou execu�
 | /api/admin/lotes/[id]/assinado | POST | total | Sim — candidato local |
 | /api/admin/lotes/[id]/cancelar | POST | total | Sim — candidato local |
 | /api/admin/lotes/[id]/codigo | POST | total | Sim — candidato local |
+| /api/admin/lotes/[id]/conciliar | GET, POST | total | Sim — backend local; sem transporte |
 | /api/admin/lotes/[id]/pdf | GET | total | Não neste handler |
 | /api/admin/lotes/criar | POST | total | Sim — candidato local |
 | /api/admin/lotes/pausa | POST | total | Sim — candidato local; versão e ator |

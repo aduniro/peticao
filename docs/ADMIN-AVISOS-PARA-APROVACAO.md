@@ -100,14 +100,17 @@ Enquanto isso, foi implementada e validada a consulta independente somente leitu
 de histórico/campi/triagem (`ETAPA-02-HISTORICO-CONTATO.md`), sem persistir rascunho,
 conectar controles, alterar texto/estética ou enviar respostas automaticamente.
 
-## AV-17 — resultado de envio de lote a conferir (pendente)
+## AV-17 — resultado de envio de lote a conferir (aprovado)
 
 Na continuação de08/11, o bloqueio de repetição automática após reserva/resultado
 incerto foi reforçado. O aviso legado “falha(s), tente novamente” pode sugerir
 uma repetição que o backend não autoriza com segurança.
 
-Proposta submetida por pergunta nativa, ainda sem resposta observada: substituir
-somente esse trecho por “Resultado do envio a conferir. Verifique o histórico
-antes de tentar outra ação.”. Não altera o texto do e-mail, o formulário público,
-a assinatura digital ou o restante do resumo de aceites. Não ativar até aceite
-explícito; a continuidade técnica não representa aprovação de textos nem deploy.
+Pergunta nativa submetida: substituir somente esse trecho por “Resultado do envio
+a conferir. Verifique o histórico antes de tentar outra ação.”. Em08/11 o
+principal transmitiu a decisão explícita do dono: “APROVAR ESSE AVISO DOS LOTES”.
+Autoriza esse texto, preservando as contagens existentes e fontes/layout, sem
+pontuação dupla. Aplicado somente ao resumo com falhas. Não altera o texto do
+e-mail, formulário público, assinatura digital ou restante do resumo de aceites.
+Não aprova outros AVs, deploy ou merge. A aprovação é posterior a `8436fa2`;
+naquele snapshot cumulativo o AV17 ainda constava pendente.
