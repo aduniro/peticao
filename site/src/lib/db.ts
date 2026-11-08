@@ -523,6 +523,14 @@ export const auditHash = (prev: string, ts: string, event: string, sigId: number
 
 /** Trilha de auditoria encadeada por hash: alterar uma linha invalida as seguintes. */
 export async function audit(event: string, signatureId: number | null, data: Record<string, unknown> = {}, client?: PoolClient) {
+  if (adminMirrorEnabled()) {
+    // Access to the preview is recorded locally, outside the imported production chain.
+    const sql = "INSERT INTO admin_mirror_access_log (ts,event,signature_id,data) VALUES ($1,$2,$3,$4)";
+    const params = [new Date().toISOString(), event, signatureId, JSON.stringify(data)];
+    if (client) await client.query(sql, params);
+    else await query(sql, params);
+    return;
+  }
   const run = async (c: PoolClient) => {
     await c.query("SELECT pg_advisory_xact_lock(7001)"); // serializa a escrita da cadeia
     const last = await c.query<{ hash: string }>("SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1");

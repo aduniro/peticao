@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash, randomUUID } from "node:crypto";
 import { query, tx, audit } from "./db";
+import { adminMirrorEnabled } from "./admin-mirror";
 import { hmac } from "./security";
 import { dedupEmail } from "./email-check";
 import { SAFE_EMAIL_RE } from "./email-syntax";
@@ -61,6 +62,7 @@ export function diagnosticProvider(provider: CpfProvider | null, declaredName: u
   } };
 }
 async function schema(c: import("pg").PoolClient) {
+  if (adminMirrorEnabled()) return;
   await c.query("SET LOCAL lock_timeout='250ms'; SET LOCAL statement_timeout='1000ms'");
   await c.query("SELECT pg_advisory_xact_lock(hashtextextended('signup-diagnostic-schema-v1',0))");
   await c.query(`CREATE TABLE IF NOT EXISTS signup_diagnostics (
