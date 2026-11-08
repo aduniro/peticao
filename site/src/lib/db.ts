@@ -405,7 +405,7 @@ const SCHEMA_SQL = `
 
 export function getPool(): Pool {
   if (!g.__pool) {
-    const schema = process.env.DATABASE_SCHEMA;
+    const schema = adminMirrorEnabled() ? "admin_mirror_live,public" : process.env.DATABASE_SCHEMA;
     g.__pool = new Pool({
       connectionString: config.databaseUrl(),
       max: 10,
@@ -453,7 +453,7 @@ function init(): Promise<void> {
   if (!g.__ready) {
     if (adminMirrorEnabled()) {
       // The importer provisions this local database. Never migrate, seed or renumber it.
-      g.__ready = getPool().query("SELECT revision FROM admin_mirror_state WHERE singleton = true")
+      g.__ready = getPool().query("SELECT revision FROM public.admin_mirror_state WHERE singleton = true")
         .then((result) => {
           if (result.rowCount !== 1) throw new Error("ADMIN_MIRROR_NOT_READY");
         }).catch((e) => {
@@ -484,6 +484,7 @@ export async function tx<T>(fn: (c: PoolClient) => Promise<T>): Promise<T> {
   const c = await getPool().connect();
   try {
     await c.query("BEGIN");
+    if (adminMirrorEnabled()) await c.query("SELECT pg_advisory_xact_lock_shared(7027)");
     const r = await fn(c);
     await c.query("COMMIT");
     return r;
@@ -525,7 +526,7 @@ export const auditHash = (prev: string, ts: string, event: string, sigId: number
 export async function audit(event: string, signatureId: number | null, data: Record<string, unknown> = {}, client?: PoolClient) {
   if (adminMirrorEnabled()) {
     // Access to the preview is recorded locally, outside the imported production chain.
-    const sql = "INSERT INTO admin_mirror_access_log (ts,event,signature_id,data) VALUES ($1,$2,$3,$4)";
+    const sql = "INSERT INTO public.admin_mirror_access_log (ts,event,signature_id,data) VALUES ($1,$2,$3,$4)";
     const params = [new Date().toISOString(), event, signatureId, JSON.stringify(data)];
     if (client) await client.query(sql, params);
     else await query(sql, params);

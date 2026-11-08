@@ -20,3 +20,11 @@ Preservar a aparência da versão essencial. Indicadores aprovados: “Prévia c
 ## Estado
 
 Implementação em andamento. A presença destes arquivos não significa que o espelho esteja operacional. A proteção HTTP complementa, mas não substitui, permissões do banco, bloqueio de rede e autenticação externa à aplicação.
+
+## Checkpoint de 08/11/2026
+
+- Guardas iniciais: commits `3f3c43b` e `52685d2`; oito testes do aplicativo e TypeScript aprovados.
+- `tools/admin-mirror/snapshot.mjs`: valida contrato, tabelas, contagens, chaves e checksums antes de abrir a transação; cria uma versão local em staging e publica por troca transacional de schema. Pacotes antigos e importações com erro preservam a versão anterior.
+- `bootstrap.sql`: papel de leitura com acesso aos dados espelhados e inserção exclusivamente na auditoria local de acessos.
+- `postgres.test.mjs`: PostgreSQL 17 local dedicado, com dados fictícios. Verificadas inclusão, alteração, exclusão, preservação de hash/data, recusa de escrita, rollback real e rejeição de snapshot antigo. Cinco testes de protocolo e este teste integrado passaram.
+- Pendentes: contrato completo das projeções, exportador SSH, adaptação de campos protegidos, atualização incremental, limpeza limitada de schemas antigos, autenticação, contêiner da aplicação, indicadores, validação cumulativa e acesso Tailnet. Nenhuma sincronização de dados reais ou publicação do novo painel foi realizada.
