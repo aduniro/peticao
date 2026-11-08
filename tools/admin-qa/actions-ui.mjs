@@ -25,7 +25,15 @@ try {
   const receiptRow = (await db.query("INSERT INTO admin_acoes(user_id,email,acao,modo,parametros,central_estado,central_request_id,ok) VALUES($1,$2,'publicar.pedir','executar',$3,'indeterminado','1234567890abcdef',false) RETURNING id", [user.usuario.id, user.usuario.email, JSON.stringify({ candidato: "a".repeat(64) })])).rows[0].id;
   const { chromium } = await import(process.env.QA_PLAYWRIGHT_MODULE); browser = await chromium.launch({ headless: true, executablePath: process.env.QA_CHROMIUM });
   try {
+    let rateWindowStarted = Date.now();
     for (const width of widths) {
+      // The real guard shares its IP budget across alerts/history and writes.
+      // Preserve the guard and each assertion; pace independent viewport pairs.
+      if (reports.length > 0 && reports.length % 2 === 0) {
+        const wait = 60_100 - (Date.now() - rateWindowStarted);
+        if (wait > 0) await new Promise(resolve => setTimeout(resolve, wait));
+        rateWindowStarted = Date.now();
+      }
       const context = await browser.newContext({ viewport: { width, height: 900 } }); await context.addCookies([{ name: "adm", value: token, url: base.origin }]);
       const page = await context.newPage(), exceptions = [], failed = [], unexpectedHttp = [], deliberate = new WeakSet(), deliberateHttp = new WeakSet();
       page.on("pageerror", error => exceptions.push(error.message));
@@ -70,7 +78,11 @@ try {
         await stop.locator("input").fill("PARAR"); await stop.getByRole("button", { name: "Executar", exact: true }).click(); await stop.getByRole("alert").waitFor();
         assert.ok((await stop.getByRole("alert").innerText()).includes("Não foi possível confirmar o resultado da ação."));
         assert.equal(lost, true); assert.equal(await count(), beforeCount + 1); assert.ok(await stop.getByRole("button", { name: "Executar", exact: true }).isDisabled());
-        await stop.getByRole("button", { name: "Conferir resultado", exact: true }).click(); await stop.locator("pre").waitFor();
+        const consultedResponse = page.waitForResponse(response => response.request().method() === "POST" && response.url().endsWith("/api/admin/acoes") && response.request().postDataJSON()?.modo === "consultar");
+        await stop.getByRole("button", { name: "Conferir resultado", exact: true }).click();
+        const consultation = await consultedResponse, checked = await consultation.json();
+        await writeFile(`${output}/consultation-${width}.json`, JSON.stringify({ status: consultation.status(), ok: checked.ok, erro: checked.erro, modo: checked.modo, encerrada: checked.encerrada }, null, 2));
+        assert.equal(consultation.status(), 200, `consultation ${JSON.stringify(checked)}`); assert.equal(checked.ok, true); assert.equal(checked.modo, "executar"); await stop.locator("pre").waitFor();
         assert.equal(executed, 1); assert.equal(consulted, 1); assert.equal(await count(), beforeCount + 1);
         assert.equal(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith("admin-action-v1:")).length), 0);
         // A missing trusted receipt must not invent success or invoke a deployment.

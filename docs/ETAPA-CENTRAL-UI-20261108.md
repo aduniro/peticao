@@ -58,6 +58,38 @@ produção local deve recusar um recibo sem propriedade root; a guarda não ser�
 relaxada para produzir um positivo artificial. O roteiro legado `action-intent`
 foi atualizado para a conferência explícita sem segundo POST de execução.
 
-Tipos, build e roteiro visual precisam de validação após esta última mudança;
-o build integrado anterior não incluía a revalidação final do ator. Este registro
-não marca a Central ou o painel integral como concluídos antes dessas evidências.
+O principal confirmou tipos/build integrado aprovados antes da rodada de
+navegador abaixo. Esse build inclui a revalidação do ator e a lógica da Central.
+
+## Diagnóstico do primeiro QA de navegador
+
+O primeiro roteiro terminou com timeout esperando o resultado consultado no
+cartão. A repetição instrumentada não escondeu o erro:320/390/768 passaram e a
+consulta de992 recebeu HTTP429, “Muitas ações em pouco tempo. Aguarde um minuto.”
+O limite `admin-acao:IP` é compartilhado entre alertas, leituras de histórico e
+POSTs, mesmo quando cada rota usa tetos diferentes. A sequência acelerada das
+seis larguras consumiu esse orçamento; não era prova de perda de intenção.
+
+Falha original preservada em `http-initial-timeout.log`; diagnóstico em
+`http-diagnostic-429.log` e `consultation-429.json`, dentro da pasta privada de QA.
+O roteiro agora verifica a resposta da consulta antes do DOM e cadencia pares de
+larguras pela janela real de60s, mantendo IP, conta, limite e asserções. Não
+suprime429 nem o transforma em sucesso. A UI preserva a intenção quando o
+backend pede aguardar; não repete execução automaticamente.
+
+Repetição final: **saída0**, relatório `actions-ui.json` com as seis larguras
+320/390/768/992/1280/1920 aprovado em
+`/tmp/admin-central-http-284nkisl/`. A paginação injetou503 e conservou as30linhas
+antes de recuperar a próxima página; efeito gravado com resposta perdida foi
+consultado sem segundo POST de execução; recibo ausente resultou409 e nenhuma
+publicação. Não houve exceção de página, falha de rede/HTTP inesperada ou
+alteração de assinaturas/mensagens/fila/configuração preservadas. Servidor3036 e
+banco fictício54356 encerrados ao fim.
+
+Logs, JSON e capturas foram copiados para a pasta privada de QA. A inspeção
+visual390 identificou colunas excessivamente estreitas na nova tabela. Foi
+acrescentado `minWidth:760` dentro do contêiner de rolagem existente, preservando
+fontes e demais estilos. Esse ajuste visual é posterior ao build testado e
+precisa de novo build/conferência visual; não atribuir a ele a aprovação da
+rodada anterior. O principal fará a consolidação com as demais frentes. O painel
+integral continua incompleto pelos itens da auditoria de escopo.

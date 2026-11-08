@@ -47,7 +47,7 @@ export default function HistoricoAcoes() {
   };
   return <section className="box" data-testid="action-history" aria-busy={busy}>
     <h2>Histórico de ações</h2><p className="small">A conferência consulta o resultado do executor; não executa a ação novamente.</p>
-    <div className="table-scroll"><table><thead><tr><th>ID</th><th>Data</th><th>Usuário</th><th>Ação</th><th>Modo</th><th>Situação</th><th>Ações</th></tr></thead>
+    <div className="table-scroll"><table style={{ minWidth: 760 }}><thead><tr><th>ID</th><th>Data</th><th>Usuário</th><th>Ação</th><th>Modo</th><th>Situação</th><th>Ações</th></tr></thead>
       <tbody>{rows.map(row => <tr key={row.id} data-action-id={row.id}><td>{row.id}</td><td>{brasilia(row.ts)}</td><td>{row.email}</td><td>{row.acao}</td><td>{row.modo}</td><td>{row.publicacao?.estado === "ok" ? "Publicação concluída" : STATE[row.central_estado] ?? row.central_estado}</td><td>{row.acao === "publicar.pedir" && row.modo === "executar" && row.central_request_id && row.central_estado !== "legacy" && row.publicacao?.estado !== "ok" ? <button type="button" className="adm-btn sm" disabled={busy} onClick={() => reconcile(row.id)}>Conferir resultado</button> : null}</td></tr>)}</tbody>
     </table></div>
     {error ? <p className="err" role="alert">{error}</p> : null}
