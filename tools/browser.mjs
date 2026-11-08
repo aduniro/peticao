@@ -31,14 +31,16 @@ async function capture(p, version, name, whole = false) {
   else await p.locator("form.form").screenshot(options);
 }
 async function record(name, version, fn) {
-  try { const detail = await fn(); results.cases.push({ name, version, status: "passed", detail }); console.log("PASS", version, name); }
+  try { console.log("START",version,name); const detail = await fn(); results.cases.push({ name, version, status: "passed", detail }); console.log("PASS", version, name); }
   catch (e) { results.cases.push({ name, version, status: "failed", error: String(e) }); console.log("FAIL", version, name, String(e)); }
 }
 async function fillSupporter(p, name = "Pessoa Ficticia Teste", email = "qa-lab-browser@gmail.com") {
   await tab(p, "Apoiador(a)");
   await field(p, "name").fill(name); await field(p, "email").fill(email);
-  await field(p, "cpf").fill("52998224725"); await field(p, "uf").fill("RO"); await field(p, "city").fill("Porto Velho");
-  await p.locator("form.form input[name=consent]").check();
+  await field(p, "cpf").fill("52998224725");
+  await field(p,"name").focus(); await p.locator("form.form input[name=consent]").check();
+  await field(p, "uf").fill("RO"); await field(p,"uf").press("Escape");
+  await field(p, "city").fill("Porto Velho"); await field(p,"city").press("Escape");
   await field(p,"name").focus();
 }
 try {

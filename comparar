@@ -61,18 +61,21 @@ def start():
             except Exception:time.sleep(.5)
         else:raise RuntimeError("Timeout aguardando versão "+str(port))
     print("A — VPS: http://127.0.0.1:3040/\nB — Formulários: http://127.0.0.1:3041/\nRelatório: "+str(ROOT/"reports/index.html"),flush=True)
-def units(variant):
+def units(variant,selected=None):
     service="app-"+variant;dbservice="db-"+variant
     exists=subprocess.run(COMPOSE+["exec","-T",dbservice,"psql","-U","peticao","-d","postgres","-Atc","SELECT 1 FROM pg_database WHERE datname='qa_unit'"],capture_output=True,text=True,check=True).stdout.strip()
     if not exists:command(COMPOSE+["exec","-T",dbservice,"createdb","-U","peticao","qa_unit"])
     site=ROOT/("app" if variant=="a" else "formularios/app")
     files=sorted(str(p.relative_to(site)) for folder in ["src/lib","src/i18n"] for p in (site/folder).glob("*.test.ts"))
+    if selected:
+        assert all(name in files for name in selected),"Unknown test file"
+        files=selected
     args=COMPOSE+["exec","-T",service,"env","-i","PATH=/usr/local/bin:/usr/bin:/bin","HOME=/tmp","NODE_ENV=test","MAIL_PROVIDER=dev",
                  f"DATABASE_URL=postgres://peticao:QA-LAB-DB-FICTITIOUS@{dbservice}:5432/qa_unit",
                  "SECRETS_DIR=/empty","PETICAO_CONFIG_DIR=/empty","CREDENTIALS_DIRECTORY=/empty",
                  "MAIL_OUTBOX_DIR=/tmp/lab-unit-outbox",
                  "node","--import","tsx","--test","--test-concurrency=1",*files]
-    log_run(args,ROOT/"reports"/("unit-"+variant+".log"))
+    log_run(args,ROOT/"reports"/("unit-targeted-"+variant+".log" if selected else "unit-"+variant+".log"))
 def status():command(COMPOSE+["ps"])
 def main():
     action=sys.argv[1] if len(sys.argv)>1 else "iniciar"
@@ -84,7 +87,7 @@ def main():
         if pid:os.kill(pid,signal.SIGTERM)
         command(COMPOSE+["stop"])
     elif action=="dados":fixtures()
-    elif action=="unitarios":units(sys.argv[2] if len(sys.argv)>2 else "b")
+    elif action=="unitarios":units(sys.argv[2] if len(sys.argv)>2 else "b",sys.argv[3:] or None)
     elif action=="testes":
         start();fixtures()
         command(["/home/barre/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",str(ROOT/"tools/browser.mjs")])
