@@ -19,6 +19,30 @@ def test_changed_helper_is_not_authorized(monkeypatch,tmp_path):
  assert not known_qa.allowed({'command':f'python3 {fake} tests','cwd':str(CANDIDATE)})
 
 
+@pytest.mark.parametrize('args',['--document-tests','--ai-tests','--mail-tests','--contact-tests','--tests','--contracts mail-recovery mail-preview','--contracts ai-executor'])
+def test_reviewed_consolidation_exact_scope(args):
+ assert allowed({'command':f"/bin/bash -lc 'python3 tools/admin-qa/consolidation.py {args}'",'cwd':str(CANDIDATE)})
+
+
+@pytest.mark.parametrize('args',['','--help','--document-tests --ai-tests','--contracts','--contracts missing','--contracts mail-preview mail-preview','--contracts mail-preview; ssh peticao true','--tests > /tmp/out','--tests && git push'])
+def test_consolidation_rejects_unreviewed_commands(args):
+ assert not allowed({'command':f'python3 tools/admin-qa/consolidation.py {args}','cwd':str(CANDIDATE)})
+
+
+def test_consolidation_rejects_changes_symlinks_and_other_cwd(monkeypatch,tmp_path):
+ import hashlib
+ from vigia_monitor import known_qa
+ fake=tmp_path/'qa.py';fake.write_text('reviewed')
+ monkeypatch.setattr(known_qa,'CONSOLIDATION',fake)
+ monkeypatch.setattr(known_qa,'CONSOLIDATION_DIGEST',hashlib.sha256(fake.read_bytes()).hexdigest())
+ payload={'command':f'python3 {fake} --document-tests','cwd':str(CANDIDATE)}
+ assert allowed(payload)
+ assert not allowed(dict(payload,cwd='/opt/peticao/app'))
+ fake.write_text('changed');assert not allowed(payload)
+ target=tmp_path/'target.py';target.write_text('reviewed');fake.unlink();fake.symlink_to(target)
+ assert not allowed(payload)
+
+
 def test_approval_is_bound_to_managed_work_and_respects_pause(tmp_path):
  import json,time
  from vigia_monitor.store import Store

@@ -100,3 +100,13 @@ Foi acrescentada a regra restrita por checksum/candidato/comando, coberta por tr
 testes adicionais (40 testes Python distintos, mais oito do monitor simples).
 A ativação ocorreu pelo detector independente, sem reiniciar o executor admin-v2.
 Comandos fora dessa regra continuam sujeitos às aprovações normais.
+
+Na retomada de08/11, a execução avançou para documentos, mas voltou a aguardar
+liberação técnica de QA já autorizado. A regra restrita agora reconhece também
+`tools/admin-qa/consolidation.py` no candidato exclusivo, pelo SHA-256 revisado
+`ef34e668c92144ce0a0503660a50688341badb253e40a45c14d084626de1c0a9`.
+Aceita somente uma seleção dirigida conhecida ou contratos HTTP nomeados e
+revisados, sem redirecionamento, encadeamento ou argumentos livres. Alterar o
+roteiro, usar symlink, outro checkout ou contrato desconhecido exige nova revisão.
+Pausa explícita continua impedindo a liberação. Isso não aprova commits, SSH,
+envios reais, avisos pendentes, deploy ou merge com a VPS.
