@@ -230,11 +230,12 @@ function scheduleDrain() {
 /** Allows a controlled shutdown/test to wait for the existing opportunistic drains. */
 export async function waitForBackgroundMail() { while(backgroundMail.size)await Promise.all([...backgroundMail]); }
 
-export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean; channel?: "transactional" | "marketing"; avoid?: string[]; singleAttempt?: boolean; messageKey?:string } = {}): Promise<SendOutcome> {
+export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean; channel?: "transactional" | "marketing"; avoid?: string[]; singleAttempt?: boolean; messageKey?:string; frozenReplyTo?: boolean } = {}): Promise<SendOutcome> {
   const channel=opts.channel??"transactional",providers=channel==="marketing"?config.marketingProviders():config.mailProviders();
   if(channel==="marketing"&&!providers.length)throw new Error("Canal de marketing não configurado (MAIL_PROVIDERS_MARKETING)");
   await checkEnvelope(m,providers);
-  const effective=withReplyTo(m),record=await prepareRecorded(effective,kind,channel,opts.messageKey);
+  // Internal callers replaying an observed envelope must retain even an absent Reply-To.
+  const effective=opts.frozenReplyTo?m:withReplyTo(m),record=await prepareRecorded(effective,kind,channel,opts.messageKey);
   const rotationChannel=channel==="marketing"?"marketing":"transacional";
   const order=ordemRodizio(rotationChannel,providers,parsePesos(channel==="marketing"?config.mailRotationMarketing():config.mailRotation()),{evitar:opts.avoid});
   try {

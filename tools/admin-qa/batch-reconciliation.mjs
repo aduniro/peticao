@@ -53,8 +53,22 @@ try {
     assert.equal(new URL(failed.headers.get("location"), base).searchParams.get("msg"), "Enviado a 0 destinatário(s); 1 falha(s). Resultado do envio a conferir. Verifique o histórico antes de tentar outra ação.");
     assert.equal((await messages()).filter(m => m.to === "qa-authority@example.test").length, 1);
   } finally { await db.query("DROP TRIGGER qa_no_batch_transport ON audit_log; DROP FUNCTION qa_no_batch_transport()"); }
+  // Explicit fictitious rejection in the existing journal; no provider is contacted.
+  const rejected = (await db.query("SELECT id FROM mail_messages WHERE kind='lote' AND status='prepared'")).rows; assert.equal(rejected.length, 1);
+  const simulated = await A.beginAttempt(rejected[0].id, "dev", "QA <qa-sender@example.test>"); assert.ok(simulated.ok);
+  assert.ok((await A.finishAttempt(simulated.id, "rejected", { errorCode: "provider_rejected" })).ok);
+  const frozenRetry = async () => (await db.query("SELECT pdf,pdf_sha256,list_hash,approved_at,approved_by FROM batches WHERE id=$1", [blockedId])).rows[0];
+  const originalRetry = await frozenRetry(), filesBeforeCode = new Set(await readdir(process.env.MAIL_OUTBOX_DIR));
+  assert.equal((await form("codigo", {}, blockedId)).status, 303);
+  const freshCodeFiles = (await readdir(process.env.MAIL_OUTBOX_DIR)).filter(f => !filesBeforeCode.has(f)); assert.equal(freshCodeFiles.length, 1);
+  const freshCode = JSON.parse(await readFile(`${process.env.MAIL_OUTBOX_DIR}/${freshCodeFiles[0]}`, "utf8")).subject.match(/: (\d{6})$/)[1];
+  const retried = await Promise.all([form("aprovar", { code: freshCode }, blockedId), form("aprovar", { code: freshCode }, blockedId)]);
+  assert.ok(retried.every(r => r.status === 303)); assert.equal(retried.filter(r => new URL(r.headers.get("location"), base).searchParams.get("msg") === "Enviado a 1 destinatário(s).").length, 1);
+  assert.deepEqual(await frozenRetry(), originalRetry);
+  assert.equal((await messages()).filter(m => m.to === "qa-authority@example.test" && m.attachments?.length).length, 2);
+  assert.deepEqual((await db.query("SELECT state FROM mail_message_attempts WHERE message_id=$1 ORDER BY started_at", [rejected[0].id])).rows.map(r => r.state), ["rejected", "accepted"]);
   await db.query("UPDATE admin_users SET ativo=false WHERE id=$1", [user.usuario.id]); assert.equal((await request(path, { proof: evidence.proof })).status, 401);
   assert.equal((await db.query("SELECT 1 FROM signatures UNION ALL SELECT 1 FROM mail_outbox")).rowCount, 0); assert.ok((await db.verifyAuditChain()).ok);
-  const report = { ok: true, compiledHttp: true, stepupOriginAndActor: true, acceptedButUnpersistedRecovered: true, auditRollback: true, concurrentAndRepeatedReconciliationOnce: true, originalAcceptanceTime: true, noTransportOnReconciliation: true, expiredContentRemainsExpired: true, documentAndMessageMetadataUnchanged: true, revokedAccountRejected: true, approvedAV17PreservesCountsOnFailure: true };
+  const report = { ok: true, compiledHttp: true, stepupOriginAndActor: true, acceptedButUnpersistedRecovered: true, auditRollback: true, concurrentAndRepeatedReconciliationOnce: true, originalAcceptanceTime: true, noTransportOnReconciliation: true, expiredContentRemainsExpired: true, documentAndMessageMetadataUnchanged: true, revokedAccountRejected: true, approvedAV17PreservesCountsOnFailure: true, explicitRejectedRecoveryWithFreshHumanCode: true, rejectedRecoveryConcurrentOnce: true, originalApprovalAndMessageIdentityPreserved: true };
   await writeFile(`${process.env.QA_OUTPUT_DIR}/batch-reconciliation.json`, JSON.stringify(report, null, 2)); console.log(JSON.stringify(report));
 } finally { if (token) await U.encerrarSessao(token); await db._closeDbForTests(); }
