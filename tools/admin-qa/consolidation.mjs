@@ -8,12 +8,13 @@ assert.equal(process.env.DEV_DB_PORT, "54349");
 assert.equal(process.env.MAIL_PROVIDER, "dev");
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const contracts = process.argv.slice(2).length ? process.argv.slice(2) : ["referrals", "referrals-browser", "content-retention", "whatsapp-senders"];
-assert.ok(contracts.every(name => ["referrals", "referrals-browser", "content-retention", "whatsapp-senders", "contact-history", "mail-recovery", "mail-preview", "ai-executor", "batch-control"].includes(name)));
+assert.ok(contracts.every(name => ["referrals", "referrals-browser", "content-retention", "whatsapp-senders", "contact-history", "mail-recovery", "mail-preview", "ai-executor", "batch-control", "batch-reservation"].includes(name)));
 try {
   for (const name of contracts) {
     const schema = `qa_consolidation_${name.replaceAll("-", "_")}_${process.pid}`;
     await pool.query(`CREATE SCHEMA ${schema}`);
     const env = { ...process.env, DATABASE_SCHEMA: schema };
+    if (name === "batch-reservation") Object.assign(env, { APPROVER_EMAIL: "qa-president@example.test", RECIPIENTS: "qa-authority@example.test", SIGNER: "none" });
     const log = createWriteStream(`${env.QA_OUTPUT_DIR}/${name}-server.log`);
     const server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-H", "127.0.0.1", "-p", "3033"], { env });
     server.stdout.pipe(log); server.stderr.pipe(log);

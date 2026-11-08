@@ -6,6 +6,8 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { assertSendable } from "./signer";
 
+const actor = { userId: 1, email: "qa-batch-session@example.test" };
+
 (process.env as Record<string, string>).NODE_ENV = "test";
 process.env.MAIL_PROVIDER = "dev";
 process.env.MAIL_OUTBOX_DIR = join(tmpdir(), `peticao-outbox-bat-${process.pid}`);
@@ -40,6 +42,7 @@ test("guarda de assinatura: produção só envia PDF ICP-Brasil", () => {
 test("lotes: meta, PDF, aprovação em duas etapas, envio, pausa e lote final acumulado", async () => {
   const dbmod = await import("./db");
   await dbmod._openForTests("t_lotes");
+  await dbmod.query("INSERT INTO admin_users(id,email,nome,nivel,senha_hash) VALUES(1,$1,'QA Session','total','QA-NOT-A-LOGIN-HASH')", [actor.email]);
   const OUTBOX_DIR = (await import("./mail")).outboxDir();
   rmSync(OUTBOX_DIR, { recursive: true, force: true });
   const b = await import("./batches");
@@ -60,19 +63,19 @@ test("lotes: meta, PDF, aprovação em duas etapas, envio, pausa e lote final ac
   assert.equal(mails(OUTBOX_DIR).filter((m) => m.to === "aprovador@exemplo.org" && /pronto para aprovação/.test(m.subject)).length, 1);
 
   // sem código: recusa
-  assert.equal((await b.approveAndSend(batch.id, "000000", "x")).ok, false);
-  await b.requestApprovalCode(batch.id);
+  assert.equal((await b.approveAndSend(batch.id, "000000", "x", actor)).ok, false);
+  await b.requestApprovalCode(batch.id, actor);
   const code = /Código de aprovação do lote \d+: (\d{6})/.exec(mails(OUTBOX_DIR).at(-1)!.text)![1];
   const wrong = code === "123456" ? "654321" : "123456";
-  assert.deepEqual(await b.approveAndSend(batch.id, wrong, "x"), { ok: false, reason: "Código incorreto." });
+  assert.deepEqual(await b.approveAndSend(batch.id, wrong, "x", actor), { ok: false, reason: "Código incorreto." });
 
   // pausa global bloqueia
   await b.setSetting("sending_enabled", "false");
-  assert.equal((await b.approveAndSend(batch.id, code, "x")).ok, false);
+  assert.equal((await b.approveAndSend(batch.id, code, "x", actor)).ok, false);
   await b.setSetting("sending_enabled", "true");
 
   const sentBefore = mails(OUTBOX_DIR).filter((m) => m.attachments?.length).length;
-  const r = await b.approveAndSend(batch.id, code, "aprovador@exemplo.org");
+  const r = await b.approveAndSend(batch.id, code, "aprovador@exemplo.org", actor);
   assert.deepEqual(r, { ok: true, sent: 2, failed: 0 });
   const withPdf = mails(OUTBOX_DIR).filter((m) => m.attachments?.length);
   assert.equal(withPdf.length, sentBefore + 2);
@@ -81,7 +84,7 @@ test("lotes: meta, PDF, aprovação em duas etapas, envio, pausa e lote final ac
   assert.equal(createHash("sha256").update(pdf).digest("hex"), stored);
   assert.equal((await b.getBatch(batch.id))!.status, "sent");
   // reuso do código / reenvio: recusado
-  assert.equal((await b.approveAndSend(batch.id, code, "x")).ok, false);
+  assert.equal((await b.approveAndSend(batch.id, code, "x", actor)).ok, false);
 
   // lote final é acumulado (inclui os já enviados) e só existe um
   await seed(dbmod, 1, 3);
@@ -98,15 +101,16 @@ test("lotes: meta, PDF, aprovação em duas etapas, envio, pausa e lote final ac
 test("lotes: destinatário .gov.br é bloqueado fora de produção", async () => {
   const dbmod = await import("./db");
   await dbmod._openForTests("t_lotes_gov");
+  await dbmod.query("INSERT INTO admin_users(id,email,nome,nivel,senha_hash) VALUES(1,$1,'QA Session','total','QA-NOT-A-LOGIN-HASH')", [actor.email]);
   const OUTBOX_DIR = (await import("./mail")).outboxDir();
   rmSync(OUTBOX_DIR, { recursive: true, force: true });
   process.env.RECIPIENTS = "gabinete@presidencia.gov.br";
   const b = await import("./batches");
   await seed(dbmod, 3);
   const id = (await b.tick()).created[0];
-  await b.requestApprovalCode(id);
+  await b.requestApprovalCode(id, actor);
   const code = /: (\d{6})/.exec(mails(OUTBOX_DIR).at(-1)!.subject)![1];
-  const r = await b.approveAndSend(id, code, "x");
+  const r = await b.approveAndSend(id, code, "x", actor);
   assert.deepEqual(r, { ok: true, sent: 0, failed: 1 });
   assert.equal((await b.getBatch(id))!.status, "failed");
   assert.equal(mails(OUTBOX_DIR).filter((m) => m.to.endsWith(".gov.br")).length, 0);
@@ -126,6 +130,7 @@ test("PDF assinado: verificação estrutural, validador plugável e bloqueio em 
   const { checkSignedPdf, verifyIcpBrasil } = await import("./signed-pdf");
   const dbmod = await import("./db");
   await dbmod._openForTests("t_signed");
+  await dbmod.query("INSERT INTO admin_users(id,email,nome,nivel,senha_hash) VALUES(1,$1,'QA Session','total','QA-NOT-A-LOGIN-HASH')", [actor.email]);
   const { OUTBOX_DIR: _o } = { OUTBOX_DIR: (await import("./mail")).outboxDir() };
   const b = await import("./batches");
   rmSync(_o, { recursive: true, force: true });
@@ -143,9 +148,9 @@ test("PDF assinado: verificação estrutural, validador plugável e bloqueio em 
 
   // sem validador configurado: anexa, mas NÃO vira icp-brasil
   delete process.env.ICP_VALIDATOR_URL;
-  const bad = await b.attachSignedPdf(id, orig, "x");
+  const bad = await b.attachSignedPdf(id, orig, "x", actor);
   assert.equal(bad.ok, false);
-  const r1 = await b.attachSignedPdf(id, fakeSigned(orig), "x");
+  const r1 = await b.attachSignedPdf(id, fakeSigned(orig), "x", actor);
   assert.deepEqual([r1.ok, r1.kind], [true, "externa-nao-validada"]);
   assert.match(r1.notes.join(" "), /não configurado/);
 
@@ -162,9 +167,9 @@ test("PDF assinado: verificação estrutural, validador plugável e bloqueio em 
   // envio: usa o PDF assinado; em produção só "icp-brasil" passa
   const row = () => dbmod.query<{ signature_kind: string; signed_pdf_sha256: string }>("SELECT signature_kind,signed_pdf_sha256 FROM batches WHERE id=$1", [id]).then((r) => r.rows[0]);
   assert.equal((await row()).signature_kind, "externa-nao-validada");
-  await b.requestApprovalCode(id);
+  await b.requestApprovalCode(id, actor);
   const code = /: (\d{6})/.exec(JSON.parse(readFileSync(join(_o, readdirSync(_o).sort().at(-1)!), "utf8")).subject)![1];
-  const sent = await b.approveAndSend(id, code, "x");
+  const sent = await b.approveAndSend(id, code, "x", actor);
   assert.deepEqual(sent, { ok: true, sent: 2, failed: 0 });
   const withPdf = readdirSync(_o).sort().map((f) => JSON.parse(readFileSync(join(_o, f), "utf8"))).filter((m) => m.attachments?.length);
   assert.equal(withPdf.at(-1).attachments[0].sha256, (await row()).signed_pdf_sha256); // o anexo é o PDF assinado

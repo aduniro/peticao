@@ -99,3 +99,15 @@ de aprovação específica. Não interpretar retenção/AV15 como aceite de AV16
 Enquanto isso, foi implementada e validada a consulta independente somente leitura
 de histórico/campi/triagem (`ETAPA-02-HISTORICO-CONTATO.md`), sem persistir rascunho,
 conectar controles, alterar texto/estética ou enviar respostas automaticamente.
+
+## AV-17 — resultado de envio de lote a conferir (pendente)
+
+Na continuação de08/11, o bloqueio de repetição automática após reserva/resultado
+incerto foi reforçado. O aviso legado “falha(s), tente novamente” pode sugerir
+uma repetição que o backend não autoriza com segurança.
+
+Proposta submetida por pergunta nativa, ainda sem resposta observada: substituir
+somente esse trecho por “Resultado do envio a conferir. Verifique o histórico
+antes de tentar outra ação.”. Não altera o texto do e-mail, o formulário público,
+a assinatura digital ou o restante do resumo de aceites. Não ativar até aceite
+explícito; a continuidade técnica não representa aprovação de textos nem deploy.
