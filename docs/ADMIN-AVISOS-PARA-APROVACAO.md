@@ -83,3 +83,19 @@ Objetivo: substituir códigos no resumo por legenda compreensível, preservando 
 ## AV-15 — remetentes arquivados e conflito de versão (aprovado em08/11/2026)
 
 Pergunta nativa enviada em08/11 antes de alterar textos: “Arquivados”, “Restaurar”, “Remetente restaurado.” e “Este registro mudou desde que a página foi aberta. Atualize a página antes de tentar novamente.” Resposta explícita: “Aprovo os textos e escolho 30 dias”. O contexto eram estes quatro textos e a pergunta separada de retenção. Autoriza integrar e testar estes controles no candidato; não aprova outros AVs, avisos públicos, WAHA, envio, deploy ou merge com a VPS.
+
+## AV-16 — rascunho compartilhado e textos (pendente)
+
+Pendência registrada no handoff e reafirmada expressamente na tarefa Contato.
+Os textos exatos da proposta anterior não constam neste catálogo; esta nota não
+reconstrói um aceite nem os substitui por mensagens novas.
+
+Nesta sessão foi emitida pergunta nativa sobre a decisão necessária ao backend:
+rascunho único compartilhado por contato com autoria/versão, individual por
+administrador/contato ou manter pendente. Ainda sem resposta observada. A pergunta
+explicita que30dias já foram aprovados, mas textos/interface continuam dependendo
+de aprovação específica. Não interpretar retenção/AV15 como aceite de AV16.
+
+Enquanto isso, foi implementada e validada a consulta independente somente leitura
+de histórico/campi/triagem (`ETAPA-02-HISTORICO-CONTATO.md`), sem persistir rascunho,
+conectar controles, alterar texto/estética ou enviar respostas automaticamente.

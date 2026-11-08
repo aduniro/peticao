@@ -49,3 +49,14 @@ Evidências de HTTP/navegador consolidadas em `1a8a6c5` e no documento
 `ETAPA-CONSOLIDACAO-CHECKPOINT-20261108.md`. A cumulativa corrigida fechou507/507,
 zero falhas/ignorados/cancelados, com log completo e saída0. Isso não encerra a
 Etapa4 inteira nem o admin-v2 integral.
+
+## Contato — backend independente de AV16
+
+`GET /api/admin/contato/historico` agora reúne o original recebido, páginas
+independentes de metadados de respostas/decisões de campus e a última triagem.
+Conta real de Edição revalidada, snapshot somente leitura e paginação limitada;
+sem payloads, selos ou inferência de identidade/entrega/publicação.32 testes
+direcionados, tipos, build e HTTP compilado passaram. Nenhuma mudança de esquema
+ou interface. Contrato e evidências em `ETAPA-02-HISTORICO-CONTATO.md`.
+Persistência/editor compartilhado e seus textos seguem dependentes de AV16;
+não considerar o módulo Contato ou o painel inteiro concluídos.
