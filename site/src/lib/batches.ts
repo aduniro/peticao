@@ -208,7 +208,9 @@ export async function attachSignedPdf(id: number, bytes: Buffer, by: string): Pr
 }
 
 export async function cancelBatch(id: number): Promise<boolean> {
-  const r = await query("UPDATE batches SET status='cancelled', approval_code_hash=NULL WHERE id=$1 AND status IN ('prepared','failed')", [id]);
-  if (r.rowCount) await audit("batch_cancelled", null, { batchId: id });
-  return !!r.rowCount;
+  return tx(async client => {
+    const r = await client.query("UPDATE batches SET status='cancelled', approval_code_hash=NULL WHERE id=$1 AND status IN ('prepared','failed')", [id]);
+    if (r.rowCount) await audit("batch_cancelled", null, { batchId: id }, client);
+    return !!r.rowCount;
+  });
 }
