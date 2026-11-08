@@ -51,10 +51,37 @@ Os testes cobrem concorrência, campos/atores forjados, revogação, stepup/orig
 limite de corpo, rollback por falha de auditoria, expiração antes do cron,
 descarte e novo ciclo. Logs locais em `.cache/qa-contact-drafts-20261108/`, fora Git.
 
-`tools/admin-qa/contact-drafts.mjs` prepara teste real do editor React em duas
-sessões e seis larguras, perda da resposta após commit, conflito, expurgo e
-preservação das demais tabelas. Ainda não é evidência de execução: falta rodá-lo
-contra build integrado, conferir capturas e registrar o resultado.
+## Validação integrada do primeiro candidato
+
+O principal executou `--contracts mail-recovery mail-preview contact-drafts`
+contra o build integrado: saída0 em
+`/tmp/admin-consolidation-k2jdskrz/validation.log`, com
+`contact-drafts.json` positivo. Duas sessões e o editor React real comprovaram
+conflito sem perder texto, escolha explícita da versão, resposta perdida depois
+do commit conciliada por GET sem repetir POST, prazo fixo, expurgo, novo ciclo,
+descarte e revogação. Contatos originais, assinaturas e tabelas de envio foram
+preservados; nenhuma mensagem enviada ou texto na auditoria.
+
+Capturas em320/390/768/992/1280/1920px. O agente do bloco inspecionou390 e1280:
+controles legíveis e dentro da largura, sem trocar fontes, cores ou layout
+global. A barra fixa capturada no meio do documento completo corresponde ao
+scroll do ensaio, não a uma nova regra de posicionamento deste bloco. Evidências
+copiadas com prefixo `baseline-` e manifesto SHA256 no diretório de QA local.
+
+## Complemento — cifra indisponível
+
+Uma falha de decifragem não é rascunho vazio. O backend conserva a cifra e retorna
+`unavailable`; o editor agora mostra aviso, mantém o texto local e impede salvar
+ou montar prévia até carregar corretamente ou descartar explicitamente. Em
+conflito, uma versão indisponível também não pode ser sobrescrita sem resolução.
+
+Rodada dirigida atual:15/15, saída0 em
+`/tmp/admin-contact-drafts-_qfheu8y/validation.log`. A nova regressão comprova que
+ler uma cifra fictícia inválida não muda a linha nem a revisão e não envia.
+O contrato de navegador foi ampliado para simular a falha, conferir os controles
+bloqueados, tentar carregar sem escrita e restaurar a cifra para recuperar o
+conteúdo. Essa ampliação ainda precisa da próxima rodada de build/HTTP; o
+baseline anterior não certifica automaticamente esse complemento.
 
 Não houve deploy, merge, provedor real, acesso ao banco real ou modificação de
 revisão local de CPF/nome. Este bloco não conclui o painel integral.

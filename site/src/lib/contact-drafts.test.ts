@@ -89,6 +89,18 @@ test("expiração oculta corpo antes do cron, expurga atomicamente e exige nova 
   } finally { await c.db._closeDbForTests(); }
 });
 
+test("falha de decifragem conserva a cifra e distingue rascunho indisponível de vazio", async () => {
+  const c = await setup("t_draft_unavailable");
+  try {
+    assert.ok((await writeContactDraft(c.id, 0, input, c.actor)).ok);
+    await c.db.query("UPDATE contact_drafts SET content_cipher='QA-CIPHER-UNAVAILABLE' WHERE contact_id=$1", [c.id]);
+    const before = (await c.db.query("SELECT row_to_json(d)::text raw FROM contact_drafts d")).rows;
+    const result = await readContactDraft(c.id, c.actor); assert.ok(result.ok); assert.equal(result.draft.state, "unavailable"); assert.equal(result.draft.input, null); assert.equal(result.draft.revision, 1);
+    assert.deepEqual((await c.db.query("SELECT row_to_json(d)::text raw FROM contact_drafts d")).rows, before);
+    assert.equal((await c.db.query("SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox")).rowCount, 0);
+  } finally { await c.db._closeDbForTests(); }
+});
+
 test("API de rascunho exige sessão/Total/stepup/origem, limita corpo e não aceita autor do cliente", async () => {
   const c = await setup("t_draft_http");
   try {

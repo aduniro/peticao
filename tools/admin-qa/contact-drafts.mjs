@@ -30,12 +30,13 @@ try {
   }
   const [first, second] = pages;
   const editor = page => page.getByTestId(`contact-editor-${id}`);
-  const open = async page => {
+  const open = async (page, expectEnabled = true) => {
     await page.goto(new URL("/admin/contato", base).href);
     const row = page.locator("section.box").filter({ has: page.getByText("QA ORIGINAL RECEBIDO: nunca substituir", { exact: true }) });
     await row.getByRole("button", { name: "Responder", exact: true }).click();
     await editor(page).getByLabel("Assunto", { exact: true }).waitFor();
-    await editor(page).getByLabel("Assunto", { exact: true }).isEnabled().then(async enabled => { if (!enabled) await page.waitForFunction(id => !document.querySelector(`[data-testid="contact-editor-${id}"] input`)?.disabled, id); });
+    if (expectEnabled) await editor(page).getByLabel("Assunto", { exact: true }).isEnabled().then(async enabled => { if (!enabled) await page.waitForFunction(id => !document.querySelector(`[data-testid="contact-editor-${id}"] input`)?.disabled, id); });
+    else await editor(page).getByRole("alert").filter({ hasText: "Não foi possível abrir o rascunho salvo." }).waitFor();
   };
   const set = async (page, subject, body) => { await editor(page).getByLabel("Assunto", { exact: true }).fill(subject); await editor(page).locator("textarea").first().fill(body); };
   const save = async page => { await editor(page).getByRole("button", { name: "Salvar rascunho", exact: true }).click(); await editor(page).getByRole("status").filter({ hasText: "Rascunho salvo." }).waitFor(); };
@@ -69,13 +70,30 @@ try {
   for (const width of widths) { await second.setViewportSize({ width, height: 900 }); const path = `${output}/contact-draft-${width}.png`; await second.screenshot({ path, fullPage: true }); shots.push(path); }
   await editor(second).getByRole("button", { name: "Descartar rascunho", exact: true }).click(); await editor(second).getByRole("status").filter({ hasText: "Rascunho descartado." }).waitFor();
   assert.equal((await db.query("SELECT content_cipher FROM contact_drafts WHERE contact_id=$1", [id])).rows[0].content_cipher, null);
+  assert.equal((await api(tokens[0], { contactId: id, revision: 7, input: { assunto: "QA Decifragem", corpo: "QA PRIVATE CIPHER RETRY" } })).status, 200);
+  const cipher = (await db.query("SELECT content_cipher FROM contact_drafts WHERE contact_id=$1", [id])).rows[0].content_cipher;
+  await db.query("UPDATE contact_drafts SET content_cipher='QA-CIPHER-UNAVAILABLE' WHERE contact_id=$1", [id]);
+  await second.setViewportSize({ width: 390, height: 900 }); await open(second, false);
+  assert.equal(await editor(second).getByRole("button", { name: "Salvar rascunho", exact: true }).isDisabled(), true);
+  assert.equal(await editor(second).getByRole("button", { name: "Ver a prévia dos e-mails", exact: true }).isDisabled(), true);
+  assert.equal(await editor(second).getByRole("button", { name: "Descartar rascunho", exact: true }).isEnabled(), true);
+  const retryResponse = second.waitForResponse(r => r.url().includes("/api/admin/contato/rascunho?contato=") && r.request().method() === "GET");
+  await editor(second).getByRole("button", { name: "Carregar rascunho", exact: true }).click(); assert.equal((await retryResponse).status(), 200);
+  await editor(second).getByRole("alert").filter({ hasText: "O conteúdo foi preservado." }).waitFor();
+  assert.deepEqual((await db.query("SELECT content_cipher,revision FROM contact_drafts WHERE contact_id=$1", [id])).rows[0], { content_cipher: "QA-CIPHER-UNAVAILABLE", revision: 8 });
+  const unavailableShot = `${output}/contact-draft-unavailable-390.png`; await second.screenshot({ path: unavailableShot, fullPage: true }); shots.push(unavailableShot);
+  await db.query("UPDATE contact_drafts SET content_cipher=$2 WHERE contact_id=$1", [id, cipher]);
+  await editor(second).getByRole("button", { name: "Carregar rascunho", exact: true }).click();
+  await second.waitForFunction(id => !document.querySelector(`[data-testid="contact-editor-${id}"] input`)?.disabled, id);
+  assert.equal(await editor(second).locator("textarea").first().inputValue(), "QA PRIVATE CIPHER RETRY");
+  await editor(second).getByRole("button", { name: "Descartar rascunho", exact: true }).click(); await editor(second).getByRole("status").filter({ hasText: "Rascunho descartado." }).waitFor();
   await open(second); await set(second, "QA Revogado", "QA PRIVATE REVOGADO");
   await db.query("UPDATE admin_users SET ativo=false WHERE id=$1", [actors[1].id]); await editor(second).getByRole("button", { name: "Salvar rascunho", exact: true }).click();
   await editor(second).getByRole("alert").waitFor(); assert.equal(await editor(second).locator("textarea").first().inputValue(), "QA PRIVATE REVOGADO");
-  assert.equal((await db.query("SELECT revision FROM contact_drafts WHERE contact_id=$1", [id])).rows[0].revision, 7);
+  assert.equal((await db.query("SELECT revision FROM contact_drafts WHERE contact_id=$1", [id])).rows[0].revision, 9);
   assert.deepEqual((await db.query("SELECT row_to_json(c)::text raw FROM contact_messages c ORDER BY id")).rows, original);
   assert.equal((await db.query("SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox UNION ALL SELECT 1 FROM contact_replies UNION ALL SELECT 1 FROM signatures")).rowCount, 0);
   assert.ok(!JSON.stringify((await db.query("SELECT data FROM audit_log")).rows).includes("QA PRIVATE")); assert.ok((await db.verifyAuditChain()).ok); assert.deepEqual(errors, []); assert.deepEqual(external, []);
-  const report = { ok: true, compiledHttp: true, realEditor: true, sharedDraftAndAuthor: true, staleVersionConflictPreservesTypedText: true, explicitConflictResolution: true, lostResponseReadbackWithoutPostRetry: true, fixedDeadline: true, expiryAndTombstone: true, newCycleVersionMonotonic: true, discardClearsCipher: true, revokedActorRejected: true, originalContactsUnchanged: true, noMailOrSignerWrites: true, noPlaintextAudit: true, widths, shots };
+  const report = { ok: true, compiledHttp: true, realEditor: true, sharedDraftAndAuthor: true, staleVersionConflictPreservesTypedText: true, explicitConflictResolution: true, lostResponseReadbackWithoutPostRetry: true, fixedDeadline: true, expiryAndTombstone: true, newCycleVersionMonotonic: true, discardClearsCipher: true, unavailableCipherPreservedAndRetry: true, revokedActorRejected: true, originalContactsUnchanged: true, noMailOrSignerWrites: true, noPlaintextAudit: true, widths, shots };
   await writeFile(`${output}/contact-drafts.json`, JSON.stringify(report, null, 2)); console.log(JSON.stringify({ ...report, shots: shots.length }));
 } finally { if (browser) await browser.close(); for (const token of tokens) await U.encerrarSessao(token); await db._closeDbForTests(); }

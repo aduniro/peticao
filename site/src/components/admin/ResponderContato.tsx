@@ -12,6 +12,8 @@ export default function ResponderContato({ contactId, assuntoInicial, jaRespondi
   const [previa, setPrevia] = useState<Previa | null>(null), [ok, setOk] = useState(false), [erro, setErro] = useState<string | null>(null), [msg, setMsg] = useState<string | null>(null), [ocupado, setOcupado] = useState(false);
   const flight = useRef(false), loaded = useRef(false);
   const [draft, setDraft] = useState<SharedDraftView | null>(null), [remote, setRemote] = useState<SharedDraftView | null>(null), [draftMsg, setDraftMsg] = useState<string | null>(null), [auth, setAuth] = useState(false);
+  const unavailableDraft = draft?.state === "unavailable";
+  const unavailableNotice = "Não foi possível abrir o rascunho salvo. O conteúdo foi preservado. Tente carregar novamente ou descarte o rascunho explicitamente.";
   const authError = (status: number, value: any) => {
     if (status === 401 || status === 403 && value?.erro === "stepup") { setAuth(true); setErro("Confirme o acesso em outra aba e volte para continuar. Seu texto foi mantido."); return true; }
     return false;
@@ -27,19 +29,19 @@ export default function ResponderContato({ contactId, assuntoInicial, jaRespondi
   };
   const useDraft = (value: SharedDraftView, replace: boolean) => {
     setDraft(value); setRemote(null); loaded.current = true;
-    if (replace) { setAssunto(value.input?.assunto ?? assuntoInicial); setCorpo(value.input?.corpo ?? ""); setPrevia(null); setOk(false); }
+    if (replace && value.state !== "unavailable") { setAssunto(value.input?.assunto ?? assuntoInicial); setCorpo(value.input?.corpo ?? ""); setPrevia(null); setOk(false); }
   };
   const loadDraft = async () => {
     if (flight.current) return; flight.current = true; setOcupado(true); setErro(null);
     try {
       const result = await draftRequest();
-      if (result.draft) { useDraft(result.draft, true); setDraftMsg(result.draft.state === "expired" ? "O rascunho anterior expirou. Você pode iniciar outro." : null); }
+      if (result.draft) { useDraft(result.draft, true); setDraftMsg(result.draft.state === "expired" ? "O rascunho anterior expirou. Você pode iniciar outro." : null); if (result.draft.state === "unavailable") setErro(unavailableNotice); }
       else if (result.error !== "auth") setErro("Não foi possível carregar o rascunho. Tente novamente.");
     } catch { setErro("Não foi possível carregar o rascunho. Tente novamente."); }
     finally { flight.current = false; setOcupado(false); }
   };
   const saveDraft = async (discard = false, revision = draft?.revision) => {
-    if (flight.current || revision === undefined) return; flight.current = true; setOcupado(true); setErro(null); setDraftMsg(null);
+    if (flight.current || revision === undefined || !discard && unavailableDraft) return; flight.current = true; setOcupado(true); setErro(null); setDraftMsg(null);
     const input = discard ? null : { assunto, corpo };
     try {
       let result;
@@ -50,7 +52,7 @@ export default function ResponderContato({ contactId, assuntoInicial, jaRespondi
         if (check.draft && check.draft.revision > revision && (discard ? check.draft.state === "discarded" : check.draft.input?.assunto === assunto && check.draft.input?.corpo === corpo)) result = check;
         else { if (check.draft && check.draft.revision !== revision) setRemote(check.draft); throw new Error("unconfirmed"); }
       }
-      if (result.draft) { useDraft(result.draft, discard); setDraftMsg(discard ? "Rascunho descartado." : "Rascunho salvo. Nenhum e-mail foi enviado."); }
+      if (result.draft) { useDraft(result.draft, discard); if (result.draft.state === "unavailable") setErro(unavailableNotice); else setDraftMsg(discard ? "Rascunho descartado." : "Rascunho salvo. Nenhum e-mail foi enviado."); }
       else if (result.error === "conflict") {
         const check = await draftRequest(); if (check.draft) setRemote(check.draft);
         setErro("O rascunho foi alterado por outra pessoa. Seu texto foi mantido; compare as versões antes de salvar.");
@@ -82,14 +84,14 @@ export default function ResponderContato({ contactId, assuntoInicial, jaRespondi
     <div className="form" style={{ maxWidth: 720 }} data-testid={`contact-editor-${contactId}`} aria-busy={ocupado}>
       <p className="small">Rascunho compartilhado por contato · retenção de até 30 dias. Salvar não envia e-mail.</p>
       {draft?.author ? <p className="small">Versão {draft.revision} · {draft.author}{draft.updatedAt ? ` · ${brasilia(draft.updatedAt, true)}` : ""}</p> : null}
-      {!loaded.current ? <button type="button" disabled={ocupado} onClick={() => void loadDraft()}>Carregar rascunho</button> : null}
-      <label>Assunto<input disabled={ocupado || !loaded.current} value={assunto} onChange={(e) => { setAssunto(e.target.value); setPrevia(null); setDraftMsg(null); }} maxLength={150} /></label>
+      {!loaded.current || unavailableDraft ? <button type="button" disabled={ocupado} onClick={() => void loadDraft()}>Carregar rascunho</button> : null}
+      <label>Assunto<input disabled={ocupado || !loaded.current || unavailableDraft} value={assunto} onChange={(e) => { setAssunto(e.target.value); setPrevia(null); setDraftMsg(null); }} maxLength={150} /></label>
       <label>Mensagem (a saudação "Olá, Nome," e a assinatura "ADUNIR · ANDES-SN" entram sozinhas; separe os parágrafos com uma linha em branco)
-        <textarea disabled={ocupado || !loaded.current} value={corpo} onChange={(e) => { setCorpo(e.target.value); setPrevia(null); setDraftMsg(null); }} rows={9} maxLength={5000} /></label>
-      <p><button type="button" onClick={() => void saveDraft()} disabled={ocupado || !draft || !(assunto.trim() || corpo.trim())}>Salvar rascunho</button> <button type="button" onClick={() => void saveDraft(true)} disabled={ocupado || !draft || draft.revision === 0}>Descartar rascunho</button></p>
+        <textarea disabled={ocupado || !loaded.current || unavailableDraft} value={corpo} onChange={(e) => { setCorpo(e.target.value); setPrevia(null); setDraftMsg(null); }} rows={9} maxLength={5000} /></label>
+      <p><button type="button" onClick={() => void saveDraft()} disabled={ocupado || !draft || unavailableDraft || !(assunto.trim() || corpo.trim())}>Salvar rascunho</button> <button type="button" onClick={() => void saveDraft(true)} disabled={ocupado || !draft || draft.revision === 0}>Descartar rascunho</button></p>
       {draftMsg ? <p role="status" className="small">{draftMsg}</p> : null}
-      {remote ? <section className="box" data-testid="draft-conflict"><h3>Versão salva por {remote.author ?? "outro administrador"}</h3><p>{remote.input?.assunto ?? "Rascunho sem conteúdo"}</p><pre style={{ whiteSpace: "pre-wrap" }}>{remote.input?.corpo ?? ""}</pre><button type="button" disabled={ocupado} onClick={() => { useDraft(remote, true); setErro(null); }}>Usar versão salva</button> <button type="button" disabled={ocupado} onClick={() => void saveDraft(false, remote.revision)}>Salvar meu texto sobre a versão exibida</button></section> : null}
-      <p><button type="button" onClick={ver} disabled={ocupado || !loaded.current}>Ver a prévia dos e-mails</button> <button type="button" className="link" disabled={ocupado} onClick={() => setAberto(false)}>Cancelar</button></p>
+      {remote ? <section className="box" data-testid="draft-conflict"><h3>Versão salva por {remote.author ?? "outro administrador"}</h3><p>{remote.state === "unavailable" ? unavailableNotice : remote.input?.assunto ?? "Rascunho sem conteúdo"}</p><pre style={{ whiteSpace: "pre-wrap" }}>{remote.input?.corpo ?? ""}</pre><button type="button" disabled={ocupado} onClick={() => { useDraft(remote, true); setErro(remote.state === "unavailable" ? unavailableNotice : null); }}>Usar versão salva</button> <button type="button" disabled={ocupado || remote.state === "unavailable"} onClick={() => void saveDraft(false, remote.revision)}>Salvar meu texto sobre a versão exibida</button></section> : null}
+      <p><button type="button" onClick={ver} disabled={ocupado || !loaded.current || unavailableDraft}>Ver a prévia dos e-mails</button> <button type="button" className="link" disabled={ocupado} onClick={() => setAberto(false)}>Cancelar</button></p>
       {previa ? (
         <div className="box">
           <p className="small">Para: <strong>{previa.para}</strong> (cópia oculta para a caixa da ADUNIR)</p>
