@@ -24,9 +24,9 @@ export default async function Indicacoes({ searchParams }: { searchParams: { msg
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p>{rows.length} códigos · <strong>{total.v}</strong> acessos por indicação · <strong>{total.s}</strong> assinaturas confirmadas por indicação.
         Quem indica vê só os próprios totais; os nomes abaixo são visíveis apenas aqui.</p>
-      <form method="post" action="/api/admin/indicacoes" style={{ display: "flex", gap: 6, flexWrap: "wrap", margin: "12px 0" }}>
+      {nivelOk(sessao.nivel, "edicao") && <form method="post" action="/api/admin/indicacoes" style={{ display: "flex", gap: 6, flexWrap: "wrap", margin: "12px 0" }}>
         <input name="label" placeholder="Código da organização (ex.: Sindicato X, Grupo Y)" size={42} required /><button>Criar código</button>
-      </form>
+      </form>}
       <table>
         <thead><tr><th>Código</th><th>Quem</th><th>Acessos</th><th>Assinaram</th><th>Aguardando</th><th>Link</th></tr></thead>
         <tbody>

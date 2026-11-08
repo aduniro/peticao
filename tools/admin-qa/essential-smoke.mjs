@@ -40,6 +40,7 @@ try {
           if (total && nivel !== "total" || editing && nivel === "leitura") {
             assert.equal(landing.pathname, "/admin"); assert.equal(landing.searchParams.get("erro"), "nivel");
           } else assert.equal(landing.pathname, path);
+          if (landing.pathname === "/admin/indicacoes") assert.equal(await page.getByRole("button", { name: "Criar código", exact: true }).count(), nivel === "leitura" ? 0 : 1, "Referral creation must follow the API editing permission");
           // Network idle can precede a debounced fetch or hydration. Require real data.
           if (landing.pathname === "/admin") {
             await page.locator(".v2-vivo.vivo").waitFor({ timeout: 30000 });
