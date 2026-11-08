@@ -120,6 +120,64 @@ O runner encerrou seus servidores e banco ao terminar. A próxima execução
 `python3 tools/admin-qa/consolidation.py --tests` iniciou depois, sessão74840,
 log completo em `/tmp/admin-consolidation-okkfug48/validation.log`.
 
-Estado desta retomada: **continue**, aguardando resultado real da cumulativa.
-Etapa e admin-v2 completo ainda não concluídos. A exceção EXATA de `ebserh.gov.br`
-e `hubrasil.gov.br` está em outro candidato, sem integração neste checkpoint.
+SHA-256 dos relatórios conferidos (arquivos de runtime fora do Git):
+
+| Relatório | SHA-256 |
+|---|---|
+| `ivmek__7/referrals.json` | `0684f3dde631dffa3492b897578d859376aba629df2cd99842974442922452fe` |
+| `mt5_ik22/referrals-browser.json` | `2edc71790bb2f8267c22b615001a5293627c0b432d4502f0911a5ca16e82c6f3` |
+| `mt5_ik22/content-retention.json` | `934b87c7ece3215da192422a945096c5d5d8038a733da889b1739ccc72229bd2` |
+| `mt5_ik22/whatsapp-senders.json` | `4cfd4cad7126a116c1f6db3106ca402a371e1fbe3128c149d450a61473a0376a` |
+
+Os prefixos abreviados na tabela correspondem às pastas completas `/tmp/admin-consolidation-*` citadas acima.
+
+Relatórios, capturas e log aprovado dos três contratos também foram COPIADOS para
+`.cache/qa-consolidation-20261108/` neste checkout, preservando os originais em
+`/tmp`; os quatro hashes JSON foram novamente conferidos e são iguais. A pasta
+permanece ignorada pelo Git; nenhum runtime, banco ou credencial é versionado.
+
+Estado final desta retomada: **completed somente para a etapa de consolidação**,
+conforme resultados abaixo. O admin-v2 completo permanece incompleto. A exceção
+EXATA de `ebserh.gov.br` e `hubrasil.gov.br` está em outro candidato, sem integração
+neste checkpoint.
+
+Orientação posterior do responsável: a ponta validada desse candidato é agora
+`11fc981`, descendente de `c55f190`; `e768c2c` contém somente as exceções EXATAS
+`ebserh.gov.br`/`hubrasil.gov.br` solicitadas pelo dono. EBSERH não é IFES; não
+ampliar `.gov.br`. Resultados informados pelo responsável:198 cumulativos,
+34 dirigidos, build/tipos e5 cenários de navegador, guarda QA `.gov.br` preservada.
+`11fc981` acrescenta catálogo PÚBLICO SQLite local fora do Git. Não incorporar
+fluxo hospitalar ao formulário nem textos novos sem aprovação específica.
+Nenhum desses commits/dados foi integrado ou editado nesta consolidação; eventual
+integração LOCAL será em etapa separada com nova regressão, sem VPS.
+
+## Fechamento da consolidação
+
+`python3 tools/admin-qa/consolidation.py --tests` terminou com saída0:
+**507/507 aprovados**, zero falhas, cancelados ou ignorados; arquivos serializados
+e corridas internas preservadas. Log completo em
+`/tmp/admin-consolidation-okkfug48/validation.log`, copiado sem alterar o original
+para `.cache/qa-consolidation-20261108/cumulative.log`. SHA-256 conferido nas duas
+cópias: `dee9180c3148605eea9f9a06f89ebf9aecc1e47ffbe7882908b80dcb00daa738`.
+
+As nove falhas da primeira rodada não reapareceram após retirar as flags de
+prévia/provedores/retenção impostas globalmente ao processo de teste. Nenhuma
+guarda, regra CPF, timeout de concorrência ou fonte da aplicação foi alterada
+para obter esse resultado. O resultado498/507 histórico permanece registrado.
+
+Critérios desta etapa atendidos: ator de domínios e ledger commitados; migração
+estrita13, direcionados15, build, tipos, contrato HTTP e navegador de indicações
+aprovados; retenção30dias e restauro do catálogo comprovados neste candidato.
+Commits da etapa: `9b4a693`, `a99875b`, `2aa2715`, `1a8a6c5`, mais o commit local
+que contém este fechamento. Nenhum runtime/banco foi incluído no Git.
+
+Os executores próprios de HTTP e cumulativa terminaram com saída0 e encerraram
+seus bancos/servidores. Não alegar agente/QA autônomo ainda ativo. O espelho
+essencial e os outros worktrees não foram alterados.
+
+Próximo checkpoint do plano: Contato/rascunhos e demais lacunas da matriz,
+mantendo AV16 pendente até aprovação explícita; continuar backend/testes
+independentes autorizados. Edição/arquivamento de indicações e curadoria versionada
+ainda não são concluídos por esta entrega. Integração LOCAL de `11fc981`, caso
+executada, será outra etapa com nova regressão. Nenhum deploy, merge com VPS,
+envio a participantes/autoridades ou mudança de avisos públicos foi realizado.

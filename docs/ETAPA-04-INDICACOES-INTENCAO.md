@@ -56,4 +56,7 @@ rótulo/UUID; a tentativa explícita seguinte devolve o código existente, sem
 duplicar evento nem alterar datas do ledger. Sucesso limpa somente a intenção
 concluída da aba. Zero exceções; capturas inspecionadas, sem mudar estilos/textos.
 Evidências em `/tmp/admin-consolidation-mt5_ik22/referrals-browser.json` e capturas
-na mesma pasta. A cumulativa corrigida ainda está em execução neste checkpoint.
+na mesma pasta. A cumulativa corrigida terminou depois com507/507 aprovados,
+zero falhas/ignorados/cancelados e saída0. Log completo e cópia local conferida
+estão registrados em `ETAPA-CONSOLIDACAO-CHECKPOINT-20261108.md`. A criação
+idempotente está validada; edição/arquivamento e o painel integral seguem no plano.

@@ -31,7 +31,8 @@ Comprovados autenticação, indisponibilidade lógica antes da limpeza, remoçã
 corpos/anexos nas cópias operacionais, preservação de originais/metadados,
 idempotência do expurgo e ausência de envio. Os cinco testes de biblioteca também
 passaram na primeira cumulativa, que falhou em outros nove testes de ambiente;
-a repetição cumulativa corrigida está em execução, sem presumir seu resultado.
+a repetição cumulativa corrigida terminou com507/507 aprovados, zero falhas,
+ignorados ou cancelados, saída0, sem alterar as guardas da aplicação.
 Build/tipos deste candidato já passaram. Minutas persistentes/AV16 e tratamento
 de backups/provedores permanecem fora desta comprovação. Detalhes e falhas
 históricas preservados em `ETAPA-CONSOLIDACAO-CHECKPOINT-20261108.md`.

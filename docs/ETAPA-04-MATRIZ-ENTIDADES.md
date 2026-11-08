@@ -27,3 +27,25 @@ Inventário do candidato local em 07/11/2026, após 60331c7. Descreve contratos 
 ## Evidência
 
 Inspeção direta dos handlers `assinaturas/[id]/email`, `assinaturas/lote`, `dominios`, `usuarios`, `configuracoes`, `indicacoes`, `whatsapp/remetentes`, além dos contratos e testes já registrados nos documentos das Etapas 2, 3 e 5. O inventário de edição/exclusão não prova que todos esses contratos já foram implementados, publicados ou testados no estado da VPS.
+
+## Atualização08/11 — consolidação local posterior à matriz
+
+As pendências históricas das linhas acima têm os seguintes complementos:
+
+- Domínios: ator revalidado na transação e autoria comprovada no HTTP compilado
+  (`9b4a693`); classificação/CPF preservados. Não conclui versionamento e
+  arquivamento por intenção da curadoria.
+- Indicações: ledger d8b8bac conectado à rota/formulário em `a99875b`; HTTP e
+  navegador390/1440 comprovam repetição sem duplicar código/evento e recuperação
+  de rascunho/intenção após resposta perdida. Edição/arquivamento seguem pendentes.
+- Retenção: dono escolheu30dias; expurgo operacional e bloqueio de conteúdo vencido
+  passaram no cron compilado sem despacho. Não equivale a minutas persistentes
+  concluídas, limpeza de backups ou declaração de entrega pelo provedor.
+- Catálogo existente de remetentes: AV15 aprovado; arquivar/filtrar/restaurar
+  passou no navegador390/1440 com versão, identidade, cifra e datas preservadas.
+  Nenhum WAHA ou envio ativado.
+
+Evidências de HTTP/navegador consolidadas em `1a8a6c5` e no documento
+`ETAPA-CONSOLIDACAO-CHECKPOINT-20261108.md`. A cumulativa corrigida fechou507/507,
+zero falhas/ignorados/cancelados, com log completo e saída0. Isso não encerra a
+Etapa4 inteira nem o admin-v2 integral.
