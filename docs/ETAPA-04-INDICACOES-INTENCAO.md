@@ -31,3 +31,17 @@ depois de corrigir apenas a anotação do parâmetro de uma fixture (`requestId:
 string` para admitir o caso inválido vazio). A primeira checagem separada falhou
 nessa anotação; não é apresentada como sucesso. Migração estrita13 aprovada.
 HTTP compilado, navegador e cumulativa ainda serão registrados após execução.
+
+## HTTP compilado observado e gates restantes
+
+O contrato compilado passou em `/tmp/admin-consolidation-ivmek__7/referrals.json`:
+repetição concorrente devolve o mesmo código, conflito409, rollback do ledger na
+falha de auditoria, recuperação, autoria de domínio e bloqueio após revogação.
+Assinaturas fictícias e filas preservadas, nenhum envio. O JSON foi lido e
+conferido nesta sessão; não é inferência baseada no commit.
+
+O navegador dessa rodada parou na criação da conta fictícia: a senha continha
+o local do e-mail e foi corretamente recusada. A fixture foi corrigida, mas a
+repetição não iniciou porque a aprovação da execução foi recusada. Não há prova
+de navegador aprovada para o novo formulário neste checkpoint.
+Ver `ETAPA-CONSOLIDACAO-CHECKPOINT-20261108.md` para todas as pendências.

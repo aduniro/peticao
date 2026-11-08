@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 const base = new URL(process.env.QA_BASE_URL ?? "http://missing"), database = new URL(process.env.DATABASE_URL ?? "http://missing");
 assert.equal(base.hostname, "127.0.0.1"); assert.equal(base.port, "3033");
-assert.equal(database.hostname, "127.0.0.1"); assert.equal(database.port, "54346");
+assert.equal(database.hostname, "127.0.0.1"); assert.ok(["54346", "54349"].includes(database.port));
 assert.equal(process.env.MAIL_PROVIDER, "dev"); assert.equal(process.env.MAIL_PROVIDERS, "dev");
 assert.equal(process.env.PREVIEW_MODE, "1"); assert.equal(process.env.ADMIN_NO_PASSWORD, "0");
 assert.equal(process.env.DATA_ENCRYPTION_KEY, "QA-SENDERS-KEY-NOT-PRODUCTION");

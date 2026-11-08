@@ -1,9 +1,10 @@
 // Compiled HTTP fault injection; dedicated local fictitious database only.
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 const base = new URL(process.env.QA_BASE_URL ?? "http://missing"), database = new URL(process.env.DATABASE_URL ?? "http://missing");
 assert.equal(base.hostname, "127.0.0.1"); assert.equal(base.port, "3033");
-assert.equal(database.hostname, "127.0.0.1"); assert.equal(database.port, "54346");
+assert.equal(database.hostname, "127.0.0.1"); assert.ok(["54346", "54349"].includes(database.port));
 assert.equal(process.env.MAIL_PROVIDER, "dev"); assert.equal(process.env.MAIL_PROVIDERS, "dev");
 assert.equal(process.env.PREVIEW_MODE, "1"); assert.equal(process.env.ADMIN_NO_PASSWORD, "0");
 const dm = await import("../../site/src/lib/db.ts"), um = await import("../../site/src/lib/admin-users.ts");
@@ -19,31 +20,47 @@ try {
   assert.ok(editor.ok && reader.ok);
   const editToken = (await U.abrirSessao(editor.usuario.id, "127.0.0.1")).token, readToken = (await U.abrirSessao(reader.usuario.id, "127.0.0.1")).token;
   sessions.push(editToken, readToken);
-  const post = (token, label, origin = base.origin) => fetch(new URL("/api/admin/indicacoes", base), { method: "POST", redirect: "manual", headers: { cookie: `adm=${token}`, origin, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ label }) });
+  const post = (token, label, origin = base.origin, requestId = randomUUID()) => fetch(new URL("/api/admin/indicacoes", base), { method: "POST", redirect: "manual", headers: { cookie: `adm=${token}`, origin, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ label, requestId }) });
   assert.equal((await post("", "QA Anonymous")).status, 401);
   assert.equal((await post(readToken, "QA Reader")).status, 403);
   assert.equal((await post(editToken, "QA Other Origin", "https://elsewhere.example.test")).status, 403);
   const invalid = await post(editToken, "x"); assert.equal(invalid.status, 303);
   assert.equal(new URL(invalid.headers.get("location")).searchParams.get("msg"), "Informe um nome para o código (ex.: Sindicato X).");
-  const saved = await post(editToken, "QA Compiled"); assert.equal(saved.status, 303);
+  assert.equal((await post(editToken, "QA Missing Intent", base.origin, "")).status, 400);
+  const requestId = randomUUID();
+  const saved = await post(editToken, "QA Compiled", base.origin, requestId); assert.equal(saved.status, 303);
   assert.match(new URL(saved.headers.get("location")).searchParams.get("msg"), /^Código criado: [2-9A-HJKMNP-Z]{7}$/);
   assert.equal((await db.query("SELECT 1 FROM referrers")).rowCount, 1);
+  const intentBefore = (await db.query("SELECT row_to_json(q)::text raw FROM admin_referral_requests q")).rows;
+  const replays = await Promise.all(Array.from({ length: 3 }, () => post(editToken, "QA Compiled", base.origin, requestId)));
+  assert.ok(replays.every(r => r.status === 303 && r.headers.get("location") === saved.headers.get("location")));
+  assert.equal((await post(editToken, "QA Conflict", base.origin, requestId)).status, 409);
+  assert.deepEqual((await db.query("SELECT row_to_json(q)::text raw FROM admin_referral_requests q")).rows, intentBefore);
   await db.query("CREATE FUNCTION qa_fail_referral_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='referrer_created' THEN RAISE EXCEPTION 'QA expected audit failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER qa_fail_referral_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION qa_fail_referral_audit()");
   try {
     const failed = await post(editToken, "QA Must Roll Back"); assert.equal(failed.status, 500);
     assert.equal((await db.query("SELECT 1 FROM referrers")).rowCount, 1);
     assert.equal((await db.query("SELECT 1 FROM audit_log WHERE event='referrer_created'")).rowCount, 1);
+    assert.equal((await db.query("SELECT 1 FROM admin_referral_requests")).rowCount, 1);
   } finally { await db.query("DROP TRIGGER qa_fail_referral_audit ON audit_log; DROP FUNCTION qa_fail_referral_audit()"); }
   assert.equal((await post(editToken, "QA Recovered")).status, 303);
   const events = (await db.query("SELECT data FROM audit_log WHERE event='referrer_created' ORDER BY id")).rows.map(row => JSON.parse(row.data));
   assert.equal(events.length, 2); assert.ok(events.every(row => row.userId === editor.usuario.id && row.por === editor.usuario.email));
   assert.ok((await db.verifyAuditChain()).ok);
+  const domainPost = token => fetch(new URL("/api/admin/dominios", base), { method: "POST", redirect: "manual", headers: { cookie: `adm=${token}`, origin: base.origin, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ action: "approve", domain: "qa-http-domain.example", kind: "outro", by: "forged@example.test" }) });
+  assert.equal((await domainPost(readToken)).status, 403);
+  assert.equal((await domainPost(editToken)).status, 303);
+  const domain = (await db.query("SELECT decided_by FROM institutional_domains WHERE domain='qa-http-domain.example'")).rows[0];
+  assert.equal(domain.decided_by, editor.usuario.email);
+  const domainAudit = JSON.parse((await db.query("SELECT data FROM audit_log WHERE event='domain_approved' ORDER BY id DESC LIMIT 1")).rows[0].data);
+  assert.equal(domainAudit.by, editor.usuario.email); assert.equal(domainAudit.userId, editor.usuario.id);
   await db.query("UPDATE admin_users SET nivel='leitura' WHERE id=$1", [editor.usuario.id]);
   assert.equal((await post(editToken, "QA Stale Role")).status, 403);
+  assert.equal((await domainPost(editToken)).status, 403);
   assert.equal((await db.query("SELECT 1 FROM referrers")).rowCount, 2);
   assert.deepEqual(await proof(), before);
   assert.equal((await db.query("SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox")).rowCount, 0);
-  results.push({ compiledHttp: true, roleAndOriginGuards: true, redirectPreserved: true, namedAudit: true, auditFailureRolledBack: true, recoveryAfterFault: true, revokedRoleRejected: true, signaturesPreserved: true, noMail: true });
+  results.push({ compiledHttp: true, concurrentIntentReplay: true, intentConflict: true, intentRollback: true, domainActor: true, roleAndOriginGuards: true, redirectPreserved: true, namedAudit: true, auditFailureRolledBack: true, recoveryAfterFault: true, revokedRoleRejected: true, signaturesPreserved: true, noMail: true });
 } finally {
   for (const token of sessions) await U.encerrarSessao(token);
   await db._closeDbForTests();
