@@ -14,7 +14,7 @@ parser.add_argument('--contact-tests', action='store_true')
 parser.add_argument('--mail-tests', action='store_true')
 parser.add_argument('--ai-tests', action='store_true')
 parser.add_argument('--document-tests', action='store_true')
-parser.add_argument('--contracts', nargs='+', choices=['referrals', 'referrals-browser', 'content-retention', 'whatsapp-senders', 'contact-history', 'mail-recovery', 'mail-preview', 'ai-executor', 'batch-control', 'batch-reservation', 'batch-reconciliation'])
+parser.add_argument('--contracts', nargs='+', choices=['referrals', 'referrals-browser', 'content-retention', 'whatsapp-senders', 'contact-history', 'contact-drafts', 'mail-recovery', 'mail-preview', 'ai-executor', 'batch-control', 'batch-reservation', 'batch-reconciliation'])
 args = parser.parse_args()
 assert Path.cwd().resolve() == root
 assert root.parent == Path('/mnt/dev/peticao/.cache/admin-integration')

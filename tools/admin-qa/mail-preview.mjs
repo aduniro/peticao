@@ -35,19 +35,24 @@ try {
   const widths = [320, 390, 768, 992, 1280, 1920], shots = [];
   for (const width of widths) {
     const page = await browser.newPage({ viewport: { width, height: 800 } }), network = [], errors = [], consoleErrors = [];
+    await page.context().addCookies([{ name: "adm", value: token, url: base.origin }]);
     page.on("request", r => network.push(r.url())); page.on("pageerror", e => errors.push(e.message)); page.on("console", m => { if (m.type() === "error") consoleErrors.push(m.text()); });
-    await page.setContent("<!doctype html><html><body style='margin:0'><iframe title='QA preview' sandbox='' style='width:100%;height:760px;border:0'></iframe></body></html>");
-    await page.evaluate(html => { window.__qaSentinel = "QA_PARENT_PRIVATE"; window.__qaExecuted = false; document.querySelector("iframe").srcdoc = html; }, preview.html);
-    const frame = await page.locator("iframe").elementHandle().then(handle => handle.contentFrame());
+    await page.goto(new URL("/admin/emails", base).href);
+    await page.evaluate(() => { window.__qaSentinel = "QA_PARENT_PRIVATE"; window.__qaExecuted = false; });
+    const history = page.getByTestId("mail-preview-history"), row = history.locator("tr").filter({ hasText: message.id });
+    await row.getByRole("button", { name: "Ver prévia protegida", exact: true }).click();
+    const iframe = history.locator("dialog[open] iframe"); await iframe.waitFor();
+    assert.equal(await iframe.getAttribute("sandbox"), ""); assert.equal(await iframe.getAttribute("referrerpolicy"), "no-referrer");
+    const frame = await iframe.elementHandle().then(handle => handle.contentFrame());
     await frame.waitForFunction(() => document.body?.textContent.includes("QA PREVIEW SAFE"));
     assert.equal(await frame.locator("script,img,form,iframe,svg,math,object,embed,link,a[href]").count(), 0);
     const access = await frame.evaluate(() => { try { return window.parent.__qaSentinel; } catch { return "blocked"; } }); assert.equal(access, "blocked");
     assert.equal(await page.evaluate(() => window.__qaExecuted), false); assert.ok(!(await frame.locator("body").innerText()).includes("123456"));
-    assert.deepEqual(network, []); assert.deepEqual(errors, []); assert.deepEqual(consoleErrors, []);
+    assert.deepEqual(network.filter(address => new URL(address).origin !== base.origin), []); assert.deepEqual(errors, []); assert.deepEqual(consoleErrors, []);
     const shot = `${output}/preview-${width}.png`; await page.screenshot({ path: shot, fullPage: true }); shots.push(shot); await page.close();
   }
   assert.deepEqual(await signerSnapshot(), before); assert.deepEqual(await mailSnapshot(), mailBefore);
-  const audit = (await db.query("SELECT data FROM audit_log WHERE event='mail_message_preview' AND data::jsonb->>'messageId'=$1", [message.id])).rows; assert.equal(audit.length, 1); assert.equal(JSON.parse(audit[0].data).por, email);
-  const report = { ok: true, compiledAuth: true, stepupRequired: true, auditActor: true, masksApplied: true, noTrackerRequests: true, sandboxIsolated: true, widths, shots, noSignerWrites: true, noMailSent: true };
+  const audit = (await db.query("SELECT data FROM audit_log WHERE event='mail_message_preview' AND data::jsonb->>'messageId'=$1", [message.id])).rows; assert.equal(audit.length, 1 + widths.length); assert.ok(audit.every(row => JSON.parse(row.data).por === email));
+  const report = { ok: true, compiledAuth: true, stepupRequired: true, auditActor: true, realAdminPageAndControls: true, masksApplied: true, noTrackerRequests: true, sandboxIsolated: true, widths, shots, noSignerWrites: true, noMailSent: true };
   await writeFile(`${output}/mail-preview.json`, JSON.stringify(report, null, 2)); console.log(JSON.stringify({ ...report, shots: shots.length }));
 } finally { if (browser) await browser.close(); if (token) await U.encerrarSessao(token); await db._closeDbForTests(); }
