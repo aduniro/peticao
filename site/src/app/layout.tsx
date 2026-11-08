@@ -8,6 +8,8 @@ import { LOCALE_INFO } from "@/i18n";
 import { PETICAO_BR } from "@/content/peticao";
 import { headers } from "next/headers";
 import { publicOrigin } from "@/lib/net";
+import { adminMirrorEnabled } from "@/lib/admin-mirror";
+import MirrorStatus from "@/components/admin/MirrorStatus";
 
 const base = process.env.APP_URL ?? "http://localhost:3000";
 const live = process.env.NODE_ENV === "production" && process.env.PREVIEW_MODE !== "1";
@@ -48,7 +50,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head><script dangerouslySetInnerHTML={{ __html: PLATFORM }} /></head>
       <body>
         <I18nProvider lang={lang} country={country} messages={messages}>
-        {process.env.PREVIEW_MODE === "1" && (
+        {adminMirrorEnabled() ? (
+          <div className="preview-banner" role="note">Prévia com dados da produção — somente leitura<MirrorStatus /></div>
+        ) : process.env.PREVIEW_MODE === "1" && (
           <div className="preview-banner" role="note">
             PRÉ-VISUALIZAÇÃO PARA REVISÃO: dados fictícios, nenhum e-mail real é enviado. Confirmações aparecem em <a href="/dev/outbox">/dev/outbox</a>.
           </div>

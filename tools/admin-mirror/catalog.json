@@ -1,0 +1,1200 @@
+[
+  {
+    "name": "audit_log",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "ts",
+        "type": "text"
+      },
+      {
+        "name": "event",
+        "type": "text"
+      },
+      {
+        "name": "signature_id",
+        "type": "integer"
+      },
+      {
+        "name": "data",
+        "type": "text"
+      },
+      {
+        "name": "prev_hash",
+        "type": "text"
+      },
+      {
+        "name": "hash",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "batch_sends",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "batch_id",
+        "type": "integer"
+      },
+      {
+        "name": "recipient",
+        "type": "text"
+      },
+      {
+        "name": "ok",
+        "type": "boolean"
+      },
+      {
+        "name": "error",
+        "type": "text"
+      },
+      {
+        "name": "at",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "batches",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "seq",
+        "type": "integer"
+      },
+      {
+        "name": "kind",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "type": "text"
+      },
+      {
+        "name": "n_servidor",
+        "type": "integer"
+      },
+      {
+        "name": "n_apoiador",
+        "type": "integer"
+      },
+      {
+        "name": "list_hash",
+        "type": "text"
+      },
+      {
+        "name": "pdf",
+        "type": "bytea"
+      },
+      {
+        "name": "pdf_sha256",
+        "type": "text"
+      },
+      {
+        "name": "signature_kind",
+        "type": "text"
+      },
+      {
+        "name": "approval_code_hash",
+        "type": "text",
+        "redact": true
+      },
+      {
+        "name": "approval_code_expires_at",
+        "type": "text",
+        "redact": true
+      },
+      {
+        "name": "approval_attempts",
+        "type": "integer"
+      },
+      {
+        "name": "approved_by",
+        "type": "text"
+      },
+      {
+        "name": "approved_at",
+        "type": "text"
+      },
+      {
+        "name": "sent_at",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "text"
+      },
+      {
+        "name": "signed_pdf",
+        "type": "bytea"
+      },
+      {
+        "name": "signed_pdf_sha256",
+        "type": "text"
+      },
+      {
+        "name": "signed_note",
+        "type": "text"
+      },
+      {
+        "name": "n_estrangeiro",
+        "type": "integer"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "contact_messages",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "name",
+        "type": "text"
+      },
+      {
+        "name": "email",
+        "type": "text"
+      },
+      {
+        "name": "kind",
+        "type": "text"
+      },
+      {
+        "name": "message",
+        "type": "text"
+      },
+      {
+        "name": "locale",
+        "type": "text"
+      },
+      {
+        "name": "ip_hash",
+        "type": "text"
+      },
+      {
+        "name": "mailed",
+        "type": "boolean"
+      },
+      {
+        "name": "mail_error",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "email_checks",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "ts",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "via",
+        "type": "text"
+      },
+      {
+        "name": "domain",
+        "type": "text"
+      },
+      {
+        "name": "verdict",
+        "type": "text"
+      },
+      {
+        "name": "ms",
+        "type": "integer"
+      },
+      {
+        "name": "detail",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "email_suppressions",
+    "columns": [
+      {
+        "name": "email",
+        "type": "text"
+      },
+      {
+        "name": "reason",
+        "type": "text"
+      },
+      {
+        "name": "detail",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "email"
+    ]
+  },
+  {
+    "name": "events",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "ts",
+        "type": "text"
+      },
+      {
+        "name": "visitor_id",
+        "type": "text"
+      },
+      {
+        "name": "session_id",
+        "type": "text"
+      },
+      {
+        "name": "type",
+        "type": "text"
+      },
+      {
+        "name": "path",
+        "type": "text"
+      },
+      {
+        "name": "target",
+        "type": "text"
+      },
+      {
+        "name": "label",
+        "type": "text"
+      },
+      {
+        "name": "ref_code",
+        "type": "text"
+      },
+      {
+        "name": "ip",
+        "type": "text"
+      },
+      {
+        "name": "ip_version",
+        "type": "integer"
+      },
+      {
+        "name": "country",
+        "type": "text"
+      },
+      {
+        "name": "region",
+        "type": "text"
+      },
+      {
+        "name": "city",
+        "type": "text"
+      },
+      {
+        "name": "lat",
+        "type": "double precision"
+      },
+      {
+        "name": "lon",
+        "type": "double precision"
+      },
+      {
+        "name": "isp",
+        "type": "text"
+      },
+      {
+        "name": "asn",
+        "type": "integer"
+      },
+      {
+        "name": "os",
+        "type": "text"
+      },
+      {
+        "name": "browser",
+        "type": "text"
+      },
+      {
+        "name": "device",
+        "type": "text"
+      },
+      {
+        "name": "is_bot",
+        "type": "boolean"
+      },
+      {
+        "name": "ua",
+        "type": "text"
+      },
+      {
+        "name": "lang",
+        "type": "text"
+      },
+      {
+        "name": "screen",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "institutional_domains",
+    "columns": [
+      {
+        "name": "domain",
+        "type": "text"
+      },
+      {
+        "name": "kind",
+        "type": "text"
+      },
+      {
+        "name": "institution",
+        "type": "text"
+      },
+      {
+        "name": "source",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "type": "text"
+      },
+      {
+        "name": "seen_count",
+        "type": "integer"
+      },
+      {
+        "name": "evidence_url",
+        "type": "text"
+      },
+      {
+        "name": "decided_by",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "text"
+      },
+      {
+        "name": "updated_at",
+        "type": "text"
+      },
+      {
+        "name": "acronym",
+        "type": "text"
+      },
+      {
+        "name": "country",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "domain"
+    ]
+  },
+  {
+    "name": "invalid_attempts",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "email_hash",
+        "type": "text"
+      },
+      {
+        "name": "ip",
+        "type": "text"
+      },
+      {
+        "name": "ts",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "ip_blacklist",
+    "columns": [
+      {
+        "name": "ip",
+        "type": "text"
+      },
+      {
+        "name": "reason",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "expires_at",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "ip"
+    ]
+  },
+  {
+    "name": "mail_engagement",
+    "columns": [
+      {
+        "name": "provider",
+        "type": "text"
+      },
+      {
+        "name": "email",
+        "type": "text"
+      },
+      {
+        "name": "delivered_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "opened_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "clicked_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "provider",
+      "email"
+    ]
+  },
+  {
+    "name": "mail_events",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "ts",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "provider",
+        "type": "text"
+      },
+      {
+        "name": "type",
+        "type": "text"
+      },
+      {
+        "name": "email",
+        "type": "text"
+      },
+      {
+        "name": "reason",
+        "type": "text"
+      },
+      {
+        "name": "source",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "mail_log",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "ts",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "kind",
+        "type": "text"
+      },
+      {
+        "name": "provider",
+        "type": "text"
+      },
+      {
+        "name": "from_addr",
+        "type": "text"
+      },
+      {
+        "name": "to_addr",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "type": "text"
+      },
+      {
+        "name": "error",
+        "type": "text"
+      },
+      {
+        "name": "channel",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "mail_outbox",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "kind",
+        "type": "text"
+      },
+      {
+        "name": "to_addr",
+        "type": "text"
+      },
+      {
+        "name": "payload",
+        "type": "jsonb",
+        "redact": true
+      },
+      {
+        "name": "status",
+        "type": "text"
+      },
+      {
+        "name": "attempts",
+        "type": "integer"
+      },
+      {
+        "name": "next_attempt_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "last_error",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "sent_at",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "provider_status",
+    "columns": [
+      {
+        "name": "provider",
+        "type": "text"
+      },
+      {
+        "name": "data",
+        "type": "jsonb"
+      },
+      {
+        "name": "at",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "provider"
+    ]
+  },
+  {
+    "name": "reenvio_falha",
+    "columns": [
+      {
+        "name": "signature_id",
+        "type": "integer"
+      },
+      {
+        "name": "enviado_em",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "provider",
+        "type": "text"
+      },
+      {
+        "name": "evitou",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "type": "text"
+      },
+      {
+        "name": "erro",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "signature_id"
+    ]
+  },
+  {
+    "name": "referrers",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "code",
+        "type": "text"
+      },
+      {
+        "name": "manage_token_hash",
+        "type": "text",
+        "redact": true
+      },
+      {
+        "name": "label",
+        "type": "text"
+      },
+      {
+        "name": "display_name",
+        "type": "text"
+      },
+      {
+        "name": "signature_id",
+        "type": "integer"
+      },
+      {
+        "name": "created_at",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "request_log",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "ts",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "kind",
+        "type": "text"
+      },
+      {
+        "name": "ip",
+        "type": "text"
+      },
+      {
+        "name": "lat",
+        "type": "double precision"
+      },
+      {
+        "name": "lon",
+        "type": "double precision"
+      },
+      {
+        "name": "city",
+        "type": "text"
+      },
+      {
+        "name": "region",
+        "type": "text"
+      },
+      {
+        "name": "country",
+        "type": "text"
+      },
+      {
+        "name": "signature_id",
+        "type": "integer"
+      },
+      {
+        "name": "email_hash",
+        "type": "text"
+      },
+      {
+        "name": "detail",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "settings",
+    "columns": [
+      {
+        "name": "key",
+        "type": "text"
+      },
+      {
+        "name": "value",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "key"
+    ]
+  },
+  {
+    "name": "signatures",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "name",
+        "type": "text"
+      },
+      {
+        "name": "email",
+        "type": "text"
+      },
+      {
+        "name": "email_hash",
+        "type": "text"
+      },
+      {
+        "name": "cpf_hash",
+        "type": "text"
+      },
+      {
+        "name": "category",
+        "type": "text"
+      },
+      {
+        "name": "institution",
+        "type": "text"
+      },
+      {
+        "name": "role",
+        "type": "text"
+      },
+      {
+        "name": "city",
+        "type": "text"
+      },
+      {
+        "name": "uf",
+        "type": "text"
+      },
+      {
+        "name": "text_version",
+        "type": "text"
+      },
+      {
+        "name": "consent_at",
+        "type": "text"
+      },
+      {
+        "name": "ip",
+        "type": "text"
+      },
+      {
+        "name": "user_agent",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "type": "text"
+      },
+      {
+        "name": "token_hash",
+        "type": "text",
+        "redact": true
+      },
+      {
+        "name": "token_expires_at",
+        "type": "text",
+        "redact": true
+      },
+      {
+        "name": "confirmed_at",
+        "type": "text"
+      },
+      {
+        "name": "batch_id",
+        "type": "integer"
+      },
+      {
+        "name": "created_at",
+        "type": "text"
+      },
+      {
+        "name": "visitor_id",
+        "type": "text"
+      },
+      {
+        "name": "ref_code",
+        "type": "text"
+      },
+      {
+        "name": "cpf_name_check",
+        "type": "text"
+      },
+      {
+        "name": "email_domain_kind",
+        "type": "text"
+      },
+      {
+        "name": "city_ibge",
+        "type": "integer"
+      },
+      {
+        "name": "ifes_acronym",
+        "type": "text"
+      },
+      {
+        "name": "institution_listed",
+        "type": "boolean"
+      },
+      {
+        "name": "campus",
+        "type": "text"
+      },
+      {
+        "name": "campus_ibge",
+        "type": "integer"
+      },
+      {
+        "name": "campus_listed",
+        "type": "boolean"
+      },
+      {
+        "name": "region_declared",
+        "type": "boolean"
+      },
+      {
+        "name": "region_validated",
+        "type": "boolean"
+      },
+      {
+        "name": "region_criteria",
+        "type": "text"
+      },
+      {
+        "name": "country",
+        "type": "text"
+      },
+      {
+        "name": "university",
+        "type": "text"
+      },
+      {
+        "name": "university_domain",
+        "type": "text"
+      },
+      {
+        "name": "locale",
+        "type": "text"
+      },
+      {
+        "name": "domain_check",
+        "type": "text"
+      },
+      {
+        "name": "identity_method",
+        "type": "text"
+      },
+      {
+        "name": "email_domain",
+        "type": "text"
+      },
+      {
+        "name": "email_institution",
+        "type": "text"
+      },
+      {
+        "name": "confirm_visitor_id",
+        "type": "text"
+      },
+      {
+        "name": "confirm_ip",
+        "type": "text"
+      },
+      {
+        "name": "confirm_same_visitor",
+        "type": "boolean"
+      },
+      {
+        "name": "seq",
+        "type": "integer"
+      },
+      {
+        "name": "verify_code",
+        "type": "text",
+        "redact": true
+      },
+      {
+        "name": "wa_cipher",
+        "type": "text",
+        "redact": true
+      },
+      {
+        "name": "wa_fp",
+        "type": "text"
+      },
+      {
+        "name": "wa_optin_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "wa_token_hash",
+        "type": "text",
+        "redact": true
+      },
+      {
+        "name": "wa_token_expires_at",
+        "type": "timestamp with time zone",
+        "redact": true
+      },
+      {
+        "name": "wa_confirmed_at",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "signup_diagnostics",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid"
+      },
+      {
+        "name": "trace_id",
+        "type": "uuid"
+      },
+      {
+        "name": "ts",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "expires_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "source",
+        "type": "text"
+      },
+      {
+        "name": "classification",
+        "type": "text"
+      },
+      {
+        "name": "category",
+        "type": "text"
+      },
+      {
+        "name": "http_status",
+        "type": "integer"
+      },
+      {
+        "name": "duration_ms",
+        "type": "integer"
+      },
+      {
+        "name": "learning_index",
+        "type": "text"
+      },
+      {
+        "name": "policy_version",
+        "type": "text"
+      },
+      {
+        "name": "metadata",
+        "type": "jsonb"
+      },
+      {
+        "name": "email_cipher",
+        "type": "text",
+        "redact": true
+      },
+      {
+        "name": "email_hash",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "tour_seen",
+    "columns": [
+      {
+        "name": "ip_hash",
+        "type": "text"
+      },
+      {
+        "name": "category",
+        "type": "text"
+      },
+      {
+        "name": "version",
+        "type": "text"
+      },
+      {
+        "name": "at",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "ip_hash",
+      "category",
+      "version"
+    ]
+  },
+  {
+    "name": "whatsapp_messages",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "signature_id",
+        "type": "integer"
+      },
+      {
+        "name": "kind",
+        "type": "text"
+      },
+      {
+        "name": "status",
+        "type": "text"
+      },
+      {
+        "name": "provider_id",
+        "type": "text"
+      },
+      {
+        "name": "error",
+        "type": "text"
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone"
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamp with time zone"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  },
+  {
+    "name": "world_universities",
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "name",
+        "type": "text"
+      },
+      {
+        "name": "country",
+        "type": "text"
+      },
+      {
+        "name": "domain",
+        "type": "text"
+      },
+      {
+        "name": "web",
+        "type": "text"
+      },
+      {
+        "name": "state",
+        "type": "text"
+      }
+    ],
+    "primaryKey": [
+      "id"
+    ]
+  }
+]

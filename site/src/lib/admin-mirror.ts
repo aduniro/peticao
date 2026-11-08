@@ -8,7 +8,7 @@ const READ_APIS = new Set([
   "dashboard", "diagnosticos/assinaturas", "dispersao", "dominios",
   "emails/engajamento", "emails/entregas", "emails/mensagens",
   "emails/mensagens/previa", "emails/recuperacao", "export", "indicacoes",
-  "monitor", "painel", "rankings",
+  "monitor", "painel", "rankings", "espelho/estado",
 ]);
 
 /** Allowlist: new routes remain unavailable until reviewed for side effects. */
@@ -16,6 +16,7 @@ export function mirrorRequestAllowed(method: string, pathname: string): boolean 
   if (method !== "GET" && method !== "HEAD") return false;
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return true;
   if (pathname.startsWith("/_next/static/") || pathname === "/favicon.ico") return true;
+  if (pathname.startsWith("/data/geo/") || pathname === "/data/municipios.json" || pathname === "/admin-manifest.webmanifest") return true;
   const prefix = "/api/admin/";
   if (!pathname.startsWith(prefix)) return false;
   const route = pathname.slice(prefix.length);

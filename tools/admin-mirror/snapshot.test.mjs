@@ -9,7 +9,15 @@ function fixture(rows = [{ id: 1, name: "Pessoa Fictícia" }]) {
 }
 test("snapshot accepts a complete verified fixture and canonicalizes object key order", () => {
   assert.equal(digest({ a: 1, b: 2 }), digest({ b: 2, a: 1 }));
+  assert.equal(digest(new Date("2026-11-08T06:00:00Z")), digest("2026-11-08T06:00:00.000Z"));
   assert.equal(validateSnapshot(fixture(), contract), fixture().revision);
+});
+test("excluded columns may exist as null placeholders, never with original values", () => {
+  const safe = [{ ...contract[0], columns: [...contract[0].columns, { name: "token_hash", type: "text", redact: true }] }];
+  assert.doesNotThrow(() => validateContract(safe));
+  const p = fixture([{ id: 1, name: "A", token_hash: "must-not-leave-source" }]);
+  p.contractHash = digest(safe);
+  assert.throws(() => validateSnapshot(p, safe), /REDACTION_REQUIRED/);
 });
 test("snapshot rejects missing data, corruption, unapproved columns and duplicate identities", () => {
   for (const mutate of [p => p.complete = false, p => p.tables = [], p => p.contractHash = "bad", p => p.tables[0].count++, p => p.tables[0].rows[0].name = "Changed", p => p.revision = "bad", p => p.capturedAt = "invalid"]) {
