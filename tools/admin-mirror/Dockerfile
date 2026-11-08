@@ -1,6 +1,6 @@
 FROM node:20.19.2-bookworm-slim AS build
 WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 ADMIN_MIRROR_BUILD=1
 COPY site/package.json site/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY site/tsconfig.json site/next-env.d.ts site/next.config.mjs ./

@@ -60,11 +60,13 @@ class Handler(BaseHTTPRequestHandler):
     def send(self, status, body=b'', headers=None):
         self.send_response(status)
         self.send_header('Content-Length', str(len(body)))
-        for name, value in {'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Frame-Options':'DENY','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer','X-Robots-Tag':'noindex, nofollow', **(headers or {})}.items():
+        for name, value in {'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Frame-Options':'DENY','X-Content-Type-Options':'nosniff','Referrer-Policy':'same-origin','X-Robots-Tag':'noindex, nofollow', **(headers or {})}.items():
             self.send_header(name, value)
-        self.end_headers()
-        if self.command != 'HEAD':
-            self.wfile.write(body)
+        try:
+            self.end_headers()
+            if self.command != 'HEAD':self.wfile.write(body)
+        except (BrokenPipeError,ConnectionResetError):
+            pass
 
     def page(self, status=200, error=''):
         page = '''<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prévia com dados da produção — somente leitura</title><style>body{font-family:system-ui;background:#f3f6f5;color:#18332b;margin:0;padding:24px}main{max-width:420px;margin:10vh auto;background:white;padding:28px;border-radius:16px}h1{font-size:22px}input,button{box-sizing:border-box;width:100%;padding:14px;font:inherit;margin-top:12px;border-radius:8px;border:1px solid #91aba0}button{background:#006c49;color:white;font-weight:600}p[role=alert]{color:#b00020}</style><main><h1>Prévia com dados da produção — somente leitura</h1><form method="post" action="/login"><label for="password">Senha de acesso</label><input id="password" name="password" type="password" autocomplete="current-password" required autofocus maxlength="256"><button>Entrar</button></form><p role="alert">'''+html.escape(error)+'</p></main></html>'

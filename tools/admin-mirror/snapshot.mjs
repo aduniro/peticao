@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { coreFingerprintSQL } from "./core-check.mjs";
+import { createReadIndexes } from "./read-indexes.mjs";
 
 const TABLES = new Set([
   "signatures", "batches", "batch_sends", "contact_messages", "contact_replies",
@@ -186,6 +187,7 @@ export async function publishBatches(client, packet, contract, batches) {
       const count = await client.query(`SELECT count(*)::text AS n FROM ${qualified}`);
       const expected = incremental && data.mode === "delta" ? data.addedCount : data.count;
       if (String(count.rows[0]?.n) !== String(expected)) throw new Error("MIRROR_IMPORT_COUNT_MISMATCH");
+      if (!incremental || data.mode !== "delta") await createReadIndexes(client, stage, table);
       if (documents.length) {
         const fields = table.columns.map(c => c.type === "bytea" ? `d${documents.findIndex(d => d.name === c.name)}.content AS ${q(c.name)}` : `m.${q(c.name)}`).join(",");
         const joins = documents.map((c, i) => `LEFT JOIN public.admin_mirror_documents d${i} ON d${i}.sha256=m.${q("mirror_blob_" + c.name)}`).join(" ");

@@ -43,6 +43,7 @@ class AccessTests(unittest.TestCase):
             c=http.client.HTTPConnection('127.0.0.1',server.server_port,timeout=5)
             c.request(method,path,body,{'Host':'localhost:3031',**(headers or {})});r=c.getresponse();result=(r.status,dict(r.getheaders()),r.read());c.close();return result
         try:
+            self.assertEqual(request('GET','/login')[1]['Referrer-Policy'],'same-origin')
             self.assertEqual(request('GET','/admin')[0],303);self.assertEqual(calls,[])
             self.assertEqual(request('GET','/admin',headers={'Host':'attacker.test'})[0],403)
             body=urlencode({'password':'fictitious-test-password'})

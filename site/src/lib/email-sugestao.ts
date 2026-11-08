@@ -2,6 +2,7 @@ import { query } from "./db";
 import { checkMx } from "./email-check";
 import { KNOWN_DOMAINS, suggestEmail } from "./email-typos";
 import { emailDomain } from "./institutional";
+import { adminMirrorEnabled } from "./admin-mirror";
 
 /**
  * Domínios que o banco já conhece, usados nos avisos "você quis dizer…?" e na política central de e-mail (lib/email-diagnostico.ts):
@@ -30,9 +31,9 @@ export const _limparDominios = () => { g.__domSug = undefined; };
 export type Sugestao = { sugestao: string | null; motivo: string | null };
 
 /** Sugere o e-mail provável (só o domínio é corrigido; erro na parte antes do @ não dá para adivinhar). */
-export async function sugerir(email: string, mxOverride?: "ok" | "none" | "erro"): Promise<Sugestao> {
+export async function sugerir(email: string, mxOverride?: "ok" | "none" | "erro", mxCheck = checkMx): Promise<Sugestao> {
   const dom = emailDomain(email) ?? "";
-  const mx = mxOverride ?? (await checkMx(email));
+  const mx = mxOverride ?? (adminMirrorEnabled() ? "erro" : await mxCheck(email));
   const known = await dominiosConhecidos();
   const s = suggestEmail(email, { known, semServidor: mx === "none" });
   if (!s || s.toLowerCase() === email.trim().toLowerCase()) return { sugestao: null, motivo: null };

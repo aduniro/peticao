@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { localDatabaseUrl } from "./local-database.mjs";
+import { createReadIndexes } from "./read-indexes.mjs";
 const require = createRequire(new URL("../../site/package.json", import.meta.url));
 const { Client } = require("pg");
 const base = process.env.ADMIN_MIRROR_STATE ?? join(homedir(), ".local/share/peticao-admin-mirror");
@@ -28,6 +29,11 @@ try {
   for (const { tablename } of tables) {
     if (!/^[a-z][a-z0-9_]+$/.test(tablename)) throw new Error("MIRROR_LOCAL_TABLE_NAME");
     await client.query(`GRANT SELECT ON public."${tablename}" TO admin_mirror_reader`);
+  }
+  const hasLive = (await client.query("SELECT 1 FROM pg_namespace WHERE nspname='admin_mirror_live'")).rowCount;
+  if (hasLive) {
+    const catalog = JSON.parse(readFileSync(new URL("./catalog.json", import.meta.url), "utf8"));
+    for (const table of catalog) await createReadIndexes(client, "admin_mirror_live", table);
   }
   await client.query("COMMIT");
   console.log(JSON.stringify({ localDatabase: "prepared", productionChanged: false }));
