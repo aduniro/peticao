@@ -110,3 +110,8 @@ revisados, sem redirecionamento, encadeamento ou argumentos livres. Alterar o
 roteiro, usar symlink, outro checkout ou contrato desconhecido exige nova revisão.
 Pausa explícita continua impedindo a liberação. Isso não aprova commits, SSH,
 envios reais, avisos pendentes, deploy ou merge com a VPS.
+
+Revisão seguinte: contrato `batch-control` conferido para3033/54349, contas e
+documentos fictícios, nenhuma chamada de transporte. Checksum vigente do roteiro:
+`7b2ad95fb99d9a160b8aa2690e0b5664b6ae981ec1e9d4f19dfc11067c66734f`.
+A revisão anterior fica registrada acima; a regra não aceita roteiros alterados.
