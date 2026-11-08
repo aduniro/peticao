@@ -11,3 +11,5 @@ node_modules/
 /runtime/
 /reports/
 /context/
+__pycache__/
+*.pyc

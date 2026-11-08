@@ -2,6 +2,7 @@
 """Control only the isolated VPS/form comparison laboratory."""
 from pathlib import Path
 import json,os,shutil,socket,subprocess,sys,time,urllib.request
+import signal
 ROOT=Path(__file__).resolve().parent
 COMPOSE=["docker","compose","-p","peticao-laboratorio","-f",str(ROOT/"compose.json")]
 def command(args,**kwargs):return subprocess.run(args,cwd=ROOT,check=True,**kwargs)
@@ -26,13 +27,33 @@ def build():
 def fixtures():
     for variant in ["a","b"]:
         command(COMPOSE+["exec","-T","app-"+variant,"node","--import","tsx","/lab/fixtures.mjs"])
+def proxy_alive():
+    file=ROOT/"runtime/host-proxy.pid"
+    if not file.exists():return None
+    pid=int(file.read_text())
+    try:cmd=Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
+    except FileNotFoundError:return None
+    return pid if str(ROOT/"tools/host-proxy.mjs").encode() in cmd else None
+def start_proxy():
+    if proxy_alive():return
+    for port in [3040,3041]:
+        with socket.socket() as sock:
+            if sock.connect_ex(("127.0.0.1",port))==0:raise RuntimeError("Porta ocupada por outro processo: "+str(port))
+    with (ROOT/"runtime/host-proxy.log").open("a") as log:
+        proc=subprocess.Popen(["/home/barre/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node",str(ROOT/"tools/host-proxy.mjs")],
+                              cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+    (ROOT/"runtime/host-proxy.pid").write_text(str(proc.pid))
 def start():
+    for image in ["peticao-laboratorio:a","peticao-laboratorio:b"]:
+        if subprocess.run(["docker","image","inspect",image],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode:
+            raise RuntimeError("Imagem local ausente. Execute primeiro: "+str(ROOT/"comparar")+" build")
     state=subprocess.run(COMPOSE+["ps","-q"],capture_output=True,text=True,check=True).stdout.strip()
     if not state:
         for port in [3040,3041]:
             with socket.socket() as s:
                 if s.connect_ex(("127.0.0.1",port))==0:raise RuntimeError("Porta ocupada; não reutilizar outro serviço: "+str(port))
-    command(COMPOSE+["up","-d","--no-build"])
+    command(COMPOSE+["up","-d","--no-build","--pull","never"])
+    start_proxy()
     for port in [3040,3041]:
         for _ in range(180):
             try:
@@ -49,6 +70,7 @@ def units(variant):
     args=COMPOSE+["exec","-T",service,"env","-i","PATH=/usr/local/bin:/usr/bin:/bin","HOME=/tmp","NODE_ENV=test","MAIL_PROVIDER=dev",
                  f"DATABASE_URL=postgres://peticao:QA-LAB-DB-FICTITIOUS@{dbservice}:5432/qa_unit",
                  "SECRETS_DIR=/empty","PETICAO_CONFIG_DIR=/empty","CREDENTIALS_DIRECTORY=/empty",
+                 "MAIL_OUTBOX_DIR=/tmp/lab-unit-outbox",
                  "node","--import","tsx","--test","--test-concurrency=1",*files]
     log_run(args,ROOT/"reports"/("unit-"+variant+".log"))
 def status():command(COMPOSE+["ps"])
@@ -57,7 +79,10 @@ def main():
     if action in ["iniciar","start"]:start()
     elif action=="build":build()
     elif action=="status":status()
-    elif action=="parar":command(COMPOSE+["stop"])
+    elif action=="parar":
+        pid=proxy_alive()
+        if pid:os.kill(pid,signal.SIGTERM)
+        command(COMPOSE+["stop"])
     elif action=="dados":fixtures()
     elif action=="unitarios":units(sys.argv[2] if len(sys.argv)>2 else "b")
     elif action=="testes":

@@ -8,7 +8,7 @@ const field = (p, n) => p.locator('form.form input[name="' + n + '"]');
 const tab = (p, n) => p.locator("form.form [role=radio]").filter({ hasText: n }).click();
 const submit = p => p.locator("form.form button[data-track=assinar]").click();
 const close = p => p.locator("dialog[open] .modal-actions button").last().click();
-async function context(version, width) {
+async function context(version, width, open = true) {
   const ctx = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: "reduce", locale: "pt-BR", timezoneId: "America/Porto_Velho" });
   await ctx.addInitScript(() => localStorage.setItem("welcome1", "1"));
   const p = await ctx.newPage();
@@ -21,7 +21,8 @@ async function context(version, width) {
   });
   await p.goto("http://127.0.0.1:" + (version === "a" ? 3040 : 3041) + "/", { waitUntil: "networkidle", timeout: 90000 });
   await p.evaluate(() => document.fonts.ready);
-  await p.locator("form.form").waitFor();
+  await p.locator("form.form").waitFor({state:"attached"});
+  if(open){await p.evaluate(()=>window.dispatchEvent(new CustomEvent("peticao:open",{detail:"sign"})));await p.locator("form.form").waitFor();}
   return { ctx, p };
 }
 async function capture(p, version, name, whole = false) {
@@ -38,13 +39,15 @@ async function fillSupporter(p, name = "Pessoa Ficticia Teste", email = "qa-lab-
   await field(p, "name").fill(name); await field(p, "email").fill(email);
   await field(p, "cpf").fill("52998224725"); await field(p, "uf").fill("RO"); await field(p, "city").fill("Porto Velho");
   await p.locator("form.form input[name=consent]").check();
+  await field(p,"name").focus();
 }
 try {
   // Capture the same untouched fixtures before any submit changes the counters.
   for (const width of [390,768,1440]) for (const version of ["a","b"]) {
-    const {ctx,p} = await context(version,width);
+    const {ctx,p} = await context(version,width,false);
     try { await record("visual-"+width,version,async()=>{
       await capture(p,version,"home-"+width,true);
+      await p.evaluate(()=>window.dispatchEvent(new CustomEvent("peticao:open",{detail:"sign"})));await p.locator("form.form").waitFor();
       await capture(p,version,"servidor-"+width);
       await tab(p,"Apoiador(a)");await capture(p,version,"apoiador-"+width);
       await tab(p,"Estrangeiro(a)");await capture(p,version,"estrangeiro-"+width);
@@ -122,6 +125,8 @@ try {
       assert.equal(final.data.ok,true,JSON.stringify(final));return {first_status:first.status,final_status:final.status,registered:final.data.ok};
     });
   }
+} catch(error) {
+  results.errors.push({version:"harness",message:String(error)});console.log("FAIL HARNESS",String(error));
 } finally {
   await browser.close();
   await fs.writeFile(root+"/reports/browser-results.json",JSON.stringify(results,null,2));

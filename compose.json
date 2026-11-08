@@ -72,7 +72,8 @@
         "/mnt/dev/peticao-laboratorio/tools:/lab:ro",
         "/mnt/dev/peticao-laboratorio/runtime/geo-data:/app/geo-data:ro",
         "/mnt/dev/peticao-laboratorio/runtime/empty:/empty:ro",
-        "/mnt/dev/peticao-laboratorio/runtime/a/outbox:/outbox"
+        "/mnt/dev/peticao-laboratorio/runtime/a/outbox:/outbox",
+        "/mnt/dev/peticao-laboratorio/tools/test-support/egress-bridge.mjs:/tools/preview/egress-bridge.mjs:ro"
       ],
       "networks": [
         "lab-a"
@@ -159,7 +160,8 @@
         "/mnt/dev/peticao-laboratorio/tools:/lab:ro",
         "/mnt/dev/peticao-laboratorio/runtime/geo-data:/app/geo-data:ro",
         "/mnt/dev/peticao-laboratorio/runtime/empty:/empty:ro",
-        "/mnt/dev/peticao-laboratorio/runtime/b/outbox:/outbox"
+        "/mnt/dev/peticao-laboratorio/runtime/b/outbox:/outbox",
+        "/mnt/dev/peticao-laboratorio/tools/test-support/egress-bridge.mjs:/tools/preview/egress-bridge.mjs:ro"
       ],
       "networks": [
         "lab-b"
