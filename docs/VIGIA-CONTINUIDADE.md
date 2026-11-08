@@ -115,3 +115,9 @@ Revisão seguinte: contrato `batch-control` conferido para3033/54349, contas e
 documentos fictícios, nenhuma chamada de transporte. Checksum vigente do roteiro:
 `7b2ad95fb99d9a160b8aa2690e0b5664b6ae981ec1e9d4f19dfc11067c66734f`.
 A revisão anterior fica registrada acima; a regra não aceita roteiros alterados.
+
+Após revisar as regressões de cancelamento, aprovação concorrente e reserva de
+documentos, o grupo dirigido inclui `batch-mutation-atomicity.test.ts` e
+`batch-document-reservation.test.ts`. Nenhum parâmetro de execução foi ampliado.
+Checksum vigente após essa revisão:
+`2609b70607a572ad6c14b0c43e08dd69b144dbd912f5b44af67051d6a02530d5`.
