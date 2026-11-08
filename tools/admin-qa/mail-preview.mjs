@@ -42,6 +42,8 @@ try {
     const history = page.getByTestId("mail-preview-history"), row = history.locator("tr").filter({ hasText: message.id });
     await row.getByRole("button", { name: "Ver prévia protegida", exact: true }).click();
     const iframe = history.locator("dialog[open] iframe"); await iframe.waitFor();
+    const close = history.locator("dialog[open]").getByRole("button", { name: "Fechar", exact: true });
+    const closeBounds = await close.boundingBox(); assert.ok(closeBounds && closeBounds.y >= 0 && closeBounds.y + closeBounds.height <= 800, "close control must be reachable without scrolling the preview");
     assert.equal(await iframe.getAttribute("sandbox"), ""); assert.equal(await iframe.getAttribute("referrerpolicy"), "no-referrer");
     const frame = await iframe.elementHandle().then(handle => handle.contentFrame());
     await frame.waitForFunction(() => document.body?.textContent.includes("QA PREVIEW SAFE"));
@@ -49,7 +51,8 @@ try {
     const access = await frame.evaluate(() => { try { return window.parent.__qaSentinel; } catch { return "blocked"; } }); assert.equal(access, "blocked");
     assert.equal(await page.evaluate(() => window.__qaExecuted), false); assert.ok(!(await frame.locator("body").innerText()).includes("123456"));
     assert.deepEqual(network.filter(address => new URL(address).origin !== base.origin), []); assert.deepEqual(errors, []); assert.deepEqual(consoleErrors, []);
-    const shot = `${output}/preview-${width}.png`; await page.screenshot({ path: shot, fullPage: true }); shots.push(shot); await page.close();
+    const shot = `${output}/preview-${width}.png`; await page.screenshot({ path: shot, fullPage: true }); shots.push(shot);
+    await close.click(); assert.equal(await history.locator("dialog[open]").count(), 0); await page.close();
   }
   assert.deepEqual(await signerSnapshot(), before); assert.deepEqual(await mailSnapshot(), mailBefore);
   const audit = (await db.query("SELECT data FROM audit_log WHERE event='mail_message_preview' AND data::jsonb->>'messageId'=$1", [message.id])).rows; assert.equal(audit.length, 1 + widths.length); assert.ok(audit.every(row => JSON.parse(row.data).por === email));

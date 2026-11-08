@@ -55,10 +55,9 @@ export default function PreviaEmail({ initial, next: firstNext, names }: { initi
     {listError ? <p className="v2-aviso erro" role="alert">{listError}</p> : null}
     {next ? <button type="button" className="adm-btn sm" disabled={busy} onClick={more}>Carregar mais</button> : null}
     <dialog ref={dialog} className="adm-modal" aria-labelledby="mail-preview-title" onCancel={close}>
-      <div className="in"><h3 id="mail-preview-title">{LABEL}</h3><p>{NOTICE}</p>
+      <div className="in"><div className="adm-bar"><h3 id="mail-preview-title">{LABEL}</h3><button type="button" className="adm-btn" onClick={close}>Fechar</button></div><p>{NOTICE}</p>
         {error ? <p className="v2-aviso erro" role="alert">{error}</p> : null}
         {preview ? <><p>{preview.subject}</p><iframe title={LABEL} sandbox="" referrerPolicy="no-referrer" srcDoc={preview.html} style={{ width: "100%", height: "60vh", border: 0 }} /></> : null}
-        <div className="fim"><button type="button" className="adm-btn" onClick={close}>Fechar</button></div>
       </div>
     </dialog>
   </section>;
