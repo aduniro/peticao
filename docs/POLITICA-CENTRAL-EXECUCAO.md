@@ -12,7 +12,9 @@ Manter foco total na prioridade até concluir o escopo aprovado. Não interrompe
 
 O desenvolvimento e a integração do **admin-v2 são a prioridade número 1 até a conclusão do escopo integral aprovado**. Uma entrega essencial ou intermediária não encerra essa prioridade.
 
-Uma tarefa temporária só pode interrompê-lo quando o responsável solicitar a interrupção. Assim que essa tarefa terminar, **retomar imediatamente o admin-v2 do ponto registrado, sem esperar novo pedido nem solicitar autorização para iniciar cada etapa já aprovada**. Perguntas de status e pedidos breves não substituem o objetivo principal. No escopo atual, concluir prioritariamente a prévia isolada somente leitura com dados da VPS; depois continuar o plano integral do admin-v2.
+Uma tarefa temporária só pode interrompê-lo quando o responsável solicitar a interrupção. Assim que essa tarefa terminar, **retomar imediatamente o admin-v2 do ponto registrado, sem esperar novo pedido nem solicitar autorização para iniciar cada etapa já aprovada**. Perguntas de status e pedidos breves não substituem o objetivo principal. A prévia isolada somente leitura com dados da VPS está concluída; o escopo prioritário atual é concluir o admin-v2 completo, preservando a prévia para avaliação.
+
+Reforço de08/11: mostrar no chat os patches/diffs e os comandos/resultados efetivamente executados, sem imprimir credenciais ou dados pessoais. Atualizar etapas e atividade real no Vigia; não manter uma tarefa como execução ativa quando só houver espera ou serviços de prévia ligados. Não substituir o desenvolvimento por notificações de andamento.
 
 ## Interrupção e retomada verificáveis
 
