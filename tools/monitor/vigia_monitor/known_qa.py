@@ -8,9 +8,9 @@ HELPER=Path('/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py')
 DIGEST='251fae6b0854b8eaf5ab613dbc085ebe7873d7207781988af70dcf56b4b5fdcf'
 CANDIDATE=Path('/mnt/dev/peticao/.cache/admin-integration/candidate-stage02-domains')
 CONSOLIDATION=CANDIDATE/'tools/admin-qa/consolidation.py'
-CONSOLIDATION_DIGEST='685719a550a4e3df9564468b8fa33994e782ac219fc1ddc67a296a6b49509103'
+CONSOLIDATION_DIGEST='4438fa7465ca3b418229beec6a420b06d3d42151d7c8ed9b0af0c8d947fa8643'
 TEST_FLAGS={'--tests','--contact-tests','--mail-tests','--ai-tests','--document-tests'}
-CONTRACTS={'referrals','referrals-browser','content-retention','whatsapp-senders','contact-history','mail-recovery','mail-preview','ai-executor','batch-control','batch-reservation','batch-reconciliation'}
+CONTRACTS={'referrals','referrals-browser','content-retention','whatsapp-senders','contact-history','contact-drafts','mail-recovery','mail-preview','ai-executor','batch-control','batch-reservation','batch-reconciliation'}
 
 
 def allowed(payload):
