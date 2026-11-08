@@ -17,7 +17,9 @@ Sete regressões passaram no PostgreSQL fictício: cifra e AAD, preservação/re
 
 O ensaio de migração passou sobre a fixture antiga: definições anteriores, assinaturas, diagnósticos, históricos e cifras preservados; apenas as duas colunas declaradas do catálogo foram acrescentadas além das duas correlações de mensagens já previstas. Repetir o DDL e o bootstrap antigo conserva revisão, decisão de arquivar e microssegundos. Isso prova preservação do banco; um aplicativo antigo que não conhece `archived_at` pode voltar a listar o catálogo arquivado. Reversão operacional precisa preservar o filtro, e não pode ser declarada segura apenas pelo ensaio de DDL.
 
-Suíte cumulativa, build e HTTP compilado/navegador estão em execução sequencial. Evidências privadas em `/home/barre/.cache/peticao-admin-mirror-qa/20261108/`: `stage02-senders-handler.log`, `stage02-senders-schema.log` e arquivos cumulativos datados. Não declarar os gates restantes aprovados antes de observar os resultados.
+Passaram **491/491 cumulativos**, build, tipos após build e HTTP compilado/navegador em390/1440px. O formulário nativo enviou a versão atual, pausou e arquivou sem apagar o registro. Verificados rollback de auditoria, operador rebaixado, sessão/origem/confirmação extra, conflito antigo, ausência de transbordamento/exceções e preservação de assinaturas, filas e ausência de transporte WhatsApp. O roteiro anterior de gestão de contas também passou nesse mesmo build.
+
+Evidências privadas em `/home/barre/.cache/peticao-admin-mirror-qa/20261108/`: `stage02-senders-handler.log`, `stage02-senders-schema.log`, `stage02-tests-20261108T081600Z.log`, `stage02-senders-final-status.json` e `runtime-stage02-senders/whatsapp-senders.json`. Código `2135700`; runtime3033/54346 encerrado, prévia3031/Tailnet preservada. A restauração foi validada na biblioteca, mas ainda não tem interface ativa: AV-15 continua pendente.
 
 ## Interface e continuidade
 
