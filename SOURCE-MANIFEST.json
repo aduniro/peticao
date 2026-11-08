@@ -266,6 +266,41 @@
       "sha256": "c76d6959dcad313fa7e95d2548875d25d975cfab5463e4ec304d697a1c479701",
       "source_mode": 384
     },
+    "public/data/geo/estados.geojson": {
+      "bytes": 98953,
+      "sha256": "a659fab3aeb6ef5f397d85b4c710e14cfc465713f5edee9d6b34795e38d564b1",
+      "source_mode": 384
+    },
+    "public/data/geo/municipios-centroides.json": {
+      "bytes": 164301,
+      "sha256": "65ab31034737e4a7bf325acaaa9a006818e6fde81c899f835123af5b3ed6b0ae",
+      "source_mode": 384
+    },
+    "public/data/geo/paises.json": {
+      "bytes": 10642,
+      "sha256": "ea6a262a2f3fd8f8f13a26a6a6aeae0a6627855f98a3dfb4e436d85ecbac2e79",
+      "source_mode": 384
+    },
+    "public/data/ifes.json": {
+      "bytes": 19665,
+      "sha256": "66148f98170c55775ac0ec93c0f47523af831d024411a874eb32e034be38a564",
+      "source_mode": 384
+    },
+    "public/data/municipios.json": {
+      "bytes": 167811,
+      "sha256": "530eb936a0791251bd48abbbdb1db831925ca18e567e1574e9ffc7652401e9b3",
+      "source_mode": 384
+    },
+    "public/data/regiao.json": {
+      "bytes": 14167,
+      "sha256": "8f816df1ddc8480dfbff09bf639315342e9487c06a4f01dd68331945260d3121",
+      "source_mode": 384
+    },
+    "public/data/world-universities.json": {
+      "bytes": 903924,
+      "sha256": "a3a98e9babca929d79e2717bc24a695b8280e42c0ace59b10d6a502fa6e2cd69",
+      "source_mode": 384
+    },
     "public/email-icones/fb.png": {
       "bytes": 389,
       "sha256": "0f3f196026805f6685bc0a0c1a62b55ad035bcd275f812fea01c72e38d260c8d",
@@ -1780,6 +1815,11 @@
       "bytes": 922,
       "sha256": "2781c3b9766b8c4b908f11480eba9e920e35ae554da2c87538d7df33275db5e0",
       "source_mode": 448
+    },
+    "server/preview-server.mjs": {
+      "bytes": 8915,
+      "sha256": "dfd7298712cf7b0414f9c5a842682990c822b58cfb25cda725b304ff5b409a64",
+      "source_mode": 384
     },
     "src/app/admin/admin.css": {
       "bytes": 17417,
