@@ -31,8 +31,9 @@ Textos aprovados para campo/modal, com traduções equivalentes:
 - “Servidor(a): use o e-mail institucional de uma universidade federal ou instituto federal. Para outros e-mails, assine como Apoiador(a).”
 - “Este e-mail é de uma instituição federal de ensino: assine pelo formulário de Servidor(a).”
 
-A atualização destes dois textos para mencionar EBSERH foi enviada para aprovação
-separada em08/11; os textos públicos não foram alterados nesta etapa.
+Decisão expressa do proprietário em08/11: manter os textos atuais por enquanto.
+As propostas mencionando EBSERH não foram aprovadas. Os textos públicos permanecem
+inalterados; a exceção de domínio funciona independentemente dessa redação.
 
 Não há migração/reclassificação/exclusão de assinaturas existentes, mudança de
 hashes/IDs/datas ou aprovação automática de domínios. Decisões de revisão de CPF

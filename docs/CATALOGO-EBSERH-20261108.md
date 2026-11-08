@@ -10,8 +10,9 @@ Sem deploy, sincronização de código ou alteração do banco da VPS.
 Base de código: candidato isolado signup-honeypot-recovery-20261108, descendente
 do snapshot equivalente à produção. Estado anterior preservado em c55f190.
 Exceção EBSERH em e768c2c. Não modifica componentes visuais, CSS, traduções,
-avisos de coleta ou política de privacidade. A revisão dos dois avisos de
-elegibilidade para mencionar EBSERH aguarda resposta ao pedido específico.
+avisos de coleta ou política de privacidade. Em resposta ao pedido específico,
+o proprietário decidiu manter os textos atuais por enquanto; não há aprovação
+para acrescentar EBSERH aos dois avisos de elegibilidade.
 
 Catálogo independente em:
 
