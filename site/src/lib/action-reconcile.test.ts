@@ -8,6 +8,7 @@ process.env.MAIL_PROVIDER="dev";delete process.env.MAIL_PROVIDERS;
 const CANDIDATE="a".repeat(64), REQUEST="0123456789abcdef", ACTOR={userId:9,email:"qa-reconciler@example.test"};
 async function setup() {
  const db=await import("./db");await db._openForTests("t_action_reconcile");const H=await import("./acoes/history");
+ await db.query("INSERT INTO admin_users(id,email,nome,nivel,senha_hash) VALUES($1,$2,'QA Reconciler','total','QA-NOT-A-LOGIN-HASH')",[ACTOR.userId,ACTOR.email]);
  const previous=process.env.PUBLICAR_ESTADO_DIR, dir=mkdtempSync(join(tmpdir(),"action-reconcile-"));process.env.PUBLICAR_ESTADO_DIR=dir;
  const add=async (request=REQUEST, state="indeterminado", action="publicar.pedir")=>(await db.query("INSERT INTO admin_acoes(user_id,email,acao,modo,parametros,central_estado,central_request_id,ok,resultado) VALUES(1,'original@example.test',$1,'executar',$2,$3,$4,false,'{\"erro\":\"lost response\"}') RETURNING id",[action,JSON.stringify({candidato:CANDIDATE}),state,request])).rows[0].id as number;
  const proof=(extra:Record<string,unknown>={})=>writeFileSync(join(dir,`resultado-${typeof extra.id === "string" ? extra.id : REQUEST}.json`),JSON.stringify({format:1,id:REQUEST,candidato:CANDIDATE,estado:"ok",inicio:"2026-11-06T10:00:00Z",fim:"2026-11-06T10:10:00Z",codigo:0,...extra}));
@@ -49,6 +50,25 @@ test("rejeição comprovada libera outro pedido; falhas de publicação continua
   }
   assert.equal((await A.rodarAcao(action.id,"executar",{candidato:CANDIDATE},"PUBLICAR",ACTOR)).ok,false);assert.equal(effects,1);
  } finally {action.executar=previous;await c.close();}
+});
+
+test("conciliação revalida conta Total atual antes de aceitar recibo e não altera pedido revogado",async()=>{
+ const c=await setup();
+ try {
+  const id=await c.add();c.proof();
+  const snapshot=async()=>(await c.db.query("SELECT row_to_json(a)::text raw FROM admin_acoes a WHERE id=$1",[id])).rows[0];
+  const original=await snapshot();
+  for(const change of ["ativo=false","nivel='edicao'","email='qa-changed@example.test'"]){
+   await c.db.query(`UPDATE admin_users SET ativo=true,nivel='total',email=$1 WHERE id=$2`,[ACTOR.email,ACTOR.userId]);
+   await c.db.query(`UPDATE admin_users SET ${change} WHERE id=$1`,[ACTOR.userId]);
+   assert.deepEqual(await c.H.conciliarPublicacao(id,ACTOR),{ok:false,erro:"nao_autorizado"});
+   assert.deepEqual(await snapshot(),original);assert.equal((await c.db.query("SELECT 1 FROM audit_log WHERE event='admin_acao_conciliada'")).rowCount,0);
+  }
+  await c.db.query("UPDATE admin_users SET ativo=true,nivel='total',email=$1 WHERE id=$2",[ACTOR.email,ACTOR.userId]);
+  assert.deepEqual(await c.H.conciliarPublicacao(id,{...ACTOR,email:"forged@example.test"}),{ok:false,erro:"nao_autorizado"});
+  assert.deepEqual(await c.H.conciliarPublicacao(id,{...ACTOR,userId:0}),{ok:false,erro:"nao_autorizado"});
+  const result=await c.H.conciliarPublicacao(id,ACTOR);assert.ok(result.ok);assert.equal(result.estado,"aceito");assert.ok((await c.db.verifyAuditChain()).ok);
+ }finally{await c.close();}
 });
 
 test("resultado e auditoria da conciliação são atômicos; falha não desbloqueia pedido",async()=>{

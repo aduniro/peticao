@@ -34,7 +34,9 @@ try {
     const beforeCount = await count();
     try {
       await page.route("**/api/admin/acoes", async route => {
-        const request = route.request(), data = request.postDataJSON();
+        const request = route.request();
+        if (request.method() !== "POST") { await route.continue(); return; }
+        const data = request.postDataJSON();
         assert.equal(data.acao, "reenvio.parar");
         if (data.modo === "executar") {
           executions++;
@@ -62,8 +64,9 @@ try {
         await page.waitForFunction(() => [...document.querySelectorAll("section.box")].some(section => section.querySelector("h2")?.textContent === "Parar o reenvio" && section.querySelector("pre")?.textContent.includes('"ligado": false')));
         assert.equal(executions, 1); assert.equal(consultations, 1);
       } else {
-        await card.getByRole("button", { name: "Executar", exact: true }).click();
-        await card.locator("pre").waitFor(); assert.equal(executions, 2); assert.equal(consultations, 0);
+        assert.ok(await card.getByRole("button", { name: "Executar", exact: true }).isDisabled());
+        await card.getByRole("button", { name: "Conferir resultado", exact: true }).click();
+        await card.locator("pre").waitFor(); assert.equal(executions, 1); assert.equal(consultations, 1);
       }
       assert.equal(await count(), beforeCount + 1);
       assert.ok(await card.getByRole("button", { name: "Simular (não altera nada)", exact: true }).isEnabled());
@@ -71,7 +74,7 @@ try {
       assert.deepEqual(exceptions, []); assert.deepEqual(failures, []); assert.deepEqual(httpErrors, []);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2), false);
       await page.screenshot({ path: `${output}/intent-${width}.png`, fullPage: true });
-      results.push({ width, ok: true, recovery: index % 2 ? "reload-consult-only" : "explicit-retry", executionsAdmitted: 1, lostResponse: true });
+      results.push({ width, ok: true, recovery: index % 2 ? "reload-consult-only" : "explicit-consult-only", executionsAdmitted: 1, lostResponse: true });
     } catch (error) { results.push({ width, ok: false, error: error.message, exceptions, failures, httpErrors }); }
     finally { await context.close(); }
   }

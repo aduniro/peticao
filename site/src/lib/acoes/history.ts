@@ -16,7 +16,10 @@ export async function historicoAcoes(before?: number, limit = 30) {
 /** No arbitrary verdicts and no effect replay: root receipt + exact request/candidate are the only evidence. */
 export async function conciliarPublicacao(id: unknown, actor: Ctx) {
   if (!validId(id)) return { ok: false as const, erro: "parametros" as const };
+  if (!actor || !validId(actor.userId) || typeof actor.email !== "string" || actor.email.length > 254) return { ok: false as const, erro: "nao_autorizado" as const };
   return tx(async client => {
+    await client.query("SELECT pg_advisory_xact_lock(7003)");
+    if (!(await client.query("SELECT 1 FROM admin_users WHERE id=$1 AND email=$2 AND ativo AND nivel='total' FOR SHARE", [actor.userId, actor.email.trim().toLowerCase()])).rowCount) return { ok: false as const, erro: "nao_autorizado" as const };
     const lock = (await client.query<{ g: boolean }>("SELECT pg_try_advisory_xact_lock(hashtext(current_schema()),hashtext('acao-grupo:publicar')) g")).rows[0].g;
     if (!lock) return { ok: false as const, erro: "ocupado" as const };
     const row = (await client.query<{ central_estado: string; central_request_id: string | null; parametros: { candidato?: string } }>(`SELECT central_estado,central_request_id,parametros FROM admin_acoes WHERE id=$1 AND acao='publicar.pedir' AND modo='executar' FOR UPDATE`, [id])).rows[0];
