@@ -2,9 +2,21 @@
 
 Regra do responsável: “ANTES DE ALTERAR QUALQUER AVISO OU INFORMAÇÃO QUE APAREÇA PARA O USUÁRIO, VOCÊ DEVE ME PERGUNTAR ANTES.” As propostas abaixo foram perguntadas no chat; o status individual indica quais foram aprovadas e quais continuam **pendentes**. Este documento não as ativa na interface e não trata ausência de resposta como aprovação. O trabalho independente prossegue; a publicação não pode conter informação contraditória.
 
-## AV-1 — Minha conta
+## Decisões vigentes recebidas em08/11/2026
 
-Proposta: “Pelo menos 12 caracteres. Ao trocar a senha, todas as sessões serão encerradas. Entre novamente com a nova senha.”
+Pergunta nativa `call_95ede63ed05d4fe39193934dd4f388ff`:
+
+- Item0: “Aprovar este grupo de textos” aprova AV2, AV3, AV4, AV9, AV11 e AV12.
+- Item1: “A única coisa que eu gostaria de mudar é a senha, que tem que ter pelo menos8 caracteres.12 caracteres é demais!” aprova AV1 com mínimo8, e AV5, AV6, AV7, AV13 e AV14 como apresentados. A validação administrativa e seus avisos devem concordar no mínimo8, preservando senhas/hashes existentes, revogação de sessões e confirmação extra.
+- Item2: “Compartilhado por contato, com autoria e versão” decide AV16: um rascunho compartilhado por contato, proteção contra sobrescrita e retenção máxima30dias. Sem envio automático. A pergunta reservou os textos específicos do editor para apresentação antes da integração visual; eles continuam pendentes.
+
+Essas decisões substituem os estados de espera dos relatos históricos abaixo.
+Não equivalem a implementação ou teste concluídos e não autorizam deploy, merge,
+envio real ou alteração de textos públicos/privacidade.
+
+## AV-1 — Minha conta (aprovado em08/11/2026 com mínimo8)
+
+Texto aprovado com alteração expressa do dono: “Pelo menos 8 caracteres. Ao trocar a senha, todas as sessões serão encerradas. Entre novamente com a nova senha.”
 
 Motivo: a troca agora revoga as sessões atomicamente; o aviso anterior precisa refletir esse comportamento. Nenhuma redação alterada até a aprovação.
 
@@ -30,20 +42,20 @@ Motivo: o resultado interno agora distingue aceite, fila e pedido sem envio. O h
 
 Não inclui mudanças de textos do formulário público, identidade, privacidade ou assinatura. Os modelos de e-mail existentes foram preservados. A autorização geral do plano não será interpretada como aprovação dessas novas redações específicas.
 
-## AV-5 — Resultado indeterminado na Central de Ações
+## AV-5 — Resultado indeterminado na Central de Ações (aprovado em08/11/2026)
 
 Proposta: “Não foi possível confirmar o resultado da ação. Verifique a situação do serviço antes de tentar novamente.”
 
 Perguntado antes da alteração; ainda pendente. O backend distingue esse estado e impede repetição de pedido externo incerto. O componente ainda não recebeu o novo texto: não liberar enquanto o código de estado não tiver apresentação clara e o fluxo de conciliação estiver concluído. O histórico/controle de conciliação também precisa de integração própria, sem edição arbitrária de registros.
 
 
-## AV-6 — Descrição e dicas da janela na Central
+## AV-6 — Descrição e dicas da janela na Central (aprovado em08/11/2026)
 
 Proposta submetida ao dono: usar a descrição exata retornada pela simulação e os rótulos “Início da janela (vazio = padrão exibido na simulação)” e “Fim da janela (vazio = padrão exibido na simulação)”. Ainda pendente; nenhum texto/descrição foi alterado na tela.
 
 Evidência: o componente mostra `a.efeito` estático, mesmo quando `saida.efeito` representa as datas escolhidas. Além disso, as dicas atuais indicam 04h/12h enquanto os instantes padrão `2026-11-04T04:00:00-03:00` / `2026-11-04T12:00:00-03:00` são exibidos pelo backend como 03h/11h em `America/Porto_Velho`. A captura `visual-actions/actions-1280.png` mostra a divergência com as datas preenchidas e o JSON da simulação. A janela configurada e o público-alvo não devem ser alterados silenciosamente.
 
-## AV-7 — Histórico e conciliação da Central
+## AV-7 — Histórico e conciliação da Central (aprovado em08/11/2026)
 
 Propostas perguntadas no chat, ainda pendentes: “Histórico de ações”, “Conferir resultado” e “A conferência consulta o resultado do executor; não executa a ação novamente”. Não inseridas na interface. O backend pode prosseguir sem ativar novos textos. O resultado da publicação deverá distinguir pedido aceito, publicação concluída e resultado inconclusivo, sem rotular falha do deploy como ausência de efeitos.
 
@@ -73,12 +85,12 @@ Aprovado: “Não foi possível carregar a lista. Tente novamente.” Submetido 
 
 Em08/11/2026 o dono respondeu à pergunta nativa `call_95ede63ed05d4fe39193934dd4f388ff`, item0, com “Aprovar este grupo de textos”. A pergunta listava integralmente AV2, AV3, AV4, AV9, AV11 e AV12. Autoriza somente esses textos e sua integração/teste no candidato. AV1, AV5, AV6, AV7, AV13, AV14 e a decisão AV16 continuam independentes e pendentes. Não altera textos públicos ou privacidade, não autoriza envios reais, deploy ou merge.
 
-## AV-13 — conflito na correção administrativa de e-mail (pendente)
+## AV-13 — conflito na correção administrativa de e-mail (aprovado em08/11/2026)
 
 Proposto ao dono por pergunta nativa: “O cadastro foi alterado durante a conferência. Atualize a página e tente novamente.” Sem aprovação inferida. A correção transacional usa por enquanto a mensagem já existente “Não foi possível salvar.” O novo texto não foi incorporado à interface. Contrato em `ETAPA-04-CORRECAO-EMAIL.md`.
 
 
-## AV-14 — legenda legível da triagem (pendente)
+## AV-14 — legenda legível da triagem (aprovado em08/11/2026)
 
 Perguntado após a aprovação do AV-8, antes de adicionar legenda/novas mensagens. Campos propostos: “Categoria”, “Processamento”, “Diagnóstico”, “Prioridade” e “Histórico”. Estados: “Em fila”, “Em análise”, “Concluída”, “Falha técnica”, “Inconclusivo”, “Revisão necessária”, “Confirmação posterior ao relato”, “Normal” e “Alta”. Categorias: “Confirmação por e-mail”, “Link expirado”, “E-mail recusado”, “Nome/CPF”, “Pedido de remoção”, “Pedido de correção”, “Campus”, “Erro no formulário” e “Dúvida”. Falhas: “Não foi possível atualizar a análise. Reabra este painel para conferir o estado atual.” e “Os dados mudaram. Solicite uma nova análise.”
 
@@ -88,7 +100,7 @@ Objetivo: substituir códigos no resumo por legenda compreensível, preservando 
 
 Pergunta nativa enviada em08/11 antes de alterar textos: “Arquivados”, “Restaurar”, “Remetente restaurado.” e “Este registro mudou desde que a página foi aberta. Atualize a página antes de tentar novamente.” Resposta explícita: “Aprovo os textos e escolho 30 dias”. O contexto eram estes quatro textos e a pergunta separada de retenção. Autoriza integrar e testar estes controles no candidato; não aprova outros AVs, avisos públicos, WAHA, envio, deploy ou merge com a VPS.
 
-## AV-16 — rascunho compartilhado e textos (pendente)
+## AV-16 — rascunho compartilhado (modelo aprovado em08/11/2026; textos pendentes)
 
 Pendência registrada no handoff e reafirmada expressamente na tarefa Contato.
 Os textos exatos da proposta anterior não constam neste catálogo; esta nota não
