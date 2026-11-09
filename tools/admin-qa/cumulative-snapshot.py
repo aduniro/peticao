@@ -18,6 +18,10 @@ DEPENDENCIES = Path('/home/barre/.cache/peticao-admin-deps-preview-v1/node_modul
 DB_PORT = 54364
 HTTP_PORT = 3044
 BLOCKED = 'rich-text'
+NODE20 = Path('/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node')
+NODE20_SHA256 = 'b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
+NODE20_ARCHIVE_SHA256 = 'cbe59620b21732313774df4428586f7222a84af29e556f848abf624ba41caf90'
+OUTPUT_NAMESPACE = 'accepted-cumulative-node20'
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -62,6 +66,13 @@ def validate_runtime(checkout):
     for path in (site / 'src').rglob('*.test.ts'):
         assert not path.is_symlink() and BLOCKED not in path.read_text(), 'Do not run the interrupted rich test or import it indirectly'
 
+def node_runtime_manifest(node=NODE20):
+    assert node == NODE20 and node.resolve() == NODE20, 'Only the approved isolated production-reference runtime'
+    assert node.is_file() and digest(node) == NODE20_SHA256, 'Pinned runtime binary hash mismatch'
+    version = subprocess.check_output([str(node), '--version'], text=True).strip()
+    assert version == 'v20.19.2', 'Runtime version mismatch'
+    return {'node': str(node), 'version': version, 'sha256': NODE20_SHA256, 'officialArchiveSha256': NODE20_ARCHIVE_SHA256}
+
 def dependency_manifest(checkout):
     lock = json.loads((checkout / 'site/package-lock.json').read_text())
     installed, absent = {}, []
@@ -85,19 +96,21 @@ def snapshot(checkout, commit):
     source = tracked_manifest(checkout)
     tests = sorted(p for p in source if p.startswith(('site/src/lib/', 'site/src/i18n/')) and p.endswith('.test.ts') and '/' not in p.removeprefix('site/src/lib/').removeprefix('site/src/i18n/'))
     assert tests and all(BLOCKED not in p for p in tests)
-    return {'commit': commit, 'checkout': str(checkout), 'source': source, 'tests': tests, 'testFiles': len(tests), 'dependencies': str(DEPENDENCIES), 'dependencyManifest': dependency_manifest(checkout), 'ports': {'http': HTTP_PORT, 'database': DB_PORT}, 'scope': 'incremental accepted snapshot; not complete admin certification', 'runnerSha256': digest(Path(__file__).resolve())}
+    return {'commit': commit, 'checkout': str(checkout), 'source': source, 'tests': tests, 'testFiles': len(tests), 'dependencies': str(DEPENDENCIES), 'dependencyManifest': dependency_manifest(checkout), 'ports': {'http': HTTP_PORT, 'database': DB_PORT}, 'scope': 'incremental accepted snapshot; not complete admin certification', 'runnerSha256': digest(Path(__file__).resolve()), 'runtime': node_runtime_manifest()}
 
 def command_for(phase, plan):
+    node = plan['runtime']['node']
     if phase == 'tests':
-        return ['node', 'scripts/with-db.mjs', 'node', '--import', 'tsx', '--test', '--test-concurrency=1', *[str(Path(p).relative_to('site')) for p in plan['tests']]]
+        return [node, 'scripts/with-db.mjs', node, '--import', 'tsx', '--test', '--test-concurrency=1', *[str(Path(p).relative_to('site')) for p in plan['tests']]]
     if phase == 'schema':
-        return ['node', 'scripts/with-db.mjs', 'node', '--import', 'tsx', '../deploy/test/admin-schema-upgrade.mjs']
+        return [node, 'scripts/with-db.mjs', node, '--import', 'tsx', '../deploy/test/admin-schema-upgrade.mjs']
     return ['npm', 'run', {'build': 'build', 'types': 'typecheck'}[phase]]
 
 def clean_env(scratch, phase):
     empty = scratch / 'empty'; empty.mkdir(mode=0o700)
     env = {k: v for k, v in os.environ.items() if k in ['HOME', 'PATH', 'LANG', 'LC_ALL']}
     env.update(NODE_ENV='test' if phase in ['tests', 'schema'] else 'production', NODE_OPTIONS='--max-old-space-size=1536', CIRCLE_NODE_TOTAL='1', TMPDIR=str(scratch), DEV_DB_PORT=str(DB_PORT), DEV_DB_DIR=str(scratch / 'postgres'), DATABASE_URL=f'postgres://peticao:peticao@127.0.0.1:{DB_PORT}/peticao', MAIL_PROVIDER='dev', HASH_PEPPER='QA-CUMULATIVE-ONLY-FICTITIOUS-PEPPER-0123456789', DATA_ENCRYPTION_KEY='QA-CUMULATIVE-NOT-PRODUCTION', CPF_CACHE_ENCRYPTION_KEY='QA-CUMULATIVE-CACHE-NOT-PRODUCTION', SECRETS_DIR=str(empty), PETICAO_CONFIG_DIR=str(empty), CREDENTIALS_DIRECTORY=str(empty), MAIL_OUTBOX_DIR=str(scratch / 'outbox'), SIGNER='none')
+    env['PATH'] = str(NODE20.parent) + os.pathsep + env.get('PATH', '')
     return env
 
 def execute(phase, plan, output):
@@ -108,7 +121,7 @@ def execute(phase, plan, output):
     scratch = Path(tempfile.mkdtemp(prefix='admin-accepted-cumulative-')); scratch.chmod(0o700)
     env = clean_env(scratch, phase); command = command_for(phase, plan)
     before = tracked_manifest(checkout); write_json(scratch / 'source-before.json', before)
-    info = {'phase': phase, 'commit': plan['commit'], 'checkout': str(checkout), 'command': command, 'started': time.time(), 'status': 'running', 'runnerPid': os.getpid(), 'log': str(scratch / 'validation.log'), 'scratch': str(scratch)}
+    info = {'phase': phase, 'commit': plan['commit'], 'checkout': str(checkout), 'command': command, 'started': time.time(), 'status': 'running', 'runnerPid': os.getpid(), 'log': str(scratch / 'validation.log'), 'scratch': str(scratch), 'runtime': plan['runtime']}
     write_json(output / f'{phase}.json', info)
     print(json.dumps(info), flush=True)
     try:
@@ -144,7 +157,7 @@ def main():
     parser.add_argument('--execute', action='store_true', help='Explicitly run exactly the frozen phase; absent means preparation only')
     args = parser.parse_args()
     checkout = args.checkout.absolute(); plan = snapshot(checkout, args.commit)
-    output = checkout / '.cache/accepted-cumulative'; output.mkdir(parents=True, exist_ok=True, mode=0o700)
+    output = checkout / '.cache' / OUTPUT_NAMESPACE; output.mkdir(parents=True, exist_ok=True, mode=0o700)
     target = output / 'plan.json'
     if args.phase == 'prepare':
         assert not args.execute
