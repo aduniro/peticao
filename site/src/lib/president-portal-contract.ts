@@ -39,6 +39,13 @@ export type PresidentIdentityVerifier = (input: { responsibleId: number; cpf: st
 type Runtime = { store: PresidentChallengeStore | null; key: string | null; clock?: () => number };
 const unavailable = { ok: false as const, error: "unavailable" as const };
 
+/** Credentials remain in POST bodies; expose neither raw value in URLs nor storage. */
+export function presidentAccessHashes(input: { token: string; password: string }, key: string | null) {
+  if (!key || Buffer.byteLength(key) < 32 || !/^[A-Za-z0-9_-]{43}$/.test(input.token) || !/^[A-Za-z0-9_-]{12}$/.test(input.password)) return null;
+  const tokenHash = digest(key,"token",input.token);
+  return { tokenHash,passwordHash:digest(key,"password",`${tokenHash}:${input.password}`) };
+}
+
 /** Creates a capability only after durable admission. No mail/provider dispatch exists here. */
 export async function issuePresidentChallenge(input: { document: PresidentDocumentRevision; responsibleId: number; issuedBy: number }, runtime: Runtime) {
   if (!runtime.store || !runtime.key || Buffer.byteLength(runtime.key) < 32) return unavailable;
