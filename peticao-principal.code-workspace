@@ -85,6 +85,78 @@
           "http://127.0.0.1:3062/"
         ],
         "problemMatcher": []
+      },
+      {
+        "label": "Reconstruir prévia isolada (build + iniciar)",
+        "type": "process",
+        "command": "/usr/bin/python3",
+        "args": [
+          "/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109-qa/controlar.py",
+          "preview"
+        ],
+        "problemMatcher": [],
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        },
+        "group": {
+          "kind": "build",
+          "isDefault": false
+        }
+      },
+      {
+        "label": "Typecheck em QA isolado",
+        "type": "process",
+        "command": "/usr/bin/python3",
+        "args": [
+          "/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109-qa/controlar.py",
+          "typecheck"
+        ],
+        "problemMatcher": [],
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        },
+        "dependsOn": "Reconstruir prévia isolada (build + iniciar)",
+        "dependsOrder": "sequence",
+        "group": {
+          "kind": "test",
+          "isDefault": false
+        }
+      },
+      {
+        "label": "Testes backend em QA isolado",
+        "type": "process",
+        "command": "/usr/bin/python3",
+        "args": [
+          "/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109-qa/controlar.py",
+          "backend"
+        ],
+        "problemMatcher": [],
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        },
+        "dependsOn": "Reconstruir prévia isolada (build + iniciar)",
+        "dependsOrder": "sequence",
+        "group": {
+          "kind": "test",
+          "isDefault": false
+        }
+      },
+      {
+        "label": "Status dos serviços de QA",
+        "type": "process",
+        "command": "/usr/bin/python3",
+        "args": [
+          "/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109-qa/controlar.py",
+          "status"
+        ],
+        "problemMatcher": [],
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        }
       }
     ]
   }
