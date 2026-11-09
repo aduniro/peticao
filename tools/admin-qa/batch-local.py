@@ -12,7 +12,7 @@ root = Path(__file__).resolve().parents[2]
 assert Path.cwd().resolve() == root == Path('/mnt/dev/peticao/.cache/admin-integration/candidate-stage02-domains')
 parser = argparse.ArgumentParser()
 parser.add_argument('--contract', choices=['batch-input'])
-parser.add_argument('--tests', choices=['portal', 'preparation', 'president', 'history'])
+parser.add_argument('--tests', choices=['portal', 'preparation', 'president', 'history', 'verification'])
 args = parser.parse_args()
 assert bool(args.contract) != bool(args.tests)
 site = root / 'site'
@@ -48,30 +48,34 @@ if args.tests:
     sources = ['src/lib/president-document.ts', 'src/lib/president-document.test.ts', 'src/lib/batch-return.ts',
                'src/app/admin/presidente/page.tsx', 'src/app/api/admin/lotes/[id]/pdf/route.ts',
                'src/app/api/admin/lotes/[id]/conciliar/route.ts']
-    if args.tests in ['preparation', 'president', 'history']:
+    if args.tests in ['preparation', 'president', 'history', 'verification']:
         command += ['src/lib/batch-preparation.test.ts', 'src/lib/batches.test.ts',
                     'src/lib/batches-foreign.test.ts', 'src/lib/batch-snapshot-reservation.test.ts']
         sources += ['src/lib/batch-preparation.ts', 'src/lib/batch-preparation.test.ts', 'src/lib/batches.ts',
                     'src/lib/db.ts', 'src/app/api/admin/lotes/[id]/preparar/route.ts',
                     '../deploy/test/admin-schema-upgrade.mjs']
-    if args.tests in ['president', 'history']:
+    if args.tests in ['president', 'history', 'verification']:
         command += ['src/lib/president-portal-contract.test.ts', 'src/lib/president-portal-store.test.ts']
         sources += ['src/lib/president-portal-contract.ts', 'src/lib/president-portal-contract.test.ts',
                     'src/lib/president-portal-store.ts', 'src/lib/president-portal-store.test.ts',
                     'src/app/api/admin/presidente/perfil/route.ts', 'src/app/api/admin/presidente/desafio/route.ts',
                     'src/app/api/presidente/confirmar/route.ts']
-if args.tests == 'history':
+if args.tests in ['history', 'verification']:
     command += ['src/lib/batch-document-history.test.ts']
     sources += ['src/lib/batch-document-history.ts', 'src/lib/batch-document-history.test.ts',
                 'src/app/api/admin/lotes/[id]/versoes/route.ts',
                 'src/app/api/admin/lotes/[id]/versoes/[versao]/route.ts']
+if args.tests == 'verification':
+    command += ['src/lib/document-verification.test.ts']
+    sources += ['src/lib/document-verification.ts', 'src/lib/document-verification.test.ts',
+                'src/app/api/documentos/verificar/[versao]/route.ts']
 fingerprints = lambda: {name: hashlib.sha256((site / name).read_bytes()).hexdigest() for name in sources}
 before = fingerprints()
 (scratch / 'sources.txt').write_text('\n'.join(f'{value}  {name}' for name, value in before.items()) + '\n')
 print(f'Fictitious owned QA evidence: {scratch}', flush=True)
 with (scratch / 'validation.log').open('w') as log:
     result = subprocess.run(command, cwd=site, env=env, stdout=log, stderr=subprocess.STDOUT)
-if args.tests in ['preparation', 'president', 'history'] and result.returncode == 0:
+if args.tests in ['preparation', 'president', 'history', 'verification'] and result.returncode == 0:
     with (scratch / 'schema-upgrade.log').open('w') as log:
         result = subprocess.run(['node', 'scripts/with-db.mjs', 'node', '--import', 'tsx',
                                  '../deploy/test/admin-schema-upgrade.mjs'], cwd=site, env=env,
