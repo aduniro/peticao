@@ -264,6 +264,9 @@ const SCHEMA_SQL = `
     signature_id INTEGER UNIQUE REFERENCES signatures(id) ON DELETE SET NULL,
     created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'utc','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
   );
+  -- Administrative catalog state only: public referral links remain valid.
+  ALTER TABLE referrers ADD COLUMN IF NOT EXISTS admin_version BIGINT NOT NULL DEFAULT 1;
+  ALTER TABLE referrers ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
   CREATE TABLE IF NOT EXISTS admin_users (
     id SERIAL PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
@@ -291,6 +294,12 @@ const SCHEMA_SQL = `
     actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
     input_hash TEXT NOT NULL, referrer_id INTEGER NOT NULL REFERENCES referrers(id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY(actor_id,request_id)
+  );
+  CREATE TABLE IF NOT EXISTS admin_referral_mutations (
+    actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
+    input_hash TEXT NOT NULL, referrer_id INTEGER NOT NULL REFERENCES referrers(id),
+    result JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(actor_id,request_id)
   );
   CREATE TABLE IF NOT EXISTS admin_reset (
     id SERIAL PRIMARY KEY,
