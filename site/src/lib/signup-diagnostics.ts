@@ -6,6 +6,7 @@ import { dedupEmail } from "./email-check";
 import { SAFE_EMAIL_RE } from "./email-syntax";
 import { encryptCpfCache, decryptCpfCache } from "./cpf-cache-crypto";
 import { classifyCpfName } from "./cpf-name";
+import { SERVER_EMAIL_POLICY_VERSION } from "./server-email-policy";
 import policy from "@/content/name-validation-policy.json";
 import { ProviderUnavailable, type CpfProvider, type CpfRecord } from "./cpf-check";
 
@@ -14,7 +15,7 @@ export const validTrace = (v: unknown): v is string => typeof v === "string" && 
 const categories = new Set(["servidor", "apoiador", "estrangeiro"]);
 const methods = new Set(["nome", "mae", "nascimento"]);
 const phases = new Set(["name", "identity", "provider", "cache", "submission"]);
-const codes = new Set(["match", "mismatch", "partial", "complete", "identity_required", "name_mismatch", "locked", "unavailable", "method_unavailable", "bad_input", "mock_unknown", "not_found", "found", "hit", "miss", "bypass", "duplicate", "recreated", "created", "queued", "sent", "send_failed", "race_duplicate", "ignored"]);
+const codes = new Set(["match", "mismatch", "partial", "complete", "identity_required", "name_mismatch", "locked", "unavailable", "method_unavailable", "bad_input", "mock_unknown", "not_found", "found", "hit", "miss", "bypass", "duplicate", "recreated", "created", "queued", "sent", "send_failed", "race_duplicate", "ignored", "honeypot_detected", "honeypot_recovered", "security_failed"]);
 const fields = new Set(["name", "email", "cpf", "institution", "role", "campus", "city", "uf", "country", "university", "consent", "regionDeclared", "whatsapp", "whatsappConsent", "identity"]);
 const browserEvents = new Set(["started", "field_touched", "browser_invalid", "client_invalid", "submit_click", "page_hidden", "page_exit", "client_result"]);
 const outcomes = new Set(["accepted", "rejected", "identity_required", "network_error"]);
@@ -97,7 +98,7 @@ export async function withSignupDiagnostics<T extends { status: number; json: Re
       const ignored = current.marks.some(m => m.code === "ignored");
       const classification = ignored ? "ignored_bot" : !result ? "internal_error" : duplicate ? "duplicate" : result.json.identityRequired ? "identity_required" : result.json.ok === true ? "registration_submitted" : result.status === 429 ? "rate_limited" : "validation_failed";
       const email = input.consent === true && typeof input.email === "string" && input.email.length <= 254 && SAFE_EMAIL_RE.test(input.email.trim()) && !input.website ? input.email.trim().toLowerCase() : undefined;
-      await persistDiagnostic({ trace: validTrace(trace) ? trace : randomUUID(), source: "server", classification, category: categories.has(String(input.category)) ? String(input.category) : null, status: result?.status ?? 500, ms: Math.min(Date.now()-started,2147483647), metadata: { errorFields: errors, marks: current.marks }, email });
+      await persistDiagnostic({ trace: validTrace(trace) ? trace : randomUUID(), source: "server", classification, category: categories.has(String(input.category)) ? String(input.category) : null, status: result?.status ?? 500, ms: Math.min(Date.now()-started,2147483647), metadata: { errorFields: errors, marks: current.marks, serverEmailPolicy: SERVER_EMAIL_POLICY_VERSION }, email });
     }
   });
 }

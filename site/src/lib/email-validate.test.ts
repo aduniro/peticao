@@ -57,7 +57,11 @@ test("política central: domínios do banco (inclusive inseridos à mão) entram
     await decideDomain("faculdade-teste.org.br", "approved", { kind: "outro", institution: "Faculdade Teste", by: "teste" });
     assert.ok((await dominiosConhecidos()).includes("faculdade-teste.org.br"));
     const man = (await validateEmailField("rita@faculdade-teste.org.bt", "servidor")) as any;
-    assert.equal(man.suggest, "rita@faculdade-teste.org.br");
+    assert.equal(man.ok, false); assert.equal(man.suggest, undefined); // curadoria "outro" não habilita Servidor nem sugestão de IFES
+    assert.equal((await validateEmailField("rita@faculdade-teste.org.br", "servidor")).ok, false);
+    await decideDomain("ifes-teste.org.br", "approved", { kind: "ifes", institution: "IFES Teste", by: "teste" });
+    assert.equal((await validateEmailField("rita@ifes-teste.org.bt", "servidor") as any).suggest, "rita@ifes-teste.org.br");
+    assert.equal((await validateEmailField("rita@ifes-teste.org.br", "servidor")).ok, true);
     const apo = (await validateEmailField("rita@faculdade-teste.org.bt", "apoiador")) as any; // apoiador: domínio recebe e-mail, então só sugere
     assert.equal(apo.ok, true); assert.equal(apo.soft.correto, "faculdade-teste.org.br");
 

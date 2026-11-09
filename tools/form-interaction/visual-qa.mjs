@@ -1,6 +1,6 @@
 import { chromium } from '/home/barre/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
 import fs from 'node:fs/promises';import assert from 'node:assert/strict';
-const out='/mnt/dev/peticao/.cache/form-interaction-20261107/visual';await fs.mkdir(out,{recursive:true});
+const out='/mnt/apps/peticao-final/peticao/.cache/form-interaction-20261107/visual';await fs.mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,executablePath:'/home/barre/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome',args:['--no-sandbox','--disable-dev-shm-usage']});const results=[];
 for (const width of [360,390,768,1024,1440,1920])for(const category of ['Servidor(a)','Apoiador(a)','Estrangeiro(a)']){
  const snapshots=[];
