@@ -71,6 +71,7 @@ const SCHEMA_SQL = `
     last_error TEXT,
     CHECK ((lease_token IS NULL) = (lease_until IS NULL))
   );
+
   CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS visitor_id TEXT;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS ref_code TEXT;
@@ -290,6 +291,31 @@ const SCHEMA_SQL = `
     ip_hash TEXT
   );
   CREATE INDEX IF NOT EXISTS admin_sessions_user ON admin_sessions(user_id);
+  CREATE TABLE IF NOT EXISTS president_challenges (
+    id UUID PRIMARY KEY,
+    batch_id INTEGER NOT NULL REFERENCES batches(id),
+    responsible_id INTEGER NOT NULL REFERENCES admin_users(id),
+    issued_by INTEGER NOT NULL REFERENCES admin_users(id),
+    profile_revision INTEGER NOT NULL,
+    responsible_fingerprint TEXT NOT NULL,
+    document_version TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE CHECK(token_hash ~ '^[a-f0-9]{64}$'),
+    password_hash TEXT NOT NULL CHECK(password_hash ~ '^[a-f0-9]{64}$'),
+    state TEXT NOT NULL DEFAULT 'issued' CHECK(state IN ('issued','verifying','consumed','rejected','revoked','expired')),
+    attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts BETWEEN 0 AND 5),
+    created_at TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    lease_token UUID,
+    lease_until TIMESTAMPTZ,
+    receipt_id UUID UNIQUE,
+    confirmed_at TIMESTAMPTZ,
+    CHECK(expires_at>created_at AND expires_at<=created_at+interval '10 minutes'),
+    CHECK((lease_token IS NULL)=(lease_until IS NULL)),
+    CHECK((state='verifying')=(lease_token IS NOT NULL)),
+    CHECK((receipt_id IS NULL)=(confirmed_at IS NULL)),
+    CHECK((state='consumed')=(receipt_id IS NOT NULL))
+  );
+  CREATE INDEX IF NOT EXISTS president_challenges_batch ON president_challenges(batch_id,created_at);
   CREATE TABLE IF NOT EXISTS admin_referral_requests (
     actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
     input_hash TEXT NOT NULL, referrer_id INTEGER NOT NULL REFERENCES referrers(id),

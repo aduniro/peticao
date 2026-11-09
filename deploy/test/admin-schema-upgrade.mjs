@@ -79,13 +79,20 @@ try{
  const archivedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows;
  await c.query(newSql);await c.query(newSql);await c.query(oldSql);
  assert.deepEqual((await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows,archivedSenders,"DDL replay and old bootstrap must not reset archive decisions or revisions");
- assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
+ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages","president_challenges"]);
  // New preparation state is additive; a code rollback must not discard its frozen list or lease.
  const preparing=(await c.query("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,list_hash) VALUES(999,'final','preparing',0,1,'QA-PREPARATION-LIST') RETURNING id")).rows[0].id;
  await c.query("INSERT INTO batch_preparations(batch_id,snapshot,snapshot_sha256,reserved_at,attempts,lease_token,lease_until,last_error) VALUES($1,'QA-FROZEN-SNAPSHOT',$2,'2026-11-08T10:00:00.123456Z',2,'QA-LEASE','2026-11-08T10:05:00.654321Z','prepare_failed')",[preparing,'a'.repeat(64)]);
  const preparationState=async()=>(await c.query("SELECT row_to_json(p)::text raw FROM batch_preparations p ORDER BY batch_id")).rows;
  const preservedPreparation=await preparationState(); await c.query(newSql); await c.query(oldSql);
  assert.deepEqual(await preparationState(),preservedPreparation,"Frozen preparation bytes/hash, attempts, lease and microsecond timestamps survive replay and old bootstrap");
+ await c.query(`INSERT INTO president_challenges(id,batch_id,responsible_id,issued_by,profile_revision,responsible_fingerprint,document_version,token_hash,password_hash,state,attempts,created_at,expires_at,receipt_id,confirmed_at)
+   VALUES('00000000-0000-4000-8000-000000000031',$1,$2,$2,3,'QA-RESPONSIBLE','QA-DOCUMENT',$3,$4,'consumed',2,'2026-11-09T01:00:00.123456Z','2026-11-09T01:10:00.123456Z','00000000-0000-4000-8000-000000000032','2026-11-09T01:01:00.654321Z')`,[preparing,referralActor,'b'.repeat(64),'c'.repeat(64)]);
+ await c.query(`INSERT INTO president_challenges(id,batch_id,responsible_id,issued_by,profile_revision,responsible_fingerprint,document_version,token_hash,password_hash,state,attempts,created_at,expires_at,lease_token,lease_until)
+   VALUES('00000000-0000-4000-8000-000000000033',$1,$2,$2,3,'QA-RESPONSIBLE','QA-DOCUMENT',$3,$4,'verifying',1,'2026-11-09T01:00:00.123456Z','2026-11-09T01:10:00.123456Z','00000000-0000-4000-8000-000000000034','2026-11-09T01:00:30.654321Z')`,[preparing,referralActor,'d'.repeat(64),'e'.repeat(64)]);
+ const challengeState=async()=>(await c.query("SELECT row_to_json(p)::text raw FROM president_challenges p ORDER BY id")).rows;
+ const preservedChallenges=await challengeState();await c.query(newSql);await c.query(oldSql);
+ assert.deepEqual(await challengeState(),preservedChallenges,"Challenge ownership, revision, consumed receipt, attempt, lease and microsecond timestamps survive replay and code rollback bootstrap");
  const newMailLog=(await c.query("SELECT * FROM mail_log ORDER BY id")).rows,newMailOutbox=(await c.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
  assert.ok([...newMailLog,...newMailOutbox].every(row=>row.message_id===null));
  assert.deepEqual(newMailLog.map(({message_id,...row})=>row),oldMailLog);assert.deepEqual(newMailOutbox.map(({message_id,...row})=>row),oldMailOutbox);
@@ -182,13 +189,14 @@ try{
  console.log("PASS AI ledger upgrade: fifteen additive tables; request UUID, actor, quota reservation, uncertain state and microsecond timestamps preserved, no generation dispatched.");
  console.log("PASS campus curation upgrade: fifteen additive tables; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
  console.log("PASS preparation upgrade: frozen snapshot, reservation identity, attempts, lease and timestamps survive DDL replay and code rollback bootstrap.");
+ console.log("PASS president challenge upgrade: identity/revision, consumed receipt, counters, leases and microsecond timestamps survive replay and old bootstrap without signing/sending.");
  console.log("PASS scoped journal upgrade: unknown account stays null, no fabricated events; existing receipt and linked event identity/timestamps preserved on replay.");
  console.log("PASS archive foundation upgrade: existing message identity, fingerprint, state and timestamp preserved; Reply-To left unknown.");
  console.log("PASS legacy action history migration: original rows unchanged, no old record admitted as a new request.");
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS sender catalogue upgrade: ciphertext, identity, paused state, archive revision and microsecond timestamps survive replay and old bootstrap.");
  console.log("PASS referral intent upgrade: request ownership, allocation, fingerprint and microsecond timestamp preserved.");
- console.log("PASS real startup on old schema plus DDL replay: sixteen additive tables, two nullable message correlation columns, two administrative referral version/archive columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS real startup on old schema plus DDL replay: seventeen additive tables, two nullable message correlation columns, two administrative referral version/archive columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;
