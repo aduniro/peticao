@@ -25,7 +25,7 @@ class Guards(unittest.TestCase):
             self.assertNotIn('UNEXPECTED_QA_VALUE', str(env)); self.assertEqual(env['NODE_ENV'], 'test')
 
     def test_fixed_test_selection_and_no_shell(self):
-        plan = {'tests': ['site/src/lib/a.test.ts', 'site/src/i18n/b.test.ts']}
+        plan = {'tests': ['site/src/lib/a.test.ts', 'site/src/i18n/b.test.ts'], 'runtime': {'node': str(module.NODE20)}}
         command = module.command_for('tests', plan)
         self.assertIn('--test-concurrency=1', command)
         self.assertEqual(command[-2:], ['src/lib/a.test.ts', 'src/i18n/b.test.ts'])
@@ -53,6 +53,22 @@ class Guards(unittest.TestCase):
             (root / 'site/.env.local').write_text('QA_SAMPLE')
             with patch.object(module.subprocess, 'run', return_value=module.subprocess.CompletedProcess([], 0)):
                 with self.assertRaisesRegex(AssertionError, 'environment files'): module.validate_environment(root)
+
+    def test_runtime_is_pinned_and_arbitrary_binaries_are_rejected(self):
+        with self.assertRaisesRegex(AssertionError, 'approved isolated'): module.node_runtime_manifest(Path('/usr/bin/node'))
+        with patch.object(module, 'digest', return_value='0' * 64):
+            with self.assertRaisesRegex(AssertionError, 'binary hash'): module.node_runtime_manifest()
+        with patch.object(module, 'digest', return_value=module.NODE20_SHA256), patch.object(module.subprocess, 'check_output', return_value='v20.19.2\n'):
+            self.assertEqual(module.node_runtime_manifest()['version'], 'v20.19.2')
+
+    def test_node20_namespace_and_child_runtime_are_separate(self):
+        self.assertEqual(module.OUTPUT_NAMESPACE, 'accepted-cumulative-node20')
+        plan = {'tests': ['site/src/lib/a.test.ts'], 'runtime': {'node': str(module.NODE20)}}
+        command = module.command_for('tests', plan)
+        self.assertEqual(command[0], str(module.NODE20)); self.assertEqual(command[2], str(module.NODE20))
+        with tempfile.TemporaryDirectory() as tmp:
+            env = module.clean_env(Path(tmp), 'tests')
+            self.assertEqual(env['PATH'].split(module.os.pathsep)[0], str(module.NODE20.parent))
 
     def test_atomic_checkpoint(self):
         with tempfile.TemporaryDirectory() as tmp:
