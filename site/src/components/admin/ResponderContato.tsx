@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { parseDraftView, type SharedDraftView } from "@/lib/contact-draft-view";
 import { brasilia } from "@/lib/time";
+import { requestContactReply } from "@/lib/contact-reply-request";
 
 type Previa = { para: string; primeiroNome: string; codigoPessoal: string | null; texto: { assunto: string; texto: string }; card: { assunto: string; html: string; texto: string } | null; selo: string };
 const ERROS: Record<string, string> = { assunto: "Escreva o assunto (mínimo 3 letras).", corpo: "Escreva a mensagem (mínimo 10 letras).", ja_respondida: "Esta mensagem já foi respondida. Use \"Responder de novo\" se for mesmo necessário.", selo: "O texto mudou depois da prévia. Veja a prévia de novo.", falhou: "O envio falhou.", nao_existe: "Mensagem não encontrada.", envio_inconclusivo: "Não foi possível confirmar o resultado do envio. Para evitar duplicação, a mensagem não será reenviada automaticamente. Confira o histórico antes de enviar outra resposta." };
@@ -63,8 +64,7 @@ export default function ResponderContato({ contactId, assuntoInicial, jaRespondi
   const chamar = async (modo: "previa" | "enviar") => {
     if (flight.current) return null; flight.current = true; setOcupado(true); setErro(null);
     try {
-      const r = await fetch("/api/admin/contato/responder", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ contactId, modo, assunto, corpo, selo: previa?.selo, nova: jaRespondida }) });
-      const j = await r.json().catch(() => ({}));
+      const { response: r, value: j } = await requestContactReply(fetch, { contactId, modo, assunto, corpo, selo: previa?.selo, nova: jaRespondida });
       if (authError(r.status, j)) return null;
       if (!r.ok) { setErro((ERROS[j.erro] ?? "Não foi possível.") + (j.detalhe ? ` (${j.detalhe})` : "")); return null; }
       return j;
