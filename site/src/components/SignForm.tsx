@@ -82,6 +82,14 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   const BAD_EMAIL = new Set(["email_not_found", "email_undeliverable", "email_invalid_domain", "email_invalid"]);
   const cpfBad = showCpfError(cpf, cpfTouched); // checagem matemática no navegador: CPF inválido nunca chega à CPF Brasil
   const [srv, setSrv] = useState<ServerState>(EMPTY_SERVER);
+  const updateServer = (patch: Partial<ServerState>) => {
+    setSrv((previous) => ({ ...previous, ...patch }));
+    const institution = patch.institution ?? srv.institution;
+    const selected = patch.ifes === undefined ? srv.ifes : patch.ifes;
+    if (errors.institution && matchesInstitutionSelection(institution, selected)) {
+      setErrors((previous) => ({ ...previous, institution: "" }));
+    }
+  };
   const [uf, setUf] = useState(""); const [city, setCity] = useState("");
   const [country, setCountry] = useState(ipCountry !== "BR" ? ipCountry : ""); const [university, setUniversity] = useState("");
   const [detail, setDetail] = useState("");
@@ -301,7 +309,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
         {!foreign && (
           <label data-tour="cpf">{t("f.cpf")}<Help text={t("help.cpf")} /><input name="cpf" inputMode="numeric" autoComplete="off" placeholder="999.999.999-99" maxLength={14} value={cpf} onFocus={() => { setCpfTouched(false); if (onlyDigits(cpf).length < 11) setErrors((x) => ({ ...x, cpf: "" })); }} onBlur={() => setCpfTouched(true)} onChange={(e) => { setCpf(maskCpf(e.target.value)); if (errors.cpf) setErrors((x) => ({ ...x, cpf: "" })); }} aria-invalid={!!errors.cpf || cpfBad} aria-describedby={cpfBad ? "cpf-erro" : undefined} required />{cpfBad ? <span id="cpf-erro" className="err" role="alert">{t("err.cpf_invalid")}</span> : err("cpf")}</label>
         )}
-        {category === "servidor" && <IfesCampusFields s={srv} set={(p) => setSrv((x) => ({ ...x, ...p }))} errors={errors} />}
+        {category === "servidor" && <IfesCampusFields s={srv} set={updateServer} errors={errors} />}
         {category === "apoiador" && <UfCityFields uf={uf} city={city} setUf={setUf} setCity={setCity} errors={errors} />}
         {foreign && <CountryUniversityFields country={country} setCountry={setCountry} university={university} setUniversity={setUniversity} errors={errors} />}
         <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hp" />
