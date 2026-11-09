@@ -17,7 +17,7 @@ def status(value):
 
 def run(script):
     global child
-    child=subprocess.Popen(['/usr/bin/node','--max-old-space-size=512',str(ROOT/'tools/admin-mirror'/script)],cwd=ROOT)
+    child=subprocess.Popen(['/mnt/apps/peticao-final/_externos/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node','--max-old-space-size=512',str(ROOT/'tools/admin-mirror'/script)],cwd=ROOT)
     return child.wait()
 
 if __name__=='__main__':
