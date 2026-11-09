@@ -3,7 +3,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 /** Metadata only; an unavailable monitor must never break email delivery. */
-export function registrarEnvioMonitor({para,assunto,result}, directory=process.env.VIGIA_STATE??join(homedir(),'.local/state/peticao-monitor')) {
+export function registrarEnvioMonitor({para,assunto,result}, directory=process.env.VIGIA_STATE??"/mnt/apps/peticao-final/_externos/home/barre/.local/state/peticao-monitor") {
   if(para!=='operator-1608598f41@example.invalid')return;
   try {
     mkdirSync(directory,{recursive:true,mode:0o700});

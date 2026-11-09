@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Install only Vigia user services/aliases; never restarts the petition application."""
 import argparse,base64,datetime,json,os,pathlib,shutil,subprocess,sys
-ROOT=pathlib.Path('/mnt/dev/peticao');HOME=pathlib.Path.home();VENV=HOME/'.local/share/peticao-monitor/venv'
+ROOT=pathlib.Path('/mnt/apps/peticao-final/peticao');HOME=pathlib.Path.home();VENV=HOME/'.local/share/peticao-monitor/venv'
 def backup(path):
  if path.exists():shutil.copy2(path,path.with_name(path.name+'.vigia-backup-'+datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')))
 def local():
@@ -46,7 +46,7 @@ WantedBy=timers.target
 ''',
  }.items():
   path=directory/name;backup(path);path.write_text(content);path.chmod(0o600)
- aliases=HOME/'.bash_aliases';line="alias vigia='/mnt/dev/peticao/vigia'"
+ aliases=HOME/'.bash_aliases';line="alias vigia='/mnt/apps/peticao-final/peticao/vigia'"
  old=aliases.read_text() if aliases.exists() else ''
  if line not in old.splitlines():backup(aliases);aliases.write_text(old.rstrip()+'\n\n# Monitor de tarefas da petição\n'+line+'\n')
  binary=HOME/'.local/bin/vigia';binary.parent.mkdir(parents=True,exist_ok=True)

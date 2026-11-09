@@ -4,7 +4,7 @@ from pathlib import Path
 import psutil
 from .store import Store, now, checksum, STATE
 
-ROOT=Path('/mnt/dev/peticao')
+ROOT=Path('/mnt/apps/peticao-final/peticao')
 spec=importlib.util.spec_from_file_location('vigia_simple_source',ROOT/'tools/monitor/vigia_simples.py');simple=importlib.util.module_from_spec(spec);spec.loader.exec_module(simple)
 clean=simple.clean
 SIMPLE_REMOTE_SCRIPT=simple.REMOTE_SCRIPT
@@ -92,7 +92,7 @@ class Collector:
    except ValueError:remote['state']='horário remoto inválido'
   self.store.snapshot('vps',remote,status=remote.get('state','unknown'))
   if slow:
-   for path in self.store.rows("SELECT DISTINCT cwd FROM tasks UNION SELECT '/mnt/dev/peticao' AS cwd UNION SELECT substr(source,5) AS cwd FROM snapshots WHERE source LIKE 'git:%'"):
+   for path in self.store.rows("SELECT DISTINCT cwd FROM tasks UNION SELECT '/mnt/apps/peticao-final/peticao' AS cwd UNION SELECT substr(source,5) AS cwd FROM snapshots WHERE source LIKE 'git:%'"):
     repo=Path(path['cwd'])
     if not repo.is_dir():continue
     try:

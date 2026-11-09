@@ -1,4 +1,4 @@
-import { getKey } from "/mnt/dev/peticao/tools/infra/lib/keystore.mjs";
+import { getKey } from "/mnt/apps/peticao-final/peticao/tools/infra/lib/keystore.mjs";
 export const DOMINIO = "painel.sancionaintegral.org";
 export const ENDERECO = `ponte@${DOMINIO}`;
 export const DONO = "operator-1608598f41@example.invalid";

@@ -3,8 +3,8 @@
 import hashlib,json,os,sqlite3,subprocess,sys,tarfile,time
 from pathlib import Path
 os.umask(0o077)
-state=json.loads(Path('/mnt/dev/peticao/.cache/cpf-complement-state.json').read_text())
-local=Path('/mnt/dev/cpfs')/state['id'];local.mkdir(mode=0o700,exist_ok=True)
+state=json.loads(Path('/mnt/apps/peticao-final/peticao/.cache/cpf-complement-state.json').read_text())
+local=Path('/mnt/apps/peticao-final/cpfs')/state['id'];local.mkdir(mode=0o700,exist_ok=True)
 done=local/'download-concluido.json'
 if done.exists():sys.exit(0)
 while True:
@@ -35,7 +35,7 @@ while True:
       if db.execute('PRAGMA integrity_check').fetchone()[0]!='ok':raise RuntimeError('SQLite mismatch')
    if json.loads((target/'estado-geral.json').read_text())['phase']!=report['phase']:raise RuntimeError('Stale package')
    done.write_text(json.dumps({'status':report,'directory':str(target)},indent=2))
-   subprocess.run(['/usr/bin/python3','/mnt/dev/peticao/tools/cpf-review/sync.py'],capture_output=True,timeout=240)
+   subprocess.run(['/usr/bin/python3','/mnt/apps/peticao-final/peticao/tools/cpf-review/sync.py'],capture_output=True,timeout=240)
    subprocess.run(['notify-send','Petição — consultas de CPF','Execução '+report['phase']+'. Arquivos conferidos e baixados em '+str(target)],capture_output=True)
    print('DOWNLOAD_CONFERIDO',str(target),flush=True);break
  except Exception as e:

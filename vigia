@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-exec /home/barre/.local/share/peticao-monitor/venv/bin/python /mnt/dev/peticao/tools/monitor/main.py "$@"
+exec /mnt/apps/peticao-final/_externos/home/barre/.local/share/peticao-monitor/venv/bin/python /mnt/apps/peticao-final/peticao/tools/monitor/main.py "$@"

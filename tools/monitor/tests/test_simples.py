@@ -25,7 +25,7 @@ class SimpleTests(unittest.TestCase):
  def test_compact_and_detailed_render_without_errors(self):
   from rich.console import Console
   from io import StringIO
-  module.register(self.args());data={'at':module.now(),'activities':module.activities(),'processes':[{'pid':1,'name':'QA','port':'3031','cwd':'/mnt/dev/peticao'}],'services':[],'vps':{'state':'desativado'}}
+  module.register(self.args());data={'at':module.now(),'activities':module.activities(),'processes':[{'pid':1,'name':'QA','port':'3031','cwd':'/mnt/apps/peticao-final/peticao'}],'services':[],'vps':{'state':'desativado'}}
   for width,height in [(80,24),(120,40)]:
    stream=StringIO();Console(file=stream,width=width,height=height).print(module.render(data,width,height));self.assertIn('VIGIA SIMPLES',stream.getvalue())
  def test_tabs_separate_tasks_and_completed_does_not_include_live_processes(self):
@@ -33,7 +33,7 @@ class SimpleTests(unittest.TestCase):
   from io import StringIO
   module.register(self.args(register='active',title='TAREFA_ATIVA'))
   module.register(self.args(register='done',title='TAREFA_FINALIZADA',state='completed'))
-  data={'at':module.now(),'activities':module.activities(),'processes':[{'pid':1,'name':'PROCESSO_VIVO','port':'3031','cwd':'/mnt/dev/peticao'}],'services':[],'vps':{'state':'desativado'}}
+  data={'at':module.now(),'activities':module.activities(),'processes':[{'pid':1,'name':'PROCESSO_VIVO','port':'3031','cwd':'/mnt/apps/peticao-final/peticao'}],'services':[],'vps':{'state':'desativado'}}
   for width,height in [(80,24),(120,40)]:
    for tab,present,absent in [('running','TAREFA_ATIVA','TAREFA_FINALIZADA'),('completed','TAREFA_FINALIZADA','TAREFA_ATIVA')]:
     module.ACTIVE_TAB=tab;stream=StringIO();Console(file=stream,width=width,height=height).print(module.render(data,width,height));value=stream.getvalue()

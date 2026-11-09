@@ -4,15 +4,15 @@ Decisão adicional de08/11: novos cadastros Servidor somente com domínio aprova
 como IFES; outros órgãos públicos não bastam. Recuperação do honeypot, essa política
 e dois textos foram aprovados e implementados isoladamente na branch
 `signup-honeypot-recovery-20261108`: implementação f4f3528, evidência f8b7368, em
-`/mnt/dev/peticao/.cache/signup-honeypot-20261108/candidate`.194 testes e4 cenários
+`/mnt/apps/peticao-final/peticao/.cache/signup-honeypot-20261108/candidate`.194 testes e4 cenários
 de navegador aprovados, build/types aprovados. Ainda NÃO publicado. Integrar
 localmente no admin-v2 somente entre etapas, preservando mudanças existentes e
 revalidando o conjunto; sem merge/deploy com VPS. Política e evidências em docs/
 do candidato. Não reintroduzir o frontend antigo durante essa integração.
 
 Continuidade persistente autorizada em08/11: seguir
-`/mnt/dev/peticao/docs/VIGIA-CONTINUIDADE.md` e o checkpoint atual em
-`/mnt/dev/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md`. O plano registrado
+`/mnt/apps/peticao-final/peticao/docs/VIGIA-CONTINUIDADE.md` e o checkpoint atual em
+`/mnt/apps/peticao-final/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md`. O plano registrado
 é verificável por etapa; fim de turno não significa fim de tarefa. O candidato
 atual é `candidate-stage02-domains`, preservando o essencial e o espelho live.
 
@@ -20,9 +20,9 @@ Política central obrigatória: [prioridade e execução](../../docs/POLITICA-CE
 
 O proprietário é a ADUNIR e as notificações são exclusivamente para operator-78ffa47eeb@example.invalid`, em HTML. Informar início, retomada, interrupção e término; consolidar andamento a cada 30 minutos. Aceite de provedor não comprova entrega. O canal WhatsApp/WAHA está desativado; existe somente contrato de extensão.
 
-Esta ferramenta monitora a petição sem alterar o aplicativo por conta própria. Código principal: `/mnt/dev/peticao`. Admin-v2 isolado: `/mnt/dev/peticao/.cache/admin-integration/candidate-stage01` (candidato essencial 94c9cc0: 471 testes e 100 cenários de navegador aprovados, sem deploy). Não publicar esse checkout integralmente. Produção está na VPS em `/opt/peticao/app`, stage em `/home/adunir/peticao-stage/site`. Os logs de diagnóstico e ajustes de foco/textos/filtros já publicados têm relatórios próprios em docs/.
+Esta ferramenta monitora a petição sem alterar o aplicativo por conta própria. Código principal: `/mnt/apps/peticao-final/peticao`. Admin-v2 isolado: `/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-stage01` (candidato essencial 94c9cc0: 471 testes e 100 cenários de navegador aprovados, sem deploy). Não publicar esse checkout integralmente. Produção está na VPS em `/opt/peticao/app`, stage em `/home/adunir/peticao-stage/site`. Os logs de diagnóstico e ajustes de foco/textos/filtros já publicados têm relatórios próprios em docs/.
 
-A revisão de CPFs é local: `http://127.0.0.1:8765/`, também acessível pelo gateway Tailscale, usando `/mnt/dev/cpfs/revisao/revisao.sqlite`. Aprovações de CPF e de nome são independentes. Nunca sobrescrever essas decisões, hashes, datas ou inscrições; nunca promover decisões locais automaticamente para a VPS. A revisão recebe dados por pipe somente leitura. Filtros/editor foram corrigidos em af44aac/53a057b/f61e7ff.
+A revisão de CPFs é local: `http://127.0.0.1:8765/`, também acessível pelo gateway Tailscale, usando `/mnt/apps/peticao-final/cpfs/revisao/revisao.sqlite`. Aprovações de CPF e de nome são independentes. Nunca sobrescrever essas decisões, hashes, datas ou inscrições; nunca promover decisões locais automaticamente para a VPS. A revisão recebe dados por pipe somente leitura. Filtros/editor foram corrigidos em af44aac/53a057b/f61e7ff.
 
 Regras obrigatórias: ler AGENTS.md; preservar alterações existentes; commits por etapa; dados fictícios e entrega dev nos testes; não enviar mensagens a assinantes ou autoridades; não ler/revelar `.env`, `secrets/`, `preview-state/`, cofres ou chaves SSH; nunca mudar HASH_PEPPER. Não alterar estética, avisos, privacidade ou validações fora da solicitação. Deploy de admin-v2 depende de autorização final específica.
 

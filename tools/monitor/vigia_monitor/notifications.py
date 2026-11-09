@@ -13,7 +13,7 @@ def deliver_one(store):
   row=dict(row)
   db.execute("UPDATE outbox SET state='sending',updated_at=? WHERE id=?",(now(),row['id']))
  try:
-  result=subprocess.run(['/usr/bin/node',str(Path('/mnt/dev/peticao/tools/monitor/mail.mjs'))],input=json.dumps({'subject':row['subject'],'body':row['body']}),capture_output=True,text=True,timeout=40)
+  result=subprocess.run(['/usr/bin/node',str(Path('/mnt/apps/peticao-final/peticao/tools/monitor/mail.mjs'))],input=json.dumps({'subject':row['subject'],'body':row['body']}),capture_output=True,text=True,timeout=40)
   data=json.loads(result.stdout);status=int(data.get('status',0))
   state='accepted' if result.returncode==0 and 200<=status<300 else 'failed';provider=data.get('id')
  except (OSError,ValueError,TypeError,subprocess.TimeoutExpired):state='uncertain';provider=None

@@ -3,7 +3,7 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'recovery'))
 from cpf_compare import compare,tokens
 
-BASE=Path(os.environ.get('CPF_REVIEW_DATA_DIR','/mnt/dev/cpfs/revisao'))
+BASE=Path(os.environ.get('CPF_REVIEW_DATA_DIR','/mnt/apps/peticao-final/cpfs/revisao'))
 DB=BASE/'revisao.sqlite'
 LABELS={
  'divergencia_forte':'Divergência forte','divergencia_relevante':'Divergência relevante',

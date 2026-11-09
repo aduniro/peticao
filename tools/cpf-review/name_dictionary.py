@@ -47,7 +47,7 @@ def display_case(value):
 
 
 def corpus():
-    observations = Path(os.environ.get("CPF_REVIEW_DATA_DIR", "/mnt/dev/cpfs/revisao")) / "name-observations.json"
+    observations = Path(os.environ.get("CPF_REVIEW_DATA_DIR", "/mnt/apps/peticao-final/cpfs/revisao")) / "name-observations.json"
     raw = _read_versioned(CORPUS_PATH)
     observed = _read_versioned(observations, optional=True)
     return _corpus(raw, observed)

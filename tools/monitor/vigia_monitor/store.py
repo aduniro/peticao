@@ -3,7 +3,7 @@ import datetime as dt, hashlib, json, os, sqlite3, uuid
 from contextlib import contextmanager
 from pathlib import Path
 
-STATE=Path(os.environ.get('VIGIA_STATE',str(Path.home()/'.local/state/peticao-monitor')))
+STATE=Path(os.environ.get('VIGIA_STATE','/mnt/apps/peticao-final/_externos/home/barre/.local/state/peticao-monitor'))
 STATES={'queued','running','waiting','paused','completed','failed','interrupted'}
 def now():return dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
 def uid():return uuid.uuid4().hex
@@ -63,7 +63,7 @@ class Store:
   if not task_id or len(task_id)>100:raise ValueError('Identificador inválido')
   if values.get('state','queued') not in STATES:raise ValueError('Estado inválido')
   old=self.rows('SELECT * FROM tasks WHERE id=?',(task_id,))
-  row=dict(old[0]) if old else dict(id=task_id,title=task_id,state='queued',cwd='/mnt/dev/peticao',environment='local',scope='',stage='',detail='',eta='',created_at=now(),thread_id=None,import_hash=None)
+  row=dict(old[0]) if old else dict(id=task_id,title=task_id,state='queued',cwd='/mnt/apps/peticao-final/peticao',environment='local',scope='',stage='',detail='',eta='',created_at=now(),thread_id=None,import_hash=None)
   for k,v in values.items():
    if k not in row and k!='updated_at':raise ValueError('Campo de tarefa inválido')
    row[k]=v
