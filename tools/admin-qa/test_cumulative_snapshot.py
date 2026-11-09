@@ -37,6 +37,23 @@ class Guards(unittest.TestCase):
             root = Path(tmp); (root / 'site').mkdir(); (root / 'site/.env.local').write_text('NOT_A_SECRET')
             with self.assertRaisesRegex(AssertionError, 'environment files'): module.validate_runtime(root)
 
+    def test_untracked_or_ignored_source_is_rejected(self):
+        for path in [b'site/src/lib/untracked.ts\0', b'site/src/lib/ignored-wip.ts\0']:
+            with patch.object(module.subprocess, 'check_output', return_value=path) as command:
+                with self.assertRaisesRegex(AssertionError, 'Untracked source'): module.validate_source_tracking(Path('/tmp/fake'))
+                self.assertNotIn('--exclude-standard', command.call_args.args[0])
+        with patch.object(module.subprocess, 'check_output', return_value=b''): module.validate_source_tracking(Path('/tmp/fake'))
+
+    def test_only_tracked_environment_example_is_allowed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); (root / 'site').mkdir(); example = root / 'site/.env.example'; example.write_text('QA_SAMPLE')
+            with patch.object(module.subprocess, 'run', return_value=module.subprocess.CompletedProcess([], 0)): module.validate_environment(root)
+            with patch.object(module.subprocess, 'run', return_value=module.subprocess.CompletedProcess([], 1)):
+                with self.assertRaisesRegex(AssertionError, 'tracked example'): module.validate_environment(root)
+            (root / 'site/.env.local').write_text('QA_SAMPLE')
+            with patch.object(module.subprocess, 'run', return_value=module.subprocess.CompletedProcess([], 0)):
+                with self.assertRaisesRegex(AssertionError, 'environment files'): module.validate_environment(root)
+
     def test_atomic_checkpoint(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'phase.json'; module.write_json(path, {'status': 'interrupted'})
