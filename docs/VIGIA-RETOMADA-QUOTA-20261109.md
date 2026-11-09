@@ -139,3 +139,22 @@ recebem promessa de retomada. Na máquina desligada o monitor não opera.
 O contrato local explicita que `ordinaryUsageAllowed=null` é indisponível e que
 clientes não devem inferir recuperação por percentuais ou datas. O código faz
 essa distinção; não amplia as capacidades documentadas nem remove controles.
+
+## Carregamento operacional verificado pelo coordenador
+
+Em 09/11/2026, o código foi integrado localmente no commit `6761375`. Antes de
+carregar o serviço, foram confirmadas zero requests gerenciadas ativas e feita
+cópia consistente do SQLite, com `quick_check=ok`, em
+`/home/barre/.local/state/peticao-monitor/private-backups/pre-quota-20261109T072114Z/monitor.sqlite`.
+SHA256: `14472cee4e96ad4c8b8e0ad23708347d5016ae85a2c7e29c2e84882f29ca807a`.
+
+O serviço local `peticao-monitor.service` foi reiniciado e observado como
+`active/running`, PID 1299072. A política foi habilitada para **futuros** pedidos
+elegíveis de `admin-v2-stage02`, com corte `2026-11-09T07:22:14+00:00`.
+O banco novo passou novamente no `quick_check`; não havia esperas de quota ou
+requests gerenciadas ativas e nenhuma execução antiga foi reativada.
+
+Isso carrega uma capacidade limitada do executor Vigia, não um mecanismo que
+controle o ciclo de vida de todos os agentes nativos. O objetivo nativo desta
+conversa já está ativo por decisão do usuário. Recuperação de créditos pagos
+não foi inferida de saldo isolado nem homologada como garantia universal.
