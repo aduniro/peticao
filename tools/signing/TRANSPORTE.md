@@ -64,3 +64,7 @@ A1_TEST_PRIVATE_ROOT=/home/barre/.cache/peticao-a1-worker-qa /mnt/apps/peticao-f
 O diretório privado de QA existe com0700; testes não instalam serviço e usam socket temporário. `systemd-analyze verify` do template encontrou somente o executável de destino ausente (`/opt/peticao-signing/venv/bin/python`), esperado porque não houve provisionamento. Isso não é prova de serviço instalado/operacional.
 
 Logs protegidos e evidências: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/a1-service-python-tests.log`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/a1-service-node-tests.log` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/a1-service-evidence.json`.
+
+## Scheduler dedicado (template, não instalado)
+
+`/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/tools/signing/dispatch.py` chama exclusivamente o endpoint local `/api/cron/a1`, sem payload, proxies, redirecionamento ou retry. A credencial systemd vem de `/etc/peticao-signing/cron-token` e não deve ser gravada no repositório. O resultado técnico sanitizado não comprova envio ou aprovação de lote. Os templates `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/deploy/peticao-a1-dispatch.service` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/deploy/peticao-a1-dispatch.timer` só documentam a instalação futura; nenhuma unidade foi ativada. Quatro testes offline cobrem segredo inválido, resposta, limites e falhas sem retry. A fila de e-mails continua independente.

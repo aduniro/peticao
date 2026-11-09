@@ -1,0 +1,20 @@
+[Unit]
+Description=Dispatch explicitly authorized petition A1 jobs
+After=peticao.service
+Requires=peticao.service
+[Service]
+Type=oneshot
+User=peticao
+Group=peticao
+LoadCredential=cron-token:/etc/peticao-signing/cron-token
+ExecStart=/usr/bin/python3 /opt/peticao-signing/dispatch.py
+TimeoutStartSec=115
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+IPAddressDeny=any
+IPAddressAllow=localhost
+[Install]
+WantedBy=multi-user.target
