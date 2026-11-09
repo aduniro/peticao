@@ -55,8 +55,8 @@ test("servidor: IFES, campus e checkbox de Amazônia Legal / faixa de fronteira"
   assert.equal(err(validate({ ...sv, institution: "Instituto Inventado", regionDeclared: true })).region, "region_ifes_not_eligible"); // IFES fora da lista não marca a caixa
   const f = ok(validate({ ...sv, institution: "UNILA", campus: "Foz do Iguaçu", regionDeclared: true })); // fora da Amazônia, mas faixa de fronteira
   assert.deepEqual([f.regionValidated, f.regionCriteria], [true, "faixa_fronteira"]);
-  const nf = ok(validate({ ...sv, institution: "Instituto Inventado" }));
-  assert.deepEqual([nf.institution, nf.ifesListed, nf.regionValidated], ["Instituto Inventado", false, false]); // IFES livre é aceita, sem checkbox
+  const nf = err(validate({ ...sv, institution: "Instituto Inventado" }));
+  assert.equal(nf.institution, "ifes_required"); // instituição fora do catálogo é rejeitada também sem checkbox
   assert.equal(err(validate({ ...sv, role: "", campus: "Ji-Paraná", regionDeclared: true })).role, "role_required");
   assert.equal(err(validate({ ...sv, institution: "UFPR", role: "" })).role, "role_required"); // o cargo é obrigatório para todo servidor, mesmo sem declarar a região
   assert.equal(ok(validate({ ...sv, institution: "UFPR", role: "tae" })).role, "tae");
