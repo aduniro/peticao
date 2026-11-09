@@ -63,7 +63,12 @@ try{
  const archivedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows;
  await c.query(newSql);await c.query(newSql);await c.query(oldSql);
  assert.deepEqual((await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows,archivedSenders,"DDL replay and old bootstrap must not reset archive decisions or revisions");
- assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
+ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_triage_jobs","mail_inbound_messages","mail_message_attempts","mail_message_events","mail_messages"]);
+ await c.query(`INSERT INTO mail_inbound_messages(id,account,external_key,content_hash,sender_hash,recipients_hash,thread_root,correlation,content_cipher,received_at,created_at,expires_at)
+   VALUES('00000000-0000-4000-8000-000000000050','qa-inbox','QA-EXTERNAL-HASH','QA-CONTENT-HASH','QA-SENDER-HASH','QA-RECIPIENTS-HASH','00000000-0000-4000-8000-000000000050','new','QA-NOT-A-REAL-CIPHER','2026-11-08T10:00:00.123456Z','2026-11-08T10:00:00.234567Z','2026-12-08T10:00:00.345678Z')`);
+ const inboundState=async()=>(await c.query("SELECT row_to_json(m)::text raw FROM mail_inbound_messages m ORDER BY id")).rows;
+ const preservedInbound=await inboundState();await c.query(newSql);await c.query(oldSql);
+ assert.deepEqual(await inboundState(),preservedInbound,"Inbound cipher, hashes, idempotency, thread and microsecond expiry survive replay and old bootstrap");
  // New preparation state is additive; a code rollback must not discard its frozen list or lease.
  const preparing=(await c.query("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,list_hash) VALUES(999,'final','preparing',0,1,'QA-PREPARATION-LIST') RETURNING id")).rows[0].id;
  await c.query("INSERT INTO batch_preparations(batch_id,snapshot,snapshot_sha256,reserved_at,attempts,lease_token,lease_until,last_error) VALUES($1,'QA-FROZEN-SNAPSHOT',$2,'2026-11-08T10:00:00.123456Z',2,'QA-LEASE','2026-11-08T10:05:00.654321Z','prepare_failed')",[preparing,'a'.repeat(64)]);
@@ -163,8 +168,8 @@ try{
  assert.equal((await c.query("SELECT count(*)::int n FROM pg_indexes WHERE schemaname=current_schema() AND tablename='signup_diagnostics'")).rows[0].n,5);
  console.log("PASS currently published diagnostics survive additive admin upgrade and code rollback bootstrap; no contact decryption or signer writes.");
  console.log("PASS shared draft upgrade: ciphertext, identity, actors, revision, expiry and expired tombstone survive replay and old bootstrap without decrypting or sending.");
- console.log("PASS AI ledger upgrade: fifteen additive tables; request UUID, actor, quota reservation, uncertain state and microsecond timestamps preserved, no generation dispatched.");
- console.log("PASS campus curation upgrade: fifteen additive tables; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
+ console.log("PASS AI ledger upgrade: sixteen additive tables; request UUID, actor, quota reservation, uncertain state and microsecond timestamps preserved, no generation dispatched.");
+ console.log("PASS campus curation upgrade: sixteen additive tables; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
  console.log("PASS preparation upgrade: frozen snapshot, reservation identity, attempts, lease and timestamps survive DDL replay and code rollback bootstrap.");
  console.log("PASS scoped journal upgrade: unknown account stays null, no fabricated events; existing receipt and linked event identity/timestamps preserved on replay.");
  console.log("PASS archive foundation upgrade: existing message identity, fingerprint, state and timestamp preserved; Reply-To left unknown.");
@@ -172,7 +177,7 @@ try{
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS sender catalogue upgrade: ciphertext, identity, paused state, archive revision and microsecond timestamps survive replay and old bootstrap.");
  console.log("PASS referral intent upgrade: request ownership, allocation, fingerprint and microsecond timestamp preserved.");
- console.log("PASS real startup on old schema plus DDL replay: fifteen additive tables, two nullable message correlation columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS real startup on old schema plus DDL replay: sixteen additive tables, two nullable message correlation columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;

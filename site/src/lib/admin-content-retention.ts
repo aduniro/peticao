@@ -1,11 +1,13 @@
 import { audit, tx } from "./db";
 import { purgeArchivedContent } from "./mail/archive";
 import { ADMIN_CONTENT_RETENTION_DAYS } from "./admin-retention-policy";
+import { purgeInboundContent } from "./mail/inbound-store";
 
 /** Purge body copies, not receipt metadata, original contacts, signers or petition documents. */
 export async function purgeAdminContent(limit = 100) {
   if (!Number.isInteger(limit) || limit < 1 || limit > 1000) throw new Error("retention_parameters");
   return tx(async c => {
+    await purgeInboundContent(limit, c);
     const messages = await purgeArchivedContent(limit, c);
     const outbox = (await c.query<{ id: number }>(`WITH expired AS (
       SELECT id FROM mail_outbox WHERE created_at<=clock_timestamp()-make_interval(days=>$2)
