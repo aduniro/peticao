@@ -414,6 +414,16 @@ const SCHEMA_SQL = `
     CHECK((state='stored' AND content_cipher IS NOT NULL) OR (state<>'stored' AND content_cipher IS NULL))
   );
   CREATE INDEX IF NOT EXISTS contact_drafts_expiry ON contact_drafts(expires_at) WHERE state='stored';
+  CREATE TABLE IF NOT EXISTS contact_reply_groups (
+    id UUID PRIMARY KEY, actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
+    input_hash TEXT NOT NULL, context_proof TEXT NOT NULL, approved_ids JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), UNIQUE(actor_id,request_id)
+  );
+  CREATE TABLE IF NOT EXISTS contact_reply_group_items (
+    group_id UUID NOT NULL REFERENCES contact_reply_groups(id),
+    contact_id INTEGER NOT NULL REFERENCES contact_messages(id), reply_id INTEGER NOT NULL UNIQUE REFERENCES contact_replies(id),
+    round INTEGER NOT NULL CHECK(round>0), PRIMARY KEY(group_id,contact_id)
+  );
   CREATE TABLE IF NOT EXISTS contact_campus_reviews (
     id SERIAL PRIMARY KEY, contact_id INTEGER NOT NULL REFERENCES contact_messages(id),
     triage_job_id INTEGER NOT NULL REFERENCES contact_triage_jobs(id), revision INTEGER NOT NULL,

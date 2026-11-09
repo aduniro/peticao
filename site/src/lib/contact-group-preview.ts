@@ -1,3 +1,4 @@
+import type { PoolClient } from "pg";
 import { tx } from "./db";
 import { hmac, safeEqual } from "./security";
 import { SAFE_EMAIL_RE } from "./email-syntax";
@@ -21,7 +22,7 @@ function entry(raw: unknown): Entrada | null {
   const parsed = validarEntrada(v);
   return parsed.ok ? parsed.v : null;
 }
-function parse(raw: unknown) {
+export function normalizeContactGroupPreviewInput(raw: unknown) {
   if (!keys(raw, ["selections", "template", "expectedProof"])) return null;
   const r = raw as GroupPreviewInput, template = entry(r.template);
   if (!template || !Array.isArray(r.selections) || r.selections.length < 1 || r.selections.length > 20 || r.expectedProof !== undefined && (typeof r.expectedProof !== "string" || !/^[a-f0-9]{64}$/.test(r.expectedProof))) return null;
@@ -31,17 +32,15 @@ function parse(raw: unknown) {
 }
 
 /** Same-response preparation only: never saves drafts, reserves delivery, dispatches mail or creates a new round. */
-export async function prepareContactGroupPreview(raw: unknown, actor: GroupActor) {
-  const r = parse(raw); if (!r) return fail("parameters");
+export async function prepareContactGroupPreviewWith(c: PoolClient, raw: unknown, actor: GroupActor) {
+  const r = normalizeContactGroupPreviewInput(raw); if (!r) return fail("parameters");
   if (!idOk(actor?.userId) || !idOk(actor.sessaoId) || typeof actor.email !== "string") return fail("forbidden");
-  return tx(async c => {
-    await c.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");
-    await c.query("SET LOCAL statement_timeout='3000ms'");
-    if (!(await c.query("SELECT u.id FROM admin_users u JOIN admin_sessions s ON s.user_id=u.id WHERE u.id=$1 AND lower(u.email)=$2 AND u.ativo AND u.nivel='total' AND s.id=$3 AND s.expira_em>now() AND s.stepup_ate>now()", [actor.userId, actor.email.toLowerCase(), actor.sessaoId])).rowCount) return fail("forbidden");
+
+    if (!(await c.query("SELECT u.id FROM admin_users u JOIN admin_sessions s ON s.user_id=u.id WHERE u.id=$1 AND lower(u.email)=$2 AND u.ativo AND u.nivel='total' AND s.id=$3 AND s.expira_em>clock_timestamp() AND s.stepup_ate>clock_timestamp()", [actor.userId, actor.email.toLowerCase(), actor.sessaoId])).rowCount) return fail("forbidden");
     const ids = r.selections.map(s => s.contactId);
     const contacts = (await c.query<Contact>("SELECT id,name,email,kind,left(message,4000) message,length(message)::int message_length,created_at FROM contact_messages WHERE id=ANY($1::int[]) ORDER BY id", [ids])).rows;
     const replies = (await c.query<Reply>("SELECT r.id,r.contact_id,r.rodada,r.versao,r.estado,r.ok,l.needs_review FROM (SELECT contact_id,max(rodada) rodada,bool_or(estado IN ('prepared','blocked','sending','uncertain') OR (estado='legacy' AND NOT ok)) needs_review FROM contact_replies WHERE contact_id=ANY($1::int[]) GROUP BY contact_id) l CROSS JOIN LATERAL (SELECT id,contact_id,rodada,versao,estado,ok FROM contact_replies WHERE contact_id=l.contact_id AND rodada=l.rodada ORDER BY id LIMIT 3) r ORDER BY r.contact_id,r.id", [ids])).rows;
-    const drafts = (await c.query<Draft>("SELECT contact_id,revision,state,expires_at<=now() expired FROM contact_drafts WHERE contact_id=ANY($1::int[])", [ids])).rows;
+    const drafts = (await c.query<Draft>("SELECT contact_id,revision,state,expires_at<=clock_timestamp() expired FROM contact_drafts WHERE contact_id=ANY($1::int[])", [ids])).rows;
     const suppressed = new Set((await c.query<{ email: string }>("SELECT lower(email) email FROM email_suppressions WHERE lower(email)=ANY($1::text[])", [contacts.map(x => x.email.trim().toLowerCase())])).rows.map(x => x.email));
     const recipients = new Map<string, number>();
     for (const contact of contacts) { const email = contact.email.trim().toLowerCase(); recipients.set(email, (recipients.get(email) ?? 0) + 1); }
@@ -77,5 +76,12 @@ export async function prepareContactGroupPreview(raw: unknown, actor: GroupActor
     const proof = hmac("contact-group-preview:v1:" + JSON.stringify([actor.userId, actor.email.toLowerCase(), actor.sessaoId, r.selections, r.template, contexts, copies, replyTo]));
     if (r.expectedProof && !safeEqual(r.expectedProof, proof)) return fail("conflict");
     return { ok: true as const, proof, recipients: results, ownerCopies: copies, replyTo, automaticSend: false, draftWrites: false, groupReserved: false, format: "texto" as const };
+}
+
+export async function prepareContactGroupPreview(raw: unknown, actor: GroupActor) {
+  return tx(async c => {
+    await c.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");
+    await c.query("SET LOCAL statement_timeout='3000ms'");
+    return prepareContactGroupPreviewWith(c, raw, actor);
   });
 }
