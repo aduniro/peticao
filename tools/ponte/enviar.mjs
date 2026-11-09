@@ -1,5 +1,5 @@
 // Envia um e-mail pela ponte. Uso: import { enviar } ... | node enviar.mjs "assunto" arquivo.html [--para x@y] [--reply]
-import { getKey } from "/mnt/dev/peticao/tools/infra/lib/keystore.mjs";
+import { getKey } from "/mnt/apps/peticao-final/peticao/tools/infra/lib/keystore.mjs";
 import { ENDERECO, DONO } from "./lib.mjs";
 export async function enviar({ assunto, html, texto, para = DONO, replyTo = ENDERECO, provedor = "mailersend", deNome = "Painel da petição (aprovações)", bcc }) {
   if (/adunir\.andes@gmail\.com/i.test(para) || /\.(gov|leg|jus)\.br$/i.test(para)) throw new Error("destinatário proibido");
