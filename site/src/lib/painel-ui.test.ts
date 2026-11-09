@@ -15,7 +15,7 @@ test("período: atalhos contam de hoje para trás (datas inclusivas); Tudo = sem
 test("menu segue o nível real e mantém as rotas do Total e os atalhos do celular", () => {
   const hrefs = (nivel: Nivel) => gruposVisiveis(nivel).flatMap(g => g.itens.map(i => i.href));
   const reading = ["/admin", "/admin/mapa", "/admin/monitor", "/admin/assinaturas", "/admin/rankings", "/admin/indicacoes", "/admin/conta"];
-  const editing = [...reading, "/admin/emails", "/admin/dominios", "/admin/contato", "/admin/dispersao", "/admin/diagnosticos"];
+  const editing = [...reading, "/admin/emails", "/admin/inbox", "/admin/dominios", "/admin/contato", "/admin/dispersao", "/admin/diagnosticos"];
   assert.deepEqual(hrefs("leitura").sort(), reading.sort());
   assert.deepEqual(hrefs("edicao").sort(), editing.sort());
   assert.deepEqual(hrefs("exclusao").sort(), editing.sort());

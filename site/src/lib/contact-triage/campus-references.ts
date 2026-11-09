@@ -1,6 +1,6 @@
 import index from "./campus-reference-index.json";
 import centroids from "../../../public/data/geo/municipios-centroides.json";
-import { findIfes } from "../ifes-data";
+import { findReferenceInstitution } from "./campus-catalog";
 import { municipalityById, regionCriteria, regionOf } from "../geo-data";
 
 const cursor = (s: string) => /^csv:[1-9][0-9]{0,5}$/.test(s) ? Number(s.slice(4)) : NaN;
@@ -15,7 +15,7 @@ export const CAMPUS_REFERENCE_PROVENANCE = {
 /** Public local references only; this is not campus publication, geolocation or evidence of current operation. */
 export function campusReferenceEvidence(input: { institution: string; cityIbge?: number; after?: string; limit?: number }) {
   if (!input || typeof input.institution !== "string" || input.institution.length > 200) return { ok: false as const, error: "invalid" };
-  const institution = findIfes(input.institution);
+  const institution = findReferenceInstitution(input.institution);
   if (!institution) return { ok: false as const, error: "unknown_institution" };
   const municipality = input.cityIbge === undefined ? null : Number.isInteger(input.cityIbge) ? municipalityById(input.cityIbge) : null;
   const limit = input.limit ?? 50, after = input.after === undefined ? 0 : cursor(input.after);

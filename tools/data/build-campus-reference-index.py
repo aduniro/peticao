@@ -9,7 +9,12 @@ TARGET=ROOT/'site/src/lib/contact-triage/campus-reference-index.json'
 key=lambda s:re.sub(r'[^a-z0-9]','',s.casefold())
 def build():
  raw={p:(ROOT/p).read_bytes() for p in SOURCES}
- institutions={key(x['s']):x for x in json.loads(raw['site/public/data/ifes.json'])}
+ institutions={}
+ for x in json.loads(raw['site/public/data/ifes.json']):
+  for label in [x['s'],x['n'],*x.get('a',[])]:
+   k=key(label)
+   assert k not in institutions or institutions[k]['s']==x['s'],('ambiguous institution alias',label)
+   institutions[k]=x
  domains=json.loads(raw['site/src/lib/ifes-domains.json'])
  municipalities={x[0]:x for x in json.loads(raw['site/public/data/municipios.json'])}
  records=[]
@@ -24,7 +29,7 @@ def build():
    token=match.group(); parts=urlsplit(token)
    assert parts.scheme in ['http','https'] and parts.hostname and not parts.username and not parts.password and not parts.port
    url=urlunsplit(parts);annotation=source[len(token):].strip() or None
-   allowed=[d['domain'] for d in domains if key(d['acronym'])==key(inst['s'])]
+   allowed=[d['domain'] for d in domains if institutions.get(key(d['acronym']),{}).get('s')==inst['s']]
    official=any(parts.hostname==d or parts.hostname.endswith('.'+d) for d in allowed)
    category='unverified_url'
    if official:category='official_http_reference' if parts.scheme=='http' else 'official_site_reference' if annotation or parts.path in ['', '/'] else 'official_page_reference'

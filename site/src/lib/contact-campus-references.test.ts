@@ -81,3 +81,14 @@ test("admin lookup enforces Edição, preserves all signer/review/mail records a
     assert.deepEqual(await snapshot(), before); assert.equal(fetchCalls, 0);
   } finally { globalThis.fetch = originalFetch; await db._closeDbForTests(); }
 });
+
+test("historical non-MEC references remain reviewable without granting server admission", async () => {
+  const { findIfes } = await import("./ifes-data");
+  const { findReferenceInstitution } = await import("./contact-triage/campus-catalog");
+  for (const acronym of ["AMAN", "ITA", "IME"]) {
+    assert.equal(findIfes(acronym), null);
+    const institution = findReferenceInstitution(acronym); assert.ok(institution);
+    const result = campusReferenceEvidence({ institution: acronym }); assert.ok(result.ok);
+    assert.equal(result.published, false); assert.equal(result.automaticApplication, false);
+  }
+});

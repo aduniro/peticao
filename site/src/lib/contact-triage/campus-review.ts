@@ -1,7 +1,7 @@
 import type { PoolClient } from "pg";
 import { audit, tx } from "../db";
 import { hmac, safeEqual } from "../security";
-import { findIfes } from "../ifes-data";
+import { findReferenceInstitution } from "./campus-catalog";
 import { municipalityById } from "../geo-data";
 import { ENGINE, proposeCampus } from "./analyze";
 import { CONTACT_SQL, inputHash } from "./evidence";
@@ -17,7 +17,7 @@ export function normalizeCampusProposal(raw: unknown) {
   if (!keys(raw, ["institution", "cityIbge", "campusName", "sourceUrl"])) return null;
   const p = raw as CampusInput;
   if (typeof p.institution !== "string" || p.institution.length > 200 || !validId(p.cityIbge) || typeof p.campusName !== "string" || typeof p.sourceUrl !== "string" || p.sourceUrl.length > 1000) return null;
-  const institution = findIfes(p.institution), municipality = municipalityById(p.cityIbge);
+  const institution = findReferenceInstitution(p.institution), municipality = municipalityById(p.cityIbge);
   const campusName = p.campusName.normalize("NFC").trim().replace(/ +/g, " ");
   if (!institution || !municipality || campusName.length < 2 || campusName.length > 160 || !/^[\p{L}\p{N}\p{Pd} .'’()\/]+$/u.test(campusName)) return null;
   let url: URL;

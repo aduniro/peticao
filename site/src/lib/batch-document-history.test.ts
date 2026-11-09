@@ -28,7 +28,7 @@ test("histórico é append-only e download preserva bytes/hash com auditoria e a
   const c=await fixture("t_document_history_immutable");
   try{
     const first=await c.db.tx(client=>c.H.appendDocumentVersion(client,c.input)),before=await c.snapshot();
-    for(const sql of ["UPDATE batch_document_versions SET note='changed'","DELETE FROM batch_document_versions","TRUNCATE batch_document_versions"]){await assert.rejects(c.db.query(sql),/immutable/);assert.deepEqual(await c.snapshot(),before);}
+    for(const sql of ["UPDATE batch_document_versions SET note='changed'","DELETE FROM batch_document_versions","TRUNCATE batch_document_versions CASCADE"]){await assert.rejects(c.db.query(sql),/immutable/);assert.deepEqual(await c.snapshot(),before);}
     const listed=await c.H.listDocumentVersions(c.batchId,c.actor);assert.ok(listed.ok);assert.equal(listed.versions.length,1);assert.ok(!("bytes" in listed.versions[0]));
     const read=await c.H.readDocumentVersion(c.batchId,first.id,c.actor);assert.ok(read.ok);assert.deepEqual(read.bytes,c.pdf);assert.equal(read.metadata.sha256,digest(c.pdf));
     await c.db.query("UPDATE admin_users SET nivel='leitura' WHERE id=1");assert.deepEqual(await c.H.readDocumentVersion(c.batchId,first.id,c.actor),{ok:false,error:"forbidden"});assert.deepEqual(await c.H.listDocumentVersions(c.batchId,c.actor),{ok:false,error:"forbidden"});

@@ -12,7 +12,7 @@ test("geolocalização: falha ao abrir as bases não fica guardada para sempre",
     process.env.GEO_DIR = mkdtempSync(join(tmpdir(), "geo-vazio-"));
     assert.deepEqual(await geoDbStatus(), { city: false, asn: false });
     assert.equal((await lookupIp("8.8.4.4")).city, null);
-    process.env.GEO_DIR = join(process.cwd(), "geo-data"); // base real: a próxima consulta reabre sozinha
+    process.env.GEO_DIR = antes.dir ?? join(process.cwd(), "geo-data"); // base real: a próxima consulta reabre sozinha
     const st = await geoDbStatus();
     assert.equal(st.city, true);
     assert.equal((await lookupIp("8.8.4.4")).city, "Mountain View");

@@ -1,4 +1,4 @@
-import { findIfes } from "../ifes-data";
+import { findReferenceInstitution } from "./campus-catalog";
 import { findByName, municipalityById, regionCriteria, regionOf } from "../geo-data";
 import { outboundReasons, type OutboundEvidence } from "./outbound";
 
@@ -26,7 +26,7 @@ export const redact = (text: string) => text.replace(/[A-Za-z0-9._%+-]+@[A-Za-z0
 
 export type CampusProposal = { status: "unknown_institution" | "unknown_city" | "ambiguous_city" | "invalid_location" | "listed" | "needs_evidence"; institution: string | null; candidates: { id: number; name: string; uf: string }[]; criteria: string | null; sources: string[] };
 export function proposeCampus(input: { institution: string; city: string; uf?: string; ibge?: number | null }): CampusProposal {
-  const institution = findIfes(input.institution);
+  const institution = findReferenceInstitution(input.institution);
   const city = input.city.replace(/^campus(?: de| do| da)?\s+/i, "").replace(/\s*\([A-Z]{2}\)\s*$/, "").trim();
   let candidates = findByName(city).filter(m => !input.uf || m.uf === input.uf.toUpperCase());
   if (input.ibge) {
