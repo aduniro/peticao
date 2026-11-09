@@ -25,3 +25,7 @@ Fonte oficial conferida em 09/11/2026: https://www.gov.br/conecta/catalogo/apis/
 ## Preservação e publicação
 
 Não alterar fontes, tamanhos, layout ou textos existentes em razão desta política. Preservar registros originais e evidências das correções. Esta política não autoriza deploy, merge ou alterações adicionais em produção. A implementação e a revisão dos vínculos devem ter testes e roteiro próprios; a existência deste documento não significa que todo o catálogo já foi revisado.
+
+## Apresentação das siglas
+
+Decisão posterior do responsável em 09/11/2026: todas as siglas canônicas devem ser apresentadas e armazenadas em letras MAIÚSCULAS. Preservar nomes por extenso, IDs, fontes oficiais, domínios e aliases históricos de busca. A preferência de caixa do próprio site institucional não substitui esta padronização expressamente escolhida para o aplicativo.
