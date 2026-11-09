@@ -12,7 +12,9 @@ assert.equal((await db.query("SELECT 1 FROM signatures UNION ALL SELECT 1 FROM m
 let token;
 try {
   const mail = { to: "qa-retention-http@example.test", subject: "QA subject", text: "QA-RETENTION-PRIVATE-BODY", attachments: [{ filename: "qa.txt", content: Buffer.from("QA-RETENTION-PRIVATE-ATTACHMENT") }] };
-  const message = await A.prepareMessage(mail, "admin", "transactional", { archive: { until: null } });
+  // Administrative credentials remain restricted regardless of their age.
+  // Exercise expiration using an ordinary confirmation message.
+  const message = await A.prepareMessage(mail, "confirmacao", "transactional", { archive: { until: null } });
   await db.query("UPDATE mail_messages SET created_at=now()-interval '31 days',content_expires_at=now()+interval '90 days' WHERE id=$1", [message.id]);
   const queue = await O.enqueueMail(mail, "admin", "QA reason");
   await db.query("UPDATE mail_outbox SET created_at=now()-interval '31 days',next_attempt_at=now()-interval '1 day' WHERE id=$1", [queue]);
