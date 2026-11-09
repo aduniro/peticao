@@ -10,7 +10,7 @@ assert not subprocess.check_output(['git','status','--porcelain'],cwd=root,text=
 assert not any((site/name).exists() for name in ['.env','.env.local','.env.production','.env.production.local'])
 for port in [3048,54363,3848]:
  with socket.socket() as s:assert s.connect_ex(('127.0.0.1',port))!=0,'Owned QA port occupied'
-runtime=Path('/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin');node=runtime/'node';node_sha=hashlib.sha256(node.read_bytes()).hexdigest()
+runtime=Path('/mnt/apps/peticao-final/_externos/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin');node=runtime/'node';node_sha=hashlib.sha256(node.read_bytes()).hexdigest()
 assert node_sha=='b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
 version=subprocess.check_output([str(node),'--version'],text=True).strip();assert version=='v20.19.2'
 p=Path(tempfile.mkdtemp(prefix='admin-president-ecnpj-'));p.chmod(0o700);(p/'empty').mkdir(mode=0o700)
