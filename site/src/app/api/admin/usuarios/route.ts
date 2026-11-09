@@ -28,8 +28,13 @@ export async function POST(req: NextRequest) {
       if (r.erro === "nao_autorizado") return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 403 });
       return volta(`erro=${r.erro}`);
     }
-    await pedirReset(r.usuario.email, { origin: origem, convite: true, actor }).catch((e) => console.error("convite falhou:", e instanceof Error ? e.message : e));
-    return volta("msg=criado");
+    const outcome = await pedirReset(r.usuario.email, { origin: origem, convite: true, actor }).catch((e) => {
+      console.error("convite falhou:", e instanceof Error ? e.message : e);
+      return null;
+    });
+    if (outcome?.estado === "skipped" && outcome.motivo === "unauthorized") return denied();
+    if (outcome?.estado === "sent") return volta("msg=criado");
+    return volta(outcome?.estado === "queued" ? "msg=email_fila" : "erro=email_incerto");
   }
   if (!Number.isInteger(id) || id < 1) return volta("erro=nao_existe");
   if (acao === "nivel") { const n = String(f.get("nivel") ?? ""); const r = await alterarNivel(id, n as never, por, actor); if (!r.ok && r.erro === "nao_autorizado") return denied(); return volta(r.ok ? "msg=nivel" : `erro=${r.erro}`); }
@@ -40,7 +45,8 @@ export async function POST(req: NextRequest) {
     if (!u) return volta("erro=nao_existe");
     const outcome = await pedirReset(u.email, { origin: origem, actor }).catch(() => null);
     if (outcome?.estado === "skipped" && outcome.motivo === "unauthorized") return denied();
-    return volta("msg=link_enviado");
+    if (outcome?.estado === "sent") return volta("msg=link_enviado");
+    return volta(outcome?.estado === "queued" ? "msg=email_fila" : "erro=email_incerto");
   }
   return volta("erro=acao_invalida");
 }
