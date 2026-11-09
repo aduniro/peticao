@@ -36,7 +36,9 @@ vazio e rejeição de cursores/tipos inválidos. Originais e tabelas de assinatu
 respostas e envio preservados. As regressões adjacentes conferem autorização,
 concorrência, falha/retomada e ausência de repetição automática de envios.
 
-`tools/admin-qa/contact-list.mjs` prepara o ensaio SSR/browser por nível, filtros,
-paginação com nova inserção e indisponibilidade/retorno da fonte, com capturas
-320/390/1280px. Ainda aguarda execução no próximo build integrado; os24 testes
-não substituem esse ensaio visual. Sem deploy, merge ou dado real alterado.
+O ensaio SSR/browser foi concluído posteriormente sobre a base congelada
+`507a634`, com papéis, filtros, paginação, nova inserção e falha/retorno da fonte.
+Capturas320/390/1280px inspecionadas. Provas, limitações e duas correções dos
+seletores de QA estão em `QA-CONTATO-PAGINACAO-20261109.md`. Os24 testes anteriores
+continuam identificados como evidência daquela rodada, sem substituição pelo
+ensaio visual. Sem deploy, merge ou dado real alterado.

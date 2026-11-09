@@ -48,9 +48,9 @@ try {
   await Promise.all([page.waitForURL(url => !url.searchParams.has("antes")), page.getByRole("link", { name: "Primeira página", exact: true }).click()]); assert.equal((await ids())[0], 61);
   await page.goto(new URL("/admin/contato?tipo=bug&busca=qa-list-2%40example.test", base).href); assert.deepEqual(await ids(), [2]);
   await page.goto(new URL("/admin/contato?busca=ABSENT", base).href); assert.deepEqual(await ids(), []); assert.match(await page.locator("main").innerText(), /Nenhuma mensagem encontrada/);
-  await page.goto(new URL("/admin/contato?tipo=invalid&antes=01", base).href); assert.match(await page.getByRole("alert").innerText(), /Não foi possível aplicar os filtros/);
+  await page.goto(new URL("/admin/contato?tipo=invalid&antes=01", base).href); assert.match(await page.locator("main").getByRole("alert").innerText(), /Não foi possível aplicar os filtros/);
   await db.query("ALTER TABLE contact_messages RENAME TO qa_contact_list_unavailable");
-  try { await page.goto(new URL("/admin/contato", base).href); assert.match(await page.getByRole("alert").innerText(), /Não foi possível carregar as mensagens/); assert.ok(!(await page.locator("main").innerText()).includes("0 mensagem(ns)")); }
+  try { await page.goto(new URL("/admin/contato", base).href); assert.match(await page.locator("main").getByRole("alert").innerText(), /Não foi possível carregar as mensagens/); assert.ok(!(await page.locator("main").innerText()).includes("0 mensagem(ns)")); }
   finally { await db.query("ALTER TABLE qa_contact_list_unavailable RENAME TO contact_messages"); }
   await page.goto(new URL("/admin/contato", base).href); assert.equal((await ids()).length, 25);
   assert.deepEqual((await db.query("SELECT row_to_json(c)::text raw FROM contact_messages c WHERE email<>'qa-new@example.test' ORDER BY id")).rows, original);
