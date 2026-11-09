@@ -74,3 +74,16 @@ export async function postPresidentRead(action: "documento" | "estado", credenti
     return response.ok ? { kind: "received", response } : response.status >= 400 && response.status < 500 ? { kind: "rejected" } : { kind: "uncertain" };
   } catch { return { kind: "uncertain" }; }
 }
+
+
+export type PresidentIssueResult = { kind: "issued"; value: IssuedChallengeView } | { kind: "rejected" | "uncertain" };
+/** Explicit admin intent only. Server still revalidates Total, stepup, profile and bytes. */
+export async function postPresidentIssue(batchId: number, transport: typeof fetch): Promise<PresidentIssueResult> {
+  if (!Number.isInteger(batchId) || batchId <= 0 || batchId > 2147483647) return { kind: "rejected" };
+  try {
+    const response = await transport("/api/admin/presidente/desafio", { method: "POST", credentials: "same-origin", cache: "no-store", headers: { "content-type": "application/json" }, body: JSON.stringify({ batchId }) });
+    const body: unknown = await response.json().catch(() => null);
+    if (response.status === 200) { const view = issuedChallengeView(body); return view ? { kind: "issued", value: view } : { kind: "uncertain" }; }
+    return [400, 401, 403, 413, 429].includes(response.status) || response.status === 409 && record(body) && body.ok === false ? { kind: "rejected" } : { kind: "uncertain" };
+  } catch { return { kind: "uncertain" }; }
+}

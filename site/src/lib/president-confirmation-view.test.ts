@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { confirmationOutcome, confirmationState, isPresidentToken, issuedChallengeView, postPresidentConfirmation, postPresidentRead, presidentChallengeLink, presidentFieldErrors } from "./president-confirmation-view";
+import { confirmationOutcome, confirmationState, isPresidentToken, issuedChallengeView, postPresidentConfirmation, postPresidentRead, postPresidentIssue, presidentChallengeLink, presidentFieldErrors } from "./president-confirmation-view";
 
 const token = "A".repeat(43), password = "FICTICIO0000", receiptId = "00000000-0000-4000-8000-000000000001";
 const accepted = { ok: true, receiptId, assurance: "own-confirmation", icpBrasil: false, govBr: false };
@@ -85,4 +85,15 @@ test("read contracts send only token/password, never identity values or a confir
 test("untrusted error objects cannot throw or reveal contents in the view parser", () => {
   assert.deepEqual(confirmationOutcome(409, { ok: false, error: { toString: null } }), { kind: "uncertain" });
   assert.deepEqual(confirmationOutcome(409, { ok: false, error: null }), { kind: "uncertain" });
+});
+
+
+test("admin issue is explicit, single-attempt, body-only batch ID and secret response picked once", async () => {
+  const requests: { url: string; options: RequestInit }[] = [];
+  const body = { ok: true, id: receiptId, token, password, expiresAt: now + 600_000, documentVersion: "a".repeat(64) };
+  const view = await postPresidentIssue(7, (async (url, options) => { requests.push({ url: String(url), options: options! }); return Response.json(body); }) as typeof fetch);
+  assert.equal(view.kind, "issued"); assert.equal(requests.length, 1); assert.equal(requests[0].url, "/api/admin/presidente/desafio"); assert.deepEqual(JSON.parse(String(requests[0].options.body)), { batchId: 7 });
+  let calls = 0;
+  assert.deepEqual(await postPresidentIssue(7, (async () => { calls++; throw new Error("FICTITIOUS LOST ISSUE"); }) as typeof fetch), { kind: "uncertain" }); assert.equal(calls, 1);
+  assert.deepEqual(await postPresidentIssue(0, (async () => { calls++; return Response.json(body); }) as typeof fetch), { kind: "rejected" }); assert.equal(calls, 1);
 });

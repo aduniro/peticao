@@ -1,0 +1,6 @@
+{
+  "extends": "../../site/tsconfig.json",
+  "compilerOptions": { "baseUrl": "../../site", "plugins": [], "incremental": false },
+  "include": ["./*.tsx", "./*.ts", "../../site/src/lib/president-confirmation-view.ts", "../../site/src/lib/president-confirmation-access.ts"],
+  "exclude": []
+}
