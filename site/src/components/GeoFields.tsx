@@ -68,6 +68,7 @@ export function IfesCampusFields({ s, set, errors, email = "", emailInstitution 
   const autoInstitution = useRef<InstitutionAutofillState>({ domain: null, applied: false });
   useEffect(() => { let on = true; loadIfes().then((x) => on && setAll(x)).catch(() => {}); return () => { on = false; }; }, []);
   const ifesOptions: Option[] = useMemo(() => rank(all, s.institution, institutionSearchText, 60).map((i) => ({ key: i.s, label: i.s, hint: i.n })), [all, s.institution]);
+  const allIfesOptions: Option[] = useMemo(() => [...all].sort((a, b) => a.s.localeCompare(b.s, "pt")).map((i) => ({ key: i.s, label: i.s, hint: i.n })), [all]);
   const findIfes = (text: string) => all.find((i) => matchesInstitutionSelection(text, i)) ?? null;
 
   useEffect(() => {
@@ -108,7 +109,7 @@ export function IfesCampusFields({ s, set, errors, email = "", emailInstitution 
     <>
       {/* MUDAR AQUI: o rótulo acima do campo vem de f.ifes em src/i18n/pt.ts; manter o estilo existente. */}
       <label data-tour="ifes">{t("f.ifes")}
-        <Combobox name="institution" value={s.institution} placeholder={t("f.ifesPlaceholder")} options={ifesOptions} invalid={!!errors.institution} ariaLabel={t("f.ifes")} inputMode="search"
+        <Combobox name="institution" value={s.institution} placeholder={t("f.ifesPlaceholder")} options={ifesOptions} allOptions={allIfesOptions} invalid={!!errors.institution} ariaLabel={t("f.ifes")} inputMode="search"
           onChange={(v) => { const institution = findIfes(v); const same = institution?.s === s.ifes?.s; set({ institution: v, ifes: institution, campus: same ? s.campus : "", campusIbge: null, ...(!same ? { region: !!geo && allInstitutionCampiInAmazonia(institution, geo.al) } : {}) }); }}
           onPick={(o) => { const i = all.find((x) => x.s === o.key) ?? null; set({ institution: o.key, ifes: i, campus: "", campusIbge: null, region: !!geo && allInstitutionCampiInAmazonia(i, geo.al) }); }} />
         {/* MUDAR AQUI: dica abaixo do campo em f.ifesHint e erro em err.ifes_required, no arquivo src/i18n/pt.ts. */}

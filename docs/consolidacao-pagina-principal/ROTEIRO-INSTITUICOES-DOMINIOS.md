@@ -91,3 +91,7 @@ A suíte extensa não foi repetida neste bloco. Revisar fixtures históricas que
 ## Padronização posterior das siglas — 09/11/2026
 
 Por solicitação expressa, todas as siglas canônicas ficam em MAIÚSCULAS, inclusive IFFAR, UFAM, UFAC, UNIFAP, IF SUDESTE MG e IFSERTÃOPE. Foram convertidas 29 siglas de instituições; os demais campos dos cinco arquivos do catálogo são idênticos aos anteriores. Aliases históricos continuam pesquisáveis. O gerador preserva essa política nas reproduções. Os 27 testes rápidos de vínculo/seleção/MEC passaram novamente. Sem alterações em registros da VPS ou deploy por este ajuste.
+
+## Dropdown de instituições — solicitação posterior de 09/11/2026
+
+A seta deve abrir todas as instituições elegíveis, mesmo com uma selecionada ou um texto parcial. Digitar continua usando exatamente a busca e o ranking anteriores. O texto selecionado não é apagado ao abrir a lista completa. O campo de instituição recebe lista completa separada; outros comboboxes preservam seu comportamento. Sem alteração de CSS, fontes ou rótulos. Validar lista completa, filtro ao digitar, troca de seleção e teclado no navegador após build.
