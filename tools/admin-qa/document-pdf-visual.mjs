@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { buildBatchPdf } from "../../site/src/lib/pdf.ts";
-assert.equal(process.cwd(), "/mnt/dev/peticao/.cache/admin-integration/candidate-stage02-domains/site");
+assert.equal(process.cwd(), "/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-stage02-domains/site");
 const output = resolve("../.cache/qa-document-pdf-20261109");
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
 const files = ["src/lib/pdf.ts", "src/lib/card.ts", "src/lib/signature-text.ts", "src/lib/verify-code.ts", "src/content/peticao.ts", "public/data/municipios.json", "public/data/regiao.json", "public/data/ifes.json", "assets/adunir.png", "assets/andes.png", "assets/fonts/NotoSans-Regular.ttf", "assets/fonts/NotoSans-SemiBold.ttf", "assets/fonts/NotoSans-ExtraBold.ttf"];

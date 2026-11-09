@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 const commit=process.env.QA_EXPECTED_COMMIT,site=process.env.QA_SITE_DIR;
 assert.match(commit??"",/^[a-f0-9]{40}$/);
-assert.equal(site,`/mnt/dev/peticao/.cache/admin-integration/candidate-president-ecnpj-http-${commit.slice(0,7)}-20261109/site`);
+assert.equal(site,`/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-president-ecnpj-http-${commit.slice(0,7)}-20261109/site`);
 assert.equal(process.cwd(),site);assert.equal(execFileSync("git",["rev-parse","HEAD"],{cwd:site,encoding:"utf8"}).trim(),commit);
 assert.equal(process.version,"v20.19.2");assert.equal(process.env.QA_BASE_URL,"http://127.0.0.1:3048");assert.equal(process.env.DEV_DB_PORT,"54363");
 assert.equal(process.env.MAIL_PROVIDER,"dev");assert.equal(process.env.MAIL_PROVIDERS,"dev");assert.equal(process.env.PREVIEW_MODE,"0");assert.equal(process.env.RECIPIENTS,"qa-authority@example.test");assert.equal(process.env.SIGNER,"none");
