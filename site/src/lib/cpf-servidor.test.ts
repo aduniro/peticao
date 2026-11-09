@@ -24,7 +24,7 @@ test("servidor: CPF obrigatório — o nome precisa conferir com o cadastro do C
     assert.deepEqual([bad.status, (bad.json as any).errors?.name], [422, "name_cpf_mismatch"]);
     assert.equal(await count(), n0);
     // CPF que não existe na base
-    const nf = await handleSign(sv("Pedro Souza Costa", "pedro@unir.br", "390.533.447-05"), ctx, provider);
+    const nf = await handleSign(sv("Pedro Souza Costa", "pedro@unir.br", "390.533.447-05"), ctx, { ...provider, name: "synthetic-registry" });
     assert.equal((nf.json as any).errors?.cpf, "cpf_not_found");
     // serviço fora do ar: 503, sem assinatura
     const down = { name: "cpf-brasil", lookup: async () => { throw new ProviderUnavailable("QUOTA"); } } as never;
