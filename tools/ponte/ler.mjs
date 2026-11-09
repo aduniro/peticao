@@ -4,7 +4,7 @@ export async function mensagens(desde = 0) {
   const z = await conta(); const acc = z.account.id; const kv = await kvId(acc);
   const ks = (await cf(`/accounts/${acc}/storage/kv/namespaces/${kv}/keys?limit=1000&prefix=m:`)).result ?? [];
   const out = [];
-  for (const k of ks) { const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acc}/storage/kv/namespaces/${kv}/values/${encodeURIComponent(k.name)}`, { headers: { Authorization: "Bearer " + (await import("/mnt/dev/peticao/tools/infra/lib/keystore.mjs")).getKey("CLOUDFLARE_API_TOKEN") } }); try { const m = JSON.parse(await r.text()); if (new Date(m.recebido).getTime() >= desde) out.push(m); } catch {} }
+  for (const k of ks) { const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acc}/storage/kv/namespaces/${kv}/values/${encodeURIComponent(k.name)}`, { headers: { Authorization: "Bearer " + (await import("/mnt/apps/peticao-final/peticao/tools/infra/lib/keystore.mjs")).getKey("CLOUDFLARE_API_TOKEN") } }); try { const m = JSON.parse(await r.text()); if (new Date(m.recebido).getTime() >= desde) out.push(m); } catch {} }
   return out.sort((a, b) => a.recebido.localeCompare(b.recebido));
 }
 // Texto novo da resposta, sem a citação da mensagem anterior.
