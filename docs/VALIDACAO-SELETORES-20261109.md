@@ -57,3 +57,13 @@ Evidências privadas:
 - `/mnt/apps/peticao-final/peticao/.cache/ebserh-flow-qa-20261109/combobox-body-click-result.json`
 - `/mnt/apps/peticao-final/peticao/.cache/ebserh-flow-qa-20261109/combobox-hospital-hc-ufg-touch.png`
 - `/mnt/apps/peticao-final/peticao/.cache/siglas-dominios-20261109/universities-all-tests.log`
+
+## Pré-publicação — regressões da política institucional
+
+Nova bateria completa sobre d7e903a:233 testes,224passaram e9falharam. Log preservado: /mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109-qa/fix-fa25c04/reports/backend-1794249140958268547.log . As expectativas antigas de instituição/domínio foram alinhadas à regra MEC; nenhuma validação foi relaxada. Casos históricos de curadoria agora usam fixtures legadas diretas em banco fictício.
+
+Corrigida regressão real em sign-flow: typo institucional mantém a sugestão e detalhe existentes somente quando a correção pertence à instituição selecionada. Continua sem cadastro/curadoria/envio; sugestão de outra instituição não encobre mismatch. Referência de campus IFSul padronizada para IFSUL.
+
+Build completo Node20.19.2 passou após correção do fluxo. Atualização posterior apenas do teste reaproveitou o mesmo build, com prova de igualdade dos arquivos de execução. Regressão dirigida final nos7arquivos afetados:27/27,zero falhas,ignorados,cancelados. Log: /mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109-qa/fix-fa25c04/reports/predeploy-policy-regression-1794250083791730311.log . Não foi alegada uma segunda rodada global233/233.
+
+Dump consistente da produção restaurado em container PostgreSQL17semrede externa; DDL aplicada2vezes conservou todos os campos anteriores das12326assinaturas. Relatório privado /mnt/apps/peticao-final/peticao/.cache/deploy-pagina-revisada-20261109/schema-validation.json . Certificados/chaves/dados pessoais permanecem fora do Git.

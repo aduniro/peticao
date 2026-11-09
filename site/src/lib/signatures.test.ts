@@ -57,7 +57,12 @@ test("guarda: pré-visualização (production + PREVIEW_MODE) continua bloqueand
 test("fluxo: assinar, confirmar, duplicidade, token reutilizado, expirado e cadeia de auditoria", async () => {
   const { dbmod, sig, OUTBOX_DIR } = await setup("t_fluxo");
   const { submit, confirm, counts, validate } = sig;
-  const base = { name: "Maria da Silva", email: "maria@exemplo.com", cpf: "529.982.247-25", category: "servidor", institution: "UNIR", role: "docente", campus: "Ji-Paraná", regionDeclared: true, consent: true };
+  const base = { name: "Maria da Silva", email: "maria@unir.br", cpf: "529.982.247-25", category: "servidor", institution: "UNIR", role: "docente", campus: "Ji-Paraná", regionDeclared: true, consent: true };
+  const mismatch = validate({ ...base, email: "maria@exemplo.com" });
+  assert.equal(mismatch.ok, false);
+  if (!mismatch.ok) assert.deepEqual(mismatch.errors, { institution: "institution_email_mismatch", email: "institution_email_mismatch" });
+  await assert.rejects(() => submit({ ...base, email: "maria@exemplo.com" } as any, {}), sig.InstitutionEmailMismatchError);
+  assert.equal((await dbmod.query<{ n: number }>("SELECT COUNT(*)::int n FROM signatures")).rows[0].n, 0);
   const v = validate(base);
   assert.equal(v.ok, true);
   if (!v.ok) return;
@@ -66,7 +71,7 @@ test("fluxo: assinar, confirmar, duplicidade, token reutilizado, expirado e cade
 
   await submit(v.value, { ip: "127.0.0.1", userAgent: "teste" });
   const { mail, token } = tokenFrom(OUTBOX_DIR);
-  assert.equal(mail.to, "maria@exemplo.com");
+  assert.equal(mail.to, "maria@unir.br");
   assert.equal((await counts()).total, 0);
 
   assert.equal(await confirm("token-errado"), "invalid");
@@ -76,17 +81,17 @@ test("fluxo: assinar, confirmar, duplicidade, token reutilizado, expirado e cade
 
   // duplicidade (mesmo CPF, e-mail diferente): não cria nem envia
   const n = readdirSync(OUTBOX_DIR).length;
-  await submit({ ...v.value, email: "outra@exemplo.com" }, {});
+  await submit({ ...v.value, email: "outra@unir.br" }, {});
   assert.equal(readdirSync(OUTBOX_DIR).length, n);
   assert.equal((await counts()).total, 1);
 
   // token expirado
-  const v2 = validate({ ...base, name: "João Pereira", email: "joao@exemplo.com", cpf: "111.444.777-35" });
+  const v2 = validate({ ...base, name: "João Pereira", email: "joao@unir.br", cpf: "111.444.777-35" });
   assert.equal(v2.ok, true);
   if (!v2.ok) return;
   await submit(v2.value, {});
   const t2 = tokenFrom(OUTBOX_DIR).token;
-  await dbmod.query("UPDATE signatures SET token_expires_at='2000-01-01T00:00:00.000Z' WHERE email='joao@exemplo.com'");
+  await dbmod.query("UPDATE signatures SET token_expires_at='2000-01-01T00:00:00.000Z' WHERE email='joao@unir.br'");
   assert.equal(await confirm(t2), "expired");
 
   // auditoria íntegra e detecta adulteração
@@ -108,14 +113,14 @@ test("regressão: envio bloqueado desfaz o pendente e não contamina o próximo 
   await assert.rejects(() => submit(blocked.value, {}), MailBlockedError);
   assert.equal((await dbmod.query<{ n: number }>("SELECT COUNT(*)::int n FROM signatures")).rows[0].n, 0);
 
-  const real = validate({ name: "Maria da Silva", email: "maria2@exemplo.com", cpf: "529.982.247-25", category: "servidor", institution: "UNIR", role: "docente", campus: "Ji-Paraná", regionDeclared: true, consent: true });
+  const real = validate({ name: "Maria da Silva", email: "maria2@unir.br", cpf: "529.982.247-25", category: "servidor", institution: "UNIR", role: "docente", campus: "Ji-Paraná", regionDeclared: true, consent: true });
   assert.equal(real.ok, true);
   if (!real.ok) return;
   await submit(real.value, {});
   assert.equal(await confirm(tokenFrom(OUTBOX_DIR).token), "ok");
   assert.deepEqual(await counts(), { servidor: 1, apoiador: 0, estrangeiro: 0, total: 1 });
   const row = (await dbmod.query<{ name: string; email: string }>("SELECT name,email FROM signatures")).rows[0];
-  assert.deepEqual(row, { name: "Maria da Silva", email: "maria2@exemplo.com" });
+  assert.deepEqual(row, { name: "Maria da Silva", email: "maria2@unir.br" });
 
   await dbmod._closeDbForTests();
   rmSync(OUTBOX_DIR, { recursive: true, force: true });

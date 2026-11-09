@@ -187,6 +187,11 @@ test("e-mail com provedor digitado errado: recusa com o que está errado e como 
     const js = s.json as any;
     assert.equal(s.status, 422);
     assert.equal(js.errors?.email, "email_institutional_invalid", JSON.stringify(js)); assert.equal(js.suggest, "ana@unir.br"); assert.equal(js.fix.correto, "unir.br");
+    // A dica não pode encaminhar para outra instituição e esconder a divergência.
+    const other = await handleSign(form({ name: "Ana Souza", email: "ana@ifro.edu.bt", cpf: c, category: "servidor", institution: "UNIR", role: "docente", regionDeclared: true, campus: "Porto Velho", campusIbge: 1100205 }), { ip: "8.8.4.4" }, provider);
+    assert.equal(other.status, 422);
+    assert.equal((other.json as any).errors?.institution, "institution_email_mismatch");
+    assert.equal(other.json.suggest, undefined);
     assert.equal((await dbmod.query("SELECT count(*)::int n FROM institutional_domains WHERE domain='unir.bt'")).rows[0].n, 0);
     assert.equal((await dbmod.query("SELECT count(*)::int n FROM signatures")).rows[0].n, 0);
   } finally { _setMxResolverForTests(async () => "ok"); await dbmod._closeDbForTests(); }

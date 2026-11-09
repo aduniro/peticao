@@ -4,11 +4,18 @@ import { validate, type SignInput } from "./signatures";
 import { findIfes, resolveCampus, IFES, campusCities } from "./ifes-data";
 import { findMunicipality } from "./geo-data";
 import { isCountryCode, COUNTRY_CODES } from "@/i18n/countries";
+import domainCatalog from "../../public/data/institution-domain-catalog.json";
+import { resolveServerInstitutionForEmail } from "./institution-domain-policy";
 
 const CPF = "529.982.247-25";
 const base = { name: "Maria da Silva", email: "maria@gmail.com", cpf: CPF, consent: true };
 const ok = (r: ReturnType<typeof validate>): SignInput => { assert.equal(r.ok, true, JSON.stringify(r)); return (r as { ok: true; value: SignInput }).value; };
 const err = (r: ReturnType<typeof validate>) => { assert.equal(r.ok, false); return (r as { ok: false; errors: Record<string, string> }).errors; };
+const emailFor = (institution: NonNullable<ReturnType<typeof findIfes>>) => {
+  const rule = domainCatalog.find((r) => r.status === "approved" && r.institutionId === institution.id && resolveServerInstitutionForEmail(`maria@${r.domain}`)?.institutionId === institution.id);
+  assert.ok(rule, `domínio MEC aprovado obrigatório para fixture ${institution.s}`);
+  return `maria@${rule.domain}`;
+};
 
 test("apoiador: UF × cidade ligadas e validadas", () => {
   const a = ok(validate({ ...base, category: "apoiador", uf: "RO", city: "Porto Velho" }));
@@ -41,46 +48,49 @@ test("IFES: sigla ou nome, campi, campus livre", () => {
 });
 
 test("servidor: IFES, campus e checkbox de Amazônia Legal / faixa de fronteira", () => {
-  const sv = { ...base, category: "servidor", role: "docente", institution: "UNIR" };
+  const sv = { ...base, email: "maria@unir.br", category: "servidor", role: "docente", institution: "UNIR" };
   const a = ok(validate({ ...sv, campus: "Ji-Paraná", regionDeclared: true }));
   assert.deepEqual([a.institution, a.ifesListed, a.campus, a.campusListed, a.regionValidated, a.regionCriteria], ["UNIR", true, "Ji-Paraná", true, true, "amazonia_legal"]);
   assert.equal(ok(validate({ ...sv, campus: "Vilhena", regionDeclared: true })).regionCriteria, "ambos");
   assert.equal(err(validate({ ...sv, regionDeclared: true })).campus, "campus_required"); // declarou a região: precisa dizer onde está lotado
-  assert.equal(err(validate({ ...sv, campus: "Vilhena" })).region, "region_required"); // UNIR: todos os campi na Amazônia Legal, então a caixa é obrigatória
-  const nd = ok(validate({ ...sv, institution: "UFPR", campus: "Vilhena" })); // UFPR tem campi fora da região: pode não declarar; nada validado e cargo/campus são ignorados
+  assert.equal(ok(validate({ ...sv, campus: "Vilhena" })).regionDeclared, true); // UNIR: caixa automática no backend; lotação continua obrigatória
+  const nd = ok(validate({ ...sv, email: emailFor(findIfes("UFPR")!), institution: "UFPR", campus: "Vilhena" })); // UFPR tem campi fora da região: pode não declarar; campus de outra instituição é ignorado
   assert.deepEqual([nd.regionValidated, nd.campus, nd.role], [false, undefined, "docente"]); // o cargo agora vale mesmo sem declarar a região
   // tentativa de burlar: declara região, mas o campus fica fora das listas oficiais
   assert.equal(err(validate({ ...sv, campus: "São Paulo", regionDeclared: true })).region, "region_not_eligible");
   assert.equal(err(validate({ ...sv, campus: "Fazenda Experimental", regionDeclared: true })).region, "region_not_eligible"); // campus livre, sem município
   assert.equal(err(validate({ ...sv, institution: "Instituto Inventado", regionDeclared: true })).region, "region_ifes_not_eligible"); // IFES fora da lista não marca a caixa
-  const f = ok(validate({ ...sv, institution: "UNILA", campus: "Foz do Iguaçu", regionDeclared: true })); // fora da Amazônia, mas faixa de fronteira
+  const f = ok(validate({ ...sv, email: emailFor(findIfes("UNILA")!), institution: "UNILA", campus: "Foz do Iguaçu", regionDeclared: true })); // fora da Amazônia, mas faixa de fronteira
   assert.deepEqual([f.regionValidated, f.regionCriteria], [true, "faixa_fronteira"]);
   const nf = err(validate({ ...sv, institution: "Instituto Inventado" }));
   assert.equal(nf.institution, "ifes_required"); // instituição fora do catálogo é rejeitada também sem checkbox
   assert.equal(err(validate({ ...sv, role: "", campus: "Ji-Paraná", regionDeclared: true })).role, "role_required");
   assert.equal(err(validate({ ...sv, institution: "UFPR", role: "" })).role, "role_required"); // o cargo é obrigatório para todo servidor, mesmo sem declarar a região
-  assert.equal(ok(validate({ ...sv, institution: "UFPR", role: "tae" })).role, "tae");
+  assert.equal(ok(validate({ ...sv, email: emailFor(findIfes("UFPR")!), institution: "UFPR", role: "tae" })).role, "tae");
+  const mismatch = err(validate({ ...sv, institution: "UFPR", role: "tae" }));
+  assert.equal(mismatch.email, "institution_email_mismatch");
+  assert.equal(mismatch.institution, "institution_email_mismatch");
   assert.equal(err(validate({ ...sv, institution: "" })).institution, "ifes_required");
   assert.equal(err(validate({ ...sv, cpf: "111.111.111-11" })).cpf, "cpf_invalid");
 });
 
 test("região: só instituição federal da lista com sede ou campus na Amazônia Legal/faixa de fronteira marca a caixa, e só com campus dela na região", async () => {
-  const { IFES, ifesEligible, regionCampusIds } = await import("./ifes-data");
+  const { SERVER_INSTITUTIONS, ifesEligible, regionCampusIds } = await import("./ifes-data");
   const sv = { ...base, category: "servidor", role: "docente" };
-  const inel = IFES.find((i) => !ifesEligible(i))!; // ex.: instituição sem nenhum campus na região
+  const inel = SERVER_INSTITUTIONS.find((i) => !ifesEligible(i))!; // instituição MEC sem nenhum campus na região
   assert.ok(inel, "esperava ao menos uma instituição inelegível nos dados");
-  assert.equal(err(validate({ ...sv, institution: inel.s, campus: "Porto Velho", regionDeclared: true })).region, "region_ifes_not_eligible");
+  assert.equal(err(validate({ ...sv, email: emailFor(inel), institution: inel.s, campus: "Porto Velho", regionDeclared: true })).region, "region_ifes_not_eligible");
   // sem declarar a região, a instituição inelegível assina normalmente (como qualquer servidor)
-  assert.equal(ok(validate({ ...sv, institution: inel.s })).regionValidated, false);
+  assert.equal(ok(validate({ ...sv, email: emailFor(inel), institution: inel.s })).regionValidated, false);
   // instituição elegível com campus fora da região: o campus não vale
-  const mixed = IFES.find((i) => ifesEligible(i) && i.c.some((id) => !regionCampusIds(i).includes(id)))!;
+  const mixed = SERVER_INSTITUTIONS.find((i) => ifesEligible(i) && i.id !== "org:ebserh" && i.c.some((id) => !regionCampusIds(i).includes(id)))!;
   const outId = mixed.c.find((id) => !regionCampusIds(mixed).includes(id))!;
   const { municipalityById } = await import("./geo-data");
   const out = municipalityById(outId)!;
-  const e = err(validate({ ...sv, institution: mixed.s, campus: out.name, campusIbge: outId, regionDeclared: true }));
+  const e = err(validate({ ...sv, email: emailFor(mixed), institution: mixed.s, campus: out.name, campusIbge: outId, regionDeclared: true }));
   assert.equal(e.region, "region_not_eligible");
   // campus na região mas que não é da instituição
-  const e2 = err(validate({ ...sv, institution: "UNIR", campus: "Manaus", regionDeclared: true }));
+  const e2 = err(validate({ ...sv, email: "maria@unir.br", institution: "UNIR", campus: "Manaus", regionDeclared: true }));
   assert.ok(e2.campus === "campus_not_in_ifes" || e2.region, JSON.stringify(e2));
   // as instituições do Norte estão elegíveis
   for (const sg of ["UNIR", "UFAC", "UFAM", "UFPA", "IFRO", "IFAM"]) { const i = IFES.find((x) => x.s === sg); if (i) assert.ok(ifesEligible(i), sg + " deveria ser elegível"); }
