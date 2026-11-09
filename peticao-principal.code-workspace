@@ -1,0 +1,91 @@
+{
+  "folders": [
+    {
+      "name": "Petição — página principal",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.encoding": "utf8",
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {},
+    "typescript.tsdk": "site/node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    "typescript.preferences.importModuleSpecifier": "non-relative",
+    "git.autofetch": false,
+    "git.confirmSync": true,
+    "git.enableSmartCommit": false,
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/.next/**": true,
+      "**/.cache/**": true,
+      "**/preview-state/**": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.next": true,
+      "**/.cache": true,
+      "**/preview-state": true,
+      "**/secrets": true
+    },
+    "todo-tree.general.tags": [
+      "MUDAR AQUI",
+      "TODO",
+      "FIXME"
+    ],
+    "todo-tree.tree.showScanModeButton": false,
+    "markdown.preview.breaks": false
+  },
+  "extensions": {
+    "recommendations": [
+      "mhutchie.git-graph",
+      "gruntfuggly.todo-tree",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "ms-azuretools.vscode-containers",
+      "redhat.vscode-yaml",
+      "shd101wyy.markdown-preview-enhanced",
+      "jeanp413.open-remote-ssh",
+      "ms-python.python"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Vigia — acompanhar tarefas",
+        "type": "process",
+        "command": "/mnt/apps/peticao-final/peticao/vigia",
+        "problemMatcher": [],
+        "presentation": {
+          "panel": "dedicated",
+          "reveal": "always"
+        }
+      },
+      {
+        "label": "Git — árvore de commits deste branch",
+        "type": "process",
+        "command": "/usr/bin/git",
+        "args": [
+          "-C",
+          "/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109",
+          "log",
+          "--graph",
+          "--decorate",
+          "--oneline",
+          "-40"
+        ],
+        "problemMatcher": []
+      },
+      {
+        "label": "Abrir prévia isolada corrigida",
+        "type": "process",
+        "command": "/usr/bin/xdg-open",
+        "args": [
+          "http://127.0.0.1:3062/"
+        ],
+        "problemMatcher": []
+      }
+    ]
+  }
+}
