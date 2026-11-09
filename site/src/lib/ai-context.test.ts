@@ -80,6 +80,21 @@ test("tamanho, ausência de fonte e parâmetros privados não produzem contexto 
   } finally { await c.db._closeDbForTests(); }
 });
 
+test("pedido livre separado da busca conserva intenção, fonte e prova sem aceitar dados pessoais comuns", async () => {
+  const c = await setup(); try {
+    const legacy = { uso: "divulgacao", consulta: "Amazonia" }, old = await c.A.prepareAiContext(legacy); assert.ok(old.ok);
+    assert.ok(!Object.prototype.hasOwnProperty.call(JSON.parse(old.input), "request"));
+    const instrucoes = "Público: universidades federais. Canal: WhatsApp. Objetivo: convidar para assinar. Use parágrafos curtos, explique os motivos e preserve as ressalvas das fontes, sem afirmar sanção ou confirmação que não ocorreu.";
+    const input = { ...legacy, instrucoes }, before = await unchanged(c.db), prepared = await c.A.prepareAiContext(input); assert.ok(prepared.ok);
+    assert.equal(JSON.parse(prepared.input).request, instrucoes); assert.equal(JSON.parse(prepared.input).query, legacy.consulta); assert.notEqual(prepared.proof, old.proof);
+    assert.ok((await c.A.validateAiContext(input, prepared.proof)).ok);
+    assert.equal((await c.A.validateAiContext({ ...input, instrucoes: instrucoes + " Mude o objetivo." }, prepared.proof)).ok, false);
+    for (const value of ["", "x".repeat(3001), 12, "CPF 123.456.789-09", "contato: private@example.test", "sk-abcdefghijklmnopqrstuv", "texto\u0000oculto"]) assert.equal((await c.A.prepareAiContext({ ...legacy, instrucoes: value })).ok, false);
+    const multiline = await c.A.prepareAiContext({ ...legacy, instrucoes: "Primeiro parágrafo.\nSegundo parágrafo, com acentuação." }); assert.ok(multiline.ok);
+    assert.deepEqual(await unchanged(c.db), before);
+  } finally { await c.db._closeDbForTests(); }
+});
+
 test("protocolo OpenAI é offline, conserva modelo explícito e impede ferramentas, conversa persistente e saída parcial", async () => {
   const c = await setup(); try {
     const input = { uso: "painel", consulta: "Amazonia" }, disabled = await c.A.prepareAiContext(input); assert.ok(disabled.ok); assert.ok(!openAiRequest(disabled).ok);
@@ -105,8 +120,9 @@ test("API separa leitura/preparação e configuração Total com confirmação e
     const prepared = { modo: "preparar", input: { uso: "painel", consulta: "Amazonia" } };
     assert.equal((await context.POST(req("contexto", prepared, readerToken, "https://other.example.test"))).status, 403);
     const r = await context.POST(req("contexto", prepared, readerToken)); assert.equal(r.status, 200); const p = await r.json(); assert.equal(p.executionAvailable, false); assert.ok(!("input" in p)); assert.ok(!("instructions" in p)); assert.ok((await context.POST(req("contexto", { modo: "conferir", input: prepared.input, proof: p.proof }, readerToken))).ok);
+    const unicode = await context.POST(req("contexto", { modo: "preparar", input: { ...prepared.input, instrucoes: "é".repeat(2200) } }, readerToken)); assert.equal(unicode.status, 200); const extended = await unicode.json(); assert.ok(extended.proof); assert.ok(!("input" in extended)); assert.ok(!("instructions" in extended));
     assert.equal((await context.POST(req("contexto", { modo: "preparar", input: { uso: "atendimento", consulta: "Amazonia", contato: c.contact } }, readerToken))).status, 403);
-    assert.equal((await context.POST(req("contexto", "x".repeat(4097), readerToken))).status, 413);
+    assert.equal((await context.POST(req("contexto", "x".repeat(16385), readerToken))).status, 413);
     const token = (await c.U.abrirSessao(c.actor.userId, "127.0.0.1")).token, change = { config: c.enabled(), expectedRevision: 0 };
     assert.equal((await settings.POST(req("configuracao", change, token))).status, 403);
     await c.db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '10 minutes' WHERE user_id=$1", [c.actor.userId]);
