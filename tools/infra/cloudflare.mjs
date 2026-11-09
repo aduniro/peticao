@@ -17,7 +17,7 @@ if (!REGISTRY[regKey]) { console.error(`Conta desconhecida: ${conta}. Opções: 
 const usingReg = flags.usando === "antigo" ? "cloudflare" : regKey;
 const token = getKey(REGISTRY[usingReg].env);
 if (!cmd || cmd === "ajuda") { console.log("Comandos: zonas | endurecer [dominio] [--aplicar] | token:criar-geral [dominio] [--aplicar] | ajustar <dominio> [--https] [--tls12] [--dnssec] | auditar <dominio> | dns:listar <dominio> | dns:site <dominio> --ipv4 IP [--ipv6 IP] [--aplicar]"); process.exit(0); }
-if (!token) { console.error(`Sem token para a conta "${usingReg}". Rode: node /mnt/dev/peticao/tools/infra/chave.mjs ${usingReg}`); process.exit(1); }
+if (!token) { console.error(`Sem token para a conta "${usingReg}". Rode: node /mnt/apps/peticao-final/peticao/tools/infra/chave.mjs ${usingReg}`); process.exit(1); }
 const cf = createCfClient({ token });
 const show = (r) => `${r.type.padEnd(6)} ${r.name.padEnd(30)} ${String(r.content).padEnd(42)} ${r.proxied ? "proxy LIGADO" : "só DNS"}`;
 try {
