@@ -1,0 +1,54 @@
+# TEMPLATE ONLY: not installed or enabled by development.
+# Provision a dedicated account peticao-signing, application group peticao-web,
+# protected config and a pinned venv/code under /opt/peticao-signing first.
+# PFX/password directories remain 0700; files 0600 owned by peticao-signing.
+[Unit]
+Description=Peticao private A1 signing broker
+After=local-fs.target
+ConditionPathExists=/etc/peticao-signing/service.json
+ConditionPathExists=/etc/peticao-signing/worker.json
+
+[Service]
+Type=simple
+User=peticao-signing
+Group=peticao-web
+RuntimeDirectory=peticao-signing
+RuntimeDirectoryMode=0750
+UMask=0077
+Environment=A1_SERVICE_CONFIG=/etc/peticao-signing/service.json
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/peticao-signing/venv/bin/python /opt/peticao-signing/service.py
+WorkingDirectory=/
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=70
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/run/peticao-signing
+ReadOnlyPaths=/etc/peticao-signing /opt/peticao-signing
+RestrictAddressFamilies=AF_UNIX
+IPAddressDeny=any
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectKernelLogs=yes
+ProtectClock=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+LimitCORE=0
+LimitNOFILE=128
+MemoryMax=2G
+TasksMax=32
+CPUQuota=200%
+StandardOutput=null
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target
