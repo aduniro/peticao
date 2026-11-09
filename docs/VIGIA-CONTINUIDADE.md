@@ -19,9 +19,13 @@ código ou alterar serviços da petição na VPS.
    no histórico existente. Queda do executor permite retomada somente quando o PID
    anterior registrado já não existe. Comando shell interrompido não é repetido.
    Falhas de verificação podem abrir até duas investigações, se autorizadas no
-   plano; não são tratadas como falhas transitórias. Créditos, autenticação,
+   plano; não são tratadas como falhas transitórias. Por padrão, créditos, autenticação,
    aprovações, erros desconhecidos ou orçamento de retomadas esgotado exigem aviso
    e estado de espera, preservando os registros.
+   Exceção opt-in de09/11: futuros erros terminais estruturados de quota podem
+   aguardar sondagem oficial e retomada limitada conforme
+   `/mnt/dev/peticao/docs/VIGIA-RETOMADA-QUOTA-20261109.md`.
+   Isso não reclassifica erros históricos, recusas ou pausas do usuário.
 5. **Conclusão verificável:** fim do turno não basta. Planos reais exigem relatório
    estruturado e verificações independentes com código zero. Continuação exige
    ferramentas executadas e checkpoint; há limite de 20 continuações por etapa,

@@ -30,6 +30,8 @@ class Store:
    CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY,at TEXT,subject TEXT,body TEXT,state TEXT,updated_at TEXT);
    CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY,value TEXT);
    ''')
+   from .quota import initialize as initialize_quota
+   initialize_quota(db)
    from .supervision import initialize
    initialize(db)
    existing={r[1] for r in db.execute('PRAGMA table_info(steps)')}
@@ -61,7 +63,7 @@ class Store:
   if not task_id or len(task_id)>100:raise ValueError('Identificador inválido')
   if values.get('state','queued') not in STATES:raise ValueError('Estado inválido')
   old=self.rows('SELECT * FROM tasks WHERE id=?',(task_id,))
-  row=old[0] if old else dict(id=task_id,title=task_id,state='queued',cwd='/mnt/dev/peticao',environment='local',scope='',stage='',detail='',eta='',created_at=now(),thread_id=None,import_hash=None)
+  row=dict(old[0]) if old else dict(id=task_id,title=task_id,state='queued',cwd='/mnt/dev/peticao',environment='local',scope='',stage='',detail='',eta='',created_at=now(),thread_id=None,import_hash=None)
   for k,v in values.items():
    if k not in row and k!='updated_at':raise ValueError('Campo de tarefa inválido')
    row[k]=v
@@ -70,6 +72,7 @@ class Store:
    if row['state']=='completed' and db.execute('SELECT 1 FROM supervision WHERE task_id=? AND enabled=1',(task_id,)).fetchone():
     plan=db.execute('SELECT state,check_request FROM workflow_steps WHERE task_id=?',(task_id,)).fetchall()
     if not plan or any(s['state']!='completed' or not s['check_request'] for s in plan):raise ValueError('Conclusão exige plano e verificações aprovadas')
+   if values.get('state') in {'paused','waiting','interrupted','completed','failed'} or any(k in values and old and values[k]!=old[0][k] for k in ('cwd','environment','scope')):db.execute("UPDATE quota_waits SET state='canceled' WHERE task_id=? AND state='pending'",(task_id,))
    keys=','.join(row);db.execute(f"INSERT OR REPLACE INTO tasks({keys}) VALUES({','.join('?' for _ in row)})",tuple(row.values()))
   return row
  def step(self,task_id,step_id,title,state='queued',weight=1,parent=None,detail='',eta=None):
@@ -113,7 +116,7 @@ class Store:
   rid=uid();self.execute('INSERT INTO requests(id,task_id,kind,body,state,at,updated_at,context) VALUES(?,?,?,?,?,?,?,?)',(rid,task_id,kind,body,'queued',now(),now(),encode(context)));self.event('request','Pedido na fila',task_id,{'id':rid,'kind':kind});return rid
  def claim(self):
   with self.connect() as db:
-   db.execute('BEGIN IMMEDIATE');r=db.execute("SELECT * FROM requests q WHERE state='queued' AND NOT EXISTS (SELECT 1 FROM requests a WHERE a.task_id=q.task_id AND a.state IN ('running','paused','waiting')) ORDER BY at LIMIT 1").fetchone()
+   db.execute('BEGIN IMMEDIATE');r=db.execute("SELECT * FROM requests q WHERE state='queued' AND EXISTS (SELECT 1 FROM tasks t WHERE t.id=q.task_id AND t.state IN ('queued','running')) AND NOT EXISTS (SELECT 1 FROM requests a WHERE a.task_id=q.task_id AND a.state IN ('running','paused','waiting')) ORDER BY at LIMIT 1").fetchone()
    if not r:return None
    db.execute("UPDATE requests SET state='running',updated_at=? WHERE id=?",(now(),r['id']));return dict(r)
  def out(self,request_id,text,kind='output'):

@@ -109,6 +109,7 @@ class Supervisor:
      request=db.execute('SELECT * FROM requests WHERE id=?',(rid,)).fetchone()
      if not request or request['state'] in ('queued','running','waiting','paused'):continue
      if request['state']!='completed':
+      if db.execute("SELECT 1 FROM quota_waits WHERE request_id=? AND state='pending'",(rid,)).fetchone():continue
       if step['state']=='working' and request['state'] in ('failed','interrupted') and request['failure_class'] in ('transport','executor_restart') and step['transient_retries']<2:
        delay=30*(2**step['transient_retries'])
        retry=(dt.datetime.now(dt.timezone.utc)+dt.timedelta(seconds=delay)).isoformat(timespec='seconds')

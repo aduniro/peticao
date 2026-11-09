@@ -97,7 +97,7 @@ def command_run(store,request,task):
 
 def ai_run(store,request,task):
  remote=request['kind']=='ai-vps';host='vps' if remote else 'local';rpc=Rpc(['ssh','-o','BatchMode=yes','peticao','/home/adunir/.local/bin/codex','app-server'] if remote else None);rid=request['id'];saved=store.rows('SELECT id FROM threads WHERE task_id=? AND host=?',(task['id'],host));thread_id=saved[0]['id'] if saved else None;turn_id=None;approval_ids=[]
- report_text=''
+ report_text='';quota_ineligible=False
  store.execute('UPDATE requests SET pid=? WHERE id=?',(rpc.proc.pid,rid))
  try:
   rpc.initialize()
@@ -108,11 +108,16 @@ def ai_run(store,request,task):
    params.update(threadId=thread_id,excludeTurns=True);result=rpc.call('thread/resume',params)
   else:result=rpc.call('thread/start',params)
   thread_id=result['thread']['id'];store.execute('INSERT OR REPLACE INTO threads VALUES(?,?,?)',(task['id'],host,thread_id))
+  if result['thread'].get('status',{}).get('type')!='idle':raise RuntimeError('Thread não está ociosa; nenhum turno duplicado foi iniciado')
+  current=store.rows('SELECT state FROM tasks WHERE id=?',(task['id'],))
+  if not current or current[0]['state'] not in ('queued','running'):raise RuntimeError('Tarefa suspensa; nenhum turno iniciado')
   text=f"Tarefa: {task['title']}\nAmbiente: {task['environment']}\nEscopo: {task['scope']}\nEstado: {task['detail']}\nPedido do usuário: {request['body']}"
   result=rpc.call('turn/start',{'threadId':thread_id,'input':[{'type':'text','text':text,'text_elements':[]}]});turn_id=result['turn']['id']
   while True:
    action=control(store,rid)
-   if action and action['action']=='cancel':rpc.request('turn/interrupt',{'threadId':thread_id,'turnId':turn_id})
+   if action and action['action'] in ('cancel','pause'):
+    if action['action']=='pause':store.task(task['id'],state='paused')
+    quota_ineligible=True;rpc.request('turn/interrupt',{'threadId':thread_id,'turnId':turn_id})
    elif action and action['action']=='steer':
     try:
      rpc.call('turn/steer',{'threadId':thread_id,'expectedTurnId':turn_id,'input':[{'type':'text','text':action['text'],'text_elements':[]}]},timeout=10);store.out(rid,'Direcionamento entregue ao turno ativo.','control')
@@ -120,6 +125,7 @@ def ai_run(store,request,task):
    for approval in store.rows('SELECT * FROM approvals WHERE request_id=? AND answered=0',(rid,)):
     decision=approval['decision'] or ('decline' if time.time()>approval['expires'] else None)
     if decision:
+     if decision=='decline':quota_ineligible=True
      rpc.send({'id':json.loads(approval['rpc_id']),'result':{'decision':decision}});store.execute('UPDATE approvals SET answered=1,decision=? WHERE id=?',(decision,approval['id']))
    msg=rpc.receive()
    if not msg:continue
@@ -129,7 +135,8 @@ def ai_run(store,request,task):
      aid=uid();approval_ids.append(aid);store.execute('INSERT INTO approvals VALUES(?,?,?,?,?,?,?,?,?)',(aid,rid,json.dumps(msg['id']),method,json.dumps(p),now(),time.time()+1200,None,0))
      store.event('approval','Aprovação solicitada',task['id'],{'id':aid,'request_id':rid})
      store.queue_mail('approval:'+aid,'Vigia: aprovação solicitada — '+task['title'],f"# Aprovação pendente\n\nTarefa: {task['title']}\n\nAmbiente: {task['environment']}\n\nAbra a aba Aprovações do Vigia para conferir a ação e decidir. Pedido {aid}, válido por 20 minutos. Nenhuma aprovação permanente será concedida.")
-    else:rpc.send({'id':msg['id'],'error':{'code':-32601,'message':'Interface não suporta esse pedido; peça esclarecimento ao usuário por mensagem.'}})
+    else:
+     quota_ineligible=True;rpc.send({'id':msg['id'],'error':{'code':-32601,'message':'Interface não suporta esse pedido; peça esclarecimento ao usuário por mensagem.'}})
    elif method=='item/agentMessage/delta':
     report_text=(report_text+p.get('delta',''))[-40000:];store.out(rid,clean(p.get('delta',''),10000),'assistant')
    elif method=='item/commandExecution/outputDelta':store.out(rid,clean(p.get('delta',''),10000),'output')
@@ -141,6 +148,13 @@ def ai_run(store,request,task):
    elif method=='turn/completed':
     status=p['turn']['status'];error=p['turn'].get('error')
     if error:store.out(rid,clean(json.dumps(error),2000),'error')
+    if status=='failed' and error and not remote and not quota_ineligible:
+     from .quota import record
+     snapshot={}
+     if error.get('codexErrorInfo')=='usageLimitExceeded':
+      try:snapshot=rpc.call('account/rateLimits/read',{},timeout=15)
+      except (RuntimeError,TimeoutError):pass
+      record(store,request,thread_id,error,snapshot)
     reports=re.findall(r'<vigia-result>(.*?)</vigia-result>',report_text,re.S)
     if reports:
      try:
@@ -148,7 +162,9 @@ def ai_run(store,request,task):
       if report.get('status') in ('completed','continue','blocked') and isinstance(report.get('checkpoint'),str):store.execute('UPDATE requests SET run_report=? WHERE id=?',(json.dumps({'status':report['status'],'checkpoint':clean(report['checkpoint'],6000)}),rid))
      except (ValueError,AttributeError):pass
     return ('completed' if status=='completed' else 'interrupted' if status=='interrupted' else 'failed',None)
-   elif method=='error':store.out(rid,clean(json.dumps(p),3000),'error')
+   elif method=='error':
+    if not p.get('willRetry') and p.get('error',{}).get('codexErrorInfo')!='usageLimitExceeded':quota_ineligible=True
+    store.out(rid,clean(json.dumps(p),3000),'error')
  finally:
   store.execute("UPDATE approvals SET answered=1,decision=COALESCE(decision,'decline') WHERE request_id=? AND answered=0",(rid,));rpc.close()
 
@@ -166,6 +182,6 @@ def execute_request(store,request,stop=None):
   else:state,code=command_run(store,request,task)
  except Exception as error:
   state,code='failed',None;failure_class='transport' if isinstance(error,(TimeoutError,ConnectionError)) else 'unknown';store.out(request['id'],clean(str(error),1500),'error')
- store.execute('UPDATE requests SET state=?,exit_code=?,updated_at=?,failure_class=? WHERE id=?',(state,code,now(),failure_class,request['id']))
+ store.execute('UPDATE requests SET state=?,exit_code=?,updated_at=?,failure_class=COALESCE(?,failure_class) WHERE id=?',(state,code,now(),failure_class,request['id']))
  store.event('observation_paused' if state=='waiting' else 'run_finished','Observação suspensa; job remoto preservado' if state=='waiting' else 'Execução '+state,task['id'],{'id':request['id'],'exit_code':code})
  store.queue_mail('run:'+request['id'],'Vigia: execução '+state+' — '+task['title'],f"# Execução {state}\n\nTarefa: {task['title']}\n\nAmbiente: {task['environment']}\n\nTipo: {request['kind']}\n\nCódigo de saída: {code if code is not None else 'não aplicável'}.\n\nConsulte o prompt da tarefa no Vigia para saída e próximos passos.")

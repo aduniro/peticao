@@ -32,7 +32,10 @@ class Daemon:
     try:self.collector.collect(slow=tick%5==0)
     except Exception as e:self.store.event('collector_error','Falha de coleta',data={'type':type(e).__name__})
     self.store.snapshot('daemon',{'pid':os.getpid(),'alive':True})
-    try:Supervisor(self.store).advance()
+    try:
+     from .quota import advance as advance_quota
+     advance_quota(self.store)
+     Supervisor(self.store).advance()
     except Exception as error:self.store.event('supervisor_error','Falha na supervisão; não declarar conclusão',data={'type':type(error).__name__})
     self.work={key:f for key,f in self.work.items() if not f.done()}
     if len(self.work)<2:
