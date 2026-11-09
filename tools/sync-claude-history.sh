@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Atualiza, em /mnt/dev/peticao, a cópia do histórico de conversa do projeto antigo
+# Atualiza, em /mnt/apps/peticao-final/peticao, a cópia do histórico de conversa do projeto antigo
 # (/media/barre/Expansion/peticao), para `claude --resume` listar a sessão nessa pasta.
 # Cópia fiel (sem editar o conteúdo). Só substitui o destino se a origem for maior,
 # então nunca apaga progresso feito depois de retomar a sessão no destino.
-# Uso: depois de sair do Claude Code (/exit), rode:  /mnt/dev/peticao/tools/sync-claude-history.sh
+# Uso: depois de sair do Claude Code (/exit), rode:  /mnt/apps/peticao-final/peticao/tools/sync-claude-history.sh
 set -euo pipefail
 SRC="$HOME/.claude/projects/-media-barre-Expansion-peticao"
 DST="$HOME/.claude/projects/-mnt-dev-peticao"
