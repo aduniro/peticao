@@ -8,6 +8,10 @@ Manter foco na tarefa prioritária até concluir o escopo aprovado. Perguntas, p
 
 Registrar etapas, commits, testes e atividade real no Vigia. Se houver interrupção externa ou impedimento técnico, informar imediatamente, preservar um checkpoint e retomar assim que possível; nunca apresentar trabalho parado como execução em segundo plano. Seguir `docs/POLITICA-CENTRAL-EXECUCAO.md`. A prioridade não autoriza deploy ou merge sem permissão explícita.
 
+## Política central de domínios e instituições
+
+Seguir `docs/POLITICA-CENTRAL-DOMINIOS-INSTITUICOES.md`: cada domínio institucional deve ter instituição titular específica e evidência oficial; pesquisar os vínculos desconhecidos antes de aprovar. Múltiplos domínios por instituição são permitidos. Identificação de titularidade não autoriza ingresso no formulário Servidor(a), temporariamente restrito às instituições vinculadas ao MEC. Preservar históricos, aparência e as restrições de publicação.
+
 ## Caminhos completos nas respostas
 
 Regra expressa do responsável em 09/11/2026: sempre apresentar o caminho absoluto completo e visível de arquivos, pastas, scripts e artefatos. Não fornecer apenas caminhos relativos, nomes de arquivo ou links que ocultem o diretório principal.

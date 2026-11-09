@@ -1,4 +1,5 @@
 import ifesDomains from "./ifes-domains.json";
+import institutionRegistry from "../../public/data/institution-registry.json";
 import { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
 import { createHash } from "node:crypto";
 import { config } from "./config";
@@ -174,6 +175,15 @@ const SCHEMA_SQL = `
     CHECK (expires_at > fetched_at AND expires_at <= fetched_at + interval '30 days')
   );
   CREATE INDEX IF NOT EXISTS cpf_lookup_cache_expiry ON cpf_lookup_cache(expires_at);
+  CREATE TABLE IF NOT EXISTS institution_registry (
+    id TEXT PRIMARY KEY,
+    acronym TEXT NOT NULL,
+    full_name TEXT NOT NULL,
+    aliases JSONB NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(aliases) = 'array'),
+    evidence_url TEXT,
+    source TEXT NOT NULL DEFAULT 'catalogo-instituicoes',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
   CREATE TABLE IF NOT EXISTS institutional_domains (
     domain TEXT PRIMARY KEY,
     kind TEXT NOT NULL DEFAULT 'outro',
@@ -191,6 +201,17 @@ const SCHEMA_SQL = `
     ON CONFLICT (domain) DO NOTHING;
   ALTER TABLE institutional_domains ADD COLUMN IF NOT EXISTS acronym TEXT;
   ALTER TABLE institutional_domains ADD COLUMN IF NOT EXISTS country TEXT;
+  ALTER TABLE institutional_domains ADD COLUMN IF NOT EXISTS institution_id TEXT REFERENCES institution_registry(id);
+  ALTER TABLE institutional_domains ADD COLUMN IF NOT EXISTS include_subdomains BOOLEAN NOT NULL DEFAULT true;
+  CREATE INDEX IF NOT EXISTS idx_institutional_domains_institution ON institutional_domains(institution_id);
+  CREATE OR REPLACE VIEW institution_registry_with_domains AS
+    SELECT i.id, i.acronym, i.full_name, i.aliases, i.evidence_url, i.source,
+      COALESCE(jsonb_agg(jsonb_build_object(
+        'domain', d.domain, 'status', d.status, 'includeSubdomains', d.include_subdomains,
+        'kind', d.kind, 'evidenceUrl', d.evidence_url) ORDER BY d.domain)
+        FILTER (WHERE d.domain IS NOT NULL), '[]'::jsonb) AS domains
+    FROM institution_registry i LEFT JOIN institutional_domains d ON d.institution_id = i.id
+    GROUP BY i.id;
   UPDATE institutional_domains SET acronym = 'UNIR' WHERE domain = 'unir.br' AND acronym IS NULL;
   CREATE TABLE IF NOT EXISTS world_universities (
     id SERIAL PRIMARY KEY,
@@ -287,6 +308,54 @@ export async function seedIfesDomains(): Promise<void> {
   }
 }
 
+/** Catálogo de relações verificadas: um registro por domínio e FK estável por instituição.
+ * Não transforma hostname de site em autorização de e-mail. Decisões manuais rejeitadas
+ * e associações alheias ao catálogo são preservadas em cada reexecução.
+ */
+export async function seedInstitutionRegistry(): Promise<void> {
+  const pool = getPool();
+  for (const institution of institutionRegistry) {
+    await pool.query(
+      `INSERT INTO institution_registry(id,acronym,full_name,aliases,evidence_url)
+       VALUES($1,$2,$3,$4::jsonb,$5)
+       ON CONFLICT(id) DO UPDATE SET acronym=EXCLUDED.acronym, full_name=EXCLUDED.full_name,
+         aliases=EXCLUDED.aliases, evidence_url=EXCLUDED.evidence_url, updated_at=now()
+       WHERE institution_registry.source='catalogo-instituicoes'`,
+      [institution.id, institution.acronym, institution.fullName, JSON.stringify(institution.aliases), institution.evidenceUrl]
+    );
+    for (const rule of institution.domains) {
+      // Sufixos públicos nunca são identidades institucionais, mesmo se inseridos no JSON por engano.
+      if (["br", "gov.br", "edu.br", "com.br", "org.br"].includes(rule.domain)) continue;
+      await pool.query(
+        `INSERT INTO institutional_domains(domain,kind,institution,acronym,institution_id,
+          source,status,include_subdomains,evidence_url,decided_by)
+         VALUES($1,$2,$3,$4,$5,'catalogo-instituicoes',$6,$7,$8,'semente-instituicoes')
+         ON CONFLICT(domain) DO UPDATE SET
+           institution_id=EXCLUDED.institution_id, institution=EXCLUDED.institution,
+           acronym=EXCLUDED.acronym, kind=EXCLUDED.kind,
+           status=EXCLUDED.status, include_subdomains=EXCLUDED.include_subdomains,
+           evidence_url=EXCLUDED.evidence_url, source=EXCLUDED.source,
+           decided_by=EXCLUDED.decided_by, updated_at=to_char(now() AT TIME ZONE 'utc','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+         WHERE institutional_domains.status <> 'rejected'
+           AND (institutional_domains.institution_id IS NULL OR institutional_domains.institution_id=EXCLUDED.institution_id)
+           AND (institutional_domains.source IN ('derivado-ifes','catalogo-instituicoes')
+             OR institutional_domains.status='pending'
+             OR (institutional_domains.decided_by='semente' AND institutional_domains.domain='unir.br'))`,
+        [rule.domain, rule.kind, institution.fullName, institution.acronym, institution.id,
+          rule.status, rule.includeSubdomains, rule.evidenceUrl]
+      );
+      // Vínculo administrativo já aprovado: acrescenta a FK apenas quando a sigla coincide;
+      // não muda status, curadoria, evidência ou instituição digitada manualmente.
+      await pool.query(
+        `UPDATE institutional_domains SET institution_id=$2
+         WHERE domain=$1 AND institution_id IS NULL AND status='approved'
+           AND lower(acronym)=ANY($3::text[]) AND kind=$4`,
+        [rule.domain, institution.id, [institution.acronym, ...institution.aliases].map((a) => a.toLowerCase()), rule.kind]
+      );
+    }
+  }
+}
+
 /** Assinaturas já confirmadas ganham número (por ordem de confirmação) e código de verificação, uma única vez. */
 async function backfillSignatureIds(): Promise<void> {
   const pool = getPool();
@@ -303,6 +372,7 @@ function init(): Promise<void> {
     g.__ready = getPool()
       .query(SCHEMA_SQL)
       .then(() => seedIfesDomains())
+      .then(() => seedInstitutionRegistry())
       .then(() => backfillSignatureIds())
       .catch((e) => {
         g.__ready = null;

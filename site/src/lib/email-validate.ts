@@ -6,6 +6,7 @@ import { detalheDeSugestao, diagnosticar, type Diagnostico } from "./email-diagn
 import { dominiosConhecidos, dominiosIfes } from "./email-sugestao";
 import { acceptsServerDomain, EBSERH } from "./server-email-policy";
 import { SUPPORTER_KNOWN_DOMAINS } from "./supporter-known-domains";
+import { resolveInstitutionForEmail } from "./institution-registry";
 
 export type EmailVerdict =
   | { ok: true; soft?: Diagnostico }
@@ -37,12 +38,13 @@ export async function validateEmailField(email: string, category: "servidor" | "
   if (!SAFE_EMAIL_RE.test(e)) return { ok: false, code: diag ? "email_typo" : "email_invalid", ...(diag ? { suggest: diag.sugestao ?? undefined, detail: diag } : {}) };
   const d = emailDomain(e) ?? "";
   const kind = await institutionalKind(e);
+  const institution = await resolveInstitutionForEmail(e);
   const noMx = (await checkMx(e)) === "none";
   if (diag && (diag.bloqueia || (diag.problema === "final" && noMx))) return { ok: false, code: "email_typo", suggest: diag.sugestao ?? undefined, detail: diag };
   if (category === "servidor") {
-    if (kind && !acceptsServerDomain(kind, d)) return { ok: false, code: "server_email_not_institutional" };
+    if (kind && !acceptsServerDomain(kind, d, institution)) return { ok: false, code: "server_email_not_institutional" };
     if (noMx) return { ok: false, code: "email_institutional_invalid", ...comDetalhe(e, suggestEmail(e, { known: kn, semServidor: true })) };
-    if (!acceptsServerDomain(kind, d)) {
+    if (!acceptsServerDomain(kind, d, institution)) {
       if (FREEMAIL.has(d) || [...FREEMAIL].some((f) => d.endsWith("." + f))) return { ok: false, code: "server_email_not_institutional" }; // gmail etc.
       const s = suggestEmail(e, { known: kn });
       if (s && !PROVIDERS.has(emailDomain(s) ?? "")) return { ok: false, code: "email_institutional_invalid", ...comDetalhe(e, s) }; // erro de digitação de domínio institucional
@@ -51,7 +53,7 @@ export async function validateEmailField(email: string, category: "servidor" | "
     return { ok: true };
   }
   // apoiador
-  if (acceptsServerDomain(kind, d) && !noMx) return { ok: false, code: "apoiador_institutional_email" };
+  if (acceptsServerDomain(kind, d, institution) && !noMx) return { ok: false, code: "apoiador_institutional_email" };
   if (noMx) return { ok: false, code: "email_provider_invalid", ...comDetalhe(e, suggestEmail(e, { known: kn, semServidor: true })) };
   const s = suggestEmail(e, { known: kn });
   if (s && PROVIDERS.has(emailDomain(s) ?? "")) return { ok: false, code: "email_provider_invalid", ...comDetalhe(e, s) }; // "gmial.com" → gmail.com

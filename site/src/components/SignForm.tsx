@@ -20,6 +20,8 @@ import { isKnownSupporterEmail } from "@/lib/supporter-known-domains";
 import { formValidationNotice } from "@/lib/form-validation-notice";
 import { signRequest } from "@/lib/sign-request";
 import { matchesInstitutionSelection } from "@/lib/datasets-client";
+import { resolveServerInstitutionForEmail as resolveInstitutionForEmail } from "@/lib/institution-domain-policy";
+import { institutionMatchesDomain, type InstitutionDomainMatch } from "@/lib/institution-form-state";
 import { useI18n } from "@/i18n/client";
 import { countryName } from "@/i18n";
 import type { MessageKey } from "@/i18n/messages-types";
@@ -29,6 +31,12 @@ declare global { interface Window { turnstile?: { render: (el: HTMLElement, o: R
 type Body = Record<string, unknown>;
 type Category = "servidor" | "apoiador" | "estrangeiro";
 const EMPTY_SERVER: ServerState = { institution: "", ifes: null, role: "", campus: "", campusIbge: null, region: false };
+function institutionFromVerdict(value: unknown): InstitutionDomainMatch | null {
+  if (!value || typeof value !== "object") return null;
+  const item = value as Record<string, unknown>;
+  return typeof item.institutionId === "string" && typeof item.acronym === "string" && typeof item.fullName === "string" && typeof item.matchedDomain === "string"
+    ? { institutionId: item.institutionId, acronym: item.acronym, fullName: item.fullName, matchedDomain: item.matchedDomain } : null;
+}
 
 export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, whatsappAtivo = false }: { consentBr: string; consentForeign: string; turnstileSiteKey?: string | null; whatsappAtivo?: boolean }) {
   const { t, lang, country: ipCountry } = useI18n();
@@ -60,6 +68,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   const [issue, setIssue] = useState<{ code: string; suggest: string } | null>(null); // problema do e-mail (domínio inválido…): campo vermelho até o e-mail validar
   const issueTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const emailVerdict = useRef<{ email: string; category: Category; at: number; value: Record<string, any> } | null>(null);
+  const [emailInstitution, setEmailInstitution] = useState<{ email: string; value: InstitutionDomainMatch } | null>(null);
   const ISSUE = new Set(["email_typo", "email_institutional_invalid", "email_provider_invalid", "server_email_not_institutional", "apoiador_institutional_email"]);
   async function checkRemote(v: string) {
     if (!v || !SAFE_EMAIL_RE.test(v) || (category !== "servidor" && category !== "apoiador")) { setIssue(null); return; }
@@ -71,6 +80,8 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       setIssue(j.ok ? null : { code: String(j.code), suggest: typeof j.suggest === "string" ? j.suggest : "" });
       setFix((j.ok ? j.soft : j.fix) ?? null);
       if (j.ok) setSugg(j.soft?.sugestao ?? suggestEmail(v) ?? "");
+      const institution = j.ok ? institutionFromVerdict(j.institution) : null;
+      setEmailInstitution(institution ? { email: v, value: institution } : null);
       emailVerdict.current = { email: v, category, at: Date.now(), value: j };
       return j as Record<string, any>;
     } catch { /* sem rede: o servidor valida de novo ao enviar */ }
@@ -86,10 +97,24 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     setSrv((previous) => ({ ...previous, ...patch }));
     const institution = patch.institution ?? srv.institution;
     const selected = patch.ifes === undefined ? srv.ifes : patch.ifes;
-    if (errors.institution && matchesInstitutionSelection(institution, selected)) {
-      setErrors((previous) => ({ ...previous, institution: "" }));
+    const validInstitution = matchesInstitutionSelection(institution, selected);
+    const validCampus = !!patch.campusIbge && !!selected && [selected.m, ...selected.c].includes(patch.campusIbge);
+    if ((errors.institution && validInstitution) || (errors.campus && validCampus)) {
+      setErrors((previous) => ({ ...previous, ...(validInstitution ? { institution: "" } : {}), ...(validCampus ? { campus: "" } : {}) }));
     }
   };
+  const verifiedEmailInstitution = category === "servidor" && emailInstitution?.email === emailMask(emailV, true) ? emailInstitution.value : null;
+  const recognizedEmailInstitution = category === "servidor" ? verifiedEmailInstitution ?? resolveInstitutionForEmail(emailV) : null;
+  const institutionMismatch = category === "servidor" && SAFE_EMAIL_RE.test(emailMask(emailV, true)) && matchesInstitutionSelection(srv.institution, srv.ifes) && !institutionMatchesDomain(srv.ifes, recognizedEmailInstitution);
+  const institutionMismatchText = t("err.institution_email_mismatch");
+  const effectiveErrors: Record<string, string> = institutionMismatch ? { ...errors, email: institutionMismatchText, institution: institutionMismatchText } : errors;
+  useEffect(() => {
+    if (institutionMismatch) return;
+    setErrors((previous) => {
+      if (previous.email !== institutionMismatchText && previous.institution !== institutionMismatchText) return previous;
+      return { ...previous, ...(previous.email === institutionMismatchText ? { email: "" } : {}), ...(previous.institution === institutionMismatchText ? { institution: "" } : {}) };
+    });
+  }, [institutionMismatch, institutionMismatchText, emailV, srv.institution]);
   const [uf, setUf] = useState(""); const [city, setCity] = useState("");
   const [country, setCountry] = useState(ipCountry !== "BR" ? ipCountry : ""); const [university, setUniversity] = useState("");
   const [detail, setDetail] = useState("");
@@ -161,8 +186,10 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     const f = new FormData(e.currentTarget);
     const eb = emailBad(emailV);
     if (eb || !emailV.trim()) { const error = eb || t("f.emailInvalid"); setErrors({ email: error }); showFieldNotice({ email: error }); setMsg(""); return; }
+    if (institutionMismatch && recognizedEmailInstitution) { showFieldNotice({ institution: "institution_email_mismatch" }); setMsg(""); return; }
     if ((category === "servidor" || category === "apoiador") && !isValidCpf(cpf)) { const error = t("err.cpf_invalid"); setErrors({ cpf: error }); showFieldNotice({ cpf: error }); setMsg(""); return; } // não envia nada: nem ao servidor, nem à CPF Brasil
     if (category === "servidor" && !matchesInstitutionSelection(srv.institution, srv.ifes)) { const error = t("err.ifes_required"); setErrors({ institution: error }); showFieldNotice({ institution: error }); setMsg(""); return; }
+    if (category === "servidor" && srv.region && !srv.campus.trim() && !srv.campusIbge) { const error = t("err.campus_required"); setErrors({ campus: error }); showFieldNotice({ campus: "campus_required" }); setMsg(""); return; }
     setState("sending"); setErrors({}); setMsg("");
     if (category === "servidor") {
       const requestGeneration = generation.current, submittedEmail = emailMask(emailV, true);
@@ -171,6 +198,11 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
         ? cached.value : await checkRemote(submittedEmail);
       if (requestGeneration !== generation.current) return;
       if (submittedEmail !== emailMask(emailRef.current, true)) { setState("idle"); return; }
+      const domainInstitution = institutionFromVerdict(verdict?.institution) ?? resolveInstitutionForEmail(submittedEmail);
+      if (verdict?.ok !== false && !institutionMatchesDomain(srv.ifes, domainInstitution)) {
+        setErrors({ email: institutionMismatchText, institution: institutionMismatchText });
+        showFieldNotice({ institution: "institution_email_mismatch" }); setState("idle"); return;
+      }
       if (verdict?.ok === false) {
         const code = typeof verdict.code === "string" ? verdict.code : "server_email_not_institutional";
         if (ISSUE.has(code)) { setIssue({ code, suggest: typeof verdict.suggest === "string" ? verdict.suggest : "" }); setFix(verdict.fix ?? null); }
@@ -252,6 +284,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     setCpf(""); setCpfTouched(false); setSrv({ ...EMPTY_SERVER });
     setUf(""); setCity(""); setCountry(""); setUniversity("");
     setWa({ iso: "BR", ddi: "55", numero: "" }); setWaConsent(false);
+    setEmailInstitution(null); emailVerdict.current = null;
     setErrors({}); setIssue(null); setSugg(""); setFix(null); setMsg(""); setDetail("");
     setNotice(null); setFieldNotice(null); setSentTo(""); setState("idle");
     setIdOpen(false); setIdBusy(false); setIdError(""); setIdLeft(null); setIdLocked(false);
@@ -277,7 +310,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       </>
     );
 
-  const err = (k: string) => (errors[k] ? <span id={`error-${k}`} className="err" role="alert">{errors[k]}</span> : null);
+  const err = (k: string) => (effectiveErrors[k] ? <span id={`error-${k}`} className="err" role="alert">{effectiveErrors[k]}</span> : null);
   const startTour = (c: Category, force = false) => window.dispatchEvent(new CustomEvent("peticao:tour", { detail: { category: c, force } }));
   const cat = (c: Category, label: string) => (
     <span className="seg-cell">
@@ -289,14 +322,14 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   return (
     <>
       <form ref={formRef} onSubmit={onSubmit} className="form" noValidate>
-        <FormDiagnostics formRef={formRef} category={category} errorFields={[...Object.keys(errors).filter(k => !!errors[k]), ...(issue ? ["email"] : []), ...(cpfBad ? ["cpf"] : [])]} />
+        <FormDiagnostics formRef={formRef} category={category} errorFields={[...Object.keys(effectiveErrors).filter(k => !!effectiveErrors[k]), ...(issue ? ["email"] : []), ...(cpfBad ? ["cpf"] : [])]} />
         <div className="form-head"><h2 className="form-title">{t("form.title")}</h2><HowTo onYes={() => startTour(category, true)} /></div>
         <div className="segmented three" data-tour="tabs" role="radiogroup" aria-label={t("cat.label")}>
           {cat("servidor", t("cat.servidor"))}{cat("apoiador", t("cat.apoiador"))}{cat("estrangeiro", t("cat.estrangeiro"))}
         </div>
         {err("category")}
         <label>{t("f.name")}<MaskedInput name="name" autoComplete="name" autoCapitalize="words" spellCheck={false} required aria-invalid={!!errors.name} aria-describedby={errors.name ? "error-name" : undefined} value={nameV} onFocus={() => setErrors((x) => ({ ...x, name: "" }))} onChange={setNameV} mask={nameMask} />{err("name")}</label>
-        <label data-tour="email">{t("f.email")}{category === "servidor" && <Help text={t("help.email.servidor")} />}<MaskedInput name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} required aria-invalid={!!errors.email || !!issue} aria-describedby={errors.email ? "error-email" : issue ? "error-email-issue" : undefined} value={emailV} onChange={(v) => { setEmailV(v); emailRef.current = v; setSugg(""); setFix(null); if (errors.email) setErrors((x) => ({ ...x, email: "" })); if (issue) { clearTimeout(issueTimer.current); issueTimer.current = setTimeout(() => checkRemote(emailMask(v, true)), 700); } }} onBlur={() => { const v = emailMask(emailV, true); const m = emailBad(v); if (m) { setErrors((x) => ({ ...x, email: m })); setIssue(null); const dg = diagnosticar(v); setFix(dg); setSugg(dg?.sugestao ?? ""); } else { const dg = diagnosticar(v); setFix(dg); setSugg(dg?.sugestao ?? suggestEmail(v) ?? ""); checkRemote(v); } }} mask={emailMask} />{err("email")}{issue && <span id="error-email-issue" className="err" role="alert">{t(`err.${issue.code}` as MessageKey)}{issue.code === "email_provider_invalid" && <><br /><span style={{ fontWeight: 400 }}>{t("f.emailProviders")}</span></>}</span>}{emailFix && <span className={issue || emailFix.bloqueia ? "err" : "hint"} role={issue || emailFix.bloqueia ? "alert" : "status"} style={{ fontWeight: 400 }}>{explainFix(emailFix)}</span>}{emailSuggestion && ( <span className="err" role="status" style={{ color: "inherit" }}>{t("f.emailSuggest", { email: emailSuggestion })} <button type="button" className="linklike" onClick={() => { const e = emailSuggestion; setEmailV(e); emailRef.current = e; setSugg(""); setFix(null); setIssue(null); setErrors((x) => ({ ...x, email: "" })); checkRemote(e); }}>{t("f.emailUse")}</button></span>)}
+        <label data-tour="email">{t("f.email")}{category === "servidor" && <Help text={t("help.email.servidor")} />}<MaskedInput name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} required aria-invalid={!!effectiveErrors.email || !!issue} aria-describedby={effectiveErrors.email ? "error-email" : issue ? "error-email-issue" : undefined} value={emailV} onChange={(v) => { setEmailV(v); emailRef.current = v; setSugg(""); setFix(null); if (errors.email) setErrors((x) => ({ ...x, email: "" })); if (issue) { clearTimeout(issueTimer.current); issueTimer.current = setTimeout(() => checkRemote(emailMask(v, true)), 700); } }} onBlur={() => { const v = emailMask(emailV, true); const m = emailBad(v); if (m) { setErrors((x) => ({ ...x, email: m })); setIssue(null); const dg = diagnosticar(v); setFix(dg); setSugg(dg?.sugestao ?? ""); } else { const dg = diagnosticar(v); setFix(dg); setSugg(dg?.sugestao ?? suggestEmail(v) ?? ""); checkRemote(v); } }} mask={emailMask} />{err("email")}{issue && <span id="error-email-issue" className="err" role="alert">{t(`err.${issue.code}` as MessageKey)}{issue.code === "email_provider_invalid" && <><br /><span style={{ fontWeight: 400 }}>{t("f.emailProviders")}</span></>}</span>}{emailFix && <span className={issue || emailFix.bloqueia ? "err" : "hint"} role={issue || emailFix.bloqueia ? "alert" : "status"} style={{ fontWeight: 400 }}>{explainFix(emailFix)}</span>}{emailSuggestion && ( <span className="err" role="status" style={{ color: "inherit" }}>{t("f.emailSuggest", { email: emailSuggestion })} <button type="button" className="linklike" onClick={() => { const e = emailSuggestion; setEmailV(e); emailRef.current = e; setSugg(""); setFix(null); setIssue(null); setErrors((x) => ({ ...x, email: "" })); checkRemote(e); }}>{t("f.emailUse")}</button></span>)}
           <span className="hint">{foreign ? t("f.emailHintForeign") : category === "servidor" ? t("f.emailHintServer") : t("f.emailHint")}</span></label>
         {whatsappAtivo && (
           <div className="wa-field" data-tour="whatsapp">
@@ -309,7 +342,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
         {!foreign && (
           <label data-tour="cpf">{t("f.cpf")}<Help text={t("help.cpf")} /><input name="cpf" inputMode="numeric" autoComplete="off" placeholder="999.999.999-99" maxLength={14} value={cpf} onFocus={() => { setCpfTouched(false); if (onlyDigits(cpf).length < 11) setErrors((x) => ({ ...x, cpf: "" })); }} onBlur={() => setCpfTouched(true)} onChange={(e) => { setCpf(maskCpf(e.target.value)); if (errors.cpf) setErrors((x) => ({ ...x, cpf: "" })); }} aria-invalid={!!errors.cpf || cpfBad} aria-describedby={cpfBad ? "cpf-erro" : undefined} required />{cpfBad ? <span id="cpf-erro" className="err" role="alert">{t("err.cpf_invalid")}</span> : err("cpf")}</label>
         )}
-        {category === "servidor" && <IfesCampusFields s={srv} set={updateServer} errors={errors} />}
+        {category === "servidor" && <IfesCampusFields s={srv} set={updateServer} errors={effectiveErrors} email={emailV} emailInstitution={verifiedEmailInstitution} />}
         {category === "apoiador" && <UfCityFields uf={uf} city={city} setUf={setUf} setCity={setCity} errors={errors} />}
         {foreign && <CountryUniversityFields country={country} setCountry={setCountry} university={university} setUniversity={setUniversity} errors={errors} />}
         <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hp" />

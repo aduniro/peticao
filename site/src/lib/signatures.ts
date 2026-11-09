@@ -15,6 +15,8 @@ import { isSuppressed } from "./mail/suppression";
 import type { CpfNameCheck } from "./cpf-check";
 import { checkMx, dedupEmail, isDisposable } from "./email-check";
 import { emailDomain, institutionInfo, institutionalKind, notePendingDomain } from "./institutional";
+import { resolveServerInstitutionForEmail as resolveCatalogInstitution, type InstitutionDomainMatch } from "./institution-domain-policy";
+import { resolveInstitutionForEmail as resolveRegisteredInstitution } from "./institution-registry";
 import { brasilia } from "./time";
 import { createReferrerForSignature } from "./referrals";
 import { TEXT_VERSION } from "@/content/peticao";
@@ -59,6 +61,7 @@ const clean = (s: unknown, max: number) => (typeof s === "string" ? s.trim().rep
 
 /** Códigos de erro de validação (o navegador traduz); o texto em português é a reserva. */
 export const ERROR_PT: Record<string, string> = {
+  institution_email_mismatch: "Este e-mail não corresponde à instituição selecionada.",
   name_required: "Informe seu nome completo.", email_invalid: "Informe um e-mail válido.", email_disposable: "Use seu e-mail pessoal ou institucional (não aceitamos e-mails temporários).",
   cpf_invalid: "CPF inválido.", category_invalid: "Escolha uma categoria.", consent_required: "É necessário concordar com o texto.",
   ifes_required: "Informe a instituição.", role_required: "Informe o cargo.", campus_invalid: "Campus inválido.", campus_required: "Informe onde você está lotado.", region_ifes_not_eligible: "Esta instituição não tem sede nem campus na Amazônia Legal ou na faixa de fronteira.", campus_not_in_ifes: "Este campus não consta entre os campi da instituição na região.", region_not_eligible: "O município do campus não está na Amazônia Legal nem na faixa de fronteira.",
@@ -71,8 +74,11 @@ export const ERROR_PT: Record<string, string> = {
 };
 
 export type ValidationResult = { ok: true; value: SignInput } | { ok: false; errors: Record<string, string> };
+export class InstitutionEmailMismatchError extends Error {
+  constructor() { super("institution_email_mismatch"); this.name = "InstitutionEmailMismatchError"; }
+}
 
-export function validate(raw: any): ValidationResult {
+export function validate(raw: any, binding?: { institutionMatch: InstitutionDomainMatch | null }): ValidationResult {
   const errors: Record<string, string> = {};
   const name = titleCaseName(clean(raw?.name, 120), { final: true }); // "mAria DA sILVA" → "Maria da Silva"
   const email = lowerEmail(clean(raw?.email, 200)); // sempre minúsculas antes de qualquer checagem ou gravação
@@ -94,8 +100,14 @@ export function validate(raw: any): ValidationResult {
     if (!ifes) errors.institution = "ifes_required";
     v.institution = ifes?.s;
     v.ifesListed = !!ifes;
+    const matched = binding ? binding.institutionMatch : resolveCatalogInstitution(email);
+    if (ifes && EMAIL_RE.test(email) && (!matched || matched.institutionId !== ifes.id)) {
+      errors.institution = "institution_email_mismatch";
+      errors.email = "institution_email_mismatch";
+    }
     // Cargo e "Lotado em" só existem para quem declara ser servidor da educação federal na Amazônia Legal/Faixa de Fronteira.
-    const declared = raw?.regionDeclared === true;
+    const automaticRegion = !!ifes && allCampiInAmazonia(ifes);
+    const declared = automaticRegion || raw?.regionDeclared === true;
     // O cargo (docente ou técnico-administrativo) é obrigatório para todo servidor, esteja ou não lotado na região.
     if (raw?.role !== "docente" && raw?.role !== "tae") errors.role = "role_required";
     else v.role = raw.role;
@@ -117,7 +129,8 @@ export function validate(raw: any): ValidationResult {
     const campusInRegion = !!v.campusIbge && regionCampusIds(ifes).includes(v.campusIbge);
     v.regionValidated = declared && !!ifes && ifesEligible(ifes) && !!v.campusListed && campusInRegion && (reg.amazoniaLegal || reg.faixaFronteira);
     v.regionCriteria = v.regionValidated ? regionCriteria(reg) : null;
-    if (!declared && ifes && allCampiInAmazonia(ifes)) errors.region = "region_required"; // todos os campi na Amazônia Legal: a caixa é obrigatória
+    // Todas as localidades na Amazônia Legal: caixa automática também no servidor;
+    // lotação continua obrigatória e é conferida nas localidades da instituição.
     if (declared) {
       if (!ifes || !ifesEligible(ifes)) errors.region = "region_ifes_not_eligible";
       else {
@@ -191,6 +204,12 @@ export function reenvioMail(name: string, token: string, startedIso?: string) {
  * A resposta é sempre a mesma para quem já assinou, para não revelar quem consta na lista.
  */
 export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = {}): Promise<void> {
+  if (input.category === "servidor") {
+    const selected = findIfes(input.institution ?? "");
+    const matched = await resolveRegisteredInstitution(input.email);
+    if (!selected?.id || !matched || selected.id !== matched.institutionId) throw new InstitutionEmailMismatchError();
+    input = { ...input, institution: matched.acronym, ifesListed: true };
+  }
   const foreign = input.category === "estrangeiro";
   const emailHash = hmac(dedupEmail(input.email)); // Gmail: pontos e +etiqueta contam como o mesmo e-mail
   const cpfHash = input.cpf ? hmac(input.cpf) : null; // estrangeiros não têm CPF

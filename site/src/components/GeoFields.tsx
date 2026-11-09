@@ -1,11 +1,13 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Help from "./Help";
 import Combobox, { type Option } from "./Combobox";
 import { useI18n } from "@/i18n/client";
 import { countryName } from "@/i18n";
 import { FOREIGN_COUNTRY_CODES } from "@/i18n/countries";
-import { loadGeo, loadIfes, matchesInstitutionSelection, norm, rank, squash, type Geo, type Ifes, type Mun } from "@/lib/datasets-client";
+import { loadGeo, loadIfes, matchesInstitutionSelection, institutionSearchText, norm, rank, squash, type Geo, type Ifes, type Mun } from "@/lib/datasets-client";
+import { resolveServerInstitutionForEmail as resolveInstitutionForEmail } from "@/lib/institution-domain-policy";
+import { allInstitutionCampiInAmazonia, institutionAutofill, type InstitutionDomainMatch, type InstitutionAutofillState } from "@/lib/institution-form-state";
 
 const UF_NAMES: Record<string, string> = {
   AC: "Acre", AL: "Alagoas", AP: "Amapá", AM: "Amazonas", BA: "Bahia", CE: "Ceará", DF: "Distrito Federal", ES: "Espírito Santo", GO: "Goiás", MA: "Maranhão",
@@ -59,13 +61,15 @@ export function UfCityFields({ uf, city, setUf, setCity, errors }: { uf: string;
 export type ServerState = { institution: string; ifes: Ifes | null; role: string; campus: string; campusIbge: number | null; region: boolean };
 
 /** Servidor: IFES (digitável por sigla), "Campus de:" filtrado pela IFES e o checkbox da Amazônia Legal / Faixa de Fronteira. */
-export function IfesCampusFields({ s, set, errors }: { s: ServerState; set: (p: Partial<ServerState>) => void; errors: Record<string, string> }) {
+export function IfesCampusFields({ s, set, errors, email = "", emailInstitution = null }: { s: ServerState; set: (p: Partial<ServerState>) => void; errors: Record<string, string>; email?: string; emailInstitution?: InstitutionDomainMatch | null }) {
   const { t } = useI18n();
   const geo = useGeo();
   const [all, setAll] = useState<Ifes[]>([]);
+  const autoInstitution = useRef<InstitutionAutofillState>({ domain: null, applied: false });
   useEffect(() => { let on = true; loadIfes().then((x) => on && setAll(x)).catch(() => {}); return () => { on = false; }; }, []);
-  const ifesOptions: Option[] = useMemo(() => rank(all, s.institution, (i) => `${i.s} ${i.n}`, 60).map((i) => ({ key: i.s, label: i.s, hint: i.n })), [all, s.institution]);
+  const ifesOptions: Option[] = useMemo(() => rank(all, s.institution, institutionSearchText, 60).map((i) => ({ key: i.s, label: i.s, hint: i.n })), [all, s.institution]);
   const findIfes = (text: string) => all.find((i) => matchesInstitutionSelection(text, i)) ?? null;
+
   useEffect(() => {
     if (!all.length) return;
     const institution = all.find((i) => matchesInstitutionSelection(s.institution, i)) ?? null;
@@ -86,17 +90,27 @@ export function IfesCampusFields({ s, set, errors }: { s: ServerState; set: (p: 
   const campusOptions: Option[] = useMemo(() => rank(allMuns, s.campus, (m) => m.name, 60).map((m) => ({ key: String(m.id), label: m.name, hint: inRegion(m.id) ? m.uf : `${m.uf} · ${t("f.campusOutside")}` })), [allMuns, s.campus, geo]); // eslint-disable-line react-hooks/exhaustive-deps
   const campusOutside = !!s.campusIbge && !inRegion(s.campusIbge) && allMuns.some((m) => m.id === s.campusIbge);
   const eligible = !!s.ifes && regionMuns.length > 0;
-  const mustRegion = !!geo && !!s.ifes && [...new Set([s.ifes.m, ...s.ifes.c])].every((id) => geo.al.has(id)); // todos os campi na Amazônia Legal: marcar é obrigatório
+  const mustRegion = !!geo && allInstitutionCampiInAmazonia(s.ifes, geo.al); // todos os campi na Amazônia Legal: marcar automaticamente e exigir lotação
+  useEffect(() => { if (mustRegion && !s.region) set({ region: true }); }, [mustRegion, s.region]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (geo && !eligible && s.region) set({ region: false, campus: "", campusIbge: null }); }, [eligible, geo]); // eslint-disable-line react-hooks/exhaustive-deps
   const why = !s.ifes ? t("f.region.noIfes") : !geo ? "" : !eligible ? t("f.region.ineligible") : t("f.region.eligibleN", { n: regionMuns.length });
+
+  useEffect(() => {
+    const match = emailInstitution ?? resolveInstitutionForEmail(email);
+    const next = institutionAutofill(autoInstitution.current, email, match, all);
+    autoInstitution.current = next.state;
+    if (!next.institution) return;
+    const changed = s.ifes?.id && next.institution.id ? s.ifes.id !== next.institution.id : s.ifes?.s !== next.institution.s;
+    set({ institution: next.institution.s, ifes: next.institution, ...(changed ? { campus: "", campusIbge: null, region: !!geo && allInstitutionCampiInAmazonia(next.institution, geo.al) } : {}) });
+  }, [email, emailInstitution, all]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
       {/* MUDAR AQUI: o rótulo acima do campo vem de f.ifes em src/i18n/pt.ts; manter o estilo existente. */}
       <label data-tour="ifes">{t("f.ifes")}
         <Combobox name="institution" value={s.institution} placeholder={t("f.ifesPlaceholder")} options={ifesOptions} invalid={!!errors.institution} ariaLabel={t("f.ifes")} inputMode="search"
-          onChange={(v) => set({ institution: v, ifes: findIfes(v), campus: findIfes(v)?.s === s.ifes?.s ? s.campus : "", campusIbge: null })}
-          onPick={(o) => { const i = all.find((x) => x.s === o.key) ?? null; set({ institution: o.key, ifes: i, campus: "", campusIbge: null }); }} />
+          onChange={(v) => { const institution = findIfes(v); const same = institution?.s === s.ifes?.s; set({ institution: v, ifes: institution, campus: same ? s.campus : "", campusIbge: null, ...(!same ? { region: !!geo && allInstitutionCampiInAmazonia(institution, geo.al) } : {}) }); }}
+          onPick={(o) => { const i = all.find((x) => x.s === o.key) ?? null; set({ institution: o.key, ifes: i, campus: "", campusIbge: null, region: !!geo && allInstitutionCampiInAmazonia(i, geo.al) }); }} />
         {/* MUDAR AQUI: dica abaixo do campo em f.ifesHint e erro em err.ifes_required, no arquivo src/i18n/pt.ts. */}
         <span className="hint">{t("f.ifesHint")}</span><Err msg={errors.institution} /></label>
       <label data-tour="role">{t("f.role")}
@@ -106,14 +120,14 @@ export function IfesCampusFields({ s, set, errors }: { s: ServerState; set: (p: 
           <option value="tae">{t("f.roleTae")}</option>
         </select><Err msg={errors.role} /></label>
       <div className={`region${eligible ? "" : " off"}`} data-tour="region">
-        <label className="check"><input type="checkbox" name="region" required={mustRegion} aria-required={mustRegion} aria-invalid={!!errors.region} checked={s.region} disabled={!eligible} onChange={(e) => set(e.target.checked ? { region: true, ...(campusOutside ? { campus: "", campusIbge: null } : {}) } : { region: false, campus: "", campusIbge: null })} /> <span>{t("f.region")}<Help text={t("help.region")} /></span></label>
+        <label className="check"><input type="checkbox" name="region" required={mustRegion} aria-required={mustRegion} aria-invalid={!!errors.region} checked={s.region} disabled={!eligible} onChange={(e) => set(mustRegion ? { region: true } : e.target.checked ? { region: true, ...(campusOutside ? { campus: "", campusIbge: null } : {}) } : { region: false, campus: "", campusIbge: null })} /> <span>{t("f.region")}<Help text={t("help.region")} /></span></label>
         <small className={eligible ? "ok" : ""}>{why}{mustRegion && <> <strong>{t("f.region.required")}</strong></>}</small>
         <Err msg={errors.region} />
       </div>
       {(s.region || campusOutside) && (
         <>
           <label data-tour="campus">{t("f.campus")}<Help text={t("help.campus")} />
-            <Combobox name="campus" value={s.campus} placeholder={s.ifes ? t("f.campusPlaceholder") : t("f.campusPickIfes")} options={campusOptions} invalid={!!errors.campus} ariaLabel={t("f.campus")}
+            <Combobox name="campus" required={s.region || mustRegion} value={s.campus} placeholder={s.ifes ? t("f.campusPlaceholder") : t("f.campusPickIfes")} options={campusOptions} invalid={!!errors.campus} ariaLabel={t("f.campus")}
               emptyText={t("f.campusNone")} disabled={!s.institution.trim()}
               onChange={(v) => set({ campus: v, campusIbge: null })} onPick={(o) => { const id = Number(o.key); set(inRegion(id) ? { campus: o.label, campusIbge: id } : { campus: o.label, campusIbge: id, region: false }); }} />
             <span className="hint">{t("f.campusHint")}</span><Err msg={errors.campus} /></label>

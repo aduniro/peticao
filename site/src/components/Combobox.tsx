@@ -4,9 +4,9 @@ import { useEffect, useId, useRef, useState } from "react";
 export type Option = { key: string; label: string; hint?: string; flag?: string };
 
 /** Campo digitável com lista de sugestões (teclado: setas, Enter, Esc). O texto continua livre; escolher uma sugestão chama onPick. */
-export default function Combobox({ value, onChange, onPick, options, placeholder, name, invalid, disabled, emptyText, ariaLabel, autoComplete = "off", openOnFocus = true, inputMode }: {
+export default function Combobox({ value, onChange, onPick, options, placeholder, name, invalid, disabled, required, emptyText, ariaLabel, autoComplete = "off", openOnFocus = true, inputMode }: {
   value: string; onChange: (v: string) => void; onPick: (o: Option) => void; options: Option[]; placeholder?: string; name?: string;
-  invalid?: boolean; disabled?: boolean; emptyText?: string; ariaLabel?: string; autoComplete?: string; openOnFocus?: boolean; inputMode?: "text" | "search";
+  invalid?: boolean; disabled?: boolean; required?: boolean; emptyText?: string; ariaLabel?: string; autoComplete?: string; openOnFocus?: boolean; inputMode?: "text" | "search";
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -28,7 +28,7 @@ export default function Combobox({ value, onChange, onPick, options, placeholder
   };
   return (
     <div className="combo" ref={root}>
-      <input name={name} value={value} placeholder={placeholder} disabled={disabled} aria-invalid={invalid || undefined} aria-label={ariaLabel}
+      <input name={name} value={value} placeholder={placeholder} disabled={disabled} required={required} aria-required={required || undefined} aria-invalid={invalid || undefined} aria-label={ariaLabel}
         role="combobox" aria-expanded={open} aria-controls={`${id}-l`} aria-autocomplete="list" aria-activedescendant={active >= 0 ? `${id}-${active}` : undefined}
         autoComplete={autoComplete} autoCapitalize="none" spellCheck={false} inputMode={inputMode}
         onChange={(e) => { onChange(e.target.value); setOpen(true); }} onFocus={() => openOnFocus && setOpen(true)} onKeyDown={onKey} />

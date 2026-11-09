@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateEmailField } from "@/lib/email-validate";
 import { rateLimit } from "@/lib/ratelimit";
 import { clientIp } from "@/lib/net";
+import { resolveInstitutionForEmail } from "@/lib/institution-registry";
 
 export const dynamic = "force-dynamic";
 
@@ -14,5 +15,6 @@ export async function POST(req: NextRequest) {
   const category = b.category === "servidor" ? "servidor" : b.category === "apoiador" ? "apoiador" : null;
   if (!email || !category) return NextResponse.json({ ok: true });
   const v = await validateEmailField(email, category);
-  return NextResponse.json(v.ok ? { ok: true, ...(v.soft ? { soft: v.soft } : {}) } : { ok: false, code: v.code, suggest: v.suggest ?? null, ...(v.detail ? { fix: v.detail } : {}) });
+  const institution = await resolveInstitutionForEmail(email);
+  return NextResponse.json(v.ok ? { ok: true, ...(institution ? { institution } : {}), ...(v.soft ? { soft: v.soft } : {}) } : { ok: false, ...(institution ? { institution } : {}), code: v.code, suggest: v.suggest ?? null, ...(v.detail ? { fix: v.detail } : {}) });
 }

@@ -29,6 +29,8 @@ export const pt = {
   "f.submit": "Assinar", "f.sending": "Enviando…", "f.privacy": "Seu CPF é usado só para evitar assinaturas duplicadas e não aparece na lista enviada às autoridades.", "f.privacyForeign": "Seu e-mail não aparece na lista enviada às autoridades.", "f.privacyLink": "Privacidade (em português)",
   "ok.title": "Quase lá! Confirme pelo e-mail.", "ok.text": "Enviamos um link de confirmação. Sua assinatura só conta depois que você clicar nele. Veja também a caixa de spam.",
   "err.name_required": "Informe seu nome completo.", "err.email_invalid": "Informe um e-mail válido.", "err.email_disposable": "Use seu e-mail pessoal ou institucional (não aceitamos e-mails temporários).",
+  // MUDAR AQUI: aviso de divergência entre o e-mail e a instituição selecionada.
+  "err.institution_email_mismatch": "Este e-mail não corresponde à instituição selecionada.",
   "err.cpf_invalid": "CPF inválido.", "err.category_invalid": "Escolha uma categoria.", "err.consent_required": "É necessário concordar com o texto.",
   // MUDAR AQUI: aviso de erro do campo Instituição.
   "err.ifes_required": "Informe a instituição.",

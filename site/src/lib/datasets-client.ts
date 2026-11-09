@@ -1,7 +1,8 @@
 "use client";
+import { isInstitutionEligibleForServer } from "./institution-eligibility";
 /** Dados públicos carregados sob demanda no navegador (IBGE e IFES): evitam pesar a página inicial. */
 export type Mun = { id: number; name: string; uf: string };
-export type Ifes = { s: string; n: string; k: string; u: string; m: number; c: number[] };
+export type Ifes = { id?: string; a?: string[]; s: string; n: string; k: string; u: string; m: number; c: number[] };
 
 export const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 export const squash = (s: string) => norm(s).replace(/ /g, "");
@@ -21,10 +22,12 @@ export function loadGeo(): Promise<Geo> {
   }).catch((e) => { geoP = null; throw e; });
   return geoP;
 }
+export const institutionSearchText = (institution: Ifes): string => [institution.s, institution.n, ...(institution.a ?? [])].join(" ");
+
 export function matchesInstitutionSelection(text: string, institution: Ifes | null): boolean {
   if (!institution) return false;
   const value = squash(text);
-  return !!value && [institution.s, institution.n, `${institution.s} - ${institution.n}`].some((label) => squash(label) === value);
+  return !!value && [institution.s, institution.n, `${institution.s} - ${institution.n}`, ...(institution.a ?? [])].some((label) => squash(label) === value);
 }
 
 export function mergeInstitutionCatalog(base: Ifes[], extra: Ifes[]): Ifes[] {
@@ -42,7 +45,7 @@ export function loadIfes(): Promise<Ifes[]> {
   ifesP ??= Promise.all([
     load<Ifes[]>("/data/ifes.json"),
     load<Ifes[]>("/data/server-institution-extras.json"),
-  ]).then(([base, extra]) => mergeInstitutionCatalog(base, extra)).catch((error) => { ifesP = null; throw error; });
+  ]).then(([base, extra]) => mergeInstitutionCatalog(base, extra).filter((institution) => isInstitutionEligibleForServer(institution.id))).catch((error) => { ifesP = null; throw error; });
   return ifesP;
 }
 

@@ -79,3 +79,7 @@ O objetivo nativo foi encontrado como `blocked` nesta inspeção, e o responsáv
 solicitou sua retomada pelo controle suportado, passando a `active`. Não editar
 registros internos para substituir esse controle do usuário/sistema. As frentes
 independentes autorizadas continuam durante diagnósticos de continuidade.
+
+## Domínios e instituições
+
+Aplicar a política central de titularidade comprovada e elegibilidade MEC em `docs/POLITICA-CENTRAL-DOMINIOS-INSTITUICOES.md`, determinada pelo responsável em 09/11/2026. Não confundir identificação do órgão titular com autorização no formulário.

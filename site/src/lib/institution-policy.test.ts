@@ -4,6 +4,7 @@ import { validate } from "./signatures";
 import { IFES, SERVER_INSTITUTIONS, findIfes } from "./ifes-data";
 import { municipalityById } from "./geo-data";
 import { matchesInstitutionSelection } from "./datasets-client";
+import { isInstitutionEligibleForServer } from "./institution-eligibility";
 
 const base = {
   name: "Pessoa Fictícia Teste", email: "qa@uffs.edu.br", cpf: "529.982.247-25",
@@ -35,7 +36,7 @@ test("instituição: opções reconhecidas são gravadas com a sigla canônica",
 
 test("catálogo autorizado preserva IFES e acrescenta EBSERH sem duplicar siglas", () => {
   assert.equal(new Set(SERVER_INSTITUTIONS.map((x) => x.s)).size, SERVER_INSTITUTIONS.length);
-  for (const institution of IFES) assert.equal(findIfes(institution.s)?.s, institution.s);
+  for (const institution of IFES) assert.equal(!!findIfes(institution.s), isInstitutionEligibleForServer(institution.id), institution.s);
   const ebserh = findIfes("EBSERH")!;
   assert.equal(ebserh.n, "Empresa Brasileira de Serviços Hospitalares");
   assert.equal(IFES.some((x) => x.s === "EBSERH"), false);

@@ -1,6 +1,7 @@
 import { domainToASCII } from "node:url";
 import { audit, query } from "./db";
 import freemailList from "./freemail.json";
+import { findIfes } from "./ifes-data";
 
 /**
  * Selo de "e-mail institucional confirmado". Significa que o e-mail é de um domínio de órgão/instituição pública
@@ -107,6 +108,7 @@ export async function decideDomain(domain: string, status: "approved" | "rejecte
   const d = domainToASCII(domain.trim().toLowerCase());
   if (!d || !d.includes(".")) throw new Error("Domínio inválido.");
   if ([...FREEMAIL].some((f) => domainMatches(d, f))) throw new Error("Provedores de e-mail gratuitos não podem ser institucionais.");
+  const institutionId = opts.institution ? findIfes(opts.institution)?.id ?? null : null;
   await query(
     `INSERT INTO institutional_domains(domain,kind,institution,source,status,evidence_url,decided_by,updated_at)
      VALUES($1,$2,$3,'manual',$4,$5,$6,$7)
@@ -115,6 +117,7 @@ export async function decideDomain(domain: string, status: "approved" | "rejecte
     [d, opts.kind ?? "outro", opts.institution ?? null, status, opts.evidenceUrl ?? null, opts.by, new Date().toISOString()]
   );
   _clearDomainCache();
+  if (institutionId) await query("UPDATE institutional_domains SET institution_id=$2 WHERE domain=$1", [d, institutionId]);
   let updated = 0;
   if (status === "approved") {
     // Sobe retroativamente quem já assinou com esse domínio (e subdomínios), respeitando a regra de discentes.

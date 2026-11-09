@@ -24,6 +24,8 @@ export const en: Messages = {
   "f.submit": "Sign", "f.sending": "Sending…", "f.privacy": "Your CPF is only used to prevent duplicate signatures and does not appear in the list sent to the authorities.", "f.privacyForeign": "Your email does not appear in the list sent to the authorities.", "f.privacyLink": "Privacy (in Portuguese)",
   "ok.title": "Almost there! Confirm by email.", "ok.text": "We sent you a confirmation link. Your signature only counts after you click it. Check your spam folder too.",
   "err.name_required": "Enter your full name.", "err.email_invalid": "Enter a valid email.", "err.email_disposable": "Use your personal or institutional email (temporary emails are not accepted).",
+  // MUDAR AQUI: aviso de divergência entre o e-mail e a instituição selecionada.
+  "err.institution_email_mismatch": "This email does not match the selected institution.",
   "err.cpf_invalid": "Invalid CPF.", "err.category_invalid": "Choose a category.", "err.consent_required": "You must agree to the text.", "err.ifes_required": "Enter the institution.", "err.role_required": "Enter your position.",
   "err.campus_invalid": "Invalid campus.", "err.region_not_eligible": "The campus municipality is not in the Legal Amazon or the border strip.", "err.uf_invalid": "Enter a valid state.", "err.city_required": "Enter the city.",
   "err.city_invalid": "That city does not exist in that state.", "err.city_ambiguous": "More than one city has that name: choose the state.", "err.country_invalid": "Choose your institution's country.", "err.university_required": "Enter your university.",

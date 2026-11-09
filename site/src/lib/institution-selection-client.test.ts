@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { loadIfes, matchesInstitutionSelection, mergeInstitutionCatalog, type Ifes } from "./datasets-client";
+import catalog from "../../public/data/ifes.json";
 
-const unir: Ifes = { s: "UNIR", n: "Fundação Universidade Federal de Rondônia", k: "U", u: "RO", m: 1100205, c: [1100205] };
-const ebserh: Ifes = { s: "EBSERH", n: "Empresa Brasileira de Serviços Hospitalares", k: "O", u: "DF", m: 5300108, c: [] };
+const unir: Ifes = { id: catalog.find((institution) => institution.s.toUpperCase() === "UNIR")!.id, s: "UNIR", n: "Fundação Universidade Federal de Rondônia", k: "U", u: "RO", m: 1100205, c: [1100205] };
+const ebserh: Ifes = { id: "org:ebserh", s: "EBSERH", n: "Empresa Brasileira de Serviços Hospitalares", k: "O", u: "DF", m: 5300108, c: [] };
 
 test("instituição no cliente: aceita somente opção reconhecida e rejeita texto livre ou seleção antiga", () => {
   assert.equal(matchesInstitutionSelection("unir", unir), true);

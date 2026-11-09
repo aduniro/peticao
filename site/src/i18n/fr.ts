@@ -24,6 +24,8 @@ export const fr: Messages = {
   "f.submit": "Signer", "f.sending": "Envoi…", "f.privacy": "Votre CPF sert uniquement à éviter les doublons et n'apparaît pas dans la liste envoyée aux autorités.", "f.privacyForeign": "Votre e-mail n'apparaît pas dans la liste envoyée aux autorités.", "f.privacyLink": "Confidentialité (en portugais)",
   "ok.title": "Presque fini ! Confirmez par e-mail.", "ok.text": "Nous vous avons envoyé un lien de confirmation. Votre signature ne compte qu'après avoir cliqué dessus. Vérifiez aussi vos courriers indésirables.",
   "err.name_required": "Indiquez votre nom complet.", "err.email_invalid": "Indiquez un e-mail valide.", "err.email_disposable": "Utilisez votre e-mail personnel ou institutionnel (les e-mails temporaires ne sont pas acceptés).",
+  // MUDAR AQUI: aviso de divergência entre o e-mail e a instituição selecionada.
+  "err.institution_email_mismatch": "Cette adresse e-mail ne correspond pas à l’établissement sélectionné.",
   "err.cpf_invalid": "CPF invalide.", "err.category_invalid": "Choisissez une catégorie.", "err.consent_required": "Vous devez accepter le texte.", "err.ifes_required": "Indiquez l'établissement.", "err.role_required": "Indiquez le poste.",
   "err.campus_invalid": "Campus invalide.", "err.region_not_eligible": "La commune du campus n'est ni en Amazonie légale ni dans la zone frontalière.", "err.uf_invalid": "Indiquez un État valide.", "err.city_required": "Indiquez la ville.",
   "err.city_invalid": "Cette ville n'existe pas dans cet État.", "err.city_ambiguous": "Plusieurs villes portent ce nom : choisissez l'État.", "err.country_invalid": "Choisissez le pays de votre établissement.", "err.university_required": "Indiquez votre université.",

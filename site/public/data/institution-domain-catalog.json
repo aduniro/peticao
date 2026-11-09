@@ -1,0 +1,2632 @@
+[
+  {
+    "institutionId": "ifes:0071",
+    "acronym": "AMAN",
+    "fullName": "Academia Militar das Agulhas Negras",
+    "domain": "aman.eb.mil.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.aman.eb.mil.br/images/pdf/alambari/2026/02%20%20%20FEVEREIRO/O%20ALAMBARI_04_9FEVEREIRO_compressed.pdf",
+    "eligibility": {
+      "linkedToMec": false,
+      "status": "not_linked",
+      "evidenceUrls": [
+        "https://www.gov.br/defesa/pt-br/assuntos/ensino-e-pesquisa/copy_of_instituicoes-de-ensino-militar/instituicoes-de-ensino-e-pesquisa-vinculadas-a-exercito-brasileiro"
+      ],
+      "reason": "Instituição vinculada a MD, não ao MEC. Reconhecimento de curso pelo MEC não equivale a vínculo administrativo.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0073",
+    "acronym": "UFCIRJ",
+    "fullName": "Universidade Federal de Ciência e Inovação do Rio de Janeiro",
+    "domain": "cefet-rj.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://sap.cefet-rj.br/index.php/2015-06-02-18-41-07",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://normas.leg.br/?urn=urn%3Alex%3Abr%3Afederal%3Alei%3A2026-09-24%3B15521"
+      ],
+      "reason": "Art.1º, parágrafo único, Lei15.521/2026: UFCI/MG e UFCI/RJ são autarquias vinculadas ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0072",
+    "acronym": "UFCIMG",
+    "fullName": "Universidade Federal de Ciência e Inovação de Minas Gerais",
+    "domain": "cefetmg.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.contagem.cefetmg.br/2026/11/05/identidade-visual-da-ufcimg-e-apresentada-a-comunidade-academica/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://normas.leg.br/?urn=urn%3Alex%3Abr%3Afederal%3Alei%3A2026-09-24%3B15521"
+      ],
+      "reason": "Art.1º, parágrafo único, Lei15.521/2026: UFCI/MG e UFCI/RJ são autarquias vinculadas ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0075",
+    "acronym": "CPII",
+    "fullName": "Colégio Pedro II",
+    "domain": "cp2.g12.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portalespiral.cp2.g12.br/index.php/index/quemsomos/o",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "org:ebserh",
+    "acronym": "EBSERH",
+    "fullName": "Empresa Brasileira de Serviços Hospitalares",
+    "domain": "ebserh.gov.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "federal",
+    "evidenceUrl": "https://www.gov.br/hubrasil/pt-br/acesso-a-informacao/institucional",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/assuntos/noticias/2026/marco/mec-inaugura-novas-areas-do-hospital-universitario-da-ufscar"
+      ],
+      "reason": "EBSERH/HU Brasil é empresa pública vinculada ao MEC. Mantida autorização expressa do responsável.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0118",
+    "acronym": "IFTO",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Tocantins",
+    "domain": "estudante.ifto.edu.br",
+    "status": "rejected",
+    "includeSubdomains": true,
+    "kind": "universidade-estrangeira",
+    "evidenceUrl": "https://www.ifto.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0001",
+    "acronym": "FURG",
+    "fullName": "Universidade Federal do Rio Grande",
+    "domain": "furg.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.furg.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0001",
+    "acronym": "FURG",
+    "fullName": "Universidade Federal do Rio Grande",
+    "domain": "furg.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.furg.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "org:ebserh",
+    "acronym": "EBSERH",
+    "fullName": "Empresa Brasileira de Serviços Hospitalares",
+    "domain": "hubrasil.gov.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "federal",
+    "evidenceUrl": "https://www.gov.br/hubrasil/pt-br/acesso-a-informacao/institucional",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/assuntos/noticias/2026/marco/mec-inaugura-novas-areas-do-hospital-universitario-da-ufscar"
+      ],
+      "reason": "EBSERH/HU Brasil é empresa pública vinculada ao MEC. Mantida autorização expressa do responsável.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0086",
+    "acronym": "Ifac",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Acre",
+    "domain": "ifac.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifac.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0087",
+    "acronym": "Ifal",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de Alagoas",
+    "domain": "ifal.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www2.ifal.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0088",
+    "acronym": "IFAM",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Amazonas",
+    "domain": "ifam.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifam.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0089",
+    "acronym": "IFAP",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Estado do Amapá",
+    "domain": "ifap.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifap.edu.br/acesso-a-informacao/institucional/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0090",
+    "acronym": "IFB",
+    "fullName": "Instituto Federal de Educação, Ciencia e Tecnologia de Brasilia",
+    "domain": "ifb.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifb.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0091",
+    "acronym": "IFBA",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia da Bahia",
+    "domain": "ifba.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifba.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0092",
+    "acronym": "IF Baiano",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia Baiano",
+    "domain": "ifbaiano.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifbaiano.edu.br/portal/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0081",
+    "acronym": "IFC",
+    "fullName": "Instituto Federal Catarinense",
+    "domain": "ifc.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://blumenau.ifc.edu.br/duvidas-frequentes-2/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0081",
+    "acronym": "IFC",
+    "fullName": "Instituto Federal Catarinense",
+    "domain": "ifcatarinense.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://blumenau.ifc.edu.br/duvidas-frequentes-2/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0093",
+    "acronym": "IFCE",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Ceará",
+    "domain": "ifce.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.ifce.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0094",
+    "acronym": "Ifes",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo",
+    "domain": "ifes.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifes.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0082",
+    "acronym": "IFF",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia Fluminense",
+    "domain": "iff.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal1.iff.edu.br/Acesso-a-Informacao/documentos-normativos",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0095",
+    "acronym": "IFFar",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia Farroupilha",
+    "domain": "iffarroupilha.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.iffarroupilha.edu.br/component/k2/item/1763-IFFar%20%C3%A9%20a%20sigla%20oficial%20do%20Instituto%20Federal%20Farroupilha",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0096",
+    "acronym": "IFG",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de Goiás",
+    "domain": "ifg.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifg.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0083",
+    "acronym": "IF Goiano",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia Goiano",
+    "domain": "ifgoiano.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifgoiano.edu.br/home/index.php/institucional.html",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0097",
+    "acronym": "IFMA",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Maranhão",
+    "domain": "ifma.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.ifma.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0098",
+    "acronym": "IFMG",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de Minas Gerais",
+    "domain": "ifmg.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifmg.edu.br/portal/acesso-a-informacao/institucional",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0099",
+    "acronym": "IFMS",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso do Sul",
+    "domain": "ifms.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifms.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0100",
+    "acronym": "IFMT",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de Mato Grosso",
+    "domain": "ifmt.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifmt.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0101",
+    "acronym": "IFNMG",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Norte de Minas Gerais",
+    "domain": "ifnmg.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifnmg.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0102",
+    "acronym": "IFPA",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Pará",
+    "domain": "ifpa.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifpa.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0103",
+    "acronym": "IFPB",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia da Paraíba",
+    "domain": "ifpb.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifpb.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0104",
+    "acronym": "IFPE",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de Pernambuco",
+    "domain": "ifpe.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.ifpe.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0105",
+    "acronym": "IFPI",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Piauí",
+    "domain": "ifpi.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifpi.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0106",
+    "acronym": "IFPR",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Paraná",
+    "domain": "ifpr.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifpr.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0107",
+    "acronym": "IFRJ",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Rio de Janeiro",
+    "domain": "ifrj.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifrj.edu.br/acesso-a-informacao/institucional",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0108",
+    "acronym": "IFRN",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Norte",
+    "domain": "ifrn.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.ifrn.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0109",
+    "acronym": "IFRO",
+    "fullName": "Instituto Federal de Educação Ciência e Tecnologia de Rondônia",
+    "domain": "ifro.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.ifro.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0110",
+    "acronym": "IFRR",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de Roraima",
+    "domain": "ifrr.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifrr.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0111",
+    "acronym": "IFRS",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Rio Grande do Sul",
+    "domain": "ifrs.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifrs.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0112",
+    "acronym": "IFS",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de Sergipe",
+    "domain": "ifs.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifs.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0113",
+    "acronym": "IFSC",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de Santa Catarina",
+    "domain": "ifsc.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifsc.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0084",
+    "acronym": "IFSertãoPE",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Sertão Pernambucano",
+    "domain": "ifsertao-pe.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifsertaope.edu.br/a-instituicao/comunicacao-institucional/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0115",
+    "acronym": "IFSP",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de São Paulo",
+    "domain": "ifsp.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifsp.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0114",
+    "acronym": "IF Sudeste MG",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais",
+    "domain": "ifsudestemg.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifsudestemg.edu.br/institucional/estrutura-organizacional",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0116",
+    "acronym": "IFSul",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense",
+    "domain": "ifsul.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ifsul.edu.br/images/atosnormativos/INs/Instruo_Normativa_15_2024.pdf",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0085",
+    "acronym": "IFSULDEMINAS",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Sul de Minas Gerais",
+    "domain": "ifsuldeminas.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.ifsuldeminas.edu.br/index.php/institucional-geral/5403-gabinete-da-reitoria-ifsuldeminas",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0117",
+    "acronym": "IFTM",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Triângulo Mineiro",
+    "domain": "iftm.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://iftm.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0118",
+    "acronym": "IFTO",
+    "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Tocantins",
+    "domain": "ifto.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ifto.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/pnaes/bolsa-permanencia/universidades-federais",
+        "https://portal.mec.gov.br/rede-federal-inicial/instituicoes"
+      ],
+      "reason": "Instituição explicitamente integrante da Rede Federal de Educação Profissional, Científica e Tecnológica vinculada ao MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0119",
+    "acronym": "IME",
+    "fullName": "Instituto Militar de Engenharia",
+    "domain": "ime.eb.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://vestibular.ime.eb.br/cfg/",
+    "eligibility": {
+      "linkedToMec": false,
+      "status": "not_linked",
+      "evidenceUrls": [
+        "https://vestibular.ime.eb.br/cfg/"
+      ],
+      "reason": "Instituição vinculada a MD, não ao MEC. Reconhecimento de curso pelo MEC não equivale a vínculo administrativo.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0120",
+    "acronym": "INES",
+    "fullName": "Instituto Nacional de Educação de Surdos",
+    "domain": "ines.gov.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.gov.br/ines/pt-br/composicao/direcao-geral/solange-maria-da-rocha",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "INES integra a administração direta do MEC, seção1.6 da estrutura UPC/MEC2024; preservado como instituição elegível.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0121",
+    "acronym": "ISCP",
+    "fullName": "Instituto Superior de Ciências Policiais",
+    "domain": "iscp.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.pm.df.gov.br/carta-de-servicos-para-policiais-instituto-superior-de-ciencias-exatas/",
+    "eligibility": {
+      "linkedToMec": false,
+      "status": "not_linked",
+      "evidenceUrls": [
+        "https://portal.pm.df.gov.br/carta-de-servicos-para-policiais-instituto-superior-de-ciencias-exatas/"
+      ],
+      "reason": "Instituição vinculada a PMDF, não ao MEC. Reconhecimento de curso pelo MEC não equivale a vínculo administrativo.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0122",
+    "acronym": "ITA",
+    "fullName": "Instituto Tecnológico de Aeronáutica",
+    "domain": "ita.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ita.br/",
+    "eligibility": {
+      "linkedToMec": false,
+      "status": "not_linked",
+      "evidenceUrls": [
+        "https://vestibular.ita.br/isencao/index.htm"
+      ],
+      "reason": "Instituição vinculada a MD/COMAER, não ao MEC. Reconhecimento de curso pelo MEC não equivale a vínculo administrativo.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0003",
+    "acronym": "Ufac",
+    "fullName": "Universidade Federal do Acre",
+    "domain": "sou.ufac.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufac.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0002",
+    "acronym": "UFABC",
+    "fullName": "Universidade Federal do ABC",
+    "domain": "ufabc.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufabc.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0003",
+    "acronym": "Ufac",
+    "fullName": "Universidade Federal do Acre",
+    "domain": "ufac.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufac.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0004",
+    "acronym": "Ufal",
+    "fullName": "Universidade Federal de Alagoas",
+    "domain": "ufal.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufal.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0004",
+    "acronym": "Ufal",
+    "fullName": "Universidade Federal de Alagoas",
+    "domain": "ufal.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufal.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0005",
+    "acronym": "Ufam",
+    "fullName": "Universidade Federal do Amazonas",
+    "domain": "ufam.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufam.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0006",
+    "acronym": "UFAPE",
+    "fullName": "Universidade Federal do Agreste de Pernambuco",
+    "domain": "ufape.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufape.edu.br/ufape",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0007",
+    "acronym": "UFBA",
+    "fullName": "Universidade Federal da Bahia",
+    "domain": "ufba.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufba.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0007",
+    "acronym": "UFBA",
+    "fullName": "Universidade Federal da Bahia",
+    "domain": "ufba.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufba.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0008",
+    "acronym": "UFC",
+    "fullName": "Universidade Federal do Ceará",
+    "domain": "ufc.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufc.br/pt",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0008",
+    "acronym": "UFC",
+    "fullName": "Universidade Federal do Ceará",
+    "domain": "ufc.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufc.br/pt",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0009",
+    "acronym": "UFCA",
+    "fullName": "Universidade Federal do Cariri",
+    "domain": "ufca.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufca.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0010",
+    "acronym": "UFCAT",
+    "fullName": "Universidade Federal de Catalão",
+    "domain": "ufcat.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufcat.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0011",
+    "acronym": "UFCG",
+    "fullName": "Universidade Federal de Campina Grande",
+    "domain": "ufcg.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://pvs.ufcg.edu.br/institucional/conheca-a-ufcg.html",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0012",
+    "acronym": "UFCSPA",
+    "fullName": "Universidade Federal de Ciências da Saúde de Porto Alegre",
+    "domain": "ufcspa.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufcspa.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0013",
+    "acronym": "UFDPar",
+    "fullName": "Universidade Federal do Delta do Parnaíba",
+    "domain": "ufdpar.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufdpar.edu.br/reitoria/reitoria-1/documentos/resolucoes/resolucoes-consuni/2021/resolucao_consuni_n_03_de_16_de_julho_de_2021.pdf",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0014",
+    "acronym": "Ufersa",
+    "fullName": "Universidade Federal Rural do Semi-Árido",
+    "domain": "ufersa.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufersa.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0015",
+    "acronym": "Ufes",
+    "fullName": "Universidade Federal do Espírito Santo",
+    "domain": "ufes.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufes.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0016",
+    "acronym": "UFF",
+    "fullName": "Universidade Federal Fluminense",
+    "domain": "uff.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.uff.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0018",
+    "acronym": "UFFS",
+    "fullName": "Universidade Federal da Fronteira Sul",
+    "domain": "uffs.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.uffs.edu.br/uffs/a-instituicao/apresentacao",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0019",
+    "acronym": "UFG",
+    "fullName": "Universidade Federal de Goiás",
+    "domain": "ufg.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufg.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0020",
+    "acronym": "UFGD",
+    "fullName": "Fundação Universidade Federal da Grande Dourados",
+    "domain": "ufgd.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.ufgd.edu.br/setor/acessoainformacao/index",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0021",
+    "acronym": "UFJ",
+    "fullName": "Universidade Federal de Jataí",
+    "domain": "ufj.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufj.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0022",
+    "acronym": "UFJF",
+    "fullName": "Universidade Federal de Juiz de Fora",
+    "domain": "ufjf.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www2.ufjf.br/ufjf/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0022",
+    "acronym": "UFJF",
+    "fullName": "Universidade Federal de Juiz de Fora",
+    "domain": "ufjf.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www2.ufjf.br/ufjf/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0023",
+    "acronym": "UFLA",
+    "fullName": "Universidade Federal de Lavras",
+    "domain": "ufla.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufla.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0024",
+    "acronym": "UFMA",
+    "fullName": "Universidade Federal do Maranhão",
+    "domain": "ufma.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portalpadrao.ufma.br/site/noticias/ufma-apresenta-balanco-da-gestao-e-define-planos-estrategicos-para-2026",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0025",
+    "acronym": "UFMG",
+    "fullName": "Universidade Federal de Minas Gerais",
+    "domain": "ufmg.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufmg.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0026",
+    "acronym": "UFMS",
+    "fullName": "Universidade Federal de Mato Grosso do Sul",
+    "domain": "ufms.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufms.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0027",
+    "acronym": "UFMT",
+    "fullName": "Universidade Federal de Mato Grosso",
+    "domain": "ufmt.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufmt.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0028",
+    "acronym": "UFNT",
+    "fullName": "Universidade Federal do Norte do Tocantins",
+    "domain": "ufnt.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufnt.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0029",
+    "acronym": "UFOB",
+    "fullName": "Universidade Federal do Oeste da Bahia",
+    "domain": "ufob.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufob.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0030",
+    "acronym": "UFOP",
+    "fullName": "Universidade Federal de Ouro Preto",
+    "domain": "ufop.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufop.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0030",
+    "acronym": "UFOP",
+    "fullName": "Universidade Federal de Ouro Preto",
+    "domain": "ufop.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufop.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0031",
+    "acronym": "Ufopa",
+    "fullName": "Universidade Federal do Oeste do Pará",
+    "domain": "ufopa.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufopa.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0032",
+    "acronym": "UFPA",
+    "fullName": "Universidade Federal do Pará",
+    "domain": "ufpa.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://transparencia.ufpa.br/acesso-a-informacao.html",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0032",
+    "acronym": "UFPA",
+    "fullName": "Universidade Federal do Pará",
+    "domain": "ufpa.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://transparencia.ufpa.br/acesso-a-informacao.html",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0033",
+    "acronym": "UFPB",
+    "fullName": "Universidade Federal da Paraíba",
+    "domain": "ufpb.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufpb.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0034",
+    "acronym": "UFPE",
+    "fullName": "Universidade Federal de Pernambuco",
+    "domain": "ufpe.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufpe.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0035",
+    "acronym": "UFPel",
+    "fullName": "Universidade Federal de Pelotas",
+    "domain": "ufpel.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://institucional.ufpel.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0036",
+    "acronym": "UFPI",
+    "fullName": "Universidade Federal do Piauí",
+    "domain": "ufpi.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufpi.br/institucional-ufpi",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0036",
+    "acronym": "UFPI",
+    "fullName": "Universidade Federal do Piauí",
+    "domain": "ufpi.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufpi.br/institucional-ufpi",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0037",
+    "acronym": "UFPR",
+    "fullName": "Universidade Federal do Paraná",
+    "domain": "ufpr.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufpr.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0038",
+    "acronym": "UFR",
+    "fullName": "Universidade Federal de Rondonópolis",
+    "domain": "ufr.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufr.edu.br/acesso_informacao_institucional/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0039",
+    "acronym": "Ufra",
+    "fullName": "Universidade Federal Rural da Amazônia",
+    "domain": "ufra.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://novo.ufra.edu.br/index.php",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0040",
+    "acronym": "UFRB",
+    "fullName": "Universidade Federal do Recôncavo da Bahia",
+    "domain": "ufrb.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufrb.edu.br/portal/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0041",
+    "acronym": "UFRGS",
+    "fullName": "Universidade Federal do Rio Grande do Sul",
+    "domain": "ufrgs.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.if.ufrgs.br/if/wp-content/uploads/2017/06/Regulamento_Transportes.pdf",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0042",
+    "acronym": "UFRJ",
+    "fullName": "Universidade Federal do Rio de Janeiro",
+    "domain": "ufrj.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufrj.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0042",
+    "acronym": "UFRJ",
+    "fullName": "Universidade Federal do Rio de Janeiro",
+    "domain": "ufrj.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufrj.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0043",
+    "acronym": "UFRN",
+    "fullName": "Universidade Federal do Rio Grande do Norte",
+    "domain": "ufrn.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufrn.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0043",
+    "acronym": "UFRN",
+    "fullName": "Universidade Federal do Rio Grande do Norte",
+    "domain": "ufrn.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufrn.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0044",
+    "acronym": "UFRPE",
+    "fullName": "Universidade Federal Rural de Pernambuco",
+    "domain": "ufrpe.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufrpe.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0045",
+    "acronym": "UFRR",
+    "fullName": "Universidade Federal de Roraima",
+    "domain": "ufrr.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufrr.br/historia-ufrr/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0046",
+    "acronym": "UFRRJ",
+    "fullName": "Universidade Federal Rural do Rio de Janeiro",
+    "domain": "ufrrj.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://institucional.ufrrj.br/acessoainformacao/carta-de-servicos-ao-cidadao/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0047",
+    "acronym": "UFS",
+    "fullName": "Universidade Federal de Sergipe",
+    "domain": "ufs.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufs.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0048",
+    "acronym": "UFSB",
+    "fullName": "Universidade Federal do Sul da Bahia",
+    "domain": "ufsb.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufsb.edu.br/index.php/a-ufsb",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0049",
+    "acronym": "UFSC",
+    "fullName": "Universidade Federal de Santa Catarina",
+    "domain": "ufsc.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufsc.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0050",
+    "acronym": "UFSCar",
+    "fullName": "Universidade Federal de São Carlos",
+    "domain": "ufscar.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.bco.ufscar.br/news/sibi-orienta-a-comunidade-que-siga-a-padronizacao-oficial-de-nomenclatura-da-ufscar-em-publicacoes-academicas-e-cientificas",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0051",
+    "acronym": "UFSJ",
+    "fullName": "Universidade Federal de São João del-Rei",
+    "domain": "ufsj.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufsj.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0052",
+    "acronym": "UFSM",
+    "fullName": "Universidade Federal de Santa Maria",
+    "domain": "ufsm.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufsm.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0053",
+    "acronym": "UFT",
+    "fullName": "Universidade Federal do Tocantins",
+    "domain": "uft.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.uft.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0054",
+    "acronym": "UFTM",
+    "fullName": "Universidade Federal do Triângulo Mineiro",
+    "domain": "uftm.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.uftm.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0055",
+    "acronym": "UFU",
+    "fullName": "Universidade Federal de Uberlândia",
+    "domain": "ufu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://ufu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0056",
+    "acronym": "UFV",
+    "fullName": "Universidade Federal de Viçosa",
+    "domain": "ufv.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.ufv.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0057",
+    "acronym": "UFVJM",
+    "fullName": "Universidade Federal dos Vales do Jequitinhonha e Mucuri",
+    "domain": "ufvjm.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.ufvjm.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0058",
+    "acronym": "UnB",
+    "fullName": "Universidade de Brasília",
+    "domain": "unb.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://marca.unb.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0059",
+    "acronym": "UNIFAL-MG",
+    "fullName": "Universidade Federal de Alfenas",
+    "domain": "unifal-mg.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.unifal-mg.edu.br/portal/index/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0060",
+    "acronym": "Unifap",
+    "fullName": "Universidade Federal do Amapá",
+    "domain": "unifap.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.unifap.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0061",
+    "acronym": "UNIFEI",
+    "fullName": "Universidade Federal de Itajubá",
+    "domain": "unifei.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://unifei.edu.br/institucional/estatutos-regimentos-e-normas/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0062",
+    "acronym": "Unifesp",
+    "fullName": "Universidade Federal de São Paulo",
+    "domain": "unifesp.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.unifesp.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0062",
+    "acronym": "Unifesp",
+    "fullName": "Universidade Federal de São Paulo",
+    "domain": "unifesp.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.unifesp.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0063",
+    "acronym": "Unifesspa",
+    "fullName": "Universidade Federal do Sul e Sudeste do Pará",
+    "domain": "unifesspa.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://editais.unifesspa.edu.br/sites/default/files/arquivos/termo_adesao_18440_UNIFESSPA_0.pdf",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0064",
+    "acronym": "UNILA",
+    "fullName": "Universidade Federal da Integração Latino-americana",
+    "domain": "unila.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portal.unila.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0065",
+    "acronym": "Unilab",
+    "fullName": "Universidade da Integração Internacional da Lusofonia Afro-Brasileira",
+    "domain": "unilab.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://unilab.edu.br/perguntas-frequentes-3/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0066",
+    "acronym": "UNIPAMPA",
+    "fullName": "Fundação Universidade Federal do Pampa - Unipampa",
+    "domain": "unipampa.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://unipampa.edu.br/portal/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0067",
+    "acronym": "UNIR",
+    "fullName": "Fundação Universidade Federal de Rondônia",
+    "domain": "unir.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://unir.br/homepage",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0068",
+    "acronym": "UNIRIO",
+    "fullName": "Universidade Federal do Estado do Rio de Janeiro",
+    "domain": "unirio.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.unirio.br/acessoinformacao/arquivos/identificacao-institucional",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0069",
+    "acronym": "Univasf",
+    "fullName": "Fundação Universidade Federal do Vale do São Francisco",
+    "domain": "univasf.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://portais.univasf.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "ifes:0070",
+    "acronym": "UTFPR",
+    "fullName": "Universidade Tecnológica Federal do Paraná",
+    "domain": "utfpr.edu.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "ifes",
+    "evidenceUrl": "https://www.utfpr.edu.br/",
+    "eligibility": {
+      "linkedToMec": true,
+      "status": "verified",
+      "evidenceUrls": [
+        "https://www.gov.br/servidor/pt-br/acesso-a-informacao/gestao-de-pessoas/concursos-publicos-e-provimento-de-pessoal/concursos-de-instituicoes-de-ensino-federais-vinculadas-ao-mec",
+        "https://www.gov.br/mec/pt-br/acesso-a-informacao/auditorias/transparencia-prestacao-de-contas/DemonstraesContbeiseNotasExplicativas.pdf"
+      ],
+      "reason": "Universidade federal do conjunto MEC revisado; vinculação na estrutura e quadro de pessoal do MEC.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  },
+  {
+    "institutionId": "org:exercito-brasileiro",
+    "acronym": "EB",
+    "fullName": "Exército Brasileiro",
+    "domain": "eb.mil.br",
+    "status": "approved",
+    "includeSubdomains": true,
+    "kind": "federal",
+    "evidenceUrl": "https://www.gov.br/conecta/catalogo/apis/situacao-militar",
+    "eligibility": {
+      "linkedToMec": false,
+      "status": "not_linked",
+      "evidenceUrls": [
+        "https://www.gov.br/conecta/catalogo/apis/situacao-militar"
+      ],
+      "reason": "Comando do Exército Brasileiro (MD); titularidade reconhecida não autoriza cadastro Servidor.",
+      "verifiedAt": "2026-11-09T14:51:52.958087+00:00"
+    }
+  }
+]

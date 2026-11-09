@@ -1,5 +1,6 @@
 import { diagnosticMark } from "./signup-diagnostics";
-import { validate, submit, EmailUndeliverableError, type Meta } from "./signatures";
+import { validate, submit, EmailUndeliverableError, InstitutionEmailMismatchError, type Meta } from "./signatures";
+import { resolveInstitutionForEmail } from "./institution-registry";
 import { needsIdentity, identityMode, verifyCpfName, makeTicket, checkTicket, verifyIdentity, type IdentityMethod, MAX_FAILED } from "./identity";
 import { checkMx } from "./email-check";
 import { verificarEmail } from "./verificacao";
@@ -69,7 +70,10 @@ async function invalidEmail(email: string, ctx: SignCtx, code: string, estrangei
 export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider | null = defaultProvider(), probe?: Probe): Promise<FlowResult> {
   const suspected = typeof body?.website === "string" && body.website.length > 0;
   if (suspected) diagnosticMark("submission", "honeypot_detected");
-  const v = validate(body);
+  const binding = body?.category === "servidor"
+    ? { institutionMatch: await resolveInstitutionForEmail(typeof body?.email === "string" ? body.email.slice(0, 200) : "") }
+    : undefined;
+  const v = validate(body, binding);
   if (!v.ok) return ASK({ errors: v.errors });
   const input = v.value;
   // A challenge is consumed at most once per HTTP request. Identity continuation
@@ -98,17 +102,17 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
   if (await isEmailBlacklisted(input.email)) { await logRequest("email_blocked", ctx.ip, { email: input.email, detail: "tentativa com e-mail da lista negra" }); return invalidEmail(input.email, ctx, "email_not_found", input.category === "estrangeiro"); }
 
 
-  // Approved IFES and exact EBSERH domains redirect to the servidor form.
+  // Somente domínios de instituições vinculadas ao MEC encaminham para Servidor.
   if (input.category === "apoiador") {
     const k = await institutionalKind(input.email);
-    if (acceptsServerDomain(k, emailDomain(input.email))) return ASK({ errors: { email: "apoiador_institutional_email" } });
+    if (acceptsServerDomain(k, emailDomain(input.email), await resolveInstitutionForEmail(input.email))) return ASK({ errors: { email: "apoiador_institutional_email" } });
   }
 
-  // New servidor requests require approved IFES or the explicit EBSERH exception.
+  // Novos pedidos de Servidor exigem vínculo MEC comprovado e domínio aprovado.
   // Public-sector suffixes, other curated kinds and generic .edu.br do not qualify.
   if (input.category === "servidor") {
     const kind = await institutionalKind(input.email);
-    if (!acceptsServerDomain(kind, emailDomain(input.email))) {
+    if (!acceptsServerDomain(kind, emailDomain(input.email), binding?.institutionMatch)) {
       const d = emailDomain(input.email);
       const v = await validateEmailField(input.email, "servidor"); // mesmo veredito do formulário: "e-mail institucional inválido" (com sugestão) ou "use e-mail de órgão público"
       const provavelErro = !v.ok && !!v.suggest; // domínio com cara de erro de digitação não vai para a fila de curadoria (evita lixo como "ufpa.edu.bt")
@@ -228,6 +232,7 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
   try {
     await submit(input, ctx, { ...extra, whatsapp: wa });
   } catch (e) {
+    if (e instanceof InstitutionEmailMismatchError) return ASK({ errors: { email: "institution_email_mismatch", institution: "institution_email_mismatch" } });
     if (e instanceof EmailUndeliverableError) return invalidEmail(input.email, ctx, "email_undeliverable", false);
     if (e instanceof MailBlockedError) return ASK({ error: "Este endereço de e-mail não pode ser usado em ambiente de teste.", errorCode: "mail_blocked" });
     console.error("assinar falhou", e);

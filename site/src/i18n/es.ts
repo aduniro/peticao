@@ -24,6 +24,8 @@ export const es: Messages = {
   "f.submit": "Firmar", "f.sending": "Enviando…", "f.privacy": "Tu CPF solo se usa para evitar firmas duplicadas y no aparece en la lista enviada a las autoridades.", "f.privacyForeign": "Tu correo no aparece en la lista enviada a las autoridades.", "f.privacyLink": "Privacidad (en portugués)",
   "ok.title": "¡Casi listo! Confirma por correo.", "ok.text": "Te enviamos un enlace de confirmación. Tu firma solo cuenta después de que hagas clic. Revisa también la carpeta de spam.",
   "err.name_required": "Indica tu nombre completo.", "err.email_invalid": "Indica un correo válido.", "err.email_disposable": "Usa tu correo personal o institucional (no aceptamos correos temporales).",
+  // MUDAR AQUI: aviso de divergência entre o e-mail e a instituição selecionada.
+  "err.institution_email_mismatch": "Este correo electrónico no corresponde a la institución seleccionada.",
   "err.cpf_invalid": "CPF inválido.", "err.category_invalid": "Elige una categoría.", "err.consent_required": "Debes estar de acuerdo con el texto.", "err.ifes_required": "Indica la institución.", "err.role_required": "Indica el cargo.",
   "err.campus_invalid": "Campus inválido.", "err.region_not_eligible": "El municipio del campus no está en la Amazonía Legal ni en la franja de frontera.", "err.uf_invalid": "Indica un estado válido.", "err.city_required": "Indica la ciudad.",
   "err.city_invalid": "Esa ciudad no existe en ese estado.", "err.city_ambiguous": "Hay más de una ciudad con ese nombre: elige el estado.", "err.country_invalid": "Elige el país de tu institución.", "err.university_required": "Indica tu universidad.",
