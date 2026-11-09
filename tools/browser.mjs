@@ -1,7 +1,7 @@
 import { chromium } from "/home/barre/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
-const root = "/mnt/dev/peticao-laboratorio";
+const root = "/mnt/apps/peticao-final/peticao-laboratorio";
 const results = { cases: [], errors: [], normalization: ["reduced motion", "same local widget", "welcome dismissed", "tour disabled for automation", "caret hidden"] };
 const browser = await chromium.launch({ headless: true, executablePath: "/home/barre/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome", args: ["--no-sandbox","--disable-dev-shm-usage"] });
 const field = (p, n) => p.locator('form.form input[name="' + n + '"]');
