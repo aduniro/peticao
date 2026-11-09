@@ -63,7 +63,7 @@ test("registro institucional: múltiplos domínios, bloqueio filho, sementes e A
     });
     const body = await (await POST(req)).json();
     assert.equal(body.institution, undefined, "API não fornece instituição elegível para titular sem vínculo MEC");
-    
+
     const rejected = await POST(new NextRequest("http://localhost/api/email/validar", {
       method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": "127.0.0.20" },
       body: JSON.stringify({ email: "pessoa@fixture.example.invalid", category: "apoiador" }),
