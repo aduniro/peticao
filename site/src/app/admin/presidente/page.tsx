@@ -1,3 +1,4 @@
+import HistoricoDocumento from "@/components/admin/HistoricoDocumento";
 import { sessaoAdmin } from "@/lib/admin";
 import { nivelOk, stepupValido } from "@/lib/admin-users";
 import { presidentDocuments, documentActions } from "@/lib/president-document";
@@ -58,6 +59,7 @@ export default async function Presidente({ searchParams }: { searchParams: { lot
       {document.status === "preparing" && !document.has_pdf && (document.has_preparation
         ? <form method="post" action={`/api/admin/lotes/${document.id}/preparar?portal=presidente`}><p>O preparo usa a lista reservada para este documento. Não inclui novas assinaturas nem envia mensagens.</p><button>Retomar preparo do PDF</button></form>
         : <p>Este lote antigo não tem snapshot de preparo. Não é possível reconstruir sua lista com segurança por esta tela.</p>)}
+      <div style={{ margin: "12px 0" }}><HistoricoDocumento key={document.id} batchId={document.id} /></div>
       <h3>2. Assinatura</h3>
       <div className="box"><strong>Upload de PDF assinado</strong><p>O upload confere o arquivo e registra o resultado. Ele não envia o lote.</p><p>Validador ICP-Brasil: {process.env.ICP_VALIDATOR_URL ? "configurado" : "não configurado"}.</p></div>
       {actions.upload && <form method="post" action={`/api/admin/lotes/${document.id}/assinado?portal=presidente`} encType="multipart/form-data"><input type="file" name="file" accept="application/pdf" aria-label="PDF assinado" required /><button>Enviar PDF assinado</button></form>}
