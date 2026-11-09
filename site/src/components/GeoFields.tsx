@@ -31,6 +31,8 @@ export function UfCityFields({ uf, city, setUf, setCity, errors }: { uf: string;
   const geo = useGeo();
   const ufOk = UFS.includes(uf);
   const ufOptions: Option[] = useMemo(() => rank(UFS.map((u) => ({ key: u, label: u, hint: UF_NAMES[u] })), uf, (o) => `${o.label} ${o.hint}`, 27), [uf]);
+  const allUfOptions: Option[] = useMemo(() => UFS.map((u) => ({ key: u, label: u, hint: UF_NAMES[u] })), []);
+  const allCityOptions: Option[] = useMemo(() => (geo ? (ufOk ? geo.muns.filter((m) => m.uf === uf) : geo.muns) : []).map((m) => ({ key: String(m.id), label: m.name, hint: ufOk ? undefined : m.uf })), [geo, uf, ufOk]);
   const cityOptions: Option[] = useMemo(() => {
     if (!geo) return [];
     const pool = ufOk ? geo.muns.filter((m) => m.uf === uf) : geo.muns;
@@ -48,12 +50,12 @@ export function UfCityFields({ uf, city, setUf, setCity, errors }: { uf: string;
   return (
     <div className="row uf-city" data-tour="ufcity">
       <label className="uf">{t("f.uf")}
-        <Combobox name="uf" value={uf} placeholder={t("f.ufPlaceholder")} options={ufOptions} invalid={!!errors.uf} ariaLabel={t("f.uf")} inputMode="search"
+        <Combobox name="uf" value={uf} placeholder={t("f.ufPlaceholder")} options={ufOptions} allOptions={allUfOptions} invalid={!!errors.uf} ariaLabel={t("f.uf")} inputMode="search"
           onChange={(v) => { const u = v.toUpperCase().slice(0, 20); setUf(u); if (geo && UFS.includes(u) && city) { const there = geo.muns.some((m) => m.uf === u && squash(m.name) === squash(city)); const elsewhere = geo.muns.some((m) => squash(m.name) === squash(city)); if (!there && elsewhere) setCity(""); } }}
           onPick={(o) => { setUf(o.key); if (geo && city) { const m = geo.muns.find((x) => x.uf === o.key && squash(x.name) === squash(city)); if (!m) setCity(""); } }} />
         <Err msg={errors.uf} /></label>
       <label className="city">{t("f.city")}
-        <Combobox name="city" value={city} placeholder={ufOk ? t("f.cityPlaceholder") : t("f.cityPickUf")} options={cityOptions} invalid={!!errors.city} ariaLabel={t("f.city")} emptyText={t("f.cityNone")} autoComplete="off"
+        <Combobox name="city" value={city} placeholder={ufOk ? t("f.cityPlaceholder") : t("f.cityPickUf")} options={cityOptions} allOptions={allCityOptions} invalid={!!errors.city} ariaLabel={t("f.city")} emptyText={t("f.cityNone")} autoComplete="off"
           onChange={changeCity} onPick={(o) => { const m = geo?.byId.get(Number(o.key)); setCity(o.label); if (m) setUf(m.uf); }} />
         <Err msg={errors.city} /></label>
     </div>
@@ -95,6 +97,7 @@ export function IfesCampusFields({ s, set, errors, email = "", emailInstitution 
     return [...new Set([s.ifes.m, ...s.ifes.c])].map((id) => geo.byId.get(id)).filter((m): m is Mun => !!m).sort((a, b) => a.name.localeCompare(b.name, "pt"));
   }, [geo, s.ifes]);
   const campusOptions: Option[] = useMemo(() => rank(allMuns, s.campus, (m) => m.name, 60).map((m) => ({ key: String(m.id), label: m.name, hint: inRegion(m.id) ? m.uf : `${m.uf} · ${t("f.campusOutside")}` })), [allMuns, s.campus, geo]); // eslint-disable-line react-hooks/exhaustive-deps
+  const allCampusOptions: Option[] = useMemo(() => allMuns.map((m) => ({ key: String(m.id), label: m.name, hint: inRegion(m.id) ? m.uf : `${m.uf} · ${t("f.campusOutside")}` })), [allMuns, geo]); // eslint-disable-line react-hooks/exhaustive-deps
   const campusOutside = !!s.campusIbge && !inRegion(s.campusIbge) && allMuns.some((m) => m.id === s.campusIbge);
   const eligible = isEbserh ? !!selectedUnit && inRegion(selectedUnit.municipalityIbge) : !!s.ifes && regionMuns.length > 0;
   const mustRegion = isEbserh ? eligible : !!geo && allInstitutionCampiInAmazonia(s.ifes, geo.al); // todos os campi na Amazônia Legal: marcar automaticamente e exigir lotação
@@ -153,7 +156,7 @@ export function IfesCampusFields({ s, set, errors, email = "", emailInstitution 
       {!isEbserh && (s.region || campusOutside) && (
         <>
           <label data-tour="campus">{t("f.campus")}<Help text={t("help.campus")} />
-            <Combobox name="campus" required={s.region || mustRegion} value={s.campus} placeholder={s.ifes ? t("f.campusPlaceholder") : t("f.campusPickIfes")} options={campusOptions} invalid={!!errors.campus} ariaLabel={t("f.campus")}
+            <Combobox name="campus" required={s.region || mustRegion} value={s.campus} placeholder={s.ifes ? t("f.campusPlaceholder") : t("f.campusPickIfes")} options={campusOptions} allOptions={allCampusOptions} invalid={!!errors.campus} ariaLabel={t("f.campus")}
               emptyText={t("f.campusNone")} disabled={!s.institution.trim()}
               onChange={(v) => set({ campus: v, campusIbge: null })} onPick={(o) => { const id = Number(o.key); set(inRegion(id) ? { campus: o.label, campusIbge: id } : { campus: o.label, campusIbge: id, region: false }); }} />
             <span className="hint">{t("f.campusHint")}</span><Err msg={errors.campus} /></label>
@@ -167,15 +170,29 @@ export function IfesCampusFields({ s, set, errors, email = "", emailInstitution 
 /** Estrangeiro: país da instituição (todos, menos o Brasil, nomes no idioma da tela) e universidade digitável com sugestões da base mundial. */
 export function CountryUniversityFields({ country, setCountry, university, setUniversity, errors }: { country: string; setCountry: (v: string) => void; university: string; setUniversity: (v: string) => void; errors: Record<string, string> }) {
   const { t, lang } = useI18n();
-  const [uniOpts, setUniOpts] = useState<Option[]>([]);
+  const [uniResults, setUniResults] = useState<{ country: string; options: Option[] }>({ country: "", options: [] });
+  const [allUniResults, setAllUniResults] = useState<{ country: string; options: Option[] }>({ country: "", options: [] });
+  const uniOpts = uniResults.country === country ? uniResults.options : [];
+  const allUniOpts = allUniResults.country === country ? allUniResults.options : [];
+  useEffect(() => {
+    setAllUniResults({ country, options: [] });
+    if (!country) return;
+    const ctl = new AbortController();
+    let active = true;
+    fetch(`/api/universidades?c=${encodeURIComponent(country)}&all=1`, { signal: ctl.signal }).then((r) => r.json()).then((d) => {
+      if (active) setAllUniResults({ country, options: (d.items as { name: string; domain: string }[]).map((x) => ({ key: x.name, label: x.name, hint: x.domain })) });
+    }).catch(() => {});
+    return () => { active = false; ctl.abort(); };
+  }, [country]);
   const countries = useMemo(() => FOREIGN_COUNTRY_CODES.map((c) => ({ c, n: countryName(c, lang) })).sort((a, b) => a.n.localeCompare(b.n, lang)), [lang]);
   useEffect(() => {
-    if (!country) { setUniOpts([]); return; }
+    if (!country) { setUniResults({ country, options: [] }); return; }
     const ctl = new AbortController();
+    let active = true;
     const h = setTimeout(() => {
-      fetch(`/api/universidades?c=${country}&q=${encodeURIComponent(university)}`, { signal: ctl.signal }).then((r) => r.json()).then((d) => setUniOpts((d.items as { name: string; domain: string }[]).map((x) => ({ key: x.name, label: x.name, hint: x.domain })))).catch(() => {});
+      fetch(`/api/universidades?c=${country}&q=${encodeURIComponent(university)}`, { signal: ctl.signal }).then((r) => r.json()).then((d) => { if (active) setUniResults({ country, options: (d.items as { name: string; domain: string }[]).map((x) => ({ key: x.name, label: x.name, hint: x.domain })) }); }).catch(() => {});
     }, 180);
-    return () => { clearTimeout(h); ctl.abort(); };
+    return () => { active = false; clearTimeout(h); ctl.abort(); };
   }, [country, university]);
   return (
     <>
@@ -188,7 +205,7 @@ export function CountryUniversityFields({ country, setCountry, university, setUn
           </select>
         </span><Err msg={errors.country} /></label>
       <label data-tour="university">{t("f.university")}<Help text={t("help.university")} />
-        <Combobox name="university" value={university} placeholder={country ? t("f.universityPlaceholder") : t("f.universityPickCountry")} options={uniOpts} invalid={!!errors.university} ariaLabel={t("f.university")} disabled={!country}
+        <Combobox name="university" value={university} placeholder={country ? t("f.universityPlaceholder") : t("f.universityPickCountry")} options={uniOpts} allOptions={allUniOpts} invalid={!!errors.university} ariaLabel={t("f.university")} disabled={!country}
           onChange={setUniversity} onPick={(o) => setUniversity(o.label)} />
         <span className="hint">{t("f.universityHint")}</span><Err msg={errors.university} /></label>
     </>

@@ -9,7 +9,7 @@ export default function Combobox({ value, onChange, onPick, options, allOptions,
   invalid?: boolean; disabled?: boolean; required?: boolean; emptyText?: string; ariaLabel?: string; autoComplete?: string; openOnFocus?: boolean; inputMode?: "text" | "search";
 }) {
   const [open, setOpen] = useState(false);
-  const [browseAll, setBrowseAll] = useState(false);
+  const [browseAll, setBrowseAll] = useState(true);
   const visibleOptions = browseAll && allOptions ? allOptions : options;
   const [active, setActive] = useState(-1);
   const id = useId();
@@ -23,7 +23,7 @@ export default function Combobox({ value, onChange, onPick, options, allOptions,
   useEffect(() => { if (active >= 0) list.current?.children[active]?.scrollIntoView({ block: "nearest" }); }, [active]);
   const pick = (o: Option) => { onPick(o); setOpen(false); };
   const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); setActive((a) => Math.min(a + 1, visibleOptions.length - 1)); }
+    if (e.key === "ArrowDown") { e.preventDefault(); if (!open) setBrowseAll(true); setOpen(true); setActive((a) => Math.min(a + 1, visibleOptions.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
     else if (e.key === "Enter" && open && active >= 0 && visibleOptions[active]) { e.preventDefault(); pick(visibleOptions[active]); }
     else if (e.key === "Escape") { setOpen(false); }
@@ -33,7 +33,8 @@ export default function Combobox({ value, onChange, onPick, options, allOptions,
       <input name={name} value={value} placeholder={placeholder} disabled={disabled} required={required} aria-required={required || undefined} aria-invalid={invalid || undefined} aria-label={ariaLabel}
         role="combobox" aria-expanded={open} aria-controls={`${id}-l`} aria-autocomplete="list" aria-activedescendant={active >= 0 ? `${id}-${active}` : undefined}
         autoComplete={autoComplete} autoCapitalize="none" spellCheck={false} inputMode={inputMode}
-        onChange={(e) => { setBrowseAll(false); onChange(e.target.value); setOpen(true); }} onFocus={() => { setBrowseAll(false); if (openOnFocus) setOpen(true); }} onKeyDown={onKey} />
+        onChange={(e) => { setBrowseAll(false); onChange(e.target.value); setOpen(true); }} onFocus={() => { setBrowseAll(true); if (openOnFocus) setOpen(true); }}
+        onClick={() => { setBrowseAll(true); setActive(-1); setOpen(true); }} onKeyDown={onKey} />
       {allOptions && <button type="button" disabled={disabled} aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} aria-controls={`${id}-l`}
         style={{ position: "absolute", right: 0, top: 0, width: 30, height: "100%", minHeight: 0, padding: 0, border: 0, borderRadius: 0, background: "transparent", transform: "none" }}
         onMouseDown={(e) => e.preventDefault()}
