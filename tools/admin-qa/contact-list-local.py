@@ -10,13 +10,13 @@ import subprocess
 import tempfile
 
 root = Path(__file__).resolve().parents[2]
-assert root == Path('/mnt/dev/peticao/.cache/admin-integration/candidate-contact-list-qa-20261109')
+assert root == Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-contact-list-qa-20261109')
 assert Path.cwd().resolve() == root
 site = root / 'site'
 for name in ['.env', '.env.local', '.env.production', '.env.production.local']:
     assert not (site / name).exists(), 'No environment files allowed'
 assert not list((site / 'src/lib').glob('rich-text*.ts')), 'Interrupted rich-text work is outside this QA'
-assert (site / 'node_modules').resolve() == Path('/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules')
+assert (site / 'node_modules').resolve() == Path('/mnt/apps/peticao-final/_externos/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules')
 parser = argparse.ArgumentParser()
 parser.add_argument('mode', choices=['tests', 'http', 'types'])
 args = parser.parse_args()

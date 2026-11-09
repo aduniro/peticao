@@ -1,6 +1,6 @@
 from pathlib import Path
 import os,socket,tempfile,subprocess,json,sys,datetime,hashlib
-r=Path('/mnt/dev/peticao/.cache/admin-integration/candidate-inbound-mail-20261109');site=r/'site'
+r=Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-inbound-mail-20261109');site=r/'site'
 assert sys.argv[1:] in [['inbound-unit'],['inbound-types'],['inbound-schema']]
 assert not any((site/x).exists() for x in ['.env','.env.local','.env.production','.env.production.local'])
 for port in [3045,54361]:
