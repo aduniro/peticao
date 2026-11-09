@@ -13,8 +13,8 @@ import subprocess
 import tempfile
 import time
 
-CHECKOUT_PARENT = Path('/mnt/dev/peticao/.cache/admin-integration')
-DEPENDENCIES = Path('/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules')
+CHECKOUT_PARENT = Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration')
+DEPENDENCIES = Path('/mnt/apps/peticao-final/_externos/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules')
 DB_PORT = 54364
 HTTP_PORT = 3044
 BLOCKED = 'rich-text'
