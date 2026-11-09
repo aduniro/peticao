@@ -5,7 +5,7 @@ import Combobox, { type Option } from "./Combobox";
 import { useI18n } from "@/i18n/client";
 import { countryName } from "@/i18n";
 import { FOREIGN_COUNTRY_CODES } from "@/i18n/countries";
-import { loadGeo, loadIfes, norm, rank, squash, type Geo, type Ifes, type Mun } from "@/lib/datasets-client";
+import { loadGeo, loadIfes, matchesInstitutionSelection, norm, rank, squash, type Geo, type Ifes, type Mun } from "@/lib/datasets-client";
 
 const UF_NAMES: Record<string, string> = {
   AC: "Acre", AL: "Alagoas", AP: "Amapá", AM: "Amazonas", BA: "Bahia", CE: "Ceará", DF: "Distrito Federal", ES: "Espírito Santo", GO: "Goiás", MA: "Maranhão",
@@ -65,7 +65,12 @@ export function IfesCampusFields({ s, set, errors }: { s: ServerState; set: (p: 
   const [all, setAll] = useState<Ifes[]>([]);
   useEffect(() => { let on = true; loadIfes().then((x) => on && setAll(x)).catch(() => {}); return () => { on = false; }; }, []);
   const ifesOptions: Option[] = useMemo(() => rank(all, s.institution, (i) => `${i.s} ${i.n}`, 60).map((i) => ({ key: i.s, label: i.s, hint: i.n })), [all, s.institution]);
-  const findIfes = (text: string) => { const head = text.trim().split(/\s[-–—]\s/)[0]; return all.find((i) => squash(i.s) === squash(head)) ?? all.find((i) => squash(i.n) === squash(text)) ?? null; };
+  const findIfes = (text: string) => all.find((i) => matchesInstitutionSelection(text, i)) ?? null;
+  useEffect(() => {
+    if (!all.length) return;
+    const institution = all.find((i) => matchesInstitutionSelection(s.institution, i)) ?? null;
+    if (institution !== s.ifes) set({ ifes: institution });
+  }, [all, s.institution, s.ifes]); // eslint-disable-line react-hooks/exhaustive-deps
   // Locais da instituição (sede e campi) que estão na Amazônia Legal e/ou na faixa de fronteira: só eles contam para a caixa e para "Lotado em".
   const regionMuns: Mun[] = useMemo(() => {
     if (!geo || !s.ifes) return [];
@@ -87,10 +92,12 @@ export function IfesCampusFields({ s, set, errors }: { s: ServerState; set: (p: 
 
   return (
     <>
+      {/* MUDAR AQUI: o rótulo acima do campo vem de f.ifes em src/i18n/pt.ts; manter o estilo existente. */}
       <label data-tour="ifes">{t("f.ifes")}
         <Combobox name="institution" value={s.institution} placeholder={t("f.ifesPlaceholder")} options={ifesOptions} invalid={!!errors.institution} ariaLabel={t("f.ifes")} inputMode="search"
           onChange={(v) => set({ institution: v, ifes: findIfes(v), campus: findIfes(v)?.s === s.ifes?.s ? s.campus : "", campusIbge: null })}
           onPick={(o) => { const i = all.find((x) => x.s === o.key) ?? null; set({ institution: o.key, ifes: i, campus: "", campusIbge: null }); }} />
+        {/* MUDAR AQUI: dica abaixo do campo em f.ifesHint e erro em err.ifes_required, no arquivo src/i18n/pt.ts. */}
         <span className="hint">{t("f.ifesHint")}</span><Err msg={errors.institution} /></label>
       <label data-tour="role">{t("f.role")}
         <select name="role" required value={s.role} onChange={(e) => set({ role: e.target.value })} aria-invalid={!!errors.role}>

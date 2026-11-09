@@ -19,6 +19,7 @@ import { supporterEmailSuggestion } from "@/lib/supporter-email-suggestion";
 import { isKnownSupporterEmail } from "@/lib/supporter-known-domains";
 import { formValidationNotice } from "@/lib/form-validation-notice";
 import { signRequest } from "@/lib/sign-request";
+import { matchesInstitutionSelection } from "@/lib/datasets-client";
 import { useI18n } from "@/i18n/client";
 import { countryName } from "@/i18n";
 import type { MessageKey } from "@/i18n/messages-types";
@@ -153,6 +154,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     const eb = emailBad(emailV);
     if (eb || !emailV.trim()) { const error = eb || t("f.emailInvalid"); setErrors({ email: error }); showFieldNotice({ email: error }); setMsg(""); return; }
     if ((category === "servidor" || category === "apoiador") && !isValidCpf(cpf)) { const error = t("err.cpf_invalid"); setErrors({ cpf: error }); showFieldNotice({ cpf: error }); setMsg(""); return; } // não envia nada: nem ao servidor, nem à CPF Brasil
+    if (category === "servidor" && !matchesInstitutionSelection(srv.institution, srv.ifes)) { const error = t("err.ifes_required"); setErrors({ institution: error }); showFieldNotice({ institution: error }); setMsg(""); return; }
     setState("sending"); setErrors({}); setMsg("");
     if (category === "servidor") {
       const requestGeneration = generation.current, submittedEmail = emailMask(emailV, true);
@@ -169,7 +171,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       }
     }
     const body: Body = { name: nameMask(nameV, true), email: emailMask(emailV, true), category, consent: f.get("consent") === "on", website: f.get("website"), turnstileToken: tsToken.current, locale: lang };
-    if (category === "servidor") Object.assign(body, { cpf, institution: srv.institution, role: srv.role, campus: srv.campus, campusIbge: srv.campusIbge, regionDeclared: srv.region });
+    if (category === "servidor") Object.assign(body, { cpf, institution: srv.ifes!.s, role: srv.role, campus: srv.campus, campusIbge: srv.campusIbge, regionDeclared: srv.region });
     else if (category === "apoiador") Object.assign(body, { cpf, uf, city });
     else Object.assign(body, { country, university });
     if (whatsappAtivo && wa.numero.trim()) Object.assign(body, { whatsapp: { ddi: wa.ddi, numero: wa.numero }, whatsappConsent: waConsent });

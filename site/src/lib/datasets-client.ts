@@ -21,7 +21,30 @@ export function loadGeo(): Promise<Geo> {
   }).catch((e) => { geoP = null; throw e; });
   return geoP;
 }
-export const loadIfes = () => load<Ifes[]>("/data/ifes.json");
+export function matchesInstitutionSelection(text: string, institution: Ifes | null): boolean {
+  if (!institution) return false;
+  const value = squash(text);
+  return !!value && [institution.s, institution.n, `${institution.s} - ${institution.n}`].some((label) => squash(label) === value);
+}
+
+export function mergeInstitutionCatalog(base: Ifes[], extra: Ifes[]): Ifes[] {
+  const institutions = new Map<string, Ifes>();
+  for (const institution of [...base, ...extra]) {
+    const key = squash(institution.s);
+    if (!key || institutions.has(key)) throw new Error("Duplicate institution in catalog");
+    institutions.set(key, institution);
+  }
+  return [...institutions.values()];
+}
+
+let ifesP: Promise<Ifes[]> | null = null;
+export function loadIfes(): Promise<Ifes[]> {
+  ifesP ??= Promise.all([
+    load<Ifes[]>("/data/ifes.json"),
+    load<Ifes[]>("/data/server-institution-extras.json"),
+  ]).then(([base, extra]) => mergeInstitutionCatalog(base, extra)).catch((error) => { ifesP = null; throw error; });
+  return ifesP;
+}
 
 /** Ordena sugestões: começa com o texto primeiro, depois contém. */
 export function rank<T>(items: T[], text: string, get: (x: T) => string, limit = 50): T[] {

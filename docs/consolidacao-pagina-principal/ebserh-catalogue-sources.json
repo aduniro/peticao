@@ -1,0 +1,287 @@
+{
+  "source": "data/ebserh/unidades-20261108.json",
+  "policy": "Only current network hospitals and administration, not planned units; EBSERH is an authorized employer, not an IFES classification.",
+  "municipalities": 39,
+  "sources": [
+    {
+      "unit": "HC-UFG",
+      "city_ibge": 5208707,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-centro-oeste/hc-ufg"
+    },
+    {
+      "unit": "HUB-UnB",
+      "city_ibge": 5300108,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-centro-oeste/hub-unb"
+    },
+    {
+      "unit": "HUJM-UFMT",
+      "city_ibge": 5103403,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-centro-oeste/hujm-ufmt"
+    },
+    {
+      "unit": "Humap-UFMS",
+      "city_ibge": 5002704,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-centro-oeste/humap-ufms"
+    },
+    {
+      "unit": "HU-UFCAT",
+      "city_ibge": 5205109,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-centro-oeste/hu-ufcat"
+    },
+    {
+      "unit": "HU-UFGD",
+      "city_ibge": 5003702,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-centro-oeste/hu-ufgd"
+    },
+    {
+      "unit": "CH-UFC",
+      "city_ibge": 2304400,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/ch-ufc"
+    },
+    {
+      "unit": "HC-UFPE",
+      "city_ibge": 2611606,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hc-ufpe"
+    },
+    {
+      "unit": "Huab-UFRN",
+      "city_ibge": 2411205,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/huab-ufrn"
+    },
+    {
+      "unit": "HUAC-UFCG",
+      "city_ibge": 2504009,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/huac-ufcg"
+    },
+    {
+      "unit": "HUJB-UFCG",
+      "city_ibge": 2503704,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hujb-ufcg"
+    },
+    {
+      "unit": "HUL-UFS",
+      "city_ibge": 2803500,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hul-ufs"
+    },
+    {
+      "unit": "HULW-UFPB",
+      "city_ibge": 2507507,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hulw-ufpb"
+    },
+    {
+      "unit": "Huol-UFRN",
+      "city_ibge": 2408102,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/huol-ufrn"
+    },
+    {
+      "unit": "HUPAA-Ufal",
+      "city_ibge": 2704302,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hupaa-ufal"
+    },
+    {
+      "unit": "Hupes-UFBA",
+      "city_ibge": 2927408,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hupes-ufba"
+    },
+    {
+      "unit": "HU-UFMA",
+      "city_ibge": 2111300,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hu-ufma"
+    },
+    {
+      "unit": "HU-UFPI",
+      "city_ibge": 2211001,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hu-ufpi"
+    },
+    {
+      "unit": "HU-UFS",
+      "city_ibge": 2800308,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hu-ufs"
+    },
+    {
+      "unit": "HU-Univasf",
+      "city_ibge": 2611101,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hu-univasf"
+    },
+    {
+      "unit": "MCO-UFBA",
+      "city_ibge": 2927408,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/mco-ufba"
+    },
+    {
+      "unit": "MEJC-UFRN",
+      "city_ibge": 2408102,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/mejc-ufrn"
+    },
+    {
+      "unit": "CHU-UFPA",
+      "city_ibge": 1501402,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-norte/chu-ufpa"
+    },
+    {
+      "unit": "HDT-UFNT",
+      "city_ibge": 1702109,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-norte/hdt-ufnt"
+    },
+    {
+      "unit": "HUGV-Ufam",
+      "city_ibge": 1302603,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-norte/hugv-ufam"
+    },
+    {
+      "unit": "HU-UFRR",
+      "city_ibge": 1400100,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-norte/hu-ufrr"
+    },
+    {
+      "unit": "HU-Unifap",
+      "city_ibge": 1600303,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-norte/hu-unifap"
+    },
+    {
+      "unit": "CH-UFRJ",
+      "city_ibge": 3304557,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/ch-ufrj"
+    },
+    {
+      "unit": "HC-UFMG",
+      "city_ibge": 3106200,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/hc-ufmg"
+    },
+    {
+      "unit": "HC-UFTM",
+      "city_ibge": 3170107,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/hc-uftm"
+    },
+    {
+      "unit": "HC-UFU",
+      "city_ibge": 3170206,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/hc-ufu"
+    },
+    {
+      "unit": "Huap-UFF",
+      "city_ibge": 3303302,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/huap-uff"
+    },
+    {
+      "unit": "Hucam-Ufes",
+      "city_ibge": 3205309,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/hucam-ufes"
+    },
+    {
+      "unit": "HUSE-Unirio",
+      "city_ibge": 3304557,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/huse-unirio"
+    },
+    {
+      "unit": "HU-UFJF",
+      "city_ibge": 3136702,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/hu-ufjf"
+    },
+    {
+      "unit": "HU-UFSCar",
+      "city_ibge": 3548906,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/hu-ufscar"
+    },
+    {
+      "unit": "HU-UFSJ",
+      "city_ibge": 3122306,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/hu-ufsj"
+    },
+    {
+      "unit": "CHC-UFPR",
+      "city_ibge": 4106902,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sul/chc-ufpr"
+    },
+    {
+      "unit": "HE-UFPel",
+      "city_ibge": 4314407,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sul/he-ufpel"
+    },
+    {
+      "unit": "HU-Furg",
+      "city_ibge": 4315602,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sul/hu-furg"
+    },
+    {
+      "unit": "HUSM-UFSM",
+      "city_ibge": 4316907,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sul/husm-ufsm"
+    },
+    {
+      "unit": "HU-UFSC",
+      "city_ibge": 4205407,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sul/hu-ufsc"
+    },
+    {
+      "unit": "HUJBB-UFPA",
+      "city_ibge": 1501402,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-norte/chu-ufpa"
+    },
+    {
+      "unit": "HUBFS-UFPA",
+      "city_ibge": 1501402,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-norte/chu-ufpa"
+    },
+    {
+      "unit": "HUWC-UFC",
+      "city_ibge": 2304400,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/ch-ufc"
+    },
+    {
+      "unit": "MEAC-UFC",
+      "city_ibge": 2304400,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/ch-ufc"
+    },
+    {
+      "unit": "HUCFF-UFRJ",
+      "city_ibge": 3304557,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/ch-ufrj/acesso-a-informacao/perguntas-frequentes/"
+    },
+    {
+      "unit": "IPPMG-UFRJ",
+      "city_ibge": 3304557,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/ch-ufrj/acesso-a-informacao/perguntas-frequentes/"
+    },
+    {
+      "unit": "ME-UFRJ",
+      "city_ibge": 3304557,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/ch-ufrj/acesso-a-informacao/perguntas-frequentes/"
+    },
+    {
+      "unit": "HC-UFPR",
+      "city_ibge": 4106902,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sul/chc-ufpr"
+    },
+    {
+      "unit": "MVFA-UFPR",
+      "city_ibge": 4106902,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sul/chc-ufpr"
+    },
+    {
+      "unit": "UPD-UFMA",
+      "city_ibge": 2111300,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hu-ufma/ensino-e-pesquisa/residencia-medica/residencia-medica"
+    },
+    {
+      "unit": "UMI-UFMA",
+      "city_ibge": 2111300,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-nordeste/hu-ufma/ensino-e-pesquisa/residencia-medica/residencia-medica"
+    },
+    {
+      "unit": "HUGG-Unirio",
+      "city_ibge": 3304557,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/huse-unirio/acesso-a-informacao/institucional/endereco-e-horario-de-atendimento"
+    },
+    {
+      "unit": "HFSE/HUSE-Unirio",
+      "city_ibge": 3304557,
+      "source": "https://www.gov.br/hubrasil/pt-br/hospitais-universitarios/regiao-sudeste/huse-unirio/acesso-a-informacao/institucional/endereco-e-horario-de-atendimento"
+    },
+    {
+      "unit": "EBSERH",
+      "city_ibge": 5300108,
+      "source": "https://www.gov.br/hubrasil/pt-br/acesso-a-informacao/institucional/horario-de-atendimento"
+    }
+  ]
+}

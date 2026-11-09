@@ -29,7 +29,7 @@ export type SignInput = {
   cpf?: string; // não existe para estrangeiros
   category: Category;
   // servidor
-  institution?: string; // sigla da IFES (ou o texto digitado, se não constar na lista)
+  institution?: string; // sigla canônica de uma instituição autorizada
   ifesListed?: boolean;
   role?: "docente" | "tae";
   campus?: string;
@@ -89,8 +89,10 @@ export function validate(raw: any): ValidationResult {
   if (category === "servidor") {
     const text = clean(raw?.institution, 160);
     const ifes = findIfes(text);
-    if (text.length < 2) errors.institution = "ifes_required";
-    v.institution = ifes ? ifes.s : text;
+    // A interface é pesquisável, mas texto livre nunca é instituição válida.
+    // Revalidar no servidor impede contornar a seleção com um POST manual.
+    if (!ifes) errors.institution = "ifes_required";
+    v.institution = ifes?.s;
     v.ifesListed = !!ifes;
     // Cargo e "Lotado em" só existem para quem declara ser servidor da educação federal na Amazônia Legal/Faixa de Fronteira.
     const declared = raw?.regionDeclared === true;

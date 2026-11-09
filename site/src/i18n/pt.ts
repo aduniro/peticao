@@ -14,7 +14,12 @@ export const pt = {
   "doc.recipient": "Destinatário:", "doc.copies": "Com cópia:", "doc.version": "Versão do texto:", "doc.where.one": "país: {c}", "doc.where.many": "países: {c}", "doc.noCountry": "(escolha o país da sua instituição)",
   "form.title": "Assine a petição", "cat.label": "Você é:", "cat.servidor": "Servidor(a)", "cat.apoiador": "Apoiador(a)", "cat.estrangeiro": "Estrangeiro(a)",
   "f.name": "Nome completo", "f.email": "E-mail", "f.emailHint": "Se usar o e-mail institucional, a assinatura é mais rápida.", "f.emailHintForeign": "Use o e-mail institucional da sua universidade.", "f.cpf": "CPF",
-  "f.ifes": "Instituição", "f.ifesPlaceholder": "Digite a sigla ou o nome (ex.: UNIR)", "f.ifesHint": "Universidades e institutos federais. Não achou? Digite o nome.",
+  // MUDAR AQUI: rótulo acima do campo Instituição.
+  "f.ifes": "Instituição",
+  // MUDAR AQUI: exemplo exibido dentro do campo Instituição.
+  "f.ifesPlaceholder": "Digite a sigla ou o nome (ex.: UNIR)",
+  // MUDAR AQUI: dica exibida abaixo do campo Instituição.
+  "f.ifesHint": "Universidades e institutos federais. Não achou? Digite o nome.",
   "f.role": "Cargo", "f.roleSelect": "Selecione", "f.roleDocente": "Docente (Magistério Federal)", "f.roleTae": "Técnico-administrativo em educação",
   "f.campus": "Lotado em:", "f.campusPlaceholder": "Selecionar campus", "f.campusHint": "Não achou o campus? Digite o nome da cidade ou do campus.", "f.campusPickIfes": "Escolha antes a instituição", "f.campusNone": "Nenhum campus encontrado: o texto digitado será usado.",
   "f.region": "Sou servidor da educação federal na Amazônia Legal e/ou Faixa de Fronteira", "f.region.al": "Município na Amazônia Legal", "f.region.ff": "Município na faixa de fronteira", "f.region.both": "Município na Amazônia Legal e na faixa de fronteira",
@@ -24,7 +29,10 @@ export const pt = {
   "f.submit": "Assinar", "f.sending": "Enviando…", "f.privacy": "Seu CPF é usado só para evitar assinaturas duplicadas e não aparece na lista enviada às autoridades.", "f.privacyForeign": "Seu e-mail não aparece na lista enviada às autoridades.", "f.privacyLink": "Privacidade (em português)",
   "ok.title": "Quase lá! Confirme pelo e-mail.", "ok.text": "Enviamos um link de confirmação. Sua assinatura só conta depois que você clicar nele. Veja também a caixa de spam.",
   "err.name_required": "Informe seu nome completo.", "err.email_invalid": "Informe um e-mail válido.", "err.email_disposable": "Use seu e-mail pessoal ou institucional (não aceitamos e-mails temporários).",
-  "err.cpf_invalid": "CPF inválido.", "err.category_invalid": "Escolha uma categoria.", "err.consent_required": "É necessário concordar com o texto.", "err.ifes_required": "Informe a instituição.", "err.role_required": "Informe o cargo.",
+  "err.cpf_invalid": "CPF inválido.", "err.category_invalid": "Escolha uma categoria.", "err.consent_required": "É necessário concordar com o texto.",
+  // MUDAR AQUI: aviso de erro do campo Instituição.
+  "err.ifes_required": "Informe a instituição.",
+  "err.role_required": "Informe o cargo.",
   "err.campus_invalid": "Campus inválido.", "err.region_not_eligible": "O município do campus não está na Amazônia Legal nem na faixa de fronteira.", "err.uf_invalid": "Informe uma UF válida.", "err.city_required": "Informe a cidade.",
   "err.city_invalid": "Essa cidade não existe nessa UF.", "err.city_ambiguous": "Há mais de uma cidade com esse nome: escolha a UF.", "err.country_invalid": "Escolha o país da sua instituição.", "err.university_required": "Informe sua universidade.",
   "err.email_undeliverable": "Este e-mail parece não existir (o domínio não recebe mensagens). Confira a digitação.", "err.not_university_email": "Use o e-mail institucional de uma universidade válida.", "err.university_country_mismatch": "Este e-mail pertence a uma universidade de outro país ({c}). Confira o país escolhido.",

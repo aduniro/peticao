@@ -1,20 +1,23 @@
 import raw from "../../public/data/ifes.json";
+import extras from "../../public/data/server-institution-extras.json";
 import { findByName, municipalityById, norm, regionOf, type Mun } from "./geo-data";
 
 /** Instituições federais de ensino (universidades, institutos, CEFETs…) e os municípios dos campi (fonte: Censo da Educação Superior, INEP). */
 export type Ifes = { s: string; n: string; k: "U" | "IF" | "CEFET" | "O"; u: string; m: number; c: number[] };
 export const IFES = raw as Ifes[];
+/** Catálogo autorizado do formulário; as IFES originais permanecem separadas. */
+export const SERVER_INSTITUTIONS: readonly Ifes[] = [...IFES, ...(extras as Ifes[])];
 
 const sq = (s: string) => norm(s).replace(/ /g, "");
-const byAcr = new Map(IFES.map((i) => [sq(i.s), i]));
-const byName = new Map(IFES.map((i) => [sq(i.n), i]));
+const byAcr = new Map(SERVER_INSTITUTIONS.map((i) => [sq(i.s), i]));
+const byName = new Map(SERVER_INSTITUTIONS.map((i) => [sq(i.n), i]));
+const byLabel = new Map(SERVER_INSTITUTIONS.map((i) => [sq(`${i.s} - ${i.n}`), i]));
 
-/** Acha a IFES pela sigla ("UNIR") ou pelo nome; aceita "UNIR - Fundação…" como a lista mostra. */
+/** Aceita sigla, nome completo ou rótulo canônico; não aceita sufixo livre. */
 export function findIfes(text: string): Ifes | null {
   const t = text.trim();
   if (!t) return null;
-  const head = t.split(/\s[-–—]\s/)[0];
-  return byAcr.get(sq(head)) ?? byName.get(sq(t)) ?? byAcr.get(sq(t)) ?? null;
+  return byAcr.get(sq(t)) ?? byName.get(sq(t)) ?? byLabel.get(sq(t)) ?? null;
 }
 
 /** Municípios da sede e dos campi da instituição que estão na Amazônia Legal e/ou na faixa de fronteira (listas oficiais do IBGE). */
