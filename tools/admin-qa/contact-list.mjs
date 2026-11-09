@@ -27,7 +27,15 @@ try {
   });
   const ids = () => page.locator("[data-contact-id]").evaluateAll(nodes => nodes.map(n => Number(n.dataset.contactId)));
   await page.goto(new URL("/admin/contato", base).href); assert.equal((await ids()).length, 25); assert.equal(await page.getByRole("button", { name: "Responder", exact: true }).count(), 0);
-  const filters = page.getByTestId("contact-list-filters"); await filters.getByLabel("Tipo", { exact: true }).selectOption("bug"); await filters.getByLabel("Nome ou e-mail", { exact: true }).fill("QA");
+  const filters = page.getByTestId("contact-list-filters");
+  const controls = await filters.evaluate(form => [...form.querySelectorAll("select,input")].map(field => ({ tag: field.tagName, name: field.name, labels: [...(field.labels ?? [])].map(label => label.textContent.trim()) })));
+  await writeFile(`${output}/contact-list-controls.json`, JSON.stringify(controls, null, 2));
+  await writeFile(`${output}/contact-list-accessibility.txt`, await filters.ariaSnapshot());
+  assert.ok(controls.some(field => field.tag === "SELECT" && field.name === "tipo" && field.labels.some(label => /^Tipo\b/.test(label))), "O select precisa de label semanticamente associado");
+  assert.ok(controls.some(field => field.tag === "INPUT" && field.name === "busca" && field.labels.some(label => /^Nome ou e-mail\b/.test(label))), "A busca precisa de label semanticamente associado");
+  // A nested label contains its option text; match the actual accessible name prefix,
+  // while retaining explicit assertions on the native control/label association.
+  await filters.getByRole("combobox", { name: /^Tipo\b/ }).selectOption("bug"); await filters.getByRole("textbox", { name: /^Nome ou e-mail\b/ }).fill("QA");
   await Promise.all([page.waitForURL(url => url.searchParams.get("tipo") === "bug" && url.searchParams.get("busca") === "QA"), filters.getByRole("button", { name: "Filtrar", exact: true }).click()]);
   const first = await ids(); assert.equal(first.length, 25); assert.ok(first.every(n => n % 2 === 0));
   await db.query("INSERT INTO contact_messages(name,email,kind,message) VALUES('QA Nova','qa-new@example.test','bug','QA NEW INSERT')");
