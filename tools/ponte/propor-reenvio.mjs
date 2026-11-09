@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"; import { propor } from "./aprovacao.mjs";
-const html = readFileSync("/mnt/dev/peticao/.cache/ponte/amostra-reenvio.html", "utf8"); const txt = readFileSync("/mnt/dev/peticao/.cache/ponte/amostra-reenvio.txt", "utf8");
+const html = readFileSync("/mnt/apps/peticao-final/peticao/.cache/ponte/amostra-reenvio.html", "utf8"); const txt = readFileSync("/mnt/apps/peticao-final/peticao/.cache/ponte/amostra-reenvio.txt", "utf8");
 const r = await propor({
   tarefa: "Modelo do e-mail de reenvio (assinaturas que não receberam a confirmação)",
   resumo: "Aprove (ou peça ajustes) o TEXTO do e-mail de reenvio. Aprovar este modelo NÃO dispara nada: o disparo só ocorre depois, com a sua aprovação de uma proposta separada de execução.",

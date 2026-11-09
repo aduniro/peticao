@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Unifica, num só arquivo, o histórico antigo (projeto em /media/barre/Expansion/peticao) e o novo
-(/mnt/dev/peticao) da mesma sessão (mesmo session id), sem perder nenhuma linha.
+(/mnt/apps/peticao-final/peticao) da mesma sessão (mesmo session id), sem perder nenhuma linha.
 
 Regras:
   * Linhas são tratadas como BYTES: nada é reinterpretado nem reescrito, exceto UM campo (parentUuid) da
@@ -16,7 +16,7 @@ import hashlib, json, os, shutil, sys, time
 
 OLD_DIR = os.path.expanduser("~/.claude/projects/-media-barre-Expansion-peticao")
 NEW_DIR = os.path.expanduser("~/.claude/projects/-mnt-dev-peticao")
-BACKUP_ROOT = "/mnt/dev/peticao/.cache/history-backup"
+BACKUP_ROOT = "/mnt/apps/peticao-final/peticao/.cache/history-backup"
 CHAIN_TYPES = ("user", "assistant", "system", "attachment")
 
 

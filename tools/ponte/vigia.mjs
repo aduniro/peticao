@@ -4,7 +4,7 @@
 //  2) Mensagens de contato dos usuários (banco do servidor, SOMENTE LEITURA): ao ligar e a cada 5 minutos procura as que ainda não foram vistas, investiga
 //     (cadastro, e-mails enviados, devoluções, fila, logs do app), decide se o relato procede e manda ao dono UM e-mail de relatório com proposta de
 //     resolução e de resposta (triagem.mjs; estado em .cache/ponte/triagem.json). Nunca escreve no servidor nem escreve à pessoa que reclamou.
-// Uso: node /mnt/dev/peticao/tools/ponte/vigia.mjs        (fica rodando; ponte a cada 60 s, triagem a cada 5 min; VIGIA_SEM_TRIAGEM=1 desliga a parte 2)
+// Uso: node /mnt/apps/peticao-final/peticao/tools/ponte/vigia.mjs        (fica rodando; ponte a cada 60 s, triagem a cada 5 min; VIGIA_SEM_TRIAGEM=1 desliga a parte 2)
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
