@@ -29,3 +29,18 @@ export function triageViewSuggestion(value: unknown, contactId: number, latest: 
   if (value.context.contactId !== contactId || value.context.jobId !== latest.id || value.context.revision !== latest.revision || typeof value.draft.assunto !== "string" || value.draft.assunto.length > 150 || typeof value.draft.corpo !== "string" || value.draft.corpo.length > 5000) return null;
   return { subject: value.draft.assunto, body: value.draft.corpo };
 }
+
+/** AV14 approved vocabulary. Unknown future codes remain technical evidence only. */
+const PROCESSING = { queued: "Em fila", running: "Em análise", complete: "Concluída", failed: "Falha técnica" } as const;
+const CATEGORIES: Record<string, string> = { nao_recebeu: "Confirmação por e-mail", expirou: "Link expirado", email_recusado: "E-mail recusado", cpf: "Nome/CPF", remover: "Pedido de remoção", corrigir: "Pedido de correção", campus: "Campus", erro: "Erro no formulário", duvida: "Dúvida" };
+const DIAGNOSES: Record<string, string> = { inconclusive: "Inconclusivo", review: "Revisão necessária", resolved: "Confirmação posterior ao relato" };
+export function triageViewLabels(job: TriageView) {
+  const analysis = job.analysis;
+  const lookup = (map: Record<string, string>, value: unknown) => typeof value === "string" && Object.hasOwn(map, value) ? map[value] : null;
+  return { processing: PROCESSING[job.status], category: lookup(CATEGORIES, analysis?.category), diagnosis: lookup(DIAGNOSES, analysis?.state), priority: lookup({ normal: "Normal", high: "Alta" }, analysis?.priority) };
+}
+export function triageViewFailure(error: string) {
+  return error === "analysis_stale" || error === "context_changed"
+    ? "Os dados mudaram. Solicite uma nova análise."
+    : "Não foi possível atualizar a análise. Reabra este painel para conferir o estado atual.";
+}
