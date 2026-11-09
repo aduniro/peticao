@@ -95,7 +95,7 @@ try{
  const archivedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows;
  await c.query(newSql);await c.query(newSql);await c.query(oldSql);
  assert.deepEqual((await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows,archivedSenders,"DDL replay and old bootstrap must not reset archive decisions or revisions");
- assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_domain_catalog_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
+ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_domain_catalog_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_reply_group_items","contact_reply_groups","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages"]);
  // New preparation state is additive; a code rollback must not discard its frozen list or lease.
  const preparing=(await c.query("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,list_hash) VALUES(999,'final','preparing',0,1,'QA-PREPARATION-LIST') RETURNING id")).rows[0].id;
  await c.query("INSERT INTO batch_preparations(batch_id,snapshot,snapshot_sha256,reserved_at,attempts,lease_token,lease_until,last_error) VALUES($1,'QA-FROZEN-SNAPSHOT',$2,'2026-11-08T10:00:00.123456Z',2,'QA-LEASE','2026-11-08T10:05:00.654321Z','prepare_failed')",[preparing,'a'.repeat(64)]);
@@ -111,6 +111,11 @@ try{
  // Older admin installations already have contact history; migrate it without dispatching it.
  const legacyContact=/CREATE TABLE IF NOT EXISTS contact_replies \([\s\S]*?\n  \);/.exec(newSql);
  assert.ok(legacyContact);
+ // This isolated legacy-shape rehearsal starts with empty group linkage.
+ // Recreate that additive FK after replacing its referenced old contact table.
+ assert.equal((await c.query("SELECT count(*)::int n FROM contact_reply_group_items")).rows[0].n,0);
+ assert.equal((await c.query("SELECT count(*)::int n FROM contact_reply_groups")).rows[0].n,0);
+ await c.query("DROP TABLE contact_reply_group_items");
  await c.query("DROP TABLE contact_replies");
  await c.query(legacyContact[0]);
  const contact=(await c.query("INSERT INTO contact_messages(name,email,kind,message) VALUES('Pessoa Fictícia','contact@example.test','duvida','Ensaio de atualização') RETURNING id")).rows[0].id;
@@ -195,8 +200,16 @@ try{
  assert.equal((await c.query("SELECT count(*)::int n FROM pg_indexes WHERE schemaname=current_schema() AND tablename='signup_diagnostics'")).rows[0].n,5);
  console.log("PASS currently published diagnostics survive additive admin upgrade and code rollback bootstrap; no contact decryption or signer writes.");
  console.log("PASS shared draft upgrade: ciphertext, identity, actors, revision, expiry and expired tombstone survive replay and old bootstrap without decrypting or sending.");
- console.log("PASS AI ledger upgrade: fifteen additive tables; request UUID, actor, quota reservation, uncertain state and microsecond timestamps preserved, no generation dispatched.");
- console.log("PASS campus curation upgrade: fifteen additive tables; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
+ console.log("PASS AI ledger upgrade: additive request table; request UUID, actor, quota reservation, uncertain state and microsecond timestamps preserved, no generation dispatched.");
+ console.log("PASS campus curation upgrade: additive review table; review versions, actors, prior links and microsecond timestamps preserved; no signer or mail writes.");
+ // Group ledgers keep only intent/link metadata; payload retention remains on contact_replies.
+ const groupId='00000000-0000-4000-8000-000000000022';
+ await c.query("INSERT INTO contact_reply_groups(id,actor_id,request_id,input_hash,context_proof,approved_ids,created_at) VALUES($1,$2,'00000000-0000-4000-8000-000000000023','QA-GROUP-INPUT','QA-CONTEXT-PROOF',$3::jsonb,'2026-11-09T01:00:00.654321Z')",[groupId,referralActor,JSON.stringify([contact])]);
+ await c.query("INSERT INTO contact_reply_group_items(group_id,contact_id,reply_id,round) VALUES($1,$2,$3,1)",[groupId,contact,migratedHistory[0].id]);
+ const groupSnapshot=async()=>(await c.query("SELECT 'group' kind,row_to_json(g)::text raw FROM contact_reply_groups g UNION ALL SELECT 'item',row_to_json(i)::text FROM contact_reply_group_items i ORDER BY kind,raw")).rows;
+ const preservedGroup=await groupSnapshot();await c.query(newSql);await c.query(oldSql);
+ assert.deepEqual(await groupSnapshot(),preservedGroup,"Group ownership, intention, context, exact case/reply/round links and microsecond timestamps survive replay/rollback bootstrap");
+ console.log("PASS contact group upgrade: durable intent/case links survive replay and old bootstrap without copying payloads or enabling dispatch.");
  console.log("PASS preparation upgrade: frozen snapshot, reservation identity, attempts, lease and timestamps survive DDL replay and code rollback bootstrap.");
  console.log("PASS scoped journal upgrade: unknown account stays null, no fabricated events; existing receipt and linked event identity/timestamps preserved on replay.");
  console.log("PASS archive foundation upgrade: existing message identity, fingerprint, state and timestamp preserved; Reply-To left unknown.");
@@ -204,7 +217,7 @@ try{
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS sender catalogue upgrade: ciphertext, identity, paused state, archive revision and microsecond timestamps survive replay and old bootstrap.");
  console.log("PASS referral intent upgrade: request ownership, allocation, fingerprint and microsecond timestamp preserved.");
- console.log("PASS real startup on old schema plus DDL replay: seventeen additive tables, three administrative domain catalog columns, two nullable message correlation columns, two administrative referral version/archive columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS real startup on old schema plus DDL replay: nineteen additive tables, three administrative domain catalog columns, two nullable message correlation columns, two administrative referral version/archive columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;

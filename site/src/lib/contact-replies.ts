@@ -64,32 +64,38 @@ export async function montarPrevia(contactId: number, entrada: Entrada, rodada: 
 
 export type Envio = { ok: true; texto: "enviado" | "na-fila"; card: "agendado" | "sem-codigo"; rodada: number } | { ok: false; erro: "nao_existe" | "assunto" | "corpo" | "ja_respondida" | "selo" | "falhou" | "envio_inconclusivo"; detalhe?: string };
 
+/** Internal shared reservation. Caller owns authorization/transaction; never dispatches mail. */
+export async function reserveContactResponseWith(c: PoolClient, o: { contactId: number; entrada: unknown; selo: string; nova?: boolean; por: { userId: number; email: string }; origin?: string }) {
+  const v = validarEntrada(o.entrada);
+  if (!v.ok) return { erro: v.erro };
+  const contact = (await c.query("SELECT id FROM contact_messages WHERE id=$1 FOR UPDATE", [o.contactId])).rows[0];
+  if (!contact) return { erro: "nao_existe" as const };
+  const last = await proximaRodada(o.contactId, c);
+  if (last > 0 && !o.nova) {
+    const previous = (await c.query<{ estado: ContactDeliveryState; ok: boolean }>("SELECT estado,ok FROM contact_replies WHERE contact_id=$1 AND rodada=$2 AND versao='texto'", [o.contactId, last])).rows[0];
+    return { erro: previous && (previous.estado === "accepted" || previous.estado === "legacy" && previous.ok) ? "ja_respondida" as const : "envio_inconclusivo" as const };
+  }
+  const rodada = last + 1;
+  const preview = await montarPrevia(o.contactId, v.v, rodada, o.origin, c);
+  if (!preview) return { erro: "nao_existe" as const };
+  if (!safeEqual(preview.selo, o.selo)) return { erro: "selo" as const };
+  const copies = { to: preview.para, bcc: config.contactBcc(), replyTo: config.mailReplyTo() || config.contactBcc()[0] };
+  const text = (await c.query<{ id: number }>(`INSERT INTO contact_replies(contact_id,rodada,versao,user_id,por,assunto,codigo_pessoal,estado,payload,selo,due_at)
+    VALUES($1,$2,'texto',$3,$4,$5,$6,'prepared',$7,$8,now()) RETURNING id`, [o.contactId, rodada, o.por.userId || null, o.por.email, preview.texto.assunto, preview.codigoPessoal, JSON.stringify({ ...copies, subject: preview.texto.assunto, text: preview.texto.texto }), preview.selo])).rows[0].id;
+  if (preview.card) {
+    await c.query(`INSERT INTO contact_replies(contact_id,rodada,versao,user_id,por,assunto,codigo_pessoal,agendada,estado,payload,selo)
+      VALUES($1,$2,'card',$3,$4,$5,$6,true,'blocked',$7,$8)`, [o.contactId, rodada, o.por.userId || null, o.por.email, preview.card.assunto, preview.codigoPessoal, JSON.stringify({ ...copies, subject: preview.card.assunto, text: preview.card.texto, html: preview.card.html }), preview.selo]);
+  }
+  await audit("contato_resposta_reservada", null, { contato: o.contactId, rodada, por: o.por.email, texto: text, card: !!preview.card, selo: preview.selo }, c);
+  return { text, rodada, card: !!preview.card };
+
+}
+
 /** Reserves the exact approved messages together before any external side effect. */
 export async function enviarResposta(o: { contactId: number; entrada: unknown; selo: string; nova?: boolean; por: { userId: number; email: string }; origin?: string; enviar?: typeof sendMail; deadlineMs?: number }): Promise<Envio> {
   const v = validarEntrada(o.entrada);
   if (!v.ok) return { ok: false, erro: v.erro };
-  const reserved = await tx(async c => {
-    const contact = (await c.query("SELECT id FROM contact_messages WHERE id=$1 FOR UPDATE", [o.contactId])).rows[0];
-    if (!contact) return { erro: "nao_existe" as const };
-    const last = await proximaRodada(o.contactId, c);
-    if (last > 0 && !o.nova) {
-      const previous = (await c.query<{ estado: ContactDeliveryState; ok: boolean }>("SELECT estado,ok FROM contact_replies WHERE contact_id=$1 AND rodada=$2 AND versao='texto'", [o.contactId, last])).rows[0];
-      return { erro: previous && (previous.estado === "accepted" || previous.estado === "legacy" && previous.ok) ? "ja_respondida" as const : "envio_inconclusivo" as const };
-    }
-    const rodada = last + 1;
-    const preview = await montarPrevia(o.contactId, v.v, rodada, o.origin, c);
-    if (!preview) return { erro: "nao_existe" as const };
-    if (!safeEqual(preview.selo, o.selo)) return { erro: "selo" as const };
-    const copies = { to: preview.para, bcc: config.contactBcc(), replyTo: config.mailReplyTo() || config.contactBcc()[0] };
-    const text = (await c.query<{ id: number }>(`INSERT INTO contact_replies(contact_id,rodada,versao,user_id,por,assunto,codigo_pessoal,estado,payload,selo,due_at)
-      VALUES($1,$2,'texto',$3,$4,$5,$6,'prepared',$7,$8,now()) RETURNING id`, [o.contactId, rodada, o.por.userId || null, o.por.email, preview.texto.assunto, preview.codigoPessoal, JSON.stringify({ ...copies, subject: preview.texto.assunto, text: preview.texto.texto }), preview.selo])).rows[0].id;
-    if (preview.card) {
-      await c.query(`INSERT INTO contact_replies(contact_id,rodada,versao,user_id,por,assunto,codigo_pessoal,agendada,estado,payload,selo)
-        VALUES($1,$2,'card',$3,$4,$5,$6,true,'blocked',$7,$8)`, [o.contactId, rodada, o.por.userId || null, o.por.email, preview.card.assunto, preview.codigoPessoal, JSON.stringify({ ...copies, subject: preview.card.assunto, text: preview.card.texto, html: preview.card.html }), preview.selo]);
-    }
-    await audit("contato_resposta_reservada", null, { contato: o.contactId, rodada, por: o.por.email, texto: text, card: !!preview.card, selo: preview.selo }, c);
-    return { text, rodada, card: !!preview.card };
-  });
+  const reserved = await tx(c => reserveContactResponseWith(c, { ...o, entrada: v.v }));
   if ("erro" in reserved) return { ok: false, erro: reserved.erro! };
   let result;
   try { result = await dispatchContactReply(reserved.text, { enviar: o.enviar, deadlineMs: o.deadlineMs }); }
