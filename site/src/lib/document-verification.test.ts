@@ -50,6 +50,23 @@ test("publicação tem CAS, revalida sessão/Total e revoga imediatamente; audit
   }finally{await c.close();}
 });
 
+test("primeira liberação concorrente tem um único vencedor e uma única auditoria",async()=>{
+  const c=await fixture("t_document_public_concurrent");
+  try{
+    await c.approve();
+    // The inherited authorization lock must protect creation even before a row exists.
+    // Delay only this fictitious insertion to exercise overlapping administrative calls.
+    await c.db.query("CREATE FUNCTION qa_public_insert_delay() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.key LIKE 'document_publication:%' THEN PERFORM pg_sleep(0.15); END IF; RETURN NEW; END $$; CREATE TRIGGER qa_public_insert_delay BEFORE INSERT ON settings FOR EACH ROW EXECUTE FUNCTION qa_public_insert_delay()");
+    const results=await Promise.all([c.publish(),c.publish(),c.publish()]);
+    assert.equal(results.filter(r=>r.ok).length,1);
+    assert.equal(results.filter(r=>!r.ok&&r.error==="conflict").length,2);
+    assert.equal((await c.db.query("SELECT 1 FROM audit_log WHERE event='document_publication_changed'")).rowCount,1);
+    process.env.DOCUMENT_VERIFICATION_PUBLIC="1";
+    assert.ok((await c.check()).ok);
+    await c.noEffects();
+  }finally{await c.close();}
+});
+
 test("mudança de bytes/lista, aprovação ausente/ambígua e revisão mais nova fecham a consulta",async()=>{
   const c=await fixture("t_document_public_binding");
   try{
