@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 const commit=process.env.QA_EXPECTED_COMMIT,site=process.env.QA_SITE_DIR,output=process.env.QA_OUTPUT_DIR;
 assert.equal(commit,"1b9ffd7faf9d4a4d1d475b651058d3b47cce7463");
-assert.equal(site,"/mnt/dev/peticao/.cache/admin-integration/candidate-president-access-http-1b9ffd7-20261109/site");
+assert.equal(site,"/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-president-access-http-1b9ffd7-20261109/site");
 assert.equal(process.cwd(),site);assert.equal(execFileSync("git",["rev-parse","HEAD"],{cwd:site,encoding:"utf8"}).trim(),commit);
 assert.equal(process.version,"v20.19.2");assert.equal(process.env.DEV_DB_PORT,"54368");
 assert.equal(process.env.PREVIEW_MODE,"1");assert.equal(process.env.CPF_FORCE_MOCK,"1");
