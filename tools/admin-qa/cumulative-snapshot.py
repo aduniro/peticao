@@ -13,12 +13,12 @@ import subprocess
 import tempfile
 import time
 
-CHECKOUT_PARENT = Path('/mnt/dev/peticao/.cache/admin-integration')
-DEPENDENCIES = Path('/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules')
+CHECKOUT_PARENT = Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration')
+DEPENDENCIES = Path('/mnt/apps/peticao-final/_externos/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules')
 DB_PORT = 54364
 HTTP_PORT = 3044
 BLOCKED = 'rich-text'
-NODE20 = Path('/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node')
+NODE20 = Path('/mnt/apps/peticao-final/_externos/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node')
 NODE20_SHA256 = 'b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
 NODE20_ARCHIVE_SHA256 = 'cbe59620b21732313774df4428586f7222a84af29e556f848abf624ba41caf90'
 OUTPUT_NAMESPACE = 'accepted-cumulative-node20'
