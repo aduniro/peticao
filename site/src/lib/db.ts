@@ -155,6 +155,18 @@ const SCHEMA_SQL = `
     content_cipher TEXT, content_expires_at TIMESTAMPTZ, previous_id UUID REFERENCES mail_messages(id)
   );
   ALTER TABLE mail_messages ADD COLUMN IF NOT EXISTS reply_to TEXT;
+  CREATE TABLE IF NOT EXISTS mail_inbound_messages (
+    id UUID PRIMARY KEY, account TEXT NOT NULL, external_key TEXT NOT NULL, content_hash TEXT NOT NULL,
+    message_key TEXT, parent_key TEXT, sender_hash TEXT NOT NULL, recipients_hash TEXT NOT NULL,
+    thread_root UUID NOT NULL REFERENCES mail_inbound_messages(id) DEFERRABLE INITIALLY DEFERRED,
+    correlation TEXT NOT NULL CHECK(correlation IN ('new','header-reference')),
+    content_cipher TEXT, received_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at TIMESTAMPTZ NOT NULL, purged_at TIMESTAMPTZ,
+    UNIQUE(account,external_key)
+  );
+  CREATE INDEX IF NOT EXISTS mail_inbound_parent ON mail_inbound_messages(account,message_key);
+  CREATE INDEX IF NOT EXISTS mail_inbound_threads ON mail_inbound_messages(thread_root,created_at,id);
+  CREATE INDEX IF NOT EXISTS mail_inbound_expiry ON mail_inbound_messages(expires_at) WHERE content_cipher IS NOT NULL;
   CREATE INDEX IF NOT EXISTS mail_messages_history ON mail_messages(created_at DESC,id);
   CREATE INDEX IF NOT EXISTS mail_messages_to ON mail_messages(lower(to_addr),created_at DESC);
   CREATE TABLE IF NOT EXISTS mail_message_attempts (
