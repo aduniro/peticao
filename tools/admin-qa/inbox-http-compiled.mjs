@@ -6,8 +6,8 @@ import { createHmac,createHash,randomUUID } from "node:crypto";
 import { pathToFileURL } from "node:url";
 
 const sites={
-  "079ca7a":"/mnt/dev/peticao/.cache/admin-integration/candidate-inbox-http-079ca7a-20261109/site",
-  "8cdd97a":"/mnt/dev/peticao/.cache/admin-integration/candidate-inbox-http-node20-8cdd97a-20261109/site",
+  "079ca7a":"/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-inbox-http-079ca7a-20261109/site",
+  "8cdd97a":"/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-inbox-http-node20-8cdd97a-20261109/site",
 };
 const expectedCommit=process.env.QA_EXPECTED_COMMIT??"079ca7a",site=sites[expectedCommit];assert.ok(site);
 assert.equal(process.cwd(),site);assert.equal(process.env.QA_BASE_URL,"http://127.0.0.1:3047");assert.equal(process.env.DEV_DB_PORT,"54362");assert.equal(process.env.MAIL_PROVIDER,"dev");
