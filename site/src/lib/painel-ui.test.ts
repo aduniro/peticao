@@ -20,6 +20,7 @@ test("menu segue o nível real e mantém as rotas do Total e os atalhos do celul
   assert.deepEqual(hrefs("edicao").sort(), editing.sort());
   assert.deepEqual(hrefs("exclusao").sort(), editing.sort());
   assert.deepEqual(gruposVisiveis("total"), GRUPOS);
+  assert.ok(hrefs("total").includes("/admin/presidente"));
   for (const nivel of NIVEIS) {
     assert.ok(hrefs(nivel).includes("/admin/conta"));
     assert.ok(gruposVisiveis(nivel).every(group => group.itens.length > 0));
