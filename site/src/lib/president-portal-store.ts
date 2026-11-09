@@ -10,13 +10,13 @@ import { verifyIdentity } from "./identity";
 import { defaultProvider, type CpfProvider } from "./cpf-check";
 import { normalizeRegistryBirth, parseBirth } from "./birth";
 import { config } from "./config";
-import { issuePresidentChallenge, confirmPresidentChallenge, presidentDocumentRevision, type PresidentChallengeStore, type PresidentDocumentRevision } from "./president-portal-contract";
+import { issuePresidentChallenge, confirmPresidentChallenge, presidentDocumentRevision, presidentAccessHashes, type PresidentChallengeStore, type PresidentDocumentRevision } from "./president-portal-contract";
 
 const PROFILE = "president_profile_v1";
 const unavailable = { ok: false as const, error: "unavailable" as const };
 type Profile = { version: 1; revision: number; responsibleId: number; cpfHash: string; whatsappCipher: string | null; enabled: boolean };
 type Account = { id: number; nome: string; email: string };
-type Challenge = { id: string; batch_id: number; responsible_id: number; issued_by: number; profile_revision: number; responsible_fingerprint: string; document_version: string; password_hash: string; state: string; attempts: number; expires_at: Date; lease_token: string | null; lease_until: Date | null };
+type Challenge = { id: string; batch_id: number; responsible_id: number; issued_by: number; profile_revision: number; responsible_fingerprint: string; document_version: string; password_hash: string; state: string; attempts: number; expires_at: Date; lease_token: string | null; lease_until: Date | null; receipt_id: string | null; confirmed_at: Date | null };
 const validId = (n: number) => Number.isInteger(n) && n > 0 && n <= 2147483647;
 const cpfHash = (cpf: string) => hmac(`president-cpf:v1:${cpf}`);
 async function bounded(client: PoolClient) {
@@ -69,18 +69,50 @@ export async function readPresidentProfile(actor: SessaoAdmin) {
   });
 }
 
-async function document(client: PoolClient, id: number): Promise<PresidentDocumentRevision | null> {
-  const row = (await client.query<{ id: number; seq: number; kind: "partial" | "final"; list_hash: string; pdf: Buffer | null; pdf_sha256: string | null; signed_pdf: Buffer | null; signed_pdf_sha256: string | null; signature_kind: string | null }>("SELECT id,seq,kind,list_hash,pdf,pdf_sha256,signed_pdf,signed_pdf_sha256,signature_kind FROM batches WHERE id=$1 AND status IN ('prepared','failed') AND approved_at IS NULL FOR SHARE", [id])).rows[0];
+async function document(client: PoolClient, id: number, allowApproved = false): Promise<PresidentDocumentRevision | null> {
+  const row = (await client.query<{ id: number; seq: number; kind: "partial" | "final"; list_hash: string; pdf: Buffer | null; pdf_sha256: string | null; signed_pdf: Buffer | null; signed_pdf_sha256: string | null; signature_kind: string | null }>("SELECT id,seq,kind,list_hash,pdf,pdf_sha256,signed_pdf,signed_pdf_sha256,signature_kind FROM batches WHERE id=$1 AND (status IN ('prepared','failed') OR ($2::boolean AND status='sent')) AND ($2::boolean OR approved_at IS NULL) FOR SHARE", [id,allowApproved])).rows[0];
   if (!row?.pdf || !safeEqual(bytesHash(row.pdf), row.pdf_sha256 ?? "") || row.signed_pdf && !safeEqual(bytesHash(row.signed_pdf), row.signed_pdf_sha256 ?? "")) return null;
   return { batchId: row.id, seq: row.seq, kind: row.kind, listHash: row.list_hash, originalPdf: row.pdf, signedPdf: row.signed_pdf, signatureKind: row.signature_kind };
 }
 const bytesHash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
-async function binding(client: PoolClient, row: Challenge) {
-  if (!(await client.query("SELECT 1 FROM admin_users WHERE id=$1 AND ativo AND nivel='total' FOR SHARE", [row.issued_by])).rowCount) return false;
+async function boundDocument(client: PoolClient, row: Challenge, allowApproved = false) {
+  if (!(await client.query("SELECT 1 FROM admin_users WHERE id=$1 AND ativo AND nivel='total' FOR SHARE", [row.issued_by])).rowCount) return null;
   const p = await profile(client), user = p && await account(client, p.responsibleId);
-  if (!p?.enabled || !user || p.responsibleId !== row.responsible_id || p.revision !== row.profile_revision || !safeEqual(fingerprint(p, user), row.responsible_fingerprint)) return false;
-  const doc = await document(client, row.batch_id);
-  return !!doc && safeEqual(presidentDocumentRevision(doc), row.document_version);
+  if (!p?.enabled || !user || p.responsibleId !== row.responsible_id || p.revision !== row.profile_revision || !safeEqual(fingerprint(p, user), row.responsible_fingerprint)) return null;
+  const doc = await document(client, row.batch_id,allowApproved);
+  return doc && safeEqual(presidentDocumentRevision(doc), row.document_version) ? doc : null;
+}
+const binding = async (client:PoolClient,row:Challenge) => !!await boundDocument(client,row);
+
+/** Password-bound reads cannot confirm identity, consume a challenge or send a batch. */
+export async function readConfiguredPresidentAccess(input:{token:string;password:string},includeDocument=false) {
+  try {
+    const credentials=presidentAccessHashes(input,config.pepper());if(!credentials)return unavailable;
+    return await tx(async client=>{
+      await bounded(client);
+      const row=(await client.query<Challenge>("SELECT * FROM president_challenges WHERE token_hash=$1 FOR UPDATE",[credentials.tokenHash])).rows[0];
+      const now=Date.now();
+      if(!row||!["issued","verifying","consumed"].includes(row.state)||row.expires_at.getTime()<=now||row.state==="issued"&&row.attempts>=5)return unavailable;
+      if(!safeEqual(row.password_hash,credentials.passwordHash)) {
+        // Share the confirmation budget before verification starts, without
+        // cancelling an in-flight verification or altering a consumed receipt.
+        if(row.state==="issued") {
+          const attempts=row.attempts+1;
+          await client.query("UPDATE president_challenges SET attempts=$2,state=$3 WHERE id=$1",[row.id,attempts,attempts>=5?"rejected":"issued"]);
+          await audit("president_access_rejected",null,{challengeId:row.id,batchId:row.batch_id,attempt:attempts},client);
+        }
+        return unavailable;
+      }
+      const doc=await boundDocument(client,row,row.state==="consumed");if(!doc)return unavailable;
+      if(row.state==="consumed"&&(!row.receipt_id||!row.confirmed_at))return unavailable;
+      const checkedAt=Date.now();if(row.expires_at.getTime()<=checkedAt)return unavailable;
+      const canConfirm=row.attempts<5&&(row.state==="issued"||row.state==="verifying"&&!!row.lease_until&&row.lease_until.getTime()<=checkedAt);
+      const bytes=doc.signedPdf??doc.originalPdf;
+      const metadata={batchId:doc.batchId,seq:doc.seq,kind:doc.kind,documentVersion:row.document_version,sha256:bytesHash(bytes),byteLength:bytes.byteLength};
+      await audit(includeDocument?"president_document_read":"president_state_read",null,{challengeId:row.id,batchId:row.batch_id,documentVersion:row.document_version,state:row.state},client);
+      return {ok:true as const,state:row.state as "issued"|"verifying"|"consumed",canConfirm,expiresAt:row.expires_at.toISOString(),document:metadata,receipt:row.state==="consumed"?{receiptId:row.receipt_id!,confirmedAt:row.confirmed_at!.toISOString(),assurance:"own-confirmation" as const,icpBrasil:false as const,govBr:false as const}:null,...(includeDocument?{bytes:Buffer.from(bytes)}:{})};
+    });
+  } catch { return unavailable; }
 }
 
 /** Actual PostgreSQL state machine. No provider call occurs while holding a transaction. */
