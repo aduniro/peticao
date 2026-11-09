@@ -1,0 +1,34 @@
+import assert from "node:assert/strict";
+import { writeFile } from "node:fs/promises";
+const base = new URL(process.env.QA_BASE_URL), database = new URL(process.env.DATABASE_URL);
+assert.ok(base.origin === "http://127.0.0.1:3033" && database.port === "54349" || base.origin === "http://127.0.0.1:3035" && database.port === "54357"); assert.equal(database.hostname, "127.0.0.1");
+assert.match(process.env.DATABASE_SCHEMA ?? "", /^qa_consolidation_batch_input_\d+$/);
+assert.equal(process.env.MAIL_PROVIDER, "dev"); assert.equal(process.env.PREVIEW_MODE, "1"); assert.equal(process.env.ADMIN_NO_PASSWORD, "0");
+const dm = await import("../../site/src/lib/db.ts"), um = await import("../../site/src/lib/admin-users.ts"), db = dm.default ?? dm, U = um.default ?? um;
+let token;
+try {
+  const created = await U.criarUsuario({ email: "qa-batch-input@example.test", nome: "QA Input", nivel: "total", senha: "Ficticia-Limites-Lotes-2026" }); assert.ok(created.ok);
+  token = (await U.abrirSessao(created.usuario.id, "127.0.0.1")).token;
+  const id = (await db.query("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,list_hash,pdf) VALUES(1,'partial','prepared',0,1,'QA-IMMUTABLE',decode('255044462d5141','hex')) RETURNING id")).rows[0].id;
+  const snapshot = async () => (await db.query("SELECT row_to_json(b)::text raw FROM batches b UNION ALL SELECT row_to_json(s)::text FROM signatures s UNION ALL SELECT row_to_json(m)::text FROM mail_messages m UNION ALL SELECT row_to_json(a)::text FROM audit_log a WHERE event LIKE 'batch_%'")).rows;
+  const original = await snapshot();
+  const post = (path, body = "", options = {}) => fetch(new URL(path, base), { method: "POST", redirect: "manual", headers: { origin: base.origin, cookie: `adm=${token}`, ...(typeof body === "string" ? { "content-type": "application/x-www-form-urlencoded" } : {}) }, body, ...options });
+  assert.equal((await post(`/api/admin/lotes/${id}/assinado`, "invalid")).status, 403);
+  await db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '10 minutes' WHERE user_id=$1", [created.usuario.id]);
+  for (const invalid of ["0", "-1", "NaN", "1.1", "1e0", "2147483648"]) for (const action of ["aprovar", "codigo", "cancelar", "assinado"]) assert.equal((await post(`/api/admin/lotes/${invalid}/${action}`)).status, 400);
+  for (const path of [`${id}/aprovar`, `${id}/codigo`, `${id}/cancelar`, "criar"]) assert.equal((await post(`/api/admin/lotes/${path}`, "x".repeat(1025))).status, 413);
+  assert.equal((await post(`/api/admin/lotes/${id}/aprovar`, "code=123456&code=654321")).status, 400);
+  assert.equal((await post(`/api/admin/lotes/${id}/assinado`, "not multipart")).status, 400);
+  const duplicate = new FormData(); for (const name of ["a.pdf", "b.pdf"]) duplicate.append("file", new Blob(["%PDF-QA"], { type: "application/pdf" }), name);
+  assert.equal((await post(`/api/admin/lotes/${id}/assinado`, duplicate)).status, 400);
+  const maximum = 25 * 1024 * 1024 + 64 * 1024, chunk = new Uint8Array(64 * 1024); let sent = 0;
+  const oversized = new ReadableStream({ pull(controller) { if (sent > maximum) { controller.close(); return; } controller.enqueue(chunk); sent += chunk.byteLength; } });
+  assert.equal((await post(`/api/admin/lotes/${id}/assinado`, oversized, { duplex: "half", headers: { origin: base.origin, cookie: `adm=${token}`, "content-type": "multipart/form-data; boundary=QA" } })).status, 413);
+  assert.deepEqual(await snapshot(), original);
+  const emptyFile = await post(`/api/admin/lotes/${id}/assinado`, new FormData()); assert.equal(emptyFile.status, 303); assert.equal(new URL(emptyFile.headers.get("location"), base).searchParams.get("msg"), "Escolha o PDF assinado.");
+  const noCode = await post(`/api/admin/lotes/${id}/aprovar`); assert.equal(noCode.status, 303); assert.equal(new URL(noCode.headers.get("location"), base).searchParams.get("msg"), "Solicite um novo código.");
+  const cancelled = await post(`/api/admin/lotes/${id}/cancelar`); assert.equal(cancelled.status, 303); assert.equal(new URL(cancelled.headers.get("location"), base).searchParams.get("msg"), "Lote cancelado.");
+  assert.equal((await db.query("SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox UNION ALL SELECT 1 FROM batch_sends")).rowCount, 0); assert.ok((await db.verifyAuditChain()).ok);
+  const report = { ok: true, compiledHttp: true, authenticationBeforeBody: true, invalidIds400: true, boundedText413: true, boundedChunkedMultipart413: true, ambiguousFields400: true, invalidInputsHaveNoEffects: true, existingMessagesPreserved: true, developmentOnlyNoMail: true };
+  await writeFile(`${process.env.QA_OUTPUT_DIR}/batch-input.json`, JSON.stringify(report, null, 2)); console.log(JSON.stringify(report));
+} finally { if (token) await U.encerrarSessao(token); await db._closeDbForTests(); }

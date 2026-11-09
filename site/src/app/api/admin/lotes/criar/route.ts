@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exigirNivel, quemAge } from "@/lib/admin-api";
 import { createBatchForAdmin } from "@/lib/batches";
+import { readBatchFields } from "@/lib/batch-http-input";
 import { requestOrigin } from "@/lib/net";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ export async function POST(req: NextRequest) {
   if (bloqueio) return bloqueio;
   const actor = await quemAge(req);
   if (!actor) return NextResponse.json({ ok: false }, { status: 401 });
+  const body = await readBatchFields(req); if (!body.ok) return new NextResponse(null, { status: body.status });
   const url = new URL("/admin/lotes", requestOrigin(req.headers));
   try {
     const b = await createBatchForAdmin("final", actor);
