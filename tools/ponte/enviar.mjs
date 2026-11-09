@@ -1,5 +1,5 @@
 // Envia um e-mail pela ponte. Uso: import { enviar } ... | node enviar.mjs "assunto" arquivo.html [--para x@y] [--reply]
-import { getKey } from "/mnt/dev/peticao/tools/infra/lib/keystore.mjs";
+import { getKey } from "/mnt/apps/peticao-final/peticao/tools/infra/lib/keystore.mjs";
 import { ENDERECO, DONO } from "./lib.mjs";
 import { registrarEnvioMonitor } from "./monitor-historico.mjs";
 import { formatarCorpoEmail } from "./formatar-email.mjs";

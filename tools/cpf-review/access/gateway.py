@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-BASE = Path(os.environ.get('CPF_REVIEW_DATA_DIR', '/mnt/dev/cpfs/revisao'))
+BASE = Path(os.environ.get('CPF_REVIEW_DATA_DIR', '/mnt/apps/peticao-final/cpfs/revisao'))
 AUTH = BASE / 'acesso.sqlite'
 ORIGIN = os.environ.get('CPF_REVIEW_ORIGIN', 'https://dell3576-zorin.tail1a6d71.ts.net:8443')
 HOST = urlsplit(ORIGIN).netloc

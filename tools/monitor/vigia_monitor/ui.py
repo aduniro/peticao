@@ -287,7 +287,7 @@ class VigiaApp(App):
   try:
    if 'worktree' in data:
     path=Path(data['worktree']).resolve()
-    if not (path.is_relative_to(ROOT) or path==Path('/mnt/dev/peticao-parcial')):raise ValueError('Worktree fora do projeto')
+    if not (path.is_relative_to(ROOT) or path==Path('/mnt/apps/peticao-final/peticao-parcial')):raise ValueError('Worktree fora do projeto')
     snapshot=git_snapshot(path);self.store.snapshot('git:'+str(path),snapshot);self.call_from_thread(self.set_repo,str(path));return
    if 'ref' in data:
     commit=git(repo,'rev-parse','--verify','--end-of-options',data['ref']).strip();text=git(repo,'log','--graph','--decorate','--oneline','-30',commit);files=[];branch_commits=git(repo,'log','--format=%H%x09%h%x09%s','-30',commit).splitlines()

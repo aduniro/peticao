@@ -2,7 +2,7 @@
   {
     "id": "consolidar",
     "title": "Consolidar retenção, domínios e indicações",
-    "body": "Leia /mnt/dev/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Feche a validação/commits das mudanças de ator em domínios e ledger de intenções, migração estrita13 tabelas e contrato HTTP. Conecte idempotência de indicação à rota e ao formulário preservando aparência/textos. Consolide evidências de retenção30 dias e restauro sem alterar avisos públicos. Não editar outros worktrees enquanto ativos. Não ampliar escopo de regras CPF.",
+    "body": "Leia /mnt/apps/peticao-final/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Feche a validação/commits das mudanças de ator em domínios e ledger de intenções, migração estrita13 tabelas e contrato HTTP. Conecte idempotência de indicação à rota e ao formulário preservando aparência/textos. Consolide evidências de retenção30 dias e restauro sem alterar avisos públicos. Não editar outros worktrees enquanto ativos. Não ampliar escopo de regras CPF.",
     "dependencies": [],
     "criteria": "Escopo da etapa implementado, testes relevantes efetivamente aprovados e documentados, commits locais identificados. Se faltar aprovação ou requisito, informar blocked/continue; não presumir conclusão.",
     "require_report": true,
@@ -15,17 +15,17 @@
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "targeted"
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "schema"
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "types"
       ]
     ]
@@ -33,7 +33,7 @@
   {
     "id": "contato",
     "title": "Concluir Contato e rascunhos",
-    "body": "Leia /mnt/dev/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Concluir backend e testes de histórico/conversas/campi/editor/rascunhos conforme matriz. Respeitar pendência AV16 sobre rascunho compartilhado e textos. Não fabricar aceite. Implemente partes independentes autorizadas; registre com clareza a pergunta restante quando realmente depender dela. Não enviar respostas automaticamente.",
+    "body": "Leia /mnt/apps/peticao-final/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Concluir backend e testes de histórico/conversas/campi/editor/rascunhos conforme matriz. Respeitar pendência AV16 sobre rascunho compartilhado e textos. Não fabricar aceite. Implemente partes independentes autorizadas; registre com clareza a pergunta restante quando realmente depender dela. Não enviar respostas automaticamente.",
     "dependencies": [
       "consolidar"
     ],
@@ -48,7 +48,7 @@
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "types"
       ]
     ]
@@ -56,7 +56,7 @@
   {
     "id": "email",
     "title": "Concluir central de e-mails e recuperação",
-    "body": "Leia /mnt/dev/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Concluir lacunas da central, prévia protegida, recuperação de fila sem reenvio indevido, auditoria e retenção, conforme ETAPA03 e AV10 aprovados. Outros textos pendentes continuam aguardando. Testar autorização, concorrência, idempotência e transporte fictício.",
+    "body": "Leia /mnt/apps/peticao-final/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Concluir lacunas da central, prévia protegida, recuperação de fila sem reenvio indevido, auditoria e retenção, conforme ETAPA03 e AV10 aprovados. Outros textos pendentes continuam aguardando. Testar autorização, concorrência, idempotência e transporte fictício.",
     "dependencies": [
       "consolidar"
     ],
@@ -71,7 +71,7 @@
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "types"
       ]
     ]
@@ -79,7 +79,7 @@
   {
     "id": "entidades",
     "title": "Concluir curadoria e histórico de entidades",
-    "body": "Leia /mnt/dev/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Concluir entidades/campi/informes/permissões/versões/arquivamento previstos na matriz. Preservar curadoria vigente e não modificar retroativamente decisões de CPF. Registrar quais textos dependem de aprovação, continuar backend/testes autorizados.",
+    "body": "Leia /mnt/apps/peticao-final/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Concluir entidades/campi/informes/permissões/versões/arquivamento previstos na matriz. Preservar curadoria vigente e não modificar retroativamente decisões de CPF. Registrar quais textos dependem de aprovação, continuar backend/testes autorizados.",
     "dependencies": [
       "consolidar"
     ],
@@ -94,7 +94,7 @@
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "types"
       ]
     ]
@@ -102,7 +102,7 @@
   {
     "id": "conhecimento",
     "title": "Concluir conhecimento e assistentes",
-    "body": "Leia /mnt/dev/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Concluir módulos previstos de conhecimento, contexto e assistentes conforme ETAPA05, com providers fictícios e guardas. Serviços sem credenciais permanecem desativados; nenhuma leitura de cofre. Seguir estética atual e não aplicar textos pendentes.",
+    "body": "Leia /mnt/apps/peticao-final/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Concluir módulos previstos de conhecimento, contexto e assistentes conforme ETAPA05, com providers fictícios e guardas. Serviços sem credenciais permanecem desativados; nenhuma leitura de cofre. Seguir estética atual e não aplicar textos pendentes.",
     "dependencies": [
       "consolidar"
     ],
@@ -117,7 +117,7 @@
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "types"
       ]
     ]
@@ -125,7 +125,7 @@
   {
     "id": "documentos",
     "title": "Concluir documentos e aprovação",
-    "body": "Leia /mnt/dev/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Concluir módulos previstos de documentos, lotes e aprovação do presidente. Nenhum e-mail de lote, publicação nominal, envio externo ou promoção de decisões locais. Testes com PDFs fictícios e guardas de aprovação preservadas.",
+    "body": "Leia /mnt/apps/peticao-final/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Concluir módulos previstos de documentos, lotes e aprovação do presidente. Nenhum e-mail de lote, publicação nominal, envio externo ou promoção de decisões locais. Testes com PDFs fictícios e guardas de aprovação preservadas.",
     "dependencies": [
       "consolidar"
     ],
@@ -140,7 +140,7 @@
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "types"
       ]
     ]
@@ -148,7 +148,7 @@
   {
     "id": "integracao",
     "title": "Validar integração cumulativa e visual",
-    "body": "Leia /mnt/dev/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Conferir matriz integral, contratos e migração, bateria cumulativa serial, build e navegador em desktop/celular, sem enfraquecer testes. Preservar IDs/hashes/datas e aparência acordada. A validação não pode declarar completo um módulo ainda pendente.",
+    "body": "Leia /mnt/apps/peticao-final/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Conferir matriz integral, contratos e migração, bateria cumulativa serial, build e navegador em desktop/celular, sem enfraquecer testes. Preservar IDs/hashes/datas e aparência acordada. A validação não pode declarar completo um módulo ainda pendente.",
     "dependencies": [
       "contato",
       "email",
@@ -167,22 +167,22 @@
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "tests"
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "schema"
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "build"
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "types"
       ]
     ]
@@ -190,7 +190,7 @@
   {
     "id": "entrega",
     "title": "Preparar candidato para autorização",
-    "body": "Leia /mnt/dev/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Entregar manifesto por commit, evidências, pendências e instruções de publicação/reversão que preservem retenção e guardas. Verificar todos os critérios da matriz. Não fazer deploy, merge com VPS ou qualquer escrita em produção. Aguardar a autorização final do proprietário.",
+    "body": "Leia /mnt/apps/peticao-final/peticao/docs/ADMIN-V2-CONTINUIDADE-SUPERVISIONADA.md e os documentos ETAPA/ETAPAS relevantes no candidato. Preserve mudanças existentes e faça commits locais por etapa. Nenhuma escrita, merge ou deploy na VPS. Nenhuma alteração de estética ou textos não aprovados. Use apenas dados fictícios e mail dev. Continue as etapas independentes quando houver aprovação pendente. Entregar manifesto por commit, evidências, pendências e instruções de publicação/reversão que preservem retenção e guardas. Verificar todos os critérios da matriz. Não fazer deploy, merge com VPS ou qualquer escrita em produção. Aguardar a autorização final do proprietário.",
     "dependencies": [
       "integracao"
     ],
@@ -205,7 +205,7 @@
       ],
       [
         "/usr/bin/python3",
-        "/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py",
+        "/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py",
         "types"
       ]
     ]

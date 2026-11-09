@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // Grava uma chave de API de infraestrutura SEM mostrá-la (prompt sem eco), com comentário identificador, e valida a conexão.
-// Uso:  node /mnt/dev/peticao/tools/infra/chave.mjs vultr
-//       node /mnt/dev/peticao/tools/infra/chave.mjs cloudflare
-//       node /mnt/dev/peticao/tools/infra/chave.mjs --listar     (mostra só os nomes e comentários, nunca os valores)
-//       node /mnt/dev/peticao/tools/infra/chave.mjs vultr --remover
-//       node /mnt/dev/peticao/tools/infra/chave.mjs cloudflare --validar   (testa a chave já gravada, sem digitar de novo)
+// Uso:  node /mnt/apps/peticao-final/peticao/tools/infra/chave.mjs vultr
+//       node /mnt/apps/peticao-final/peticao/tools/infra/chave.mjs cloudflare
+//       node /mnt/apps/peticao-final/peticao/tools/infra/chave.mjs --listar     (mostra só os nomes e comentários, nunca os valores)
+//       node /mnt/apps/peticao-final/peticao/tools/infra/chave.mjs vultr --remover
+//       node /mnt/apps/peticao-final/peticao/tools/infra/chave.mjs cloudflare --validar   (testa a chave já gravada, sem digitar de novo)
 import { createInterface } from "node:readline/promises";
 import { askHidden, closePrompt } from "../../site/scripts/lib-prompt.mjs";
 import { REGISTRY, filePath, getKey, listKeys, mask, removeKey, setKey } from "./lib/keystore.mjs";

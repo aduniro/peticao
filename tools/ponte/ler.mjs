@@ -25,7 +25,7 @@ export async function mensagens(desde = 0) {
   for (const k of ks) {
     let m = cache.get(k.name);
     if (!m) {
-      const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acc}/storage/kv/namespaces/${kv}/values/${encodeURIComponent(k.name)}`, { signal: AbortSignal.timeout(20_000), headers: { Authorization: "Bearer " + (await import("/mnt/dev/peticao/tools/infra/lib/keystore.mjs")).getKey("CLOUDFLARE_API_TOKEN") } });
+      const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acc}/storage/kv/namespaces/${kv}/values/${encodeURIComponent(k.name)}`, { signal: AbortSignal.timeout(20_000), headers: { Authorization: "Bearer " + (await import("/mnt/apps/peticao-final/peticao/tools/infra/lib/keystore.mjs")).getKey("CLOUDFLARE_API_TOKEN") } });
       if (r.status === 404) continue; // A chave pode expirar entre a listagem e a leitura.
       if (!r.ok) throw new Error(`Falha de leitura na Ponte (HTTP ${r.status})`);
       m = await r.json();

@@ -4,9 +4,9 @@ import json
 from pathlib import Path
 import shlex
 
-HELPER=Path('/mnt/dev/peticao/tools/monitor/verify_admin_candidate.py')
+HELPER=Path('/mnt/apps/peticao-final/peticao/tools/monitor/verify_admin_candidate.py')
 DIGEST='251fae6b0854b8eaf5ab613dbc085ebe7873d7207781988af70dcf56b4b5fdcf'
-CANDIDATE=Path('/mnt/dev/peticao/.cache/admin-integration/candidate-stage02-domains')
+CANDIDATE=Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-stage02-domains')
 CONSOLIDATION=CANDIDATE/'tools/admin-qa/consolidation.py'
 CONSOLIDATION_DIGEST='4fd45c10b3b83ebcf8caf134c28b5f37c47e5e466d7cba90af71940bc4fe5574'
 TEST_FLAGS={'--tests','--contact-tests','--mail-tests','--ai-tests','--document-tests'}

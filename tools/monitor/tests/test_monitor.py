@@ -8,7 +8,7 @@ from vigia_monitor.runner import execute_request
 
 @pytest.fixture
 def store(tmp_path):return Store(tmp_path/'state/monitor.sqlite')
-def task(store):return store.task('qa',title='Tarefa fictícia',cwd='/mnt/dev/peticao')
+def task(store):return store.task('qa',title='Tarefa fictícia',cwd='/mnt/apps/peticao-final/peticao')
 def test_store_private_atomic_history_and_dedup(store):
  a=task(store);b=store.task('qa',state='running');assert a['created_at']==b['created_at'];assert store.path.stat().st_mode&0o777==0o600
  assert store.event('test','Primeiro',event_id='same');assert not store.event('test','Segundo',event_id='same');assert len(store.rows('SELECT * FROM events'))==1
@@ -48,7 +48,7 @@ def test_owned_shell_can_receive_input(store):
 async def test_tui_tabs_task_selection_and_prompt_queue(store,tmp_path):
  from vigia_monitor.ui import VigiaApp
  from textual.widgets import TabbedContent,TextArea
- task(store);store.snapshot('daemon',{'alive':True});store.snapshot('local',{'processes':[],'services':[]});store.snapshot('git:/mnt/dev/peticao',{'cwd':'/mnt/dev/peticao','branches':'* test','worktrees':'worktree /mnt/dev/peticao','graph':'* abc commit','commits':['a'*40+'\tabc\tCommit'],'files':['site/src/components/SignForm.tsx']})
+ task(store);store.snapshot('daemon',{'alive':True});store.snapshot('local',{'processes':[],'services':[]});store.snapshot('git:/mnt/apps/peticao-final/peticao',{'cwd':'/mnt/apps/peticao-final/peticao','branches':'* test','worktrees':'worktree /mnt/apps/peticao-final/peticao','graph':'* abc commit','commits':['a'*40+'\tabc\tCommit'],'files':['site/src/components/SignForm.tsx']})
  app=VigiaApp(store)
  async with app.run_test(size=(120,40)) as pilot:
   await pilot.pause();assert app.task_id=='qa';app.refresh_data();await pilot.pause()
@@ -59,7 +59,7 @@ async def test_tui_tabs_task_selection_and_prompt_queue(store,tmp_path):
   app.save_screenshot(str(tmp_path/'vigia.svg'))
 
 def test_request_keeps_approved_context_if_task_is_edited(store):
- task(store);rid=store.request('qa','shell','printf ok');store.task('qa',cwd='/tmp',scope='Changed later');request=store.claim();assert json.loads(request['context'])['cwd']=='/mnt/dev/peticao'
+ task(store);rid=store.request('qa','shell','printf ok');store.task('qa',cwd='/tmp',scope='Changed later');request=store.claim();assert json.loads(request['context'])['cwd']=='/mnt/apps/peticao-final/peticao'
 
 def test_remote_job_creation_is_idempotent_and_worker_is_private(tmp_path,monkeypatch):
  import importlib.util

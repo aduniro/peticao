@@ -101,7 +101,7 @@ def ai_run(store,request,task):
  store.execute('UPDATE requests SET pid=? WHERE id=?',(rpc.proc.pid,rid))
  try:
   rpc.initialize()
-  context_path=Path('/mnt/dev/peticao/tools/monitor/CONTEXTO.md')
+  context_path=Path('/mnt/apps/peticao-final/peticao/tools/monitor/CONTEXTO.md')
   context=context_path.read_text() if context_path.is_file() and not context_path.is_symlink() and context_path.stat().st_size<20000 else ''
   params={'cwd':task['cwd'],'approvalPolicy':'on-request','sandbox':'workspace-write','developerInstructions':INSTRUCTIONS+'\n\nResumo preparado do projeto:\n'+context}
   if thread_id:

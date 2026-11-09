@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse, datetime as dt, json, os, re, select, shutil, sqlite3, subprocess, sys, tempfile, threading, time
 from pathlib import Path
 from zoneinfo import ZoneInfo
-ROOT = Path('/mnt/dev/peticao')
+ROOT = Path('/mnt/apps/peticao-final/peticao')
 STATE = Path(os.environ.get('VIGIA_SIMPLES_STATE', str(Path.home()/'.local/state/peticao-monitor/simple')))
 ZONE = ZoneInfo('America/Porto_Velho')
 PROCESS_OFFSET = 0
@@ -85,11 +85,11 @@ def processes():
             comm=(entry/'comm').read_text().strip()
             if comm == 'node_repl' or not comm.startswith(('node','next-server','python','postgres','npm','codex')):continue
             cwd=str((entry/'cwd').resolve())
-            if not (cwd==str(ROOT) or cwd.startswith(str(ROOT)+'/') or cwd.startswith('/mnt/dev/cpfs')):continue
+            if not (cwd==str(ROOT) or cwd.startswith(str(ROOT)+'/') or cwd.startswith('/mnt/apps/peticao-final/cpfs')):continue
             args=[a.decode(errors='replace') for a in (entry/'cmdline').read_bytes().split(b'\0') if a]
             if args and args[0].startswith('postgres:'):continue
             label=comm;port=''
-            scripts=[a for a in args[1:] if a.endswith(('.py','.mjs','.js')) and a.startswith(('/mnt/dev/peticao/','tools/','scripts/','./tools/')) and not any(c in a for c in ['\n',' '])]
+            scripts=[a for a in args[1:] if a.endswith(('.py','.mjs','.js')) and a.startswith(('/mnt/apps/peticao-final/peticao/','tools/','scripts/','./tools/')) and not any(c in a for c in ['\n',' '])]
             if scripts:label=Path(scripts[0]).name
             if label.startswith('run-') and label.endswith('-qa.py'):label='supervisor de prévia/QA'
             for i,a in enumerate(args[:-1]):

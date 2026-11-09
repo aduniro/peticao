@@ -6,7 +6,7 @@ from pathlib import Path
 import socket
 import subprocess
 
-ROOT=Path('/mnt/dev/peticao/.cache/admin-integration')
+ROOT=Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration')
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
  scratch=Path.home()/'.cache/peticao-admin-supervised-qa';scratch.mkdir(mode=0o700,exist_ok=True)
  empty=scratch/'config-empty';empty.mkdir(mode=0o700,exist_ok=True)
  if any(empty.iterdir()):raise SystemExit('Diretório de configuração QA deve estar vazio')
- env.update(NODE_ENV='test',TMPDIR='/mnt/dev/.qa-tmp',DEV_DB_PORT='54349',DEV_DB_DIR=str(scratch/'postgres'),DATABASE_URL='postgres://peticao:peticao@127.0.0.1:54349/peticao',MAIL_PROVIDER='dev',MAIL_PROVIDERS='dev',PREVIEW_MODE='1',HASH_PEPPER='QA-ONLY-SUPERVISED-PEPPER',DATA_ENCRYPTION_KEY='QA-ONLY-SUPERVISED-KEY',CPF_CACHE_ENCRYPTION_KEY='QA-ONLY-SUPERVISED-CACHE-KEY',SECRETS_DIR=str(empty),PETICAO_CONFIG_DIR=str(empty),CREDENTIALS_DIRECTORY=str(empty),MAIL_ARCHIVE_RETENTION='30')
+ env.update(NODE_ENV='test',TMPDIR='/mnt/apps/peticao-final/.qa-tmp',DEV_DB_PORT='54349',DEV_DB_DIR=str(scratch/'postgres'),DATABASE_URL='postgres://peticao:peticao@127.0.0.1:54349/peticao',MAIL_PROVIDER='dev',MAIL_PROVIDERS='dev',PREVIEW_MODE='1',HASH_PEPPER='QA-ONLY-SUPERVISED-PEPPER',DATA_ENCRYPTION_KEY='QA-ONLY-SUPERVISED-KEY',CPF_CACHE_ENCRYPTION_KEY='QA-ONLY-SUPERVISED-CACHE-KEY',SECRETS_DIR=str(empty),PETICAO_CONFIG_DIR=str(empty),CREDENTIALS_DIRECTORY=str(empty),MAIL_ARCHIVE_RETENTION='30')
  if args.mode=='types':command=['npm','run','typecheck']
  else:
   with socket.socket() as sock:
