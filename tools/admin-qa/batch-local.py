@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 
 root = Path(__file__).resolve().parents[2]
-assert Path.cwd().resolve() == root == Path('/mnt/dev/peticao/.cache/admin-integration/candidate-stage02-domains')
+assert Path.cwd().resolve() == root == Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-stage02-domains')
 parser = argparse.ArgumentParser()
 parser.add_argument('--contract', choices=['batch-input'])
 parser.add_argument('--tests', choices=['portal', 'preparation'])

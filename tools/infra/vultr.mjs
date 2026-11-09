@@ -7,7 +7,7 @@ import { VultrError, createClient } from "./lib/vultr-api.mjs";
 import * as C from "./lib/commands.mjs";
 import net from "node:net";
 
-const ISO_DIR = "/mnt/dev/peticao/.cache/iso";
+const ISO_DIR = "/mnt/apps/peticao-final/peticao/.cache/iso";
 const [cmd, ...rest] = process.argv.slice(2);
 const flags = {}, pos = [];
 for (let i = 0; i < rest.length; i++) {
@@ -36,7 +36,7 @@ const AJUDA = `Comandos (somente leitura, exceto onde indicado):
 
 if (!cmd || cmd === "ajuda" || cmd === "--ajuda") { console.log(AJUDA); process.exit(0); }
 const key = getKey(REGISTRY.vultr.env);
-if (!key) { console.error("Não há chave do Vultr gravada. Rode antes:  node /mnt/dev/peticao/tools/infra/chave.mjs vultr"); process.exit(1); }
+if (!key) { console.error("Não há chave do Vultr gravada. Rode antes:  node /mnt/apps/peticao-final/peticao/tools/infra/chave.mjs vultr"); process.exit(1); }
 const client = createClient({ key });
 const tabela = (rows) => rows.forEach((r) => console.log("  " + r.join("  ")));
 const mb = (n) => (n ? `${(n / 1024 ** 2).toFixed(0)} MB` : "?");

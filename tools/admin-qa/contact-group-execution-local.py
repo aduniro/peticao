@@ -3,9 +3,9 @@
 import hashlib, json, os, socket, subprocess, tempfile, sys
 from pathlib import Path
 root=Path(__file__).resolve().parents[2]
-assert root==Path.cwd().resolve()==Path('/mnt/dev/peticao/.cache/admin-integration/candidate-referral-management-20261109')
+assert root==Path.cwd().resolve()==Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-referral-management-20261109')
 site=root/'site'
-assert (site/'node_modules').resolve()==Path('/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules')
+assert (site/'node_modules').resolve()==Path('/mnt/apps/peticao-final/_externos/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules')
 for name in ['.env','.env.local','.env.production','.env.production.local']:
  assert not (site/name).exists()
 with socket.socket() as sock: assert sock.connect_ex(('127.0.0.1',54356))!=0

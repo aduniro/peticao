@@ -1,7 +1,7 @@
 // Respostas de contato aprovadas: cada caso sai em DOIS e-mails, nesta ordem: (1) só texto, no primeiro modelo que o dono recebeu, e (2) o e-mail com o card
 // de divulgação (cartaz com o QR pessoal). Funções puras e com injeção de dependências, para testar sem enviar nada.
 import { readFileSync } from "node:fs";
-export const DIR = "/mnt/dev/peticao/.cache/respostas/";
+export const DIR = "/mnt/apps/peticao-final/peticao/.cache/respostas/";
 export const ASSUNTO_CARD = "Divulgue a petição: seu cartaz com QR Code pessoal";
 export const REPLY_TO = "operator-1608598f41@example.invalid";
 export const REMETENTE = "Campanha Sanção Integral · ADUNIR";
