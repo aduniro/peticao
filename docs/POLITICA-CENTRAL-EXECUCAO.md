@@ -55,3 +55,27 @@ independente, alertas em HTML, retomada limitada e conclusão por evidências.
 Nunca registrar o pulso do monitor como progresso do agente. Uma interrupção deve
 ficar explícita, com checkpoint e aviso; não apresentar um teste encerrado como
 desenvolvimento ativo. A supervisão não concede autorização de deploy/merge VPS.
+
+## Continuidade após limites de uso — reforço de 09/11/2026
+
+O responsável reiterou a prioridade integral do admin-v2: concluir uma tarefa
+intermediária exige selecionar a próxima etapa independente do plano, sem
+aguardar novo pedido de continuação. Vigia e APOIO devem registrar interrupções
+por falta de créditos e preparar a retomada a partir do checkpoint, quando a
+disponibilidade voltar a ser comprovada pela interface suportada do executor.
+
+Essa retomada deve preservar a identidade da tarefa/conversa, evitar execuções
+duplicadas e respeitar pausas explícitas, aprovações pendentes, bloqueios de
+segurança e limites do serviço. Não trocar conta/modelo para contornar limites,
+consumir créditos de reinício ou efetuar compras por essa autorização.
+
+Separar no monitor: coletor ativo, agente executando ferramentas, execução
+aguardando créditos, retomada agendada e objetivo nativo bloqueado. Não fabricar
+atividade ou conclusão pelo simples pulso do monitor. O fim de uma subtarefa
+não conclui o admin-v2. A retomada automática só será declarada operacional
+depois de implementada e testada; manter o diagnóstico explícito até lá.
+
+O objetivo nativo foi encontrado como `blocked` nesta inspeção, e o responsável
+solicitou sua retomada pelo controle suportado, passando a `active`. Não editar
+registros internos para substituir esse controle do usuário/sistema. As frentes
+independentes autorizadas continuam durante diagnósticos de continuidade.
