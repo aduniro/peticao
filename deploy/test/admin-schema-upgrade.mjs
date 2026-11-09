@@ -18,7 +18,10 @@ const diagnosticProvenance=JSON.parse(readFileSync(resolve(here,"fixtures/produc
 assert.equal(createHash("sha256").update(diagnosticSql).digest("hex"),diagnosticProvenance.schema_sha256);
 const newSource=readFileSync(resolve(here,"../../site/src/lib/db.ts"),"utf8");
 const match=/const SCHEMA_SQL = (`[\s\S]*?`);/.exec(newSource);assert.ok(match);assert.ok(!match[1].includes("${"));
-const newSql=Function("return "+match[1])();
+const a1Source=readFileSync(resolve(here,"../../site/src/lib/batch-a1-schema.ts"),"utf8");
+const a1Match=/export const BATCH_A1_SCHEMA_SQL = (`[\s\S]*?`);/.exec(a1Source);
+assert.ok(a1Match);assert.ok(!a1Match[1].includes("${"));
+const newSql=Function("return "+match[1])()+"\n"+Function("return "+a1Match[1])();
 const schemaName="admin_upgrade_rehearsal_"+process.pid;
 let db;
 const pool=new Pool({connectionString:process.env.DATABASE_URL,max:1});const c=await pool.connect();
@@ -39,7 +42,8 @@ try{
  await c.query("INSERT INTO mail_log(kind,provider,to_addr,status,ts) VALUES('confirmacao','legacy','legacy@example.test','sent','2026-10-01T10:00:00Z')");
  await c.query("INSERT INTO mail_outbox(kind,to_addr,payload) VALUES('confirmacao','legacy@example.test','{\"to\":\"legacy@example.test\",\"subject\":\"legacy\",\"text\":\"do-not-send-legacy-fixture\"}')");
  const oldMailLog=(await c.query("SELECT * FROM mail_log ORDER BY id")).rows,oldMailOutbox=(await c.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
- const rows=async()=> (await c.query("SELECT * FROM signatures ORDER BY id")).rows;
+ const signatureColumns=(await c.query("SELECT column_name FROM information_schema.columns WHERE table_schema=$1 AND table_name='signatures' ORDER BY ordinal_position",[schemaName])).rows.map(r=>'"'+r.column_name.replaceAll('"','""')+'"').join(',');
+ const rows=async()=> (await c.query("SELECT "+signatureColumns+" FROM signatures ORDER BY id")).rows;
  const tables=async()=> (await c.query("SELECT table_name FROM information_schema.tables WHERE table_schema=current_schema() AND table_type='BASE TABLE' ORDER BY table_name")).rows.map(r=>r.table_name);
  const columns=async()=> (await c.query("SELECT table_name,column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema=current_schema() ORDER BY table_name,ordinal_position")).rows;
  await c.query("INSERT INTO referrers(code,manage_token_hash,label,created_at) VALUES('ABCDEFG','QA-REFERRAL-HASH','QA Organização','2026-10-01T10:00:00.123456Z')");
@@ -58,13 +62,16 @@ try{
   {table_name:"institutional_domains",column_name:"admin_catalog",data_type:"jsonb",is_nullable:"NO",column_default:"'{}'::jsonb"},
   {table_name:"institutional_domains",column_name:"admin_catalog_version",data_type:"bigint",is_nullable:"NO",column_default:"1"},
   {table_name:"institutional_domains",column_name:"admin_archived_at",data_type:"timestamp with time zone",is_nullable:"YES",column_default:null},
+  {table_name:"institutional_domains",column_name:"institution_id",data_type:"text",is_nullable:"YES",column_default:null},
+  {table_name:"institutional_domains",column_name:"include_subdomains",data_type:"boolean",is_nullable:"NO",column_default:"true"},
   {table_name:"mail_log",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null},
   {table_name:"mail_outbox",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null},
   {table_name:"referrers",column_name:"admin_version",data_type:"bigint",is_nullable:"NO",column_default:"1"},
   {table_name:"referrers",column_name:"archived_at",data_type:"timestamp with time zone",is_nullable:"YES",column_default:null},
+  {table_name:"signatures",column_name:"ebserh_unit_id",data_type:"text",is_nullable:"YES",column_default:null},
   {table_name:"whatsapp_senders",column_name:"revision",data_type:"integer",is_nullable:"NO",column_default:"1"},
   {table_name:"whatsapp_senders",column_name:"archived_at",data_type:"timestamp with time zone",is_nullable:"YES",column_default:null}
- ],"Only explicit domain catalog overlay, message correlation, administrative referral version/archive and sender revision/archive columns may be added to old tables");
+ ],"Only explicitly listed institutional/EBSERH bindings, catalog overlay, message correlation and administrative versions may be added to old tables");
  const migratedReferrers=(await c.query("SELECT row_to_json(r)::text raw FROM referrers r ORDER BY id")).rows.map(r=>JSON.parse(r.raw));
  assert.deepEqual(migratedReferrers.map(({admin_version,archived_at,...r})=>r),originalReferrers,"Referral codes, tokens, labels and creation instants survive upgrade");
  assert.ok(migratedReferrers.every(r=>r.admin_version===1&&r.archived_at===null));
@@ -74,7 +81,8 @@ try{
  await c.query("INSERT INTO admin_referral_mutations(actor_id,request_id,input_hash,referrer_id,result,created_at) SELECT $1,'00000000-0000-4000-8000-000000000020','QA-INPUT',id,'{\"ok\":true,\"row\":{\"version\":\"3\"}}'::jsonb,'2026-11-09T01:00:00.123456Z' FROM referrers WHERE code='ABCDEFG'",[referralActor]);
  const mutationLedger=(await c.query("SELECT row_to_json(q)::text raw FROM admin_referral_mutations q")).rows;
  const migratedDomain=(await c.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE domain='qa-catalog.example'")).rows.map(r=>JSON.parse(r.raw));
- assert.deepEqual(migratedDomain.map(({admin_catalog,admin_catalog_version,admin_archived_at,...d})=>d),originalDomain,"Domain effective policy and unknown fields survive overlay migration");
+ assert.deepEqual(migratedDomain.map(({admin_catalog,admin_catalog_version,admin_archived_at,institution_id,include_subdomains,...d})=>d),originalDomain,"Domain effective policy and unknown fields survive overlay migration");
+ assert.ok(migratedDomain.every(d=>d.institution_id===null&&d.include_subdomains===true),"Additive institution binding defaults preserve legacy decisions");
  assert.ok(migratedDomain.every(d=>d.admin_catalog_version===1&&d.admin_archived_at===null&&Object.keys(d.admin_catalog).length===0));
  await c.query("UPDATE institutional_domains SET admin_catalog='{\"label\":null,\"evidenceUrl\":\"http://evidence.example\",\"futureKey\":{\"unknown\":null}}',admin_catalog_version=7,admin_archived_at='2026-11-09T01:00:00.123456Z' WHERE domain='qa-catalog.example'");
  await c.query("INSERT INTO admin_domain_catalog_requests(actor_id,request_id,input_hash,domain,result,created_at) VALUES($1,'00000000-0000-4000-8000-000000000021','QA-CATALOG-INPUT','qa-catalog.example','{\"ok\":true,\"row\":{\"version\":\"7\"}}','2026-11-09T01:00:00.654321Z')",[referralActor]);
@@ -95,7 +103,7 @@ try{
  const archivedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows;
  await c.query(newSql);await c.query(newSql);await c.query(oldSql);
  assert.deepEqual((await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows,archivedSenders,"DDL replay and old bootstrap must not reset archive decisions or revisions");
-assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_domain_catalog_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_document_versions","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_reply_group_items","contact_reply_groups","contact_triage_jobs","mail_inbound_messages","mail_message_attempts","mail_message_events","mail_messages","president_challenges"]);
+assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_domain_catalog_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_a1_jobs","batch_a1_validations","batch_document_versions","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_reply_group_items","contact_reply_groups","contact_triage_jobs","ebserh_units","institution_registry","mail_inbound_messages","mail_message_attempts","mail_message_events","mail_messages","president_challenges"]);
  await c.query(`INSERT INTO mail_inbound_messages(id,account,external_key,content_hash,sender_hash,recipients_hash,thread_root,correlation,content_cipher,received_at,created_at,expires_at)
    VALUES('00000000-0000-4000-8000-000000000050','qa-inbox','QA-EXTERNAL-HASH','QA-CONTENT-HASH','QA-SENDER-HASH','QA-RECIPIENTS-HASH','00000000-0000-4000-8000-000000000050','new','QA-NOT-A-REAL-CIPHER','2026-11-08T10:00:00.123456Z','2026-11-08T10:00:00.234567Z','2026-12-08T10:00:00.345678Z')`);
  const inboundState=async()=>(await c.query("SELECT row_to_json(m)::text raw FROM mail_inbound_messages m ORDER BY id")).rows;

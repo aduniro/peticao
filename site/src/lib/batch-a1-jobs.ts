@@ -2,61 +2,14 @@ import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { audit, tx } from "./db";
 import { authorizeBatchActor, documentVersion, type ApprovalRow } from "./batches";
+import { appendDocumentVersion, preserveObservedDocument } from "./batch-document-history";
+import { isVerifiedA1Pdf, type VerifiedA1Pdf } from "./a1-validation";
 import type { SessaoAdmin } from "./admin-users";
 import { A1_MAX_PDF_BYTES, type A1WorkerBinding } from "./a1-worker-contract";
 
 export const BATCH_A1_POLICY_KEY = "batch_a1_policy_v1";
 export const A1_LEASE_SECONDS = 120;
-export const BATCH_A1_SCHEMA_SQL = `
-  CREATE TABLE IF NOT EXISTS batch_a1_jobs (
-    id UUID PRIMARY KEY, batch_id INTEGER NOT NULL REFERENCES batches(id),
-    request_id UUID NOT NULL, request_fingerprint TEXT NOT NULL CHECK(request_fingerprint ~ '^[a-f0-9]{64}$'),
-    actor_id INTEGER NOT NULL REFERENCES admin_users(id), actor_email TEXT NOT NULL,
-    session_id INTEGER NOT NULL, authorization_id UUID NOT NULL UNIQUE,
-    authorized_at TIMESTAMPTZ NOT NULL, authorization_expires_at TIMESTAMPTZ NOT NULL,
-    input_artifact_version_id UUID NOT NULL REFERENCES batch_document_versions(id),
-    input_sha256 TEXT NOT NULL CHECK(input_sha256 ~ '^[a-f0-9]{64}$'),
-    input_byte_length INTEGER NOT NULL CHECK(input_byte_length>0 AND input_byte_length<=26214400),
-    document_version TEXT NOT NULL CHECK(document_version ~ '^[a-f0-9]{64}$'),
-    list_hash TEXT NOT NULL, batch_revision TEXT NOT NULL,
-    credential_version_id UUID NOT NULL, profile_version TEXT NOT NULL,
-    trust_store_version TEXT NOT NULL CHECK(trust_store_version ~ '^[a-f0-9]{64}$'),
-    expected_cnpj TEXT NOT NULL CHECK(expected_cnpj='15883671000115'),
-    certificate_fingerprint_sha256 TEXT NOT NULL CHECK(certificate_fingerprint_sha256 ~ '^[a-f0-9]{64}$'),
-    policy_revision INTEGER NOT NULL CHECK(policy_revision>0),
-    policy_fingerprint TEXT NOT NULL CHECK(policy_fingerprint ~ '^[a-f0-9]{64}$'),
-    state TEXT NOT NULL DEFAULT 'queued' CHECK(state IN ('queued','running','validating','succeeded','failed','stale','cancelled')),
-    revision INTEGER NOT NULL DEFAULT 1 CHECK(revision>0),
-    attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts BETWEEN 0 AND 3),
-    lease_token UUID, lease_until TIMESTAMPTZ,
-    error_code TEXT CHECK(error_code IS NULL OR error_code IN ('signing_failed','validation_failed','worker_unavailable','result_uncertain','input_mismatch','authorization_changed','policy_changed','document_changed','attempt_limit')),
-    output_version_id UUID REFERENCES batch_document_versions(id),
-    output_sha256 TEXT CHECK(output_sha256 IS NULL OR output_sha256 ~ '^[a-f0-9]{64}$'),
-    validation_report_id UUID,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(), updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
-    UNIQUE(actor_id,request_id),
-    UNIQUE(batch_id,input_artifact_version_id,credential_version_id,profile_version,authorization_id),
-    CHECK(authorization_expires_at>authorized_at AND authorization_expires_at<=authorized_at+interval '10 minutes'),
-    CHECK((state IN ('running','validating') AND lease_token IS NOT NULL AND lease_until IS NOT NULL)
-      OR (state NOT IN ('running','validating') AND lease_token IS NULL AND lease_until IS NULL)),
-    CHECK((state='succeeded' AND output_version_id IS NOT NULL AND output_sha256 IS NOT NULL AND validation_report_id IS NOT NULL)
-      OR (state<>'succeeded' AND output_version_id IS NULL AND output_sha256 IS NULL AND validation_report_id IS NULL))
-  );
-  CREATE UNIQUE INDEX IF NOT EXISTS batch_a1_active_batch ON batch_a1_jobs(batch_id) WHERE state IN ('queued','running','validating');
-  CREATE INDEX IF NOT EXISTS batch_a1_actor_requests ON batch_a1_jobs(actor_id,created_at);
-  CREATE OR REPLACE FUNCTION preserve_batch_a1_binding() RETURNS trigger LANGUAGE plpgsql AS $a1_binding$
-  BEGIN
-    IF (to_jsonb(NEW)-ARRAY['state','revision','attempts','lease_token','lease_until','error_code','output_version_id','output_sha256','validation_report_id','updated_at'])
-       IS DISTINCT FROM (to_jsonb(OLD)-ARRAY['state','revision','attempts','lease_token','lease_until','error_code','output_version_id','output_sha256','validation_report_id','updated_at'])
-      THEN RAISE EXCEPTION 'batch_a1_binding_immutable'; END IF;
-    RETURN NEW;
-  END; $a1_binding$;
-  DO $a1_trigger$ BEGIN
-    IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='batch_a1_jobs'::regclass AND tgname='batch_a1_binding_immutable') THEN
-      CREATE TRIGGER batch_a1_binding_immutable BEFORE UPDATE ON batch_a1_jobs FOR EACH ROW EXECUTE FUNCTION preserve_batch_a1_binding();
-    END IF;
-  END; $a1_trigger$;
-`;
+export { BATCH_A1_SCHEMA_SQL } from "./batch-a1-schema";
 
 export type A1ServerPolicy = {
   version: 1; revision: number; enabled: boolean; credentialActive: boolean;
@@ -65,20 +18,21 @@ export type A1ServerPolicy = {
 };
 export type A1JobState = "queued" | "running" | "validating" | "succeeded" | "failed" | "stale" | "cancelled";
 export type A1JobMetadata = A1WorkerBinding & {
-  batchId: number; inputByteLength: number; listHash: string; state: A1JobState;
+  batchId: number; requestId:string; inputByteLength: number; listHash: string; state: A1JobState;
   revision: number; attempts: number; policyRevision: number;
   authorizationExpiresAt: string; leaseUntil: string | null; errorCode: string | null;
-  createdAt: string; updatedAt: string;
+  createdAt: string; updatedAt: string; outputVersionId:string|null; outputSha256:string|null; validationReportId:string|null;
 };
 type Actor = Pick<SessaoAdmin, "userId" | "email" | "sessaoId">;
 type JobRow = {
-  id: string; batch_id: number; request_fingerprint: string; actor_id: number; actor_email: string; session_id: number;
+  id: string; batch_id: number; request_id:string; request_fingerprint: string; actor_id: number; actor_email: string; session_id: number;
   input_artifact_version_id: string; input_sha256: string; input_byte_length: number; document_version: string;
   list_hash: string; credential_version_id: string; profile_version: "pades-basic-unhomologated-v1";
   trust_store_version: string; expected_cnpj: "15883671000115"; certificate_fingerprint_sha256: string;
   policy_revision: number; policy_fingerprint: string; state: A1JobState; revision: number; attempts: number;
   authorization_expires_at: Date; lease_token: string | null; lease_until: Date | null; error_code: string | null;
-  created_at: Date; updated_at: Date;
+  created_at: Date; updated_at: Date; output_version_id: string | null; output_sha256: string | null;
+  validation_report_id: string | null; completed_lease_token_sha256: string | null;
 };
 const uuid = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(v);
 const sha = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
@@ -87,13 +41,13 @@ const digest = (v: string | Buffer) => createHash("sha256").update(v).digest("he
 const error = (code: string) => ({ ok: false as const, error: code });
 const iso = (d: Date) => d.toISOString();
 function metadata(j: JobRow): A1JobMetadata {
-  return { jobId:j.id,batchId:j.batch_id,inputArtifactVersionId:j.input_artifact_version_id,inputSha256:j.input_sha256,
+  return { jobId:j.id,batchId:j.batch_id,requestId:j.request_id,inputArtifactVersionId:j.input_artifact_version_id,inputSha256:j.input_sha256,
     inputByteLength:j.input_byte_length,documentVersion:j.document_version,listHash:j.list_hash,
     credentialVersionId:j.credential_version_id,profileVersion:j.profile_version,trustStoreVersion:j.trust_store_version,
     expectedCnpj:j.expected_cnpj,certificateFingerprintSha256:j.certificate_fingerprint_sha256,
     state:j.state,revision:j.revision,attempts:j.attempts,policyRevision:j.policy_revision,
     authorizationExpiresAt:iso(j.authorization_expires_at),leaseUntil:j.lease_until?iso(j.lease_until):null,
-    errorCode:j.error_code,createdAt:iso(j.created_at),updatedAt:iso(j.updated_at) };
+    errorCode:j.error_code,createdAt:iso(j.created_at),updatedAt:iso(j.updated_at),outputVersionId:j.output_version_id,outputSha256:j.output_sha256,validationReportId:j.validation_report_id };
 }
 async function bounded(c: PoolClient) {
   await c.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'");
@@ -208,5 +162,67 @@ export async function getA1Job(jobId:string,actor:Actor|null) {
     await bounded(c);if(!await authorized(c,actor))return error("forbidden");
     const j=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE id=$1",[jobId])).rows[0];
     return j?{ok:true as const,job:metadata(j)}:error("not_found");
+  });
+}
+
+
+/** Caller must obtain a runtime verification proof before opening this transaction. */
+export async function finishA1Job(jobId:string,leaseToken:string,expectedRevision:number,bytes:Buffer,proof:VerifiedA1Pdf) {
+  if(!uuid(jobId)||!uuid(leaseToken)||!integer(expectedRevision)||!Buffer.isBuffer(bytes)||!bytes.length||bytes.length>A1_MAX_PDF_BYTES)return error("parameters");
+  // Copy the caller's mutable Buffer before checking or awaiting anything.
+  const output=Buffer.from(bytes), outputSha=digest(output);
+  return tx(async c=>{
+    await bounded(c);
+    const seen=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE id=$1",[jobId])).rows[0];if(!seen)return error("not_found");
+    const auth=await authorized(c,{userId:seen.actor_id,email:seen.actor_email,sessaoId:seen.session_id});
+    const p=await policy(c);
+    // Same lock order as claim: real actor/session/policy, then batch, then job.
+    const doc=await currentDocument(c,seen.batch_id);
+    const j=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE id=$1 FOR UPDATE",[jobId])).rows[0];if(!j)return error("not_found");
+    const m=metadata(j);
+    const binding:A1WorkerBinding={jobId:m.jobId,documentVersion:m.documentVersion,inputArtifactVersionId:m.inputArtifactVersionId,inputSha256:m.inputSha256,credentialVersionId:m.credentialVersionId,profileVersion:m.profileVersion,trustStoreVersion:m.trustStoreVersion,expectedCnpj:m.expectedCnpj,certificateFingerprintSha256:m.certificateFingerprintSha256};
+    if(!isVerifiedA1Pdf(proof,output,binding))return error("invalid_proof");
+    const now=Number((await c.query("SELECT extract(epoch FROM clock_timestamp())*1000 ms")).rows[0].ms);
+    if(j.state==='succeeded'){
+      if(!auth||j.authorization_expires_at.getTime()<=now)return error("forbidden");
+      if(!p||digest(JSON.stringify(p))!==j.policy_fingerprint)return error("policy_conflict");
+      if(j.revision!==expectedRevision+1||j.completed_lease_token_sha256!==digest(leaseToken)||j.output_sha256!==outputSha)return error("conflict");
+      // A committed output is replayable only while its immutable artifact and current batch still agree.
+      const stored=(await c.query("SELECT v.id FROM batch_document_versions v JOIN batches b ON b.id=v.batch_id WHERE v.id=$1 AND v.batch_id=$2 AND v.variant='signed' AND v.sha256=$3 AND v.bytes=$4 AND b.signed_pdf_sha256=$3 AND b.signed_pdf=$4 AND b.signature_kind='icp-brasil'",[j.output_version_id,j.batch_id,outputSha,output])).rows[0];
+      if(!stored)return error("conflict");
+      return {ok:true as const,job:metadata(j),outputVersionId:j.output_version_id!,outputSha256:outputSha,validationReportId:j.validation_report_id!,replayed:true};
+    }
+    if(j.revision!==expectedRevision||j.lease_token!==leaseToken||!['running','validating'].includes(j.state))return error("conflict");
+    if(!j.lease_until||j.lease_until.getTime()<=now)return error("lease_expired");
+    if(!auth||j.authorization_expires_at.getTime()<=now)return stale(c,j,"authorization_changed");
+    if(!p||digest(JSON.stringify(p))!==j.policy_fingerprint)return stale(c,j,"policy_changed");
+    if(!doc||doc.version!==j.document_version||doc.original.id!==j.input_artifact_version_id||doc.original.sha256!==j.input_sha256||doc.original.bytes.length!==j.input_byte_length)return stale(c,j,"document_changed");
+    if(doc.batch.signed_pdf)await preserveObservedDocument(c,{batchId:j.batch_id,variant:'signed',bytes:doc.batch.signed_pdf,sha256:doc.batch.signed_pdf_sha256!,listHash:j.list_hash,signatureKind:doc.batch.signature_kind,note:doc.batch.signed_note??null,recordedBy:j.actor_id});
+    const version=await appendDocumentVersion(c,{batchId:j.batch_id,variant:'signed',bytes:output,sha256:outputSha,listHash:j.list_hash,signatureKind:'icp-brasil',note:null,source:'a1-worker',authorId:j.actor_id,recordedBy:j.actor_id});
+    const reportId=randomUUID();
+    await c.query("INSERT INTO batch_a1_validations(id,job_id,output_version_id,output_sha256,input_sha256,metadata)VALUES($1,$2,$3,$4,$5,$6::jsonb)",[reportId,j.id,version.id,outputSha,j.input_sha256,JSON.stringify(proof.metadata)]);
+    await c.query("UPDATE batches SET signed_pdf=$1,signed_pdf_sha256=$2,signed_note=NULL,signature_kind='icp-brasil',status='prepared',approved_by=NULL,approved_at=NULL,approval_code_hash=NULL,approval_code_expires_at=NULL,approval_attempts=0 WHERE id=$3",[output,outputSha,j.batch_id]);
+    const row=(await c.query<JobRow>("UPDATE batch_a1_jobs SET state='succeeded',revision=revision+1,lease_token=NULL,lease_until=NULL,error_code=NULL,output_version_id=$2,output_sha256=$3,validation_report_id=$4,completed_lease_token_sha256=$5,updated_at=clock_timestamp() WHERE id=$1 AND revision=$6 AND lease_token=$7 RETURNING *",[j.id,version.id,outputSha,reportId,digest(leaseToken),expectedRevision,leaseToken])).rows[0];
+    if(!row)throw new Error("a1_finish_compare_and_swap_failed");
+    await audit("batch_a1_job_succeeded",null,{jobId:j.id,batchId:j.batch_id,requestId:j.request_id,inputArtifactVersionId:j.input_artifact_version_id,inputSha256:j.input_sha256,outputVersionId:version.id,outputSha256:outputSha,validationReportId:reportId,revision:row.revision,userId:j.actor_id},c);
+    return {ok:true as const,job:metadata(row),outputVersionId:version.id,outputSha256:outputSha,validationReportId:reportId,replayed:false};
+  });
+}
+
+
+/** Availability projection for the admin UI; no activation or confidential material is returned. */
+export async function getA1Availability(batchId:number,actor:Actor|null){
+  if(!integer(batchId))return error("parameters");
+  return tx(async c=>{
+    await bounded(c);if(!await authorized(c,actor))return error("forbidden");
+    const p=await policy(c);
+    const latest=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE batch_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1",[batchId])).rows[0];
+    const latestJob=latest?metadata(latest):undefined;
+    if(!p)return {ok:true as const,available:false as const,error:"disabled",latestJob};
+    const doc=await currentDocument(c,batchId);
+    if(!doc)return {ok:true as const,available:false as const,error:"document_unavailable",latestJob};
+    const now=Number((await c.query("SELECT extract(epoch FROM clock_timestamp())*1000 ms")).rows[0].ms);
+    const active=latest&&['queued','running','validating'].includes(latest.state)&&latest.authorization_expires_at.getTime()>now;
+    return {ok:true as const,available:!active,documentVersion:doc.version,policyRevision:p.revision,...(active?{error:"active_job"}:{}),latestJob};
   });
 }

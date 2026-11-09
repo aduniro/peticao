@@ -1,4 +1,5 @@
 import ifesDomains from "./ifes-domains.json";
+import { BATCH_A1_SCHEMA_SQL } from "./batch-a1-schema";
 import { EBSERH_UNITS } from "./ebserh-units";
 import institutionRegistry from "../../public/data/institution-registry.json";
 import { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
@@ -365,13 +366,20 @@ const SCHEMA_SQL = `
     list_hash TEXT NOT NULL,
     signature_kind TEXT,
     note TEXT,
-    source TEXT NOT NULL CHECK(source IN ('prepared','upload','legacy-observed')),
+    source TEXT NOT NULL CHECK(source IN ('prepared','upload','legacy-observed','a1-worker')),
     author_id INTEGER REFERENCES admin_users(id),
     recorded_by INTEGER REFERENCES admin_users(id),
     captured_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
     UNIQUE(batch_id,ordinal),
     CHECK(source<>'legacy-observed' OR author_id IS NULL)
   );
+  DO $a1_document_source$ BEGIN
+    IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='batch_document_versions'::regclass AND conname='batch_document_versions_source_check_v2') THEN
+      ALTER TABLE batch_document_versions DROP CONSTRAINT IF EXISTS batch_document_versions_source_check;
+      ALTER TABLE batch_document_versions ADD CONSTRAINT batch_document_versions_source_check_v2
+        CHECK(source IN ('prepared','upload','legacy-observed','a1-worker'));
+    END IF;
+  END; $a1_document_source$;
   CREATE OR REPLACE FUNCTION reject_batch_document_mutation() RETURNS trigger LANGUAGE plpgsql AS $$
     BEGIN RAISE EXCEPTION 'batch_document_versions is immutable'; END;
   $$;
@@ -680,6 +688,7 @@ function init(): Promise<void> {
   if (!g.__ready) {
     g.__ready = getPool()
       .query(SCHEMA_SQL)
+      .then(() => getPool().query(BATCH_A1_SCHEMA_SQL))
       .then(() => seedEbserhUnits())
       .then(() => seedIfesDomains())
       .then(() => seedInstitutionRegistry())
