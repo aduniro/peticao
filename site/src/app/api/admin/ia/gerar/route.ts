@@ -4,6 +4,7 @@ import { readLimitedText } from "@/lib/http-body";
 import { exactKeys } from "@/lib/ai/configuration";
 import { aiRequestStatus, generateAiDraft } from "@/lib/ai/executor";
 import { rateLimit } from "@/lib/ratelimit";
+import { AI_REQUEST_MAX_BYTES } from "@/lib/ai/limits";
 export const dynamic = "force-dynamic";
 const reply = (b: unknown, status = 200) => NextResponse.json(b, { status, headers: { "cache-control": "no-store" } });
 export async function GET(req: NextRequest) {
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
 }
 export async function POST(req: NextRequest) {
   const denied = await exigirNivel(req, "edicao", 60); if (denied) return denied;
-  const body = await readLimitedText(req, 4096); if (!body.ok) return reply({ ok: false, error: "parameters" }, body.status);
+  const body = await readLimitedText(req, AI_REQUEST_MAX_BYTES); if (!body.ok) return reply({ ok: false, error: "parameters" }, body.status);
   let b: any; try { b = JSON.parse(body.raw); } catch { return reply({ ok: false, error: "parameters" }, 400); }
   if (!exactKeys(b, ["input", "proof", "requestId"])) return reply({ ok: false, error: "parameters" }, 400);
   const actor = await quemAge(req); if (!actor) return reply({ ok: false, error: "forbidden" }, 403);
