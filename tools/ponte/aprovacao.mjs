@@ -4,9 +4,9 @@
 import { randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { enviar } from "./enviar.mjs"; import { mensagens, corpoNovo } from "./ler.mjs"; import { DONO, ENDERECO } from "./lib.mjs"; import { doDono as remetenteDono } from "./dono.mjs";
-const ARQ = "/mnt/dev/peticao/.cache/ponte/propostas.json";
+const ARQ = "/mnt/apps/peticao-final/peticao/.cache/ponte/propostas.json";
 const ler = () => (existsSync(ARQ) ? JSON.parse(readFileSync(ARQ, "utf8")) : {});
-const gravar = (o) => { mkdirSync("/mnt/dev/peticao/.cache/ponte", { recursive: true }); writeFileSync(ARQ, JSON.stringify(o, null, 1)); };
+const gravar = (o) => { mkdirSync("/mnt/apps/peticao-final/peticao/.cache/ponte", { recursive: true }); writeFileSync(ARQ, JSON.stringify(o, null, 1)); };
 const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
 
 export async function propor({ tarefa, resumo, detalhes = [], anexoHtml = "", provedor = "sendpulse", para }) {
