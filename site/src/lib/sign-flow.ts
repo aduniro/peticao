@@ -1,5 +1,5 @@
 import { diagnosticMark } from "./signup-diagnostics";
-import { validate, submit, EmailUndeliverableError, InstitutionEmailMismatchError, type Meta } from "./signatures";
+import { validate, submit, EmailUndeliverableError, InstitutionEmailMismatchError, EbserhUnitValidationError, type Meta } from "./signatures";
 import { resolveInstitutionForEmail } from "./institution-registry";
 import { needsIdentity, identityMode, verifyCpfName, makeTicket, checkTicket, verifyIdentity, type IdentityMethod, MAX_FAILED } from "./identity";
 import { checkMx } from "./email-check";
@@ -233,6 +233,7 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     await submit(input, ctx, { ...extra, whatsapp: wa });
   } catch (e) {
     if (e instanceof InstitutionEmailMismatchError) return ASK({ errors: { email: "institution_email_mismatch", institution: "institution_email_mismatch" } });
+    if (e instanceof EbserhUnitValidationError) return ASK({ errors: e.errors });
     if (e instanceof EmailUndeliverableError) return invalidEmail(input.email, ctx, "email_undeliverable", false);
     if (e instanceof MailBlockedError) return ASK({ error: "Este endereço de e-mail não pode ser usado em ambiente de teste.", errorCode: "mail_blocked" });
     console.error("assinar falhou", e);

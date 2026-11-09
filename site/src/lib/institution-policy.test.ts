@@ -55,15 +55,15 @@ test("catálogo: navegador e backend reconhecem os mesmos nomes e rejeitam sufix
   }
 });
 
-test("EBSERH: instituição e campus são revalidados no backend pela mesma lista autorizada", () => {
-  const result = validate({ ...base, institution: "EBSERH", email: "qa@ebserh.gov.br", campus: "Manaus", campusIbge: 1302603, regionDeclared: true });
+test("EBSERH: instituição, hospital e cidade são revalidados pelo catálogo autorizado", () => {
+  const result = validate({ ...base, institution: "EBSERH", email: "qa@ebserh.gov.br", ebserhUnitId: "hugv-ufam", campus: "Manaus", campusIbge: 1302603, regionDeclared: true });
   assert.equal(result.ok, true);
   if (result.ok) {
     assert.equal(result.value.institution, "EBSERH");
     assert.equal(result.value.campusIbge, 1302603);
     assert.equal(result.value.regionValidated, true);
   }
-  const invalid = validate({ ...base, institution: "EBSERH", email: "qa@ebserh.gov.br", campus: "São Gabriel da Cachoeira", campusIbge: 1303809, regionDeclared: true });
+  const invalid = validate({ ...base, institution: "EBSERH", email: "qa@ebserh.gov.br", ebserhUnitId: "hospital-inexistente", campus: "São Gabriel da Cachoeira", campusIbge: 1303809, regionDeclared: true });
   assert.equal(invalid.ok, false);
 });
 

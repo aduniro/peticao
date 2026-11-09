@@ -26,9 +26,10 @@ test("EBSERH preflight and signup share eligibility without widening government 
       assert.deepEqual(await validateEmailField(`qa@${domain}`, "servidor"), { ok: true });
       assert.deepEqual(await validateEmailField(`qa@${domain}`, "apoiador"), { ok: false, code: "apoiador_institutional_email" });
     }
-    for (const domain of ["saude.gov.br", "sub.ebserh.gov.br", "hubrasil.gov.br.evil.org", "sou.ucpel.edu.br"]) {
+    for (const domain of ["saude.gov.br", "hubrasil.gov.br.evil.org", "sou.ucpel.edu.br"]) {
       assert.equal((await validateEmailField(`qa@${domain}`, "servidor")).ok, false, domain);
     }
+    assert.equal((await validateEmailField("qa@sub.ebserh.gov.br", "servidor")).ok, true, "owner verificado autoriza subdomínios conforme política v4");
     assert.equal(await count(), before, "email preflight never writes domain curation");
     for (const domain of EBSERH.domains) {
       const result = await handleSign({
@@ -65,11 +66,11 @@ test("new EBSERH servidor requests reach CPF validation while QA government-mail
       const provider = { name: fake.name, lookup: async (value: string) => { lookups++; return fake.lookup(value); } };
       const result = await handleSign({
         name: "Pessoa Fictícia Teste", email: `qa-sign@${domain}`, cpf,
-        category: "servidor", institution: EBSERH.name, role: "tae", regionDeclared: false, consent: true,
+        category: "servidor", institution: EBSERH.name, role: "tae", ebserhUnitId: "sede", regionDeclared: false, consent: true,
       }, { ip: `203.0.113.${90 + i}` }, provider);
       assert.equal(result.status, 422, JSON.stringify(result.json));
       assert.equal(result.json.errorCode, "mail_blocked", "do not weaken the existing QA send guard");
-      assert.equal(await institutionalKind(`qa-sign@${domain}`), "governo", "EBSERH is not relabeled as an IFES");
+      assert.equal(await institutionalKind(`qa-sign@${domain}`), "federal", "EBSERH mantém classificação federal e não é rotulada como IFES");
     }
     assert.equal(lookups, 2, "EBSERH email does not bypass CPF/name validation");
     const rows = (await db.query<{ email: string; email_domain_kind: string; institution: string }>(

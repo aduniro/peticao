@@ -13,6 +13,7 @@ import { suggestEmail } from "@/lib/email-typos";
 import { emailSuggestionForCategory } from "@/lib/email-feedback";
 import { diagnosticar, detalheDeSugestao, type Diagnostico } from "@/lib/email-diagnostico";
 import { CountryUniversityFields, IfesCampusFields, UfCityFields, type ServerState } from "./GeoFields";
+import { findEbserhUnit } from "@/lib/ebserh-units";
 import { maskCpf } from "@/lib/cpf-mask";
 import { showCpfError } from "@/lib/cpf-feedback";
 import { supporterEmailSuggestion } from "@/lib/supporter-email-suggestion";
@@ -30,7 +31,7 @@ declare global { interface Window { turnstile?: { render: (el: HTMLElement, o: R
 
 type Body = Record<string, unknown>;
 type Category = "servidor" | "apoiador" | "estrangeiro";
-const EMPTY_SERVER: ServerState = { institution: "", ifes: null, role: "", campus: "", campusIbge: null, region: false };
+const EMPTY_SERVER: ServerState = { institution: "", ifes: null, role: "", campus: "", campusIbge: null, region: false, ebserhUnit: "", ebserhUnitId: null };
 function institutionFromVerdict(value: unknown): InstitutionDomainMatch | null {
   if (!value || typeof value !== "object") return null;
   const item = value as Record<string, unknown>;
@@ -94,13 +95,17 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   const cpfBad = showCpfError(cpf, cpfTouched); // checagem matemática no navegador: CPF inválido nunca chega à CPF Brasil
   const [srv, setSrv] = useState<ServerState>(EMPTY_SERVER);
   const updateServer = (patch: Partial<ServerState>) => {
-    setSrv((previous) => ({ ...previous, ...patch }));
+    setSrv((previous) => {
+      const next = { ...previous, ...patch };
+      return next.ifes?.id === "org:ebserh" ? next : { ...next, ebserhUnit: "", ebserhUnitId: null };
+    });
     const institution = patch.institution ?? srv.institution;
     const selected = patch.ifes === undefined ? srv.ifes : patch.ifes;
     const validInstitution = matchesInstitutionSelection(institution, selected);
     const validCampus = !!patch.campusIbge && !!selected && [selected.m, ...selected.c].includes(patch.campusIbge);
-    if ((errors.institution && validInstitution) || (errors.campus && validCampus)) {
-      setErrors((previous) => ({ ...previous, ...(validInstitution ? { institution: "" } : {}), ...(validCampus ? { campus: "" } : {}) }));
+    const validUnit = selected?.id === "org:ebserh" && !!findEbserhUnit(patch.ebserhUnitId ?? "");
+    if ((errors.institution && validInstitution) || (errors.campus && validCampus) || (validUnit && (errors.ebserhUnitId || errors.region))) {
+      setErrors((previous) => ({ ...previous, ...(validInstitution ? { institution: "" } : {}), ...(validCampus ? { campus: "" } : {}), ...(validUnit ? { ebserhUnitId: "", campus: "", region: "" } : {}) }));
     }
   };
   const verifiedEmailInstitution = category === "servidor" && emailInstitution?.email === emailMask(emailV, true) ? emailInstitution.value : null;
@@ -189,6 +194,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     if (institutionMismatch && recognizedEmailInstitution) { showFieldNotice({ institution: "institution_email_mismatch" }); setMsg(""); return; }
     if ((category === "servidor" || category === "apoiador") && !isValidCpf(cpf)) { const error = t("err.cpf_invalid"); setErrors({ cpf: error }); showFieldNotice({ cpf: error }); setMsg(""); return; } // não envia nada: nem ao servidor, nem à CPF Brasil
     if (category === "servidor" && !matchesInstitutionSelection(srv.institution, srv.ifes)) { const error = t("err.ifes_required"); setErrors({ institution: error }); showFieldNotice({ institution: error }); setMsg(""); return; }
+    if (category === "servidor" && srv.ifes?.id === "org:ebserh" && !findEbserhUnit(srv.ebserhUnitId ?? "")) { const error = t("err.campus_required"); setErrors({ ebserhUnitId: error }); showFieldNotice({ ebserhUnitId: "campus_required" }); setMsg(""); return; }
     if (category === "servidor" && srv.region && !srv.campus.trim() && !srv.campusIbge) { const error = t("err.campus_required"); setErrors({ campus: error }); showFieldNotice({ campus: "campus_required" }); setMsg(""); return; }
     setState("sending"); setErrors({}); setMsg("");
     if (category === "servidor") {
@@ -211,7 +217,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       }
     }
     const body: Body = { name: nameMask(nameV, true), email: emailMask(emailV, true), category, consent: f.get("consent") === "on", website: f.get("website"), turnstileToken: tsToken.current, locale: lang };
-    if (category === "servidor") Object.assign(body, { cpf, institution: srv.ifes!.s, role: srv.role, campus: srv.campus, campusIbge: srv.campusIbge, regionDeclared: srv.region });
+    if (category === "servidor") Object.assign(body, { cpf, institution: srv.ifes!.s, role: srv.role, campus: srv.campus, campusIbge: srv.campusIbge, regionDeclared: srv.region, ebserhUnitId: srv.ifes?.id === "org:ebserh" ? srv.ebserhUnitId ?? null : null });
     else if (category === "apoiador") Object.assign(body, { cpf, uf, city });
     else Object.assign(body, { country, university });
     if (whatsappAtivo && wa.numero.trim()) Object.assign(body, { whatsapp: { ddi: wa.ddi, numero: wa.numero }, whatsappConsent: waConsent });

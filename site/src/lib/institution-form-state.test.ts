@@ -1,6 +1,7 @@
 import test from "node:test";
+import { EBSERH_UNITS, findEbserhUnit } from "./ebserh-units";
 import assert from "node:assert/strict";
-import { allInstitutionCampiInAmazonia, institutionAutofill, institutionMatchesDomain, type InstitutionDomainMatch } from "./institution-form-state";
+import { allInstitutionCampiInAmazonia, ebserhUnitSelection, institutionAutofill, institutionMatchesDomain, type InstitutionDomainMatch } from "./institution-form-state";
 import { matchesInstitutionSelection, rank, institutionSearchText, type Ifes } from "./datasets-client";
 import { formValidationNotice } from "./form-validation-notice";
 import { resolveInstitutionForEmail, type InstitutionDomainRule } from "./institution-domain-policy";
@@ -75,5 +76,26 @@ test("domínios reais do resolver: dois domínios e subdomínio, regra específi
   }
   for (const email of ["pessoa@fakeunir.br", "pessoa@unir.br.evil.example", "pessoa@bloqueado.unir.br"]) {
     assert.equal(resolveInstitutionForEmail(email, rules), null, email);
+  }
+});
+
+test("lotação EBSERH deriva cidade e região de hospital/sede, limpando o anterior", () => {
+  const geo = { al: new Set([1302603]), ff: new Set([5002704]) };
+  const unit = { id: "hospital-manaus", acronym: "hugv-ufam", city: "Manaus", municipalityIbge: 1302603 };
+  assert.deepEqual(ebserhUnitSelection(unit, geo), { ebserhUnit: "HUGV-UFAM", ebserhUnitId: unit.id, campus: "Manaus", campusIbge: 1302603, region: true });
+  assert.equal(ebserhUnitSelection({ ...unit, municipalityIbge: 5002704 }, geo).region, true);
+  const sede = ebserhUnitSelection({ ...unit, id: "sede", city: "Brasília", municipalityIbge: 5300108 }, geo);
+  assert.equal(sede.region, false);
+  assert.equal(sede.campus, "Brasília");
+  assert.deepEqual(ebserhUnitSelection(null, geo), { ebserhUnit: "", ebserhUnitId: null, campus: "", campusIbge: null, region: false });
+});
+
+test("catálogo EBSERH oferece 48 unidades, inclui sede e busca por nome, sigla ou cidade", () => {
+  assert.equal(EBSERH_UNITS.length, 48);
+  assert.equal(new Set(EBSERH_UNITS.map((u) => u.id)).size, 48);
+  assert.equal(findEbserhUnit("sede")?.municipalityIbge, 5300108);
+  for (const query of ["HUGV", "Getúlio Vargas", "Manaus"]) {
+    const options = rank([...EBSERH_UNITS], query, (u) => `${u.acronym} ${u.name} ${u.city} ${u.uf}`, 60);
+    assert.ok(options.some((u) => u.id === "hugv-ufam"), query);
   }
 });

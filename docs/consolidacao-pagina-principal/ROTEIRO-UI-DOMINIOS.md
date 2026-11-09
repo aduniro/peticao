@@ -54,3 +54,11 @@ O e-mail é validado com o binding atual do banco: domínio alternativo aprovado
 Validação focada adicional:23testes rápidos sem rede passaram, além de teste separado em PostgreSQL17 fictício e rede interna exclusiva (1/1). Esse teste insere um domínio novo com FK da UNIR, valida um subdomínio, rejeita-o depois e confirma que eb.mil.br com kind legado ifes continua bloqueado. Containers e rede temporários foram removidos. Log: /mnt/apps/peticao-final/peticao/.cache/siglas-dominios-20261109/mec-live-db-test.log.
 
 A busca de instituições inclui os aliases na mesma ordenação existente; digitar IFFarroupilha continua mostrando a sigla oficial, sem mudança de rótulos, fontes ou estrutura do dropdown.
+
+## Lotação EBSERH por hospital/unidade
+
+Implementado no componente /mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109/site/src/components/GeoFields.tsx: seletor obrigatório sempre visível para EBSERH, com 48 unidades (47 hospitais e sede). A seta abre a lista completa; digitação pesquisa sigla, nome e cidade. A lista utiliza sigla em maiúsculas e nome completo como dica, preservando o Combobox e os estilos existentes. O rótulo reutiliza “Lotado em:” e a cidade reutiliza “Cidade”, sem novos textos.
+
+A escolha preenche cidade/UF somente leitura e campus/IBGE pelo ID da unidade; a caixa regional corresponde ao município selecionado. Manaus marca a região, Brasília/sede não marca. Trocar instituição limpa unidade e cidade. O backend deve resolver novamente o ID, sem confiar na cidade do navegador.
+
+Validação rápida: 9/9 testes do módulo /mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109/site/src/lib/institution-form-state.test.ts passaram, incluindo catálogo completo, busca, sede, Amazônia Legal, fronteira e limpeza; TypeScript --noEmit --incremental false passou. Testes de navegador e fluxo API ficam sob coordenação do agente principal e QA antes de qualquer publicação.

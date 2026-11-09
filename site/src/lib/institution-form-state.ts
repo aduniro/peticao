@@ -36,3 +36,14 @@ export function allInstitutionCampiInAmazonia(institution: Ifes | null, amazonia
   const places = [...new Set([institution.m, ...institution.c])];
   return places.length > 0 && places.every((id) => amazoniaMunicipalities.has(id));
 }
+
+/** Hospital/unidade identifica a lotação; o backend deriva os mesmos dados novamente pelo ID. */
+export function ebserhUnitSelection(unit: { id: string; acronym: string; city: string; municipalityIbge: number } | null, geo: { al: ReadonlySet<number>; ff: ReadonlySet<number> } | null) {
+  return {
+    ebserhUnit: unit?.acronym.toUpperCase() ?? "",
+    ebserhUnitId: unit?.id ?? null,
+    campus: unit?.city ?? "",
+    campusIbge: unit?.municipalityIbge ?? null,
+    region: !!unit && !!geo && (geo.al.has(unit.municipalityIbge) || geo.ff.has(unit.municipalityIbge)),
+  };
+}

@@ -1,4 +1,5 @@
 import ifesDomains from "./ifes-domains.json";
+import { EBSERH_UNITS } from "./ebserh-units";
 import institutionRegistry from "../../public/data/institution-registry.json";
 import { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
 import { createHash } from "node:crypto";
@@ -9,6 +10,18 @@ import { newVerifyCode } from "./verify-code";
 const g = globalThis as unknown as { __pool?: Pool | null; __ready?: Promise<void> | null };
 
 const SCHEMA_SQL = `
+  CREATE TABLE IF NOT EXISTS ebserh_units (
+    id TEXT PRIMARY KEY,
+    acronym TEXT NOT NULL,
+    name TEXT NOT NULL,
+    municipality_ibge INTEGER NOT NULL CHECK(municipality_ibge BETWEEN 1000000 AND 9999999),
+    city TEXT NOT NULL,
+    uf TEXT NOT NULL CHECK(length(uf)=2),
+    type TEXT NOT NULL CHECK(type IN ('hospital','hospital_componente','sede')),
+    parent_id TEXT,
+    evidence_url TEXT NOT NULL,
+    UNIQUE(id,municipality_ibge)
+  );
   CREATE TABLE IF NOT EXISTS signatures (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
@@ -139,6 +152,20 @@ const SCHEMA_SQL = `
   ALTER TABLE signatures DROP CONSTRAINT IF EXISTS signatures_category_check;
   ALTER TABLE signatures ADD CONSTRAINT signatures_category_check CHECK (category IN ('servidor','apoiador','estrangeiro'));
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS city_ibge INTEGER;
+  ALTER TABLE signatures ADD COLUMN IF NOT EXISTS ebserh_unit_id TEXT REFERENCES ebserh_units(id);
+  DO $ebserh_constraints$
+  BEGIN
+    IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='signatures'::regclass AND conname='signatures_ebserh_unit_city_fk') THEN
+      ALTER TABLE signatures ADD CONSTRAINT signatures_ebserh_unit_city_fk
+        FOREIGN KEY(ebserh_unit_id,city_ibge) REFERENCES ebserh_units(id,municipality_ibge);
+    END IF;
+    ALTER TABLE signatures DROP CONSTRAINT IF EXISTS signatures_ebserh_category_check;
+    IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='signatures'::regclass AND conname='signatures_ebserh_category_check_v2') THEN
+      ALTER TABLE signatures ADD CONSTRAINT signatures_ebserh_category_check_v2
+        CHECK(ebserh_unit_id IS NULL OR (category='servidor' AND institution IS NOT DISTINCT FROM 'EBSERH' AND city_ibge IS NOT NULL));
+    END IF;
+  END;
+  $ebserh_constraints$;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS ifes_acronym TEXT;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS institution_listed BOOLEAN;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS campus TEXT;
@@ -308,6 +335,20 @@ export async function seedIfesDomains(): Promise<void> {
   }
 }
 
+/** Catálogo público de47 hospitais e sede; carga idempotente, sem vínculo com cadastros pessoais. */
+export async function seedEbserhUnits(): Promise<void> {
+  await getPool().query(
+    `INSERT INTO ebserh_units(id,acronym,name,municipality_ibge,city,uf,type,parent_id,evidence_url)
+     SELECT id,acronym,name,"municipalityIbge",city,uf,type,"parentId","evidenceUrl"
+     FROM jsonb_to_recordset($1::jsonb) AS u(id text,acronym text,name text,"municipalityIbge" integer,
+       city text,uf text,type text,"parentId" text,"evidenceUrl" text)
+     ON CONFLICT(id) DO UPDATE SET acronym=EXCLUDED.acronym,name=EXCLUDED.name,
+       municipality_ibge=EXCLUDED.municipality_ibge,city=EXCLUDED.city,uf=EXCLUDED.uf,
+       type=EXCLUDED.type,parent_id=EXCLUDED.parent_id,evidence_url=EXCLUDED.evidence_url`,
+    [JSON.stringify(EBSERH_UNITS)]
+  );
+}
+
 /** Catálogo de relações verificadas: um registro por domínio e FK estável por instituição.
  * Não transforma hostname de site em autorização de e-mail. Decisões manuais rejeitadas
  * e associações alheias ao catálogo são preservadas em cada reexecução.
@@ -371,6 +412,7 @@ function init(): Promise<void> {
   if (!g.__ready) {
     g.__ready = getPool()
       .query(SCHEMA_SQL)
+      .then(() => seedEbserhUnits())
       .then(() => seedIfesDomains())
       .then(() => seedInstitutionRegistry())
       .then(() => backfillSignatureIds())

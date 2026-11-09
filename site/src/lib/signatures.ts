@@ -5,6 +5,7 @@ import { isValidCpf, onlyDigits } from "./cpf";
 import { UFS, findByName, findMunicipality, regionCriteria, regionOf } from "./geo-data";
 import { findIfes, ifesEligible, allCampiInAmazonia, regionCampusIds, resolveCampus } from "./ifes-data";
 import { isCountryCode } from "@/i18n/countries";
+import { findEbserhUnit } from "./ebserh-units";
 import { hmac, newToken, normalizeEmail, sha256 } from "./security";
 import { titleCaseName, lowerEmail } from "./name-case";
 import { sendMail } from "./mail";
@@ -37,6 +38,7 @@ export type SignInput = {
   campus?: string;
   campusIbge?: number | null;
   campusListed?: boolean;
+  ebserhUnitId?: string | null;
   regionDeclared?: boolean;
   regionValidated?: boolean;
   regionCriteria?: string | null;
@@ -78,6 +80,28 @@ export class InstitutionEmailMismatchError extends Error {
   constructor() { super("institution_email_mismatch"); this.name = "InstitutionEmailMismatchError"; }
 }
 
+export class EbserhUnitValidationError extends Error {
+  constructor(public readonly errors: Record<string, string>) {
+    super("ebserh_unit_invalid"); this.name = "EbserhUnitValidationError";
+  }
+}
+
+/** Unidade é a única origem de hospital/cidade; campos geográficos enviados pelo cliente são ignorados. */
+function applyEbserhSelection(value: SignInput, raw: any, errors: Record<string, string>): void {
+  const unit = findEbserhUnit(raw?.ebserhUnitId);
+  if (!unit) { errors.campus = raw?.ebserhUnitId ? "campus_invalid" : "campus_required"; return; }
+  const region = regionOf(unit.municipalityIbge);
+  const inRegion = region.amazoniaLegal || region.faixaFronteira;
+  const declared = inRegion || raw?.regionDeclared === true;
+  Object.assign(value, {
+    ebserhUnitId: unit.id, campus: unit.city, campusIbge: unit.municipalityIbge, campusListed: true,
+    city: unit.city, uf: unit.uf, cityIbge: unit.municipalityIbge,
+    regionDeclared: declared, regionValidated: declared && inRegion,
+    regionCriteria: declared && inRegion ? regionCriteria(region) : null,
+  });
+  if (declared && !inRegion) errors.region = "region_not_eligible";
+}
+
 export function validate(raw: any, binding?: { institutionMatch: InstitutionDomainMatch | null }): ValidationResult {
   const errors: Record<string, string> = {};
   const name = titleCaseName(clean(raw?.name, 120), { final: true }); // "mAria DA sILVA" → "Maria da Silva"
@@ -92,6 +116,7 @@ export function validate(raw: any, binding?: { institutionMatch: InstitutionDoma
   if ((category === "servidor" || category === "apoiador") && !isValidCpf(cpf)) errors.cpf = "cpf_invalid";
 
   const v: SignInput = { name, email, category, consent: true };
+  if (raw?.ebserhUnitId != null && raw.ebserhUnitId !== "" && (category !== "servidor" || findIfes(clean(raw?.institution, 160))?.id !== "org:ebserh")) errors.campus = "campus_not_in_ifes";
   if (category === "servidor") {
     const text = clean(raw?.institution, 160);
     const ifes = findIfes(text);
@@ -111,31 +136,35 @@ export function validate(raw: any, binding?: { institutionMatch: InstitutionDoma
     // O cargo (docente ou técnico-administrativo) é obrigatório para todo servidor, esteja ou não lotado na região.
     if (raw?.role !== "docente" && raw?.role !== "tae") errors.role = "role_required";
     else v.role = raw.role;
-    // O campus de quem não se declara lotado na região (ex.: IFRS Ibirubá, fora da faixa de fronteira) também é gravado, desde que conste na lista da instituição: aí é só informação, nunca vira "lotação na região".
-    const campusText = clean(raw?.campus, 120);
-    const picked = Number(raw?.campusIbge) || null;
-    if (declared && !campusText && !picked) errors.campus = "campus_required";
-    let placeIbge: number | null = ifes?.m ?? null; // sem campus informado, vale a sede da IFES
-    if (campusText || picked) {
-      const rc = resolveCampus(ifes, campusText, picked);
-      if (!rc) { if (declared) errors.campus = "campus_invalid"; } // sem declaração de região o campus é opcional: valor ilegível é ignorado, não barra a assinatura
-      else if (!declared && !rc.listed) { /* sem declarar a região, só se grava campus que conste na lista da instituição; texto livre/outro município é ignorado */ }
-      else { v.campus = rc.name; v.campusIbge = rc.ibge; v.campusListed = rc.listed; placeIbge = rc.ibge; }
-    }
-    // Checkbox "lotado na Amazônia Legal / faixa de fronteira": só vale para instituição federal da lista com sede ou campus na região (listas do IBGE)
-    // e para um campus dessa instituição que esteja na região.
-    const reg = regionOf(placeIbge);
-    v.regionDeclared = declared;
-    const campusInRegion = !!v.campusIbge && regionCampusIds(ifes).includes(v.campusIbge);
-    v.regionValidated = declared && !!ifes && ifesEligible(ifes) && !!v.campusListed && campusInRegion && (reg.amazoniaLegal || reg.faixaFronteira);
-    v.regionCriteria = v.regionValidated ? regionCriteria(reg) : null;
-    // Todas as localidades na Amazônia Legal: caixa automática também no servidor;
-    // lotação continua obrigatória e é conferida nas localidades da instituição.
-    if (declared) {
-      if (!ifes || !ifesEligible(ifes)) errors.region = "region_ifes_not_eligible";
-      else {
-        if (!errors.campus && v.campusIbge && !v.campusListed) errors.campus = "campus_not_in_ifes"; // o campus escolhido não é da instituição
-        if (!v.regionValidated) errors.region = "region_not_eligible"; // ou não está na Amazônia Legal/faixa de fronteira
+    if (ifes?.id === "org:ebserh") {
+      applyEbserhSelection(v, raw, errors);
+    } else {
+      // O campus de quem não se declara lotado na região (ex.: IFRS Ibirubá, fora da faixa de fronteira) também é gravado, desde que conste na lista da instituição: aí é só informação, nunca vira "lotação na região".
+      const campusText = clean(raw?.campus, 120);
+      const picked = Number(raw?.campusIbge) || null;
+      if (declared && !campusText && !picked) errors.campus = "campus_required";
+      let placeIbge: number | null = ifes?.m ?? null; // sem campus informado, vale a sede da IFES
+      if (campusText || picked) {
+        const rc = resolveCampus(ifes, campusText, picked);
+        if (!rc) { if (declared) errors.campus = "campus_invalid"; } // sem declaração de região o campus é opcional: valor ilegível é ignorado, não barra a assinatura
+        else if (!declared && !rc.listed) { /* sem declarar a região, só se grava campus que conste na lista da instituição; texto livre/outro município é ignorado */ }
+        else { v.campus = rc.name; v.campusIbge = rc.ibge; v.campusListed = rc.listed; placeIbge = rc.ibge; }
+      }
+      // Checkbox "lotado na Amazônia Legal / faixa de fronteira": só vale para instituição federal da lista com sede ou campus na região (listas do IBGE)
+      // e para um campus dessa instituição que esteja na região.
+      const reg = regionOf(placeIbge);
+      v.regionDeclared = declared;
+      const campusInRegion = !!v.campusIbge && regionCampusIds(ifes).includes(v.campusIbge);
+      v.regionValidated = declared && !!ifes && ifesEligible(ifes) && !!v.campusListed && campusInRegion && (reg.amazoniaLegal || reg.faixaFronteira);
+      v.regionCriteria = v.regionValidated ? regionCriteria(reg) : null;
+      // Todas as localidades na Amazônia Legal: caixa automática também no servidor;
+      // lotação continua obrigatória e é conferida nas localidades da instituição.
+      if (declared) {
+        if (!ifes || !ifesEligible(ifes)) errors.region = "region_ifes_not_eligible";
+        else {
+          if (!errors.campus && v.campusIbge && !v.campusListed) errors.campus = "campus_not_in_ifes"; // o campus escolhido não é da instituição
+          if (!v.regionValidated) errors.region = "region_not_eligible"; // ou não está na Amazônia Legal/faixa de fronteira
+        }
       }
     }
   } else if (category === "apoiador") {
@@ -204,11 +233,19 @@ export function reenvioMail(name: string, token: string, startedIso?: string) {
  * A resposta é sempre a mesma para quem já assinou, para não revelar quem consta na lista.
  */
 export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = {}): Promise<void> {
+  if (input.ebserhUnitId != null && (input.category !== "servidor" || findIfes(input.institution ?? "")?.id !== "org:ebserh")) {
+    throw new EbserhUnitValidationError({ campus: "campus_not_in_ifes" });
+  }
   if (input.category === "servidor") {
     const selected = findIfes(input.institution ?? "");
     const matched = await resolveRegisteredInstitution(input.email);
     if (!selected?.id || !matched || selected.id !== matched.institutionId) throw new InstitutionEmailMismatchError();
     input = { ...input, institution: matched.acronym, ifesListed: true };
+    if (selected.id === "org:ebserh") {
+      const errors: Record<string, string> = {};
+      applyEbserhSelection(input, input, errors);
+      if (Object.keys(errors).length) throw new EbserhUnitValidationError(errors);
+    }
   }
   const foreign = input.category === "estrangeiro";
   const emailHash = hmac(dedupEmail(input.email)); // Gmail: pontos e +etiqueta contam como o mesmo e-mail
@@ -243,6 +280,7 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
     cpf_name_check: extra.nameCheck && extra.nameCheck !== "nao_verificado" ? extra.nameCheck : null, visitor_id: meta.visitorId ?? null, ref_code: refCode,
     email_domain: inst.domain, email_institution: inst.institution, city_ibge: input.cityIbge ?? null,
     ifes_acronym: input.category === "servidor" && input.ifesListed ? input.institution : null, institution_listed: input.category === "servidor" ? !!input.ifesListed : null,
+    ebserh_unit_id: input.ebserhUnitId ?? null,
     campus: input.campus ?? null, campus_ibge: input.campusIbge ?? null, campus_listed: input.category === "servidor" && input.campus ? !!input.campusListed : null,
     region_declared: input.category === "servidor" ? !!input.regionDeclared : null, region_validated: input.category === "servidor" ? !!input.regionValidated : null,
     region_criteria: input.regionCriteria ?? null,
