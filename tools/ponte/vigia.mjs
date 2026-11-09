@@ -1,5 +1,5 @@
 // Vigia da caixa da ponte (ponte@painel.sancionaintegral.org): imprime UMA linha JSON para cada e-mail NOVO enviado pelo dono, para a sessão do Claude reagir.
-// Uso: node /mnt/dev/peticao/tools/ponte/vigia.mjs        (fica rodando; consulta a caixa a cada 60 s)
+// Uso: node /mnt/apps/peticao-final/peticao/tools/ponte/vigia.mjs        (fica rodando; consulta a caixa a cada 60 s)
 // Só passam e-mails do dono (os 3 endereços de dono.mjs) com DKIM aprovado do MESMO domínio do endereço do remetente.
 // Bounces, avisos do SendPulse e qualquer outro remetente são ignorados. O estado (o que já foi visto) fica em .cache/ponte/vigia.json.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
