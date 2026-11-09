@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { brasilia } from "@/lib/time";
 import { listarEntregas, type Situacao } from "@/lib/mail/entregas";
 
@@ -9,7 +10,9 @@ const SIT: Record<Situacao, string> = { clicou: "Clicou", abriu: "Abriu", entreg
 type SP = { busca?: string; situacao?: string; cadastro?: string; categoria?: string; provedor?: string; pagina?: string };
 
 export default async function Entregas({ searchParams }: { searchParams: SP }) {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
   const pagina = Math.max(1, Number(searchParams.pagina) || 1);
   const f = { busca: searchParams.busca ?? "", situacao: searchParams.situacao ?? "", cadastro: searchParams.cadastro ?? "", categoria: searchParams.categoria ?? "", provedor: searchParams.provedor ?? "" };
   const r = await listarEntregas({ ...f, pagina, limite: 50 });
@@ -17,7 +20,8 @@ export default async function Entregas({ searchParams }: { searchParams: SP }) {
   const qs = (extra: Record<string, string>) => new URLSearchParams(Object.entries({ ...f, ...extra }).filter(([, v]) => v)).toString();
   const t = (v: string) => (v ? brasilia(v) : "—");
   return (
-    <main>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <p><a href="/admin/emails">← E-mails</a></p>
       <h1>Entregas por pessoa</h1>
       <p className="small">Cada linha é um endereço que recebeu e-mail, com a situação (entregue, aberto, clicado, devolvido) e os dados do cadastro, para contato pela ADUNIR e pelo sindicato. <strong>O CPF não aparece aqui.</strong> Quem não tem cadastro (contato, avisos) fica sem nome.</p>
@@ -53,6 +57,7 @@ export default async function Entregas({ searchParams }: { searchParams: SP }) {
       <p>
         {pagina > 1 && <a href={`?${qs({ pagina: String(pagina - 1) })}`}>← Anterior</a>} {pagina < paginas && <a href={`?${qs({ pagina: String(pagina + 1) })}`}>Próxima →</a>}
       </p>
+    </div>
     </main>
   );
 }

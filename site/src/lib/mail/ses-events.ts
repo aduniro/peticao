@@ -2,6 +2,8 @@ import { createVerify } from "node:crypto";
 import { storeEvents, sesToEvents } from "./events";
 import { storeEngagement, sesToEngajamento } from "./engajamento";
 import { suppress } from "./suppression";
+import { recordMessageEvents } from "./message-events";
+import { sesMessageEvents } from "./ses-message-events";
 
 /** Mensagem do Amazon SNS (campos usados na assinatura variam por tipo). */
 export type SnsMessage = Record<string, string> & { Type: string };
@@ -95,6 +97,8 @@ export async function handleSns(m: SnsMessage, deps: { getCert?: (u: string) => 
     for (const s of list) await suppress(s.email, s.reason, s.detail);
     await storeEvents(sesToEvents(ev)).catch(() => {}); // também entra no painel de e-mails (permanentes e transitórios)
     await storeEngagement(sesToEngajamento(ev)).catch(() => {}); // entrega, abertura e clique (quando o conjunto publica esses eventos)
+    // A journal failure propagates to the existing HTTP 500 handler, so SNS retries. Suppression is already preserved.
+    await recordMessageEvents(sesMessageEvents(ev,topic));
     return { status: 200, body: `${list.length} endereço(s) bloqueado(s)` };
   }
   return { status: 200, body: "ignorada" };

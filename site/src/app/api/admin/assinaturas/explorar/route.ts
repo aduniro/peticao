@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exigirAdmin } from "@/lib/admin-api";
+import { exigirNivel } from "@/lib/admin-api";
 import { explorar, linhas, parseFiltros } from "@/lib/assinaturas-explorar";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ const csv = (v: unknown) => { let s = String(v ?? ""); if (/^[=+\-@\t\r]/.test(s
 
 /** Filtros combináveis (mapa, tabela, facetas e totais saem da mesma consulta). `?formato=csv` baixa o filtro atual (sem e-mail nem CPF). */
 export async function GET(req: NextRequest) {
-  const bloqueio = exigirAdmin(req, 240);
+  const bloqueio = await exigirNivel(req, "leitura", 240);
   if (bloqueio) return bloqueio;
   const sp = req.nextUrl.searchParams;
   const f = parseFiltros(sp);

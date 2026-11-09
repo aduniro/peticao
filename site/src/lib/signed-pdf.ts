@@ -1,3 +1,5 @@
+import { readLimitedText } from "./http-body";
+
 /**
  * PDF assinado pelo responsável (e-CNPJ da ADUNIR, no Adobe/LibreOffice/Assinador do ITI) e reenviado ao site.
  * Verificações ESTRUTURAIS locais abaixo. A validação criptográfica da cadeia ICP-Brasil é um serviço plugável
@@ -28,7 +30,14 @@ export function checkSignedPdf(original: Buffer, uploaded: Buffer): StructCheck 
   return { ok: reasons.length === 0, reasons, signatures: ranges.length };
 }
 
-export type IcpResult = { valid: boolean; signer?: string; reason?: string };
+export type IcpResult = { valid: boolean; signer?: string; reason?: string; code?: "validator_response_invalid" | "validator_identity_missing" | "validator_expected_identity_invalid" };
+const INVALID_RESPONSE = "Assinatura inválida segundo o validador.";
+const MAX_VALIDATOR_RESPONSE_BYTES = 64 * 1024;
+function normalizedCnpj(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  return /^(?:[0-9]{14}|[0-9]{2}\.[0-9]{3}\.[0-9]{3}\/[0-9]{4}-[0-9]{2})$/.test(text) ? text.replace(/\D/g, "") : null;
+}
 
 /** Valida a cadeia ICP-Brasil num serviço externo. POST application/pdf → { valid, signer?, cnpj? }. */
 export async function verifyIcpBrasil(pdf: Buffer, fetchImpl: typeof fetch = fetch): Promise<IcpResult> {
@@ -37,10 +46,21 @@ export async function verifyIcpBrasil(pdf: Buffer, fetchImpl: typeof fetch = fet
   try {
     const r = await fetchImpl(url, { method: "POST", headers: { "content-type": "application/pdf", ...(process.env.ICP_VALIDATOR_TOKEN ? { authorization: `Bearer ${process.env.ICP_VALIDATOR_TOKEN}` } : {}) }, body: new Uint8Array(pdf), signal: AbortSignal.timeout(30_000) });
     if (!r.ok) return { valid: false, reason: `Validador respondeu ${r.status}.` };
-    const j = (await r.json()) as { valid?: boolean; signer?: string; cnpj?: string };
-    const want = (process.env.ICP_EXPECTED_CNPJ ?? "15883671000115").replace(/\D/g, ""); // CNPJ da ADUNIR
-    if (j.valid && j.cnpj && j.cnpj.replace(/\D/g, "") !== want) return { valid: false, reason: "A assinatura é válida, mas não é do e-CNPJ da ADUNIR." };
-    return { valid: !!j.valid, signer: j.signer, reason: j.valid ? undefined : "Assinatura inválida segundo o validador." };
+    const body = await readLimitedText(r, MAX_VALIDATOR_RESPONSE_BYTES);
+    if (!body.ok) return { valid: false, reason: INVALID_RESPONSE, code: "validator_response_invalid" };
+    let parsed: unknown;
+    try { parsed = JSON.parse(body.raw); } catch { return { valid: false, reason: INVALID_RESPONSE, code: "validator_response_invalid" }; }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return { valid: false, reason: INVALID_RESPONSE, code: "validator_response_invalid" };
+    const j = parsed as Record<string, unknown>;
+    if (typeof j.valid !== "boolean" || Object.hasOwn(j, "signer") && (typeof j.signer !== "string" || j.signer.length > 500 || /[\u0000-\u001f\u007f]/.test(j.signer)) || Object.hasOwn(j, "cnpj") && normalizedCnpj(j.cnpj) === null) return { valid: false, reason: INVALID_RESPONSE, code: "validator_response_invalid" };
+    if (j.valid !== true) return { valid: false, signer: j.signer as string | undefined, reason: INVALID_RESPONSE };
+    // A1 e-CNPJ ADUNIR was explicitly confirmed by the owner on 09/11/2026.
+    // A positive adapter verdict without the holder identity is insufficient.
+    if (!Object.hasOwn(j, "cnpj")) return { valid: false, reason: INVALID_RESPONSE, code: "validator_identity_missing" };
+    const want = normalizedCnpj(process.env.ICP_EXPECTED_CNPJ ?? "15883671000115");
+    if (!want) return { valid: false, reason: INVALID_RESPONSE, code: "validator_expected_identity_invalid" };
+    if (normalizedCnpj(j.cnpj) !== want) return { valid: false, reason: "A assinatura é válida, mas não é do e-CNPJ da ADUNIR." };
+    return { valid: true, signer: j.signer as string | undefined, reason: undefined };
   } catch {
     return { valid: false, reason: "Validador ICP-Brasil indisponível." };
   }

@@ -13,7 +13,7 @@ const aspas = (s: string) => `'${s.replace(/'/g, "''")}'`;
 const SEDES = IFES.filter((i) => /^[A-Za-z0-9 ._()-]+$/.test(i.s)).map((i) => `WHEN ${aspas(i.s)} THEN ${Number(i.m)}`).join(" ");
 export const LOCAL_SQL = `COALESCE(s.campus_ibge, s.city_ibge, CASE s.ifes_acronym ${SEDES} END)`;
 
-function onde(f: Filtros, ignorar?: ChaveFiltro): { sql: string; params: unknown[] } {
+export function onde(f: Filtros, ignorar?: ChaveFiltro): { sql: string; params: unknown[] } {
   const w: string[] = []; const p: unknown[] = [];
   const add = (cond: string, v: unknown) => { p.push(v); w.push(cond.replace("$$", `$${p.length}`)); };
   const lista = (k: ChaveFiltro, cond: string, mapa?: (x: string) => string) => { if (k !== ignorar && f[k].length) add(cond, mapa ? f[k].map(mapa) : f[k]); };
@@ -22,10 +22,13 @@ function onde(f: Filtros, ignorar?: ChaveFiltro): { sql: string; params: unknown
   if (ignorar !== "uf" && f.uf.length) add(`LEFT(${LOCAL_SQL}::text, 2) = ANY($$::text[])`, f.uf.map((u) => CODIGO_POR_UF[u]).filter(Boolean));
   if (ignorar !== "cidade" && f.cidade.length) add(`${LOCAL_SQL} = ANY($$::int[])`, f.cidade.map(Number).filter(Number.isInteger));
   if (ignorar !== "regiao" && f.regiao.length) {
+    // Aceita os dois vocabulários: o da tela (amazonia_legal / faixa_fronteira / ambos / fora) e o curto (al / ff / fora).
+    const tem = (...v: string[]) => v.some((x) => f.regiao.includes(x));
     const c: string[] = [];
-    if (f.regiao.includes("al")) c.push("s.region_criteria IN ('amazonia_legal','ambos')");
-    if (f.regiao.includes("ff")) c.push("s.region_criteria IN ('faixa_fronteira','ambos')");
-    if (f.regiao.includes("fora")) c.push("(s.category = 'servidor' AND s.region_validated IS NOT TRUE)");
+    if (tem("al", "amazonia_legal")) c.push("s.region_criteria IN ('amazonia_legal','ambos')");
+    if (tem("ff", "faixa_fronteira")) c.push("s.region_criteria IN ('faixa_fronteira','ambos')");
+    if (tem("ambos")) c.push("s.region_criteria = 'ambos'");
+    if (tem("fora")) c.push("(s.category = 'servidor' AND s.region_validated IS NOT TRUE)");
     if (c.length) w.push(`(${c.join(" OR ")})`);
   }
   if (ignorar !== "whatsapp" && f.whatsapp.length === 1) w.push(f.whatsapp[0] === "sim" ? "s.wa_cipher IS NOT NULL" : "s.wa_cipher IS NULL");

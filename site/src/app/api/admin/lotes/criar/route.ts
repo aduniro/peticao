@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
-import { createBatch } from "@/lib/batches";
-import { requestOrigin } from "@/lib/net";
+import { exigirNivel, quemAge } from "@/lib/admin-api";
+import { createBatchForAdmin } from "@/lib/batches";
+import { readBatchFields } from "@/lib/batch-http-input";
+import { batchReturnUrl, returnsToPresident } from "@/lib/batch-return";
 
 export const dynamic = "force-dynamic";
 
 /** Fecha manualmente o lote final (acumulado). */
 export async function POST(req: NextRequest) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
-  const url = new URL("/admin/lotes", requestOrigin(req.headers));
+  const bloqueio = await exigirNivel(req, "total", 120, { stepup: true });
+  if (bloqueio) return bloqueio;
+  const actor = await quemAge(req);
+  if (!actor) return NextResponse.json({ ok: false }, { status: 401 });
+  const body = await readBatchFields(req); if (!body.ok) return new NextResponse(null, { status: body.status });
+  const url = batchReturnUrl(req);
   try {
-    const b = await createBatch("final");
+    const b = await createBatchForAdmin("final", actor);
+    if (b && returnsToPresident(req)) url.searchParams.set("lote", String(b.id));
     url.searchParams.set("msg", b ? `Lote final ${b.seq} criado.` : "Nada a fechar (já existe lote final ou não há assinaturas).");
   } catch (e) { url.searchParams.set("msg", (e as Error).message); }
   return NextResponse.redirect(url, 303);

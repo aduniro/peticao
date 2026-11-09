@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { exigirNivel } from "@/lib/admin-api";
 import { audit } from "@/lib/db";
 import { dispersionRows } from "@/lib/dispersion";
 import { esc } from "@/lib/csv";
@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 
 /** Base interna completa (INCLUI e-mail): nunca enviar às autoridades. A lista para as autoridades é /api/admin/export. */
 export async function GET(_req: NextRequest) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(_req, "edicao");
+  if (bloqueio) return bloqueio;
   const rows = await dispersionRows(50000);
   const names = new Map(rows.map((r) => [r.id, r.name]));
   await audit("export_internal_base", null, { rows: rows.length });

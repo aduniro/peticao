@@ -7,10 +7,13 @@ test("servidor: CPF obrigatório — o nome precisa conferir com o cadastro do C
   const dbmod = await import("./db"); await dbmod._openForTests("t_cpf_servidor");
   const { handleSign } = await import("./sign-flow");
   const { _setMxResolverForTests } = await import("./email-check");
-  const { mockProvider, ProviderUnavailable } = await import("./cpf-check");
+  const { ProviderUnavailable } = await import("./cpf-check");
   _setMxResolverForTests(async () => "ok");
   const ctx = { ip: "10.2.2.2", ua: "teste", locale: "pt" } as never;
-  const provider = mockProvider({ "52998224725": { nome: "MARIA DA SILVA SANTOS" }, "11144477735": { nome: "JOAO PEREIRA LIMA" } });
+  const provider = { name: "teste", lookup: async (cpf: string) => {
+    const nome = ({ "52998224725": "MARIA DA SILVA SANTOS", "11144477735": "JOAO PEREIRA LIMA" } as Record<string, string>)[cpf];
+    return nome ? { nome, mae: null, nasc: null } : null;
+  } };
   const sv = (name: string, email: string, cpf: string) => ({ name, email, cpf, category: "servidor", institution: "UNIR", role: "docente", campus: "Ji-Paraná", regionDeclared: true, consent: true });
   const count = async () => ((await dbmod.query("SELECT count(*)::int n FROM signatures")).rows[0] as any).n;
   try {

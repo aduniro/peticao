@@ -1,21 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
-import { createLabelReferrer } from "@/lib/referrals";
-import { audit } from "@/lib/db";
+import { exigirNivel, quemAge } from "@/lib/admin-api";
+import { createAdministrativeReferrer } from "@/lib/admin-referrals";
 import { requestOrigin } from "@/lib/net";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(req, "edicao");
+  if (bloqueio) return bloqueio;
+  const actor = await quemAge(req);
+  if (!actor) return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 401 });
   const f = await req.formData();
   const label = String(f.get("label") ?? "").trim();
   const url = new URL("/admin/indicacoes", requestOrigin(req.headers));
   if (label.length < 2) url.searchParams.set("msg", "Informe um nome para o código (ex.: Sindicato X).");
   else {
-    const r = await createLabelReferrer(label);
-    await audit("referrer_created", null, { code: r.code, label });
+    const requestId = String(f.get("requestId") ?? "");
+    const r = await createAdministrativeReferrer(label, actor, { requestId });
+    if (!r.ok) {
+      if (r.error === "request" || r.error === "conflict") return new NextResponse(null, { status: r.error === "request" ? 400 : 409 });
+      return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 403 });
+    }
     url.searchParams.set("msg", `Código criado: ${r.code}`);
+    url.searchParams.set("completedRequestId", requestId);
   }
   return NextResponse.redirect(url, 303);
 }

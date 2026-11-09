@@ -5,8 +5,12 @@
 set -euo pipefail
 DEPLOY_USER="${DEPLOY_USER:-adunir}"; HOME_DIR="${HOME_DIR:-/home/$DEPLOY_USER}"
 BARE="${BARE:-/srv/git/peticao.git}"; CHECKOUT="${CHECKOUT:-$HOME_DIR/peticao-checkout}"; STAGE="${STAGE:-$HOME_DIR/peticao-stage}"; BRANCH="${BRANCH:-producao}"
+LOCK="${PUBLICAR_DEPLOY_LOCK:-/run/lock/peticao-deploy.lock}"
+[ -f "$LOCK" ] && [ ! -L "$LOCK" ] || { echo "Instale antes deploy/23-publicacao-segura.sh."; exit 1; }
+exec 8<"$LOCK"; flock -x 8
 git --git-dir="$BARE" rev-parse --verify -q "refs/heads/$BRANCH" >/dev/null || { echo "ramo $BRANCH não existe em $BARE"; exit 1; }
 mkdir -p "$CHECKOUT" "$STAGE/site" "$STAGE/deploy"
+ANTES="$(cat "$STAGE/VERSAO" 2>/dev/null | head -c 40 || true)"   # versão que estava no stage antes desta atualização (para listar o que mudou)
 git --git-dir="$BARE" --work-tree="$CHECKOUT" checkout -f "$BRANCH"
 git --git-dir="$BARE" --work-tree="$CHECKOUT" clean -fdq
 SHA="$(git --git-dir="$BARE" rev-parse "refs/heads/$BRANCH")"
@@ -19,5 +23,12 @@ rsync -rlc --delete --omit-dir-times "${CHOWN[@]}" \
   --exclude '.env*' --exclude /secrets --exclude /.npmrc --exclude /tsconfig.tsbuildinfo \
   "$CHECKOUT/site/" "$STAGE/site/"
 [ -d "$CHECKOUT/deploy" ] && rsync -rlc --delete --omit-dir-times "${CHOWN[@]}" "$CHECKOUT/deploy/" "$STAGE/deploy/"
-echo "$SHA" > "$STAGE/VERSAO"; [ "$(id -u)" = 0 ] && chown "$DEPLOY_USER:$DEPLOY_USER" "$STAGE/VERSAO" || true
+# VERSAO também dentro de site/: acompanha a publicação e a Central de Ações do painel mostra a versão implantada.
+for f in "$STAGE/VERSAO" "$STAGE/site/VERSAO"; do echo "$SHA" > "$f"; [ "$(id -u)" = 0 ] && chown "$DEPLOY_USER:$DEPLOY_USER" "$f" || true; done
+# MUDANCAS: o que entrou desde a versão anterior (ou as últimas 15 alterações, se não houver versão anterior); a Central de Ações mostra depois do deploy.
+{ if [ -n "$ANTES" ] && git --git-dir="$BARE" cat-file -e "$ANTES^{commit}" 2>/dev/null; then git --git-dir="$BARE" log --format='%h %s' -n 40 "$ANTES..$SHA"; else git --git-dir="$BARE" log --format='%h %s' -n 15 "$SHA"; fi; } > "$STAGE/site/MUDANCAS" || true
+[ "$(id -u)" = 0 ] && chown "$DEPLOY_USER:$DEPLOY_USER" "$STAGE/site/MUDANCAS" || true
 echo "stage atualizado para $BRANCH @ ${SHA:0:12} ($(git --git-dir="$BARE" log -1 --format=%s "$SHA" | cut -c1-70))"
+
+flock -u 8
+if [ "$(id -u)" = 0 ] && [ -x /usr/local/sbin/peticao-publicar-preparar ]; then /usr/local/sbin/peticao-publicar-preparar; fi

@@ -12,6 +12,6 @@ export function attemptLogger(m: Pick<Mail, "to">, kind: string, channel: "trans
 }
 
 /** Mensagem que foi para a fila de reenvio porque nenhum provedor conseguiu enviar. */
-export function logQueued(m: Pick<Mail, "to">, kind: string, error: string) {
-  query("INSERT INTO mail_log(kind,provider,to_addr,status,error) VALUES($1,'fila',$2,'queued',$3)", [kind, m.to.toLowerCase().slice(0, 254), error.slice(0, 300)]).catch(() => {});
+export function logQueued(m: Pick<Mail,"to">,kind:string,error:string,messageId?:string) {
+  return query("INSERT INTO mail_log(kind,provider,to_addr,status,error,message_id) VALUES($1,'fila',$2,'queued',$3,$4)",[kind,m.to.toLowerCase().slice(0,254),error.slice(0,300),messageId??null]).then(()=>{}).catch(()=>{});
 }

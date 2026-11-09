@@ -74,6 +74,18 @@ const SCHEMA_SQL = `
     at TEXT NOT NULL,
     UNIQUE (batch_id, recipient)
   );
+  CREATE TABLE IF NOT EXISTS batch_preparations (
+    batch_id INTEGER PRIMARY KEY REFERENCES batches(id),
+    snapshot TEXT NOT NULL,
+    snapshot_sha256 TEXT NOT NULL CHECK (snapshot_sha256 ~ '^[a-f0-9]{64}$'),
+    reserved_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+    lease_token TEXT,
+    lease_until TIMESTAMPTZ,
+    last_error TEXT,
+    CHECK ((lease_token IS NULL) = (lease_until IS NULL))
+  );
+
   CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS visitor_id TEXT;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS ref_code TEXT;
@@ -88,6 +100,15 @@ const SCHEMA_SQL = `
     id SERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL, kind TEXT NOT NULL, message TEXT NOT NULL,
     locale TEXT, ip_hash TEXT, mailed BOOLEAN NOT NULL DEFAULT false, mail_error TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
   );
+  CREATE TABLE IF NOT EXISTS contact_triage_jobs (
+    id SERIAL PRIMARY KEY, contact_id INTEGER NOT NULL REFERENCES contact_messages(id), revision INTEGER NOT NULL,
+    engine TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued' CHECK(status IN ('queued','running','complete','failed')),
+    requested_by TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), finished_at TIMESTAMPTZ,
+    attempts INTEGER NOT NULL DEFAULT 0, next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(), lease_token TEXT, lease_until TIMESTAMPTZ,
+    input_hash TEXT, evidence JSONB, analysis JSONB, error_code TEXT, UNIQUE(contact_id,revision)
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS contact_triage_active ON contact_triage_jobs(contact_id) WHERE status IN ('queued','running');
+  CREATE INDEX IF NOT EXISTS contact_triage_due ON contact_triage_jobs(status,next_attempt_at);
   CREATE TABLE IF NOT EXISTS email_suppressions (
     email TEXT PRIMARY KEY, reason TEXT NOT NULL CHECK (reason IN ('bounce','complaint')), detail TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -118,6 +139,8 @@ const SCHEMA_SQL = `
   CREATE INDEX IF NOT EXISTS signatures_wa_token ON signatures(wa_token_hash) WHERE wa_token_hash IS NOT NULL;
   CREATE TABLE IF NOT EXISTS whatsapp_senders (
     id SERIAL PRIMARY KEY, label TEXT NOT NULL, phone_cipher TEXT NOT NULL, phone_last4 TEXT NOT NULL, active BOOLEAN NOT NULL DEFAULT true, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+  ALTER TABLE whatsapp_senders ADD COLUMN IF NOT EXISTS revision INTEGER NOT NULL DEFAULT 1;
+  ALTER TABLE whatsapp_senders ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
   CREATE TABLE IF NOT EXISTS whatsapp_messages (
     id SERIAL PRIMARY KEY, signature_id INTEGER, kind TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', provider_id TEXT, error TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
@@ -138,6 +161,49 @@ const SCHEMA_SQL = `
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','sent','failed')), attempts INTEGER NOT NULL DEFAULT 0,
     next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(), last_error TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), sent_at TIMESTAMPTZ);
   CREATE INDEX IF NOT EXISTS mail_outbox_due ON mail_outbox(status, next_attempt_at);
+  CREATE TABLE IF NOT EXISTS mail_messages (
+    id UUID PRIMARY KEY, request_key TEXT UNIQUE, kind TEXT NOT NULL, channel TEXT NOT NULL CHECK(channel IN ('transactional','marketing')),
+    to_addr TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), status TEXT NOT NULL DEFAULT 'prepared'
+      CHECK(status IN ('prepared','sending','accepted','rejected','indeterminate','queued')),
+    content_fingerprint TEXT NOT NULL, content_state TEXT NOT NULL CHECK(content_state IN ('unavailable','stored','expired','oversize')),
+    content_cipher TEXT, content_expires_at TIMESTAMPTZ, previous_id UUID REFERENCES mail_messages(id)
+  );
+  ALTER TABLE mail_messages ADD COLUMN IF NOT EXISTS reply_to TEXT;
+  CREATE TABLE IF NOT EXISTS mail_inbound_messages (
+    id UUID PRIMARY KEY, account TEXT NOT NULL, external_key TEXT NOT NULL, content_hash TEXT NOT NULL,
+    message_key TEXT, parent_key TEXT, sender_hash TEXT NOT NULL, recipients_hash TEXT NOT NULL,
+    thread_root UUID NOT NULL REFERENCES mail_inbound_messages(id) DEFERRABLE INITIALLY DEFERRED,
+    correlation TEXT NOT NULL CHECK(correlation IN ('new','header-reference')),
+    content_cipher TEXT, received_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expires_at TIMESTAMPTZ NOT NULL, purged_at TIMESTAMPTZ,
+    UNIQUE(account,external_key)
+  );
+  CREATE INDEX IF NOT EXISTS mail_inbound_parent ON mail_inbound_messages(account,message_key);
+  CREATE INDEX IF NOT EXISTS mail_inbound_threads ON mail_inbound_messages(thread_root,created_at,id);
+  CREATE INDEX IF NOT EXISTS mail_inbound_expiry ON mail_inbound_messages(expires_at) WHERE content_cipher IS NOT NULL;
+  CREATE INDEX IF NOT EXISTS mail_messages_history ON mail_messages(created_at DESC,id);
+  CREATE INDEX IF NOT EXISTS mail_messages_to ON mail_messages(lower(to_addr),created_at DESC);
+  CREATE TABLE IF NOT EXISTS mail_message_attempts (
+    id UUID PRIMARY KEY, message_id UUID NOT NULL REFERENCES mail_messages(id), provider TEXT NOT NULL, from_addr TEXT NOT NULL,
+    state TEXT NOT NULL DEFAULT 'prepared' CHECK(state IN ('prepared','accepted','rejected','indeterminate')),
+    started_at TIMESTAMPTZ NOT NULL DEFAULT now(), finished_at TIMESTAMPTZ, provider_id TEXT, error_code TEXT
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS mail_message_attempt_active ON mail_message_attempts(message_id) WHERE state='prepared';
+  CREATE INDEX IF NOT EXISTS mail_message_attempt_history ON mail_message_attempts(message_id,started_at);
+  ALTER TABLE mail_message_attempts ADD COLUMN IF NOT EXISTS account_scope TEXT CHECK(account_scope IS NULL OR account_scope ~ '^[a-f0-9]{64}$');
+  CREATE INDEX IF NOT EXISTS mail_message_receipt ON mail_message_attempts(provider,account_scope,provider_id) WHERE provider_id IS NOT NULL;
+  CREATE TABLE IF NOT EXISTS mail_message_events (
+    id BIGSERIAL PRIMARY KEY, fingerprint TEXT NOT NULL UNIQUE,
+    provider TEXT NOT NULL, account_scope TEXT NOT NULL, provider_id TEXT NOT NULL, recipient TEXT NOT NULL,
+    event_type TEXT NOT NULL CHECK(event_type IN ('delivered','opened','clicked','hard_bounce','soft_bounce','blocked','complaint')),
+    occurred_at TIMESTAMPTZ NOT NULL, received_at TIMESTAMPTZ NOT NULL DEFAULT now(), source TEXT NOT NULL CHECK(source IN ('api','sns','webhook')),
+    association_state TEXT NOT NULL DEFAULT 'unlinked' CHECK(association_state IN ('unlinked','linked','ambiguous')),
+    message_id UUID REFERENCES mail_messages(id), attempt_id UUID REFERENCES mail_message_attempts(id)
+  );
+  CREATE INDEX IF NOT EXISTS mail_message_event_identity ON mail_message_events(provider,account_scope,provider_id,recipient);
+  CREATE INDEX IF NOT EXISTS mail_message_event_history ON mail_message_events(message_id,occurred_at DESC,id DESC) WHERE association_state='linked';
+  ALTER TABLE mail_log ADD COLUMN IF NOT EXISTS message_id UUID REFERENCES mail_messages(id);
+  ALTER TABLE mail_outbox ADD COLUMN IF NOT EXISTS message_id UUID REFERENCES mail_messages(id);
   CREATE SEQUENCE IF NOT EXISTS signature_seq;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS seq INTEGER;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS verify_code TEXT;
@@ -223,6 +289,10 @@ const SCHEMA_SQL = `
     created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'utc','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
     updated_at TEXT
   );
+  -- This overlay organizes only the admin catalog; effective policy columns stay separate.
+  ALTER TABLE institutional_domains ADD COLUMN IF NOT EXISTS admin_catalog JSONB NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(admin_catalog)='object');
+  ALTER TABLE institutional_domains ADD COLUMN IF NOT EXISTS admin_catalog_version BIGINT NOT NULL DEFAULT 1;
+  ALTER TABLE institutional_domains ADD COLUMN IF NOT EXISTS admin_archived_at TIMESTAMPTZ;
   INSERT INTO institutional_domains(domain,kind,institution,source,status,decided_by)
     VALUES ('unir.br','ifes','Fundação Universidade Federal de Rondônia','manual','approved','semente')
     ON CONFLICT (domain) DO NOTHING;
@@ -259,6 +329,204 @@ const SCHEMA_SQL = `
     signature_id INTEGER UNIQUE REFERENCES signatures(id) ON DELETE SET NULL,
     created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'utc','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
   );
+  -- Administrative catalog state only: public referral links remain valid.
+  ALTER TABLE referrers ADD COLUMN IF NOT EXISTS admin_version BIGINT NOT NULL DEFAULT 1;
+  ALTER TABLE referrers ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
+  CREATE TABLE IF NOT EXISTS admin_users (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    nome TEXT NOT NULL,
+    nivel TEXT NOT NULL CHECK (nivel IN ('leitura','edicao','exclusao','total')),
+    senha_hash TEXT NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT true,
+    trocar_senha BOOLEAN NOT NULL DEFAULT false,
+    falhas INTEGER NOT NULL DEFAULT 0,
+    bloqueado_ate TIMESTAMPTZ,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    ultimo_acesso TIMESTAMPTZ
+  );
+  CREATE TABLE IF NOT EXISTS admin_sessions (
+    id SERIAL PRIMARY KEY,
+    token_hash TEXT NOT NULL UNIQUE,
+    user_id INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+    criada_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expira_em TIMESTAMPTZ NOT NULL,
+    stepup_ate TIMESTAMPTZ,
+    ip_hash TEXT
+  );
+  CREATE INDEX IF NOT EXISTS admin_sessions_user ON admin_sessions(user_id);
+  CREATE TABLE IF NOT EXISTS batch_document_versions (
+    id UUID PRIMARY KEY,
+    batch_id INTEGER NOT NULL REFERENCES batches(id),
+    ordinal INTEGER NOT NULL CHECK(ordinal>0),
+    variant TEXT NOT NULL CHECK(variant IN ('original','signed')),
+    bytes BYTEA NOT NULL CHECK(octet_length(bytes)>0),
+    sha256 TEXT NOT NULL CHECK(sha256 ~ '^[a-f0-9]{64}$'),
+    list_hash TEXT NOT NULL,
+    signature_kind TEXT,
+    note TEXT,
+    source TEXT NOT NULL CHECK(source IN ('prepared','upload','legacy-observed')),
+    author_id INTEGER REFERENCES admin_users(id),
+    recorded_by INTEGER REFERENCES admin_users(id),
+    captured_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    UNIQUE(batch_id,ordinal),
+    CHECK(source<>'legacy-observed' OR author_id IS NULL)
+  );
+  CREATE OR REPLACE FUNCTION reject_batch_document_mutation() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'batch_document_versions is immutable'; END;
+  $$;
+  DO $$ BEGIN
+    IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='batch_document_versions'::regclass AND tgname='batch_document_versions_immutable') THEN
+      CREATE TRIGGER batch_document_versions_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON batch_document_versions FOR EACH STATEMENT EXECUTE FUNCTION reject_batch_document_mutation();
+    END IF;
+  END $$;
+  CREATE TABLE IF NOT EXISTS president_challenges (
+    id UUID PRIMARY KEY,
+    batch_id INTEGER NOT NULL REFERENCES batches(id),
+    responsible_id INTEGER NOT NULL REFERENCES admin_users(id),
+    issued_by INTEGER NOT NULL REFERENCES admin_users(id),
+    profile_revision INTEGER NOT NULL,
+    responsible_fingerprint TEXT NOT NULL,
+    document_version TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE CHECK(token_hash ~ '^[a-f0-9]{64}$'),
+    password_hash TEXT NOT NULL CHECK(password_hash ~ '^[a-f0-9]{64}$'),
+    state TEXT NOT NULL DEFAULT 'issued' CHECK(state IN ('issued','verifying','consumed','rejected','revoked','expired')),
+    attempts INTEGER NOT NULL DEFAULT 0 CHECK(attempts BETWEEN 0 AND 5),
+    created_at TIMESTAMPTZ NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    lease_token UUID,
+    lease_until TIMESTAMPTZ,
+    receipt_id UUID UNIQUE,
+    confirmed_at TIMESTAMPTZ,
+    CHECK(expires_at>created_at AND expires_at<=created_at+interval '10 minutes'),
+    CHECK((lease_token IS NULL)=(lease_until IS NULL)),
+    CHECK((state='verifying')=(lease_token IS NOT NULL)),
+    CHECK((receipt_id IS NULL)=(confirmed_at IS NULL)),
+    CHECK((state='consumed')=(receipt_id IS NOT NULL))
+  );
+  CREATE INDEX IF NOT EXISTS president_challenges_batch ON president_challenges(batch_id,created_at);
+  CREATE TABLE IF NOT EXISTS admin_referral_requests (
+    actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
+    input_hash TEXT NOT NULL, referrer_id INTEGER NOT NULL REFERENCES referrers(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), PRIMARY KEY(actor_id,request_id)
+  );
+  CREATE TABLE IF NOT EXISTS admin_referral_mutations (
+    actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
+    input_hash TEXT NOT NULL, referrer_id INTEGER NOT NULL REFERENCES referrers(id),
+    result JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(actor_id,request_id)
+  );
+  CREATE TABLE IF NOT EXISTS admin_domain_catalog_requests (
+    actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
+    input_hash TEXT NOT NULL, domain TEXT NOT NULL REFERENCES institutional_domains(domain),
+    result JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(actor_id,request_id)
+  );
+  CREATE TABLE IF NOT EXISTS admin_reset (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    expira_em TIMESTAMPTZ NOT NULL,
+    usado BOOLEAN NOT NULL DEFAULT false,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE TABLE IF NOT EXISTS admin_stepup (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+    sessao_id INTEGER NOT NULL REFERENCES admin_sessions(id) ON DELETE CASCADE,
+    codigo_hash TEXT NOT NULL,
+    expira_em TIMESTAMPTZ NOT NULL,
+    tentativas INTEGER NOT NULL DEFAULT 0,
+    usado BOOLEAN NOT NULL DEFAULT false,
+    criado_em TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX IF NOT EXISTS admin_stepup_sessao ON admin_stepup(sessao_id);
+  CREATE TABLE IF NOT EXISTS contact_replies (
+    id SERIAL PRIMARY KEY,
+    contact_id INTEGER NOT NULL REFERENCES contact_messages(id) ON DELETE CASCADE,
+    rodada INTEGER NOT NULL DEFAULT 1,
+    versao TEXT NOT NULL CHECK (versao IN ('texto','card')),
+    user_id INTEGER,
+    por TEXT,
+    assunto TEXT NOT NULL,
+    codigo_pessoal TEXT,
+    agendada BOOLEAN NOT NULL DEFAULT false,
+    ok BOOLEAN NOT NULL DEFAULT false,
+    erro TEXT,
+    criada_em TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (contact_id, rodada, versao)
+  );
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS estado TEXT NOT NULL DEFAULT 'legacy' CHECK (estado IN ('legacy','prepared','blocked','sending','accepted','uncertain','rejected'));
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS payload JSONB;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS selo TEXT;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS due_at TIMESTAMPTZ;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS finished_at TIMESTAMPTZ;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS attempt_id TEXT;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE contact_replies ADD COLUMN IF NOT EXISTS error_code TEXT;
+  CREATE INDEX IF NOT EXISTS contact_replies_due ON contact_replies(estado,due_at);
+  CREATE TABLE IF NOT EXISTS contact_drafts (
+    contact_id INTEGER PRIMARY KEY REFERENCES contact_messages(id), id UUID NOT NULL UNIQUE,
+    revision INTEGER NOT NULL CHECK(revision>0), state TEXT NOT NULL CHECK(state IN ('stored','discarded','expired')),
+    content_cipher TEXT, created_by INTEGER NOT NULL REFERENCES admin_users(id), updated_by INTEGER NOT NULL REFERENCES admin_users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), expires_at TIMESTAMPTZ NOT NULL,
+    CHECK((state='stored' AND content_cipher IS NOT NULL) OR (state<>'stored' AND content_cipher IS NULL))
+  );
+  CREATE INDEX IF NOT EXISTS contact_drafts_expiry ON contact_drafts(expires_at) WHERE state='stored';
+  CREATE TABLE IF NOT EXISTS contact_reply_groups (
+    id UUID PRIMARY KEY, actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
+    input_hash TEXT NOT NULL, context_proof TEXT NOT NULL, approved_ids JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), UNIQUE(actor_id,request_id)
+  );
+  CREATE TABLE IF NOT EXISTS contact_reply_group_items (
+    group_id UUID NOT NULL REFERENCES contact_reply_groups(id),
+    contact_id INTEGER NOT NULL REFERENCES contact_messages(id), reply_id INTEGER NOT NULL UNIQUE REFERENCES contact_replies(id),
+    round INTEGER NOT NULL CHECK(round>0), PRIMARY KEY(group_id,contact_id)
+  );
+  CREATE TABLE IF NOT EXISTS contact_campus_reviews (
+    id SERIAL PRIMARY KEY, contact_id INTEGER NOT NULL REFERENCES contact_messages(id),
+    triage_job_id INTEGER NOT NULL REFERENCES contact_triage_jobs(id), revision INTEGER NOT NULL,
+    previous_id INTEGER REFERENCES contact_campus_reviews(id), proposal JSONB NOT NULL,
+    decision TEXT NOT NULL CHECK(decision IN ('approved','rejected')), source_reviewed BOOLEAN NOT NULL,
+    created_by INTEGER NOT NULL REFERENCES admin_users(id), created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    intent_hash TEXT NOT NULL UNIQUE, UNIQUE(contact_id,revision),
+    CHECK(decision<>'approved' OR source_reviewed)
+  );
+  CREATE INDEX IF NOT EXISTS contact_campus_review_history ON contact_campus_reviews(contact_id,id DESC);
+  CREATE TABLE IF NOT EXISTS admin_ai_requests (
+    id UUID PRIMARY KEY, request_id UUID NOT NULL, created_by INTEGER NOT NULL REFERENCES admin_users(id),
+    day DATE NOT NULL, purpose TEXT NOT NULL CHECK(purpose IN ('painel','divulgacao','atendimento')),
+    configuration_revision INTEGER NOT NULL, provider TEXT NOT NULL, model TEXT NOT NULL,
+    context_hash TEXT NOT NULL, source_versions JSONB NOT NULL, input_bytes INTEGER NOT NULL CHECK(input_bytes>0),
+    reserved_output_tokens INTEGER NOT NULL CHECK(reserved_output_tokens BETWEEN 16 AND 4096),
+    state TEXT NOT NULL CHECK(state IN ('reserved','completed','rejected','uncertain','discarded')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(), finished_at TIMESTAMPTZ,
+    input_tokens INTEGER CHECK(input_tokens>=0), output_tokens INTEGER CHECK(output_tokens>=0),
+    provider_response_id TEXT, error_code TEXT, UNIQUE(created_by,request_id)
+  );
+  CREATE INDEX IF NOT EXISTS admin_ai_request_budget ON admin_ai_requests(day);
+  CREATE INDEX IF NOT EXISTS admin_ai_request_history ON admin_ai_requests(created_at DESC,id);
+  CREATE TABLE IF NOT EXISTS admin_acoes (
+    id SERIAL PRIMARY KEY,
+    ts TIMESTAMPTZ NOT NULL DEFAULT now(),
+    user_id INTEGER,
+    email TEXT,
+    acao TEXT NOT NULL,
+    parametros JSONB,
+    modo TEXT NOT NULL,
+    resultado JSONB,
+    ok BOOLEAN NOT NULL DEFAULT false
+  );
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_estado TEXT NOT NULL DEFAULT 'legacy' CHECK (central_estado IN ('legacy','solicitado','concluido','aceito','falhou','indeterminado'));
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_transacional BOOLEAN NOT NULL DEFAULT false;
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_fim TIMESTAMPTZ;
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_request_id TEXT;
+  CREATE UNIQUE INDEX IF NOT EXISTS admin_acoes_central_request ON admin_acoes(central_request_id) WHERE central_request_id IS NOT NULL;
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_simulacao_hash TEXT;
+  ALTER TABLE admin_acoes ADD COLUMN IF NOT EXISTS central_simulacao_id INTEGER REFERENCES admin_acoes(id);
+  CREATE UNIQUE INDEX IF NOT EXISTS admin_acoes_central_intent ON admin_acoes(central_simulacao_id) WHERE modo='executar' AND central_simulacao_id IS NOT NULL;
+  CREATE INDEX IF NOT EXISTS admin_acoes_central_pendente ON admin_acoes(acao) WHERE modo='executar' AND central_estado IN ('solicitado','indeterminado');
   CREATE TABLE IF NOT EXISTS events (
     id SERIAL PRIMARY KEY,
     ts TEXT NOT NULL,

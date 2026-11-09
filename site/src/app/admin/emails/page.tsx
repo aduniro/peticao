@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk, stepupValido } from "@/lib/admin-users";
 import { config } from "@/lib/config";
 import { brasilia } from "@/lib/time";
 import { outboxStats } from "@/lib/mail/outbox";
@@ -7,6 +8,10 @@ import { query } from "@/lib/db";
 import { alertasEmail } from "@/lib/mail/alertas";
 import { resumoEngajamento } from "@/lib/mail/engajamento";
 import PendentesTable, { type Linha } from "@/components/admin/PendentesTable";
+import RecuperarFila from "@/components/admin/RecuperarFila";
+import { listMailRecovery } from "@/lib/mail/recovery";
+import PreviaEmail from "@/components/admin/PreviaEmail";
+import { mailHistory } from "@/lib/mail/history";
 import { sugerir } from "@/lib/email-sugestao";
 import { dominiosLentos, eventosResumo, porProvedor, porSubdominio, porTipo, semEmailEntregue, sesSaude, statusProvedores, verificacoes } from "@/lib/mail/painel";
 
@@ -29,7 +34,14 @@ async function comSugestoes(sem: Awaited<ReturnType<typeof semEmailEntregue>>): 
 }
 
 export default async function Emails({ searchParams }: { searchParams: { msg?: string } }) {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
+  const podeRecuperar = nivelOk(sessao.nivel, "total") && !!sessao.userId;
+  const recuperacao = podeRecuperar && stepupValido(sessao)
+    ? await listMailRecovery().catch(() => null)
+    : undefined;
+  const historico = await mailHistory({ limit: 10 }).catch(() => null);
   const [prov, tipos, subs, ses, evs, sem, checks, lentos, status, outbox] = await Promise.all([porProvedor(), porTipo(), porSubdominio(), sesSaude(), eventosResumo(), semEmailEntregue(), verificacoes(), dominiosLentos(), statusProvedores(), outboxStats()]);
   const blackEmails = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason='invalid'")).rows[0].n;
   const suppressed = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason IN ('bounce','complaint')")).rows[0].n;
@@ -40,8 +52,8 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
   const falhasPorMotivo = sem.reduce<Record<string, number>>((a, s) => ((a[s.motivo] = (a[s.motivo] ?? 0) + 1), a), {});
 
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>E-mails</h1>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p>Cadeia transacional: <strong>{config.mailProviders().join(" → ")}</strong> · Marketing: <strong>{config.marketingProviders().join(" → ") || "não configurado"}</strong> · Reply-To: <strong>{config.mailReplyTo() || "nenhum"}</strong></p>
@@ -66,7 +78,7 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
         <span className="small"> Última atualização: {eng.ultimaAtualizacao ?? "nunca"}. Pode levar alguns minutos.</span>
       </form>
 
-      <h2>Fila de reenvio e lista negra</h2>
+      <h2 id="fila" tabIndex={-1}>Fila de reenvio e lista negra</h2>
       <section className="box" style={{ margin: "8px 0" }}>
         <div className="adm-bar">Fila de reenvio: <strong>{outbox.pending}</strong> pendente(s){outbox.oldest ? ` (a mais antiga é de ${brasilia(outbox.oldest)})` : ""} · {outbox.failed} que desistiram depois de 48 h.
           <form method="post" action="/api/admin/seguranca/fila" style={{ display: "inline" }}><button className="adm-btn sm">Reenviar agora</button></form></div>
@@ -76,6 +88,10 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
         </form>
         <p className="small">Regra: 3 tentativas com o mesmo e-mail inexistente põem o e-mail na lista negra. Não há bloqueio de IP por erro.</p>
       </section>
+      {podeRecuperar && !stepupValido(sessao) ? <p><a href="/admin/confirmar?volta=%2Fadmin%2Femails">Concluir fila sem reenviar</a></p> : null}
+      {recuperacao?.ok ? <RecuperarFila initial={recuperacao.records} next={recuperacao.next} names={NOME_TIPO} /> : recuperacao === null || recuperacao?.ok === false ? <p className="v2-aviso erro" role="alert">Não foi possível carregar a lista. Tente novamente.</p> : null}
+      {podeRecuperar && !stepupValido(sessao) ? <p><a href="/admin/confirmar?volta=%2Fadmin%2Femails">Ver prévia protegida</a></p> : null}
+      {historico?.ok ? <PreviaEmail initial={historico.records} next={historico.next} names={NOME_TIPO} canPreview={podeRecuperar && stepupValido(sessao)} /> : historico === null || historico?.ok === false ? <p className="v2-aviso erro" role="alert">Não foi possível carregar a lista. Tente novamente.</p> : null}
 
       <h2>Provedores: saldo e envios</h2>
       <div className="table-scroll"><table>
@@ -132,6 +148,7 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
       <h2>Respostas recebidas (Cloudflare Email Routing → Proton)</h2>
       {rp?.ok ? <p>Últimos {rp.dias} dias: <strong>{n(rp.total)}</strong> mensagens recebidas nos endereços dos subdomínios · entregues ao Proton {n(rp.entregues)} · marcadas como spam {n(rp.spam)} · rejeitadas {n(rp.rejeitadas)}. As respostas em si ficam na caixa <code>operator-1608598f41@example.invalid</code>.</p>
         : <p className="box">{rp?.erro ?? "sem consulta"}. Para contar as respostas aqui, crie na Cloudflare um token só de leitura de estatísticas (Analytics Read, zona sancionaintegral.org) e grave-o com <code>chave.mjs cloudflare:analytics</code> e <code>deploy/17-credencial-cloudflare-analytics.sh</code>. Enquanto isso, as respostas chegam normalmente ao Proton.</p>}
+    </div>
     </main>
   );
 }

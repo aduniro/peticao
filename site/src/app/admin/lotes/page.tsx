@@ -1,5 +1,8 @@
-import { isAdmin } from "@/lib/admin";
-import { listBatches, sendingEnabled } from "@/lib/batches";
+import HistoricoDocumento from "@/components/admin/HistoricoDocumento";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk, stepupValido } from "@/lib/admin-users";
+import { listBatches } from "@/lib/batches";
+import { batchSendingControl } from "@/lib/batch-sending-control";
 import { config } from "@/lib/config";
 import { redirect } from "next/navigation";
 import { brasilia } from "@/lib/time";
@@ -8,13 +11,17 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Lotes", robots: { index: false } };
 
 export default async function Lotes({ searchParams }: { searchParams: { msg?: string } }) {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "total")) redirect("/admin?erro=nivel");
+  if (!stepupValido(sessao)) redirect("/admin/confirmar?volta=/admin/lotes");
   const batches = await listBatches();
-  const enabled = await sendingEnabled();
+  const control = await batchSendingControl(sessao), enabled = control.enabled;
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>Lotes</h1>
+      <p><a className="v2-btn v2-btn-sec" href="/admin/presidente">Presidente da ADUNIR</a></p>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p>
         Meta por lote: {config.batchSize()} · Fechamento final: {brasilia(config.finalAt())} (horário de Brasília) ·
@@ -27,7 +34,7 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
       </div>
       <div style={{ margin: "12px 0" }}>
         Envios: <strong>{enabled ? "ativos" : "PAUSADOS"}</strong>{" "}
-        <form method="post" action="/api/admin/lotes/pausa" style={{ display: "inline" }}><button>{enabled ? "Pausar todos os envios" : "Retomar envios"}</button></form>{" "}
+        <form method="post" action="/api/admin/lotes/pausa" style={{ display: "inline" }}><input type="hidden" name="version" value={control.version} /><input type="hidden" name="enabled" value={String(!enabled)} /><button>{enabled ? "Pausar todos os envios" : "Retomar envios"}</button></form>{" "}
         <form method="post" action="/api/admin/lotes/criar" style={{ display: "inline" }}><button>Fechar lote final agora</button></form>
       </div>
       <div className="table-scroll"><table>
@@ -40,6 +47,7 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
               <td>{b.status}{b.sent_at ? ` em ${brasilia(b.sent_at)}` : ""}</td>
               <td>
                 <a href={`/api/admin/lotes/${b.id}/pdf`}>PDF</a>{b.signature_kind && b.signature_kind !== "none" && b.signature_kind !== "" ? <> · <a href={`/api/admin/lotes/${b.id}/pdf?assinado=1`}>assinado</a></> : null}{" "}
+                <HistoricoDocumento key={b.id} batchId={b.id} />{" "}
                 {(b.status === "prepared" || b.status === "failed") && (
                   <>
                     <form method="post" action={`/api/admin/lotes/${b.id}/assinado`} encType="multipart/form-data" style={{ display: "inline" }}><input type="file" name="file" accept="application/pdf" required /> <button>Enviar PDF assinado</button></form>
@@ -57,6 +65,7 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
         </tbody>
       </table></div>
       <p className="small">Fluxo: baixe o PDF do lote, assine com o e-CNPJ da ADUNIR (Adobe, LibreOffice ou Assinador do ITI) e envie o PDF assinado. O site confere a estrutura da assinatura; a validação da cadeia ICP-Brasil usa um validador configurável (ICP_VALIDATOR_URL). Em produção, só lote validado como ICP-Brasil pode ser enviado.</p>
+    </div>
     </main>
   );
 }

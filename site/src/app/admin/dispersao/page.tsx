@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { dispersionRows, summarize, type DispRow } from "@/lib/dispersion";
 import { brasilia } from "@/lib/time";
 import { KIND_LABELS } from "@/lib/institutional";
@@ -18,15 +19,18 @@ function Node({ r, kids, depth }: { r: DispRow; kids: Map<number, DispRow[]>; de
 }
 
 export default async function Dispersao() {
-  if (!isAdmin()) redirect("/admin");
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
   const rows = await dispersionRows();
   const s = summarize(rows);
   const kids = new Map<number, DispRow[]>();
   for (const r of rows) if (r.owner_id !== null) kids.set(r.owner_id, [...(kids.get(r.owner_id) ?? []), r]);
   const roots = rows.filter((r) => r.owner_id === null && (kids.get(r.id)?.length ?? 0) > 0).sort((a, b) => b.invited_confirmed - a.invited_confirmed);
   return (
-    <main className="wide">
-      <p><a href="/admin">← Painel</a> · <a href="/admin/indicacoes">Indicações</a> · <a href="/admin/monitor">Monitor</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
+      <p><a href="/admin/indicacoes">Indicações</a> · <a href="/admin/monitor">Monitor</a></p>
       <h1>Dispersão da campanha</h1>
       <p>De onde vieram as assinaturas: link direto, código de uma organização ou link/QR de outro assinante. <a href="/api/admin/dispersao">Baixar base interna (CSV, com e-mail e horário de Brasília)</a>. <strong>Não envie esse arquivo às autoridades.</strong></p>
 
@@ -75,6 +79,7 @@ export default async function Dispersao() {
           </tbody>
         </table>
       </div>
+    </div>
     </main>
   );
 }
