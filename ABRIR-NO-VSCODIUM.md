@@ -6,7 +6,7 @@ Abra o workspace com o comando absoluto:
 /usr/bin/codium --new-window /mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109/peticao-principal.code-workspace
 ```
 
-A pasta é o worktree isolado da consolidação. O branch aparece na barra inferior e no GitGraph. Enquanto a validação não terminar, é consolidacao/pagina-principal-20261109; a promoção para main local só ocorrerá após os testes. A VPS não é atualizada por abrir ou editar aqui.
+A pasta é o worktree isolado da consolidação. O branch aparece na barra inferior e no GitGraph. A versão foi validada em208testesbackend,35cenáriosnavegador e9comparaçõesvisuais e será aberta no ramo main local. O ramo consolidacao/pagina-principal-20261109 preserva a consolidação para consulta. A VPS não é atualizada por abrir ou editar aqui.
 
 Para localizar textos, procure MUDAR AQUI (Ctrl+Shift+F) ou use TodoTree. Os comentários ficam em /mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109/site/src/i18n/pt.ts; não alterei seus valores. Os componentes ficam em /mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109/site/src/components/.
 
