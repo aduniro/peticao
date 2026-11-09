@@ -37,9 +37,24 @@ def tracked_manifest(checkout):
     assert paths and any(path.startswith('site/src/') for path in paths)
     return {p: digest(checkout / p) for p in paths if p and (checkout / p).is_file()}
 
+def validate_source_tracking(checkout):
+    untracked = subprocess.check_output(['git', 'ls-files', '--others', '-z', '--', 'site/src'], cwd=checkout)
+    assert not untracked, 'Untracked source, including ignored source, cannot enter a frozen snapshot'
+
+def validate_environment(checkout):
+    for site in [checkout, checkout / 'site']:
+        for file in site.glob('.env*'):
+            if file.name == '.env.example':
+                relative = str(file.relative_to(checkout))
+                tracked = subprocess.run(['git', 'ls-files', '--error-unmatch', '--', relative], cwd=checkout, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                assert tracked.returncode == 0, 'Only a tracked example is allowed'
+            else:
+                raise AssertionError('No environment files, even ignored files')
+
 def validate_runtime(checkout):
     site = checkout / 'site'
-    assert not list(site.glob('.env*')), 'No environment files, even ignored files'
+    validate_environment(checkout)
+    validate_source_tracking(checkout)
     for name in ['secrets', 'preview-state']:
         assert not (checkout / name).exists() and not (site / name).exists(), 'No private runtime directories'
     assert (site / 'node_modules').is_symlink() and (site / 'node_modules').resolve() == DEPENDENCIES
