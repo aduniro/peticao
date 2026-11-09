@@ -3,7 +3,7 @@ import { exigirNivel, quemAge } from "@/lib/admin-api";
 import { requestApprovalCode } from "@/lib/batches";
 import { rateLimit } from "@/lib/ratelimit";
 import { batchId, readBatchFields } from "@/lib/batch-http-input";
-import { requestOrigin } from "@/lib/net";
+import { batchReturnUrl } from "@/lib/batch-return";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   if (!actor) return NextResponse.json({ ok: false }, { status: 401 });
   const id = batchId(params.id); if (id === null) return new NextResponse(null, { status: 400 });
   const body = await readBatchFields(req); if (!body.ok) return new NextResponse(null, { status: body.status });
-  const url = new URL("/admin/lotes", requestOrigin(req.headers));
+  const url = batchReturnUrl(req, id);
   if (!rateLimit(`codigo:${id}`, 5, 15 * 60_000)) url.searchParams.set("msg", "Aguarde antes de pedir outro código.");
   else {
     try { await requestApprovalCode(id, actor); url.searchParams.set("msg", "Código enviado ao aprovador."); }

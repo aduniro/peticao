@@ -11,8 +11,10 @@ import tempfile
 root = Path(__file__).resolve().parents[2]
 assert Path.cwd().resolve() == root == Path('/mnt/dev/peticao/.cache/admin-integration/candidate-stage02-domains')
 parser = argparse.ArgumentParser()
-parser.add_argument('--contract', choices=['batch-input'], required=True)
+parser.add_argument('--contract', choices=['batch-input'])
+parser.add_argument('--tests', choices=['portal'])
 args = parser.parse_args()
+assert bool(args.contract) != bool(args.tests)
 site = root / 'site'
 for name in ['.env', '.env.local', '.env.production', '.env.production.local']:
     assert not (site / name).exists(), 'QA requires no environment files'
@@ -35,6 +37,17 @@ assert (runtime / 'node').is_file()
 env['PATH'] = str(runtime) + os.pathsep + env.get('PATH', '')
 command = ['node', 'scripts/with-db.mjs', 'node', '../tools/admin-qa/batch-local-contract.mjs', args.contract]
 sources = ['src/lib/batch-http-input.ts', 'src/app/api/admin/lotes/[id]/aprovar/route.ts', 'src/app/api/admin/lotes/[id]/assinado/route.ts', 'src/app/api/admin/lotes/[id]/codigo/route.ts', 'src/app/api/admin/lotes/[id]/cancelar/route.ts', 'src/app/api/admin/lotes/criar/route.ts']
+if args.tests:
+    for key in ['PREVIEW_MODE', 'ADMIN_NO_PASSWORD', 'MAIL_PROVIDERS', 'MAIL_ARCHIVE_RETENTION']:
+        env.pop(key, None)
+    env['NODE_ENV'] = 'test'
+    command = ['node', 'scripts/with-db.mjs', 'node', '--import', 'tsx', '--test', '--test-concurrency=1',
+               'src/lib/president-document.test.ts', 'src/lib/batch-creation-actor.test.ts',
+               'src/lib/batch-document-reservation.test.ts', 'src/lib/batch-rejection-recovery.test.ts',
+               'src/lib/batch-sending-control.test.ts', 'src/lib/signed-pdf.test.ts']
+    sources = ['src/lib/president-document.ts', 'src/lib/president-document.test.ts', 'src/lib/batch-return.ts',
+               'src/app/admin/presidente/page.tsx', 'src/app/api/admin/lotes/[id]/pdf/route.ts',
+               'src/app/api/admin/lotes/[id]/conciliar/route.ts']
 fingerprints = lambda: {name: hashlib.sha256((site / name).read_bytes()).hexdigest() for name in sources}
 before = fingerprints()
 (scratch / 'sources.txt').write_text('\n'.join(f'{value}  {name}' for name, value in before.items()) + '\n')

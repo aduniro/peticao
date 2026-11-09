@@ -20,6 +20,7 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
     <main className="v2-pagina">
       <div className="v2-secao">
       <h1>Lotes</h1>
+      <p><a className="v2-btn v2-btn-sec" href="/admin/presidente">Presidente da ADUNIR</a></p>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p>
         Meta por lote: {config.batchSize()} · Fechamento final: {brasilia(config.finalAt())} (horário de Brasília) ·

@@ -28,7 +28,7 @@ o arquivo como um caso. Para comprovar os casos internos, executei do diretório
 `site/`: `node --import tsx ../tools/admin-qa/batch-input-unit.mjs`; **4/4**, saída0,
 sem falhas/ignorados/cancelamentos. Log em `.cache/qa-batch-input-20261108/unit.log`.
 Build2 do principal informado saída0 às23:44Z. Contrato HTTP executado no build
-fechado, em banco novo54357/HTTP3035, com quatro fontes de configuração vazias e
+fechado, em banco novo54357/HTTP3035, com configuração vazia e
 mail dev: `python3 tools/admin-qa/batch-local.py --contract batch-input`, saída0,
 `/tmp/admin-batch-local-amsu3m0x/validation.log` e `batch-input.json` positivos.
 As fontes relevantes tiveram SHA-256 conferido antes/depois pelo helper. Cópias
