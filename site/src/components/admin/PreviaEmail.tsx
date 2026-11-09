@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { MailHistoryRow } from "@/lib/mail/history";
+import HistoricoMensagem from "./HistoricoMensagem";
 
 type Preview = { subject: string; html: string };
 const LABEL = "Ver prévia protegida";
 const NOTICE = "Esta prévia oculta links, imagens e códigos e simplifica a formatação. O e-mail original foi preservado.";
 
-export default function PreviaEmail({ initial, next: firstNext, names }: { initial: MailHistoryRow[]; next: string | null; names: Record<string, string> }) {
+export default function PreviaEmail({ initial, next: firstNext, names, canPreview = false }: { initial: MailHistoryRow[]; next: string | null; names: Record<string, string>; canPreview?: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null), controller = useRef<AbortController | null>(null);
   const [rows, setRows] = useState(initial), [next, setNext] = useState(firstNext);
   const [preview, setPreview] = useState<Preview | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null);
@@ -48,9 +49,9 @@ export default function PreviaEmail({ initial, next: firstNext, names }: { initi
   };
   if (!rows.length && !next) return null;
   return <section data-testid="mail-preview-history" aria-busy={busy}>
-    <h3>{LABEL}</h3>
-    <div className="table-scroll"><table><thead><tr><th>ID</th><th>Tipo</th><th>E-mail</th><th>{LABEL}</th></tr></thead>
-      <tbody>{rows.map(row => <tr key={row.record_key}><td>{row.record_key}</td><td>{names[row.kind] ?? row.kind}</td><td>{row.to_addr}</td><td>{row.record_key.startsWith("message:") && row.content_state === "stored" ? <button type="button" className="adm-btn sm" disabled={busy} onClick={() => open(row.record_key.slice(8))}>{LABEL}</button> : "[restrito]"}</td></tr>)}</tbody>
+    <h3>Histórico de mensagens</h3>
+    <div className="table-scroll"><table style={{ minWidth: 720 }}><thead><tr><th>ID</th><th>Tipo</th><th>E-mail</th><th>Histórico</th><th>{LABEL}</th></tr></thead>
+      <tbody>{rows.map(row => <tr key={row.record_key}><td>{row.record_key}</td><td>{names[row.kind] ?? row.kind}</td><td>{row.to_addr}</td><td><HistoricoMensagem recordKey={row.record_key} /></td><td>{canPreview && row.record_key.startsWith("message:") && row.content_state === "stored" ? <button type="button" className="adm-btn sm" disabled={busy} onClick={() => open(row.record_key.slice(8))}>{LABEL}</button> : "[restrito]"}</td></tr>)}</tbody>
     </table></div>
     {listError ? <p className="v2-aviso erro" role="alert">{listError}</p> : null}
     {next ? <button type="button" className="adm-btn sm" disabled={busy} onClick={more}>Carregar mais</button> : null}
