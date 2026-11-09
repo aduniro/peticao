@@ -15,7 +15,7 @@ for port in [3047,54362]:
 p=Path(tempfile.mkdtemp(prefix='admin-inbox-compiled-'));p.chmod(0o700);(p/'empty').mkdir(mode=0o700)
 env={k:v for k,v in os.environ.items() if k in ['PATH','HOME','LANG','LC_ALL']}
 env.update(NODE_ENV='production',NODE_OPTIONS='--max-old-space-size=1536',CIRCLE_NODE_TOTAL='2',RAYON_NUM_THREADS='2',NEXT_TELEMETRY_DISABLED='1',DEV_DB_PORT='54362',DEV_DB_DIR=str(p/'postgres'),DATABASE_URL='postgres://peticao:peticao@127.0.0.1:54362/peticao',MAIL_PROVIDER='dev',MAIL_PROVIDERS='dev',PREVIEW_MODE='1',ADMIN_NO_PASSWORD='0',ADMIN_PASSWORD='QA-NOT-A-REAL-PASSWORD',ADMIN_PASSWORD_FILE=str(p/'empty'/'no-password'),HASH_PEPPER='QA-INBOX-COMPILED-PEPPER-FICTITIOUS-0123456789',DATA_ENCRYPTION_KEY='QA-INBOX-COMPILED-KEY',CPF_CACHE_ENCRYPTION_KEY='QA-INBOX-COMPILED-CACHE-0123456789',SECRETS_DIR=str(p/'empty'),PETICAO_CONFIG_DIR=str(p/'empty'),CREDENTIALS_DIRECTORY=str(p/'empty'),PUBLICAR_ESTADO_DIR=str(p/'empty'),MAIL_OUTBOX_DIR=str(p/'outbox'),TMPDIR=str(p),QA_OUTPUT_DIR=str(p),QA_BASE_URL='http://127.0.0.1:3047',QA_EXPECTED_COMMIT=expected)
-runtime=Path('/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin' if node20 else '/home/barre/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin')
+runtime=Path('/mnt/apps/peticao-final/_externos/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin' if node20 else '/home/barre/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin')
 assert(runtime/'node').is_file()
 node_hash=hashlib.sha256((runtime/'node').read_bytes()).hexdigest()
 if node20:assert node_hash=='b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'

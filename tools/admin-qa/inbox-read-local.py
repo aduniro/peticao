@@ -2,7 +2,7 @@
 from pathlib import Path
 import os, socket, tempfile, subprocess, hashlib, json, sys
 r=Path(__file__).resolve().parents[2]
-assert r==Path('/mnt/dev/peticao/.cache/admin-integration/candidate-inbox-read-20261109')
+assert r==Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-inbox-read-20261109')
 site=r/'site'
 assert sys.argv[1:] in [['tests'],['types']]
 assert not any((site/x).exists() for x in ['.env','.env.local','.env.production','.env.production.local'])

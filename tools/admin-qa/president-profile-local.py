@@ -4,13 +4,13 @@ import hashlib,json,os,socket,subprocess,sys,tempfile
 from pathlib import Path
 
 root=Path(__file__).resolve().parents[2]
-assert root==Path('/mnt/dev/peticao/.cache/admin-integration/candidate-president-profile-ui-20261109')
+assert root==Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration/candidate-president-profile-ui-20261109')
 assert len(sys.argv)==2 and sys.argv[1] in ['tests','types']
 site=root/'site'
 assert not any((site/p).exists() for p in ['.env','.env.local','.env.production','.env.production.local'])
-assert (site/'node_modules').resolve()==Path('/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules')
+assert (site/'node_modules').resolve()==Path('/mnt/apps/peticao-final/_externos/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules')
 with socket.socket() as sock: assert sock.connect_ex(('127.0.0.1',54369))!=0
-node=Path('/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node')
+node=Path('/mnt/apps/peticao-final/_externos/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node')
 assert hashlib.sha256(node.read_bytes()).hexdigest()=='b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
 assert subprocess.check_output([str(node),'--version'],text=True).strip()=='v20.19.2'
 scratch=Path(tempfile.mkdtemp(prefix='admin-president-profile-'));scratch.chmod(0o700);(scratch/'empty').mkdir(mode=0o700)

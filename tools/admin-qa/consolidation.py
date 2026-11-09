@@ -17,7 +17,7 @@ parser.add_argument('--document-tests', action='store_true')
 parser.add_argument('--contracts', nargs='+', choices=['referrals', 'referrals-browser', 'content-retention', 'whatsapp-senders', 'contact-history', 'contact-drafts', 'contact-list', 'mail-recovery', 'mail-preview', 'ai-executor', 'actions-ui', 'admin-password-ui', 'batch-control', 'batch-reservation', 'batch-reconciliation'])
 args = parser.parse_args()
 assert Path.cwd().resolve() == root
-assert root.parent == Path('/mnt/dev/peticao/.cache/admin-integration')
+assert root.parent == Path('/mnt/apps/peticao-final/peticao/.cache/admin-integration')
 assert root.name == 'candidate-stage02-domains'
 site = root / 'site'
 for name in ['.env', '.env.local', '.env.production', '.env.production.local']:
