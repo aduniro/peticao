@@ -15,3 +15,16 @@ test("suggestion view binds the displayed draft to the latest complete revision 
   for (const value of [{ ...suggestion, requiresHumanReview: false }, { ...suggestion, context: { ...suggestion.context, revision: 2 } }, { ...suggestion, draft: { assunto: "QA", corpo: 12 } }]) assert.equal(triageViewSuggestion(value, 2, latest), null);
   assert.equal(triageViewSuggestion(suggestion, 2, { ...latest, status: "queued" }), null);
 });
+
+test("AV14 displays the exact approved vocabulary and keeps unknown codes out of summaries", async () => {
+  const { triageViewLabels, triageViewFailure } = await import("./contact-triage-display");
+  const job = triageViewHistory([row], 2)![0];
+  for (const [code, label] of Object.entries({ queued: "Em fila", running: "Em análise", complete: "Concluída", failed: "Falha técnica" })) assert.equal(triageViewLabels({ ...job, status: code as typeof job.status }).processing, label);
+  for (const [code, label] of Object.entries({ nao_recebeu: "Confirmação por e-mail", expirou: "Link expirado", email_recusado: "E-mail recusado", cpf: "Nome/CPF", remover: "Pedido de remoção", corrigir: "Pedido de correção", campus: "Campus", erro: "Erro no formulário", duvida: "Dúvida" })) assert.equal(triageViewLabels({ ...job, analysis: { category: code } }).category, label);
+  for (const [code, label] of Object.entries({ inconclusive: "Inconclusivo", review: "Revisão necessária", resolved: "Confirmação posterior ao relato" })) assert.equal(triageViewLabels({ ...job, analysis: { state: code } }).diagnosis, label);
+  for (const [code, label] of Object.entries({ normal: "Normal", high: "Alta" })) assert.equal(triageViewLabels({ ...job, analysis: { priority: code } }).priority, label);
+  assert.deepEqual(triageViewLabels({ ...job, analysis: { category: "__proto__", state: "FUTURE_CODE", priority: "FUTURE_CODE" } }), { processing: "Concluída", category: null, diagnosis: null, priority: null });
+  for (const error of ["analysis_stale", "context_changed"]) assert.equal(triageViewFailure(error), "Os dados mudaram. Solicite uma nova análise.");
+  for (const error of ["request_failed", "invalid_response", "evidence_failure", "unavailable"]) assert.equal(triageViewFailure(error), "Não foi possível atualizar a análise. Reabra este painel para conferir o estado atual.");
+  assert.equal(job.analysis?.category, "cpf"); // raw structured evidence remains available.
+});

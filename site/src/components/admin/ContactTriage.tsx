@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { adminJsonRequest } from "@/lib/admin-request";
-import { triageViewHistory, triageViewSuggestion, type TriageView } from "@/lib/contact-triage-display";
+import { triageViewHistory, triageViewSuggestion, triageViewLabels, triageViewFailure, type TriageView } from "@/lib/contact-triage-display";
 import { brasilia } from "@/lib/time";
 
 /** AV-8 approved. Read/queue only: this component cannot send a reply. */
@@ -64,13 +64,23 @@ export default function ContactTriage({ contactId }: { contactId: number }) {
       <p className="small">Revise a análise antes de responder. Nenhuma resposta é enviada automaticamente.</p>
       <button type="button" className="adm-btn sm" disabled={writing || loading} onClick={() => void reanalyze()}>Reanalisar</button>
       {(loading || writing) && <progress aria-label="Análise automática" />}
-      {error && <p className="err" role="alert"><code>{error}</code></p>}
-      {history.map((job, index) => <section key={job.id}>
-        <p className="small">#{job.revision} · {job.status} · {brasilia(job.finishedAt ?? job.createdAt, true)}{job.error ? ` · ${job.error}` : ""}</p>
-        {job.analysis && <pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{JSON.stringify(job.analysis, null, 2)}</pre>}
-        {job.evidence && <details className="v2-expansor"><summary>Evidências</summary><pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{JSON.stringify(job.evidence, null, 2)}</pre></details>}
-        {index === 0 && suggestion && <details className="v2-expansor"><summary>Sugestão de resposta</summary><p>{suggestion.subject}</p><pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{suggestion.body}</pre></details>}
-      </section>)}
+      {error && <p className="err" role="alert">{triageViewFailure(error)}</p>}
+      {history.length > 0 && <h4>Histórico</h4>}
+      {history.map((job, index) => {
+        const labels = triageViewLabels(job);
+        return <section key={job.id}>
+          <p className="small">#{job.revision} · {brasilia(job.finishedAt ?? job.createdAt, true)}</p>
+          <dl className="small">
+            <dt>Processamento</dt><dd>{labels.processing}</dd>
+            {labels.category && <><dt>Categoria</dt><dd>{labels.category}</dd></>}
+            {labels.diagnosis && <><dt>Diagnóstico</dt><dd>{labels.diagnosis}</dd></>}
+            {labels.priority && <><dt>Prioridade</dt><dd>{labels.priority}</dd></>}
+          </dl>
+          {job.error && <p className="err" role="alert">{triageViewFailure(job.error)}</p>}
+          <details className="v2-expansor"><summary>Evidências</summary><pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{JSON.stringify({ status: job.status, error: job.error, analysis: job.analysis, evidence: job.evidence }, null, 2)}</pre></details>
+          {index === 0 && suggestion && <details className="v2-expansor"><summary>Sugestão de resposta</summary><p>{suggestion.subject}</p><pre style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{suggestion.body}</pre></details>}
+        </section>;
+      })}
     </div>
   </details>;
 }
