@@ -41,9 +41,7 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
   const recuperacao = podeRecuperar && stepupValido(sessao)
     ? await listMailRecovery().catch(() => null)
     : undefined;
-  const historico = podeRecuperar && stepupValido(sessao)
-    ? await mailHistory({ limit: 10 }).catch(() => null)
-    : undefined;
+  const historico = await mailHistory({ limit: 10 }).catch(() => null);
   const [prov, tipos, subs, ses, evs, sem, checks, lentos, status, outbox] = await Promise.all([porProvedor(), porTipo(), porSubdominio(), sesSaude(), eventosResumo(), semEmailEntregue(), verificacoes(), dominiosLentos(), statusProvedores(), outboxStats()]);
   const blackEmails = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason='invalid'")).rows[0].n;
   const suppressed = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason IN ('bounce','complaint')")).rows[0].n;
@@ -93,7 +91,7 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
       {podeRecuperar && !stepupValido(sessao) ? <p><a href="/admin/confirmar?volta=%2Fadmin%2Femails">Concluir fila sem reenviar</a></p> : null}
       {recuperacao?.ok ? <RecuperarFila initial={recuperacao.records} next={recuperacao.next} names={NOME_TIPO} /> : recuperacao === null || recuperacao?.ok === false ? <p className="v2-aviso erro" role="alert">Não foi possível carregar a lista. Tente novamente.</p> : null}
       {podeRecuperar && !stepupValido(sessao) ? <p><a href="/admin/confirmar?volta=%2Fadmin%2Femails">Ver prévia protegida</a></p> : null}
-      {historico?.ok ? <PreviaEmail initial={historico.records} next={historico.next} names={NOME_TIPO} /> : historico === null || historico?.ok === false ? <p className="v2-aviso erro" role="alert">Não foi possível carregar a lista. Tente novamente.</p> : null}
+      {historico?.ok ? <PreviaEmail initial={historico.records} next={historico.next} names={NOME_TIPO} canPreview={podeRecuperar && stepupValido(sessao)} /> : historico === null || historico?.ok === false ? <p className="v2-aviso erro" role="alert">Não foi possível carregar a lista. Tente novamente.</p> : null}
 
       <h2>Provedores: saldo e envios</h2>
       <div className="table-scroll"><table>
