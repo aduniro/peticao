@@ -30,7 +30,7 @@ try {
   const response = await request(token); assert.equal(response.status, 200); assert.match(response.headers.get("cache-control") ?? "", /(^|,)\s*no-store\s*(,|$)/); assert.equal(response.headers.get("x-content-type-options"), "nosniff");
   const preview = await response.json(); assert.equal(preview.state, "ready"); assert.ok(preview.transformed);
   for (const bad of [secret, "123456", "QA_ATTACHMENT_PRIVATE", "blocked.test"]) assert.ok(!JSON.stringify(preview).includes(bad));
-  const { chromium } = await import(process.env.QA_PLAYWRIGHT_MODULE ?? "/tmp/peticao-ui-hotfix/node_modules/playwright/index.mjs");
+  const { chromium } = await import(process.env.QA_PLAYWRIGHT_MODULE ?? "/mnt/apps/peticao-final/_externos/tmp/peticao-ui-hotfix/node_modules/playwright/index.mjs");
   browser = await chromium.launch({ headless: true, executablePath: process.env.QA_CHROMIUM ?? "/home/barre/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome" });
   const widths = [320, 390, 768, 992, 1280, 1920], shots = [];
   for (const width of widths) {
