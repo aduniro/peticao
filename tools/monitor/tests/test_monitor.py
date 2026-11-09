@@ -89,7 +89,7 @@ def test_app_server_stream_and_approval_response_stay_bound_to_request(store,tmp
 for line in sys.stdin:
  m=json.loads(line);method=m.get('method');rid=m.get('id')
  if method=='initialize':print(json.dumps({'id':rid,'result':{}}),flush=True)
- elif method=='thread/start':print(json.dumps({'id':rid,'result':{'thread':{'id':'fixture-thread'}}}),flush=True)
+ elif method=='thread/start':print(json.dumps({'id':rid,'result':{'thread':{'id':'fixture-thread','status':{'type':'idle'}}}}),flush=True)
  elif method=='turn/start':
   print(json.dumps({'id':rid,'result':{'turn':{'id':'fixture-turn'}}}),flush=True)
   print(json.dumps({'id':'approval-1','method':'item/commandExecution/requestApproval','params':{'command':'fictional-command-never-executed'}}),flush=True)

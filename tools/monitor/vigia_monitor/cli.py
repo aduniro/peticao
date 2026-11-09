@@ -10,6 +10,7 @@ def main(argv=None):
  d=sub.add_parser('coletor');d.add_argument('--sem-vps',action='store_true');d.add_argument('--sem-email',action='store_true')
  sub.add_parser('estado');diag=sub.add_parser('diagnostico');diag.add_argument('--vps',action='store_true')
  x=sub.add_parser('execucao');x.add_argument('id');x.add_argument('--limite',type=int,default=12000)
+ quota=sub.add_parser('retomada-quota');quota.add_argument('task');quota.add_argument('--desativar',action='store_true')
  q=sub.add_parser('retomar');q.add_argument('task');q.add_argument('step');q.add_argument('--contexto',required=True)
  w=sub.add_parser('supervisionar');w.add_argument('task',nargs='?');w.add_argument('--intervalo',type=int,default=300);w.add_argument('--desativar',action='store_true');w.add_argument('--plano',type=Path)
  t=sub.add_parser('tarefa');t.add_argument('id');t.add_argument('--titulo');t.add_argument('--estado');t.add_argument('--etapa');t.add_argument('--escopo');t.add_argument('--ambiente');t.add_argument('--diretorio');t.add_argument('--detalhe');t.add_argument('--estimativa')
@@ -19,6 +20,9 @@ def main(argv=None):
  a=sub.add_parser('aprovar');a.add_argument('id');a.add_argument('--recusar',action='store_true')
  c=sub.add_parser('controlar');c.add_argument('id');c.add_argument('acao',choices=['cancel','pause','resume','stdin','steer']);c.add_argument('--texto')
  args=p.parse_args(argv);store=Store()
+ if args.command=='retomada-quota':
+  from .quota import configure
+  configure(store,args.task,not args.desativar);print('Política registrada somente para futuros pedidos');return
  if args.command=='retomar':
   with store.connect() as db:
    db.execute('BEGIN IMMEDIATE')
