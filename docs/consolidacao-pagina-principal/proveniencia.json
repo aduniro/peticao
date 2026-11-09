@@ -1,0 +1,2751 @@
+{
+  "created_at": "2026-11-09T13:00:36.893556+00:00",
+  "vps_snapshot_repository": "/mnt/apps/peticao-final/backups/peticao-vps/20261108T182956Z/source-git",
+  "vps_snapshot_commit": "d1b90457cf280c16f82789bfb4e455e63f5deca6",
+  "published_source_base_commit": "61edd210b97664ba1c3a364d47eb2771de8175db",
+  "local_candidate_commit": "c1e16d2516399afbd45f30b41e68c931be54a914",
+  "vps_files": 681,
+  "base_files": 684,
+  "runtime_content_differences": [],
+  "test_content_differences": [
+    "src/lib/campaign.test.ts",
+    "src/lib/cpf-servidor.test.ts",
+    "src/lib/foreign-flow.test.ts",
+    "src/lib/mail-painel.test.ts",
+    "src/lib/reacher-fluxo.test.ts",
+    "src/lib/sign-flow.test.ts",
+    "src/lib/verification.test.ts"
+  ],
+  "absent_from_capture_retained": [
+    ".npmrc",
+    "src/lib/form-interaction.test.ts",
+    "src/lib/signup-diagnostics.test.ts"
+  ],
+  "policy": "Preserve production runtime; retain newer candidate tests; exclude runtime secrets/database/build; no production changes or deployment. Preserve main until validation.",
+  "vps_snapshot_blobs": {
+    ".gitignore": {
+      "mode": "100755",
+      "sha": "442f5207029a871c747dbe151635abfb35cda207"
+    },
+    "README.md": {
+      "mode": "100755",
+      "sha": "a003dc210e7792ec4506b003e2ff5ccad5f76808"
+    },
+    "assets/adunir-andes.png": {
+      "mode": "100644",
+      "sha": "30f424b50985e8e6396ac941a4e88b51e5328742"
+    },
+    "assets/adunir.png": {
+      "mode": "100755",
+      "sha": "5ad0c2ea5ed51bd4a5c3c00439617365de59067f"
+    },
+    "assets/andes.png": {
+      "mode": "100644",
+      "sha": "72395819ed06f98a08f29ac6d80eff428e70d517"
+    },
+    "assets/capa_peticao.png": {
+      "mode": "100755",
+      "sha": "07f256586cc9908bc18efc956463a2a5deff08f9"
+    },
+    "assets/fonts/Inter-ExtraBold.otf": {
+      "mode": "100644",
+      "sha": "66cd95228c0ed187ebe352bf928a4c41fe342827"
+    },
+    "assets/fonts/Inter-Regular.otf": {
+      "mode": "100644",
+      "sha": "2d0bd1d645a9afaa4cf47afc4e1dc38698809f78"
+    },
+    "assets/fonts/Inter-SemiBold.otf": {
+      "mode": "100644",
+      "sha": "52c84550ba03fa5543f14c5cb215b9b2c72946cb"
+    },
+    "assets/fonts/NotoSans-ExtraBold.ttf": {
+      "mode": "100644",
+      "sha": "a16a204c9c78318cee62780ac74d13b2371e2f86"
+    },
+    "assets/fonts/NotoSans-Regular.ttf": {
+      "mode": "100644",
+      "sha": "7e9c1696ae43d387278f5fae47a2590dd6f1b0f8"
+    },
+    "assets/fonts/NotoSans-SemiBold.ttf": {
+      "mode": "100644",
+      "sha": "e581e1923db1b98de542cd2fd3cfac90088ff576"
+    },
+    "next-env.d.ts": {
+      "mode": "100755",
+      "sha": "40c3d68096c270ef976f3db4e9eb42b05c7067bb"
+    },
+    "next.config.mjs": {
+      "mode": "100755",
+      "sha": "faab0de7c13df82610e1a9876485ec66aad38a5f"
+    },
+    "package-lock.json": {
+      "mode": "100755",
+      "sha": "ccabeb2fdbea7f0b09d0f0e62478b14b506f6018"
+    },
+    "package.json": {
+      "mode": "100755",
+      "sha": "1f51e277baac661846f987b9ecfb4ee942af87c3"
+    },
+    "public/admin-manifest.webmanifest": {
+      "mode": "100644",
+      "sha": "b4b15af83b722d3ae93315cea002bd8ce19f5081"
+    },
+    "public/capa/capa-1080.jpg": {
+      "mode": "100644",
+      "sha": "c88f6963f0bad1ffe4ac1fa84099afb9d73bcb70"
+    },
+    "public/capa/capa-1080.webp": {
+      "mode": "100644",
+      "sha": "18ab61a734f47bc0d91d54da3dd1399bc3e0ab2f"
+    },
+    "public/capa/capa-1600.webp": {
+      "mode": "100644",
+      "sha": "ca3d0eff020f56a3d90c5d203e0012455efa9488"
+    },
+    "public/capa/capa-2172.webp": {
+      "mode": "100644",
+      "sha": "4cc9bc572d09bfc2542cd1b65c85c3f305b2a2c0"
+    },
+    "public/capa/capa-640.webp": {
+      "mode": "100644",
+      "sha": "93f31601d7ccd978f81acbb8c15f7fda03c2e563"
+    },
+    "public/capa/og.jpg": {
+      "mode": "100644",
+      "sha": "783d21496e3fdb88611848d839010c03c027df16"
+    },
+    "public/capa/opcoes/opcao-1-1080.webp": {
+      "mode": "100644",
+      "sha": "675c23c0ed6ec28ac69bac5e4b3eb26c4172b3b6"
+    },
+    "public/capa/opcoes/opcao-1-1600.webp": {
+      "mode": "100644",
+      "sha": "bebc1d9705659cbbbce30f72cd25a0ef3918aed7"
+    },
+    "public/capa/opcoes/opcao-1-640.webp": {
+      "mode": "100644",
+      "sha": "c0dc3831d3344ecdfebf59f7db8517f3b7ed8b85"
+    },
+    "public/capa/opcoes/opcao-10-1080.webp": {
+      "mode": "100644",
+      "sha": "18ab61a734f47bc0d91d54da3dd1399bc3e0ab2f"
+    },
+    "public/capa/opcoes/opcao-10-1600.webp": {
+      "mode": "100644",
+      "sha": "ca3d0eff020f56a3d90c5d203e0012455efa9488"
+    },
+    "public/capa/opcoes/opcao-10-640.webp": {
+      "mode": "100644",
+      "sha": "93f31601d7ccd978f81acbb8c15f7fda03c2e563"
+    },
+    "public/capa/opcoes/opcao-2-1080.webp": {
+      "mode": "100644",
+      "sha": "470791313099a850c376a3d40493c181d4ebfdbd"
+    },
+    "public/capa/opcoes/opcao-2-1600.webp": {
+      "mode": "100644",
+      "sha": "1fdad6ab502262e96a3163a6de19cde4017c1a4b"
+    },
+    "public/capa/opcoes/opcao-2-640.webp": {
+      "mode": "100644",
+      "sha": "7e32d8f63091f2d555db84f3dd8e05d73d962a44"
+    },
+    "public/capa/opcoes/opcao-3-1080.webp": {
+      "mode": "100644",
+      "sha": "43bdbd1529960b216916cf0ca3b80cea1f685098"
+    },
+    "public/capa/opcoes/opcao-3-1600.webp": {
+      "mode": "100644",
+      "sha": "8df172d0fb0f724a0026cd310bc319ca574b0229"
+    },
+    "public/capa/opcoes/opcao-3-640.webp": {
+      "mode": "100644",
+      "sha": "225d8f3959aabce33c1ec2e249bcc46912430dc3"
+    },
+    "public/capa/opcoes/opcao-4-1080.webp": {
+      "mode": "100644",
+      "sha": "b8e3f1450cdb936c4c0bb0b3cdad36855a3512c3"
+    },
+    "public/capa/opcoes/opcao-4-1600.webp": {
+      "mode": "100644",
+      "sha": "319a6d4f68b08a3d61078168b41665731bcdce0f"
+    },
+    "public/capa/opcoes/opcao-4-640.webp": {
+      "mode": "100644",
+      "sha": "4d2751d3159c09d854e7fe1332b49cf2a52380b4"
+    },
+    "public/capa/opcoes/opcao-5-1080.webp": {
+      "mode": "100644",
+      "sha": "538d22f015460b1bfc687e8d203fd0dc77ecfd80"
+    },
+    "public/capa/opcoes/opcao-5-1600.webp": {
+      "mode": "100644",
+      "sha": "734562b5ede8cc83f188228fe205b57647a9596e"
+    },
+    "public/capa/opcoes/opcao-5-640.webp": {
+      "mode": "100644",
+      "sha": "2896c036fb31756131a052b01b61ec2148f76727"
+    },
+    "public/capa/opcoes/opcao-6-1080.webp": {
+      "mode": "100644",
+      "sha": "366e9f118c96bc3e7259b5947f8092186b934ae9"
+    },
+    "public/capa/opcoes/opcao-6-1600.webp": {
+      "mode": "100644",
+      "sha": "7609cf93eced9a7fe90e365b9399373ebc0cce39"
+    },
+    "public/capa/opcoes/opcao-6-640.webp": {
+      "mode": "100644",
+      "sha": "f012552e9014bcfdcdb4a87ac1e70e8c5ceb3e03"
+    },
+    "public/capa/opcoes/opcao-7-1080.webp": {
+      "mode": "100644",
+      "sha": "57811acd032723994df48179cab96ba7a57e08fd"
+    },
+    "public/capa/opcoes/opcao-7-1600.webp": {
+      "mode": "100644",
+      "sha": "c9ffb4e6ef1dc0ba163045a74f5b3a488f81c08d"
+    },
+    "public/capa/opcoes/opcao-7-640.webp": {
+      "mode": "100644",
+      "sha": "d1f436b9d097a1edd97948d8d05d0760a04b19cd"
+    },
+    "public/capa/opcoes/opcao-8-1080.webp": {
+      "mode": "100644",
+      "sha": "a28dee86c29a361e085eda8e0cb0dd4e6fd5b081"
+    },
+    "public/capa/opcoes/opcao-8-1600.webp": {
+      "mode": "100644",
+      "sha": "3720a18d812f7a515afe27395602718202ce96c3"
+    },
+    "public/capa/opcoes/opcao-8-640.webp": {
+      "mode": "100644",
+      "sha": "475fa0da2c00faf8e28a0b6e7fdde0013a199251"
+    },
+    "public/capa/opcoes/opcao-9-1080.webp": {
+      "mode": "100644",
+      "sha": "f833809359b17d5a39875546d52564ffeb38289c"
+    },
+    "public/capa/opcoes/opcao-9-1600.webp": {
+      "mode": "100644",
+      "sha": "1744ac8a2ddb2c1f189a1a178cfe1eafdb6b2f69"
+    },
+    "public/capa/opcoes/opcao-9-640.webp": {
+      "mode": "100644",
+      "sha": "f70a42fb6541dc4cfd1a297c9a4d7f7f0967c75f"
+    },
+    "public/data/geo/estados.geojson": {
+      "mode": "100644",
+      "sha": "2fa9b1bd848b3cda7086407906eb1471fec4494f"
+    },
+    "public/data/geo/municipios-centroides.json": {
+      "mode": "100644",
+      "sha": "8f97f8bb5b7126fe26d410f73e6cc7b0ada0cadb"
+    },
+    "public/data/geo/paises.json": {
+      "mode": "100644",
+      "sha": "e180facdac395aa5e8838f2b21d3e98fd8d9af19"
+    },
+    "public/data/ifes.json": {
+      "mode": "100644",
+      "sha": "cd7099eb139f4e15378d5019bcfac7339c380279"
+    },
+    "public/data/municipios.json": {
+      "mode": "100644",
+      "sha": "b40eb2073866e73cfde35dbaab7723ff183695cf"
+    },
+    "public/data/regiao.json": {
+      "mode": "100644",
+      "sha": "cd3362b6873416d0b9f1aa6ef0c016092ecfe7c5"
+    },
+    "public/data/world-universities.json": {
+      "mode": "100644",
+      "sha": "1d0829811ac624ebe73c3675ff1c62039d4b20d4"
+    },
+    "public/email-icones/fb.png": {
+      "mode": "100644",
+      "sha": "99ead9265298c15b1cd01d054d1fb7490ad5d3db"
+    },
+    "public/email-icones/ig.png": {
+      "mode": "100644",
+      "sha": "23f4ac2dd08917cd86d13b685fc5f16e9a0a13c3"
+    },
+    "public/email-icones/tg.png": {
+      "mode": "100644",
+      "sha": "ff290d48621da4bfbedb88ce31f52da77669290c"
+    },
+    "public/email-icones/wa.png": {
+      "mode": "100644",
+      "sha": "c295fb9d116a4e8fa7f158f711a3f0d2a6725b56"
+    },
+    "public/email-icones/x.png": {
+      "mode": "100644",
+      "sha": "3030fb49f1f51abea4216c16e7dc7a8e8a79e8ac"
+    },
+    "public/flags/ad.svg": {
+      "mode": "100644",
+      "sha": "199ff198e7e4a1f542de9606e0832998cbc82f7e"
+    },
+    "public/flags/ae.svg": {
+      "mode": "100644",
+      "sha": "651ac8523d3d933827ccfbdf5dfd598e65bad442"
+    },
+    "public/flags/af.svg": {
+      "mode": "100644",
+      "sha": "4dbe4556e12f2040f27e35f423e35a8106b21af9"
+    },
+    "public/flags/ag.svg": {
+      "mode": "100644",
+      "sha": "243c3d8f9e7896433ad3795af3c43dcd1cf531ae"
+    },
+    "public/flags/ai.svg": {
+      "mode": "100644",
+      "sha": "9c2ea3398e4d53a9092e4835d29ce3547f9d26d1"
+    },
+    "public/flags/al.svg": {
+      "mode": "100644",
+      "sha": "e85d95f0f0a67d3d2fdd828c289a1c80210e7022"
+    },
+    "public/flags/am.svg": {
+      "mode": "100644",
+      "sha": "99fa4dc5979a45b249ca805c2a43d3a8c74841d2"
+    },
+    "public/flags/ao.svg": {
+      "mode": "100644",
+      "sha": "b73b1ec5e45073af6e4d854881b9821bf83ffd83"
+    },
+    "public/flags/aq.svg": {
+      "mode": "100644",
+      "sha": "c7e353624cefa2a2722d69e678cffed60f4fe301"
+    },
+    "public/flags/ar.svg": {
+      "mode": "100644",
+      "sha": "c753da103f3ceae0a975b6eda70c2776f7467c5f"
+    },
+    "public/flags/arab.svg": {
+      "mode": "100644",
+      "sha": "9ef079f630ab1aeffff367a90c079de2449ead7f"
+    },
+    "public/flags/as.svg": {
+      "mode": "100644",
+      "sha": "82459dec1b579e9945dcef8ab3918430dd9043f2"
+    },
+    "public/flags/asean.svg": {
+      "mode": "100644",
+      "sha": "189ae02054a6846c904fb2e296346e220823fcc4"
+    },
+    "public/flags/at.svg": {
+      "mode": "100644",
+      "sha": "9d2775c083280e98bcaa0fc8e136ebaef5984bf8"
+    },
+    "public/flags/au.svg": {
+      "mode": "100644",
+      "sha": "96e80768bb7084e490fd34ad626f40d5cea1ac7b"
+    },
+    "public/flags/aw.svg": {
+      "mode": "100644",
+      "sha": "413b7c45b60d7f575323933856e7adb6fb10661a"
+    },
+    "public/flags/ax.svg": {
+      "mode": "100644",
+      "sha": "0584d713b54305c0b331fd9fe87ad6f6c2ae696b"
+    },
+    "public/flags/az.svg": {
+      "mode": "100644",
+      "sha": "35575221104fccb01c19318bdb15b6247a4108d4"
+    },
+    "public/flags/ba.svg": {
+      "mode": "100644",
+      "sha": "93bd9cf9378475a443d6f29b0708e932a685ae22"
+    },
+    "public/flags/bb.svg": {
+      "mode": "100644",
+      "sha": "cecd5cc33439f864474458956b5efb1dcc0fe6d3"
+    },
+    "public/flags/bd.svg": {
+      "mode": "100644",
+      "sha": "16b794debd08294403b4e61c61a17ae02bfa0a44"
+    },
+    "public/flags/be.svg": {
+      "mode": "100644",
+      "sha": "ac706a0b5a148cb20a1bdecb79bb709d20455fa3"
+    },
+    "public/flags/bf.svg": {
+      "mode": "100644",
+      "sha": "d85dbda717fb67a396542d5a94e1a7acb8060b3c"
+    },
+    "public/flags/bg.svg": {
+      "mode": "100644",
+      "sha": "af2d0d07c31e24fabc76bc7df026cfa046ac682e"
+    },
+    "public/flags/bh.svg": {
+      "mode": "100644",
+      "sha": "7a2ea549b63f576052adc45e20e5970921c5b870"
+    },
+    "public/flags/bi.svg": {
+      "mode": "100644",
+      "sha": "a4434a955fbcdb15e1b297cc46d884bc85cdec6c"
+    },
+    "public/flags/bj.svg": {
+      "mode": "100644",
+      "sha": "0846724d179abc3f815246236d220f6f43b9bd1a"
+    },
+    "public/flags/bl.svg": {
+      "mode": "100644",
+      "sha": "f84cbbaeb1940e1ab5853545b4f4c3ff9591639c"
+    },
+    "public/flags/bm.svg": {
+      "mode": "100644",
+      "sha": "f43a5ebc8f25ed366068b2785b1ded981b755d20"
+    },
+    "public/flags/bn.svg": {
+      "mode": "100644",
+      "sha": "f544c25e22728dc40004e88a009a49b8ab2a5118"
+    },
+    "public/flags/bo.svg": {
+      "mode": "100644",
+      "sha": "7658e3f6c26dcb342aa0b8dc6664ebab386fb30e"
+    },
+    "public/flags/bq.svg": {
+      "mode": "100644",
+      "sha": "0e6bc76e6284722974b8a8727f4c95602245b3a2"
+    },
+    "public/flags/br.svg": {
+      "mode": "100644",
+      "sha": "719a763caaf7cc2b1809fe05b5f06e5f12e47393"
+    },
+    "public/flags/bs.svg": {
+      "mode": "100644",
+      "sha": "5cc918e5ad40ee0af8f8d819ca3666f0e7026530"
+    },
+    "public/flags/bt.svg": {
+      "mode": "100644",
+      "sha": "20aef3a63b4dcbe769cc63bfc13c152df4102b4d"
+    },
+    "public/flags/bv.svg": {
+      "mode": "100644",
+      "sha": "40e16d9482fbd3d732d3b43061d3cae8bbea3a5e"
+    },
+    "public/flags/bw.svg": {
+      "mode": "100644",
+      "sha": "3435608d6c0daa48ae4a042eee336f58b9886bb9"
+    },
+    "public/flags/by.svg": {
+      "mode": "100644",
+      "sha": "948784ff17075fee77bd5abd4ae862f7bf9d0026"
+    },
+    "public/flags/bz.svg": {
+      "mode": "100644",
+      "sha": "d81b16c23d446934aa0876086d8b1abeea833f9c"
+    },
+    "public/flags/ca.svg": {
+      "mode": "100644",
+      "sha": "c9b23b4988b326e10be7508e91919fd1d29ec852"
+    },
+    "public/flags/cc.svg": {
+      "mode": "100644",
+      "sha": "a42dec667ac0c4787376e22cc049d31dd1e39b00"
+    },
+    "public/flags/cd.svg": {
+      "mode": "100644",
+      "sha": "b9cf528941371b9cc973bdc5de2bb02425fefad1"
+    },
+    "public/flags/cefta.svg": {
+      "mode": "100644",
+      "sha": "f748d08a120248f2a0f47da4ad5e72d856a5a9cd"
+    },
+    "public/flags/cf.svg": {
+      "mode": "100644",
+      "sha": "a6cd3670f27279db2138f14ab185f1ac44ed3c64"
+    },
+    "public/flags/cg.svg": {
+      "mode": "100644",
+      "sha": "f5a0e42d4595ffca08ac64ab1188221cf01f5ee7"
+    },
+    "public/flags/ch.svg": {
+      "mode": "100644",
+      "sha": "b42d6709cfaf22e773bc7aa5da7095eff742873e"
+    },
+    "public/flags/ci.svg": {
+      "mode": "100644",
+      "sha": "4eb884d9ce66228fd23dd59ba934fb9331780d6a"
+    },
+    "public/flags/ck.svg": {
+      "mode": "100644",
+      "sha": "18e547b17daa8d8d1a93c991d1a22ed89e849521"
+    },
+    "public/flags/cl.svg": {
+      "mode": "100644",
+      "sha": "5b3c72fa7c26f80593b0757227deb9c4b77bdf34"
+    },
+    "public/flags/cm.svg": {
+      "mode": "100644",
+      "sha": "70adc8b6818f844e2015f0b76953d4519de585fa"
+    },
+    "public/flags/cn.svg": {
+      "mode": "100644",
+      "sha": "10d3489a0e60176c4db839ad958facf76717cbd1"
+    },
+    "public/flags/co.svg": {
+      "mode": "100644",
+      "sha": "ebd0a0fb2d4b374a6e3f6722436bd54ea89e0520"
+    },
+    "public/flags/cp.svg": {
+      "mode": "100644",
+      "sha": "b8aa9cfd693ddfc924a4e78360be6d065801004e"
+    },
+    "public/flags/cr.svg": {
+      "mode": "100644",
+      "sha": "5a409eebb25d8b72ff39b435bda8c22b6c0115e1"
+    },
+    "public/flags/cu.svg": {
+      "mode": "100644",
+      "sha": "053c9ee3a0296e8594867aaea12b229ad609d0ee"
+    },
+    "public/flags/cv.svg": {
+      "mode": "100644",
+      "sha": "aec8994902cc9f6db819856d61d54d2ff4c9cc93"
+    },
+    "public/flags/cw.svg": {
+      "mode": "100644",
+      "sha": "bb0ece22e49cedf52861e7b390d17ac3f6aa9084"
+    },
+    "public/flags/cx.svg": {
+      "mode": "100644",
+      "sha": "3a83c23f624e6f7b15a701bc8ad683f3c6da4797"
+    },
+    "public/flags/cy.svg": {
+      "mode": "100644",
+      "sha": "ee4b0c78c285555b9e011ebb0356956bf10e97c3"
+    },
+    "public/flags/cz.svg": {
+      "mode": "100644",
+      "sha": "7913de3895e8c149a00419187aa0fee16fd0325e"
+    },
+    "public/flags/de.svg": {
+      "mode": "100644",
+      "sha": "71aa2d2c30f576d3577b5c93c7cc2cc9de740da7"
+    },
+    "public/flags/dg.svg": {
+      "mode": "100644",
+      "sha": "dfee2bb9314f3e5f93d26eaf386853a51ab4ce07"
+    },
+    "public/flags/dj.svg": {
+      "mode": "100644",
+      "sha": "9b00a82056625e86235dc988080d3c142f9dbcca"
+    },
+    "public/flags/dk.svg": {
+      "mode": "100644",
+      "sha": "563277f81d904ddf48573466c018c914d693bf6a"
+    },
+    "public/flags/dm.svg": {
+      "mode": "100644",
+      "sha": "5aa9cea5f51961a50d4bfdb1a4be4280326d3edd"
+    },
+    "public/flags/do.svg": {
+      "mode": "100644",
+      "sha": "6de2b268d034a30afb3322b61b088df98101b71f"
+    },
+    "public/flags/dz.svg": {
+      "mode": "100644",
+      "sha": "5ff29a74a00be5f65b5219b35ca6caaa6399e87f"
+    },
+    "public/flags/eac.svg": {
+      "mode": "100644",
+      "sha": "59d02d218146ab441aa3ecdd707e48e9d415a492"
+    },
+    "public/flags/ec.svg": {
+      "mode": "100644",
+      "sha": "88c50bf616564c5ed2d5d895572d4f54fcc9b29b"
+    },
+    "public/flags/ee.svg": {
+      "mode": "100644",
+      "sha": "8b98c2c429bc94f6adca7aa099a18b8ab1b8fdd3"
+    },
+    "public/flags/eg.svg": {
+      "mode": "100644",
+      "sha": "88e32b3ae6666464a0a5b4e3303430af481afcf5"
+    },
+    "public/flags/eh.svg": {
+      "mode": "100644",
+      "sha": "6aec72883c46ed59be2dd120e2397c439fe20eae"
+    },
+    "public/flags/er.svg": {
+      "mode": "100644",
+      "sha": "48a13b47fe6ab02a2e21693e8c5b2d2baaa2ce89"
+    },
+    "public/flags/es-ct.svg": {
+      "mode": "100644",
+      "sha": "4d85911402e448090b373c2d359b71de7c257f1b"
+    },
+    "public/flags/es-ga.svg": {
+      "mode": "100644",
+      "sha": "573ca45da18187cf752c17f5b5d72c82dfa47eb9"
+    },
+    "public/flags/es-pv.svg": {
+      "mode": "100644",
+      "sha": "63c19f4174bad88d425d7e53377e39b80f920f6c"
+    },
+    "public/flags/es.svg": {
+      "mode": "100644",
+      "sha": "a296ebf7e186054afaa06f6a27991aa1b569a5a8"
+    },
+    "public/flags/et.svg": {
+      "mode": "100644",
+      "sha": "518100c1d061e31c32deb67137e175c5552a41c2"
+    },
+    "public/flags/eu.svg": {
+      "mode": "100644",
+      "sha": "b0874c1ed497e8607e472592e381573c9c6544f8"
+    },
+    "public/flags/fi.svg": {
+      "mode": "100644",
+      "sha": "470be2d07c9df2cbedfde2f27fa42cb3a59d3657"
+    },
+    "public/flags/fj.svg": {
+      "mode": "100644",
+      "sha": "332ae61d0b8a0ed313c3236f07884154f0e58a17"
+    },
+    "public/flags/fk.svg": {
+      "mode": "100644",
+      "sha": "a0dace8371c9a3d13789d8542e587d251879cfc3"
+    },
+    "public/flags/fm.svg": {
+      "mode": "100644",
+      "sha": "c1b7c9778436ae1880c0f7a6123a723e20297d2d"
+    },
+    "public/flags/fo.svg": {
+      "mode": "100644",
+      "sha": "f802d285ac7bc5684cec527da5381336fa7099ef"
+    },
+    "public/flags/fr.svg": {
+      "mode": "100644",
+      "sha": "e682b90020218ddd39df6f81497f14b04bdacbda"
+    },
+    "public/flags/ga.svg": {
+      "mode": "100644",
+      "sha": "76edab429c29ee1818c8451da065df5cdd822cb1"
+    },
+    "public/flags/gb-eng.svg": {
+      "mode": "100644",
+      "sha": "12e3b67d56ee0db67b02a3fbd26925d5f9cb16c6"
+    },
+    "public/flags/gb-nir.svg": {
+      "mode": "100644",
+      "sha": "e22190aae10ab74af93dffe9f4b2b6a1af6094a1"
+    },
+    "public/flags/gb-sct.svg": {
+      "mode": "100644",
+      "sha": "f50cd322ac5207ca162812bc97a53521ee1f058d"
+    },
+    "public/flags/gb-wls.svg": {
+      "mode": "100644",
+      "sha": "d7f57912db1652dc9e96b529c9874cf3840304cc"
+    },
+    "public/flags/gb.svg": {
+      "mode": "100644",
+      "sha": "799138319d8446a6407a3448185559f20b9e3415"
+    },
+    "public/flags/gd.svg": {
+      "mode": "100644",
+      "sha": "b3d250db99cfe301aab188101366873457c810e5"
+    },
+    "public/flags/ge.svg": {
+      "mode": "100644",
+      "sha": "ab08a9ab4234ea1fb156a10c495984d4d5022ae2"
+    },
+    "public/flags/gf.svg": {
+      "mode": "100644",
+      "sha": "f8fe94c6597c6572e940a6a7e4393517fad42807"
+    },
+    "public/flags/gg.svg": {
+      "mode": "100644",
+      "sha": "f8216c8bc151db8358353e88581b1c13bb6df76b"
+    },
+    "public/flags/gh.svg": {
+      "mode": "100644",
+      "sha": "5c3e3e69abef991bccb41ccb60a9e1a3023dc574"
+    },
+    "public/flags/gi.svg": {
+      "mode": "100644",
+      "sha": "a5d7570dddbb0be42e54c6757b9811b6c2a6aada"
+    },
+    "public/flags/gl.svg": {
+      "mode": "100644",
+      "sha": "eb5a52e9e486139468f67fc71221a33b57f95844"
+    },
+    "public/flags/gm.svg": {
+      "mode": "100644",
+      "sha": "8fe9d669204c288298d69d08ab52e3739632fbeb"
+    },
+    "public/flags/gn.svg": {
+      "mode": "100644",
+      "sha": "40d6ad4f03dbd66bd713bad8595fb88dc0d55d73"
+    },
+    "public/flags/gp.svg": {
+      "mode": "100644",
+      "sha": "ee55c4bcd3723a006ca16b87a3583e0ba12dde05"
+    },
+    "public/flags/gq.svg": {
+      "mode": "100644",
+      "sha": "64c8eb220a3049dc6162cc4298a06154dfaddd1b"
+    },
+    "public/flags/gr.svg": {
+      "mode": "100644",
+      "sha": "599741eec82f5c8729cfa503f552c9f781f5625b"
+    },
+    "public/flags/gs.svg": {
+      "mode": "100644",
+      "sha": "29db9b942e96d78436d0c624c124e7d806ee5b95"
+    },
+    "public/flags/gt.svg": {
+      "mode": "100644",
+      "sha": "7df9df57926714b70be3d47e81b2d13b150834ba"
+    },
+    "public/flags/gu.svg": {
+      "mode": "100644",
+      "sha": "3b95219a084d5a92d2c061364cbe22ca04f9a641"
+    },
+    "public/flags/gw.svg": {
+      "mode": "100644",
+      "sha": "d470bac9f71b82867e76cdb528c0c2808307df94"
+    },
+    "public/flags/gy.svg": {
+      "mode": "100644",
+      "sha": "569fb562759edd11a7ba270c83c752f03be5c042"
+    },
+    "public/flags/hk.svg": {
+      "mode": "100644",
+      "sha": "4fd55bc14b064e5c0359389c644716f69fe5a0c9"
+    },
+    "public/flags/hm.svg": {
+      "mode": "100644",
+      "sha": "815c4820850776edc81d8746c0dded7ec7d4185b"
+    },
+    "public/flags/hn.svg": {
+      "mode": "100644",
+      "sha": "11fde67db930e5cfeae9fc1ba2865b1e91a825e5"
+    },
+    "public/flags/hr.svg": {
+      "mode": "100644",
+      "sha": "dde825c30a9231c3f31fe9e70ed0e8971a2abd2a"
+    },
+    "public/flags/ht.svg": {
+      "mode": "100644",
+      "sha": "8e8efc46b9a9a5418d40e3ba2d31f7a277e4e431"
+    },
+    "public/flags/hu.svg": {
+      "mode": "100644",
+      "sha": "24fbfb965888e2c2f66899dd89942f2e47ca5187"
+    },
+    "public/flags/ic.svg": {
+      "mode": "100644",
+      "sha": "81e6ee2e13724de87ee79f8738f2e0bbd7263414"
+    },
+    "public/flags/id.svg": {
+      "mode": "100644",
+      "sha": "3b7c8fcfd96578480474bf942e1a0adb604dde0f"
+    },
+    "public/flags/ie.svg": {
+      "mode": "100644",
+      "sha": "049be14de14f4f67419f3c5e2f0c5d022b74ca39"
+    },
+    "public/flags/il.svg": {
+      "mode": "100644",
+      "sha": "f43be7e8ed7ae29d324f7f1aa0d46528e2a5c3af"
+    },
+    "public/flags/im.svg": {
+      "mode": "100644",
+      "sha": "fe6a59a1a04b5d8411da77689afcbe3cfd5dd6a8"
+    },
+    "public/flags/in.svg": {
+      "mode": "100644",
+      "sha": "bc47d74911bb32886aa9c611feb36e6fc54ff850"
+    },
+    "public/flags/io.svg": {
+      "mode": "100644",
+      "sha": "3058f7dffa03284127eaaf79fb8d826e5c8bec55"
+    },
+    "public/flags/iq.svg": {
+      "mode": "100644",
+      "sha": "804451474adb04b36660de45e082b6c758f8b7b5"
+    },
+    "public/flags/ir.svg": {
+      "mode": "100644",
+      "sha": "8c6d516216991dea851ae9c2be9e65cd86d8783a"
+    },
+    "public/flags/is.svg": {
+      "mode": "100644",
+      "sha": "a6588afaefd01855a9e5587e0fb52737e03c50bd"
+    },
+    "public/flags/it.svg": {
+      "mode": "100644",
+      "sha": "20a8bfdcc802296c682866e18c41a74fbaa702fd"
+    },
+    "public/flags/je.svg": {
+      "mode": "100644",
+      "sha": "70a8754ef9ad0a579ece019eed3d3934d9f0af67"
+    },
+    "public/flags/jm.svg": {
+      "mode": "100644",
+      "sha": "269df03836848d552789f9ea6a35ef0993694778"
+    },
+    "public/flags/jo.svg": {
+      "mode": "100644",
+      "sha": "d6f927d44f21a21f3c6c23e67fbe144541d5ba66"
+    },
+    "public/flags/jp.svg": {
+      "mode": "100644",
+      "sha": "cc1c181ce9b2c22b5d29d04d7858d4d6ed0c878c"
+    },
+    "public/flags/ke.svg": {
+      "mode": "100644",
+      "sha": "3a67ca3ccd48b1e0fe01fd4741711d462395006d"
+    },
+    "public/flags/kg.svg": {
+      "mode": "100644",
+      "sha": "e26db95356b64999faa48d6b5fca6d8742e7d512"
+    },
+    "public/flags/kh.svg": {
+      "mode": "100644",
+      "sha": "a7d52f2cb41c6b5c83316cdb0c672adf01c44d10"
+    },
+    "public/flags/ki.svg": {
+      "mode": "100644",
+      "sha": "fda03f37beec39c99a7ad182be4e15688a878cc2"
+    },
+    "public/flags/km.svg": {
+      "mode": "100644",
+      "sha": "414d65e47fd1c921cb6cbf9c352c3b655a148576"
+    },
+    "public/flags/kn.svg": {
+      "mode": "100644",
+      "sha": "47fe64d617abeab2d89d61568b8504a6e6dd6102"
+    },
+    "public/flags/kp.svg": {
+      "mode": "100644",
+      "sha": "ad1b713f16ecc8b1bc06a391568ded01f627d73d"
+    },
+    "public/flags/kr.svg": {
+      "mode": "100644",
+      "sha": "6947eab2b3902872175f81d84f6966e170083c0d"
+    },
+    "public/flags/kw.svg": {
+      "mode": "100644",
+      "sha": "3dd89e9962e65164e4ed41a305f71a1afe027085"
+    },
+    "public/flags/ky.svg": {
+      "mode": "100644",
+      "sha": "aeaa7e08cbc56e018831a4121b603ee8b7de677e"
+    },
+    "public/flags/kz.svg": {
+      "mode": "100644",
+      "sha": "2fac45bda64a3d840bf898708340cc6ee0d382be"
+    },
+    "public/flags/la.svg": {
+      "mode": "100644",
+      "sha": "6aea6b72b4050a3e7bf89f4dd545fdb67ef334f4"
+    },
+    "public/flags/lb.svg": {
+      "mode": "100644",
+      "sha": "bde2581d2b1eb934cf913c203969f7f2b0f8ca8a"
+    },
+    "public/flags/lc.svg": {
+      "mode": "100644",
+      "sha": "bb256541c6ed49b0a8d242f323360130a690c2bd"
+    },
+    "public/flags/li.svg": {
+      "mode": "100644",
+      "sha": "7a4d183245c97fb96d5bd2bb8b0038fc5580ed29"
+    },
+    "public/flags/lk.svg": {
+      "mode": "100644",
+      "sha": "cbd660a54ac609f29fb6433dd3c637dab91c379f"
+    },
+    "public/flags/lr.svg": {
+      "mode": "100644",
+      "sha": "e482ab9d749d63d64cdf337158a2ead10a235d0a"
+    },
+    "public/flags/ls.svg": {
+      "mode": "100644",
+      "sha": "a7c01a98ffc7cac85a3db0ca42fc8297d7642273"
+    },
+    "public/flags/lt.svg": {
+      "mode": "100644",
+      "sha": "90ec5d240e5e324254b093c8ce70f8d046db16f9"
+    },
+    "public/flags/lu.svg": {
+      "mode": "100644",
+      "sha": "cc122068125c02693dee300ebec3909459ac50f7"
+    },
+    "public/flags/lv.svg": {
+      "mode": "100644",
+      "sha": "f6dececab891bd3420112183dbec9ee866ad3a1b"
+    },
+    "public/flags/ly.svg": {
+      "mode": "100644",
+      "sha": "1eaa51e468b7ed416ae8c332d8310feda761fa41"
+    },
+    "public/flags/ma.svg": {
+      "mode": "100644",
+      "sha": "7ce56eff707c288edbe3071bd8cb495c74dd307c"
+    },
+    "public/flags/mc.svg": {
+      "mode": "100644",
+      "sha": "9cb6c9e8a0ea73661dd9c0659a475851d1eec291"
+    },
+    "public/flags/md.svg": {
+      "mode": "100644",
+      "sha": "e9ba506a2ba85f099e2c11659d90994febde9aac"
+    },
+    "public/flags/me.svg": {
+      "mode": "100644",
+      "sha": "297888c7be5f223629d69c98ac7501043c42bbdf"
+    },
+    "public/flags/mf.svg": {
+      "mode": "100644",
+      "sha": "6305edc1c2390024944d5ddf740e915480d8826a"
+    },
+    "public/flags/mg.svg": {
+      "mode": "100644",
+      "sha": "5fa2d2440d5bfc07bf7863c6c8cbb9648053cc0a"
+    },
+    "public/flags/mh.svg": {
+      "mode": "100644",
+      "sha": "7b9f49075518c2ce18925c1a0e4de1b499dfe28b"
+    },
+    "public/flags/mk.svg": {
+      "mode": "100644",
+      "sha": "4f5cae77ed60b6128d062ab55055290295359b77"
+    },
+    "public/flags/ml.svg": {
+      "mode": "100644",
+      "sha": "6f6b71695cbb3cb3f00e74d825faf95999fe768e"
+    },
+    "public/flags/mm.svg": {
+      "mode": "100644",
+      "sha": "42b4dee2b8ccb00e6dc5817cae1e73e18d1ab46a"
+    },
+    "public/flags/mn.svg": {
+      "mode": "100644",
+      "sha": "6a38a71fcf6c712461a5e85f6133bb365ae2a1bb"
+    },
+    "public/flags/mo.svg": {
+      "mode": "100644",
+      "sha": "f638b6cbc89e01afc1e9ea1c67f5d1359e04755e"
+    },
+    "public/flags/mp.svg": {
+      "mode": "100644",
+      "sha": "26bfa2217ae48a59c214cd20a8ec3454418eb67d"
+    },
+    "public/flags/mq.svg": {
+      "mode": "100644",
+      "sha": "b221951e360d8bb3d9053555f53325baa3011ac3"
+    },
+    "public/flags/mr.svg": {
+      "mode": "100644",
+      "sha": "d859972c5d61e8ec1d2aafb6d510f3518588ad03"
+    },
+    "public/flags/ms.svg": {
+      "mode": "100644",
+      "sha": "4367505bc234086cdb987e9ce8d5241784623d5b"
+    },
+    "public/flags/mt.svg": {
+      "mode": "100644",
+      "sha": "5d5d7c80af64db922f76fb11e9a6c9398644fdbb"
+    },
+    "public/flags/mu.svg": {
+      "mode": "100644",
+      "sha": "82d7a3bec553cee4d3bb428569c2417a99fb4da7"
+    },
+    "public/flags/mv.svg": {
+      "mode": "100644",
+      "sha": "10450f984585a423ef7cac54c9a3dd2c9d739730"
+    },
+    "public/flags/mw.svg": {
+      "mode": "100644",
+      "sha": "137ff87893c77827771b7ec781a1a78a8578a7f0"
+    },
+    "public/flags/mx.svg": {
+      "mode": "100644",
+      "sha": "e3ec2bc596c05ef55ee501047b768a1702976e45"
+    },
+    "public/flags/my.svg": {
+      "mode": "100644",
+      "sha": "115f864d8acfc6776feb20d64b9bf852cd32e8e0"
+    },
+    "public/flags/mz.svg": {
+      "mode": "100644",
+      "sha": "0f94c3a1aaa2320e891aa5e92b2c11362c770f47"
+    },
+    "public/flags/na.svg": {
+      "mode": "100644",
+      "sha": "35b9f783e155a4e380086dc7a8f34ad46f47963d"
+    },
+    "public/flags/nc.svg": {
+      "mode": "100644",
+      "sha": "f898af78aae62fff4810e6a1de5ad3886f09430e"
+    },
+    "public/flags/ne.svg": {
+      "mode": "100644",
+      "sha": "39a82b827744d08b7013215ba2f139c9180d1bf7"
+    },
+    "public/flags/nf.svg": {
+      "mode": "100644",
+      "sha": "fd61b25c15274f351ac3be90d7fb0b89283d563f"
+    },
+    "public/flags/ng.svg": {
+      "mode": "100644",
+      "sha": "81eb35f78eb16c26e25ffcb36f9f65720d062b6a"
+    },
+    "public/flags/ni.svg": {
+      "mode": "100644",
+      "sha": "e4861f5abaaf19c3c45d7df7208381c9beaaba0f"
+    },
+    "public/flags/nl.svg": {
+      "mode": "100644",
+      "sha": "e90f5b03511fe47d56930eea41341521579dc8fc"
+    },
+    "public/flags/no.svg": {
+      "mode": "100644",
+      "sha": "a5f2a152a932b85e30cfc1921325da0e300a75bb"
+    },
+    "public/flags/np.svg": {
+      "mode": "100644",
+      "sha": "624285684531217f6a9e99a98ca756965f4c5251"
+    },
+    "public/flags/nr.svg": {
+      "mode": "100644",
+      "sha": "ff394c411211b0739c3c0f4bb19a1ea2a369ee36"
+    },
+    "public/flags/nu.svg": {
+      "mode": "100644",
+      "sha": "4067bafff00a49b9cda26951e711f1ac9bce8981"
+    },
+    "public/flags/nz.svg": {
+      "mode": "100644",
+      "sha": "935d8a749d943341ee885010bf1c31bd59809ab3"
+    },
+    "public/flags/om.svg": {
+      "mode": "100644",
+      "sha": "4f1461a000c837da726a8501670e6dc4aeaabcd1"
+    },
+    "public/flags/pa.svg": {
+      "mode": "100644",
+      "sha": "9ab733f4b548825e3c553d2de4ba7767137b7d6e"
+    },
+    "public/flags/pc.svg": {
+      "mode": "100644",
+      "sha": "5202d6d62351845b5e365b8243a709fe37042c50"
+    },
+    "public/flags/pe.svg": {
+      "mode": "100644",
+      "sha": "33e6cfd417813982f050488d6256c160185adeaf"
+    },
+    "public/flags/pf.svg": {
+      "mode": "100644",
+      "sha": "bea0354d51df5237c4daf90ea408eba7667457cd"
+    },
+    "public/flags/pg.svg": {
+      "mode": "100644",
+      "sha": "7b7e77aad4a512ca0f47d050f6c89d627a47d352"
+    },
+    "public/flags/ph.svg": {
+      "mode": "100644",
+      "sha": "b910e24cd2292aacdab5731a0ddf17e3f6b42304"
+    },
+    "public/flags/pk.svg": {
+      "mode": "100644",
+      "sha": "4ddc19f8eaa824f521c01437355fc90e14b05d9d"
+    },
+    "public/flags/pl.svg": {
+      "mode": "100644",
+      "sha": "42d2b0ce19161bc528e6f20f2d37691c98f8e366"
+    },
+    "public/flags/pm.svg": {
+      "mode": "100644",
+      "sha": "19a9330a31b69da257a312ccc67b4250ac360de0"
+    },
+    "public/flags/pn.svg": {
+      "mode": "100644",
+      "sha": "209ea71a151d0b5618aaf19e96d13fa10722a72b"
+    },
+    "public/flags/pr.svg": {
+      "mode": "100644",
+      "sha": "ec51831dcd801eb1e12b1b0df500007b99801582"
+    },
+    "public/flags/ps.svg": {
+      "mode": "100644",
+      "sha": "362d4359ba9e4c311c344b30347b150b3e47fc66"
+    },
+    "public/flags/pt.svg": {
+      "mode": "100644",
+      "sha": "2767cd4e9faa0beec0593e039b899f78c1831fcb"
+    },
+    "public/flags/pw.svg": {
+      "mode": "100644",
+      "sha": "9f89c5f1483ca787a33689352bb9ffdc1f612522"
+    },
+    "public/flags/py.svg": {
+      "mode": "100644",
+      "sha": "abccd87994c05b81c6fa410bc5fa7b9312675127"
+    },
+    "public/flags/qa.svg": {
+      "mode": "100644",
+      "sha": "901f3fa761a3b90598f952e7a321ad71ca7e793d"
+    },
+    "public/flags/re.svg": {
+      "mode": "100644",
+      "sha": "64e788e011b6e24538aae3d0950db080ba1c3afc"
+    },
+    "public/flags/ro.svg": {
+      "mode": "100644",
+      "sha": "fda0f7bec91d8e31052993b16b794edea4de2f95"
+    },
+    "public/flags/rs.svg": {
+      "mode": "100644",
+      "sha": "6d4f74d7671194c6bcc9ef761f203b23805cace2"
+    },
+    "public/flags/ru.svg": {
+      "mode": "100644",
+      "sha": "cf243011ae99e45cb43edf4ca6b7c51e08419c4c"
+    },
+    "public/flags/rw.svg": {
+      "mode": "100644",
+      "sha": "06e26ae44e4ef16948b32f246c5aafded2982635"
+    },
+    "public/flags/sa.svg": {
+      "mode": "100644",
+      "sha": "596cf48bb7b6005ba3fb4da6d9d6ae0b6451fa0b"
+    },
+    "public/flags/sb.svg": {
+      "mode": "100644",
+      "sha": "6066f94cd1170ea93e50e657c649e1ae75dbeea1"
+    },
+    "public/flags/sc.svg": {
+      "mode": "100644",
+      "sha": "9a46b369b3ff609b538df0a211e87878b2b92780"
+    },
+    "public/flags/sd.svg": {
+      "mode": "100644",
+      "sha": "12818b4110dbe25327131f9ec898aa2e73b85fc6"
+    },
+    "public/flags/se.svg": {
+      "mode": "100644",
+      "sha": "8ba745acaf2231a519e658852e8ef874dbeb8dc7"
+    },
+    "public/flags/sg.svg": {
+      "mode": "100644",
+      "sha": "c4dd4ac9ebe6171235ea7636444265cd2611b9ce"
+    },
+    "public/flags/sh-ac.svg": {
+      "mode": "100644",
+      "sha": "86a3e88b8c377dce3ea9c5e2bf393c8a4353a17f"
+    },
+    "public/flags/sh-hl.svg": {
+      "mode": "100644",
+      "sha": "2150bf609c3c4cb28e80a2cb0f29a56e66675da3"
+    },
+    "public/flags/sh-ta.svg": {
+      "mode": "100644",
+      "sha": "ba390631c96da98db48d4371e8f259340fce99e2"
+    },
+    "public/flags/sh.svg": {
+      "mode": "100644",
+      "sha": "7aba0aec8a074707808eaf6c1cf3bc1d89b80493"
+    },
+    "public/flags/si.svg": {
+      "mode": "100644",
+      "sha": "1bbdd94fd25406e21c452a2a905343f3298672cf"
+    },
+    "public/flags/sj.svg": {
+      "mode": "100644",
+      "sha": "bb2799ce73cdc27c4c6349f4908d8ce10305dcb1"
+    },
+    "public/flags/sk.svg": {
+      "mode": "100644",
+      "sha": "676018e6284fcfed6c878552ef1e662fac4395dd"
+    },
+    "public/flags/sl.svg": {
+      "mode": "100644",
+      "sha": "a07baf75b40f2cbd4fc060ecf2043590c63146d1"
+    },
+    "public/flags/sm.svg": {
+      "mode": "100644",
+      "sha": "e41d2f776cc9c556b377bea017a3f086afe6e9b5"
+    },
+    "public/flags/sn.svg": {
+      "mode": "100644",
+      "sha": "7c0673d6d66d4260fd768deb8807b2ac72de7370"
+    },
+    "public/flags/so.svg": {
+      "mode": "100644",
+      "sha": "a581ac63cfaf2f58a7b5c685f620188d2c7ce826"
+    },
+    "public/flags/sr.svg": {
+      "mode": "100644",
+      "sha": "5e71c400262bac42b8f8fdd36c9a789e78c5a13b"
+    },
+    "public/flags/ss.svg": {
+      "mode": "100644",
+      "sha": "b257aa0b3e505f31f93446067b59bef8a033c58c"
+    },
+    "public/flags/st.svg": {
+      "mode": "100644",
+      "sha": "1294bcb70e87ea10a22743d512bce2fa90af3173"
+    },
+    "public/flags/sv.svg": {
+      "mode": "100644",
+      "sha": "cbc674a6e7c4ec288026a85d06876121ce0e69a4"
+    },
+    "public/flags/sx.svg": {
+      "mode": "100644",
+      "sha": "ac7856178acae07a24bf697683502fbd47c34360"
+    },
+    "public/flags/sy.svg": {
+      "mode": "100644",
+      "sha": "97c05cfc93b1e68d3336507be6f885a52d353252"
+    },
+    "public/flags/sz.svg": {
+      "mode": "100644",
+      "sha": "eb538e4476350ce9984091c289c44b5cc68b2742"
+    },
+    "public/flags/tc.svg": {
+      "mode": "100644",
+      "sha": "125897107764b4697cb96ec44605c2c9eb05dcb9"
+    },
+    "public/flags/td.svg": {
+      "mode": "100644",
+      "sha": "fa3bd927c1580108677d5936898ebd9d87737d09"
+    },
+    "public/flags/tf.svg": {
+      "mode": "100644",
+      "sha": "fba233563fea8f0e6099205c7f55adb7a0d3831c"
+    },
+    "public/flags/tg.svg": {
+      "mode": "100644",
+      "sha": "9d6ea6c5d4882291e63193b8e878910ef13cf9b7"
+    },
+    "public/flags/th.svg": {
+      "mode": "100644",
+      "sha": "1e93a61e95bfe4bd0494ffa27d24dc4fd798eb95"
+    },
+    "public/flags/tj.svg": {
+      "mode": "100644",
+      "sha": "f8c9a0371cb0311a340f5fb9fb327885a01f1851"
+    },
+    "public/flags/tk.svg": {
+      "mode": "100644",
+      "sha": "05d3e86ce6375352f6372d1dc36fdd54a562ecc2"
+    },
+    "public/flags/tl.svg": {
+      "mode": "100644",
+      "sha": "3d0701a2c8c8da8ee7b7736c49aa6a551c0d5a93"
+    },
+    "public/flags/tm.svg": {
+      "mode": "100644",
+      "sha": "4154ed765cfc20762704c5b0da3e8c95b36cb75c"
+    },
+    "public/flags/tn.svg": {
+      "mode": "100644",
+      "sha": "5735c1984de39c02488cafaebbd34d91f79c93bf"
+    },
+    "public/flags/to.svg": {
+      "mode": "100644",
+      "sha": "d0723370668d1322a85a574da2458891c91357ca"
+    },
+    "public/flags/tr.svg": {
+      "mode": "100644",
+      "sha": "b96da21f0e98bfaeee3312cf938417bdc4ec2639"
+    },
+    "public/flags/tt.svg": {
+      "mode": "100644",
+      "sha": "bc24938cf8ead7002e283b29f70b8d34ff5e8607"
+    },
+    "public/flags/tv.svg": {
+      "mode": "100644",
+      "sha": "675210ec5524a97eb206b674556543d0f37f3c97"
+    },
+    "public/flags/tw.svg": {
+      "mode": "100644",
+      "sha": "57fd98b4333c71cc6a84f733a0ae03db264cf72b"
+    },
+    "public/flags/tz.svg": {
+      "mode": "100644",
+      "sha": "a2cfbca42aa2695c6a539fef2c4ee5c44f4f2114"
+    },
+    "public/flags/ua.svg": {
+      "mode": "100644",
+      "sha": "03daa196837a4c6194ee0d015a866943bc859079"
+    },
+    "public/flags/ug.svg": {
+      "mode": "100644",
+      "sha": "520eee5c7c1f005c971bd114302f9cb0b844e8fa"
+    },
+    "public/flags/um.svg": {
+      "mode": "100644",
+      "sha": "9e9eddaa4a71766c3b736e525634946dd81e599e"
+    },
+    "public/flags/un.svg": {
+      "mode": "100644",
+      "sha": "632bbb4ac27a75576f15182c54760fda5066aa80"
+    },
+    "public/flags/us.svg": {
+      "mode": "100644",
+      "sha": "9cfd0c927f975b7afff364179c2b850e525236c3"
+    },
+    "public/flags/uy.svg": {
+      "mode": "100644",
+      "sha": "62c36f8e5e68e03d24497629b1dc34a2955d9985"
+    },
+    "public/flags/uz.svg": {
+      "mode": "100644",
+      "sha": "0ccca1b1b4aa9cfaf14911a49e5a89dfac314d14"
+    },
+    "public/flags/va.svg": {
+      "mode": "100644",
+      "sha": "3e297d638a9454bdf57830c6a62c7491305247f8"
+    },
+    "public/flags/vc.svg": {
+      "mode": "100644",
+      "sha": "f26c2d8da992ebd682254ad797e99e5501f148e9"
+    },
+    "public/flags/ve.svg": {
+      "mode": "100644",
+      "sha": "314e7f5f7f53c3f069830afd15ec278b820f00b9"
+    },
+    "public/flags/vg.svg": {
+      "mode": "100644",
+      "sha": "ac900888ec4cce3d24de1a0f2047567149b3e359"
+    },
+    "public/flags/vi.svg": {
+      "mode": "100644",
+      "sha": "d88d68f9972cb9b4e8d46a31aebf0930f56f6c9f"
+    },
+    "public/flags/vn.svg": {
+      "mode": "100644",
+      "sha": "7e4bac8f4acf3a8dc4cda58e9a3696ca65f8e91e"
+    },
+    "public/flags/vu.svg": {
+      "mode": "100644",
+      "sha": "fdd5e348497b02d401ad614b7613273aac385791"
+    },
+    "public/flags/wf.svg": {
+      "mode": "100644",
+      "sha": "054c57df9972cd5b0c7a0684c7ed4a28eb8bdb40"
+    },
+    "public/flags/ws.svg": {
+      "mode": "100644",
+      "sha": "0e758a7a95c09924056d2b08da60bdb0a25b7b09"
+    },
+    "public/flags/xk.svg": {
+      "mode": "100644",
+      "sha": "0e8958d884b08c3994d41e2d7c97d9691ceb37a3"
+    },
+    "public/flags/xx.svg": {
+      "mode": "100644",
+      "sha": "9333be36355510d91c37086d090608e92d3c822a"
+    },
+    "public/flags/ye.svg": {
+      "mode": "100644",
+      "sha": "de7bd613ecd7e494d1ed3c3b1e0ec749e0efd915"
+    },
+    "public/flags/yt.svg": {
+      "mode": "100644",
+      "sha": "e7776b307879a9d83eac363f7a728eab9b5d6f20"
+    },
+    "public/flags/za.svg": {
+      "mode": "100644",
+      "sha": "d563adb90c0c20b32d666b9903b8ad88722f1372"
+    },
+    "public/flags/zm.svg": {
+      "mode": "100644",
+      "sha": "360f37aa19db6a0f271ffb24130b4fa836a56c56"
+    },
+    "public/flags/zw.svg": {
+      "mode": "100644",
+      "sha": "93aac4f6cf2d11335854da77e992cebb8df50695"
+    },
+    "public/logos/adunir-andes.png": {
+      "mode": "100644",
+      "sha": "30f424b50985e8e6396ac941a4e88b51e5328742"
+    },
+    "public/logos/adunir.png": {
+      "mode": "100755",
+      "sha": "5ad0c2ea5ed51bd4a5c3c00439617365de59067f"
+    },
+    "public/logos/andes.png": {
+      "mode": "100644",
+      "sha": "72395819ed06f98a08f29ac6d80eff428e70d517"
+    },
+    "scripts/aplicar-campi-extras.mjs": {
+      "mode": "100644",
+      "sha": "d1b84994e87bc59890a63d2d87d23458f474117d"
+    },
+    "scripts/build-geo-data.py": {
+      "mode": "100644",
+      "sha": "2b039a0f781423c9cee7ab57d444ed691972e5d1"
+    },
+    "scripts/build-ifes-data.py": {
+      "mode": "100644",
+      "sha": "81f896b14146888cba7f1a8b7d548483fa5e75ce"
+    },
+    "scripts/build-world-universities.py": {
+      "mode": "100644",
+      "sha": "6c50488cafa4f9df95f5cc62795094f0471f1aa1"
+    },
+    "scripts/cpf-chave-teste.ts": {
+      "mode": "100644",
+      "sha": "75fdc51a494f85fb027b883033da0c1c14f84582"
+    },
+    "scripts/cpf-diagnostico.ts": {
+      "mode": "100644",
+      "sha": "37c568b9fa918eb80c5c25d38143c7167655d920"
+    },
+    "scripts/dev-db.mjs": {
+      "mode": "100755",
+      "sha": "2fa5a7f810869d407eecef9410fa49e4d6f1f6dd"
+    },
+    "scripts/gate-set-password.mjs": {
+      "mode": "100644",
+      "sha": "8de9dd536c67fd9b032cbd61f74e3f9fd111a9c0"
+    },
+    "scripts/gerar-layouts-email-obrigado.ts": {
+      "mode": "100644",
+      "sha": "b44cf6204626cb2cb5326a8ea1643d9ccbe70bf1"
+    },
+    "scripts/ifes-campi-extras.json": {
+      "mode": "100644",
+      "sha": "a76058c72c31e9f5737e6d5b5c724480dbe27aa5"
+    },
+    "scripts/import-domains-cnpj.ts": {
+      "mode": "100644",
+      "sha": "0d3572a2fe94c147d1e5865d6e479f58b6d4313a"
+    },
+    "scripts/import-domains-emec.ts": {
+      "mode": "100644",
+      "sha": "626b71128f840a18edb6e849065e10c97f8b3377"
+    },
+    "scripts/import-domains-siorg.ts": {
+      "mode": "100644",
+      "sha": "5b1a6aee924c69dd04ef04457d8ae4890f5ff621"
+    },
+    "scripts/lib-csv.ts": {
+      "mode": "100644",
+      "sha": "4f352458ab9234f0aab1e8b35a7cb016eaab4fc4"
+    },
+    "scripts/lib-prompt.d.mts": {
+      "mode": "100644",
+      "sha": "c37ad64da1db2a9413ad0162537e5a763c538dcd"
+    },
+    "scripts/lib-prompt.mjs": {
+      "mode": "100644",
+      "sha": "b2a275c52db478f23508a88efc0125291fde63c2"
+    },
+    "scripts/prepare-cover.py": {
+      "mode": "100644",
+      "sha": "1840203f980ee231844d7f20f0ac2c7d743eb1f5"
+    },
+    "scripts/prepare-covers.py": {
+      "mode": "100644",
+      "sha": "b64c32cd2cd9bc49f0692a5d7d11ff2524068e1e"
+    },
+    "scripts/preview-entry.mjs": {
+      "mode": "100644",
+      "sha": "5393e8ba703ce1a94d8ca5e6e1e403fe4b0b2feb"
+    },
+    "scripts/preview-isolation-check.mjs": {
+      "mode": "100644",
+      "sha": "3b041fcb7ff47a62a2f8cc0da9331120b59f8e7a"
+    },
+    "scripts/sample-pdf.ts": {
+      "mode": "100755",
+      "sha": "409caa79f245cffd749777d8ff1830ce1be6acee"
+    },
+    "scripts/set-secret.mjs": {
+      "mode": "100644",
+      "sha": "7589ed782e72bc0a56c0180fcdc7090039d9afc6"
+    },
+    "scripts/update-geo-db.sh": {
+      "mode": "100755",
+      "sha": "92605c31a079ffd8eddf7e68ee7f09e10cefe51b"
+    },
+    "scripts/with-db.mjs": {
+      "mode": "100755",
+      "sha": "441b42767f655455d754846be4299345e709959d"
+    },
+    "server/preview-server.mjs": {
+      "mode": "100644",
+      "sha": "eed86a1a3e91ca34c02b7e4b82060420cb305193"
+    },
+    "src/app/admin/admin.css": {
+      "mode": "100644",
+      "sha": "b5f4cf597758c9c8aaa92b74cd2ebd862e3a076d"
+    },
+    "src/app/admin/assinaturas/page.tsx": {
+      "mode": "100644",
+      "sha": "dc13707d283cad479ebbd0448a8417b745536476"
+    },
+    "src/app/admin/contato/page.tsx": {
+      "mode": "100644",
+      "sha": "29c03bddbc086df62a09324485d6e68ad727e4e7"
+    },
+    "src/app/admin/devolvidos/page.tsx": {
+      "mode": "100644",
+      "sha": "07831a34e731541ef32e696f73e7e17753a72d3a"
+    },
+    "src/app/admin/dispersao/page.tsx": {
+      "mode": "100644",
+      "sha": "abb40aa366be68280452dd2d43775a1d0dcdef0b"
+    },
+    "src/app/admin/dominios/page.tsx": {
+      "mode": "100644",
+      "sha": "d7d44db56555f2968c110436a2bef82921532130"
+    },
+    "src/app/admin/emails/entregas/page.tsx": {
+      "mode": "100644",
+      "sha": "2a957f9db3455a46d15d90aa2fb4dd5b75d66f94"
+    },
+    "src/app/admin/emails/page.tsx": {
+      "mode": "100644",
+      "sha": "2f91d24a60d4814ec12be67581ab1161c485a0a1"
+    },
+    "src/app/admin/indicacoes/page.tsx": {
+      "mode": "100644",
+      "sha": "07c9d6ad905769541236fd5584ea061650eabd5a"
+    },
+    "src/app/admin/layout.tsx": {
+      "mode": "100644",
+      "sha": "b67a7f82e722ed8395d125fd198aa57869340a13"
+    },
+    "src/app/admin/lotes/page.tsx": {
+      "mode": "100755",
+      "sha": "1e13f18aca3a173610176e826df26fcf96659e1b"
+    },
+    "src/app/admin/mapa/page.tsx": {
+      "mode": "100644",
+      "sha": "8308d26844790c85ed0a9b6deb1603590db9bfe4"
+    },
+    "src/app/admin/mapa/tela/page.tsx": {
+      "mode": "100644",
+      "sha": "027249ee2f673e2955694f79b543cc5cf63c0762"
+    },
+    "src/app/admin/monitor/page.tsx": {
+      "mode": "100644",
+      "sha": "ac05636d1506060be88eb811cf3ee91f69889988"
+    },
+    "src/app/admin/page.tsx": {
+      "mode": "100755",
+      "sha": "b9cf40c946c0e6810d4e04c5338e950a9fd616db"
+    },
+    "src/app/admin/whatsapp/page.tsx": {
+      "mode": "100644",
+      "sha": "0594870aaedab157edbe7b47675ea0dbeafeae0e"
+    },
+    "src/app/api/admin/alertas/route.ts": {
+      "mode": "100644",
+      "sha": "831bcd5411dbdf65952c152a862ef28b5dc59687"
+    },
+    "src/app/api/admin/assinaturas/[id]/email/route.ts": {
+      "mode": "100644",
+      "sha": "9316ce95a5bea2e8f79a1b23b854c2c31dddb2de"
+    },
+    "src/app/api/admin/assinaturas/[id]/reenviar/route.ts": {
+      "mode": "100644",
+      "sha": "782eb7fd1490936aa8993d2989dea380c1824e31"
+    },
+    "src/app/api/admin/assinaturas/explorar/route.ts": {
+      "mode": "100644",
+      "sha": "e860402482182ec525ff7b36064fc494d82e672d"
+    },
+    "src/app/api/admin/assinaturas/lote/route.ts": {
+      "mode": "100644",
+      "sha": "af71c7ecaae29adcff900dc605c7e9e276a96cfb"
+    },
+    "src/app/api/admin/assinaturas/visitas/route.ts": {
+      "mode": "100644",
+      "sha": "d27e9a7b8e24371839c359ac1e822cc797f2f791"
+    },
+    "src/app/api/admin/dashboard/route.ts": {
+      "mode": "100644",
+      "sha": "06639835d7a96d41a4e94d7515362d3aa1488b97"
+    },
+    "src/app/api/admin/diagnosticos/assinaturas/route.ts": {
+      "mode": "100644",
+      "sha": "d34a0c0c8efafcaf6672a42198815cc1c325e4e4"
+    },
+    "src/app/api/admin/dispersao/route.ts": {
+      "mode": "100644",
+      "sha": "7ee58869ace84bff550732780958447c18212271"
+    },
+    "src/app/api/admin/dominios/route.ts": {
+      "mode": "100644",
+      "sha": "be5dfe87be5a41cf9e741268c9a8942c3a9dc811"
+    },
+    "src/app/api/admin/emails/engajamento/route.ts": {
+      "mode": "100644",
+      "sha": "51bcb36a8e8b0ce960b3479be3197bd48d51ab7f"
+    },
+    "src/app/api/admin/emails/entregas/route.ts": {
+      "mode": "100644",
+      "sha": "3f715dbbbebb4a6ad52ae255d0cdf51127838f21"
+    },
+    "src/app/api/admin/emails/sincronizar/route.ts": {
+      "mode": "100644",
+      "sha": "e16a543ab5b70566e2499795482d4abe6465cb99"
+    },
+    "src/app/api/admin/export/route.ts": {
+      "mode": "100755",
+      "sha": "434d5737323a12fa3503fc7a67427538c75f8a03"
+    },
+    "src/app/api/admin/identidade/zerar/route.ts": {
+      "mode": "100644",
+      "sha": "63345e7bc3afc23b175b01b487f8e9dfc8d4cdd3"
+    },
+    "src/app/api/admin/indicacoes/route.ts": {
+      "mode": "100644",
+      "sha": "617e93331f0d468116d8dac7aed602e3a4179f3a"
+    },
+    "src/app/api/admin/login/route.ts": {
+      "mode": "100755",
+      "sha": "e3ffdd56e63d09f4abd413ec6d468d11acb51641"
+    },
+    "src/app/api/admin/lotes/[id]/aprovar/route.ts": {
+      "mode": "100755",
+      "sha": "ed4df38d12315a7e19eb5f148708acf9d8cf4f79"
+    },
+    "src/app/api/admin/lotes/[id]/assinado/route.ts": {
+      "mode": "100644",
+      "sha": "0a4570dc5b01c11b5850c26b756c81dc99851a90"
+    },
+    "src/app/api/admin/lotes/[id]/cancelar/route.ts": {
+      "mode": "100755",
+      "sha": "6c8392e49e922429cf09e906437b81fce4ccc284"
+    },
+    "src/app/api/admin/lotes/[id]/codigo/route.ts": {
+      "mode": "100755",
+      "sha": "30dab0bbedaa60f569de1db42b99b98932d5ab88"
+    },
+    "src/app/api/admin/lotes/[id]/pdf/route.ts": {
+      "mode": "100755",
+      "sha": "cb14218fa9ae46c39fb5117bea255d970e650eb2"
+    },
+    "src/app/api/admin/lotes/criar/route.ts": {
+      "mode": "100755",
+      "sha": "554ab3bd5f5adddd997a2a04cb83dcefc40fdaab"
+    },
+    "src/app/api/admin/lotes/pausa/route.ts": {
+      "mode": "100755",
+      "sha": "ad05e7070f1cfd5a1fbf58e0ce4885f6a84b37cd"
+    },
+    "src/app/api/admin/monitor/route.ts": {
+      "mode": "100644",
+      "sha": "f8daa059e4a6cc2220476c6a1393daf34984f31b"
+    },
+    "src/app/api/admin/monitor/visitante/[vid]/route.ts": {
+      "mode": "100644",
+      "sha": "8c4649b57c0b224633a27b0beeef436819d75f75"
+    },
+    "src/app/api/admin/pdf-previa/route.ts": {
+      "mode": "100644",
+      "sha": "b2d1bade8ce65e1854f1a135a294ef3301152b57"
+    },
+    "src/app/api/admin/sair/route.ts": {
+      "mode": "100644",
+      "sha": "10f7321e2aad8ffaab75ba80dacc3ed0ecb19552"
+    },
+    "src/app/api/admin/seguranca/email/route.ts": {
+      "mode": "100644",
+      "sha": "b53e32d58e6686068536afc3e021577dbd32363b"
+    },
+    "src/app/api/admin/seguranca/fila/route.ts": {
+      "mode": "100644",
+      "sha": "dd6eb6f444c7656f37cb8a7d688147d1376afbe5"
+    },
+    "src/app/api/admin/whatsapp/remetentes/route.ts": {
+      "mode": "100644",
+      "sha": "c5fd07c23627799df61affc665ae404582a6ffa3"
+    },
+    "src/app/api/assinar/route.ts": {
+      "mode": "100644",
+      "sha": "99c7fdac323e19a3906d7e032e37892caac716b7"
+    },
+    "src/app/api/cartao-compartilhar/route.ts": {
+      "mode": "100644",
+      "sha": "2eff7ab04b8778bd7204f2129ab0f2f2b0564bd6"
+    },
+    "src/app/api/cartao-governo/route.ts": {
+      "mode": "100644",
+      "sha": "9c66e7c9fd41c127d46d39d8c3c33914b71e5a57"
+    },
+    "src/app/api/cartaz/[code]/route.ts": {
+      "mode": "100644",
+      "sha": "6b01988f7664cb89da6f416046db153dd868de88"
+    },
+    "src/app/api/confirmar/route.ts": {
+      "mode": "100755",
+      "sha": "eadb34cc7f32a033c59a76afd6c38c11e9481718"
+    },
+    "src/app/api/confirmar/whatsapp/route.ts": {
+      "mode": "100644",
+      "sha": "14e443b9b23004c4e8b5ec76f851ebbd549a8603"
+    },
+    "src/app/api/contador/route.ts": {
+      "mode": "100755",
+      "sha": "3bb94b779da66d21d9f567f8bbe0f57358aa531d"
+    },
+    "src/app/api/contato/route.ts": {
+      "mode": "100644",
+      "sha": "7dfa37a1d65cde4dacb8d4d5491c533566ffdce4"
+    },
+    "src/app/api/cron/fila/route.ts": {
+      "mode": "100644",
+      "sha": "bece6b22f26088a49b2bb92382d1ba4b00ad14da"
+    },
+    "src/app/api/cron/tick/route.ts": {
+      "mode": "100644",
+      "sha": "7ef4e455e6e60a6f27a597daacc9ed591acb32c4"
+    },
+    "src/app/api/email/validar/route.ts": {
+      "mode": "100644",
+      "sha": "f33802f7493005d0ea9b5ba19f5aee0656182ad6"
+    },
+    "src/app/api/evento/route.ts": {
+      "mode": "100644",
+      "sha": "5f23f2f4a418ba99c62ceed80bdef2a164f3d0af"
+    },
+    "src/app/api/mail/eventos/[provedor]/route.ts": {
+      "mode": "100644",
+      "sha": "8c0d4d5ed4df24d4c20acac4b5692230bdf294a2"
+    },
+    "src/app/api/qr/[code]/route.ts": {
+      "mode": "100644",
+      "sha": "25d9739c99893ed883806acacd77b020e0afdaa8"
+    },
+    "src/app/api/ses/eventos/route.ts": {
+      "mode": "100644",
+      "sha": "ccc76ac60a6e08c90b25cbc269ccf053fa0a62a0"
+    },
+    "src/app/api/sign-diagnostic/route.ts": {
+      "mode": "100644",
+      "sha": "ed8a71147e94459db9b1438768165690b0de4222"
+    },
+    "src/app/api/tour/route.ts": {
+      "mode": "100644",
+      "sha": "fabaa7d45ff2e7fea5545813d63edfc9dcb32b51"
+    },
+    "src/app/api/ultimas/route.ts": {
+      "mode": "100644",
+      "sha": "506f20f85c032d34a72454f82289789fbbd4fdb3"
+    },
+    "src/app/api/universidades/route.ts": {
+      "mode": "100644",
+      "sha": "4442e877da790db49bbfe07029cfd081ab3a6346"
+    },
+    "src/app/api/whatsapp/eventos/route.ts": {
+      "mode": "100644",
+      "sha": "a33d191c2fa085965a90b99722629bd4eb7e7480"
+    },
+    "src/app/apple-icon.png/route.ts": {
+      "mode": "100644",
+      "sha": "721d139fb191152357261c5c012e10e173f92f74"
+    },
+    "src/app/c/[code]/page.tsx": {
+      "mode": "100644",
+      "sha": "8ee10c1aa4af6cf58fc7dd2fba5c522cbe526172"
+    },
+    "src/app/confirmar/page.tsx": {
+      "mode": "100755",
+      "sha": "79976b93ea4bba57965c9c46f5fcefbbdd37163b"
+    },
+    "src/app/confirmar/whatsapp/page.tsx": {
+      "mode": "100644",
+      "sha": "d6ba2fd75ea7eb1e310c8d8bc921ef560c631e68"
+    },
+    "src/app/contato/page.tsx": {
+      "mode": "100644",
+      "sha": "826dfefbe8631487687788c03ae627d71c368e40"
+    },
+    "src/app/globals.css": {
+      "mode": "100644",
+      "sha": "9307395dcdefb9e8b6c23aef6e31c55b41ac5bca"
+    },
+    "src/app/icon-192.png/route.ts": {
+      "mode": "100644",
+      "sha": "21853b42f1e7e8f1d05cc42000615bee80cda870"
+    },
+    "src/app/icon-512.png/route.ts": {
+      "mode": "100644",
+      "sha": "f1e28945e3b542fd8b1b74a0497189a52162015a"
+    },
+    "src/app/layout.tsx": {
+      "mode": "100755",
+      "sha": "92deba0991c639dcf733eb162d4e687034a2215d"
+    },
+    "src/app/manifest.ts": {
+      "mode": "100644",
+      "sha": "b72aef0486d7a872683a6acecaaeddccfe6cf8a9"
+    },
+    "src/app/meu/[token]/page.tsx": {
+      "mode": "100644",
+      "sha": "fa1aa4a695e78b4f75b67bdf6b3a78242111020a"
+    },
+    "src/app/og.png/route.ts": {
+      "mode": "100644",
+      "sha": "650bfacbe7cbaddee51a4358710511ee540e2507"
+    },
+    "src/app/page.tsx": {
+      "mode": "100755",
+      "sha": "a8fd4a846bae0b096c267744dad9f45d08baf1f9"
+    },
+    "src/app/privacidade/page.tsx": {
+      "mode": "100755",
+      "sha": "ba7815b31090504a65c0ea6bcd8b176c444e41d0"
+    },
+    "src/app/r/[code]/route.ts": {
+      "mode": "100644",
+      "sha": "3d98a2969c7be56cee8e8e3251d2221fdf4be8c6"
+    },
+    "src/app/verificar/[code]/page.tsx": {
+      "mode": "100644",
+      "sha": "d014c821c429c4dcc50bf518101410f4aa2ef411"
+    },
+    "src/app/verificar/ir/route.ts": {
+      "mode": "100644",
+      "sha": "03f9236de6de48c30829479bd5db9058cdf1bb20"
+    },
+    "src/app/verificar/page.tsx": {
+      "mode": "100644",
+      "sha": "b5ff965fa77d2141c32e8a228987afbc8d69f081"
+    },
+    "src/components/AppBar.tsx": {
+      "mode": "100644",
+      "sha": "5202c2d3fdc1d6de8b34e661cbfb46eb571c8a81"
+    },
+    "src/components/Combobox.tsx": {
+      "mode": "100644",
+      "sha": "6b1a6dd1a29c6c6a7d8827d59e34ab386417b09b"
+    },
+    "src/components/ConfirmButton.tsx": {
+      "mode": "100755",
+      "sha": "623ce1fe8ab7430d618aefa37fd344f8e269ecf9"
+    },
+    "src/components/ContactForm.tsx": {
+      "mode": "100644",
+      "sha": "9b8393f5b11530838e963cbde760d5b78492c914"
+    },
+    "src/components/CookieNotice.tsx": {
+      "mode": "100644",
+      "sha": "4f1736c3af014e924d89edf5b43128fd1faa99bd"
+    },
+    "src/components/CoverCarousel.tsx": {
+      "mode": "100644",
+      "sha": "1d9e7359ca536ea367809b660f89afd8af04e213"
+    },
+    "src/components/DateField.tsx": {
+      "mode": "100644",
+      "sha": "3392394f91950c93ed2c7c240159a62eafd9dc0d"
+    },
+    "src/components/Flag.tsx": {
+      "mode": "100644",
+      "sha": "099336cc0a64e031791a5ce6de32418de08eb9e0"
+    },
+    "src/components/FormDiagnostics.tsx": {
+      "mode": "100644",
+      "sha": "96015d4ad5902d9e5494a64c5e5d0aa08747343d"
+    },
+    "src/components/GeoFields.tsx": {
+      "mode": "100644",
+      "sha": "9228f4365736560d173cb68e97427f179e168b71"
+    },
+    "src/components/GoalBar.tsx": {
+      "mode": "100644",
+      "sha": "d782ec8be46c71c0ee35764896bffcdda89bf2d6"
+    },
+    "src/components/GovMail.tsx": {
+      "mode": "100644",
+      "sha": "ab3e0ed4b0d4c0eb9b9bae2924d7cff7e644d93c"
+    },
+    "src/components/Help.tsx": {
+      "mode": "100644",
+      "sha": "3747a4844d38bfca6fc10a11ad8e55e6fc724cf8"
+    },
+    "src/components/HeroActions.tsx": {
+      "mode": "100644",
+      "sha": "c21b85ea27c2b30de5f0e1c4ca7caad6a759f32c"
+    },
+    "src/components/HowTo.tsx": {
+      "mode": "100644",
+      "sha": "3f4f3ccf2c62ccb276e3355aa2d191fb296cb824"
+    },
+    "src/components/IdentityModal.tsx": {
+      "mode": "100644",
+      "sha": "82e394be19368b39f7cfed28b21c82750e90360d"
+    },
+    "src/components/LangSwitcher.tsx": {
+      "mode": "100644",
+      "sha": "dbcb96220cd32633d44c30edac70652801a9ff9e"
+    },
+    "src/components/LiveFeed.tsx": {
+      "mode": "100644",
+      "sha": "1e9a3d8e6572559ae37c5018aa9886976000e1d3"
+    },
+    "src/components/LiveStats.tsx": {
+      "mode": "100644",
+      "sha": "c2eb0c97e3acf4166bfe8e376c5d69abe4ffa35f"
+    },
+    "src/components/LiveTotal.tsx": {
+      "mode": "100644",
+      "sha": "ea233148dc5903de429b09be9afb72decdca2cc5"
+    },
+    "src/components/Logos.tsx": {
+      "mode": "100644",
+      "sha": "5440757897c3e4adcbf45e840a077c839abd276a"
+    },
+    "src/components/MaskedInput.tsx": {
+      "mode": "100644",
+      "sha": "18d353b74121a4270de11f8d6abad60615b9b981"
+    },
+    "src/components/MonitorClient.tsx": {
+      "mode": "100644",
+      "sha": "bea57d7a0543ae73c34855ee3eb63124f030df97"
+    },
+    "src/components/NoticeModal.tsx": {
+      "mode": "100644",
+      "sha": "068c7b76a13bcee919f4339239a6f1543dfa8f70"
+    },
+    "src/components/PetitionDoc.tsx": {
+      "mode": "100644",
+      "sha": "c9f16b6c87fd8ebc7007bea3e4bd131423656113"
+    },
+    "src/components/PhoneField.tsx": {
+      "mode": "100644",
+      "sha": "65c169903568dc6d128ed184cc9f0c0794b5a59e"
+    },
+    "src/components/PublicChrome.tsx": {
+      "mode": "100644",
+      "sha": "5b987bedf853c1cc46d1a88a7471f1d5fd35746a"
+    },
+    "src/components/Rich.tsx": {
+      "mode": "100755",
+      "sha": "f91adfe8c4425c6a3f25b20b037d693ddbfa60b7"
+    },
+    "src/components/ShareButtons.tsx": {
+      "mode": "100644",
+      "sha": "0b0c6e17c4b80b49f9eda6127c49b810ec1f1030"
+    },
+    "src/components/ShareEnd.tsx": {
+      "mode": "100644",
+      "sha": "2e2c1363abee7fd354f1a244853138b96cbe5e2c"
+    },
+    "src/components/ShareLanding.tsx": {
+      "mode": "100644",
+      "sha": "2f4a9b6d7d638bcbd60599d728ce4ddce60f0a69"
+    },
+    "src/components/ShareSheet.tsx": {
+      "mode": "100644",
+      "sha": "3ac8c2dd83eedf3dd3f962a4cda198c9af7bc414"
+    },
+    "src/components/SignForm.tsx": {
+      "mode": "100644",
+      "sha": "05071f27df6147948191801d199ff6a68bde886b"
+    },
+    "src/components/SignPanel.tsx": {
+      "mode": "100644",
+      "sha": "5aff9425cd7201c72ea19d09ce9fab025f309268"
+    },
+    "src/components/SiteFooter.tsx": {
+      "mode": "100644",
+      "sha": "e1f076faf0a0448c08744e04c37381f313f7486f"
+    },
+    "src/components/TabBar.tsx": {
+      "mode": "100644",
+      "sha": "588f40e9f33faba5929d872c553e5be4ae8f8cc9"
+    },
+    "src/components/ThemeToggle.tsx": {
+      "mode": "100644",
+      "sha": "67295e3f6e3eff74245ecfa90d47462c71cfcce5"
+    },
+    "src/components/Tour.tsx": {
+      "mode": "100644",
+      "sha": "badb208760beb1a92ab4fe213f8e17ac0ed71a6d"
+    },
+    "src/components/Tracker.tsx": {
+      "mode": "100644",
+      "sha": "defcf2302f9a86fd6329e9dc1ee31518c429b4d7"
+    },
+    "src/components/VisitorMap.tsx": {
+      "mode": "100644",
+      "sha": "65f86efc57ab76158f18855eb26739715b7e9155"
+    },
+    "src/components/WelcomeModal.tsx": {
+      "mode": "100644",
+      "sha": "606bc3db08d88a1cf4af4762d34b75ea0c85abae"
+    },
+    "src/components/WhatsappConfirm.tsx": {
+      "mode": "100644",
+      "sha": "b4d673e2d15e127e43f32ae796886f88af7ec3c6"
+    },
+    "src/components/admin/AdminLogin.tsx": {
+      "mode": "100644",
+      "sha": "56d60a960ec36d7ae98d2ce3e34d4b9270047d43"
+    },
+    "src/components/admin/AdminShell.tsx": {
+      "mode": "100644",
+      "sha": "86c508c89972803e8fb44d64317b4c983feb469f"
+    },
+    "src/components/admin/Coropletico.tsx": {
+      "mode": "100644",
+      "sha": "5ce1ea3ed8238a4289bbb697c57a5a13a0ebb554"
+    },
+    "src/components/admin/Dashboard.tsx": {
+      "mode": "100644",
+      "sha": "f4555a28f87eac904bc0e080302d408cb04035b4"
+    },
+    "src/components/admin/Explorador.tsx": {
+      "mode": "100644",
+      "sha": "feaa7b6fe458b9e459b74514324ffeada10f48ce"
+    },
+    "src/components/admin/Grafico.tsx": {
+      "mode": "100644",
+      "sha": "3f8f659cd4a9c4322bef517f504718ae0bb96acc"
+    },
+    "src/components/admin/MapaAssinaturas.tsx": {
+      "mode": "100644",
+      "sha": "a311aee2b9c563094d16eb205502ec9f11b8ec71"
+    },
+    "src/components/admin/PendentesTable.tsx": {
+      "mode": "100644",
+      "sha": "71e6945a7aa3e1d2346ebc5387f93b63ae36229c"
+    },
+    "src/components/admin/controles.tsx": {
+      "mode": "100644",
+      "sha": "f94b1a61c5bea71b242cb6235d96c8f276376bf8"
+    },
+    "src/components/req-colors.ts": {
+      "mode": "100644",
+      "sha": "735f8383973f6d70658389dc695d13217ef2527e"
+    },
+    "src/components/useTurnstile.ts": {
+      "mode": "100644",
+      "sha": "9e2009b242d9e9ea97cd8236315a34540a5b963c"
+    },
+    "src/content/capas.ts": {
+      "mode": "100644",
+      "sha": "5951debf7a3eeb2727ebcfeb07a2b0f9042ca9f6"
+    },
+    "src/content/compartilhar.ts": {
+      "mode": "100644",
+      "sha": "341d61dfcdf4217b7a513b84afb0375484748102"
+    },
+    "src/content/governo.ts": {
+      "mode": "100644",
+      "sha": "aee2a829ea055ff3f80de0ac6bb3d6fc5d90ba14"
+    },
+    "src/content/name-validation-policy.json": {
+      "mode": "100644",
+      "sha": "a7a6e0683c987eb02202287e56e316ecc712ce23"
+    },
+    "src/content/peticao.ts": {
+      "mode": "100755",
+      "sha": "cda00188add2b4c7d1aa13be5340382a24fa36d6"
+    },
+    "src/i18n/client.tsx": {
+      "mode": "100644",
+      "sha": "424e7fd1440c7023b262ec2a9b6fd024125af92e"
+    },
+    "src/i18n/countries.ts": {
+      "mode": "100644",
+      "sha": "60acc19305f87fb21f296c9684175ab86b75c08a"
+    },
+    "src/i18n/de.ts": {
+      "mode": "100644",
+      "sha": "527ce5219020ccb7f63d79948a352dbf7970b4d2"
+    },
+    "src/i18n/en.ts": {
+      "mode": "100644",
+      "sha": "43896b739262d38b11e9380486730b031076cc0d"
+    },
+    "src/i18n/es.ts": {
+      "mode": "100644",
+      "sha": "f82ca75f77a9a3b1e5590ca763ed777c15cc654b"
+    },
+    "src/i18n/fr.ts": {
+      "mode": "100644",
+      "sha": "59d3d11a818cce8870d469af62a3aaf9a2993af7"
+    },
+    "src/i18n/index.ts": {
+      "mode": "100644",
+      "sha": "f9b79a6bd55ea4d4f46a061b0080c08ab9355114"
+    },
+    "src/i18n/messages-types.ts": {
+      "mode": "100644",
+      "sha": "ae5910e4233fb09cd800d054b2567a6717c57877"
+    },
+    "src/i18n/messages.ts": {
+      "mode": "100644",
+      "sha": "4dfe771e933dcc60e695e8fc17fecb3f0f1c8366"
+    },
+    "src/i18n/parity.test.ts": {
+      "mode": "100644",
+      "sha": "239944c4cb9cff6d7c30e6314a4c435b9fb8484f"
+    },
+    "src/i18n/pt.ts": {
+      "mode": "100644",
+      "sha": "4408e93604bbd8085a6235d5e2671b715bfdb813"
+    },
+    "src/i18n/server.ts": {
+      "mode": "100644",
+      "sha": "5094aa3dc44a1d8ab82c576e1377826a6e018631"
+    },
+    "src/lib/abuse.test.ts": {
+      "mode": "100644",
+      "sha": "6bc2fcf8cd6d20a202fee95e4d8352969c7fba8e"
+    },
+    "src/lib/abuse.ts": {
+      "mode": "100644",
+      "sha": "2f0eab9cc0cbab4cd6238e3d25c587356a89c94b"
+    },
+    "src/lib/admin-api.ts": {
+      "mode": "100644",
+      "sha": "3ead433d66198c6bb31efbeef19b626eb41ed96a"
+    },
+    "src/lib/admin-ip.test.ts": {
+      "mode": "100644",
+      "sha": "7944db1454a3a266e950417ab75e9f71cf68d816"
+    },
+    "src/lib/admin-login.test.ts": {
+      "mode": "100644",
+      "sha": "2745c67e9a132bc9d90c9e7a752cf355400845c6"
+    },
+    "src/lib/admin-password.test.ts": {
+      "mode": "100644",
+      "sha": "af2043050104860c0d1452dcd5e24e0e84c2babd"
+    },
+    "src/lib/admin-sem-senha.test.ts": {
+      "mode": "100644",
+      "sha": "e479909e8a9a662020d44b37d18b421add57da2c"
+    },
+    "src/lib/admin.ts": {
+      "mode": "100755",
+      "sha": "0b85ba18845973303c970432fdc4809dee980a2c"
+    },
+    "src/lib/apoiador-institucional.test.ts": {
+      "mode": "100644",
+      "sha": "3c08252636e5b077c39b10571877a473e7c171b6"
+    },
+    "src/lib/assinaturas-email.test.ts": {
+      "mode": "100644",
+      "sha": "88a3d00523287fca26a923fa24d78900ad041951"
+    },
+    "src/lib/assinaturas-email.ts": {
+      "mode": "100644",
+      "sha": "36c8d099183ca7c31732dc705cf0835c7ee96cf3"
+    },
+    "src/lib/assinaturas-explorar.test.ts": {
+      "mode": "100644",
+      "sha": "7e4a7e412c195ec936c93f4e908507f1b1049bdc"
+    },
+    "src/lib/assinaturas-explorar.ts": {
+      "mode": "100644",
+      "sha": "ff8852b1dbd9f50e1e6522a5e2b77c5a897b55e8"
+    },
+    "src/lib/assinaturas-filtros.ts": {
+      "mode": "100644",
+      "sha": "f8758f9cbd6524160d6ac46ee9242d8c080b08c1"
+    },
+    "src/lib/batches-foreign.test.ts": {
+      "mode": "100644",
+      "sha": "4b59d67ddc71beb90210638272cbc96d9135551a"
+    },
+    "src/lib/batches.test.ts": {
+      "mode": "100755",
+      "sha": "8159ffe03292ece82e92e4ee53353c23e4354a9a"
+    },
+    "src/lib/batches.ts": {
+      "mode": "100755",
+      "sha": "b2e427af06522a2203a04463772769a430ae2300"
+    },
+    "src/lib/birth.ts": {
+      "mode": "100644",
+      "sha": "3a4909b74ca51a0e90c7777c086b7a71e4f1e0f9"
+    },
+    "src/lib/bounces.test.ts": {
+      "mode": "100644",
+      "sha": "b23b1bb7973a0be4f8678b9d9f8d0385009dc17e"
+    },
+    "src/lib/bounces.ts": {
+      "mode": "100644",
+      "sha": "4ae41a9ed9d2a51fcc88420ba6980c7012c83ff3"
+    },
+    "src/lib/bridge.test.ts": {
+      "mode": "100644",
+      "sha": "c28092a0562d096dd61728c05caab6b5a4e1db67"
+    },
+    "src/lib/campaign.test.ts": {
+      "mode": "100644",
+      "sha": "99a65b3b4b48a8a308f6ce914d3b61a84f4402f9"
+    },
+    "src/lib/card.ts": {
+      "mode": "100644",
+      "sha": "42a68948c643ed32c6db5f0748d805da6e0c1850"
+    },
+    "src/lib/config.ts": {
+      "mode": "100755",
+      "sha": "b587d845549aa184ea990f5952d991cd5657806a"
+    },
+    "src/lib/confirmacao-emails.test.ts": {
+      "mode": "100644",
+      "sha": "94bfffcb92364f7804d7d3bb17c0b8b7aba989b3"
+    },
+    "src/lib/contact.test.ts": {
+      "mode": "100644",
+      "sha": "a49af22a020dbcd3bc329a87ff26e4a497bbf4ba"
+    },
+    "src/lib/contact.ts": {
+      "mode": "100644",
+      "sha": "16816de651e5f06a693cb54a8d96d55bb0230883"
+    },
+    "src/lib/cookies.ts": {
+      "mode": "100644",
+      "sha": "4df968aff3f5ab458ef029ecdf433cd26a832ae7"
+    },
+    "src/lib/cpf-cache-crypto.ts": {
+      "mode": "100644",
+      "sha": "9b67ea1acbda646e82c7f0eba997ad691a7f301c"
+    },
+    "src/lib/cpf-cache.test.ts": {
+      "mode": "100644",
+      "sha": "113a01804e93281fe50eb1eb3b8e06a8bad61f7c"
+    },
+    "src/lib/cpf-cache.ts": {
+      "mode": "100644",
+      "sha": "e4393a6f711db9b976ecf1a7c0f4778993528f87"
+    },
+    "src/lib/cpf-check.ts": {
+      "mode": "100644",
+      "sha": "49d3cfaf56bf64c15357240002c10c5ca9188820"
+    },
+    "src/lib/cpf-feedback.ts": {
+      "mode": "100644",
+      "sha": "25782a6d51358c5358d76cc8003667fcba3c603e"
+    },
+    "src/lib/cpf-mask.ts": {
+      "mode": "100644",
+      "sha": "ae02bc9063ab47c6d93a6675d8be39d70a7e27b7"
+    },
+    "src/lib/cpf-name.ts": {
+      "mode": "100644",
+      "sha": "f5c4260037879adc67d8fcbe169ea4adf1128b8b"
+    },
+    "src/lib/cpf-servidor.test.ts": {
+      "mode": "100644",
+      "sha": "bc0a2c749a05ccf0e65a377f972b35724cf82b9a"
+    },
+    "src/lib/cpf.ts": {
+      "mode": "100755",
+      "sha": "f975251dab2075be649b8f5e923b0e3d55ac2fd1"
+    },
+    "src/lib/crypto-dados.test.ts": {
+      "mode": "100644",
+      "sha": "ce12762ecf6a4aa26b670144accf1dd56fa15490"
+    },
+    "src/lib/crypto-dados.ts": {
+      "mode": "100644",
+      "sha": "1e935da949ed676cf702b1cadc0e6e51506c8ed9"
+    },
+    "src/lib/csv.ts": {
+      "mode": "100644",
+      "sha": "32550f63a70f41a87a58fc92d1527dab46e68934"
+    },
+    "src/lib/datasets-client.ts": {
+      "mode": "100644",
+      "sha": "86bd0bdf6349bfc69bcf2993ae3e3e71b6db6401"
+    },
+    "src/lib/db.ts": {
+      "mode": "100644",
+      "sha": "0ab759dc52d64b14b627bf9756409bb53c96646d"
+    },
+    "src/lib/dispersion.ts": {
+      "mode": "100644",
+      "sha": "3fdbf05b3c6d47b08bafebd14b200d24ec727370"
+    },
+    "src/lib/domain-extract.test.ts": {
+      "mode": "100644",
+      "sha": "2020acf8a7a998057c7df368afba0a40184942f0"
+    },
+    "src/lib/domain-extract.ts": {
+      "mode": "100644",
+      "sha": "6556abb40afba368fc22ed93fab07439873aa7db"
+    },
+    "src/lib/domain-import.ts": {
+      "mode": "100644",
+      "sha": "08479b49f41d316c10672cce56172afba838269b"
+    },
+    "src/lib/domain-probe.d.mts": {
+      "mode": "100644",
+      "sha": "d3003b83aa8de58071b8b5eff3d58b2f6b61993e"
+    },
+    "src/lib/domain-probe.mjs": {
+      "mode": "100644",
+      "sha": "f381c3b8359184ce441371e91862adfbe5579a94"
+    },
+    "src/lib/domain-probe.test.ts": {
+      "mode": "100644",
+      "sha": "1ef42af77a0c45117e92c96589e9ca92b0e79716"
+    },
+    "src/lib/egress.ts": {
+      "mode": "100644",
+      "sha": "4d7a4770da1b839060b8497278202f3a60208378"
+    },
+    "src/lib/email-check-log.ts": {
+      "mode": "100644",
+      "sha": "4d775fd3e9d6d9111b17efdd9e97ff1dcbf01831"
+    },
+    "src/lib/email-check.ts": {
+      "mode": "100644",
+      "sha": "fdea585f1f5d0b6e3d6c0d915bc5f5180592d3a0"
+    },
+    "src/lib/email-diagnostico.test.ts": {
+      "mode": "100644",
+      "sha": "990362406092bc2f0ac19178130d73efd91b0a1f"
+    },
+    "src/lib/email-diagnostico.ts": {
+      "mode": "100644",
+      "sha": "33aa9a824bd1b2b97e9380210e565a38b8d2edcf"
+    },
+    "src/lib/email-feedback.ts": {
+      "mode": "100644",
+      "sha": "1be5d096d068f9c25c4d980a800334394558ed99"
+    },
+    "src/lib/email-sugestao.ts": {
+      "mode": "100644",
+      "sha": "40f729569f2322c22a3917596d43ff183388d848"
+    },
+    "src/lib/email-syntax.test.ts": {
+      "mode": "100644",
+      "sha": "82e8630ac3b2cc3494a330b630d5ed16cfef820a"
+    },
+    "src/lib/email-syntax.ts": {
+      "mode": "100644",
+      "sha": "6a33d4f19e6234bb1f3f1d22f840ce03948460b5"
+    },
+    "src/lib/email-typos.test.ts": {
+      "mode": "100644",
+      "sha": "c63b45859c8a48bb5fa25ea078e8c9315ebc588b"
+    },
+    "src/lib/email-typos.ts": {
+      "mode": "100644",
+      "sha": "876912b2e08576556d50441740d4c8d8d7c2e1ed"
+    },
+    "src/lib/email-validate.test.ts": {
+      "mode": "100644",
+      "sha": "52ea2d4661151920c35ed1832039695eada86ebd"
+    },
+    "src/lib/email-validate.ts": {
+      "mode": "100644",
+      "sha": "b131b35a4d86d0bcde07dfe32a80ef33202f3fc4"
+    },
+    "src/lib/foreign-flow.test.ts": {
+      "mode": "100644",
+      "sha": "8017050dae0c99d8f4b6a6b6bba2b6bed2271141"
+    },
+    "src/lib/form-validation-notice.ts": {
+      "mode": "100644",
+      "sha": "c673bd4b776ce134ee223070fdebf9fca797fa1f"
+    },
+    "src/lib/form-validation.test.ts": {
+      "mode": "100644",
+      "sha": "6e3aaecba1995c508ba5433b0c8d60e3804d851c"
+    },
+    "src/lib/freemail.json": {
+      "mode": "100644",
+      "sha": "6701e73555bafe85a247a981f8ee679d4ca83aee"
+    },
+    "src/lib/geo-cf.test.ts": {
+      "mode": "100644",
+      "sha": "2f8225e6089ca965c894e890a63d9b8573d58256"
+    },
+    "src/lib/geo-coexistencia.test.ts": {
+      "mode": "100644",
+      "sha": "9c82194ce84286ae67898c8d6f8bf5993cb992f6"
+    },
+    "src/lib/geo-data.test.ts": {
+      "mode": "100644",
+      "sha": "823b31f077c7696b31c2077abce5c14a2dc019cd"
+    },
+    "src/lib/geo-data.ts": {
+      "mode": "100644",
+      "sha": "f13ea12f14519aafdc81e5016c337151dbc611c9"
+    },
+    "src/lib/geo-retry.test.ts": {
+      "mode": "100644",
+      "sha": "aa2bc7ba72a8e55e160061176ebef4ff41e47ffb"
+    },
+    "src/lib/geo-server.ts": {
+      "mode": "100644",
+      "sha": "c0e68eb5c83a048f86117d4cfcc165401bdd3630"
+    },
+    "src/lib/geo.ts": {
+      "mode": "100644",
+      "sha": "bfdb1f88b5989c293affc4874b7d87adddb5765a"
+    },
+    "src/lib/identity.ts": {
+      "mode": "100644",
+      "sha": "81359ddfcc31ab2799ceba21f37e0a57cab89494"
+    },
+    "src/lib/ifes-campi.test.ts": {
+      "mode": "100644",
+      "sha": "0c219a338e92b618cfbc6f06fd15e0f517560f71"
+    },
+    "src/lib/ifes-data.ts": {
+      "mode": "100644",
+      "sha": "89b29941ed2a71d14d2e2e09825eff181772829f"
+    },
+    "src/lib/ifes-domains.json": {
+      "mode": "100644",
+      "sha": "6f79c12aaee0ed5257fca8b1a3701b3c1a525518"
+    },
+    "src/lib/institutional.test.ts": {
+      "mode": "100644",
+      "sha": "18e042bb94796475dbac36820c047d453b5f91f5"
+    },
+    "src/lib/institutional.ts": {
+      "mode": "100644",
+      "sha": "b0a2bfa470c0ebbe5627b218cbea1c803096d850"
+    },
+    "src/lib/live-client.ts": {
+      "mode": "100644",
+      "sha": "8e4a6f8440d8a87b800c1d76ea930a198aba1dae"
+    },
+    "src/lib/mail-chain.test.ts": {
+      "mode": "100644",
+      "sha": "4167c5757f958f39b0cc436321124db809606203"
+    },
+    "src/lib/mail-engajamento.test.ts": {
+      "mode": "100644",
+      "sha": "0d751e976d77394781a43344b7a95e064e78844c"
+    },
+    "src/lib/mail-marketing.test.ts": {
+      "mode": "100644",
+      "sha": "716d0d2e7158ad05387bc774c20c36dfb6ef31e9"
+    },
+    "src/lib/mail-painel.test.ts": {
+      "mode": "100644",
+      "sha": "041c0a8e7514da8be81782cd3c3367093484d137"
+    },
+    "src/lib/mail-remetente.test.ts": {
+      "mode": "100644",
+      "sha": "6cfde5ce20dfd85f16f89b848ef3368118d4d99d"
+    },
+    "src/lib/mail-resposta-contato.test.ts": {
+      "mode": "100644",
+      "sha": "8aed39b41fffe0a792290488efa39f9dd9c27f3e"
+    },
+    "src/lib/mail-rodizio.test.ts": {
+      "mode": "100644",
+      "sha": "6c9b9d191502da93f30567849bb7024c0b887795"
+    },
+    "src/lib/mail/alertas.ts": {
+      "mode": "100644",
+      "sha": "8e16450f9404ede9c3f90014b925edeff3973408"
+    },
+    "src/lib/mail/engajamento.ts": {
+      "mode": "100644",
+      "sha": "afe679073497f29903f22413f34e53eb5ff27774"
+    },
+    "src/lib/mail/entregas.ts": {
+      "mode": "100644",
+      "sha": "54067f158a518b720d9f6466174ef688c15d19c2"
+    },
+    "src/lib/mail/events.ts": {
+      "mode": "100644",
+      "sha": "0528ccc6a699ecbfb44bb85177b3e2468d8cd655"
+    },
+    "src/lib/mail/guard.ts": {
+      "mode": "100755",
+      "sha": "951ef822d987c93c774cc29ac91f96d4a5aa8187"
+    },
+    "src/lib/mail/index.ts": {
+      "mode": "100755",
+      "sha": "0d25d416f42a7f8cb82237a89f3a75126e42b84d"
+    },
+    "src/lib/mail/log.ts": {
+      "mode": "100644",
+      "sha": "66b85201fd87b69b4fdb9f485e7ebda7e69153e3"
+    },
+    "src/lib/mail/outbox.ts": {
+      "mode": "100644",
+      "sha": "d65b93eb87c5691a8b786401d93ac74292cb610f"
+    },
+    "src/lib/mail/painel.ts": {
+      "mode": "100644",
+      "sha": "13c344967c522940f451d513571df03aa194f18b"
+    },
+    "src/lib/mail/rodizio.ts": {
+      "mode": "100644",
+      "sha": "0738b5a75e52b1dfa5cdd0ac169bfc3617f009d9"
+    },
+    "src/lib/mail/ses-events.ts": {
+      "mode": "100644",
+      "sha": "0ffd285d044b5648e1ca84c9f3e2cc078bf2535d"
+    },
+    "src/lib/mail/smtp-credential.ts": {
+      "mode": "100644",
+      "sha": "3b1751f31821cf63d43fd3a7efc3e0685fd23b7b"
+    },
+    "src/lib/mail/status.ts": {
+      "mode": "100644",
+      "sha": "422b690b9421906737b796aade7facd6254e7323"
+    },
+    "src/lib/mail/suppression.ts": {
+      "mode": "100644",
+      "sha": "184e7041491d3d27122d96cd63c3fe13012b64be"
+    },
+    "src/lib/mail/templates.ts": {
+      "mode": "100644",
+      "sha": "756a2ed8652c893651fde15634b0f1624a67ae5e"
+    },
+    "src/lib/monitor.ts": {
+      "mode": "100644",
+      "sha": "5a0af3425995874b22a40b9d631c33f03a972647"
+    },
+    "src/lib/name-case.test.ts": {
+      "mode": "100644",
+      "sha": "af6d6232d72f1250c21bc94a11a8446ecc514395"
+    },
+    "src/lib/name-case.ts": {
+      "mode": "100644",
+      "sha": "0c8c7ba3ff347a8c296585f8aac563f29393cba4"
+    },
+    "src/lib/net.ts": {
+      "mode": "100644",
+      "sha": "450b8f092aad519cf84aed4473eab6be73202e9d"
+    },
+    "src/lib/normalizacao.test.ts": {
+      "mode": "100644",
+      "sha": "b87e935d69453e6f76b765745ff07ad293e9cf7e"
+    },
+    "src/lib/outbox.test.ts": {
+      "mode": "100644",
+      "sha": "e5f0a23eccdab89dda481db6e62ec68893336de1"
+    },
+    "src/lib/pdf-preview.ts": {
+      "mode": "100644",
+      "sha": "97d54e00504ad75133dd2350624e7c9804dc4a05"
+    },
+    "src/lib/pdf.test.ts": {
+      "mode": "100644",
+      "sha": "c126b6151253f61d0d2c28e3527e7345e24511a0"
+    },
+    "src/lib/pdf.ts": {
+      "mode": "100755",
+      "sha": "8000752dabd29bc8e2449330611b98cca12bf545"
+    },
+    "src/lib/pos-confirmacao.ts": {
+      "mode": "100644",
+      "sha": "0d7fbbfe34251a4ca01b82b928b4c4616a1c0fe1"
+    },
+    "src/lib/public-feed.ts": {
+      "mode": "100644",
+      "sha": "ee2323b4965604f5446c905e95cd0d1349f42391"
+    },
+    "src/lib/quantis.test.ts": {
+      "mode": "100644",
+      "sha": "bb6fb2a1dfee238d4174c9833c86225fefc2c5e5"
+    },
+    "src/lib/quantis.ts": {
+      "mode": "100644",
+      "sha": "0fef7b7765d77d002534a57cac7cf0506cc0195f"
+    },
+    "src/lib/ratelimit.ts": {
+      "mode": "100755",
+      "sha": "be50bd3085af61dfdbe5c208e48b43a2b329ab7a"
+    },
+    "src/lib/reacher-cadeia.test.ts": {
+      "mode": "100644",
+      "sha": "6948baec227c81e9794c2d0cfaacfbb74ee7ae2b"
+    },
+    "src/lib/reacher-fluxo.test.ts": {
+      "mode": "100644",
+      "sha": "750f88ac14e0403d6f9b15e0f207502f95ad998a"
+    },
+    "src/lib/reacher.test.ts": {
+      "mode": "100644",
+      "sha": "f02d0ab0e9453c41421a7ce14b4e8ce44fb697db"
+    },
+    "src/lib/reacher.ts": {
+      "mode": "100644",
+      "sha": "55b6119d2de084649f0d62c7cd25847ff496893c"
+    },
+    "src/lib/reenvio.test.ts": {
+      "mode": "100644",
+      "sha": "8de2e826ab1b3384c3b0e3a427c1cbb1f16481dc"
+    },
+    "src/lib/reenvio.ts": {
+      "mode": "100644",
+      "sha": "4a60ddcbc8b0cb012e1beff93942ce489b627133"
+    },
+    "src/lib/referrals.test.ts": {
+      "mode": "100644",
+      "sha": "13fded69458c48dfb4aa912feb5a30b709f02dee"
+    },
+    "src/lib/referrals.ts": {
+      "mode": "100644",
+      "sha": "82b96143334a25f45e376bf46ff4924dcc89016d"
+    },
+    "src/lib/secrets.ts": {
+      "mode": "100644",
+      "sha": "67ea43e83e8af239211e1ebab7f3cf1ff8deddca"
+    },
+    "src/lib/security.ts": {
+      "mode": "100755",
+      "sha": "3a4af80f218c151c59c4bc563e23b5376ee4ac87"
+    },
+    "src/lib/sendpulse.test.ts": {
+      "mode": "100644",
+      "sha": "53f51cced92c54cdb64702024fc56a69ecfbb7ab"
+    },
+    "src/lib/server-email.test.ts": {
+      "mode": "100644",
+      "sha": "4431c9b24dbcf13558a2b688823efe1f78e11902"
+    },
+    "src/lib/ses-events.test.ts": {
+      "mode": "100644",
+      "sha": "ad1f746ecb71f99c4183e87a56d27d8b7d9c9b15"
+    },
+    "src/lib/share-gov.test.ts": {
+      "mode": "100644",
+      "sha": "5f464a830515fd236330e8c47bd198d7c11d6dac"
+    },
+    "src/lib/sign-diagnostic-client.ts": {
+      "mode": "100644",
+      "sha": "16fa6508ad283e53defc918e97b523036fb7fae3"
+    },
+    "src/lib/sign-flow.test.ts": {
+      "mode": "100644",
+      "sha": "8aaf22da7963a9be8c1f2061be872da7375da1de"
+    },
+    "src/lib/sign-flow.ts": {
+      "mode": "100644",
+      "sha": "a71c443390617851be16fa110518c3e76c3590b6"
+    },
+    "src/lib/sign-request.ts": {
+      "mode": "100644",
+      "sha": "a1bca08a5d832d1ea77393c6c78e3612af15be6a"
+    },
+    "src/lib/signature-text.ts": {
+      "mode": "100644",
+      "sha": "17a92fe427027f0660e1d78ddd3f477b7be8d2ab"
+    },
+    "src/lib/signatures.test.ts": {
+      "mode": "100755",
+      "sha": "641b9d6d03caefbc29197e91a88686a9659284d1"
+    },
+    "src/lib/signatures.ts": {
+      "mode": "100644",
+      "sha": "41c86b0ee3c8cb638f08406ebd592f6ed248de42"
+    },
+    "src/lib/signed-pdf.ts": {
+      "mode": "100644",
+      "sha": "d98de0ac65385da34c008791d00c61f9d8a311ad"
+    },
+    "src/lib/signer.ts": {
+      "mode": "100755",
+      "sha": "def8b2cc89c14d0327866e12c5c44439ae16a1b6"
+    },
+    "src/lib/signup-diagnostics.ts": {
+      "mode": "100644",
+      "sha": "a12927d077ae2509242551627f53b051ccfcf7ea"
+    },
+    "src/lib/smtp-credential.test.ts": {
+      "mode": "100644",
+      "sha": "85709cdefe916d3bea8d3790c5c56181385d5ed9"
+    },
+    "src/lib/supporter-email-suggestion.ts": {
+      "mode": "100644",
+      "sha": "673fb4e57e6f16e41b7523969b8586ff22de022b"
+    },
+    "src/lib/templates.test.ts": {
+      "mode": "100644",
+      "sha": "c00eb6c5c0150bac010ef46b835936095928628e"
+    },
+    "src/lib/time.ts": {
+      "mode": "100644",
+      "sha": "a09bdc67ff812ebbfafc3d99420f1106f1c87dd2"
+    },
+    "src/lib/track.ts": {
+      "mode": "100644",
+      "sha": "48f487fc7e784ace0c34045f56d7f8877e1b0727"
+    },
+    "src/lib/turnstile.ts": {
+      "mode": "100644",
+      "sha": "833f43feb814038f7c13e485fc8ea8db3416a374"
+    },
+    "src/lib/ua.ts": {
+      "mode": "100644",
+      "sha": "5c6f6d44a466fa32c146c0e139977fef18b31e35"
+    },
+    "src/lib/university-check.ts": {
+      "mode": "100644",
+      "sha": "0c7dcab118a734fadee26ec20c457cc236affb97"
+    },
+    "src/lib/verificacao.test.ts": {
+      "mode": "100644",
+      "sha": "211916a78239ba47dc6a29b568140e3a21e34959"
+    },
+    "src/lib/verificacao.ts": {
+      "mode": "100644",
+      "sha": "e469c11314d1356b34d2bd41156d9b62c5f3c814"
+    },
+    "src/lib/verification.test.ts": {
+      "mode": "100644",
+      "sha": "fcdae124a9216c32049bb3a215b7e5a680beefd3"
+    },
+    "src/lib/verify-code.ts": {
+      "mode": "100644",
+      "sha": "919066285f9715505b767bd20b61197d7b89afce"
+    },
+    "src/lib/verify.test.ts": {
+      "mode": "100644",
+      "sha": "b2a2957a43b35b95b7d31e002aee6c1a1f10f6be"
+    },
+    "src/lib/verify.ts": {
+      "mode": "100644",
+      "sha": "198d82fd8c7561d84580a3b5b949a88851b6de56"
+    },
+    "src/lib/version.ts": {
+      "mode": "100644",
+      "sha": "5187ec0442a8e1ef90fb1413920af5f58cea0e3d"
+    },
+    "src/lib/whatsapp.test.ts": {
+      "mode": "100644",
+      "sha": "befc64d5246263da2b5e30d49df2f5c79464d02e"
+    },
+    "src/lib/whatsapp/ddi.ts": {
+      "mode": "100644",
+      "sha": "16d7867052061ed894785c99274d18d1c1ab5ae7"
+    },
+    "src/lib/whatsapp/provider.ts": {
+      "mode": "100644",
+      "sha": "612302673602a10eeb49d691ad49fcd158b0da09"
+    },
+    "src/lib/whatsapp/store.ts": {
+      "mode": "100644",
+      "sha": "ef2416f7a5c38f2ec2d708a64639c84c705e3eb4"
+    },
+    "src/lib/whatsapp/telefone.ts": {
+      "mode": "100644",
+      "sha": "c40579886c7658deb17a49db4dcfad41762ec5c1"
+    },
+    "src/lib/world-universities.ts": {
+      "mode": "100644",
+      "sha": "36870ab4ac3f44882fce22fae4c7c7caafad9e96"
+    },
+    "tsconfig.json": {
+      "mode": "100755",
+      "sha": "5caac0c6c7fa9d9eaf1a8724c8a19821e3c8430d"
+    }
+  }
+}
