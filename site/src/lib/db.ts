@@ -239,6 +239,10 @@ const SCHEMA_SQL = `
     created_at TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'utc','YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
     updated_at TEXT
   );
+  -- This overlay organizes only the admin catalog; effective policy columns stay separate.
+  ALTER TABLE institutional_domains ADD COLUMN IF NOT EXISTS admin_catalog JSONB NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(admin_catalog)='object');
+  ALTER TABLE institutional_domains ADD COLUMN IF NOT EXISTS admin_catalog_version BIGINT NOT NULL DEFAULT 1;
+  ALTER TABLE institutional_domains ADD COLUMN IF NOT EXISTS admin_archived_at TIMESTAMPTZ;
   INSERT INTO institutional_domains(domain,kind,institution,source,status,decided_by)
     VALUES ('unir.br','ifes','Fundação Universidade Federal de Rondônia','manual','approved','semente')
     ON CONFLICT (domain) DO NOTHING;
@@ -298,6 +302,12 @@ const SCHEMA_SQL = `
   CREATE TABLE IF NOT EXISTS admin_referral_mutations (
     actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
     input_hash TEXT NOT NULL, referrer_id INTEGER NOT NULL REFERENCES referrers(id),
+    result JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY(actor_id,request_id)
+  );
+  CREATE TABLE IF NOT EXISTS admin_domain_catalog_requests (
+    actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
+    input_hash TEXT NOT NULL, domain TEXT NOT NULL REFERENCES institutional_domains(domain),
     result JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY(actor_id,request_id)
   );
