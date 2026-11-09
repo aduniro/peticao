@@ -295,6 +295,31 @@ const SCHEMA_SQL = `
     ip_hash TEXT
   );
   CREATE INDEX IF NOT EXISTS admin_sessions_user ON admin_sessions(user_id);
+  CREATE TABLE IF NOT EXISTS batch_document_versions (
+    id UUID PRIMARY KEY,
+    batch_id INTEGER NOT NULL REFERENCES batches(id),
+    ordinal INTEGER NOT NULL CHECK(ordinal>0),
+    variant TEXT NOT NULL CHECK(variant IN ('original','signed')),
+    bytes BYTEA NOT NULL CHECK(octet_length(bytes)>0),
+    sha256 TEXT NOT NULL CHECK(sha256 ~ '^[a-f0-9]{64}$'),
+    list_hash TEXT NOT NULL,
+    signature_kind TEXT,
+    note TEXT,
+    source TEXT NOT NULL CHECK(source IN ('prepared','upload','legacy-observed')),
+    author_id INTEGER REFERENCES admin_users(id),
+    recorded_by INTEGER REFERENCES admin_users(id),
+    captured_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+    UNIQUE(batch_id,ordinal),
+    CHECK(source<>'legacy-observed' OR author_id IS NULL)
+  );
+  CREATE OR REPLACE FUNCTION reject_batch_document_mutation() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'batch_document_versions is immutable'; END;
+  $$;
+  DO $$ BEGIN
+    IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='batch_document_versions'::regclass AND tgname='batch_document_versions_immutable') THEN
+      CREATE TRIGGER batch_document_versions_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON batch_document_versions FOR EACH STATEMENT EXECUTE FUNCTION reject_batch_document_mutation();
+    END IF;
+  END $$;
   CREATE TABLE IF NOT EXISTS president_challenges (
     id UUID PRIMARY KEY,
     batch_id INTEGER NOT NULL REFERENCES batches(id),

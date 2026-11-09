@@ -14,6 +14,7 @@ import type { PoolClient } from "pg";
 import { rejectedBatchRecipients } from "./batch-rejection";
 import { frozenReplyTo, withReplyTo } from "./mail/payload";
 import { freezePreparation, thawPreparation, type CreationSource } from "./batch-preparation";
+import { appendDocumentVersion, preserveObservedDocument } from "./batch-document-history";
 
 export type BatchActor = { userId: number; email: string };
 const actorData = (actor: BatchActor) => ({ userId: actor.userId, por: actor.email.trim().toLowerCase() });
@@ -139,6 +140,7 @@ async function prepareReservedBatch(id: number, source: CreationSource, recovery
       const batch = (await client.query<ApprovalRow>("SELECT * FROM batches WHERE id=$1 FOR UPDATE", [id])).rows[0];
       const row = (await client.query<PreparationRow & { current: boolean }>("SELECT *,lease_until>now() current FROM batch_preparations WHERE batch_id=$1 FOR UPDATE", [id])).rows[0];
       if (!batch || batch.status !== "preparing" || batch.pdf || batch.signed_pdf || batch.approved_at || !row || row.lease_token !== token || !row.current || row.snapshot_sha256 !== claim.sha256 || !thawPreparation(row.snapshot, row.snapshot_sha256, batch)) throw new Error("Lote não está pronto para aprovação.");
+      await appendDocumentVersion(client, { batchId:id, variant:"original", bytes:Buffer.from(signed.bytes), sha256:sha, listHash:batch.list_hash, signatureKind:signed.kind, note:null, source:"prepared", authorId:claim.frozen.source.kind === "admin" ? claim.frozen.source.actor.userId : null, recordedBy:source.kind === "admin" ? source.actor.userId : null });
       await client.query("UPDATE batches SET pdf=$1,pdf_sha256=$2,signature_kind=$3,status='prepared' WHERE id=$4", [Buffer.from(signed.bytes), sha, signed.kind, id]);
       await client.query("UPDATE batch_preparations SET lease_token=NULL,lease_until=NULL,last_error=NULL WHERE batch_id=$1", [id]);
       await audit("batch_prepared", null, { batchId: id, pdfSha256: sha, signatureKind: signed.kind, snapshotSha256: row.snapshot_sha256, ...creationData(claim.frozen.source) }, client);
@@ -316,6 +318,9 @@ export async function attachSignedPdf(id: number, bytes: Buffer, by: string, act
     if (!(await authorizeBatchActor(client, actor))) return unavailable;
     const current = (await client.query<ApprovalRow & { revision: string }>("SELECT *,xmin::text revision FROM batches WHERE id=$1 FOR UPDATE", [id])).rows[0];
     if (!current || current.revision !== row.revision || current.approved_at || !["prepared", "failed"].includes(current.status) || documentVersion(current) !== documentVersion(row)) return unavailable;
+    await preserveObservedDocument(client, { batchId:id, variant:"original", bytes:current.pdf!, sha256:current.pdf_sha256!, listHash:current.list_hash, signatureKind:null, note:null, recordedBy:actor.userId });
+    if (current.signed_pdf) await preserveObservedDocument(client, { batchId:id, variant:"signed", bytes:current.signed_pdf, sha256:current.signed_pdf_sha256!, listHash:current.list_hash, signatureKind:current.signature_kind, note:current.signed_note ?? null, recordedBy:actor.userId });
+    await appendDocumentVersion(client, { batchId:id, variant:"signed", bytes, sha256:sha, listHash:current.list_hash, signatureKind:kind, note:notes.join(" "), source:"upload", authorId:actor.userId, recordedBy:actor.userId });
     await client.query("UPDATE batches SET signed_pdf=$1, signed_pdf_sha256=$2, signed_note=$3, signature_kind=$4, approval_code_hash=NULL WHERE id=$5", [bytes, sha, notes.join(" "), kind, id]);
     await audit("signed_pdf_attached", null, { batchId: id, by, kind, sha256: sha, ...actorData(actor) }, client);
     return { ok: true, kind, notes };
