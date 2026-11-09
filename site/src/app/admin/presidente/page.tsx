@@ -55,6 +55,9 @@ export default async function Presidente({ searchParams }: { searchParams: { lot
       </dl>
       <p>{document.has_pdf && <a className="v2-btn v2-btn-sec" href={`/api/admin/lotes/${document.id}/pdf`}>Baixar PDF original</a>} {document.has_signed_pdf && <a className="v2-btn v2-btn-sec" href={`/api/admin/lotes/${document.id}/pdf?assinado=1`}>Baixar PDF assinado</a>}</p>
       {document.has_pdf ? <details><summary>Prévia do PDF das assinaturas</summary><iframe title={`PDF do lote ${document.seq}`} src={`/api/admin/lotes/${document.id}/pdf?previa=1`} style={{ width: "100%", height: "65vh", minHeight: 360, border: "1px solid var(--adm-line)" }} loading="lazy" /></details> : <p>PDF não disponível neste lote.</p>}
+      {document.status === "preparing" && !document.has_pdf && (document.has_preparation
+        ? <form method="post" action={`/api/admin/lotes/${document.id}/preparar?portal=presidente`}><p>O preparo usa a lista reservada para este documento. Não inclui novas assinaturas nem envia mensagens.</p><button>Retomar preparo do PDF</button></form>
+        : <p>Este lote antigo não tem snapshot de preparo. Não é possível reconstruir sua lista com segurança por esta tela.</p>)}
       <h3>2. Assinatura</h3>
       <div className="box"><strong>Upload de PDF assinado</strong><p>O upload confere o arquivo e registra o resultado. Ele não envia o lote.</p><p>Validador ICP-Brasil: {process.env.ICP_VALIDATOR_URL ? "configurado" : "não configurado"}.</p></div>
       {actions.upload && <form method="post" action={`/api/admin/lotes/${document.id}/assinado?portal=presidente`} encType="multipart/form-data"><input type="file" name="file" accept="application/pdf" aria-label="PDF assinado" required /><button>Enviar PDF assinado</button></form>}

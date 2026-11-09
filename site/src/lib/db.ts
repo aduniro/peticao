@@ -60,6 +60,17 @@ const SCHEMA_SQL = `
     at TEXT NOT NULL,
     UNIQUE (batch_id, recipient)
   );
+  CREATE TABLE IF NOT EXISTS batch_preparations (
+    batch_id INTEGER PRIMARY KEY REFERENCES batches(id),
+    snapshot TEXT NOT NULL,
+    snapshot_sha256 TEXT NOT NULL CHECK (snapshot_sha256 ~ '^[a-f0-9]{64}$'),
+    reserved_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+    lease_token TEXT,
+    lease_until TIMESTAMPTZ,
+    last_error TEXT,
+    CHECK ((lease_token IS NULL) = (lease_until IS NULL))
+  );
   CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS visitor_id TEXT;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS ref_code TEXT;

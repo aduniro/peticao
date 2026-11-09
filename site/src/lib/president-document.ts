@@ -8,12 +8,14 @@ export type PresidentDocument = {
   list_hash: string; pdf_sha256: string | null; signed_pdf_sha256: string | null;
   signature_kind: string | null; signed_note: string | null; has_pdf: boolean; has_signed_pdf: boolean;
   approved_by: string | null; approved_at: string | null; sent_at: string | null; created_at: string;
+  has_preparation: boolean;
 };
 
 const COLUMNS = `id,seq,kind,status,n_servidor,n_apoiador,n_estrangeiro,
   list_hash,pdf_sha256,signed_pdf_sha256,signature_kind,signed_note,
   pdf IS NOT NULL has_pdf,signed_pdf IS NOT NULL has_signed_pdf,
-  approved_by,approved_at,sent_at,created_at`;
+  approved_by,approved_at,sent_at,created_at,
+  EXISTS(SELECT 1 FROM batch_preparations p WHERE p.batch_id=batches.id) has_preparation`;
 /** Only stored document metadata, never a reconstruction from current signers or local CPF decisions. */
 export async function presidentDocuments(actor: BatchActor, selection: { id?: number; before?: number } = {}) {
   if ([selection.id, selection.before].some(v => v !== undefined && (!Number.isInteger(v) || v <= 0 || v > 2147483647))) return { ok: false as const, error: "parameters" };

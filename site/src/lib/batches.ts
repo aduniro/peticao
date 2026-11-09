@@ -1,4 +1,4 @@
-import { createHash, randomInt } from "node:crypto";
+import { createHash, randomInt, randomUUID } from "node:crypto";
 import { config } from "./config";
 import { audit, query, tx } from "./db";
 import { buildBatchPdf, ListRow } from "./pdf";
@@ -13,6 +13,7 @@ import { checkSignedPdf, verifyIcpBrasil } from "./signed-pdf";
 import type { PoolClient } from "pg";
 import { rejectedBatchRecipients } from "./batch-rejection";
 import { frozenReplyTo, withReplyTo } from "./mail/payload";
+import { freezePreparation, thawPreparation, type CreationSource } from "./batch-preparation";
 
 export type BatchActor = { userId: number; email: string };
 const actorData = (actor: BatchActor) => ({ userId: actor.userId, por: actor.email.trim().toLowerCase() });
@@ -62,7 +63,6 @@ export async function getBatch(id: number): Promise<Batch | null> {
  * Os dois PDFs são acumulados: cada versão enviada ao Governo traz todas as assinaturas confirmadas até ali (as "novas" só marcam o lote em que cada uma entrou).
  * Retorna null se não houver o que fechar.
  */
-type CreationSource = { kind: "scheduler" } | { kind: "admin"; actor: BatchActor };
 const creationData = (source: CreationSource) => source.kind === "admin" ? { source: "admin", ...actorData(source.actor) } : { source: "scheduler" };
 /** Internal scheduler path; manual HTTP creation must use createBatchForAdmin. */
 export const createBatch = (kind: "partial" | "final") => createBatchFrom(kind, { kind: "scheduler" });
@@ -91,27 +91,72 @@ async function createBatchFrom(kind: "partial" | "final", source: CreationSource
     );
     const id = ins.rows[0].id;
     await c.query("UPDATE signatures SET batch_id=$1 WHERE status='confirmed' AND batch_id IS NULL AND id=ANY($2::int[])", [id, rows.map(row => row.id)]);
-    await audit("batch_created", null, { batchId: id, seq, kind, n: rows.length, listHash, ...creationData(source) }, c);
+    const frozen = freezePreparation(rows, { seq, kind, generatedAt: new Date().toISOString(), listHash, nServidor: nS, nApoiador: rows.length - nS - nE, nEstrangeiro: nE, signedNote: signerNote(), origin: config.appUrl(), ...badgeCounts(rows) }, source);
+    await c.query("INSERT INTO batch_preparations(batch_id,snapshot,snapshot_sha256) VALUES($1,$2,$3)", [id, frozen.snapshot, frozen.sha256]);
+    await audit("batch_created", null, { batchId: id, seq, kind, n: rows.length, listHash, snapshotSha256: frozen.sha256, ...creationData(source) }, c);
     return { id, seq, rows, nS, nE, listHash };
   });
   if (!created) return null;
 
-  const { id, seq, rows, nS, nE, listHash } = created;
+  const { id } = created;
   try {
-    const unsigned = await buildBatchPdf(rows, { seq, kind, generatedAt: new Date().toISOString(), listHash, nServidor: nS, nApoiador: rows.length - nS - nE, nEstrangeiro: nE, signedNote: signerNote(), origin: config.appUrl(), ...badgeCounts(rows) });
-    const signed = await signPdf(unsigned);
-    const sha = createHash("sha256").update(signed.bytes).digest("hex"); // hash dos bytes do arquivo, igual ao `sha256sum`
-    await tx(async client => {
-      if (source.kind === "admin" && !(await authorizeBatchActor(client, source.actor))) throw new Error("Lote não está pronto para aprovação.");
-      await client.query("UPDATE batches SET pdf=$1, pdf_sha256=$2, signature_kind=$3, status='prepared' WHERE id=$4", [Buffer.from(signed.bytes), sha, signed.kind, id]);
-      await audit("batch_prepared", null, { batchId: id, pdfSha256: sha, signatureKind: signed.kind, ...creationData(source) }, client);
-    });
+    const prepared = await prepareReservedBatch(id, source);
+    if (!prepared.ok) throw new Error("Lote não está pronto para aprovação.");
   } catch (e) {
     await audit("batch_prepare_failed", null, { batchId: id, error: String(e).slice(0, 200), ...creationData(source) });
     throw e;
   }
   await notifyApprover(id).catch((e) => console.error("aviso ao aprovador falhou", e));
   return getBatch(id);
+}
+
+type PreparationRow = { snapshot: string; snapshot_sha256: string; lease_token: string | null; lease_until: Date | null };
+/** A process may claim only an unprepared document. Expired workers cannot publish over a newer lease. */
+async function prepareReservedBatch(id: number, source: CreationSource, recovery = false) {
+  const token = randomUUID();
+  const claim = await tx(async client => {
+    await client.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'");
+    if (source.kind === "admin" && !(await authorizeBatchActor(client, source.actor))) return { ok: false as const, error: "forbidden" };
+    const batch = (await client.query<ApprovalRow>("SELECT * FROM batches WHERE id=$1 FOR UPDATE", [id])).rows[0];
+    if (!batch || batch.status !== "preparing" || batch.pdf || batch.signed_pdf || batch.approved_at) return { ok: false as const, error: "conflict" };
+    const row = (await client.query<PreparationRow>("SELECT * FROM batch_preparations WHERE batch_id=$1 FOR UPDATE", [id])).rows[0];
+    const frozen = row && thawPreparation(row.snapshot, row.snapshot_sha256, batch);
+    if (!frozen) return { ok: false as const, error: "snapshot" };
+    const auditRows = (await client.query<{ data: string }>("SELECT data FROM audit_log WHERE event='batch_created' AND data::jsonb->>'batchId'=$1 ORDER BY id LIMIT 2", [String(id)])).rows;
+    if (auditRows.length !== 1 || JSON.parse(auditRows[0].data).snapshotSha256 !== row.snapshot_sha256) return { ok: false as const, error: "snapshot" };
+    const claimed = await client.query("UPDATE batch_preparations SET lease_token=$2,lease_until=now()+interval '5 minutes',attempts=attempts+1,last_error=NULL WHERE batch_id=$1 AND (lease_token IS NULL OR lease_until<=now()) RETURNING batch_id", [id, token]);
+    if (!claimed.rowCount) return { ok: false as const, error: "busy" };
+    if (recovery) await audit("batch_preparation_recovery_started", null, { batchId: id, snapshotSha256: row.snapshot_sha256, ...creationData(source) }, client);
+    return { ok: true as const, frozen, sha256: row.snapshot_sha256 };
+  });
+  if (!claim.ok) return claim;
+  try {
+    const unsigned = await buildBatchPdf(claim.frozen.rows, claim.frozen.meta);
+    const signed = await signPdf(unsigned), sha = createHash("sha256").update(signed.bytes).digest("hex");
+    return await tx(async client => {
+      await client.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'");
+      if (source.kind === "admin" && !(await authorizeBatchActor(client, source.actor))) throw new Error("Lote não está pronto para aprovação.");
+      const batch = (await client.query<ApprovalRow>("SELECT * FROM batches WHERE id=$1 FOR UPDATE", [id])).rows[0];
+      const row = (await client.query<PreparationRow & { current: boolean }>("SELECT *,lease_until>now() current FROM batch_preparations WHERE batch_id=$1 FOR UPDATE", [id])).rows[0];
+      if (!batch || batch.status !== "preparing" || batch.pdf || batch.signed_pdf || batch.approved_at || !row || row.lease_token !== token || !row.current || row.snapshot_sha256 !== claim.sha256 || !thawPreparation(row.snapshot, row.snapshot_sha256, batch)) throw new Error("Lote não está pronto para aprovação.");
+      await client.query("UPDATE batches SET pdf=$1,pdf_sha256=$2,signature_kind=$3,status='prepared' WHERE id=$4", [Buffer.from(signed.bytes), sha, signed.kind, id]);
+      await client.query("UPDATE batch_preparations SET lease_token=NULL,lease_until=NULL,last_error=NULL WHERE batch_id=$1", [id]);
+      await audit("batch_prepared", null, { batchId: id, pdfSha256: sha, signatureKind: signed.kind, snapshotSha256: row.snapshot_sha256, ...creationData(claim.frozen.source) }, client);
+      if (recovery) await audit("batch_preparation_recovered", null, { batchId: id, snapshotSha256: row.snapshot_sha256, ...creationData(source) }, client);
+      return { ok: true as const };
+    });
+  } catch (error) {
+    // Release only our lease; a late worker must never clear a newer attempt.
+    await query("UPDATE batch_preparations SET lease_token=NULL,lease_until=NULL,last_error='prepare_failed' WHERE batch_id=$1 AND lease_token=$2", [id, token]);
+    throw error;
+  }
+}
+
+/** Manual recovery prepares only; it never notifies, requests approval or sends a batch. */
+export async function recoverBatchPreparation(id: number, actor: BatchActor) {
+  if (!Number.isInteger(id) || id <= 0 || id > 2147483647) return { ok: false as const, error: "parameters" };
+  try { return await prepareReservedBatch(id, { kind: "admin", actor }, true); }
+  catch { return { ok: false as const, error: "unavailable" }; }
 }
 
 async function notifyApprover(id: number) {
