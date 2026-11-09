@@ -44,6 +44,8 @@ try{
  const columns=async()=> (await c.query("SELECT table_name,column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema=current_schema() ORDER BY table_name,ordinal_position")).rows;
  await c.query("INSERT INTO referrers(code,manage_token_hash,label,created_at) VALUES('ABCDEFG','QA-REFERRAL-HASH','QA Organização','2026-10-01T10:00:00.123456Z')");
  const originalReferrers=(await c.query("SELECT row_to_json(r)::text raw FROM referrers r ORDER BY id")).rows.map(r=>JSON.parse(r.raw));
+ await c.query("INSERT INTO institutional_domains(domain,kind,status,source) VALUES('qa-catalog.example','outro','rejected','QA Original')");
+ const originalDomain=(await c.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE domain='qa-catalog.example'")).rows.map(r=>JSON.parse(r.raw));
  const before=await rows(),existing=await tables(),definition=await columns();
  process.env.DATABASE_SCHEMA=schemaName;
  const module=await import("../../site/src/lib/db.ts");db=module.default || module;
@@ -53,13 +55,16 @@ try{
  const afterColumns=await columns(),originalKeys=new Set(definition.map(row=>`${row.table_name}.${row.column_name}`));
  assert.deepEqual(afterColumns.filter(row=>originalKeys.has(`${row.table_name}.${row.column_name}`)),definition,"Original column definitions must not change");
  assert.deepEqual(afterColumns.filter(row=>existing.includes(row.table_name)&&!originalKeys.has(`${row.table_name}.${row.column_name}`)),[
+  {table_name:"institutional_domains",column_name:"admin_catalog",data_type:"jsonb",is_nullable:"NO",column_default:"'{}'::jsonb"},
+  {table_name:"institutional_domains",column_name:"admin_catalog_version",data_type:"bigint",is_nullable:"NO",column_default:"1"},
+  {table_name:"institutional_domains",column_name:"admin_archived_at",data_type:"timestamp with time zone",is_nullable:"YES",column_default:null},
   {table_name:"mail_log",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null},
   {table_name:"mail_outbox",column_name:"message_id",data_type:"uuid",is_nullable:"YES",column_default:null},
   {table_name:"referrers",column_name:"admin_version",data_type:"bigint",is_nullable:"NO",column_default:"1"},
   {table_name:"referrers",column_name:"archived_at",data_type:"timestamp with time zone",is_nullable:"YES",column_default:null},
   {table_name:"whatsapp_senders",column_name:"revision",data_type:"integer",is_nullable:"NO",column_default:"1"},
   {table_name:"whatsapp_senders",column_name:"archived_at",data_type:"timestamp with time zone",is_nullable:"YES",column_default:null}
- ],"Only the explicit message correlation, administrative referral version/archive and sender revision/archive columns may be added to old tables");
+ ],"Only explicit domain catalog overlay, message correlation, administrative referral version/archive and sender revision/archive columns may be added to old tables");
  const migratedReferrers=(await c.query("SELECT row_to_json(r)::text raw FROM referrers r ORDER BY id")).rows.map(r=>JSON.parse(r.raw));
  assert.deepEqual(migratedReferrers.map(({admin_version,archived_at,...r})=>r),originalReferrers,"Referral codes, tokens, labels and creation instants survive upgrade");
  assert.ok(migratedReferrers.every(r=>r.admin_version===1&&r.archived_at===null));
@@ -68,10 +73,21 @@ try{
  const referralActor=(await c.query("INSERT INTO admin_users(email,nome,nivel,senha_hash) VALUES('qa-referral-migration@example.test','QA Migration','total','QA-NOT-A-REAL-HASH') RETURNING id")).rows[0].id;
  await c.query("INSERT INTO admin_referral_mutations(actor_id,request_id,input_hash,referrer_id,result,created_at) SELECT $1,'00000000-0000-4000-8000-000000000020','QA-INPUT',id,'{\"ok\":true,\"row\":{\"version\":\"3\"}}'::jsonb,'2026-11-09T01:00:00.123456Z' FROM referrers WHERE code='ABCDEFG'",[referralActor]);
  const mutationLedger=(await c.query("SELECT row_to_json(q)::text raw FROM admin_referral_mutations q")).rows;
+ const migratedDomain=(await c.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE domain='qa-catalog.example'")).rows.map(r=>JSON.parse(r.raw));
+ assert.deepEqual(migratedDomain.map(({admin_catalog,admin_catalog_version,admin_archived_at,...d})=>d),originalDomain,"Domain effective policy and unknown fields survive overlay migration");
+ assert.ok(migratedDomain.every(d=>d.admin_catalog_version===1&&d.admin_archived_at===null&&Object.keys(d.admin_catalog).length===0));
+ await c.query("UPDATE institutional_domains SET admin_catalog='{\"label\":null,\"evidenceUrl\":\"http://evidence.example\",\"futureKey\":{\"unknown\":null}}',admin_catalog_version=7,admin_archived_at='2026-11-09T01:00:00.123456Z' WHERE domain='qa-catalog.example'");
+ await c.query("INSERT INTO admin_domain_catalog_requests(actor_id,request_id,input_hash,domain,result,created_at) VALUES($1,'00000000-0000-4000-8000-000000000021','QA-CATALOG-INPUT','qa-catalog.example','{\"ok\":true,\"row\":{\"version\":\"7\"}}','2026-11-09T01:00:00.654321Z')",[referralActor]);
+ const domainCatalogState=(await c.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE domain='qa-catalog.example'")).rows;
+ const domainCatalogLedger=(await c.query("SELECT row_to_json(q)::text raw FROM admin_domain_catalog_requests q")).rows;
+
 
  await c.query(newSql);await c.query(oldSql);
  assert.deepEqual((await c.query("SELECT row_to_json(r)::text raw FROM referrers r ORDER BY id")).rows,referralState,"Replay and old bootstrap preserve administrative archive/revision, including microseconds");
  assert.deepEqual((await c.query("SELECT row_to_json(q)::text raw FROM admin_referral_mutations q")).rows,mutationLedger,"Replay and old bootstrap preserve exact stored mutation results/intentions");
+ assert.deepEqual((await c.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE domain='qa-catalog.example'")).rows,domainCatalogState,"Overlay, effective policy, unknown keys and archive microseconds survive DDL replay/old bootstrap");
+ assert.deepEqual((await c.query("SELECT row_to_json(q)::text raw FROM admin_domain_catalog_requests q")).rows,domainCatalogLedger,"Domain catalog intention and exact result survive DDL replay/old bootstrap");
+
  const upgradedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows.map(r=>JSON.parse(r.raw));
  assert.deepEqual(upgradedSenders.map(({revision,archived_at,...row})=>row),oldSenders,"Sender identity, ciphertext, status and microsecond timestamps survive upgrade");
  assert.ok(upgradedSenders.every(row=>row.revision===1&&row.archived_at===null));
@@ -79,7 +95,7 @@ try{
  const archivedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows;
  await c.query(newSql);await c.query(newSql);await c.query(oldSql);
  assert.deepEqual((await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows,archivedSenders,"DDL replay and old bootstrap must not reset archive decisions or revisions");
- assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages","president_challenges"]);
+ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_domain_catalog_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_triage_jobs","mail_message_attempts","mail_message_events","mail_messages","president_challenges"]);
  // New preparation state is additive; a code rollback must not discard its frozen list or lease.
  const preparing=(await c.query("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,list_hash) VALUES(999,'final','preparing',0,1,'QA-PREPARATION-LIST') RETURNING id")).rows[0].id;
  await c.query("INSERT INTO batch_preparations(batch_id,snapshot,snapshot_sha256,reserved_at,attempts,lease_token,lease_until,last_error) VALUES($1,'QA-FROZEN-SNAPSHOT',$2,'2026-11-08T10:00:00.123456Z',2,'QA-LEASE','2026-11-08T10:05:00.654321Z','prepare_failed')",[preparing,'a'.repeat(64)]);
@@ -196,7 +212,7 @@ try{
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS sender catalogue upgrade: ciphertext, identity, paused state, archive revision and microsecond timestamps survive replay and old bootstrap.");
  console.log("PASS referral intent upgrade: request ownership, allocation, fingerprint and microsecond timestamp preserved.");
- console.log("PASS real startup on old schema plus DDL replay: seventeen additive tables, two nullable message correlation columns, two administrative referral version/archive columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS real startup on old schema plus DDL replay: eighteen additive tables, three administrative domain catalog columns, two nullable message correlation columns, two administrative referral version/archive columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;
