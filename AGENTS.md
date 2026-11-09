@@ -8,6 +8,12 @@ Manter foco na tarefa prioritária até concluir o escopo aprovado. Perguntas, p
 
 Registrar etapas, commits, testes e atividade real no Vigia. Se houver interrupção externa ou impedimento técnico, informar imediatamente, preservar um checkpoint e retomar assim que possível; nunca apresentar trabalho parado como execução em segundo plano. Seguir `docs/POLITICA-CENTRAL-EXECUCAO.md`. A prioridade não autoriza deploy ou merge sem permissão explícita.
 
+## Caminhos completos nas respostas
+
+Regra expressa do responsável em 09/11/2026: sempre apresentar o caminho absoluto completo e visível de arquivos, pastas, scripts e artefatos. Não fornecer apenas caminhos relativos, nomes de arquivo ou links que ocultem o diretório principal.
+
+Ao fornecer comandos para o terminal, usar caminhos absolutos para arquivos, scripts e executáveis e informar explicitamente o diretório absoluto de execução quando necessário. Não depender de um diretório atual implícito. Distinguir caminhos locais dos caminhos na VPS. Esta regra vale também para prévias, relatórios, e-mails e respostas dos subagentes.
+
 ## Project Structure & Module Organization
 `site/` contains the Next.js 14, React, TypeScript, and PostgreSQL application. Routes and API handlers live in `site/src/app/`; reusable UI in `src/components/`; business logic in `src/lib/`; petition and sharing copy in `src/content/`; translations in `src/i18n/`. Paths in this sentence are relative to `site/` unless fully qualified. Assets live in `site/assets/` and `site/public/`.
 
