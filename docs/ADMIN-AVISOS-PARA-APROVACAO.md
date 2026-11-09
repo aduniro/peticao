@@ -38,6 +38,8 @@ Propostas: “Solicitação registrada. O e-mail está na fila de envio.” e �
 
 Motivo: o resultado interno agora distingue aceite, fila e pedido sem envio. O handler administrativo antigo ainda não consome esse resultado; não declarar a interface corrigida. A recuperação pública mantém a resposta uniforme existente e não expõe a existência da conta.
 
+Integração AV4 concluída no candidato em09/11: handler e página consomem o resultado,26 testes dirigidos, tipos, build e navegador seis larguras aprovados. Evidências em `QA-CONTAS-RESULTADO-EMAIL-20261109.md`. Isso não conclui o painel integral.
+
 ## Limites
 
 Não inclui mudanças de textos do formulário público, identidade, privacidade ou assinatura. Os modelos de e-mail existentes foram preservados. A autorização geral do plano não será interpretada como aprovação dessas novas redações específicas.

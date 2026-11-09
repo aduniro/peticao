@@ -6,8 +6,9 @@ import { brasilia } from "@/lib/time";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Usuários do painel", robots: { index: false } };
 
-const MSG: Record<string, string> = { criado: "Usuário criado. Enviamos um convite por e-mail para a pessoa criar a própria senha (vale 24 horas).", nivel: "Nível alterado.", ativado: "Usuário ativado.", desativado: "Usuário desativado e sessões encerradas.", link_enviado: "Link de redefinição enviado por e-mail." };
+const MSG: Record<string, string> = { criado: "Usuário criado. Enviamos um convite por e-mail para a pessoa criar a própria senha (vale 24 horas).", nivel: "Nível alterado.", ativado: "Usuário ativado.", desativado: "Usuário desativado e sessões encerradas.", link_enviado: "Link de redefinição enviado por e-mail.", email_fila: "Solicitação registrada. O e-mail está na fila de envio." };
 const ERRO: Record<string, string> = {
+  email_incerto: "Não foi possível confirmar o envio do e-mail. Confira a situação do usuário antes de tentar novamente.",
   email_invalido: "E-mail inválido.", nome_invalido: "Informe o nome (2 a 120 caracteres).", nivel_invalido: "Nível inválido.", email_ja_existe: "Já existe um usuário com esse e-mail.",
   ultimo_total: "Não é possível: o painel não pode ficar sem nenhum usuário ativo de nível Total.", nao_existe: "Usuário não encontrado.", acao_invalida: "Ação inválida.",
 };
