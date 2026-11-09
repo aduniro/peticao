@@ -61,6 +61,9 @@ test("política central: domínios do banco (inclusive inseridos à mão) entram
     assert.equal((await validateEmailField("rita@faculdade-teste.org.br", "servidor")).ok, false);
     await decideDomain("ifes-teste.org.br", "approved", { kind: "ifes", institution: "IFES Teste", by: "teste" });
     assert.equal((await validateEmailField("rita@ifes-teste.org.bt", "servidor") as any).suggest, "rita@ifes-teste.org.br");
+    assert.equal((await validateEmailField("rita@ifes-teste.org.br", "servidor")).ok, false, "kind=ifes sem titular MEC não autoriza servidor");
+    // Domínio adicional conferido e ligado à identidade MEC, não apenas ao selo.
+    await decideDomain("ifes-teste.org.br", "approved", { kind: "ifes", institution: "IFC", by: "teste" });
     assert.equal((await validateEmailField("rita@ifes-teste.org.br", "servidor")).ok, true);
     const apo = (await validateEmailField("rita@faculdade-teste.org.bt", "apoiador")) as any; // apoiador: domínio recebe e-mail, então só sugere
     assert.equal(apo.ok, true); assert.equal(apo.soft.correto, "faculdade-teste.org.br");

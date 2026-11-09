@@ -1,6 +1,7 @@
 import { diagnosticMark } from "./signup-diagnostics";
 import { validate, submit, EmailUndeliverableError, InstitutionEmailMismatchError, EbserhUnitValidationError, type Meta } from "./signatures";
 import { resolveInstitutionForEmail } from "./institution-registry";
+import { findIfes } from "./ifes-data";
 import { needsIdentity, identityMode, verifyCpfName, makeTicket, checkTicket, verifyIdentity, type IdentityMethod, MAX_FAILED } from "./identity";
 import { checkMx } from "./email-check";
 import { verificarEmail } from "./verificacao";
@@ -74,7 +75,21 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     ? { institutionMatch: await resolveInstitutionForEmail(typeof body?.email === "string" ? body.email.slice(0, 200) : "") }
     : undefined;
   const v = validate(body, binding);
-  if (!v.ok) return ASK({ errors: v.errors });
+  if (!v.ok) {
+    // A divergência continua bloqueada. Um domínio digitado errado pode receber
+    // a dica existente, mas só se a correção pertencer à instituição selecionada.
+    if (!suspected && body?.category === "servidor" && v.errors.institution === "institution_email_mismatch" && typeof body.email === "string" && body.email.length <= 200) {
+      const selected = findIfes(typeof body.institution === "string" ? body.institution : "");
+      const known = await dominiosConhecidos().catch(() => [] as string[]);
+      const suggestion = suggestEmail(body.email, { known });
+      const owner = suggestion ? await resolveInstitutionForEmail(suggestion) : null;
+      const detail = suggestion ? detalheDeSugestao(body.email, suggestion) : null;
+      if (selected?.id && owner?.institutionId === selected.id && detail) {
+        return ASK({ errors: { ...v.errors, email: "email_institutional_invalid" }, suggest: suggestion, fix: detail });
+      }
+    }
+    return ASK({ errors: v.errors });
+  }
   const input = v.value;
   // A challenge is consumed at most once per HTTP request. Identity continuation
   // uses a separate proof bound to its ticket/input, never a reused Turnstile token.
