@@ -67,7 +67,7 @@ export default function Inbox() {
       <label>Conta<input value={input} onChange={event => setInput(event.target.value)} maxLength={80} autoComplete="off" spellCheck={false} disabled={busy} /></label>
       <button className="adm-btn" type="submit" disabled={busy || !inboxAccount(input.trim())}>Atualizar</button>
     </form>
-    {account && <p>Conta: <code>{account}</code></p>}
+    {account && <p>Conta: <code style={{ overflowWrap: "anywhere" }}>{account}</code></p>}
     {error && <p role="alert" className="v2-aviso erro">{error}</p>}
     {auth && <p><a className="adm-btn" href={auth === 401 ? "/admin" : "/admin/confirmar?volta=%2Fadmin%2Finbox"}>{auth === 401 ? "Entrar" : "Confirmar"}</a></p>}
     {threads && <section data-testid="inbox-threads"><h2>Conversas</h2><div className="table-scroll"><table style={{ minWidth: 680 }}><thead><tr><th>ID</th><th>Mensagens</th><th>Disponíveis</th><th>Data</th><th>Ações</th></tr></thead><tbody>
