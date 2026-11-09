@@ -22,3 +22,7 @@ Apoiador usa prioridade editorial definida em `SUPPORTER_PROVIDER_PRIORITY`: Gma
 ## Limites e preservação
 
 Não alterar CSS, fontes, tamanhos, privacidade, avisos de armazenamento, assinaturas, hashes, datas, banco ou regras do backend. Sem chamadas reais à API CPF e sem e-mails para assinantes durante testes. O checkout local principal permanece intocado. Publicar somente arquivos de runtime listados no manifesto e depois de testes cumulativos, build, navegador, comparação visual e confirmação de baseline fresca.
+
+## Seletores — decisão de 09/11/2026
+
+Aplicar `docs/POLITICA-CENTRAL-SELETORES.md`: clicar abre todas as opções válidas do contexto; apenas digitar filtra. A correção vale para o corpo do campo, mesmo já focado, e para a seta.
