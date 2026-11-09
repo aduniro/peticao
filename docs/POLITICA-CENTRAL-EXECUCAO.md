@@ -79,3 +79,7 @@ O objetivo nativo foi encontrado como `blocked` nesta inspeção, e o responsáv
 solicitou sua retomada pelo controle suportado, passando a `active`. Não editar
 registros internos para substituir esse controle do usuário/sistema. As frentes
 independentes autorizadas continuam durante diagnósticos de continuidade.
+
+## Domínios e instituições
+
+Aplicar `docs/POLITICA-CENTRAL-DOMINIOS-INSTITUICOES.md`: titularidade específica com evidência oficial e formulário Servidor temporariamente restrito às instituições vinculadas ao MEC.
