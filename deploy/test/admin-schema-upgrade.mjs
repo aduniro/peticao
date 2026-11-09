@@ -129,7 +129,8 @@ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin
  assert.deepEqual(await binaryHistory(),preservedBinaryHistory,"Historical binary bytes, metadata, unknown author, capture actor and microsecond timestamps survive DDL replay/code rollback bootstrap");
  await assert.rejects(c.query("UPDATE batch_document_versions SET note='QA-CHANGED'"),/immutable/);
  await assert.rejects(c.query("DELETE FROM batch_document_versions"),/immutable/);
- await assert.rejects(c.query("TRUNCATE batch_document_versions"),/immutable/);
+ await assert.rejects(c.query("TRUNCATE batch_document_versions"),/immutable|referenced in a foreign key constraint/);
+ await assert.rejects(c.query("TRUNCATE batch_document_versions CASCADE"),/immutable/);
  assert.deepEqual(await binaryHistory(),preservedBinaryHistory,"Normal UPDATE/DELETE/TRUNCATE cannot mutate history");
  const newMailLog=(await c.query("SELECT * FROM mail_log ORDER BY id")).rows,newMailOutbox=(await c.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
  assert.ok([...newMailLog,...newMailOutbox].every(row=>row.message_id===null));
@@ -248,7 +249,7 @@ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS sender catalogue upgrade: ciphertext, identity, paused state, archive revision and microsecond timestamps survive replay and old bootstrap.");
  console.log("PASS referral intent upgrade: request ownership, allocation, fingerprint and microsecond timestamp preserved.");
- console.log("PASS real startup on old schema plus DDL replay: twenty-two additive tables, three administrative domain catalog columns, two nullable message correlation columns, two administrative referral version/archive columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS real startup on old schema plus DDL replay: twenty-six additive tables, institutional/EBSERH links, three administrative domain catalog columns, two nullable message correlation columns, two administrative referral version/archive columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;

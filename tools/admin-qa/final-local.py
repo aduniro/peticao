@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """Isolated final candidate checks. No production configuration, providers or databases."""
-import argparse, hashlib, json, os, socket, subprocess, time
+import argparse, hashlib, json, os, socket, subprocess, time, shutil
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SITE = ROOT / "site"
@@ -21,10 +21,12 @@ assert not subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "ls-files",
 tracked = subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "ls-files", "site", "deploy/test", "tools/signing"], text=True).splitlines()
 def manifest():
     return {f: hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in tracked if (ROOT/f).is_file()}
+short = Path("/mnt/apps/peticao-final/_qa") / ("a1-" + str(time.time_ns()))
+short.mkdir(mode=0o700, parents=True)
 before = manifest()
 env = {k: os.environ[k] for k in ["HOME", "LANG", "LC_ALL"] if k in os.environ}
 env.update(PATH=str(NODE.parent)+":/usr/bin:/bin", NODE_ENV="test", MAIL_PROVIDER="dev", SIGNER="none", NEXT_TELEMETRY_DISABLED="1",
-    DEV_DB_PORT="54375", DEV_DB_DIR=str(scratch/"postgres"), TMPDIR=str(scratch/"tmp"), DATABASE_URL="postgres://peticao:peticao@127.0.0.1:54375/peticao",
+    DEV_DB_PORT="54375", DEV_DB_DIR=str(scratch/"postgres"), TMPDIR=str(short), DATABASE_URL="postgres://peticao:peticao@127.0.0.1:54375/peticao",
     HASH_PEPPER="QA-ADMIN-FINAL-NEVER-PRODUCTION-0123456789", SECRETS_DIR=str(scratch/"empty"), PETICAO_CONFIG_DIR=str(scratch/"empty"), CREDENTIALS_DIRECTORY=str(scratch/"empty"))
 if args.mode in ["targeted", "full", "schema"]:
     with socket.socket() as s: assert s.connect_ex(("127.0.0.1",54375)) != 0, "QA port occupied"
@@ -40,6 +42,7 @@ else:
 print("Check:",args.mode,"; evidence:",scratch,flush=True)
 with (scratch/"validation.log").open("w") as log: code=subprocess.run(command,cwd=SITE,env=env,stdout=log,stderr=subprocess.STDOUT).returncode
 same = before == manifest()
+shutil.rmtree(short)
 result={"mode":args.mode,"exit":code,"sourceStable":same,"node":"20.19.2","nodeSha256":NODE_SHA,"commit":subprocess.check_output(["/usr/bin/git","-C",str(ROOT),"rev-parse","HEAD"],text=True).strip(),"command":command,"trackedFiles":len(before),"log":str(scratch/"validation.log")}
 (scratch/"result.json").write_text(json.dumps(result,indent=2));(scratch/"source-manifest.json").write_text(json.dumps(before,sort_keys=True))
 print(json.dumps(result),flush=True)
