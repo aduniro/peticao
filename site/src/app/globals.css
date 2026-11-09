@@ -44,6 +44,8 @@ button.ghost { background: transparent; } .ghost-light { background: rgba(255,25
 label, .field > label, .datefield > label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: .92rem; }
 .field { display: flex; flex-direction: column; gap: 4px; }
 input:not([type=checkbox]):not([type=radio]), select { font: inherit; font-size: 16px; min-height: 48px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); color: var(--fg); width: 100%; }
+/* Opções de Cargo: mesma tipografia das opções de cidade/campus, sem alterar o campo fechado. */
+.form [data-tour="role"] select option { font-family: var(--font); font-size: .92rem; font-weight: 500; }
 input[aria-invalid="true"], select[aria-invalid="true"] { border: 2px solid var(--err) !important; }
 input[aria-invalid="true"]:focus-visible, select[aria-invalid="true"]:focus-visible { outline-color: var(--err); }
 input[type="checkbox"][aria-invalid="true"] { outline: 2px solid var(--err); outline-offset: 2px; accent-color: var(--err); }

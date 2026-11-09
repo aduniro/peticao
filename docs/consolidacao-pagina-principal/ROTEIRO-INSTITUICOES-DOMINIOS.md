@@ -95,3 +95,7 @@ Por solicitação expressa, todas as siglas canônicas ficam em MAIÚSCULAS, inc
 ## Dropdown de instituições — solicitação posterior de 09/11/2026
 
 A seta deve abrir todas as instituições elegíveis, mesmo com uma selecionada ou um texto parcial. Digitar continua usando exatamente a busca e o ranking anteriores. O texto selecionado não é apagado ao abrir a lista completa. O campo de instituição recebe lista completa separada; outros comboboxes preservam seu comportamento. Sem alteração de CSS, fontes ou rótulos. Validar lista completa, filtro ao digitar, troca de seleção e teclado no navegador após build.
+
+## Tipografia das opções de Cargo — solicitação posterior de 09/11/2026
+
+O controle Cargo é um select nativo; cidade/campus usam lista customizada. O histórico consultado não mostrou mudança recente na folha de estilos desses controles. Para corrigir a diferença exibida pelo navegador, declarar somente nas opções do Cargo a mesma família, tamanho (.92rem) e peso (500) das opções da lista de cidades. Campo fechado, rótulos, dimensões e demais estilos permanecem iguais. Validar estilos computados e seleção no navegador, inclusive após erro.
