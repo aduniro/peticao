@@ -1,7 +1,7 @@
 import {chromium} from '/home/barre/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-const out='/mnt/dev/peticao/.cache/form-interaction-20261107/visual';await fs.mkdir(out,{recursive:true});
+const out='/mnt/apps/peticao-final/peticao/.cache/form-interaction-20261107/visual';await fs.mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true,executablePath:'/home/barre/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome',args:['--no-sandbox','--disable-dev-shm-usage']});
 const passed=[];const failures=[];
 async function scenario(title,work,width=390) {
