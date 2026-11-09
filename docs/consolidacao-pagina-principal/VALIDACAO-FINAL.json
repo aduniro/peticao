@@ -1,0 +1,16 @@
+{
+  "validated_at": "2026-11-09T13:47:53.067034+00:00",
+  "runtime_source_commit": "15c5b0dd28bab696f07c6e91ed13cc987f02344c",
+  "site_tree": "58210408d1a0a6adb630a3debdc7757901f99939",
+  "backend_tests": 208,
+  "backend_failures": 0,
+  "browser_cases": 35,
+  "visual_comparisons": 9,
+  "public_texts_preserved": 345,
+  "node": "20.19.2",
+  "production_deploy": false,
+  "database_corrections_applied": false,
+  "backend_proof": "/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109-qa/fix-fa25c04/reports/recheck-a03c3bf/backend.log",
+  "frontend_proof": "/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109-qa/fix-fa25c04/reports/recheck-15c5b0d",
+  "old_main_preserved_tag": "preservado/main-antes-consolidacao-20261109"
+}
