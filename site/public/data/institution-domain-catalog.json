@@ -176,7 +176,7 @@
   },
   {
     "institutionId": "ifes:0086",
-    "acronym": "Ifac",
+    "acronym": "IFAC",
     "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Acre",
     "domain": "ifac.edu.br",
     "status": "approved",
@@ -196,7 +196,7 @@
   },
   {
     "institutionId": "ifes:0087",
-    "acronym": "Ifal",
+    "acronym": "IFAL",
     "fullName": "Instituto Federal de Educação, Ciência e Tecnologia de Alagoas",
     "domain": "ifal.edu.br",
     "status": "approved",
@@ -296,7 +296,7 @@
   },
   {
     "institutionId": "ifes:0092",
-    "acronym": "IF Baiano",
+    "acronym": "IF BAIANO",
     "fullName": "Instituto Federal de Educação, Ciência e Tecnologia Baiano",
     "domain": "ifbaiano.edu.br",
     "status": "approved",
@@ -376,7 +376,7 @@
   },
   {
     "institutionId": "ifes:0094",
-    "acronym": "Ifes",
+    "acronym": "IFES",
     "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo",
     "domain": "ifes.edu.br",
     "status": "approved",
@@ -416,7 +416,7 @@
   },
   {
     "institutionId": "ifes:0095",
-    "acronym": "IFFar",
+    "acronym": "IFFAR",
     "fullName": "Instituto Federal de Educação, Ciência e Tecnologia Farroupilha",
     "domain": "iffarroupilha.edu.br",
     "status": "approved",
@@ -456,7 +456,7 @@
   },
   {
     "institutionId": "ifes:0083",
-    "acronym": "IF Goiano",
+    "acronym": "IF GOIANO",
     "fullName": "Instituto Federal de Educação, Ciência e Tecnologia Goiano",
     "domain": "ifgoiano.edu.br",
     "status": "approved",
@@ -816,7 +816,7 @@
   },
   {
     "institutionId": "ifes:0084",
-    "acronym": "IFSertãoPE",
+    "acronym": "IFSERTÃOPE",
     "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Sertão Pernambucano",
     "domain": "ifsertao-pe.edu.br",
     "status": "approved",
@@ -856,7 +856,7 @@
   },
   {
     "institutionId": "ifes:0114",
-    "acronym": "IF Sudeste MG",
+    "acronym": "IF SUDESTE MG",
     "fullName": "Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais",
     "domain": "ifsudestemg.edu.br",
     "status": "approved",
@@ -876,7 +876,7 @@
   },
   {
     "institutionId": "ifes:0116",
-    "acronym": "IFSul",
+    "acronym": "IFSUL",
     "fullName": "Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense",
     "domain": "ifsul.edu.br",
     "status": "approved",
@@ -1032,7 +1032,7 @@
   },
   {
     "institutionId": "ifes:0003",
-    "acronym": "Ufac",
+    "acronym": "UFAC",
     "fullName": "Universidade Federal do Acre",
     "domain": "sou.ufac.br",
     "status": "approved",
@@ -1072,7 +1072,7 @@
   },
   {
     "institutionId": "ifes:0003",
-    "acronym": "Ufac",
+    "acronym": "UFAC",
     "fullName": "Universidade Federal do Acre",
     "domain": "ufac.br",
     "status": "approved",
@@ -1092,7 +1092,7 @@
   },
   {
     "institutionId": "ifes:0004",
-    "acronym": "Ufal",
+    "acronym": "UFAL",
     "fullName": "Universidade Federal de Alagoas",
     "domain": "ufal.br",
     "status": "approved",
@@ -1112,7 +1112,7 @@
   },
   {
     "institutionId": "ifes:0004",
-    "acronym": "Ufal",
+    "acronym": "UFAL",
     "fullName": "Universidade Federal de Alagoas",
     "domain": "ufal.edu.br",
     "status": "approved",
@@ -1132,7 +1132,7 @@
   },
   {
     "institutionId": "ifes:0005",
-    "acronym": "Ufam",
+    "acronym": "UFAM",
     "fullName": "Universidade Federal do Amazonas",
     "domain": "ufam.edu.br",
     "status": "approved",
@@ -1332,7 +1332,7 @@
   },
   {
     "institutionId": "ifes:0013",
-    "acronym": "UFDPar",
+    "acronym": "UFDPAR",
     "fullName": "Universidade Federal do Delta do Parnaíba",
     "domain": "ufdpar.edu.br",
     "status": "approved",
@@ -1352,7 +1352,7 @@
   },
   {
     "institutionId": "ifes:0014",
-    "acronym": "Ufersa",
+    "acronym": "UFERSA",
     "fullName": "Universidade Federal Rural do Semi-Árido",
     "domain": "ufersa.edu.br",
     "status": "approved",
@@ -1372,7 +1372,7 @@
   },
   {
     "institutionId": "ifes:0015",
-    "acronym": "Ufes",
+    "acronym": "UFES",
     "fullName": "Universidade Federal do Espírito Santo",
     "domain": "ufes.br",
     "status": "approved",
@@ -1712,7 +1712,7 @@
   },
   {
     "institutionId": "ifes:0031",
-    "acronym": "Ufopa",
+    "acronym": "UFOPA",
     "fullName": "Universidade Federal do Oeste do Pará",
     "domain": "ufopa.edu.br",
     "status": "approved",
@@ -1812,7 +1812,7 @@
   },
   {
     "institutionId": "ifes:0035",
-    "acronym": "UFPel",
+    "acronym": "UFPEL",
     "fullName": "Universidade Federal de Pelotas",
     "domain": "ufpel.edu.br",
     "status": "approved",
@@ -1912,7 +1912,7 @@
   },
   {
     "institutionId": "ifes:0039",
-    "acronym": "Ufra",
+    "acronym": "UFRA",
     "fullName": "Universidade Federal Rural da Amazônia",
     "domain": "ufra.edu.br",
     "status": "approved",
@@ -2172,7 +2172,7 @@
   },
   {
     "institutionId": "ifes:0050",
-    "acronym": "UFSCar",
+    "acronym": "UFSCAR",
     "fullName": "Universidade Federal de São Carlos",
     "domain": "ufscar.br",
     "status": "approved",
@@ -2332,7 +2332,7 @@
   },
   {
     "institutionId": "ifes:0058",
-    "acronym": "UnB",
+    "acronym": "UNB",
     "fullName": "Universidade de Brasília",
     "domain": "unb.br",
     "status": "approved",
@@ -2372,7 +2372,7 @@
   },
   {
     "institutionId": "ifes:0060",
-    "acronym": "Unifap",
+    "acronym": "UNIFAP",
     "fullName": "Universidade Federal do Amapá",
     "domain": "unifap.br",
     "status": "approved",
@@ -2412,7 +2412,7 @@
   },
   {
     "institutionId": "ifes:0062",
-    "acronym": "Unifesp",
+    "acronym": "UNIFESP",
     "fullName": "Universidade Federal de São Paulo",
     "domain": "unifesp.br",
     "status": "approved",
@@ -2432,7 +2432,7 @@
   },
   {
     "institutionId": "ifes:0062",
-    "acronym": "Unifesp",
+    "acronym": "UNIFESP",
     "fullName": "Universidade Federal de São Paulo",
     "domain": "unifesp.edu.br",
     "status": "approved",
@@ -2452,7 +2452,7 @@
   },
   {
     "institutionId": "ifes:0063",
-    "acronym": "Unifesspa",
+    "acronym": "UNIFESSPA",
     "fullName": "Universidade Federal do Sul e Sudeste do Pará",
     "domain": "unifesspa.edu.br",
     "status": "approved",
@@ -2492,7 +2492,7 @@
   },
   {
     "institutionId": "ifes:0065",
-    "acronym": "Unilab",
+    "acronym": "UNILAB",
     "fullName": "Universidade da Integração Internacional da Lusofonia Afro-Brasileira",
     "domain": "unilab.edu.br",
     "status": "approved",
@@ -2572,7 +2572,7 @@
   },
   {
     "institutionId": "ifes:0069",
-    "acronym": "Univasf",
+    "acronym": "UNIVASF",
     "fullName": "Fundação Universidade Federal do Vale do São Francisco",
     "domain": "univasf.edu.br",
     "status": "approved",

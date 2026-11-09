@@ -36,7 +36,7 @@
     ]
   },
   {
-    "s": "Ufac",
+    "s": "UFAC",
     "n": "Universidade Federal do Acre",
     "k": "U",
     "u": "AC",
@@ -54,7 +54,7 @@
     ]
   },
   {
-    "s": "Ufal",
+    "s": "UFAL",
     "n": "Universidade Federal de Alagoas",
     "k": "U",
     "u": "AL",
@@ -77,7 +77,7 @@
     ]
   },
   {
-    "s": "Ufam",
+    "s": "UFAM",
     "n": "Universidade Federal do Amazonas",
     "k": "U",
     "u": "AM",
@@ -223,7 +223,7 @@
     ]
   },
   {
-    "s": "UFDPar",
+    "s": "UFDPAR",
     "n": "Universidade Federal do Delta do Parnaíba",
     "k": "U",
     "u": "PI",
@@ -241,7 +241,7 @@
     ]
   },
   {
-    "s": "Ufersa",
+    "s": "UFERSA",
     "n": "Universidade Federal Rural do Semi-Árido",
     "k": "U",
     "u": "RN",
@@ -261,7 +261,7 @@
     ]
   },
   {
-    "s": "Ufes",
+    "s": "UFES",
     "n": "Universidade Federal do Espírito Santo",
     "k": "U",
     "u": "ES",
@@ -558,7 +558,7 @@
     ]
   },
   {
-    "s": "Ufopa",
+    "s": "UFOPA",
     "n": "Universidade Federal do Oeste do Pará",
     "k": "U",
     "u": "PA",
@@ -644,7 +644,7 @@
     ]
   },
   {
-    "s": "UFPel",
+    "s": "UFPEL",
     "n": "Universidade Federal de Pelotas",
     "k": "U",
     "u": "RS",
@@ -716,7 +716,7 @@
     ]
   },
   {
-    "s": "Ufra",
+    "s": "UFRA",
     "n": "Universidade Federal Rural da Amazônia",
     "k": "U",
     "u": "PA",
@@ -918,7 +918,7 @@
     ]
   },
   {
-    "s": "UFSCar",
+    "s": "UFSCAR",
     "n": "Universidade Federal de São Carlos",
     "k": "U",
     "u": "SP",
@@ -1064,7 +1064,7 @@
     ]
   },
   {
-    "s": "UnB",
+    "s": "UNB",
     "n": "Universidade de Brasília",
     "k": "U",
     "u": "DF",
@@ -1097,7 +1097,7 @@
     ]
   },
   {
-    "s": "Unifap",
+    "s": "UNIFAP",
     "n": "Universidade Federal do Amapá",
     "k": "U",
     "u": "AP",
@@ -1136,7 +1136,7 @@
     ]
   },
   {
-    "s": "Unifesp",
+    "s": "UNIFESP",
     "n": "Universidade Federal de São Paulo",
     "k": "U",
     "u": "SP",
@@ -1157,7 +1157,7 @@
     ]
   },
   {
-    "s": "Unifesspa",
+    "s": "UNIFESSPA",
     "n": "Universidade Federal do Sul e Sudeste do Pará",
     "k": "U",
     "u": "PA",
@@ -1193,7 +1193,7 @@
     ]
   },
   {
-    "s": "Unilab",
+    "s": "UNILAB",
     "n": "Universidade da Integração Internacional da Lusofonia Afro-Brasileira",
     "k": "U",
     "u": "CE",
@@ -1272,7 +1272,7 @@
     ]
   },
   {
-    "s": "Univasf",
+    "s": "UNIVASF",
     "n": "Fundação Universidade Federal do Vale do São Francisco",
     "k": "U",
     "u": "PE",
@@ -1381,7 +1381,7 @@
     ]
   },
   {
-    "s": "CIAvEx",
+    "s": "CIAVEX",
     "n": "Centro de Instrução de Aviação do Exército",
     "k": "O",
     "u": "SP",
@@ -1443,7 +1443,7 @@
     ]
   },
   {
-    "s": "EsEFEx",
+    "s": "ESEFEX",
     "n": "Escola de Educação Física do Exército",
     "k": "O",
     "u": "RJ",
@@ -1459,7 +1459,7 @@
     ]
   },
   {
-    "s": "EsSLog",
+    "s": "ESSLOG",
     "n": "Escola de Sargentos de Logística",
     "k": "O",
     "u": "RJ",
@@ -1475,7 +1475,7 @@
     ]
   },
   {
-    "s": "FaCS-GHC",
+    "s": "FACS-GHC",
     "n": "Faculdade de Ciências da Saúde do Grupo Hospitalar Conceição",
     "k": "O",
     "u": "RS",
@@ -1543,7 +1543,7 @@
     ]
   },
   {
-    "s": "IF Goiano",
+    "s": "IF GOIANO",
     "n": "Instituto Federal de Educação, Ciência e Tecnologia Goiano",
     "k": "IF",
     "u": "GO",
@@ -1571,7 +1571,7 @@
     ]
   },
   {
-    "s": "IFSertãoPE",
+    "s": "IFSERTÃOPE",
     "n": "Instituto Federal de Educação, Ciência e Tecnologia do Sertão Pernambucano",
     "k": "IF",
     "u": "PE",
@@ -1615,7 +1615,7 @@
     ]
   },
   {
-    "s": "Ifac",
+    "s": "IFAC",
     "n": "Instituto Federal de Educação, Ciência e Tecnologia do Acre",
     "k": "IF",
     "u": "AC",
@@ -1636,7 +1636,7 @@
     ]
   },
   {
-    "s": "Ifal",
+    "s": "IFAL",
     "n": "Instituto Federal de Educação, Ciência e Tecnologia de Alagoas",
     "k": "IF",
     "u": "AL",
@@ -1758,7 +1758,7 @@
     ]
   },
   {
-    "s": "IF Baiano",
+    "s": "IF BAIANO",
     "n": "Instituto Federal de Educação, Ciência e Tecnologia Baiano",
     "k": "IF",
     "u": "BA",
@@ -1828,7 +1828,7 @@
     ]
   },
   {
-    "s": "Ifes",
+    "s": "IFES",
     "n": "Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo",
     "k": "IF",
     "u": "ES",
@@ -1863,7 +1863,7 @@
     ]
   },
   {
-    "s": "IFFar",
+    "s": "IFFAR",
     "n": "Instituto Federal de Educação, Ciência e Tecnologia Farroupilha",
     "k": "IF",
     "u": "RS",
@@ -2430,7 +2430,7 @@
     ]
   },
   {
-    "s": "IF Sudeste MG",
+    "s": "IF SUDESTE MG",
     "n": "Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais",
     "k": "IF",
     "u": "MG",
@@ -2499,7 +2499,7 @@
     ]
   },
   {
-    "s": "IFSul",
+    "s": "IFSUL",
     "n": "Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense",
     "k": "IF",
     "u": "RS",

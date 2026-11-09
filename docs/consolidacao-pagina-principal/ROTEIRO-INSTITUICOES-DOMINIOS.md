@@ -87,3 +87,7 @@ Em 09/11/2026 às 14:56 UTC, transação única aplicada com35 correções e35 a
 ### Próxima etapa de testes, conforme pedido do responsável
 
 A suíte extensa não foi repetida neste bloco. Revisar fixtures históricas que usam domínio fictício genérico como instituição válida antes da regressão ampla; repetir concorrência, rede, integração externa, acessibilidade e comparações visuais em diferentes larguras. Aprovação rápida não equivale à comprovação de entrega real de e-mail ou ausência de todo bug. Nenhum deploy de código ou DDL foi executado na VPS.
+
+## Padronização posterior das siglas — 09/11/2026
+
+Por solicitação expressa, todas as siglas canônicas ficam em MAIÚSCULAS, inclusive IFFAR, UFAM, UFAC, UNIFAP, IF SUDESTE MG e IFSERTÃOPE. Foram convertidas 29 siglas de instituições; os demais campos dos cinco arquivos do catálogo são idênticos aos anteriores. Aliases históricos continuam pesquisáveis. O gerador preserva essa política nas reproduções. Os 27 testes rápidos de vínculo/seleção/MEC passaram novamente. Sem alterações em registros da VPS ou deploy por este ajuste.

@@ -16,22 +16,22 @@
   },
   {
     "domain": "ufac.br",
-    "acronym": "Ufac",
+    "acronym": "UFAC",
     "institution": "Universidade Federal do Acre"
   },
   {
     "domain": "ufal.br",
-    "acronym": "Ufal",
+    "acronym": "UFAL",
     "institution": "Universidade Federal de Alagoas"
   },
   {
     "domain": "ufal.edu.br",
-    "acronym": "Ufal",
+    "acronym": "UFAL",
     "institution": "Universidade Federal de Alagoas"
   },
   {
     "domain": "ufam.edu.br",
-    "acronym": "Ufam",
+    "acronym": "UFAM",
     "institution": "Universidade Federal do Amazonas"
   },
   {
@@ -81,17 +81,17 @@
   },
   {
     "domain": "ufdpar.edu.br",
-    "acronym": "UFDPar",
+    "acronym": "UFDPAR",
     "institution": "Universidade Federal do Delta do Parnaíba"
   },
   {
     "domain": "ufersa.edu.br",
-    "acronym": "Ufersa",
+    "acronym": "UFERSA",
     "institution": "Universidade Federal Rural do Semi-Árido"
   },
   {
     "domain": "ufes.br",
-    "acronym": "Ufes",
+    "acronym": "UFES",
     "institution": "Universidade Federal do Espírito Santo"
   },
   {
@@ -176,7 +176,7 @@
   },
   {
     "domain": "ufopa.edu.br",
-    "acronym": "Ufopa",
+    "acronym": "UFOPA",
     "institution": "Universidade Federal do Oeste do Pará"
   },
   {
@@ -201,7 +201,7 @@
   },
   {
     "domain": "ufpel.edu.br",
-    "acronym": "UFPel",
+    "acronym": "UFPEL",
     "institution": "Universidade Federal de Pelotas"
   },
   {
@@ -226,7 +226,7 @@
   },
   {
     "domain": "ufra.edu.br",
-    "acronym": "Ufra",
+    "acronym": "UFRA",
     "institution": "Universidade Federal Rural da Amazônia"
   },
   {
@@ -291,7 +291,7 @@
   },
   {
     "domain": "ufscar.br",
-    "acronym": "UFSCar",
+    "acronym": "UFSCAR",
     "institution": "Universidade Federal de São Carlos"
   },
   {
@@ -331,12 +331,12 @@
   },
   {
     "domain": "unb.br",
-    "acronym": "UnB",
+    "acronym": "UNB",
     "institution": "Universidade de Brasília"
   },
   {
     "domain": "unifap.br",
-    "acronym": "Unifap",
+    "acronym": "UNIFAP",
     "institution": "Universidade Federal do Amapá"
   },
   {
@@ -346,17 +346,17 @@
   },
   {
     "domain": "unifesp.br",
-    "acronym": "Unifesp",
+    "acronym": "UNIFESP",
     "institution": "Universidade Federal de São Paulo"
   },
   {
     "domain": "unifesp.edu.br",
-    "acronym": "Unifesp",
+    "acronym": "UNIFESP",
     "institution": "Universidade Federal de São Paulo"
   },
   {
     "domain": "unifesspa.edu.br",
-    "acronym": "Unifesspa",
+    "acronym": "UNIFESSPA",
     "institution": "Universidade Federal do Sul e Sudeste do Pará"
   },
   {
@@ -366,7 +366,7 @@
   },
   {
     "domain": "unilab.edu.br",
-    "acronym": "Unilab",
+    "acronym": "UNILAB",
     "institution": "Universidade da Integração Internacional da Lusofonia Afro-Brasileira"
   },
   {
@@ -386,7 +386,7 @@
   },
   {
     "domain": "univasf.edu.br",
-    "acronym": "Univasf",
+    "acronym": "UNIVASF",
     "institution": "Fundação Universidade Federal do Vale do São Francisco"
   },
   {
@@ -411,7 +411,7 @@
   },
   {
     "domain": "ifgoiano.edu.br",
-    "acronym": "IF Goiano",
+    "acronym": "IF GOIANO",
     "institution": "Instituto Federal de Educação, Ciência e Tecnologia Goiano"
   },
   {
@@ -421,12 +421,12 @@
   },
   {
     "domain": "ifac.edu.br",
-    "acronym": "Ifac",
+    "acronym": "IFAC",
     "institution": "Instituto Federal de Educação, Ciência e Tecnologia do Acre"
   },
   {
     "domain": "ifal.edu.br",
-    "acronym": "Ifal",
+    "acronym": "IFAL",
     "institution": "Instituto Federal de Educação, Ciência e Tecnologia de Alagoas"
   },
   {
@@ -451,7 +451,7 @@
   },
   {
     "domain": "ifbaiano.edu.br",
-    "acronym": "IF Baiano",
+    "acronym": "IF BAIANO",
     "institution": "Instituto Federal de Educação, Ciência e Tecnologia Baiano"
   },
   {
@@ -461,12 +461,12 @@
   },
   {
     "domain": "ifes.edu.br",
-    "acronym": "Ifes",
+    "acronym": "IFES",
     "institution": "Instituto Federal de Educação, Ciência e Tecnologia do Espírito Santo"
   },
   {
     "domain": "iffarroupilha.edu.br",
-    "acronym": "IFFar",
+    "acronym": "IFFAR",
     "institution": "Instituto Federal de Educação, Ciência e Tecnologia Farroupilha"
   },
   {
@@ -566,7 +566,7 @@
   },
   {
     "domain": "ifsul.edu.br",
-    "acronym": "IFSul",
+    "acronym": "IFSUL",
     "institution": "Instituto Federal de Educação, Ciência e Tecnologia Sul-rio-grandense"
   },
   {
@@ -596,7 +596,7 @@
   },
   {
     "domain": "ifsertao-pe.edu.br",
-    "acronym": "IFSertãoPE",
+    "acronym": "IFSERTÃOPE",
     "institution": "Instituto Federal de Educação, Ciência e Tecnologia do Sertão Pernambucano"
   },
   {
@@ -606,7 +606,7 @@
   },
   {
     "domain": "ifsudestemg.edu.br",
-    "acronym": "IF Sudeste MG",
+    "acronym": "IF SUDESTE MG",
     "institution": "Instituto Federal de Educação, Ciência e Tecnologia do Sudeste de Minas Gerais"
   },
   {
