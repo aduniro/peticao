@@ -1,3 +1,4 @@
+import { effectivePetitionBaseValidationIdTx } from "./petition-base-validation-store";
 import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { audit, tx } from "./db";
@@ -76,7 +77,8 @@ export async function prepareBatchPackage(input:{batchId:number;requestId:string
   if(!current||!policy||selected.petition_text_version!==TEXT_VERSION||selected.responsible_id!==current.responsibleId||selected.profile_revision!==current.profileRevision||selected.validator_configuration_sha256!==policy)return error('selection_conflict');
   const base=(await c.query<{bytes:Buffer;sha256:string}>('SELECT bytes,sha256 FROM petition_base_artifacts WHERE id=$1 FOR SHARE',[selected.artifact_id])).rows[0];
   if(!base||base.sha256!==selected.artifact_sha256||digest(base.bytes)!==base.sha256)return error('integrity');
-  const evidence=(await c.query<{id:string;report:unknown;report_sha256:string;validator_configuration_sha256:string}>("SELECT id,report,report_sha256,validator_configuration_sha256 FROM petition_base_validations WHERE artifact_id=$1 AND binding_sha256=$2 AND validator_configuration_sha256=$3 ORDER BY created_at DESC,id DESC LIMIT 1 FOR SHARE",[selected.artifact_id,boundHash(current),policy])).rows[0];
+  const effective=await effectivePetitionBaseValidationIdTx(c,selected.artifact_id);if(effective.journaled&&!effective.validationId)return error('validation_required');
+  const evidence=(await c.query<{id:string;report:unknown;report_sha256:string;validator_configuration_sha256:string}>("SELECT id,report,report_sha256,validator_configuration_sha256 FROM petition_base_validations WHERE artifact_id=$1 AND binding_sha256=$2 AND validator_configuration_sha256=$3 AND ($4::uuid IS NULL OR id=$4) ORDER BY created_at DESC,id DESC LIMIT 1 FOR SHARE",[selected.artifact_id,boundHash(current),policy,effective.validationId])).rows[0];
   if(!evidence||!isCurrentStoredPetitionBaseEvidence(evidence.report,current,base.sha256,evidence.validator_configuration_sha256,evidence.report_sha256))return error('validation_required');
   const frozen=freezeBatchPackage({batchId:batch.id,documentVersion:intent.expectedDocumentVersion,batch:{versionId:signed.id,sha256:signed.sha256,byteLength:signed.bytes.length},basePetition:{artifactId:selected.artifact_id,versionId:selected.artifact_id,sha256:base.sha256,byteLength:base.bytes.length,validationState:'valid',method:'gov-br-advanced'}});
   if(!frozen.ok)return error('package_invalid');const checked=verifyBatchPackage(frozen.manifest,frozen.packageDigest,new Map([[signed.id,signed.bytes],[selected.artifact_id,base.bytes]]),budget);if(!checked.ok)return error(checked.error==='package_too_large'?'package_too_large':'package_invalid');
@@ -107,7 +109,8 @@ export async function batchPackageDispatchReadyTx(c:PoolClient,packageId:string)
  const current=await binding(c,row.base_artifact_id),policy=petitionBaseValidationPolicyFingerprint();if(!current||!policy)return false;
  const original=(await c.query<{binding_sha256:string;validator_configuration_sha256:string}>('SELECT binding_sha256,validator_configuration_sha256 FROM petition_base_validations WHERE id=$1',[row.base_validation_id])).rows[0];
  if(!original||original.binding_sha256!==boundHash(current)||original.validator_configuration_sha256!==policy)return false;
- const evidence=(await c.query<{report:unknown;report_sha256:string;validator_configuration_sha256:string}>("SELECT report,report_sha256,validator_configuration_sha256 FROM petition_base_validations WHERE artifact_id=$1 AND binding_sha256=$2 AND validator_configuration_sha256=$3 ORDER BY created_at DESC,id DESC LIMIT 1 FOR SHARE",[row.base_artifact_id,boundHash(current),policy])).rows[0];
+ const effective=await effectivePetitionBaseValidationIdTx(c,row.base_artifact_id);if(effective.journaled&&!effective.validationId)return false;
+ const evidence=(await c.query<{report:unknown;report_sha256:string;validator_configuration_sha256:string}>("SELECT report,report_sha256,validator_configuration_sha256 FROM petition_base_validations WHERE artifact_id=$1 AND binding_sha256=$2 AND validator_configuration_sha256=$3 AND ($4::uuid IS NULL OR id=$4) ORDER BY created_at DESC,id DESC LIMIT 1 FOR SHARE",[row.base_artifact_id,boundHash(current),policy,effective.validationId])).rows[0];
  return !!evidence&&isCurrentStoredPetitionBaseEvidence(evidence.report,current,row.base_sha256,evidence.validator_configuration_sha256,evidence.report_sha256)&&enabled()&&policy===petitionBaseValidationPolicyFingerprint();
 }
 /** Authenticated historical read: resolve the exact frozen pair, never the current base selection. Not permission to send. */

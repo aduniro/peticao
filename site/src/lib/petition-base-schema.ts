@@ -65,4 +65,29 @@ CREATE TABLE IF NOT EXISTS petition_base_selections (
 );
 DROP TRIGGER IF EXISTS petition_base_selections_immutable ON petition_base_selections;
 CREATE TRIGGER petition_base_selections_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON petition_base_selections FOR EACH STATEMENT EXECUTE FUNCTION petition_base_upload_immutable();
+
+-- Attempts and outcomes are append-only: a later failure/pending check supersedes cached success.
+CREATE TABLE IF NOT EXISTS petition_base_validation_attempts (
+ id UUID PRIMARY KEY,
+ ordinal BIGSERIAL NOT NULL UNIQUE,
+ artifact_id UUID NOT NULL,
+ artifact_sha256 TEXT NOT NULL,
+ binding_sha256 TEXT NOT NULL CHECK(binding_sha256 ~ '^[a-f0-9]{64}$'),
+ validator_configuration_sha256 TEXT NOT NULL CHECK(validator_configuration_sha256 ~ '^[a-f0-9]{64}$'),
+ actor_id INTEGER NOT NULL REFERENCES admin_users(id),
+ created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+ FOREIGN KEY(artifact_id,artifact_sha256) REFERENCES petition_base_artifacts(id,sha256)
+);
+CREATE INDEX IF NOT EXISTS petition_base_validation_attempt_latest ON petition_base_validation_attempts(artifact_id,ordinal DESC);
+CREATE TABLE IF NOT EXISTS petition_base_validation_results (
+ attempt_id UUID PRIMARY KEY REFERENCES petition_base_validation_attempts(id),
+ state TEXT NOT NULL CHECK(state IN ('valid','rejected','unavailable')),
+ validation_id UUID REFERENCES petition_base_validations(id),
+ created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
+ CHECK((state='valid' AND validation_id IS NOT NULL) OR (state<>'valid' AND validation_id IS NULL))
+);
+DROP TRIGGER IF EXISTS petition_base_validation_attempts_immutable ON petition_base_validation_attempts;
+CREATE TRIGGER petition_base_validation_attempts_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON petition_base_validation_attempts FOR EACH STATEMENT EXECUTE FUNCTION petition_base_upload_immutable();
+DROP TRIGGER IF EXISTS petition_base_validation_results_immutable ON petition_base_validation_results;
+CREATE TRIGGER petition_base_validation_results_immutable BEFORE UPDATE OR DELETE OR TRUNCATE ON petition_base_validation_results FOR EACH STATEMENT EXECUTE FUNCTION petition_base_upload_immutable();
 `;

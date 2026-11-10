@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { TEXT_VERSION } from "@/content/peticao";
 import { audit, tx } from "./db";
+import { effectivePetitionBaseValidationIdTx } from "./petition-base-validation-store";
 import { authorizeBatchActor } from "./batches";
 import type { SessaoAdmin } from "./admin-users";
 import { petitionBaseValidationReady, petitionBaseValidationPolicyFingerprint, isCurrentStoredPetitionBaseEvidence, type PetitionBaseValidationBinding } from "./petition-base-validation";
@@ -51,6 +52,8 @@ export async function selectPetitionBase(input: { requestId: string; expectedRev
     if (intent.expectedTextVersion !== TEXT_VERSION) return error("profile_conflict");
     const evidence = (await c.query<{ artifact_id: string; artifact_sha256: string; petition_text_version: string; responsible_id: number; profile_revision: number; binding_sha256: string; report_sha256: string; validator_configuration_sha256: string | null; report: unknown; bytes: Buffer; sha256: string }>("SELECT v.*,a.bytes,a.sha256 FROM petition_base_validations v JOIN petition_base_artifacts a ON a.id=v.artifact_id WHERE v.id=$1 FOR SHARE", [intent.validationId])).rows[0];
     if (!evidence || evidence.artifact_sha256 !== intent.reviewedSha256 || evidence.sha256 !== intent.reviewedSha256 || digest(evidence.bytes) !== intent.reviewedSha256) return error("validation_unavailable");
+    const effective = await effectivePetitionBaseValidationIdTx(c, evidence.artifact_id);
+    if (effective.journaled && effective.validationId !== intent.validationId) return error("validation_unavailable");
     const binding = await currentBinding(c, evidence.artifact_id);
     if (!binding || bindingFingerprint(binding) !== evidence.binding_sha256 || evidence.petition_text_version !== TEXT_VERSION || evidence.responsible_id !== binding.responsibleId || evidence.profile_revision !== binding.profileRevision) return error("profile_conflict");
     if (!isCurrentStoredPetitionBaseEvidence(evidence.report, binding, evidence.sha256, evidence.validator_configuration_sha256, evidence.report_sha256)) return error("validation_unavailable");

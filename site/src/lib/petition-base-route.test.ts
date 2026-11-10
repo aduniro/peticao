@@ -64,9 +64,9 @@ async function requestFactory(c:Awaited<ReturnType<typeof fixture>>){
 }
 async function verifier(onCall?:(bytes:Buffer)=>Promise<void>,valid=true){
  let calls=0;
- const server=createServer(async(req,res)=>{try{const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk));const b=Buffer.concat(chunks);calls++;assert.equal(req.headers.authorization,'Bearer QA-BASE-ONLY');await onCall?.(b);res.setHeader('content-type','application/json');res.end(JSON.stringify({protocol:'peticao-base-validation',version:1,valid,sha256:hash(b),method:'gov-br-advanced',signerCpf:cpf,certificateFingerprintSha256:'b'.repeat(64),integrity:true,govBrChainTrusted:true,coverage:'entire-file',modificationsAllowed:true,revocation:'good',profile:'QA-GOVBR-PROOF',validatedAt:new Date().toISOString(),validatorVersion:'qa-http-1'}));}catch{res.statusCode=500;res.end('{}');}});
+ const server=createServer(async(req,res)=>{try{const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk));const b=Buffer.concat(chunks);calls++;const reportValid=valid;assert.equal(req.headers.authorization,'Bearer QA-BASE-ONLY');await onCall?.(b);res.setHeader('content-type','application/json');res.end(JSON.stringify({protocol:'peticao-base-validation',version:1,valid:reportValid,sha256:hash(b),method:'gov-br-advanced',signerCpf:cpf,certificateFingerprintSha256:'b'.repeat(64),integrity:true,govBrChainTrusted:true,coverage:'entire-file',modificationsAllowed:true,revocation:'good',profile:'QA-GOVBR-PROOF',validatedAt:new Date().toISOString(),validatorVersion:'qa-http-1'}));}catch{res.statusCode=500;res.end('{}');}});
  await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));const address=server.address();assert.ok(address&&typeof address!=='string');process.env.GOVBR_BASE_VALIDATOR_URL='http://127.0.0.1:'+address.port+'/synthetic-verifier';
- return{calls:()=>calls,close:()=>new Promise<void>(resolve=>{server.close(()=>resolve());server.closeAllConnections();})};
+ return{calls:()=>calls,setValid:(value:boolean)=>{valid=value;},close:()=>new Promise<void>(resolve=>{server.close(()=>resolve());server.closeAllConnections();})};
 }
 
 test('base/package HTTP guards require Total, live stepup, same origin and bounded exact commands',async()=>{
@@ -128,4 +128,74 @@ test('exact upload, selection and package GET recovery is actor scoped, historic
   assert.equal((await BASES(req('GET',base+'?requestId='+uploadRequest))).status,200);assert.equal((await CURRENT(req('GET',selection+'?requestId='+selectedRequest))).status,200);assert.equal((await REVIEW(req('GET',packet+'?requestId='+input.requestId),params)).status,200);
   assert.equal((await BASES(req('GET',base+'?requestId=bad'))).status,400);assert.equal((await BASES(req('GET',base+'?requestId='+uploadRequest+'&requestId='+uploadRequest))).status,400);assert.equal((await REVIEW(req('GET',packet+'?requestId='+randomUUID()),params)).status,404);assert.deepEqual(await snapshot(),before);await c.noSend();
  }finally{await c.close();}
+});
+
+
+test('a later failed verifier check invalidates earlier positive evidence until a new successful check',async()=>{
+ const c=await fixture('t_base_http_negative_supersedes'),service=await verifier();try{
+  const req=await requestFactory(c),path='/api/admin/documentos/base/'+c.artifactId+'/validar',params={params:{id:c.artifactId}};
+  const positive=await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params);assert.equal(positive.status,201);const proof=await positive.json();
+  service.setValid(false);
+  assert.equal((await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params)).status,409);
+  assert.equal((await(await BASES(req('GET','/api/admin/documentos/base'))).json()).artifacts[0].lastValidationId,null);
+  const input={requestId:randomUUID(),expectedRevision:0,validationId:proof.validationId,reviewedSha256:hash(bytes),expectedTextVersion:(await import('@/content/peticao')).TEXT_VERSION};
+  assert.equal((await selectPetitionBase(input,c.actor)).ok,false,'failed latest verification must block an earlier positive');
+  assert.equal((await c.db.query('SELECT 1 FROM petition_base_selections')).rowCount,0);
+  service.setValid(true);
+  const refreshed=await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params);assert.ok([200,201].includes(refreshed.status));
+  const latest=await refreshed.json();assert.ok((await selectPetitionBase({...input,requestId:randomUUID(),validationId:latest.validationId},c.actor)).ok);
+  await c.noSend();
+ }finally{await service.close();await c.close();}
+});
+
+
+test('pending and late positive checks cannot supersede a later rejected check',async()=>{
+ const c=await fixture('t_base_http_out_of_order');let release!:()=>void,started!:()=>void,count=0;
+ const ready=new Promise<void>(r=>{started=r;}),hold=new Promise<void>(r=>{release=r;});
+ const service=await verifier(async()=>{if(++count===1){started();await hold;}});
+ try{
+  const req=await requestFactory(c),path='/api/admin/documentos/base/'+c.artifactId+'/validar',params={params:{id:c.artifactId}};
+  const old=await persistPetitionBaseValidation(await c.proof(),c.actor);assert.ok(old.ok);
+  const input={requestId:randomUUID(),expectedRevision:0,validationId:old.validationId,reviewedSha256:hash(bytes),expectedTextVersion:(await import('@/content/peticao')).TEXT_VERSION};
+  const pending=VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params);
+  await Promise.race([ready,new Promise((_,reject)=>setTimeout(()=>reject(new Error('QA verifier did not start')),3000))]);
+  assert.equal((await selectPetitionBase(input,c.actor)).ok,false,'pending newer check blocks cached positive');
+  service.setValid(false);assert.equal((await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params)).status,409);
+  release();assert.equal((await pending).status,409,'late older positive is historical, not current');
+  const journal=(await c.db.query('SELECT r.state FROM petition_base_validation_attempts a JOIN petition_base_validation_results r ON r.attempt_id=a.id ORDER BY a.ordinal')).rows;
+  assert.deepEqual(journal.map(r=>r.state),['valid','rejected']);
+  assert.equal((await selectPetitionBase({...input,requestId:randomUUID()},c.actor)).ok,false);
+  for(const table of ['petition_base_validation_attempts','petition_base_validation_results']){
+   await assert.rejects(c.db.query('UPDATE '+table+' SET created_at=created_at'),/immutable/);
+   await assert.rejects(c.db.query('DELETE FROM '+table),/immutable/);
+   await assert.rejects(c.db.query('TRUNCATE '+table+' CASCADE'),/immutable/);
+  }
+  const before=(await c.db.query('SELECT row_to_json(a)::text v FROM petition_base_validation_attempts a ORDER BY ordinal')).rows;
+  await c.db.query(PETITION_BASE_SCHEMA_SQL);await c.db.query(PETITION_BASE_SCHEMA_SQL);
+  assert.deepEqual((await c.db.query('SELECT row_to_json(a)::text v FROM petition_base_validation_attempts a ORDER BY ordinal')).rows,before);
+  await c.noSend();
+ }finally{release();await service.close();await c.close();}
+});
+
+test('a newer failed or unavailable check blocks preparation and approval but preserves frozen package history',async()=>{
+ const c=await packetFixture('t_base_http_package_guard'),service=await verifier();try{
+  const req=await requestFactory(c),path='/api/admin/documentos/base/'+c.artifactId+'/validar',params={params:{id:c.artifactId}};
+  const checked=await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params);assert.equal(checked.status,201);const proof=await checked.json();
+  const chosen=await selectPetitionBase({requestId:randomUUID(),expectedRevision:1,validationId:proof.validationId,reviewedSha256:hash(bytes),expectedTextVersion:(await import('@/content/peticao')).TEXT_VERSION},c.actor);assert.ok(chosen.ok);
+  const input={...c.input(),expectedSelectionId:chosen.selection.selectionId},frozen=await prepareBatchPackage(input,c.actor);assert.ok(frozen.ok);
+  const M=await import('./batch-package-store');
+  assert.equal((await M.getBatchPackageReview(c.batchId,c.actor) as any).approvalReady,true);
+  service.setValid(false);assert.equal((await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params)).status,409);
+  assert.equal((await M.getBatchPackageReview(c.batchId,c.actor) as any).approvalReady,false);
+  assert.equal(await c.db.tx(client=>M.batchPackageDispatchReadyTx(client,frozen.package.packageId)),false);
+  assert.equal((await prepareBatchPackage({...input,requestId:randomUUID(),expectedPackageRevision:1},c.actor)).ok,false);
+  assert.ok((await M.readFrozenBatchPackage(frozen.package.packageId,c.actor)).ok,'history remains readable');
+  service.setValid(true);assert.ok([200,201].includes((await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params)).status));
+  assert.equal((await M.getBatchPackageReview(c.batchId,c.actor) as any).approvalReady,true);
+  await service.close();
+  assert.equal((await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params)).status,409);
+  assert.equal((await c.db.query('SELECT state FROM petition_base_validation_results ORDER BY created_at DESC LIMIT 1')).rows[0].state,'unavailable');
+  assert.equal((await M.getBatchPackageReview(c.batchId,c.actor) as any).approvalReady,false);
+  await c.noSend();
+ }finally{await service.close();await c.close();}
 });
