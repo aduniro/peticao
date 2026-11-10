@@ -8,6 +8,16 @@ function assertPrivateNoStore(value) {
   assert.ok(directives.has("private") && directives.has("no-store"));
   assert.ok([...directives].every(v => ["private", "no-store", "max-age=0"].includes(v)), "no public/shared/positive-age caching directive is allowed");
 }
+
+// Header composition follows W3C Referrer Policy (last recognized token) and
+// https://fetch.spec.whatwg.org/#x-content-type-options-header (first nosniff token).
+function assertPrivateSecurityHeaders(headers) {
+  const referrer = String(headers["referrer-policy"] ?? "").toLowerCase().split(",").map(v => v.trim()).filter(Boolean);
+  assert.ok(referrer.length && referrer.at(-1) === "no-referrer" && referrer.every(v => ["no-referrer", "strict-origin-when-cross-origin"].includes(v)));
+  const sniff = String(headers["x-content-type-options"] ?? "").toLowerCase().split(",").map(v => v.trim()).filter(Boolean);
+  assert.ok(sniff.length && sniff.every(v => v === "nosniff"));
+}
+
 const uuid = value => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
 const inventory = page => page.getByRole("region", { name: "Histórico de confirmações e documentos próprios", exact: true });
 const button = (scope, name) => scope.getByRole("button", { name, exact: true });
@@ -57,7 +67,7 @@ async function runPhase(ctx, phase) {
       const request = route.request(), url = new URL(request.url()), kind = url.searchParams.get("kind");
       assert.equal(request.method(), "GET");assert.equal(url.origin, base);assert.equal(url.searchParams.size, 1);assert.ok(["receipts", "artifacts"].includes(kind));
       const response = await route.fetch({ maxRedirects: 0 });assert.equal(response.status(), 200);assertPrivateNoStore(response.headers()["cache-control"]);
-      assert.equal(response.headers()["referrer-policy"], "no-referrer");assert.equal(response.headers()["x-content-type-options"], "nosniff");
+      assertPrivateSecurityHeaders(response.headers());
       const bytes = await response.body();assert.ok(bytes.length <= 65536);const value = JSON.parse(bytes.toString("utf8"));
       assert.ok(value.ok && value.batchId === sourceBatchId && value.kind === kind);
       await route.fulfill({ response, body: bytes });
@@ -114,7 +124,7 @@ async function runPhase(ctx, phase) {
     const response = await responseWait;assert.equal(response.status(), 200);assert.equal(response.headers()["x-document-sha256"], artifact.sha256);
     assert.equal(response.headers()["x-source-document-sha256"], artifact.source_sha256);
     assert.equal(response.headers()["content-type"], "application/pdf");assertPrivateNoStore(response.headers()["cache-control"]);
-    assert.equal(response.headers()["referrer-policy"], "no-referrer");assert.equal(response.headers()["x-content-type-options"], "nosniff");
+    assertPrivateSecurityHeaders(response.headers());
     assert.match(response.headers()["content-disposition"] ?? "", /^attachment;/);
     const download = await downloadWait;const path = `${output}/president-own-history-${phase}.pdf`;await download.saveAs(path);chmodSync(path, 0o600);assert.equal(sha(readFileSync(path)), artifact.sha256);
     if (phase === "current") {
