@@ -34,3 +34,11 @@ Nenhum deploy, merge, sincronização com a VPS ou envio de mensagens integra es
 30/30 testes passaram, sem omitidos, fontes/HEAD/runtime estáveis, em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/dispersion-1794313996752309522/result.json`. Inclui os casos anteriores de campanha, interface pura, grafos e CSV, mais consultas reais PostgreSQL: autorização atual Edição/sessão, paginação137/136filhos, diagnóstico de ciclos/legados, expiração durante processamento e exportação50001 com auditoria reautorizada/rollback. A primeira rodada29/30 falhou somente porque a fixture criava dois códigos pessoais para o mesmo titular, violando UNIQUE(signature_id); corrigido somente o titular do segundo código fictício, sem alterar schema/regra de produção.
 
 Tipos globais com interface passaram em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794313638813536589/result.json`; o build seguinte revalidará a coorte final com o novo teste PG. O aceite completo aguarda build e navegação Next compilada.
+
+## Aceite local final
+
+Build exit0 em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/build-1794314060076680960/result.json`, app08f0d83. Ensaio Next compilado/PostgreSQL/navegador exit0 em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/dispersao-compiled-1794314316222726427/execution.json`, QAHEADf017992, mapa completo de fontes do build idêntico, runtime202/HEAD/fontes estáveis e portas54383/3059/3060 encerradas.
+
+Comprovados199assinaturas em tela/CSV19colunas,57raízes,55filhos,30níveis navegados e82buckets de geração, diagnóstico sem invalidar confirmados, resposta perdida sem retry automático, transição de sessão sem reter contato, SHA/bytes iguais entre API/download. Baseline após bootstrap exclusivamente seq/verify_code; assinaturas e vínculos completos permanecem idênticos durante leitura. Auditoria encadeada válida, nenhum envio/job externo. Seis larguras320/390/768/992/1280/1920 sem overflow/erros/requisições externas; captura390inspecionada.
+
+Dispersão aceita100% LOCAL. Não publicada. Próxima entrega autorizada: seção Assinaturas → Lista de assinaturas; Materiais de divulgação adiado.
