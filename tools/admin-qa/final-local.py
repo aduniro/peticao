@@ -13,6 +13,8 @@ parser.add_argument("--test-name-pattern", help="Run only matching test names; r
 args = parser.parse_args()
 if args.test_name_pattern and (args.mode in ["types", "build", "schema"] or len(args.test_name_pattern)>256): parser.error("Pattern is limited to test modes and 256 characters")
 assert ROOT == Path("/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109")
+if args.mode == "build":
+    assert not subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "status", "--porcelain"], text=True).strip(), "Finish committing the complete checkout before starting a build"
 assert hashlib.sha256(NODE.read_bytes()).hexdigest() == NODE_SHA
 for name in [".env", ".env.local", ".env.production", ".env.production.local"]:
     assert not (SITE / name).exists(), "Real environment files are forbidden"
@@ -30,6 +32,8 @@ except BlockingIOError:
 commit_before = subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
 scratch = base / (args.mode + "-" + str(time.time_ns()))
 scratch.mkdir(mode=0o700, parents=True)
+(scratch / "started.json").write_text(json.dumps({"mode": args.mode, "commit": commit_before, "startedAt": time.time()}))
+print("Frozen check:", args.mode, "; commit:", commit_before, "; evidence:", scratch, flush=True)
 for d in ["empty", "tmp"]: (scratch / d).mkdir(mode=0o700)
 assert not subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "ls-files", "--others", "--exclude-standard", "site", "deploy", "tools/signing"], text=True).strip(), "Track source files before freezing QA"
 tracked = subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "ls-files", "site", "deploy", "tools/signing"], text=True).splitlines()
