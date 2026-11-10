@@ -1,0 +1,66 @@
+{
+  "criticalSeq": 480,
+  "profileInfrastructureCommit": "4ddb04347bbcb63b6be61185f1ff488f10a59b9d",
+  "profileManifestSha256": "5d71c394f9bd84e538ebe87f0bf5d672b5594cc40c7ae5a63bfde1ae54211a39",
+  "applicationSourceCommit": "0a5f734da4f9b8a35a10a20eaa9fb4fd5adb0e4f",
+  "jobId": "cad43f085e374bc5876e4cf246ca8572",
+  "service": "admin-v2-coordinator.service",
+  "roles": {
+    "coordinator": {
+      "name": "vigia-coord",
+      "uid": 999,
+      "gid": 989
+    },
+    "worker": {
+      "name": "vigia-worker",
+      "uid": 997,
+      "gid": 986,
+      "supplementary": 989
+    }
+  },
+  "oldPins": {
+    "coordinator.py": "3675926e81e1b6160b9548ad15c9d18b8fcc65ccec208cf6329f8ada3fb55f92",
+    "launch.py": "bf1f35bdb44446351af0199f777258cb053189a791ee7de7168dd0a271d67685",
+    "runtime_profile.py": null
+  },
+  "newPins": {
+    "coordinator.py": "a8e93ff093555241d2eeead49d418dc4d5bb4dacecf4aa460c329e8e7cd7adef",
+    "runtime_profile.py": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8",
+    "launch.py": "8c8c927bcf6e143c3a4b4c7d93531b06518c90f73576a88d096b88119b35f906"
+  },
+  "stagePins": {
+    "harness-manifest.json": "bb66b05d4d3d48a1ca6af08bb6c32376282e4db62516b315574216a081e2bc90",
+    "runtime-guard.mjs": "3295bce5bcb55ba44ae767b08d88bf4812e62d3336409990ccbac678d095867a",
+    "probe.py": "24ef7bcd125d5209e8301dbd372082ccc1dbe07dcd0be0b8f8e77cea7cdc8ba9",
+    "safe_extract.py": "1335211754d8e846f0fc3fc6ff5c1b64199040fae2669f54d82c143198db8326",
+    "guard-probe.mjs": "d45c163c4eae53bf2298ac71f67fe42c1442ad1ee20cabe51f99fd38fca59cc5",
+    "smoke.py": "3451aff051138fd7626b8f67e305e906a1e5198e9fb15e9baf0018bab257a6b6"
+  },
+  "archiveSha256": "4338322c4f9dee2c30c28c5359b2f537312543cb3cfe7fde20a3db69d747df84",
+  "releaseManifestSha256": "12b7d8a8e617c98c7d4f22b9e0865b8e3cde63e8d8933b871f65cceb68f72576",
+  "nodeSha256": "ca0728526aa1cc4e3056decec848ecc6d2c5391cecdd4e21a0ebd221d665c84e",
+  "default": "DRY_RUN_NO_MUTATIONS",
+  "ackLeaseRequired": true,
+  "submitAutomatically": false,
+  "installOrder": [
+    "runtime_profile.py",
+    "launch.py",
+    "coordinator.py"
+  ],
+  "rollbackRestoresQueue": false,
+  "installPaths": {
+    "coordinator.py": "/opt/admin-v2-cluster/coordinator.py",
+    "runtime_profile.py": "/opt/admin-v2-cluster/runtime_profile.py",
+    "launch.py": "/usr/local/libexec/admin-v2-launch"
+  },
+  "sourceRoot": "/srv/admin-v2-coordinator/install-inputs-480",
+  "stageRoot": "/srv/admin-v2-worker/admin-r0000-runtime-qa-20261110",
+  "backupRoot": "/srv/admin-v2-coordinator/install-backups-480",
+  "queue": "/srv/admin-v2-coordinator/queue.sqlite",
+  "authority": "/srv/admin-v2-coordinator/authority.json",
+  "note": "Large runtime transferred separately by approved transport, never RPC/import-source. No job submission/retry is performed.",
+  "peerAckEventSeq": 507,
+  "peerAckLedgerEvidenceSha256": "b2684cc9a1a9a467a1477c013f44c3522efb39f6dc9d91e4557c33a7c7aeac6a",
+  "governance": "Parent validates existing ledger ACK480/507 and existing lease before invoking apply; no additional authorization system. Lease ID only names the operational checkpoint.",
+  "acceptExistingStage": "Only fully verified identical private worker-owned bytes with empty runs; never overlay or complete a partial transfer."
+}
