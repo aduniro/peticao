@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import type { ApprovalCodeIntent } from "@/lib/batches";
 import PeticaoBaseGovBr from "@/components/admin/PeticaoBaseGovBr";
 import { TEXT_VERSION } from "@/content/peticao";
 import { getBatchPackageReview } from "@/lib/batch-package-store";
@@ -37,7 +39,14 @@ export default async function Presidente({ searchParams }: { searchParams: { lot
   const proof = inspected?.ok ? inspected : null;
   const retrySafe = proof && proof.recipients.some(r => r.state !== "accepted") && proof.recipients.every(r => ["accepted", "rejected", "prepared", "unavailable"].includes(r.state));
   let packageReady = process.env.BATCH_PACKAGE_ENABLED !== "1";
-  if (document && !document.approved_at && !packageReady) { try { const reviewed = await getBatchPackageReview(document.id, actor); packageReady = reviewed.ok && reviewed.approvalReady; } catch { /* Never open approval without package evidence. */ } }
+  let codeFields: Omit<ApprovalCodeIntent, "requestId"> = proof?.approvalContext ?? {};
+  if (document && !document.approved_at) { try {
+    const reviewed = await getBatchPackageReview(document.id, actor);
+    if (reviewed.ok && reviewed.latestPackage) {
+      packageReady = reviewed.approvalReady;
+      codeFields = { expectedDocumentVersion: reviewed.documentVersion, expectedPackageId: reviewed.latestPackage.packageId, expectedPackageDigest: reviewed.latestPackage.packageDigest };
+    } else if (process.env.BATCH_PACKAGE_ENABLED === "1") packageReady = false;
+  } catch { packageReady = false; } }
   const canApprove = !!(document && actions?.approval && (!document.approved_at ? packageReady : retrySafe));
   return <main className="v2-pagina"><div className="v2-secao">
     <h1>Presidente da ADUNIR</h1>
@@ -76,7 +85,7 @@ export default async function Presidente({ searchParams }: { searchParams: { lot
       <h3>3. Aprovação e resultado</h3>
       <p>O código é solicitado para o e-mail do aprovador configurado. A autoria das ações é registrada pela conta conectada.</p>
       {document.status !== "sent" && document.status !== "cancelled" && <>
-        <form method="post" action={`/api/admin/lotes/${document.id}/codigo?portal=presidente`}><button disabled={!canApprove}>Enviar código ao aprovador</button></form>
+        <form method="post" action={`/api/admin/lotes/${document.id}/codigo?portal=presidente`}><input type="hidden" name="requestId" value={randomUUID()} />{Object.entries(codeFields).map(([name, value]) => <input type="hidden" name={name} value={value} key={name} />)}<button disabled={!canApprove}>Enviar código ao aprovador</button></form>
         <form method="post" action={`/api/admin/lotes/${document.id}/aprovar?portal=presidente`}><input name="code" aria-label="Código" inputMode="numeric" maxLength={6} placeholder="código" size={7} required disabled={!canApprove} /><button disabled={!canApprove}>Aprovar e enviar</button></form>
       </>}
       {document.signature_kind !== "icp-brasil" && <p className="small">O envio depende de um PDF com validação ICP-Brasil concluída.</p>}

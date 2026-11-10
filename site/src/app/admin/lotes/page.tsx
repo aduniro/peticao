@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import A1Assinatura from "@/components/admin/A1Assinatura";
 import HistoricoDocumento from "@/components/admin/HistoricoDocumento";
 import { sessaoAdmin } from "@/lib/admin";
@@ -54,7 +55,7 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
                   <>
                     <form method="post" action={`/api/admin/lotes/${b.id}/assinado`} encType="multipart/form-data" style={{ display: "inline" }}><input type="file" name="file" accept="application/pdf" required /> <button>Enviar PDF assinado</button></form>
                     {process.env.BATCH_PACKAGE_ENABLED === "1" ? <a className="v2-btn v2-btn-sec" href={`/admin/presidente?lote=${b.id}`}>Presidente da ADUNIR</a> : <>
-                    <form method="post" action={`/api/admin/lotes/${b.id}/codigo`} style={{ display: "inline" }}><button>Enviar código ao aprovador</button></form>
+                    <form method="post" action={`/api/admin/lotes/${b.id}/codigo`} style={{ display: "inline" }}><input type="hidden" name="requestId" value={randomUUID()} /><button>Enviar código ao aprovador</button></form>
                     <form method="post" action={`/api/admin/lotes/${b.id}/aprovar`} style={{ display: "inline" }}>
                       <input name="code" inputMode="numeric" maxLength={6} placeholder="código" size={7} required /> <button>Aprovar e enviar</button>
                     </form></>}

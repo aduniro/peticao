@@ -218,7 +218,20 @@ export function batchEnvelope(row: ApprovalRow, to: string, pdf: Buffer, sentSha
       };
 }
 
-const approvalHash = (b: ApprovalRow, code: string, binding: DeliveryBinding | null = null) => binding
+export type ApprovalCodeIntent = { requestId: string; expectedDocumentVersion?: string; expectedPackageId?: string; expectedPackageDigest?: string };
+type ApprovalCodeContext = { issuerId: number; requestId: string; approverFingerprint: string; recipientsFingerprint: string };
+const intentUuid = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(v);
+const intentHash = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
+const recipientFingerprint = (recipients: string[]) => hmac("approval-recipients:v1:" + JSON.stringify([...new Set(recipients.map(v => v.trim().toLowerCase()))].sort()));
+function codeContext(value: unknown): ApprovalCodeContext | null {
+  if (!value || typeof value !== "object") return null;
+  const v = value as ApprovalCodeContext;
+  return Number.isSafeInteger(v.issuerId) && v.issuerId > 0 && v.issuerId <= 2147483647 && intentUuid(v.requestId) && intentHash(v.approverFingerprint) && intentHash(v.recipientsFingerprint)
+    ? { issuerId: v.issuerId, requestId: v.requestId, approverFingerprint: v.approverFingerprint, recipientsFingerprint: v.recipientsFingerprint } : null;
+}
+const approvalHash = (b: ApprovalRow, code: string, binding: DeliveryBinding | null = null, context: ApprovalCodeContext | null = null) => context
+  ? hmac("code:v4:" + JSON.stringify([b.id, documentVersion(b), binding?.packageId ?? null, binding?.packageDigest ?? null, context, code]))
+  : binding
   ? hmac(`code:v3:${b.id}:${documentVersion(b)}:${binding.packageId}:${binding.packageDigest}:${code}`)
   : hmac(`code:v2:${b.id}:${documentVersion(b)}:${code}`);
 async function deliveryForApprovalTx(client: PoolClient, row: ApprovalRow) {
@@ -234,11 +247,15 @@ async function mayApprovePacketTx(client: PoolClient, actor: BatchActor, binding
     && await batchPackageDispatchReadyTx(client, binding.packageId);
 }
 
-export async function requestApprovalCode(id: number, actor: BatchActor): Promise<void> {
+/** A form UUID identifies one logical request; retries never renew its TTL, reset guesses or resend. */
+export async function requestApprovalCode(id: number, actor: BatchActor, input?: ApprovalCodeIntent, admitNew?: () => boolean): Promise<void> {
   const to = config.approverEmail();
   if (!to) throw new Error("APPROVER_EMAIL não configurado.");
-  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  const intent = input ? { ...input } : null;
+  if (intent && (!intentUuid(intent.requestId) || Object.keys(intent).some(k => !["requestId", "expectedDocumentVersion", "expectedPackageId", "expectedPackageDigest"].includes(k)) || intent.expectedDocumentVersion !== undefined && !intentHash(intent.expectedDocumentVersion) || (intent.expectedPackageId === undefined) !== (intent.expectedPackageDigest === undefined) || intent.expectedPackageId !== undefined && (!intentUuid(intent.expectedPackageId) || !intentHash(intent.expectedPackageDigest)))) throw new Error("Lote não está pronto para aprovação.");
+  const requestFingerprint = intent ? sha256(JSON.stringify([intent.requestId, intent.expectedDocumentVersion ?? null, intent.expectedPackageId ?? null, intent.expectedPackageDigest ?? null])) : null;
   const b = await tx(async client => {
+    await client.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'");
     if (!(await authorizeBatchActor(client, actor))) throw new Error("Lote não está pronto para aprovação.");
     const row = (await client.query<ApprovalRow>("SELECT * FROM batches WHERE id=$1 FOR UPDATE", [id])).rows[0];
     if (!row?.pdf) throw new Error("Lote não está pronto para aprovação.");
@@ -246,13 +263,30 @@ export async function requestApprovalCode(id: number, actor: BatchActor): Promis
     if (row.approved_at ? !retry : row.status !== "prepared") throw new Error("Lote não está pronto para aprovação.");
     const delivery = await deliveryForApprovalTx(client, row);
     if (!delivery || !await mayApprovePacketTx(client, actor, delivery.binding)) throw new Error("Lote não está pronto para aprovação.");
-    const codeHash = approvalHash(row, code, delivery.binding);
-    await client.query("UPDATE batches SET approval_code_hash=$1, approval_code_expires_at=$2, approval_attempts=0 WHERE id=$3", [codeHash, new Date(Date.now() + 15 * 60_000).toISOString(), id]);
-    await audit(retry ? "batch_retry_code_prepared" : "approval_code_prepared", null, { batchId: id, documentVersion: documentVersion(row), approvalCodeHash: codeHash, ...(delivery.binding ?? {}), ...(retry ? { recipients: retry } : {}), ...actorData(actor) }, client);
-    return { row, codeHash };
+    if (intent && (intent.expectedDocumentVersion !== undefined && intent.expectedDocumentVersion !== documentVersion(row) || delivery.binding && (intent.expectedDocumentVersion !== documentVersion(row) || intent.expectedPackageId !== delivery.binding.packageId || intent.expectedPackageDigest !== delivery.binding.packageDigest) || !delivery.binding && intent.expectedPackageId !== undefined)) throw new Error("Lote não está pronto para aprovação.");
+    const context: ApprovalCodeContext | null = intent ? { issuerId: actor.userId, requestId: intent.requestId, approverFingerprint: hmac(to.trim().toLowerCase()), recipientsFingerprint: recipientFingerprint(retry ?? config.recipients()) } : null;
+    const code = context ? String(BigInt("0x" + hmac("approval-number:v1:" + JSON.stringify([id, documentVersion(row), delivery.binding, context]))) % BigInt(1000000)).padStart(6, "0") : String(randomInt(0, 1_000_000)).padStart(6, "0");
+    const codeHash = approvalHash(row, code, delivery.binding, context);
+    if (intent) {
+      const known = (await client.query<{ data: string }>("SELECT data FROM audit_log WHERE event IN ('approval_code_prepared','batch_retry_code_prepared') AND data::jsonb->>'userId'=$1 AND data::jsonb->'approvalCodeIntent'->'context'->>'requestId'=$2 ORDER BY id LIMIT 2", [String(actor.userId), intent.requestId])).rows;
+      if (known.length) {
+        const data = JSON.parse(known[0].data), previous = data.approvalCodeIntent;
+        if (known.length !== 1 || data.batchId !== id || previous?.requestFingerprint !== requestFingerprint || JSON.stringify(codeContext(previous.context)) !== JSON.stringify(context) || data.approvalCodeHash !== codeHash || row.approval_code_hash !== codeHash || row.approval_attempts >= 5 || !row.approval_code_expires_at || new Date(row.approval_code_expires_at).getTime() !== Date.parse(previous.expiresAt) || Date.parse(previous.expiresAt) <= Date.now()) throw new Error("Solicite um novo código.");
+        return { row, codeHash, code, requestId: intent.requestId };
+      }
+      const recent = await client.query("SELECT 1 FROM audit_log WHERE event IN ('approval_code_prepared','batch_retry_code_prepared') AND data::jsonb->>'batchId'=$1 AND ts::timestamptz>clock_timestamp()-interval '15 minutes' LIMIT 5", [String(id)]);
+      if ((recent.rowCount ?? 0) >= 5 || admitNew && !admitNew()) throw new Error("Aguarde antes de pedir outro código.");
+    } else if (admitNew && !admitNew()) throw new Error("Aguarde antes de pedir outro código.");
+    const expiresAt = new Date(Date.now() + 15 * 60_000).toISOString();
+    await client.query("UPDATE batches SET approval_code_hash=$1, approval_code_expires_at=$2, approval_attempts=0 WHERE id=$3", [codeHash, expiresAt, id]);
+    await audit(retry ? "batch_retry_code_prepared" : "approval_code_prepared", null, { batchId: id, documentVersion: documentVersion(row), approvalCodeHash: codeHash, ...(delivery.binding ?? {}), ...(retry ? { recipients: retry } : {}), ...(intent ? { approvalCodeIntent: { version: 1, context, requestFingerprint, expiresAt } } : {}), ...actorData(actor) }, client);
+    return { row, codeHash, code, requestId: intent?.requestId ?? null };
   });
-  await sendNow({ to, subject: `Código para aprovar o lote ${b.row.seq}: ${code}`, text: `Código de aprovação do lote ${b.row.seq}: ${code}\nVale por 15 minutos. Se não foi você, ignore.` }, "aprovacao", `batch-code:${id}:${b.codeHash}`);
-  await audit("approval_code_sent", null, { batchId: id, ...actorData(actor) });
+  await sendNow({ to, subject: `Código para aprovar o lote ${b.row.seq}: ${b.code}`, text: `Código de aprovação do lote ${b.row.seq}: ${b.code}\nVale por 15 minutos. Se não foi você, ignore.` }, "aprovacao", `batch-code:${id}:${b.codeHash}`);
+  await tx(async client => {
+    await client.query("SELECT pg_advisory_xact_lock(7003)");
+    if (!(await client.query("SELECT 1 FROM audit_log WHERE event='approval_code_sent' AND data::jsonb->>'approvalCodeHash'=$1 LIMIT 1", [b.codeHash])).rowCount) await audit("approval_code_sent", null, { batchId: id, approvalCodeHash: b.codeHash, ...(b.requestId ? { requestId: b.requestId } : {}), ...actorData(actor) }, client);
+  });
 }
 
 export type ApproveResult = { ok: true; sent: number; failed: number } | { ok: false; reason: string };
@@ -270,12 +304,18 @@ export async function approveAndSend(id: number, code: string, approvedBy: strin
     if (row.approval_attempts >= 5) return { ok: false, reason: "Muitas tentativas. Solicite um novo código." };
     const delivery = await deliveryForApprovalTx(client, row);
     if (!delivery || !await mayApprovePacketTx(client, actor, delivery.binding)) return { ok: false, reason: "Lote não está disponível para envio." };
-    if (!safeEqual(row.approval_code_hash, approvalHash(row, code.trim(), delivery.binding))) {
+    const recipients = retry ?? [...new Set(config.recipients().map(to => to.trim().toLowerCase()))];
+    const intentRecords = (await client.query<{ data: string }>("SELECT data FROM audit_log WHERE event IN ('approval_code_prepared','batch_retry_code_prepared') AND data::jsonb->>'approvalCodeHash'=$1 AND data::jsonb ? 'approvalCodeIntent' ORDER BY id LIMIT 2", [row.approval_code_hash])).rows;
+    let context: ApprovalCodeContext | null = null;
+    if (intentRecords.length) {
+      const record = JSON.parse(intentRecords[0].data), intent = record.approvalCodeIntent; context = codeContext(intent?.context);
+      if (intentRecords.length !== 1 || record.batchId !== id || intent?.version !== 1 || !context || context.approverFingerprint !== hmac(config.approverEmail().trim().toLowerCase()) || context.recipientsFingerprint !== recipientFingerprint(recipients) || new Date(row.approval_code_expires_at).getTime() !== Date.parse(intent.expiresAt)) return { ok: false, reason: "Solicite um novo código." };
+    }
+    if (!safeEqual(row.approval_code_hash, approvalHash(row, code.trim(), delivery.binding, context))) {
       await client.query("UPDATE batches SET approval_attempts = approval_attempts + 1 WHERE id=$1", [id]);
       await audit("approval_code_wrong", null, { batchId: id, ...actorData(actor) }, client);
       return { ok: false, reason: "Código incorreto." };
     }
-    const recipients = retry ?? [...new Set(config.recipients().map(to => to.trim().toLowerCase()))];
     if (recipients.length === 0) return { ok: false, reason: "Nenhum destinatário configurado (RECIPIENTS)." };
 
     const pdf = row.signed_pdf ?? row.pdf;

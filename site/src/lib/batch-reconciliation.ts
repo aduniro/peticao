@@ -40,7 +40,7 @@ async function inspect(client: PoolClient, id: number, actor: BatchActor) {
     evidence.push({ recipient, messageId: message?.id ?? null, state, acceptedAt, attemptId });
   }
   const proof = hmac("batch-reconciliation:v1:" + JSON.stringify([id, actor.userId, actor.email.trim().toLowerCase(), records[0].id, row.approved_at, version, ...(delivery.binding ? [delivery.binding] : []), proofs]));
-  return { row, evidence, proof, approvalId: records[0].id };
+  return { row, evidence, proof, approvalId: records[0].id, approvalContext: { expectedDocumentVersion: version, ...(delivery.binding ? { expectedPackageId: delivery.binding.packageId, expectedPackageDigest: delivery.binding.packageDigest } : {}) } };
 }
 
 export async function inspectBatchAcceptance(id: number, actor: BatchActor) {
@@ -50,7 +50,7 @@ export async function inspectBatchAcceptance(id: number, actor: BatchActor) {
     if (!(await authorizeBatchActor(client, actor))) return { ok: false as const, error: "forbidden" };
     const snapshot = await inspect(client, id, actor);
     if (!snapshot) return { ok: false as const, error: "conflict" };
-    return { ok: true as const, proof: snapshot.proof, recipients: snapshot.evidence, batchId: id };
+    return { ok: true as const, proof: snapshot.proof, recipients: snapshot.evidence, batchId: id, approvalContext: snapshot.approvalContext };
   });
 }
 

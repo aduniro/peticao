@@ -127,3 +127,68 @@ test('changing the selected base invalidates an unconsumed code until the packag
   const fresh=await c.code();assert.equal((await approveAndSend(c.batchId,fresh,c.actor.email,c.actor)).ok,true);
  }finally{await c.close();}
 });
+
+
+test('repeated logical approval-code requests emit one code and preserve expiry and wrong-attempt count',async()=>{
+ const c=await deliveryFixture('t_packet_code_intent_replay');try{
+  const input={requestId:randomUUID(),expectedDocumentVersion:c.input().expectedDocumentVersion,expectedPackageId:c.packet.packageId,expectedPackageDigest:c.packet.packageDigest};
+  const results=await Promise.allSettled([requestApprovalCode(c.batchId,c.actor,input),requestApprovalCode(c.batchId,c.actor,input)]);
+  assert.ok(results.some(r=>r.status==='fulfilled'),'at least one request must emit the code; in-flight duplicate can report uncertainty');
+  assert.equal(c.mails().length,1,'one logical request must emit one approval code');
+  await c.db.query('UPDATE batches SET approval_attempts=3 WHERE id=$1',[c.batchId]);
+  const before=(await c.db.query('SELECT approval_code_hash,approval_code_expires_at,approval_attempts FROM batches WHERE id=$1',[c.batchId])).rows[0];
+  await requestApprovalCode(c.batchId,c.actor,input);
+  assert.deepEqual((await c.db.query('SELECT approval_code_hash,approval_code_expires_at,approval_attempts FROM batches WHERE id=$1',[c.batchId])).rows[0],before);
+  assert.equal(c.mails().length,1);
+ }finally{await c.close();}
+});
+
+
+function codeIntent(c:Awaited<ReturnType<typeof deliveryFixture>>){return{requestId:randomUUID(),expectedDocumentVersion:c.input().expectedDocumentVersion,expectedPackageId:c.packet.packageId,expectedPackageDigest:c.packet.packageDigest};}
+const latestCode=(c:Awaited<ReturnType<typeof deliveryFixture>>)=>c.mails().filter(m=>!m.attachments?.length).at(-1).subject.match(/: (\d{6})$/)[1] as string;
+test('superseded, consumed and mismatched code intents cannot restore an old approval',async()=>{
+ const c=await deliveryFixture('t_code_intent_superseded');try{
+  const input=codeIntent(c);await requestApprovalCode(c.batchId,c.actor,input);
+  await assert.rejects(requestApprovalCode(c.batchId,c.actor,{...input,expectedPackageDigest:'f'.repeat(64)}),/não está pronto/);
+  await requestApprovalCode(c.batchId,c.actor,codeIntent(c));const code=latestCode(c),active=(await c.db.query('SELECT approval_code_hash FROM batches')).rows[0].approval_code_hash;
+  await assert.rejects(requestApprovalCode(c.batchId,c.actor,input),/novo código/);
+  assert.equal((await c.db.query('SELECT approval_code_hash FROM batches')).rows[0].approval_code_hash,active);assert.equal(c.mails().length,2);
+  assert.equal((await approveAndSend(c.batchId,code,c.actor.email,c.actor)).ok,true);
+  await assert.rejects(requestApprovalCode(c.batchId,c.actor,input));assert.equal(c.mails().length,3);
+ }finally{await c.close();}
+});
+test('approval code binds recipient and approver configuration and can be used by another authorized Total',async()=>{
+ const c=await deliveryFixture('t_code_intent_configuration');try{
+  const input=codeIntent(c);await requestApprovalCode(c.batchId,c.actor,input);const code=latestCode(c);
+  process.env.RECIPIENTS='different@example.test';assert.equal((await approveAndSend(c.batchId,code,c.actor.email,c.actor)).ok,false);await assert.rejects(requestApprovalCode(c.batchId,c.actor,input),/novo código/);
+  process.env.RECIPIENTS='qa-recipient@example.test';process.env.APPROVER_EMAIL='different-owner@example.test';assert.equal((await approveAndSend(c.batchId,code,c.actor.email,c.actor)).ok,false);
+  process.env.APPROVER_EMAIL='qa-owner@example.test';
+  await c.db.query("UPDATE admin_users SET nivel='total' WHERE id=2");const other={...c.reader,nivel:'total' as const};
+  assert.equal((await approveAndSend(c.batchId,code,other.email,other)).ok,true,'issuer context does not forbid another authorized approver');
+  assert.equal(c.mails().filter(m=>m.attachments?.length).length,1);assert.ok((await c.db.verifyAuditChain()).ok);
+ }finally{await c.close();}
+});
+test('logical code quota counts new intents only and audit failure rolls back reservation before email',async()=>{
+ const c=await deliveryFixture('t_code_intent_quota');try{
+  const input=codeIntent(c);let admitted=0;const admit=()=>{admitted++;return true;};
+  await c.db.query("CREATE FUNCTION qa_code_intent_fault() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='approval_code_prepared' THEN RAISE EXCEPTION 'QA code intent audit'; END IF;RETURN NEW;END $$; CREATE TRIGGER qa_code_intent_fault BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION qa_code_intent_fault()");
+  await assert.rejects(requestApprovalCode(c.batchId,c.actor,input),/QA code intent audit/);assert.equal(c.mails().length,0);assert.equal((await c.db.query('SELECT approval_code_hash FROM batches')).rows[0].approval_code_hash,null);
+  await c.db.query('DROP TRIGGER qa_code_intent_fault ON audit_log');
+  await requestApprovalCode(c.batchId,c.actor,input,admit);for(let n=0;n<3;n++)await requestApprovalCode(c.batchId,c.actor,input,admit);assert.equal(admitted,1);assert.equal(c.mails().length,1);
+  for(let n=0;n<4;n++)await requestApprovalCode(c.batchId,c.actor,codeIntent(c),admit);
+  await assert.rejects(requestApprovalCode(c.batchId,c.actor,codeIntent(c),admit),/Aguarde/);assert.equal(admitted,5);assert.equal(c.mails().length,5);
+  assert.equal((await c.db.query("SELECT 1 FROM audit_log WHERE event='approval_code_prepared'")).rowCount,5);assert.equal((await c.db.query("SELECT 1 FROM audit_log WHERE event='approval_code_sent'")).rowCount,5);
+ }finally{await c.close();}
+});
+test('real code HTTP handler deduplicates one form identity and refuses missing/duplicate/unknown fields',async()=>{
+ const c=await deliveryFixture('t_code_intent_http');try{
+  const {NextRequest}=await import('next/server'),{POST}=await import('../app/api/admin/lotes/[id]/codigo/route'),U=await import('./admin-users');const session=await U.abrirSessao(1,'127.0.0.1');await c.db.query("UPDATE admin_sessions SET stepup_ate=clock_timestamp()+interval '9 minutes'");
+  const input=codeIntent(c),path='http://code-qa.local/api/admin/lotes/'+c.batchId+'/codigo?portal=presidente',params={params:{id:String(c.batchId)}};
+  const req=(body:string)=>new NextRequest(path,{method:'POST',headers:{host:'code-qa.local',origin:'http://code-qa.local',cookie:'adm='+session.token,'content-type':'application/x-www-form-urlencoded','x-forwarded-for':'192.0.2.201'},body});
+  const body=new URLSearchParams(input).toString();assert.equal((await POST(req(body),params)).status,303);const before=(await c.db.query('SELECT approval_code_hash,approval_code_expires_at FROM batches')).rows;
+  for(let n=0;n<6;n++){const result=await POST(req(body),params);assert.equal(result.status,303);assert.equal(new URL(result.headers.get('location')!).searchParams.get('msg'),'Código enviado ao aprovador.');}
+  assert.deepEqual((await c.db.query('SELECT approval_code_hash,approval_code_expires_at FROM batches')).rows,before);assert.equal(c.mails().length,1);
+  assert.equal((await POST(req(''),params)).status,400);assert.equal((await POST(req(body+'&requestId='+input.requestId),params)).status,400);assert.equal((await POST(req(body+'&unknown=1'),params)).status,400);
+  assert.equal(c.mails().length,1);assert.equal((await c.db.query('SELECT 1 FROM batch_sends')).rowCount,0);
+ }finally{await c.close();}
+});
