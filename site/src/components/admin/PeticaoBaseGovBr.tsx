@@ -102,7 +102,7 @@ export function PeticaoBaseGovBrControl({ batchId, actorId, petitionTextVersion,
         <p><input ref={fileInput} type="file" accept="application/pdf" aria-label="PDF assinado" disabled={disabled} /> <button type="button" className="adm-btn" disabled={disabled} onClick={() => void upload()}>{COPY.upload}</button></p>
         <button type="button" className="adm-btn" disabled={loading || posting} onClick={() => void refresh()}>Atualizar</button>
         {selected && <p style={{ overflowWrap: "anywhere" }}><a href={`/api/admin/documentos/base/${selected.artifactId}`} target="_blank" rel="noopener">{COPY.title}</a> · <code>{selected.sha256}</code></p>}
-        <div className="table-scroll"><table><thead><tr><th>Documento</th><th>sha256</th><th>Ações</th></tr></thead><tbody>{artifacts.map(item => <tr key={item.artifactId}>
+        <div className="table-scroll"><table style={{ minWidth: 600 }}><thead><tr><th>Documento</th><th>sha256</th><th>Ações</th></tr></thead><tbody>{artifacts.map(item => <tr key={item.artifactId}>
           <td><a href={`/api/admin/documentos/base/${item.artifactId}`} target="_blank" rel="noopener">PDF</a></td><td style={{ overflowWrap: "anywhere", maxWidth: 240 }}><code>{item.sha256}</code></td>
           <td><button type="button" className="adm-btn" disabled={disabled} onClick={() => void validate(item)}>{COPY.validate}</button> <button type="button" className="adm-btn" disabled={disabled || !item.lastValidationId || selected?.artifactId === item.artifactId && bindingMatches} onClick={() => choose(item)}>{COPY.select}</button></td>
         </tr>)}</tbody></table></div>

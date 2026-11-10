@@ -1,4 +1,9 @@
 import { randomUUID } from "node:crypto";
+import type { ReactNode } from "react";
+import PresidenteAcesso from "@/components/admin/PresidenteAcesso";
+import { readPresidentProfile } from "@/lib/president-portal-store";
+import { getPresidentIssueDocument } from "@/lib/president-issue-document";
+import { listarUsuarios } from "@/lib/admin-users";
 import type { ApprovalCodeIntent } from "@/lib/batches";
 import PeticaoBaseGovBr from "@/components/admin/PeticaoBaseGovBr";
 import { TEXT_VERSION } from "@/content/peticao";
@@ -48,6 +53,17 @@ export default async function Presidente({ searchParams }: { searchParams: { lot
     } else if (process.env.BATCH_PACKAGE_ENABLED === "1") packageReady = false;
   } catch { packageReady = false; } }
   const canApprove = !!(document && actions?.approval && (!document.approved_at ? packageReady : retrySafe));
+  const ownEnabled = process.env.PRESIDENT_OWN_ENABLED === "1";
+  let ownControl: ReactNode = null;
+  if (ownEnabled && document) {
+    try {
+      const [profile, context, users] = await Promise.all([readPresidentProfile(actor), getPresidentIssueDocument(document.id, actor), listarUsuarios()]);
+      const d = context.ok ? context.document : null;
+      const same = d && d.batchId === document.id && d.seq === document.seq && d.kind === document.kind && d.originalSha256 === document.pdf_sha256 && d.signedSha256 === document.signed_pdf_sha256 && d.listHash === document.list_hash && d.signatureKind === document.signature_kind;
+      if (profile.ok) ownControl = <PresidenteAcesso key={`${actor.userId}:${actor.sessaoId}:${document.id}:${same ? d.documentVersion : "unavailable"}`} actorScope={`${actor.userId}:${actor.sessaoId}`} accounts={users.filter(u => u.ativo).map(u => ({ id: u.id, name: u.nome, email: u.email }))} initialProfile={profile.profile} document={same ? d : null} />;
+    } catch { /* Unavailable context cannot enable issuance. */ }
+  }
+
   return <main className="v2-pagina"><div className="v2-secao">
     <h1>Presidente da ADUNIR</h1>
     <p>Documento final e lotes para revisão, assinatura e aprovação.</p>
@@ -79,8 +95,9 @@ export default async function Presidente({ searchParams }: { searchParams: { lot
       {document.has_pdf && <A1Assinatura key={document.id} batchId={document.id} currentSignedSha256={document.signed_pdf_sha256} />}
       <div className="box"><strong>Upload de PDF assinado</strong><p>O upload confere o arquivo e registra o resultado. Ele não envia o lote.</p><p>Validador ICP-Brasil: {process.env.ICP_VALIDATOR_URL ? "configurado" : "não configurado"}.</p></div>
       {actions.upload && <form method="post" action={`/api/admin/lotes/${document.id}/assinado?portal=presidente`} encType="multipart/form-data"><input type="file" name="file" accept="application/pdf" aria-label="PDF assinado" required /><button>Enviar PDF assinado</button></form>}
-      <p><button type="button" disabled>Assinatura própria do app</button> <button type="button" disabled>gov.br</button></p>
-      <p className="small">Esses dois métodos não estão ativos neste candidato. A aprovação por código não altera a validação da assinatura.</p>
+      {ownEnabled ? ownControl ?? <p className="box" role="status">Não foi possível consultar a configuração da assinatura própria. Atualize a página antes de continuar.</p> : <p><button type="button" disabled>Assinatura própria do app</button></p>}
+      {process.env.GOVBR_BASE_ENABLED !== "1" && <p><button type="button" disabled>gov.br</button></p>}
+      <p className="small">A aprovação por código não altera a validação da assinatura.</p>
       {process.env.GOVBR_BASE_ENABLED === "1" && <div style={{ margin: "12px 0" }}><PeticaoBaseGovBr key={`${actor.userId}:${document.id}`} actorId={actor.userId} batchId={document.id} petitionTextVersion={TEXT_VERSION} /></div>}
       <h3>3. Aprovação e resultado</h3>
       <p>O código é solicitado para o e-mail do aprovador configurado. A autoria das ações é registrada pela conta conectada.</p>

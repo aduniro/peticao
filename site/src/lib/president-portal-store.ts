@@ -231,3 +231,23 @@ export async function readPresidentChallengeRequest(requestId: string, actor: Se
     });
   } catch { return failure("unavailable"); }
 }
+
+/** Metadata derived from actual bytes, never reconstructed from a browser digest. */
+export async function readPresidentIssueDocumentRevision(batchId: number, actor: SessaoAdmin | null) {
+  if (!validId(batchId)) return { ok: false as const, error: "parameters" as const };
+  try {
+    return await tx(async client => {
+      await bounded(client);
+      if (!await authorized(client, actor)) return { ok: false as const, error: "forbidden" as const };
+      const doc = await document(client, batchId);
+      if (!doc) return unavailable;
+      await audit("president_issue_document_read", null, { batchId, userId: actor!.userId, documentVersion: presidentDocumentRevision(doc) }, client);
+      return { ok: true as const, document: {
+        batchId: doc.batchId, seq: doc.seq, kind: doc.kind,
+        documentVersion: presidentDocumentRevision(doc), originalSha256: bytesHash(doc.originalPdf),
+        signedSha256: doc.signedPdf ? bytesHash(doc.signedPdf) : null,
+        listHash: doc.listHash, signatureKind: doc.signatureKind,
+      } };
+    });
+  } catch { return unavailable; }
+}

@@ -210,3 +210,23 @@ test("issuance HTTP requires document/profile intent; exact GET is private, acto
   await c.S.configurePresidentProfile(c.actor,{responsibleId:2,enabled:true,expectedRevision:1});const revoked=await c.S.readPresidentChallengeRequest(intent.requestId,c.actor);assert.ok(revoked.ok);assert.equal(revoked.state,'revoked');assert.equal(revoked.isCurrent,false);await c.noMail();
  }finally{delete process.env.CPF_FORCE_MOCK;delete process.env.CPF_MOCK_DATA;await c.db._closeDbForTests();}
 });
+
+
+test("contexto de emissão deriva versão dos bytes reais e não vaza documento/CPF",async()=>{
+  const c=await fixture("t_president_issue_context");
+  try {
+    const r=await c.S.readPresidentIssueDocumentRevision(c.batch,c.actor);assert.ok(r.ok);
+    assert.equal(r.document.batchId,c.batch);assert.equal(r.document.originalSha256,digest(c.bytes));
+    assert.match(r.document.documentVersion,/^[a-f0-9]{64}$/);assert.equal(r.document.signedSha256,null);
+    assert.ok(!JSON.stringify(r).includes(cpf));assert.ok(!JSON.stringify(r).includes("originalPdf"));
+    const before=r.document.documentVersion;
+    const changed=await PDFDocument.create();changed.addPage([201,200]);const bytes=Buffer.from(await changed.save());
+    await c.db.query("UPDATE batches SET pdf=$1,pdf_sha256=$2 WHERE id=$3",[bytes,digest(bytes),c.batch]);
+    const next=await c.S.readPresidentIssueDocumentRevision(c.batch,c.actor);assert.ok(next.ok);assert.notEqual(next.document.documentVersion,before);
+    await c.db.query("UPDATE batches SET pdf_sha256=$1 WHERE id=$2",["f".repeat(64),c.batch]);
+    assert.equal((await c.S.readPresidentIssueDocumentRevision(c.batch,c.actor)).ok,false);
+    await c.db.query("UPDATE admin_sessions SET stepup_ate=now()-interval '1 minute' WHERE user_id=1");
+    assert.deepEqual(await c.S.readPresidentIssueDocumentRevision(c.batch,c.actor),{ok:false,error:"forbidden"});
+    await c.noMail();assert.ok((await c.db.verifyAuditChain()).ok);
+  } finally {await c.db._closeDbForTests();}
+});

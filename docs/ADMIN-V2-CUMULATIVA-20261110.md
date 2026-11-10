@@ -13,3 +13,7 @@ A prévia da confirmação própria e o contrato em protótipo ficaram fora das 
 O coletor do Vigia leu o log a cada5 segundos e encerrou a subtarefa ao encontrar o resultado. Seu caminho foi `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/full-watch-20261110/watch-vigia.py`. Nenhum subagente ou envio real foi simulado como atividade.
 
 A árvore permanece65,1% por marcos até aceitar novas funcionalidades integradas. O certificado A1 ainda não foi disponibilizado pelo responsável. Não houve deploy, merge ou escrita no banco da VPS.
+
+## Cumulativa8d1b8c6
+
+Execução915casos:914 aprovados,0 falhas,1 explicitamente suspenso (WIP de instruções livres IA preservado). Duração1205258,65ms. Commit/fontes estáveis. Evidência: /mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/full-1794296432091659317/result.json. Essa execução é anterior à integração das novas interfaces do presidente e não lhes transfere comprovação.
