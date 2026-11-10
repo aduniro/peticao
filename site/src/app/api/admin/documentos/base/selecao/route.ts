@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import { exigirNivel, quemAge } from "@/lib/admin-api";
-import { currentPetitionBaseSelection, selectPetitionBase } from "@/lib/petition-base-selection";
+import { currentPetitionBaseSelection, selectPetitionBase, getPetitionBaseSelectionRequest } from "@/lib/petition-base-selection";
 import { baseReply, baseStatus, readBaseCommand } from "@/lib/petition-base-http";
 
 export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const denied = await exigirNivel(req, "total", 120, { stepup: true }); if (denied) return denied;
-  if (req.nextUrl.searchParams.size) return baseReply({ ok: false, error: "parameters" }, 400);
-  try { const result = await currentPetitionBaseSelection(await quemAge(req)); return baseReply(result, result.ok ? 200 : baseStatus(result.error)); }
+  const q = req.nextUrl.searchParams; if (q.size && (q.size !== 1 || !q.has("requestId"))) return baseReply({ ok: false, error: "parameters" }, 400);
+  try { const actor = await quemAge(req), result = q.has("requestId") ? await getPetitionBaseSelectionRequest(q.get("requestId")!, actor) : await currentPetitionBaseSelection(actor); return baseReply(result, result.ok ? 200 : baseStatus(result.error)); }
   catch { return baseReply({ ok: false, error: "unavailable" }, 503); }
 }
 export async function POST(req: NextRequest) {

@@ -110,3 +110,22 @@ test('negative external report remains a rejection with no selection, package or
   assert.equal((await c.db.query('SELECT 1 FROM petition_base_validations UNION ALL SELECT 1 FROM petition_base_selections UNION ALL SELECT 1 FROM batch_packages')).rowCount,0);await c.noSend();
  }finally{await service.close();await c.close();}
 });
+
+test('exact upload, selection and package GET recovery is actor scoped, historical and inert with gates off',async()=>{
+ const c=await packetFixture('t_base_http_exact_intents');try{
+  const req=await requestFactory(c),uploadRequest=randomUUID(),staged=await stagePetitionBase({requestId:uploadRequest,bytes},c.actor);assert.ok(staged.ok);
+  const selectedRequest=(await c.db.query('SELECT request_id FROM petition_base_selections WHERE artifact_id=$1',[c.artifactId])).rows[0].request_id as string;
+  const input=c.input(),first=await prepareBatchPackage(input,c.actor);assert.ok(first.ok);
+  const second=await prepareBatchPackage({...c.input(),expectedPackageRevision:1},c.actor);assert.ok(second.ok);
+  const base='/api/admin/documentos/base',selection=base+'/selecao',packet='/api/admin/lotes/'+c.batchId+'/pacote',params={params:{id:String(c.batchId)}};
+  const upload=await BASES(req('GET',base+'?requestId='+uploadRequest));assert.equal(upload.status,200);assert.equal((await upload.json()).artifactId,staged.artifactId);
+  const old=await REVIEW(req('GET',packet+'?requestId='+input.requestId),params);assert.equal(old.status,200);const recovered=await old.json();assert.equal(recovered.package.packageId,first.package.packageId);assert.equal(recovered.isCurrent,false);assert.equal(recovered.package.dispatchAllowed,false);
+  const own=await CURRENT(req('GET',selection+'?requestId='+selectedRequest));assert.equal(own.status,200);assert.equal((await own.json()).selection.selectionId,input.expectedSelectionId);
+  const other=await(await import('./admin-users')).abrirSessao(2,'127.0.0.1');await c.db.query("UPDATE admin_users SET nivel='total' WHERE id=2;UPDATE admin_sessions SET stepup_ate=clock_timestamp()+interval '9 minutes' WHERE user_id=2");
+  for(const [handler,path,param]of [[BASES,base+'?requestId='+uploadRequest,undefined],[CURRENT,selection+'?requestId='+selectedRequest,undefined],[REVIEW,packet+'?requestId='+input.requestId,params]]as const)assert.equal((await(handler as any)(req('GET',path,undefined,other.token),param)).status,404);
+  const snapshot=async()=>(await c.db.query("SELECT count(*)::int n FROM petition_base_artifacts UNION ALL SELECT count(*)::int FROM petition_base_validations UNION ALL SELECT count(*)::int FROM petition_base_selections UNION ALL SELECT count(*)::int FROM batch_packages")).rows;
+  const before=await snapshot();process.env.GOVBR_BASE_ENABLED='0';process.env.BATCH_PACKAGE_ENABLED='0';process.env.GOVBR_BASE_VALIDATION_ENABLED='0';
+  assert.equal((await BASES(req('GET',base+'?requestId='+uploadRequest))).status,200);assert.equal((await CURRENT(req('GET',selection+'?requestId='+selectedRequest))).status,200);assert.equal((await REVIEW(req('GET',packet+'?requestId='+input.requestId),params)).status,200);
+  assert.equal((await BASES(req('GET',base+'?requestId=bad'))).status,400);assert.equal((await BASES(req('GET',base+'?requestId='+uploadRequest+'&requestId='+uploadRequest))).status,400);assert.equal((await REVIEW(req('GET',packet+'?requestId='+randomUUID()),params)).status,404);assert.deepEqual(await snapshot(),before);await c.noSend();
+ }finally{await c.close();}
+});

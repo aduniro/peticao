@@ -30,6 +30,17 @@ async function binding(c:PoolClient,artifactId:string):Promise<PetitionBaseValid
 const boundHash=(b:PetitionBaseValidationBinding)=>digest(JSON.stringify([b.artifactId,b.petitionTextVersion,b.responsibleId,b.profileRevision,b.expectedSignerCpfHash]));
 type Row={id:string;batch_id:number;ordinal:number;document_version:string;selection_id:string;base_validation_id:string;base_artifact_id:string;base_sha256:string;batch_version_id:string;batch_sha256:string;manifest:string;package_digest:string;encoded_budget_bytes:number;reserved_envelope_bytes:number;actor_id:number;request_fingerprint:string;created_at:Date};
 const project=(r:Row)=>({packageId:r.id,batchId:r.batch_id,ordinal:r.ordinal,documentVersion:r.document_version,selectionId:r.selection_id,baseValidationId:r.base_validation_id,baseArtifactId:r.base_artifact_id,baseSha256:r.base_sha256,batchVersionId:r.batch_version_id,batchSha256:r.batch_sha256,packageDigest:r.package_digest,createdBy:r.actor_id,createdAt:r.created_at.toISOString(),approvalRequired:true as const,dispatchAllowed:false as const});
+/** Metadata for the exact actor/batch/request; no gate can turn this read into another preparation. */
+export async function getBatchPackageRequest(batchId:number,requestId:string,actor:SessaoAdmin|null){
+ if(!id(batchId)||!uuid(requestId))return error('parameters');
+ return tx(async c=>{
+  if(!await authorized(c,actor))return error('forbidden');
+  const row=(await c.query<Row>('SELECT * FROM batch_packages WHERE batch_id=$1 AND actor_id=$2 AND request_id=$3',[batchId,actor!.userId,requestId])).rows[0];if(!row)return error('not_found');
+  const batch=(await c.query<ApprovalRow>('SELECT * FROM batches WHERE id=$1',[batchId])).rows[0];
+  const latest=(await c.query<{id:string}>('SELECT id FROM batch_packages WHERE batch_id=$1 AND document_version=$2 ORDER BY ordinal DESC LIMIT 1',[batchId,row.document_version])).rows[0];
+  return{ok:true as const,requestId,package:project(row),isCurrent:!!batch&&documentVersion(batch)===row.document_version&&latest?.id===row.id};
+ });
+}
 /** Review metadata only. It cannot freeze a package, validate a signature or approve a batch. */
 export async function getBatchPackageReview(batchId:number,actor:SessaoAdmin|null){
  if(!id(batchId))return error('parameters');

@@ -9,7 +9,7 @@ const digest = (v: string | Buffer) => createHash("sha256").update(v).digest("he
 const uuid = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(v);
 const hash = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
 const id = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v > 0 && v <= 2147483647;
-const error = (code: "disabled" | "parameters" | "forbidden" | "request_conflict" | "revision_conflict" | "validation_unavailable" | "profile_conflict") => ({ ok: false as const, error: code });
+const error = (code: "disabled" | "parameters" | "forbidden" | "not_found" | "request_conflict" | "revision_conflict" | "validation_unavailable" | "profile_conflict") => ({ ok: false as const, error: code });
 async function authorized(c: PoolClient, actor: SessaoAdmin | null) {
   await c.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'; SELECT pg_advisory_xact_lock(7003)");
   if (!actor?.sessaoId || !await authorizeBatchActor(c, actor)) return false;
@@ -25,6 +25,17 @@ async function currentBinding(c: PoolClient, artifactId: string): Promise<Petiti
 const bindingFingerprint = (b: PetitionBaseValidationBinding) => digest(JSON.stringify([b.artifactId, b.petitionTextVersion, b.responsibleId, b.profileRevision, b.expectedSignerCpfHash]));
 type Selection = { id: string; revision: number; previous_revision: number | null; validation_id: string; artifact_id: string; artifact_sha256: string; petition_text_version: string; responsible_id: number; profile_revision: number; validator_configuration_sha256: string; request_id: string; request_fingerprint: string; actor_id: number; created_at: Date };
 const projection = (r: Selection) => ({ selectionId: r.id, revision: r.revision, previousRevision: r.previous_revision, validationId: r.validation_id, artifactId: r.artifact_id, sha256: r.artifact_sha256, petitionTextVersion: r.petition_text_version, responsibleId: r.responsible_id, profileRevision: r.profile_revision, createdBy: r.actor_id, createdAt: r.created_at.toISOString(), usableInPackage: false as const });
+/** An old or out-of-order response must resolve its own intent, never today's latest selection. */
+export async function getPetitionBaseSelectionRequest(requestId: string, actor: SessaoAdmin | null) {
+  if (!uuid(requestId)) return error("parameters");
+  return tx(async c => {
+    if (!await authorized(c, actor)) return error("forbidden");
+    const row = (await c.query<Selection>("SELECT * FROM petition_base_selections WHERE actor_id=$1 AND request_id=$2", [actor!.userId, requestId])).rows[0];
+    if (!row) return error("not_found");
+    const latest = (await c.query<{ revision: number }>("SELECT revision FROM petition_base_selections ORDER BY revision DESC LIMIT 1")).rows[0];
+    return { ok: true as const, requestId, selection: projection(row), isCurrent: latest?.revision === row.revision };
+  });
+}
 /** Explicit review of exact bytes, with CAS and actor-scoped request identity. Never signs, modifies a PDF or sends. */
 export async function selectPetitionBase(input: { requestId: string; expectedRevision: number; validationId: string; reviewedSha256: string; expectedTextVersion: string }, actor: SessaoAdmin | null) {
   if (process.env.GOVBR_BASE_ENABLED !== "1" || !petitionBaseValidationReady()) return error("disabled");

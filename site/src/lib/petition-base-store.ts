@@ -12,6 +12,15 @@ async function authorized(c:PoolClient,actor:SessaoAdmin|null){
  return !!(await c.query("SELECT 1 FROM admin_sessions WHERE id=$1 AND user_id=$2 AND expira_em>now() AND stepup_ate>now() FOR SHARE",[actor.sessaoId,actor.userId])).rowCount;
 }
 const projection=(row:{id:string;sha256:string;byte_length:number})=>({artifactId:row.id,sha256:row.sha256,byteLength:row.byte_length,validationState:'pending' as const,usableInPackage:false as const});
+/** Recover only the authenticated actor's exact upload intent, including when new uploads are disabled. */
+export async function getStagedPetitionBaseRequest(requestId:string,actor:SessaoAdmin|null){
+ if(!uuid(requestId))return error('parameters');
+ return tx(async c=>{
+  await bounded(c);if(!await authorized(c,actor))return error('forbidden');
+  const row=(await c.query<{id:string;sha256:string;byte_length:number}>('SELECT a.id,a.sha256,octet_length(a.bytes) byte_length FROM petition_base_upload_requests r JOIN petition_base_artifacts a ON a.id=r.artifact_id WHERE r.actor_id=$1 AND r.request_id=$2',[actor!.userId,requestId])).rows[0];
+  return row?{ok:true as const,requestId,...projection(row)}:error('not_found');
+ });
+}
 /** Limited metadata inventory only. A recorded validation is not a fresh permission to select/send. */
 export async function listStagedPetitionBases(actor:SessaoAdmin|null){
  if(process.env.GOVBR_BASE_ENABLED!=='1')return error('disabled');
