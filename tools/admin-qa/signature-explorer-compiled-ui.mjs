@@ -25,7 +25,7 @@ export async function runSignatureExplorerCompiledUi({browser,base,readerSession
    const data=JSON.parse(bytes.toString("utf8")),record={params,status:response.status(),data};
    if(response.status()===200){assert.ok(data.ok&&data.coverage.complete&&data.coverage.facetsComplete&&data.coverage.mapComplete);assert.equal(data.coverage.totalRowsReturned,data.linhas.length);assert.equal(data.capabilities.contacts,role==="editor");assert.ok(data.linhas.every(row=>typeof row.cpf==="boolean"&&!('email'in row)&&!('cpf_hash'in row)&&!('wa_cipher'in row)));if(role==="reader")assert.ok(data.linhas.every(row=>row.whatsapp===""));}
    if(params.get("pagina")==="2"&&dropPageTwo){dropPageTwo=false;await route.abort("failed");publish({...record,dropped:true});return;}
-   if(params.get("q")===holdQuery){holdQuery=null;held={route,response,bytes,record};return;}
+   if(holdQuery !== null && params.get("q")===holdQuery){holdQuery=null;held={route,response,bytes,record};return;}
    await route.fulfill({response,body:bytes});publish(record);
    }catch(error){const item={role,url:req.url(),message:String(error?.stack??error).slice(0,6000)};routeErrors.push(item);progress("route.error",item);throw error;}
   });
