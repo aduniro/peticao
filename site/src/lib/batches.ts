@@ -1,3 +1,5 @@
+import { reserveDocumentReferenceTx, snapshotReferenceMatchesTx } from "./document-reference-store";
+import { a1PreparationEnabledTx } from "./batch-a1-jobs";
 import { createHash, randomInt, randomUUID } from "node:crypto";
 import { config } from "./config";
 import { audit, query, tx } from "./db";
@@ -92,7 +94,9 @@ async function createBatchFrom(kind: "partial" | "final", source: CreationSource
     );
     const id = ins.rows[0].id;
     await c.query("UPDATE signatures SET batch_id=$1 WHERE status='confirmed' AND batch_id IS NULL AND id=ANY($2::int[])", [id, rows.map(row => row.id)]);
-    const frozen = freezePreparation(rows, { seq, kind, generatedAt: new Date().toISOString(), listHash, nServidor: nS, nApoiador: rows.length - nS - nE, nEstrangeiro: nE, signedNote: signerNote(), origin: config.appUrl(), ...badgeCounts(rows) }, source);
+    const documentReference = await reserveDocumentReferenceTx(c,id,source.kind === "admin" ? source.actor.userId : null);
+    const a1Preparation = await a1PreparationEnabledTx(c);
+    const frozen = freezePreparation(rows, { seq, kind, generatedAt: new Date().toISOString(), listHash, nServidor: nS, nApoiador: rows.length - nS - nE, nEstrangeiro: nE, signedNote: signerNote(a1Preparation ? "a1" : undefined), ...(a1Preparation ? { signaturePreparation: "a1" as const } : {}), ...(documentReference ? { documentReference } : {}), origin: config.appUrl(), ...badgeCounts(rows) }, source);
     await c.query("INSERT INTO batch_preparations(batch_id,snapshot,snapshot_sha256) VALUES($1,$2,$3)", [id, frozen.snapshot, frozen.sha256]);
     await audit("batch_created", null, { batchId: id, seq, kind, n: rows.length, listHash, snapshotSha256: frozen.sha256, ...creationData(source) }, c);
     return { id, seq, rows, nS, nE, listHash };
@@ -122,7 +126,7 @@ async function prepareReservedBatch(id: number, source: CreationSource, recovery
     if (!batch || batch.status !== "preparing" || batch.pdf || batch.signed_pdf || batch.approved_at) return { ok: false as const, error: "conflict" };
     const row = (await client.query<PreparationRow>("SELECT * FROM batch_preparations WHERE batch_id=$1 FOR UPDATE", [id])).rows[0];
     const frozen = row && thawPreparation(row.snapshot, row.snapshot_sha256, batch);
-    if (!frozen) return { ok: false as const, error: "snapshot" };
+    if (!frozen || !await snapshotReferenceMatchesTx(client,id,frozen.meta.documentReference)) return { ok: false as const, error: "snapshot" };
     const auditRows = (await client.query<{ data: string }>("SELECT data FROM audit_log WHERE event='batch_created' AND data::jsonb->>'batchId'=$1 ORDER BY id LIMIT 2", [String(id)])).rows;
     if (auditRows.length !== 1 || JSON.parse(auditRows[0].data).snapshotSha256 !== row.snapshot_sha256) return { ok: false as const, error: "snapshot" };
     const claimed = await client.query("UPDATE batch_preparations SET lease_token=$2,lease_until=now()+interval '5 minutes',attempts=attempts+1,last_error=NULL WHERE batch_id=$1 AND (lease_token IS NULL OR lease_until<=now()) RETURNING batch_id", [id, token]);
@@ -139,7 +143,7 @@ async function prepareReservedBatch(id: number, source: CreationSource, recovery
       if (source.kind === "admin" && !(await authorizeBatchActor(client, source.actor))) throw new Error("Lote não está pronto para aprovação.");
       const batch = (await client.query<ApprovalRow>("SELECT * FROM batches WHERE id=$1 FOR UPDATE", [id])).rows[0];
       const row = (await client.query<PreparationRow & { current: boolean }>("SELECT *,lease_until>now() current FROM batch_preparations WHERE batch_id=$1 FOR UPDATE", [id])).rows[0];
-      if (!batch || batch.status !== "preparing" || batch.pdf || batch.signed_pdf || batch.approved_at || !row || row.lease_token !== token || !row.current || row.snapshot_sha256 !== claim.sha256 || !thawPreparation(row.snapshot, row.snapshot_sha256, batch)) throw new Error("Lote não está pronto para aprovação.");
+      if (!batch || batch.status !== "preparing" || batch.pdf || batch.signed_pdf || batch.approved_at || !row || row.lease_token !== token || !row.current || row.snapshot_sha256 !== claim.sha256 || !thawPreparation(row.snapshot, row.snapshot_sha256, batch) || !await snapshotReferenceMatchesTx(client,id,claim.frozen.meta.documentReference)) throw new Error("Lote não está pronto para aprovação.");
       await appendDocumentVersion(client, { batchId:id, variant:"original", bytes:Buffer.from(signed.bytes), sha256:sha, listHash:batch.list_hash, signatureKind:signed.kind, note:null, source:"prepared", authorId:claim.frozen.source.kind === "admin" ? claim.frozen.source.actor.userId : null, recordedBy:source.kind === "admin" ? source.actor.userId : null });
       await client.query("UPDATE batches SET pdf=$1,pdf_sha256=$2,signature_kind=$3,status='prepared' WHERE id=$4", [Buffer.from(signed.bytes), sha, signed.kind, id]);
       await client.query("UPDATE batch_preparations SET lease_token=NULL,lease_until=NULL,last_error=NULL WHERE batch_id=$1", [id]);

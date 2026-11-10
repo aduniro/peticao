@@ -1,9 +1,10 @@
+import { freezePreparation } from "./batch-preparation";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
 import { PDFDocument } from "pdf-lib";
-import { _openForTests, _closeDbForTests, query, tx } from "./db";
+import { _openForTests, _closeDbForTests, query, tx, audit } from "./db";
 import { abrirSessao } from "./admin-users";
 import { appendDocumentVersion } from "./batch-document-history";
 import { documentVersion, type ApprovalRow } from "./batches";
@@ -35,7 +36,12 @@ test("A1 API: autenticação/origem/limites, admissão idempotente e GET sem ass
     assert.equal((await query("SELECT 1 FROM batch_a1_jobs")).rowCount,0);
 
     const doc=await PDFDocument.create();doc.addPage([200,200]);const pdf=Buffer.from(await doc.save());
-    const row=(await query<ApprovalRow>("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,list_hash,pdf,pdf_sha256,signature_kind)VALUES(1,'final','prepared',0,1,$1,$2,$3,'none')RETURNING *",['a'.repeat(64),pdf,sha(pdf)])).rows[0];
+    const rows=[{name:"QA Pessoa",category:"apoiador",role:null,institution:null,city:"QA",uf:"RO"}];
+    const listHash=sha(Buffer.from(JSON.stringify(rows)));
+    const row=(await query<ApprovalRow>("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,list_hash,pdf,pdf_sha256,signature_kind)VALUES(1,'final','prepared',0,1,$1,$2,$3,'none')RETURNING *",[listHash,pdf,sha(pdf)])).rows[0];
+    const frozen=freezePreparation(rows,{seq:1,kind:'final',generatedAt:'2026-11-09T12:00:00.000Z',listHash,nServidor:0,nApoiador:1,signedNote:'',signaturePreparation:'a1'},{kind:'scheduler'});
+    await query("INSERT INTO batch_preparations(batch_id,snapshot,snapshot_sha256)VALUES($1,$2,$3)",[row.id,frozen.snapshot,frozen.sha256]);
+    await audit('batch_created',null,{batchId:row.id,snapshotSha256:frozen.sha256,source:'scheduler'});
     await tx(c=>appendDocumentVersion(c,{batchId:row.id,variant:'original',bytes:pdf,sha256:sha(pdf),listHash:row.list_hash,signatureKind:'none',note:null,source:'prepared',authorId:1,recordedBy:1}));
     const policy={version:1,revision:1,enabled:true,credentialActive:true,credentialVersionId:randomUUID(),profileVersion:'pades-basic-unhomologated-v1',trustStoreVersion:'b'.repeat(64),expectedCnpj:'15883671000115',certificateFingerprintSha256:'c'.repeat(64)};
     await query("INSERT INTO settings(key,value)VALUES('batch_a1_policy_v1',$1)",[JSON.stringify(policy)]);

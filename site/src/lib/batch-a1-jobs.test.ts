@@ -1,3 +1,4 @@
+import { freezePreparation } from "./batch-preparation";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
@@ -14,7 +15,7 @@ import { documentVersion, type ApprovalRow } from "./batches";
 (process.env as Record<string,string>).NODE_ENV="test";
 process.env.MAIL_PROVIDER="dev";
 const digest=(bytes:Buffer)=>createHash("sha256").update(bytes).digest("hex");
-async function fixture(name:string) {
+async function fixture(name:string,a1Prepared=true) {
   const url=new URL(process.env.DATABASE_URL!);
   assert.equal(process.env.NODE_ENV,'test');assert.equal(process.env.MAIL_PROVIDER,'dev');
   assert.ok(['127.0.0.1','localhost','[::1]'].includes(url.hostname),'somente PostgreSQL local fictício');
@@ -25,7 +26,12 @@ async function fixture(name:string) {
   const session=await abrirSessao(1,"127.0.0.1");await query("UPDATE admin_sessions SET stepup_ate=clock_timestamp()+interval '9 minutes' WHERE user_id=1");
   const actor=(await sessaoPorToken(session.token))!;
   const pdf=await PDFDocument.create();pdf.addPage([200,200]);const bytes=name.startsWith('t_a1_finish')&&process.env.QA_A1_ORIGINAL_PDF?readFileSync(process.env.QA_A1_ORIGINAL_PDF):Buffer.from(await pdf.save());
-  const b=(await query<ApprovalRow>("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,list_hash,pdf,pdf_sha256,signature_kind)VALUES(1,'final','prepared',0,1,$1,$2,$3,'none')RETURNING *",['a'.repeat(64),bytes,digest(bytes)])).rows[0];
+  const rows=[{id:1,name:'QA Pessoa',category:'apoiador',institution:null,role:null,city:'QA',uf:'RO'}];
+  const listHash=digest(Buffer.from(JSON.stringify(rows)));
+  const b=(await query<ApprovalRow>("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,list_hash,pdf,pdf_sha256,signature_kind)VALUES(1,'final','prepared',0,1,$1,$2,$3,'none')RETURNING *",[listHash,bytes,digest(bytes)])).rows[0];
+  const frozen=freezePreparation(rows,{seq:1,kind:'final',generatedAt:'2026-11-09T12:00:00.000Z',listHash,nServidor:0,nApoiador:1,signedNote:a1Prepared?'':'NAO ASSINADO (teste)',...(a1Prepared?{signaturePreparation:'a1' as const}:{})},{kind:'scheduler'});
+  await query("INSERT INTO batch_preparations(batch_id,snapshot,snapshot_sha256)VALUES($1,$2,$3)",[b.id,frozen.snapshot,frozen.sha256]);
+  const db=await import('./db');await db.audit('batch_created',null,{batchId:b.id,snapshotSha256:frozen.sha256,source:'scheduler'});
   const original=await tx(c=>appendDocumentVersion(c,{batchId:b.id,variant:'original',bytes,sha256:digest(bytes),listHash:b.list_hash,signatureKind:'none',note:null,source:'prepared',authorId:1,recordedBy:1}));
   const policy:A1ServerPolicy={version:1,revision:1,enabled:true,credentialActive:true,credentialVersionId:randomUUID(),profileVersion:'pades-basic-unhomologated-v1',trustStoreVersion:'b'.repeat(64),expectedCnpj:'15883671000115',certificateFingerprintSha256:'c'.repeat(64)};
   await query("INSERT INTO settings(key,value)VALUES($1,$2)",[BATCH_A1_POLICY_KEY,JSON.stringify(policy)]);
@@ -176,4 +182,8 @@ test('A1 finish: revogação, política, documento, aprovação e lease impedem 
    assert.equal((await query("SELECT 1 FROM batch_a1_validations")).rowCount,0);assert.equal((await query("SELECT 1 FROM batch_document_versions WHERE variant='signed'")).rowCount,0);assert.equal((await query("SELECT signed_pdf FROM batches WHERE id=$1",[f.input.batchId])).rows[0].signed_pdf,null);await f.noSend();
   }finally{await close();}
  }
+});
+
+test('A1 refuses legacy test PDFs without explicit frozen A1 preparation',async()=>{
+ const f=await fixture('t_a1_legacy_footer',false);try{assert.equal((await admitA1Job(f.input,f.actor) as any).error,'document_conflict');assert.equal((await query('SELECT 1 FROM batch_a1_jobs')).rowCount,0);await f.noSend();}finally{await close();}
 });

@@ -7,7 +7,7 @@ SITE = ROOT / "site"
 NODE = Path("/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node")
 NODE_SHA = "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac"
 parser = argparse.ArgumentParser()
-parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression"])
+parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents"])
 args = parser.parse_args()
 assert ROOT == Path("/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109")
 assert hashlib.sha256(NODE.read_bytes()).hexdigest() == NODE_SHA
@@ -30,7 +30,7 @@ env = {k: os.environ[k] for k in ["HOME", "LANG", "LC_ALL"] if k in os.environ}
 env.update(PATH=str(NODE.parent)+":/usr/bin:/bin", NODE_ENV="test", MAIL_PROVIDER="dev", SIGNER="none", NEXT_TELEMETRY_DISABLED="1",
     GEO_DIR=str(geo), DEV_DB_PORT="54375", DEV_DB_DIR=str(scratch/"postgres"), TMPDIR=str(short), DATABASE_URL="postgres://peticao:peticao@127.0.0.1:54375/peticao",
     HASH_PEPPER="QA-ADMIN-FINAL-NEVER-PRODUCTION-0123456789", SECRETS_DIR=str(scratch/"empty"), PETICAO_CONFIG_DIR=str(scratch/"empty"), CREDENTIALS_DIRECTORY=str(scratch/"empty"))
-if args.mode in ["targeted", "full", "schema", "regression"]:
+if args.mode in ["targeted", "full", "schema", "regression", "documents"]:
     with socket.socket() as s: assert s.connect_ex(("127.0.0.1",54375)) != 0, "QA port occupied"
 if args.mode == "types": command=[str(NODE),"node_modules/typescript/bin/tsc","--noEmit","--incremental","false"]
 elif args.mode == "build":
@@ -39,6 +39,7 @@ elif args.mode == "build":
 elif args.mode == "schema": command=[str(NODE),"scripts/with-db.mjs",str(NODE),"--import","tsx","../deploy/test/admin-schema-upgrade.mjs"]
 else:
     if args.mode == "full": files=sorted(str(p.relative_to(SITE)) for folder in [SITE/"src/lib",SITE/"src/i18n"] for p in folder.glob("*.test.ts"))
+    elif args.mode == "documents": files=sorted(str(p.relative_to(SITE)) for p in (SITE/"src/lib").glob("*.test.ts") if p.name.startswith(("batch", "document", "president", "a1-")))
     elif args.mode == "regression": files=["src/lib/"+f+".test.ts" for f in ["admin-ip", "ai-context", "batch-document-history", "contact-campus-references", "contact-triage", "geo-coexistencia", "geo-retry", "painel-ui"]]
     else: files=["src/lib/"+f+".test.ts" for f in ["a1-worker-contract","a1-worker-client","a1-validation","a1-job-view","batch-a1-executor","batch-a1-jobs","batch-a1-route","batch-document-history","admin-settings-domains","institution-registry","institutional","server-email","sign-flow"]]
     command=[str(NODE),"scripts/with-db.mjs",str(NODE),"--import","tsx","--test","--test-concurrency=1",*files]

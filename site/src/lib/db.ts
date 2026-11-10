@@ -1,4 +1,5 @@
 import ifesDomains from "./ifes-domains.json";
+import { DOCUMENT_REFERENCE_SCHEMA_SQL } from "./document-reference-schema";
 import { BATCH_A1_SCHEMA_SQL } from "./batch-a1-schema";
 import { EBSERH_UNITS } from "./ebserh-units";
 import institutionRegistry from "../../public/data/institution-registry.json";
@@ -689,6 +690,7 @@ function init(): Promise<void> {
     g.__ready = getPool()
       .query(SCHEMA_SQL)
       .then(() => getPool().query(BATCH_A1_SCHEMA_SQL))
+      .then(() => getPool().query(DOCUMENT_REFERENCE_SCHEMA_SQL))
       .then(() => seedEbserhUnits())
       .then(() => seedIfesDomains())
       .then(() => seedInstitutionRegistry())

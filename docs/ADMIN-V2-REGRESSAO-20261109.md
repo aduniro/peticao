@@ -22,3 +22,15 @@ Commit 46e32cc: 44 testes, 43 aprovados, zero falhas e um teste explicitamente p
 ## Incrementos independentes
 
 Contrato puro de pacote v2 adicionado em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/site/src/lib/batch-package-contract.ts`: vincula os dois PDFs distintos, versões, hashes, tamanho e chave idempotente do pacote. Cinco testes offline. Não implementa armazenamento, validação gov.br, UI ou envio; integração ainda pendente. Nenhum anexo é descartado silenciosamente.
+
+## Rodada cumulativa corrigida
+
+Commit 6c5e0cdfc89e1c4f934a921900e4a806bd36959e: 790 testes, 789 aprovados, zero falhas e um teste IA explicitamente pendente. Fontes estáveis durante toda a execução. Evidência: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/full-1794268522351081756/result.json`.
+
+## Incremento documental posterior (validação própria obrigatória)
+
+Referências QR reservadas antes do render, snapshot v2 compatível com v1, vínculo imutável ao binário final e resolução pública reaplicando o controle existente de publicação. Dois gates desligados por padrão; nenhuma publicação automática ou binário público.
+
+Aprovação explícita recebida nesta sessão: retirar “NAO ASSINADO (teste)” somente de novos PDFs preparados para A1. O render target depende da política A1 protegida e do gate servidor; ele não assina nem aprova. PDFs antigos/mode teste continuam inalterados; jobs A1 agora exigem snapshot v2 A1 auditado e histórico de origem preparada.
+
+Rascunhos receberam 11 testes de referência, 4 de snapshot e 9 de jobs/finish; esses números não substituem a validação da integração final. Prévia fictícia A1 inspecionada e texto extraído: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/qr-draft/previa-qr-documental-a1.pdf`. Nenhuma alteração posterior à assinatura e nenhuma alegação de validação criptográfica na prévia.

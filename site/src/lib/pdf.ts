@@ -1,3 +1,4 @@
+import { documentReferenceUrl } from "./document-reference-contract";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PDFDocument, PDFFont, PDFImage, PDFPage, degrees, rgb } from "pdf-lib";
@@ -73,13 +74,18 @@ function wrap(text: string, font: PDFFont, size: number, width: number): string[
 const fit = (text: string, font: PDFFont, size: number, width: number, min = 8.5) => { let s = size; const t = clean(text, font); while (s > min && wid(font, t, s) > width) s -= 0.5; return s; };
 const cutTo = (text: string, font: PDFFont, size: number, width: number) => { let s = clean(text, font); while (s.length > 3 && wid(font, s, size) > width) s = s.slice(0, -2); return s; };
 
-export type PdfMeta = { seq: number; kind: "partial" | "final"; generatedAt: string; listHash: string; nServidor: number; nApoiador: number; nEstrangeiro?: number; signedNote: string; nInstitucional?: number; nDiscente?: number; nNomeConferido?: number; origin?: string; preview?: string };
+export type PdfMeta = { seq: number; kind: "partial" | "final"; generatedAt: string; listHash: string; nServidor: number; nApoiador: number; nEstrangeiro?: number; signedNote: string; nInstitucional?: number; nDiscente?: number; nNomeConferido?: number; origin?: string; preview?: string; documentReference?: { id: string; url: string }; signaturePreparation?: "a1" };
 
 const asset = (...p: string[]) => readFileSync(join(process.cwd(), "assets", ...p));
 export { institutionLabel };
 const ROLE = (r: string | null | undefined) => (r === "docente" ? "Docente" : r === "tae" ? "Técnico-administrativo (TAE)" : null);
 
 export async function buildBatchPdf(rows: ListRow[], meta: PdfMeta): Promise<Uint8Array> {
+  if (meta.documentReference) {
+    const r = meta.documentReference;
+    if (documentReferenceUrl(new URL(r.url).origin, r.id) !== r.url) throw new Error("invalid_pdf_document_reference");
+  }
+  if (meta.signaturePreparation !== undefined && (meta.signaturePreparation !== "a1" || meta.signedNote !== "")) throw new Error("invalid_pdf_signing_preparation");
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   doc.setTitle(`Petição PLV 12/2026 - lote ${meta.seq}`);
@@ -198,6 +204,17 @@ export async function buildBatchPdf(rows: ListRow[], meta: PdfMeta): Promise<Uin
 
   // ---- Parte 1: texto, totais e lista do Brasil
   text(PETICAO, { title: false });
+  if (meta.documentReference) {
+    ensure(332); // Keep reference, list heading/totals and the first signature together.
+    const qr = qrMatrix(meta.documentReference.url), side = 62, unit = side / qr.n, bottom = y - side;
+    page.drawRectangle({ x: M - 6, y: bottom - 6, width: side + 12, height: side + 12, color: WHITE });
+    for (let row = 0; row < qr.n; row++) for (let col = 0; col < qr.n; col++) {
+      if (qr.on(row, col)) qrOps += `${(M + col * unit).toFixed(2)} ${(bottom + side - (row + 1) * unit).toFixed(2)} ${unit.toFixed(2)} ${unit.toFixed(2)} re\n`;
+    }
+    page.drawText("Autenticidade:", { x: M + side + 14, y: y - 16, size: 9, font: semi, color: GREEN });
+    page.drawText(meta.documentReference.id, { x: M + side + 14, y: y - 32, size: 8, font, color: INK });
+    y = bottom - 16;
+  }
   ensure(120);
   para(meta.kind === "final" ? `Lista final de apoiadores do Brasil (acumulada): lote ${meta.seq}` : `Lista de apoiadores do Brasil: lote ${meta.seq}`, bold, 12.5, 4, GREEN);
   const totals =
@@ -230,7 +247,7 @@ export async function buildBatchPdf(rows: ListRow[], meta: PdfMeta): Promise<Uin
   flushQr();
   const pages = doc.getPages();
   pages.forEach((p, i) => {
-    p.drawText(clean(`Lote ${meta.seq} | lista sha256 ${meta.listHash.slice(0, 16)} | texto ${TEXT_VERSION.slice(0, 12)} | ${meta.signedNote} | pág. ${i + 1}/${pages.length}`, font),
+    p.drawText(clean(`Lote ${meta.seq} | lista sha256 ${meta.listHash.slice(0, 16)} | texto ${TEXT_VERSION.slice(0, 12)}${meta.signaturePreparation === "a1" ? "" : ` | ${meta.signedNote}`} | pág. ${i + 1}/${pages.length}`, font),
       { x: M, y: 24, size: 7, font, color: MUTED });
     if (meta.preview) {
       // Prévia: marca-d'água diagonal e faixa no rodapé, para nunca ser confundida com o documento enviado.

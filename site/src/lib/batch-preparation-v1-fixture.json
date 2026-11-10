@@ -1,0 +1,6 @@
+{
+  "sourceCommit": "6c5e0cdfc89e1c4f934a921900e4a806bd36959e",
+  "synthetic": true,
+  "snapshot": "{\"version\":1,\"renderer\":\"64fd6e6be83d030309356a40e6b800bc39471215ebd295be7bcbcef6c664890a\",\"rows\":[{\"id\":1,\"name\":\"QA Pessoa\",\"category\":\"apoiador\",\"institution\":null,\"role\":null,\"city\":\"QA\",\"uf\":\"RO\",\"campus\":null,\"campus_ibge\":null,\"verify_code\":\"QA-CODE\"}],\"meta\":{\"seq\":1,\"kind\":\"final\",\"generatedAt\":\"2026-11-09T12:00:00.000Z\",\"listHash\":\"cb59a5b40bfea7520b6952939f0d7300f0ea88a7537b823d60746ac91b2ac3f0\",\"nServidor\":0,\"nApoiador\":1,\"signedNote\":\"QA\",\"origin\":\"https://example.org/\"},\"source\":{\"kind\":\"scheduler\"},\"signerMode\":\"none\"}",
+  "sha256": "5078e4762defeeeb4746a83811dccfd0ce1c3579044f41e5d513d1f9f92dd9fe"
+}

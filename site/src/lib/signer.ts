@@ -18,4 +18,4 @@ export function assertSendable(kind: string | null, nodeEnv: string | undefined 
 }
 
 /** Texto do rodapé do PDF, conhecido antes de assinar. */
-export const signerNote = () => ((process.env.SIGNER ?? "none") === "none" ? "NAO ASSINADO (teste)" : "assinado ICP-Brasil");
+export const signerNote = (preparation?: "a1") => preparation === "a1" ? "" : ((process.env.SIGNER ?? "none") === "none" ? "NAO ASSINADO (teste)" : "assinado ICP-Brasil");

@@ -1,3 +1,4 @@
+import { thawPreparation } from "./batch-preparation";
 import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { audit, tx } from "./db";
@@ -71,8 +72,13 @@ async function policy(c: PoolClient): Promise<A1ServerPolicy | null> {
 async function currentDocument(c: PoolClient, batchId: number) {
   const b=(await c.query<ApprovalRow & {batch_revision:string}>("SELECT *,xmin::text batch_revision FROM batches WHERE id=$1 FOR UPDATE",[batchId])).rows[0];
   if (!b || !['prepared','failed'].includes(b.status) || b.approved_at || b.sent_at || !b.pdf || !sha(b.pdf_sha256) || b.pdf.length>A1_MAX_PDF_BYTES || digest(b.pdf)!==b.pdf_sha256 || b.pdf.subarray(0,5).toString()!=="%PDF-") return null;
-  const original=(await c.query<{id:string;bytes:Buffer;sha256:string}>("SELECT id,bytes,sha256 FROM batch_document_versions WHERE batch_id=$1 AND variant='original' AND sha256=$2 AND list_hash=$3 ORDER BY ordinal DESC LIMIT 1 FOR SHARE",[batchId,b.pdf_sha256,b.list_hash])).rows[0];
+  const original=(await c.query<{id:string;bytes:Buffer;sha256:string}>("SELECT id,bytes,sha256 FROM batch_document_versions WHERE batch_id=$1 AND variant='original' AND source='prepared' AND sha256=$2 AND list_hash=$3 ORDER BY ordinal DESC LIMIT 1 FOR SHARE",[batchId,b.pdf_sha256,b.list_hash])).rows[0];
   if (!original || !original.bytes.equals(b.pdf) || digest(original.bytes)!==original.sha256) return null;
+  const preparation=(await c.query<{snapshot:string;snapshot_sha256:string}>("SELECT snapshot,snapshot_sha256 FROM batch_preparations WHERE batch_id=$1 FOR SHARE",[batchId])).rows[0];
+  const frozen=preparation&&thawPreparation(preparation.snapshot,preparation.snapshot_sha256,b);
+  if(!frozen || frozen.version!==2 || frozen.meta.signaturePreparation!=="a1" || frozen.meta.signedNote!=="") return null;
+  const created=(await c.query<{data:string}>("SELECT data FROM audit_log WHERE event='batch_created' AND data::jsonb->>'batchId'=$1 ORDER BY id LIMIT 2",[String(batchId)])).rows;
+  if(created.length!==1 || JSON.parse(created[0].data).snapshotSha256!==preparation.snapshot_sha256) return null;
   return { batch:b, original, version:documentVersion(b) };
 }
 async function stale(c: PoolClient,j: JobRow,code: "authorization_changed"|"policy_changed"|"document_changed"|"attempt_limit") {
@@ -226,3 +232,6 @@ export async function getA1Availability(batchId:number,actor:Actor|null){
     return {ok:true as const,available:!active,documentVersion:doc.version,policyRevision:p.revision,...(active?{error:"active_job"}:{}),latestJob};
   });
 }
+
+/** Render target only: no signature, approval or delivery. */
+export async function a1PreparationEnabledTx(c:PoolClient) { return (process.env.SIGNER ?? "none") === "none" && !!await policy(c); }

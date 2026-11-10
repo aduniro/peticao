@@ -1,3 +1,4 @@
+import { bindDocumentReferenceTx } from "./document-reference-store";
 import { createHash } from "node:crypto";
 import type { PoolClient } from "pg";
 import { audit, tx } from "./db";
@@ -43,6 +44,7 @@ export async function setDocumentPublication(input:{versionId:string;sha256:stri
     if (stored && !current || (current?.revision ?? 0)!==input.expectedRevision || current && current.sha256!==input.sha256) return {ok:false as const,error:"conflict" as const};
     if (input.enabled && !await eligible(client,input.versionId,input.sha256)) return {ok:false as const,error:"ineligible" as const};
     if (!input.enabled && !current) return {ok:false as const,error:"ineligible" as const};
+    if (input.enabled) { const binding = await bindDocumentReferenceTx(client,input.versionId,input.sha256,actor.userId); if (!binding.ok) return binding; }
     const revision=input.expectedRevision+1,value:Release={version:1,revision,sha256:input.sha256,enabled:input.enabled};
     await client.query("INSERT INTO settings(key,value) VALUES($1,$2) ON CONFLICT(key) DO UPDATE SET value=$2",[key(input.versionId),JSON.stringify(value)]);
     await audit("document_publication_changed",null,{versionId:input.versionId,sha256:input.sha256,enabled:input.enabled,revision,userId:actor.userId,por:actor.email},client);
