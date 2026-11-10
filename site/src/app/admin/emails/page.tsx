@@ -7,13 +7,13 @@ import { outboxStats } from "@/lib/mail/outbox";
 import { query } from "@/lib/db";
 import { alertasEmail } from "@/lib/mail/alertas";
 import { resumoEngajamento } from "@/lib/mail/engajamento";
-import PendentesTable, { type Linha } from "@/components/admin/PendentesTable";
+import PendentesTable from "@/components/admin/PendentesTable";
+import { readPendingEmailPage } from "@/lib/pending-email-admin-store";
 import RecuperarFila from "@/components/admin/RecuperarFila";
 import { listMailRecovery } from "@/lib/mail/recovery";
 import PreviaEmail from "@/components/admin/PreviaEmail";
 import { mailHistory } from "@/lib/mail/history";
-import { sugerir } from "@/lib/email-sugestao";
-import { dominiosLentos, eventosResumo, porProvedor, porSubdominio, porTipo, semEmailEntregue, sesSaude, statusProvedores, verificacoes } from "@/lib/mail/painel";
+import { dominiosLentos, eventosResumo, porProvedor, porSubdominio, porTipo, sesSaude, statusProvedores, verificacoes } from "@/lib/mail/painel";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "E-mails", robots: { index: false } };
@@ -23,33 +23,27 @@ const NOME_EVENTO: Record<string, string> = { hard_bounce: "devolução permanen
 const n = (x: unknown) => (x === undefined || x === null ? "—" : Number(x).toLocaleString("pt-BR"));
 const pct = (a: number, b: number) => (b ? `${((a / b) * 100).toFixed(1)}%` : "—");
 
-/** Anexa a sugestão de correção (calculada no servidor) e o horário legível a cada linha, com no máximo 8 consultas de domínio ao mesmo tempo. */
-async function comSugestoes(sem: Awaited<ReturnType<typeof semEmailEntregue>>): Promise<Linha[]> {
-  const out: Linha[] = new Array(sem.length);
-  let i = 0;
-  await Promise.all(Array.from({ length: Math.min(8, sem.length) }, async () => {
-    while (i < sem.length) { const k = i++; const r = sem[k]; const s = await sugerir(r.email).catch(() => ({ sugestao: null, motivo: null })); out[k] = { ...r, criadaTxt: brasilia(r.criada, true), sugestao: s.sugestao, motivoSugestao: s.motivo }; }
-  }));
-  return out;
-}
-
 export default async function Emails({ searchParams }: { searchParams: { msg?: string } }) {
   const sessao = await sessaoAdmin();
   if (!sessao) redirect("/admin");
   if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
   const podeRecuperar = nivelOk(sessao.nivel, "total") && !!sessao.userId;
-  const recuperacao = podeRecuperar && stepupValido(sessao)
+  const stepupAtRead = podeRecuperar && stepupValido(sessao);
+  const recuperacao = stepupAtRead
     ? await listMailRecovery().catch(() => null)
     : undefined;
   const historico = await mailHistory({ limit: 10 }).catch(() => null);
-  const [prov, tipos, subs, ses, evs, sem, checks, lentos, status, outbox] = await Promise.all([porProvedor(), porTipo(), porSubdominio(), sesSaude(), eventosResumo(), semEmailEntregue(), verificacoes(), dominiosLentos(), statusProvedores(), outboxStats()]);
+  const [prov, tipos, subs, ses, evs, pending, checks, lentos, status, outbox] = await Promise.all([porProvedor(), porTipo(), porSubdominio(), sesSaude(), eventosResumo(), readPendingEmailPage(sessao, { limit: 50 }), verificacoes(), dominiosLentos(), statusProvedores(), outboxStats()]);
   const blackEmails = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason='invalid'")).rows[0].n;
   const suppressed = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason IN ('bounce','complaint')")).rows[0].n;
-  const alertas = await alertasEmail();
+  const alertas = await alertasEmail({ pendingTotal: pending.ok ? pending.summary.global.total : null });
   const eng = await resumoEngajamento();
-  const linhas: Linha[] = await comSugestoes(sem);
   const status_b = status.brevo?.data, rp = status.respostas?.data; void status_b;
-  const falhasPorMotivo = sem.reduce<Record<string, number>>((a, s) => ((a[s.motivo] = (a[s.motivo] ?? 0) + 1), a), {});
+  // Recheck the whole SSR response after potentially lengthy reads, including recovery/preview permissions.
+  const current = await sessaoAdmin();
+  if (!current || current.userId !== sessao.userId || current.sessaoId !== sessao.sessaoId || !nivelOk(current.nivel, "edicao")) redirect("/admin?erro=nivel");
+  if (current.nivel !== sessao.nivel || stepupAtRead !== (nivelOk(current.nivel, "total") && !!current.userId && stepupValido(current))) redirect("/admin/emails");
+  const actorScope = `${current.userId}:${current.sessaoId ?? "legacy"}:${current.nivel}`;
 
   return (
     <main className="v2-pagina">
@@ -133,9 +127,10 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
         <tbody>{evs.length ? evs.map((e) => <tr key={e.provider + e.type}><td>{e.provider}</td><td>{NOME_EVENTO[e.type] ?? e.type}</td><td>{n(e.n24)}</td><td>{n(e.n7)}</td><td>{n(e.total)}</td></tr>) : <tr><td colSpan={5}><em>Nenhum evento registrado. Use “Sincronizar agora” com 14 ou 30 dias para trazer o histórico.</em></td></tr>}</tbody>
       </table></div>
 
-      <h2 id="pendentes">Cadastros pendentes sem e-mail entregue ({sem.length})</h2>
-      <p>{Object.entries(falhasPorMotivo).map(([k, v]) => `${k}: ${v}`).join(" · ") || "Nenhum."} A pessoa precisa assinar de novo com o e-mail correto (o mesmo CPF substitui o cadastro pendente). Nada é enviado a endereços que ela não digitou. Esta lista mostra o e-mail completo, só para a ADUNIR contatar por outro canal.</p>
-      {sem.length > 0 && <PendentesTable linhas={linhas} />}
+      {/* MUDAR AQUI: sinais pertencem ao histórico do endereço, sem atribuição automática à solicitação atual. */}
+      <h2 id="pendentes">Cadastros aguardando confirmação</h2>
+      <p>Consulta de todos os cadastros pendentes. Os sinais registrados pertencem ao histórico do endereço e não comprovam, por si só, a situação da mensagem atual. Endereços completos são restritos aos usuários autorizados.</p>
+      <PendentesTable actorScope={actorScope} initial={pending.ok ? pending : null} initialError={pending.ok ? undefined : pending.error} />
 
       <h2>Verificação de e-mail antes do envio (Reacher pelas sondas de cabanos.cc, e domínio)</h2>
       <p className="small">Sondas: <code>verifica1.cabanos.cc</code> (padrão) e <code>verifica2.cabanos.cc</code> (Gmail). Limites do Reacher: 30 por minuto e 5.000 por dia. Domínios institucionais que não respondem à sonda são pulados por 30 minutos.</p>

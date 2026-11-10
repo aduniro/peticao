@@ -6,7 +6,7 @@ import type { PoolClient } from "pg";
 delete process.env.PREVIEW_MODE;
 delete process.env.ADMIN_NO_PASSWORD;
 
-type AuditKind = "signatures" | "dispersion";
+type AuditKind = "signatures" | "dispersion" | "pending";
 
 /**
  * The BEFORE INSERT trigger spends time AFTER the audit's initial authorization.
@@ -66,7 +66,8 @@ async function auditExpiryScenario(kind: AuditKind) {
     `);
     const auditExport = kind === "signatures"
       ? (await import("./signature-explorer-admin-store")).auditSignatureExport
-      : (await import("./dispersion-admin-store")).auditDispersionExport;
+      : kind === "dispersion" ? (await import("./dispersion-admin-store")).auditDispersionExport
+      : (await import("./pending-email-admin-store")).auditPendingEmailExport;
     pool = db.getPool();
     pool.on("acquire", attach);
     const previousCount = Number((await db.query("SELECT count(*)::text n FROM audit_log WHERE event='export_internal_base'")).rows[0].n);
@@ -98,4 +99,8 @@ test("signature CSV audit rechecks a session that expires during the audit write
 
 test("dispersion CSV audit rechecks a session that expires during the audit write and rolls back", async () => {
   await auditExpiryScenario("dispersion");
+});
+
+test("pending CSV audit rechecks a session that expires during the audit write and rolls back", async () => {
+  await auditExpiryScenario("pending");
 });
