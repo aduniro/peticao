@@ -7,7 +7,9 @@ export type BasePacketView = { packageId: string; batchId: number; ordinal: numb
 export type BaseSelectionIntent = { requestId: string; expectedRevision: number; validationId: string; reviewedSha256: string; expectedTextVersion: string };
 export type BasePacketIntent = { requestId: string; batchId: number; expectedDocumentVersion: string; expectedSelectionId: string; expectedPackageRevision: number };
 export type BaseReviewView = { batchId: number; documentVersion: string; configured: boolean; canPrepare: boolean; approvalReady: boolean; selectionId: string | null; latestPackage: BasePacketView | null };
-export type BaseIntentView = { kind: "upload"; artifact: BaseArtifactView } | { kind: "selection"; selection: BaseSelectionView; isCurrent: boolean } | { kind: "package"; package: BasePacketView; isCurrent: boolean };
+export type BaseValidationIntent = { requestId: string; artifactId: string; sha256: string };
+export type BaseValidationView = BaseValidationIntent & { attemptId: string; state: "pending" | "valid" | "rejected" | "unavailable"; contextMatches: boolean; validationId: string | null; isCurrent: boolean };
+export type BaseIntentView = { kind: "validation"; validation: BaseValidationView } | { kind: "upload"; artifact: BaseArtifactView } | { kind: "selection"; selection: BaseSelectionView; isCurrent: boolean } | { kind: "package"; package: BasePacketView; isCurrent: boolean };
 const uuid = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(v);
 const hash = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
 const id = (v: unknown): v is number => Number.isSafeInteger(v) && Number(v) > 0 && Number(v) <= 2147483647;
@@ -89,9 +91,18 @@ export function uploadBase(requestId: string, file: File, expectedSha256: string
   const form = new FormData(); form.set("requestId", requestId); form.set("file", file);
   return exchange("/api/admin/documentos/base", "POST", form, raw => { const value = artifact(raw); return value && value.sha256 === expectedSha256 && value.byteLength === file.size ? value : null; }, fetcher, timeoutMs);
 }
-export function validateBase(artifactId: string, expectedSha256: string, fetcher: typeof fetch = fetch, timeoutMs = 45_000) {
-  if (!uuid(artifactId) || !hash(expectedSha256)) return Promise.resolve(invalid);
-  return exchange(`/api/admin/documentos/base/${artifactId}/validar`, "POST", { expectedSha256 }, raw => uuid(raw.validationId) && raw.artifactId === artifactId && raw.sha256 === expectedSha256 && raw.validationState === "valid" && raw.method === "gov-br-advanced" && raw.usableInPackage === false ? { validationId: raw.validationId, artifactId, sha256: expectedSha256 } : null, fetcher, timeoutMs);
+function validation(raw: Record<string, unknown>, input: BaseValidationIntent): BaseValidationView | null {
+  if (raw.requestId !== input.requestId || raw.artifactId !== input.artifactId || raw.sha256 !== input.sha256 || !uuid(raw.attemptId) || !["pending", "valid", "rejected", "unavailable"].includes(String(raw.state)) || typeof raw.contextMatches !== "boolean" || typeof raw.isCurrent !== "boolean" || (raw.state === "valid" ? !uuid(raw.validationId) : raw.validationId !== null) || raw.isCurrent && (raw.state !== "valid" || !raw.contextMatches)) return null;
+  return { ...input, attemptId: raw.attemptId, state: raw.state as BaseValidationView["state"], validationId: raw.validationId as string | null, contextMatches: raw.contextMatches, isCurrent: raw.isCurrent };
+}
+export function validateBase(artifactId: string, expectedSha256: string, fetcher: typeof fetch = fetch, timeoutMs = 45_000, requestId?: string) {
+  if (!uuid(requestId) || !uuid(artifactId) || !hash(expectedSha256)) return Promise.resolve(invalid);
+  const input = { requestId, artifactId, sha256: expectedSha256 };
+  return exchange(`/api/admin/documentos/base/${artifactId}/validar`, "POST", { requestId, expectedSha256 }, raw => validation(raw, input), fetcher, timeoutMs);
+}
+export function readBaseValidation(input: BaseValidationIntent, fetcher: typeof fetch = fetch, timeoutMs = 15_000): Promise<BaseHttpResult<BaseIntentView>> {
+  if (!uuid(input.requestId) || !uuid(input.artifactId) || !hash(input.sha256)) return Promise.resolve(invalid);
+  return exchange(`/api/admin/documentos/base/${input.artifactId}/validar?requestId=${encodeURIComponent(input.requestId)}&expectedSha256=${input.sha256}`, "GET", undefined, raw => { const value = validation(raw, input); return value ? { kind: "validation", validation: value } : null; }, fetcher, timeoutMs);
 }
 export function selectBase(intent: BaseSelectionIntent, fetcher: typeof fetch = fetch, timeoutMs = 15_000) {
   if (!intent || !uuid(intent.requestId) || !revision(intent.expectedRevision) || !uuid(intent.validationId) || !hash(intent.reviewedSha256) || !hash(intent.expectedTextVersion)) return Promise.resolve(invalid);

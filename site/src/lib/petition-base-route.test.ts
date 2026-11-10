@@ -55,7 +55,7 @@ import {NextRequest} from "next/server";
 import {createServer,type Server} from "node:http";
 import {GET as BASES} from "../app/api/admin/documentos/base/route";
 import {GET as CURRENT,POST as SELECT} from "../app/api/admin/documentos/base/selecao/route";
-import {POST as VALIDATE} from "../app/api/admin/documentos/base/[id]/validar/route";
+import {POST as VALIDATE, GET as RECOVER_VALIDATION} from "../app/api/admin/documentos/base/[id]/validar/route";
 import {GET as REVIEW,POST as PREPARE} from "../app/api/admin/lotes/[id]/pacote/route";
 let requestNumber=0;
 async function requestFactory(c:Awaited<ReturnType<typeof fixture>>){
@@ -76,7 +76,7 @@ test('base/package HTTP guards require Total, live stepup, same origin and bound
   assert.equal((await BASES(req('GET',base,undefined,''))).status,401);assert.equal((await CURRENT(req('GET',selection,undefined,reader.token))).status,403);assert.equal((await REVIEW(req('GET',packet,undefined,reader.token),{params:{id:'1'}})).status,403);
   assert.equal((await SELECT(req('POST',selection,{},undefined,'https://outside.invalid'))).status,403);
   assert.equal((await SELECT(req('POST',selection,'x'.repeat(2049)))).status,413);assert.equal((await SELECT(req('POST',selection,{proof:'not-accepted'}))).status,400);
-  assert.equal((await VALIDATE(req('POST',validation,{expectedSha256:hash(bytes),valid:true}),{params:{id:c.artifactId}})).status,400);
+  assert.equal((await VALIDATE(req('POST',validation,{requestId:randomUUID(),expectedSha256:hash(bytes),valid:true}),{params:{id:c.artifactId}})).status,400);
   assert.equal((await PREPARE(req('POST',packet,{}),{params:{id:'01'}})).status,400);
   assert.equal((await BASES(req('GET',base+'?unknown=1'))).status,400);
   await c.db.query('UPDATE admin_sessions SET stepup_ate=NULL WHERE user_id=1');assert.equal((await BASES(req('GET',base))).status,403);
@@ -88,8 +88,8 @@ test('HTTP synthetic verifier -> explicit selection -> exact package; reads/repl
   const req=await requestFactory(c),base='/api/admin/documentos/base',selection=base+'/selecao',packet='/api/admin/lotes/'+c.batchId+'/pacote',validation=base+'/'+c.artifactId+'/validar',params={params:{id:String(c.batchId)}};
   const listed=await BASES(req('GET',base));assert.equal(listed.status,200);assert.match(listed.headers.get('cache-control')??'',/no-store/);const inventory=await listed.json();assert.equal(inventory.artifacts[0].artifactId,c.artifactId);assert.equal(inventory.artifacts[0].usableInPackage,false);assert.equal(JSON.stringify(inventory).includes('signerCpf'),false);assert.equal(JSON.stringify(inventory).includes('bytes'),false);
   const old=await(await CURRENT(req('GET',selection))).json();assert.equal(old.currentBindingMatches,false);
-  assert.equal((await VALIDATE(req('POST',validation,{expectedSha256:'f'.repeat(64)}),{params:{id:c.artifactId}})).status,409);assert.equal(service.calls(),0);
-  const checked=await VALIDATE(req('POST',validation,{expectedSha256:hash(bytes)}),{params:{id:c.artifactId}});assert.equal(checked.status,201);const proof=await checked.json();assert.equal(service.calls(),1);assert.equal(proof.usableInPackage,false);assert.equal(JSON.stringify(proof).includes('signerCpf'),false);
+  assert.equal((await VALIDATE(req('POST',validation,{requestId:randomUUID(),expectedSha256:'f'.repeat(64)}),{params:{id:c.artifactId}})).status,409);assert.equal(service.calls(),0);
+  const checked=await VALIDATE(req('POST',validation,{requestId:randomUUID(),expectedSha256:hash(bytes)}),{params:{id:c.artifactId}});assert.equal(checked.status,201);const proof=await checked.json();assert.equal(service.calls(),1);assert.equal(proof.usableInPackage,false);assert.equal(JSON.stringify(proof).includes('signerCpf'),false);
   const input={requestId:randomUUID(),expectedRevision:1,validationId:proof.validationId,reviewedSha256:hash(bytes),expectedTextVersion:(await import("@/content/peticao")).TEXT_VERSION};
   const chosen=await SELECT(req('POST',selection,input));assert.equal(chosen.status,201);const selected=await chosen.json();assert.equal((await SELECT(req('POST',selection,input))).status,200);
   const read=await REVIEW(req('GET',packet),params);assert.equal(read.status,200);const review=await read.json();assert.equal(review.canPrepare,true);assert.equal(review.latestPackage,null);
@@ -100,13 +100,13 @@ test('HTTP synthetic verifier -> explicit selection -> exact package; reads/repl
 });
 test('revoking the actor during external verification prevents evidence persistence',async()=>{
  const c=await fixture('t_base_http_revoke');let release!:()=>void,started!:()=>void;const ready=new Promise<void>(r=>{started=r;}),hold=new Promise<void>(r=>{release=r;});const service=await verifier(async()=>{started();await hold;});try{
-  const req=await requestFactory(c),pending=VALIDATE(req('POST','/api/admin/documentos/base/'+c.artifactId+'/validar',{expectedSha256:hash(bytes)}),{params:{id:c.artifactId}});
+  const req=await requestFactory(c),pending=VALIDATE(req('POST','/api/admin/documentos/base/'+c.artifactId+'/validar',{requestId:randomUUID(),expectedSha256:hash(bytes)}),{params:{id:c.artifactId}});
   await Promise.race([ready,new Promise((_,reject)=>setTimeout(()=>reject(new Error('QA verifier did not start')),3000))]);await c.db.query('UPDATE admin_users SET ativo=false WHERE id=1');release();assert.equal((await pending).status,403);assert.equal((await c.db.query('SELECT 1 FROM petition_base_validations')).rowCount,0);await c.noSend();
  }finally{release();await service.close();await c.close();}
 });
 test('negative external report remains a rejection with no selection, package or transport',async()=>{
  const c=await fixture('t_base_http_invalid'),service=await verifier(undefined,false);try{
-  const req=await requestFactory(c),response=await VALIDATE(req('POST','/api/admin/documentos/base/'+c.artifactId+'/validar',{expectedSha256:hash(bytes)}),{params:{id:c.artifactId}});assert.equal(response.status,409);assert.equal(service.calls(),1);
+  const req=await requestFactory(c),response=await VALIDATE(req('POST','/api/admin/documentos/base/'+c.artifactId+'/validar',{requestId:randomUUID(),expectedSha256:hash(bytes)}),{params:{id:c.artifactId}});assert.equal(response.status,409);assert.equal(service.calls(),1);
   assert.equal((await c.db.query('SELECT 1 FROM petition_base_validations UNION ALL SELECT 1 FROM petition_base_selections UNION ALL SELECT 1 FROM batch_packages')).rowCount,0);await c.noSend();
  }finally{await service.close();await c.close();}
 });
@@ -134,15 +134,15 @@ test('exact upload, selection and package GET recovery is actor scoped, historic
 test('a later failed verifier check invalidates earlier positive evidence until a new successful check',async()=>{
  const c=await fixture('t_base_http_negative_supersedes'),service=await verifier();try{
   const req=await requestFactory(c),path='/api/admin/documentos/base/'+c.artifactId+'/validar',params={params:{id:c.artifactId}};
-  const positive=await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params);assert.equal(positive.status,201);const proof=await positive.json();
+  const positive=await VALIDATE(req('POST',path,{requestId:randomUUID(),expectedSha256:hash(bytes)}),params);assert.equal(positive.status,201);const proof=await positive.json();
   service.setValid(false);
-  assert.equal((await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params)).status,409);
+  assert.equal((await VALIDATE(req('POST',path,{requestId:randomUUID(),expectedSha256:hash(bytes)}),params)).status,409);
   assert.equal((await(await BASES(req('GET','/api/admin/documentos/base'))).json()).artifacts[0].lastValidationId,null);
   const input={requestId:randomUUID(),expectedRevision:0,validationId:proof.validationId,reviewedSha256:hash(bytes),expectedTextVersion:(await import('@/content/peticao')).TEXT_VERSION};
   assert.equal((await selectPetitionBase(input,c.actor)).ok,false,'failed latest verification must block an earlier positive');
   assert.equal((await c.db.query('SELECT 1 FROM petition_base_selections')).rowCount,0);
   service.setValid(true);
-  const refreshed=await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params);assert.ok([200,201].includes(refreshed.status));
+  const refreshed=await VALIDATE(req('POST',path,{requestId:randomUUID(),expectedSha256:hash(bytes)}),params);assert.ok([200,201].includes(refreshed.status));
   const latest=await refreshed.json();assert.ok((await selectPetitionBase({...input,requestId:randomUUID(),validationId:latest.validationId},c.actor)).ok);
   await c.noSend();
  }finally{await service.close();await c.close();}
@@ -157,10 +157,10 @@ test('pending and late positive checks cannot supersede a later rejected check',
   const req=await requestFactory(c),path='/api/admin/documentos/base/'+c.artifactId+'/validar',params={params:{id:c.artifactId}};
   const old=await persistPetitionBaseValidation(await c.proof(),c.actor);assert.ok(old.ok);
   const input={requestId:randomUUID(),expectedRevision:0,validationId:old.validationId,reviewedSha256:hash(bytes),expectedTextVersion:(await import('@/content/peticao')).TEXT_VERSION};
-  const pending=VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params);
+  const pending=VALIDATE(req('POST',path,{requestId:randomUUID(),expectedSha256:hash(bytes)}),params);
   await Promise.race([ready,new Promise((_,reject)=>setTimeout(()=>reject(new Error('QA verifier did not start')),3000))]);
   assert.equal((await selectPetitionBase(input,c.actor)).ok,false,'pending newer check blocks cached positive');
-  service.setValid(false);assert.equal((await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params)).status,409);
+  service.setValid(false);assert.equal((await VALIDATE(req('POST',path,{requestId:randomUUID(),expectedSha256:hash(bytes)}),params)).status,409);
   release();assert.equal((await pending).status,409,'late older positive is historical, not current');
   const journal=(await c.db.query('SELECT r.state FROM petition_base_validation_attempts a JOIN petition_base_validation_results r ON r.attempt_id=a.id ORDER BY a.ordinal')).rows;
   assert.deepEqual(journal.map(r=>r.state),['valid','rejected']);
@@ -180,22 +180,75 @@ test('pending and late positive checks cannot supersede a later rejected check',
 test('a newer failed or unavailable check blocks preparation and approval but preserves frozen package history',async()=>{
  const c=await packetFixture('t_base_http_package_guard'),service=await verifier();try{
   const req=await requestFactory(c),path='/api/admin/documentos/base/'+c.artifactId+'/validar',params={params:{id:c.artifactId}};
-  const checked=await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params);assert.equal(checked.status,201);const proof=await checked.json();
+  const checked=await VALIDATE(req('POST',path,{requestId:randomUUID(),expectedSha256:hash(bytes)}),params);assert.equal(checked.status,201);const proof=await checked.json();
   const chosen=await selectPetitionBase({requestId:randomUUID(),expectedRevision:1,validationId:proof.validationId,reviewedSha256:hash(bytes),expectedTextVersion:(await import('@/content/peticao')).TEXT_VERSION},c.actor);assert.ok(chosen.ok);
   const input={...c.input(),expectedSelectionId:chosen.selection.selectionId},frozen=await prepareBatchPackage(input,c.actor);assert.ok(frozen.ok);
   const M=await import('./batch-package-store');
   assert.equal((await M.getBatchPackageReview(c.batchId,c.actor) as any).approvalReady,true);
-  service.setValid(false);assert.equal((await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params)).status,409);
+  service.setValid(false);assert.equal((await VALIDATE(req('POST',path,{requestId:randomUUID(),expectedSha256:hash(bytes)}),params)).status,409);
   assert.equal((await M.getBatchPackageReview(c.batchId,c.actor) as any).approvalReady,false);
   assert.equal(await c.db.tx(client=>M.batchPackageDispatchReadyTx(client,frozen.package.packageId)),false);
   assert.equal((await prepareBatchPackage({...input,requestId:randomUUID(),expectedPackageRevision:1},c.actor)).ok,false);
   assert.ok((await M.readFrozenBatchPackage(frozen.package.packageId,c.actor)).ok,'history remains readable');
-  service.setValid(true);assert.ok([200,201].includes((await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params)).status));
+  service.setValid(true);assert.ok([200,201].includes((await VALIDATE(req('POST',path,{requestId:randomUUID(),expectedSha256:hash(bytes)}),params)).status));
   assert.equal((await M.getBatchPackageReview(c.batchId,c.actor) as any).approvalReady,true);
   await service.close();
-  assert.equal((await VALIDATE(req('POST',path,{expectedSha256:hash(bytes)}),params)).status,409);
+  assert.equal((await VALIDATE(req('POST',path,{requestId:randomUUID(),expectedSha256:hash(bytes)}),params)).status,409);
   assert.equal((await c.db.query('SELECT state FROM petition_base_validation_results ORDER BY created_at DESC LIMIT 1')).rows[0].state,'unavailable');
   assert.equal((await M.getBatchPackageReview(c.batchId,c.actor) as any).approvalReady,false);
   await c.noSend();
  }finally{await service.close();await c.close();}
+});
+
+test('validation replay and exact recovery never repeat an accepted verifier call',async()=>{
+ const c=await fixture('t_base_http_intent_recovery');let release!:()=>void,started!:()=>void;
+ const ready=new Promise<void>(r=>{started=r;}),hold=new Promise<void>(r=>{release=r;});
+ const service=await verifier(async()=>{started();await hold;});
+ try{
+  const req=await requestFactory(c),path='/api/admin/documentos/base/'+c.artifactId+'/validar',params={params:{id:c.artifactId}};
+  const requestId=randomUUID(),input={requestId,expectedSha256:hash(bytes)},query='?requestId='+requestId+'&expectedSha256='+hash(bytes);
+  const first=VALIDATE(req('POST',path,input),params);
+  await Promise.race([ready,new Promise((_,reject)=>setTimeout(()=>reject(Error('fixture did not start')),3000))]);
+  const concurrent=await VALIDATE(req('POST',path,input),params);assert.equal(concurrent.status,200);
+  const pending=await concurrent.json();assert.equal(pending.state,'pending');assert.equal(pending.requestId,requestId);
+  assert.equal((await(await RECOVER_VALIDATION(req('GET',path+query),params)).json()).state,'pending');
+  assert.equal(service.calls(),1);release();assert.equal((await first).status,201); // discard response as if connection was lost
+  const recovered=await(await RECOVER_VALIDATION(req('GET',path+query),params)).json();assert.equal(recovered.state,'valid');assert.equal(recovered.isCurrent,true);assert.equal(recovered.attemptId,pending.attemptId);
+  const replayed=await(await VALIDATE(req('POST',path,input),params)).json();assert.equal(replayed.attemptId,pending.attemptId);assert.equal(service.calls(),1);
+  assert.equal((await c.db.query('SELECT 1 FROM petition_base_validation_attempts')).rowCount,1);
+  assert.equal((await c.db.query('SELECT 1 FROM petition_base_validation_intents')).rowCount,1);
+  assert.equal((await RECOVER_VALIDATION(req('GET',path+query+'&requestId='+requestId),params)).status,400);
+  assert.equal((await VALIDATE(req('POST',path,{...input,expectedSha256:'c'.repeat(64)}),params)).status,409);
+  const before=(await c.db.query('SELECT row_to_json(i)::text v FROM petition_base_validation_intents i')).rows;
+  await c.db.query(PETITION_BASE_SCHEMA_SQL);assert.deepEqual((await c.db.query('SELECT row_to_json(i)::text v FROM petition_base_validation_intents i')).rows,before);
+  for(const sql of ['UPDATE petition_base_validation_intents SET created_at=created_at','DELETE FROM petition_base_validation_intents','TRUNCATE petition_base_validation_intents'])await assert.rejects(c.db.query(sql),/immutable/);
+  await c.db.query("UPDATE settings SET value=jsonb_set(value::jsonb,'{revision}','2')::text WHERE key='president_profile_v1'");
+  const obsolete=await(await RECOVER_VALIDATION(req('GET',path+query),params)).json();assert.equal(obsolete.contextMatches,false);assert.equal(obsolete.isCurrent,false);assert.equal((await VALIDATE(req('POST',path,input),params)).status,409);assert.equal(service.calls(),1);
+  await c.db.query('UPDATE admin_sessions SET stepup_ate=NULL');
+  assert.equal((await RECOVER_VALIDATION(req('GET',path+query),params)).status,403);assert.equal(service.calls(),1);
+  await c.noSend();
+ }finally{release();await service.close();await c.close();}
+});
+
+test('recovery distinguishes no reservation from obsolete in-flight context',async()=>{
+ const c=await fixture('t_base_http_intent_context');let release!:()=>void,started!:()=>void;
+ const ready=new Promise<void>(r=>{started=r;}),hold=new Promise<void>(r=>{release=r;});
+ const service=await verifier(async()=>{started();await hold;});
+ try{
+  const req=await requestFactory(c),path='/api/admin/documentos/base/'+c.artifactId+'/validar',params={params:{id:c.artifactId}};
+  const requestId=randomUUID(),input={requestId,expectedSha256:hash(bytes)},query='?requestId='+requestId+'&expectedSha256='+hash(bytes);
+  process.env.GOVBR_BASE_VALIDATION_ENABLED='0';
+  const denied=await VALIDATE(req('POST',path,input),params);assert.equal(denied.status,409);assert.equal((await denied.json()).error,'disabled');
+  assert.equal((await RECOVER_VALIDATION(req('GET',path+query),params)).status,404);assert.equal(service.calls(),0);
+  process.env.GOVBR_BASE_VALIDATION_ENABLED='1';
+  await c.db.query("UPDATE settings SET value=$1 WHERE key='president_profile_v1'",[JSON.stringify({...c.profile,enabled:false})]);
+  const noProfile=await VALIDATE(req('POST',path,input),params);assert.equal(noProfile.status,409);assert.equal((await noProfile.json()).error,'profile_unavailable');
+  assert.equal((await RECOVER_VALIDATION(req('GET',path+query),params)).status,404);assert.equal(service.calls(),0);
+  await c.db.query("UPDATE settings SET value=$1 WHERE key='president_profile_v1'",[JSON.stringify(c.profile)]);
+  const pending=VALIDATE(req('POST',path,input),params);await Promise.race([ready,new Promise((_,reject)=>setTimeout(()=>reject(Error('fixture did not start')),3000))]);
+  process.env.GOVBR_BASE_VALIDATION_ACCEPTED_PROFILES='["QA-CHANGED-POLICY"]';
+  const obsolete=await(await RECOVER_VALIDATION(req('GET',path+query),params)).json();assert.equal(obsolete.state,'pending');assert.equal(obsolete.contextMatches,false);assert.equal(obsolete.isCurrent,false);
+  release();await pending;assert.equal(service.calls(),1);
+  assert.equal((await c.db.query('SELECT 1 FROM petition_base_validation_intents')).rowCount,1);await c.noSend();
+ }finally{release();await service.close();await c.close();}
 });
