@@ -20,7 +20,7 @@ import { appendDocumentVersion, preserveObservedDocument } from "./batch-documen
 import { pendingBatchDeliveryTx, resolveBatchDeliveryTx, type DeliveryBinding } from "./batch-delivery";
 import { batchPackageDispatchReadyTx } from "./batch-package-store";
 
-export type BatchActor = { userId: number; email: string; sessaoId?: string | null };
+export type BatchActor = { userId: number; email: string; sessaoId?: number | null };
 const actorData = (actor: BatchActor) => ({ userId: actor.userId, por: actor.email.trim().toLowerCase() });
 export async function authorizeBatchActor(client: PoolClient, actor: BatchActor) {
   if (!actor || !Number.isInteger(actor.userId) || actor.userId <= 0 || actor.userId > 2147483647 || typeof actor.email !== "string" || actor.email.length > 254) return false;
