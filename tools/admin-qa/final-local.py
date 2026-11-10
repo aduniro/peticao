@@ -8,7 +8,7 @@ SITE = ROOT / "site"
 NODE = Path("/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node")
 NODE_SHA = "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac"
 parser = argparse.ArgumentParser()
-parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http", "base-validation", "base-store", "packages", "package-delivery", "base-http", "base-client", "president-native", "referrals", "dispersion"])
+parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http", "base-validation", "base-store", "packages", "package-delivery", "base-http", "base-client", "president-native", "referrals", "dispersion", "signature-store", "export-audit", "signature-client"])
 parser.add_argument("--test-name-pattern", help="Run only matching test names; result is directed QA, not a full suite")
 args = parser.parse_args()
 if args.test_name_pattern and (args.mode in ["types", "build", "schema"] or len(args.test_name_pattern)>256): parser.error("Pattern is limited to test modes and 256 characters")
@@ -47,18 +47,21 @@ env = {k: os.environ[k] for k in ["HOME", "LANG", "LC_ALL"] if k in os.environ}
 env.update(PATH=str(NODE.parent)+":/usr/bin:/bin", NODE_ENV="test", MAIL_PROVIDER="dev", MAIL_PROVIDERS="dev", SIGNER="none", NEXT_TELEMETRY_DISABLED="1",
     GEO_DIR=str(geo), DEV_DB_PORT="54375", DEV_DB_DIR=str(scratch/"postgres"), TMPDIR=str(short), DATABASE_URL="postgres://peticao:peticao@127.0.0.1:54375/peticao",
     HASH_PEPPER="QA-ADMIN-FINAL-NEVER-PRODUCTION-0123456789", SECRETS_DIR=str(scratch/"empty"), PETICAO_CONFIG_DIR=str(scratch/"empty"), CREDENTIALS_DIRECTORY=str(scratch/"empty"))
-if args.mode in ["targeted", "full", "schema", "regression", "documents", "a1-http", "base-store", "packages", "package-delivery", "base-http", "president-native", "referrals", "dispersion"]:
+if args.mode in ["targeted", "full", "schema", "regression", "documents", "a1-http", "base-store", "packages", "package-delivery", "base-http", "president-native", "referrals", "dispersion", "signature-store", "export-audit", "signature-client"]:
     with socket.socket() as s: assert s.connect_ex(("127.0.0.1",54375)) != 0, "QA port occupied"
 if args.mode == "types": command=[str(NODE),"node_modules/typescript/bin/tsc","--noEmit","--incremental","false"]
 elif args.mode == "build":
     env.update(NODE_ENV="production", PREVIEW_MODE="1", DATABASE_URL="postgres://peticao:peticao@127.0.0.1:1/peticao", ADMIN_PASSWORD="QA-FINAL-NOT-REAL", CPF_CACHE_ENCRYPTION_KEY="QA-ADMIN-FINAL-CACHE-KEY-FICTITIOUS", MAIL_PROVIDERS="dev")
     command=[str(NODE),"node_modules/next/dist/bin/next","build"]
+elif args.mode == "signature-client": command=[str(NODE),"--import","tsx","--test","src/lib/signature-explorer-admin-client.test.ts"]
 elif args.mode == "base-client": command=[str(NODE),"--import","tsx","--test","--test-concurrency=1","src/lib/petition-base-request.test.ts","src/lib/petition-base-view.test.ts","src/lib/petition-base-control.test.ts"]
 elif args.mode == "base-validation": command=[str(NODE),"--import","tsx","--test","--test-concurrency=1","src/lib/petition-base-validation-http.test.ts","src/lib/petition-base-validation.test.ts"]
 elif args.mode == "schema": command=[str(NODE),"scripts/with-db.mjs",str(NODE),"--import","tsx","../deploy/test/admin-schema-upgrade.mjs"]
 else:
     if args.mode == "full": files=sorted(str(p.relative_to(SITE)) for folder in [SITE/"src/lib",SITE/"src/i18n"] for p in folder.glob("*.test.ts"))
     elif args.mode == "president-native": files=["src/lib/"+f+".test.ts" for f in ["president-native-contract", "president-portal-store", "president-access", "president-native-pdf", "president-client", "president-admin-client", "private-ui-path", "president-own-document-contract", "president-own-document-store", "president-own-document-client", "president-own-history-client", "president-own-history-store", "a1-expired-contract", "a1-expired-jobs", "a1-recovery-control", "president-pdf-preview", "president-own-a1-contract", "president-own-a1-jobs", "president-own-a1-browser", "a1-ui-context", "a1-request", "a1-reconciliation", "a1-job-view", "batch-a1-jobs", "batch-a1-route", "document-history-view", "petition-base-pagination", "petition-base-pagination-store", "petition-base-request"]]
+    elif args.mode == "export-audit": files=["src/lib/audit-export-session-expiry.test.ts"]
+    elif args.mode == "signature-store": files=["src/lib/"+f+".test.ts" for f in ["assinaturas-explorar", "rankings", "signature-explorer-admin-contract", "signature-explorer-csv", "signature-explorer-admin-store"]]
     elif args.mode == "dispersion": files=["src/lib/"+f+".test.ts" for f in ["dispersion-graph", "dispersion-admin-contract", "dispersion-csv", "dispersion-admin-client", "dispersion-admin-store", "campaign"]]
     elif args.mode == "referrals": files=["src/lib/"+f+".test.ts" for f in ["referrals", "admin-referrals", "admin-referral-management", "referral-admin-stats-contract", "referral-admin-stats-store", "referral-admin-client"]]
     elif args.mode == "base-http": files=["src/lib/petition-base-route.test.ts"]

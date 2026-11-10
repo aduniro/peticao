@@ -2,7 +2,9 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { filtrosParaQuery, filtrosVazios, parseFiltros, type Filtros } from "@/lib/assinaturas-filtros";
-import type { Faceta, Ponto, Resultado } from "@/lib/assinaturas-explorar";
+import type { SignatureExplorerFacet as Faceta, SignatureExplorerPoint as Ponto, SignatureExplorerResult } from "@/lib/signature-explorer-admin-contract";
+import { brasilia } from "@/lib/time";
+import { readSignatureExplorer } from "@/lib/signature-explorer-admin-client";
 import { Multi as MultiBase } from "./controles";
 import { FiltrosShell, useEhMobile } from "./shell/filtros";
 import type { PontoVisita } from "@/app/api/admin/assinaturas/visitas/route";
@@ -22,13 +24,19 @@ const CHAVES = ["categoria", "instituicao", "cargo", "campus", "regiao", "uf", "
 const COLUNAS: [string, string][] = [["nome", "Nome"], ["categoria", "Categoria"], ["instituicao", "Instituição"], ["cargo", "Cargo"], ["regiao", "AL/Fronteira"], ["campus", "Campus"], ["cidadeUf", "Cidade/UF"], ["pais", "País"], ["status", "Status"], ["whatsapp", "WhatsApp"], ["criada", "Criada em"]];
 const ORDENAVEIS = new Set(["nome", "categoria", "instituicao", "cargo", "campus", "status", "criada"]);
 
+// MUDAR AQUI: avisos administrativos de consulta; classes/fontes/layout permanecem os existentes.
+const COPY = { failed: "Não foi possível consultar os dados. A consulta anterior foi preservada.", forbidden: "Sua sessão não permite consultar estes dados. Entre novamente com uma conta autorizada.", invalid: "A consulta retornou dados incompatíveis. Atualize os filtros e tente novamente.", previous: "Exibindo a consulta anterior; os filtros atuais ainda não foram confirmados. O CSV corresponde à consulta exibida.", contacts: "Dados de contato não estão disponíveis para este nível de acesso.", retry: "Tentar consulta novamente" };
+type Props = { inicial: string; actorScope: string; tela?: boolean; cheio?: boolean };
 /** Mapa + tabela com um só conjunto de filtros (sincronizado com a URL). `tela` = modo janela cheia, só o mapa. */
-export default function Explorador({ inicial, tela = false, cheio = false }: { inicial: string; tela?: boolean; cheio?: boolean }) {
+export default function Explorador(props: Props) { return <ExplorerContext key={props.actorScope} {...props} />; }
+function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
   const [f, setF] = useState<Filtros>(() => parseFiltros(new URLSearchParams(inicial)));
   const [pagina, setPagina] = useState(1);
   const [ordem, setOrdem] = useState({ k: "criada", dir: "desc" });
-  const [r, setR] = useState<(Resultado & { pagina: number; limite: number }) | null>(null);
+  const [r, setR] = useState<SignatureExplorerResult | null>(null);
   const [erro, setErro] = useState("");
+  const [lastGoodQuery, setLastGoodQuery] = useState("");
+  const [readAttempt,setReadAttempt] = useState(0);
   const [foco, setFoco] = useState<string | null>(null);
   const [buscando, setBuscando] = useState(false);
   const [aberto, setAberto] = useState(!(cheio || tela));
@@ -54,20 +62,25 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
   const seq = useRef(0);
   const qs = filtrosParaQuery(f);
 
+  const requestParams = new URLSearchParams(qs);requestParams.set("pagina",String(pagina));requestParams.set("ordem",ordem.k);requestParams.set("dir",ordem.dir);
+  const requestKey = requestParams.toString();
   useEffect(() => {
-    const id = ++seq.current; setBuscando(true);
+    const id = ++seq.current, controller = new AbortController();setBuscando(true);
     const t = setTimeout(async () => {
-      try {
-        const p = new URLSearchParams(qs); p.set("pagina", String(pagina)); p.set("ordem", ordem.k); p.set("dir", ordem.dir);
-        const res = await fetch(`/api/admin/assinaturas/explorar?${p}`);
-        const j = await res.json();
-        if (id !== seq.current) return;
-        if (!j.ok) setErro(j.erro ?? "Falha ao carregar"); else { setR(j); setErro(""); }
-      } catch { if (id === seq.current) setErro("Falha de rede"); }
-      if (id === seq.current) setBuscando(false);
-    }, 200);
-    return () => clearTimeout(t);
-  }, [qs, pagina, ordem]);
+      const result = await readSignatureExplorer(new URLSearchParams(requestKey),controller.signal);
+      if (id !== seq.current) return;
+      if (result.ok) { setR(result.data);setLastGoodQuery(requestKey);setErro(""); }
+      else if (result.kind !== "aborted") {
+        if (result.kind === "invalid" || result.kind === "http" && [401,403].includes(result.status ?? 0)) { setR(null);setLastGoodQuery(""); }
+        setErro(result.kind === "http" && [401,403].includes(result.status ?? 0) ? COPY.forbidden : result.kind === "invalid" ? COPY.invalid : COPY.failed);
+      }
+      setBuscando(false);
+    },200);
+    return () => { clearTimeout(t);++seq.current;controller.abort(); };
+  },[requestKey,readAttempt]);
+  const previousData = !!r && lastGoodQuery !== requestKey;
+  const csvParams = new URLSearchParams(lastGoodQuery);csvParams.delete("pagina");csvParams.delete("limite");csvParams.set("formato","csv");
+  const csvHref = `/api/admin/assinaturas/explorar?${csvParams}`;
 
   useEffect(() => { if (tela) return; const e = new URLSearchParams(qs); if (camada !== "assinaturas") { e.set("camada", camada); e.set("janela", janela); } const t = e.toString(); history.replaceState(null, "", t ? `?${t}` : location.pathname); }, [qs, tela, camada, janela]);
 
@@ -84,7 +97,7 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
   const [folha, setFolha] = useState(false);
   if (modoCheio) {
     return (
-      <div className="adm-explorador v2-mapa-cheio">
+      <div className="adm-explorador v2-mapa-cheio" role="region" aria-label="Explorador de assinaturas" aria-busy={buscando}>
         <div className="v2-mapa-fundo">
       <Mapa visitas={visitas} acessos={acessos} pontos={r?.pontos ?? []} altura="100%" onEscolher={escolher} foco={foco} />
         </div>
@@ -104,10 +117,13 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
         <span>{r ? <><b>{r.total}</b> assinatura(s) · {r.totais.confirmadas} confirmadas · {r.totais.pendentes} aguardando{r.semLocal ? ` · ${r.semLocal} sem local no mapa` : ""}</> : "Carregando…"}{buscando ? " …" : ""}</span>
 
       </p>
-      {erro ? <p className="err" role="alert">{erro}</p> : null}
+      {erro ? <p className="err" role="alert">{erro} <button type="button" className="adm-btn" disabled={buscando} onClick={() => setReadAttempt(n => n + 1)}>{COPY.retry}</button></p> : null}
+      {previousData && <p className="adm-sub" role="status">{COPY.previous}</p>}
+      {r && <p className="adm-sub">Consulta: {brasilia(r.asOf,true)}. Cada página possui seu próprio horário.</p>}
+      {r && !r.capabilities.contacts && <p className="adm-sub">{COPY.contacts}</p>}
 
           {(aberto || mobile) && <div className={mobile ? undefined : "v2-mapa-filtros"}><FiltrosShell><div className="adm-filters" role="search" >
-        <input type="search" placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
+        <input type="search" maxLength={80} placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
         {CHAVES.map((k) => <MultiBase key={k} rotulo={ROTULOS[k]} opcoes={FIXAS[k] ?? r?.facetas[k] ?? []} valor={f[k]} onChange={(v) => mudar(k, v)} />)}
         <label>De <input type="date" value={f.de} onChange={(e) => mudar("de", e.target.value)} /></label>
         <label>Até <input type="date" value={f.ate} onChange={(e) => mudar("ate", e.target.value)} /></label>
@@ -136,10 +152,10 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
             </table>
           </div>
           <div className="adm-bar">
-            <button type="button" className="adm-btn" disabled={pagina <= 1} onClick={() => setPagina(pagina - 1)}>‹ Anterior</button>
-            <span>Página {pagina} de {paginas}</span>
-            <button type="button" className="adm-btn" disabled={pagina >= paginas} onClick={() => setPagina(pagina + 1)}>Próxima ›</button>
-            <a className="adm-btn" href={`/api/admin/assinaturas/explorar?${new URLSearchParams(qs).toString()}${qs ? "&" : ""}formato=csv&ordem=${ordem.k}&dir=${ordem.dir}`}>Baixar CSV do filtro</a>
+            <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina <= 1} onClick={() => setPagina(r.pagina - 1)}>‹ Anterior</button>
+            <span>Página {r.pagina} de {paginas}</span>
+            <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina >= paginas} onClick={() => setPagina(r.pagina + 1)}>Próxima ›</button>
+            <a className="adm-btn" href={csvHref}>Baixar CSV do filtro</a>
           </div>
         </>
       ) : null}
@@ -150,10 +166,10 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
     );
   }
   return (
-    <div className="adm-explorador">
+    <div className="adm-explorador" role="region" aria-label="Explorador de assinaturas" aria-busy={buscando}>
       <button type="button" className="adm-btn adm-filtros-btn" hidden={mobile} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
       <FiltrosShell><div className="adm-filters" role="search" hidden={!aberto && !mobile}>
-        <input type="search" placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
+        <input type="search" maxLength={80} placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
         {CHAVES.map((k) => <MultiBase key={k} rotulo={ROTULOS[k]} opcoes={FIXAS[k] ?? r?.facetas[k] ?? []} valor={f[k]} onChange={(v) => mudar(k, v)} />)}
         <label>De <input type="date" value={f.de} onChange={(e) => mudar("de", e.target.value)} /></label>
         <label>Até <input type="date" value={f.ate} onChange={(e) => mudar("ate", e.target.value)} /></label>
@@ -163,7 +179,10 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
         <span>{r ? <><b>{r.total}</b> assinatura(s) · {r.totais.confirmadas} confirmadas · {r.totais.pendentes} aguardando{r.semLocal ? ` · ${r.semLocal} sem local no mapa` : ""}</> : "Carregando…"}{buscando ? " …" : ""}</span>
 
       </p>
-      {erro ? <p className="err" role="alert">{erro}</p> : null}
+      {erro ? <p className="err" role="alert">{erro} <button type="button" className="adm-btn" disabled={buscando} onClick={() => setReadAttempt(n => n + 1)}>{COPY.retry}</button></p> : null}
+      {previousData && <p className="adm-sub" role="status">{COPY.previous}</p>}
+      {r && <p className="adm-sub">Consulta: {brasilia(r.asOf,true)}. Cada página possui seu próprio horário.</p>}
+      {r && !r.capabilities.contacts && <p className="adm-sub">{COPY.contacts}</p>}
       <p><a className="v2-btn v2-btn-sec" href={`/admin/mapa${qs ? `?${qs}` : ""}`}>Ver estes filtros no mapa →</a></p>
       {r ? (
         <>
@@ -184,10 +203,10 @@ export default function Explorador({ inicial, tela = false, cheio = false }: { i
             </table>
           </div>
           <div className="adm-bar">
-            <button type="button" className="adm-btn" disabled={pagina <= 1} onClick={() => setPagina(pagina - 1)}>‹ Anterior</button>
-            <span>Página {pagina} de {paginas}</span>
-            <button type="button" className="adm-btn" disabled={pagina >= paginas} onClick={() => setPagina(pagina + 1)}>Próxima ›</button>
-            <a className="adm-btn" href={`/api/admin/assinaturas/explorar?${new URLSearchParams(qs).toString()}${qs ? "&" : ""}formato=csv&ordem=${ordem.k}&dir=${ordem.dir}`}>Baixar CSV do filtro</a>
+            <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina <= 1} onClick={() => setPagina(r.pagina - 1)}>‹ Anterior</button>
+            <span>Página {r.pagina} de {paginas}</span>
+            <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina >= paginas} onClick={() => setPagina(r.pagina + 1)}>Próxima ›</button>
+            <a className="adm-btn" href={csvHref}>Baixar CSV do filtro</a>
           </div>
         </>
       ) : null}

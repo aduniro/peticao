@@ -13,5 +13,5 @@ export default async function Tela({ searchParams }: { searchParams: Record<stri
   if (!sessao) redirect("/admin");
   if (!nivelOk(sessao.nivel, "leitura")) redirect("/admin?erro=nivel");
   const qs = filtrosParaQuery(parseFiltros(new URLSearchParams(Object.entries(searchParams).filter(([, v]) => typeof v === "string") as [string, string][])));
-  return <main className="adm-page" style={{ padding: 8 }}><Explorador inicial={qs} tela /></main>;
+  return <main className="adm-page" style={{ padding: 8 }}><Explorador actorScope={`${sessao.userId}:${sessao.sessaoId ?? "legacy"}:${sessao.nivel}`} inicial={qs} tela /></main>;
 }

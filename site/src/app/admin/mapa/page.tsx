@@ -14,7 +14,7 @@ export default async function Mapa({ searchParams }: { searchParams: Record<stri
   const qs = filtrosParaQuery(parseFiltros(new URLSearchParams(Object.entries(searchParams).filter(([, v]) => typeof v === "string") as [string, string][])));
   return (
     <main className="v2-pagina v2-mapa-pagina">
-      <Explorador inicial={qs} cheio />
+      <Explorador actorScope={`${sessao.userId}:${sessao.sessaoId ?? "legacy"}:${sessao.nivel}`} inicial={qs} cheio />
     </main>
   );
 }

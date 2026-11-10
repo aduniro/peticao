@@ -16,7 +16,7 @@ export default async function Assinaturas({ searchParams }: { searchParams: Reco
     <main className="adm-page">
       <h1>Assinaturas</h1>
       <p className="adm-sub">Busque, filtre, ordene e baixe a lista. Para ver no mapa, use o botão “Ver estes filtros no mapa”.</p>
-      <Explorador inicial={qs} />
+      <Explorador actorScope={`${sessao.userId}:${sessao.sessaoId ?? "legacy"}:${sessao.nivel}`} inicial={qs} />
     </main>
   );
 }

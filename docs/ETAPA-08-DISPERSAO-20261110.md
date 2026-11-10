@@ -42,3 +42,7 @@ Build exit0 em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-2026110
 Comprovados199assinaturas em tela/CSV19colunas,57raízes,55filhos,30níveis navegados e82buckets de geração, diagnóstico sem invalidar confirmados, resposta perdida sem retry automático, transição de sessão sem reter contato, SHA/bytes iguais entre API/download. Baseline após bootstrap exclusivamente seq/verify_code; assinaturas e vínculos completos permanecem idênticos durante leitura. Auditoria encadeada válida, nenhum envio/job externo. Seis larguras320/390/768/992/1280/1920 sem overflow/erros/requisições externas; captura390inspecionada.
 
 Dispersão aceita100% LOCAL. Não publicada. Próxima entrega autorizada: seção Assinaturas → Lista de assinaturas; Materiais de divulgação adiado.
+
+## Reabertura pontual da validação de exportação
+
+A revisão da Lista identificou também em Dispersão uma janela de expiração durante awaitaudit. Reautorização após a escrita, com erro para rollback, foi adicionada. O teste específico PG passou em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/export-audit-1794315532284581291/result.json`: sessão comprovadamente válida antes, expirada durante o trigger, retorno falso e nenhuma entrada de auditoria persistida. Demais provas do grafo/UI/CSV permanecem preservadas. O marco final foi reaberto no Vigia até a checagem global do candidato integrado.

@@ -116,6 +116,8 @@ export async function auditDispersionExport(actor: DispersionActor, data: { rows
     await c.query("SET LOCAL statement_timeout='5000ms'");
     if (!await authorize(c, actor)) return false;
     await audit("export_internal_base", null, { ...data, actorId: actor.userId, sessionId: actor.sessaoId, scope: "dispersion_complete", meaning: "file_prepared_not_delivery" }, c);
+    // Audit may wait on its serialized chain or triggers. Expiry after that wait must roll back the new entry.
+    if (!await authorize(c, actor)) throw new Error("expired_export_session");
     return true;
   }); } catch { return false; }
 }
