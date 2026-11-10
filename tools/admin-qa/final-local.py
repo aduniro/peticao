@@ -7,7 +7,7 @@ SITE = ROOT / "site"
 NODE = Path("/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node")
 NODE_SHA = "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac"
 parser = argparse.ArgumentParser()
-parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http"])
+parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http", "base-validation"])
 args = parser.parse_args()
 assert ROOT == Path("/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109")
 assert hashlib.sha256(NODE.read_bytes()).hexdigest() == NODE_SHA
@@ -47,6 +47,7 @@ if args.mode == "types": command=[str(NODE),"node_modules/typescript/bin/tsc","-
 elif args.mode == "build":
     env.update(NODE_ENV="production", PREVIEW_MODE="1", DATABASE_URL="postgres://peticao:peticao@127.0.0.1:1/peticao", ADMIN_PASSWORD="QA-FINAL-NOT-REAL", CPF_CACHE_ENCRYPTION_KEY="QA-ADMIN-FINAL-CACHE-KEY-FICTITIOUS", MAIL_PROVIDERS="dev")
     command=[str(NODE),"node_modules/next/dist/bin/next","build"]
+elif args.mode == "base-validation": command=[str(NODE),"--import","tsx","--test","--test-concurrency=1","src/lib/petition-base-validation-http.test.ts","src/lib/petition-base-validation.test.ts"]
 elif args.mode == "schema": command=[str(NODE),"scripts/with-db.mjs",str(NODE),"--import","tsx","../deploy/test/admin-schema-upgrade.mjs"]
 else:
     if args.mode == "full": files=sorted(str(p.relative_to(SITE)) for folder in [SITE/"src/lib",SITE/"src/i18n"] for p in folder.glob("*.test.ts"))
