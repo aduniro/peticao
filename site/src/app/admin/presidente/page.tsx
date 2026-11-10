@@ -1,3 +1,4 @@
+import A1Assinatura from "@/components/admin/A1Assinatura";
 import HistoricoDocumento from "@/components/admin/HistoricoDocumento";
 import { sessaoAdmin } from "@/lib/admin";
 import { nivelOk, stepupValido } from "@/lib/admin-users";
@@ -61,6 +62,7 @@ export default async function Presidente({ searchParams }: { searchParams: { lot
         : <p>Este lote antigo não tem snapshot de preparo. Não é possível reconstruir sua lista com segurança por esta tela.</p>)}
       <div style={{ margin: "12px 0" }}><HistoricoDocumento key={document.id} batchId={document.id} /></div>
       <h3>2. Assinatura</h3>
+      {document.has_pdf && <A1Assinatura key={document.id} batchId={document.id} currentSignedSha256={document.signed_pdf_sha256} />}
       <div className="box"><strong>Upload de PDF assinado</strong><p>O upload confere o arquivo e registra o resultado. Ele não envia o lote.</p><p>Validador ICP-Brasil: {process.env.ICP_VALIDATOR_URL ? "configurado" : "não configurado"}.</p></div>
       {actions.upload && <form method="post" action={`/api/admin/lotes/${document.id}/assinado?portal=presidente`} encType="multipart/form-data"><input type="file" name="file" accept="application/pdf" aria-label="PDF assinado" required /><button>Enviar PDF assinado</button></form>}
       <p><button type="button" disabled>Assinatura própria do app</button> <button type="button" disabled>gov.br</button></p>

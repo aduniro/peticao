@@ -1,23 +1,32 @@
-import os,sys,json,subprocess,time,socket,threading,hashlib,base64,importlib.util,shutil
+import argparse,os,sys,json,subprocess,time,socket,threading,hashlib,base64,importlib.util,shutil
 from pathlib import Path
 from http.server import ThreadingHTTPServer,BaseHTTPRequestHandler
+parser=argparse.ArgumentParser();parser.add_argument('--browser',action='store_true');args=parser.parse_args()
 ROOT=Path('/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109')
-OUT=ROOT.parent/"admin-v2-retomada-20261109"/("a1-e2e-"+str(time.time_ns()))
+OUT=ROOT.parent/"admin-v2-retomada-20261109"/(("a1-e2e-ui-" if args.browser else "a1-e2e-")+str(time.time_ns()))
 OUT.mkdir(mode=0o700)
 assert ROOT==Path("/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109")
 assert (ROOT/"site/node_modules").is_dir()
 (OUT/"node_modules").symlink_to(ROOT/"site/node_modules")
-shutil.copyfile(Path(__file__).with_name("a1-e2e-scenario.ts"),OUT/"scenario.ts")
+shutil.copyfile(Path(__file__).with_name("a1-browser-scenario.ts" if args.browser else "a1-e2e-scenario.ts"),OUT/"scenario.ts")
 NODE=Path('/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node')
 assert hashlib.sha256(NODE.read_bytes()).hexdigest()=='b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
 COMMIT=subprocess.check_output(['/usr/bin/git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip()
-assert not subprocess.check_output(['/usr/bin/git','-C',str(ROOT),'status','--porcelain','--','site','tools/signing','tools/admin-qa/a1-e2e.py','tools/admin-qa/a1-e2e-scenario.ts'],text=True).strip(),'commit the tested snapshot first'
-tracked=subprocess.check_output(['/usr/bin/git','-C',str(ROOT),'ls-files','site','tools/signing','tools/admin-qa/a1-e2e.py','tools/admin-qa/a1-e2e-scenario.ts'],text=True).splitlines()
+assert not subprocess.check_output(['/usr/bin/git','-C',str(ROOT),'status','--porcelain','--','site','tools/signing','tools/admin-qa'],text=True).strip(),'commit the tested snapshot first'
+tracked=subprocess.check_output(['/usr/bin/git','-C',str(ROOT),'ls-files','site','tools/signing','tools/admin-qa'],text=True).splitlines()
 def manifest():return {name:hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in tracked if (ROOT/name).is_file()}
 before=manifest()
 assert (OUT/'node_modules').is_dir(),'private Node dependencies must be prepared before the test'
 with socket.socket() as probe:assert probe.connect_ex(('127.0.0.1',54377))!=0,'private QA database port occupied'
-os.environ['A1_TEST_PRIVATE_ROOT']='/home/barre/.cache/peticao-a1-worker-qa'
+if args.browser:
+ private_ram=Path('/run/user')/str(os.getuid())/'peticao-a1-qa'
+ assert private_ram.parent.stat().st_uid==os.getuid() and not private_ram.parent.stat().st_mode & 0o077
+ private_ram.mkdir(mode=0o700,exist_ok=True)
+ assert not private_ram.is_symlink() and private_ram.stat().st_uid==os.getuid() and not private_ram.stat().st_mode & 0o077
+ assert shutil.disk_usage(private_ram).free>1024*1024*1024
+ os.environ['A1_TEST_PRIVATE_ROOT']=str(private_ram)
+else:
+ os.environ['A1_TEST_PRIVATE_ROOT']='/home/barre/.cache/peticao-a1-worker-qa'
 sys.path.insert(0,str(ROOT/'tools/signing'))
 spec=importlib.util.spec_from_file_location('qa_fixture_worker',ROOT/'tools/signing/test_worker.py');module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 C=module.WorkerTests
@@ -100,7 +109,7 @@ try:
  command=[str(NODE),'scripts/with-db.mjs',str(NODE),'--import','tsx',str(OUT/'scenario.ts')]
  with (OUT/'scenario.log').open('w') as f:
   child=subprocess.Popen(command,cwd=ROOT/'site',env=env,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
-  try:code=child.wait(timeout=180)
+  try:code=child.wait(timeout=300 if args.browser else 180)
   except subprocess.TimeoutExpired:
    import signal
    os.killpg(child.pid,signal.SIGTERM)
@@ -109,7 +118,7 @@ try:
    code=124
  stable=before==manifest() and COMMIT==subprocess.check_output(['/usr/bin/git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip()
  if code==0 and (state['pdfRequests']!=2 or state['cryptographicChecks']!=2):code=2
- report={'exit':code,'commit':COMMIT,'commitStable':stable,'syntheticOnly':True,'notIcpHomologation':True,'validatorTrustSimulated':True,'validatorRequests':state['pdfRequests'],'realCryptographicChecks':state['cryptographicChecks'],'databasePort':54377,'log':str(OUT/'scenario.log')}
+ report={'exit':code,'commit':COMMIT,'commitStable':stable,'syntheticOnly':True,'notIcpHomologation':True,'validatorTrustSimulated':True,'validatorRequests':state['pdfRequests'],'realCryptographicChecks':state['cryptographicChecks'],'databasePort':54377,'browserToActualApi':args.browser,'qaDatabaseStorage':'private-user-tmpfs' if args.browser else 'private-disk','log':str(OUT/'scenario.log')}
  (OUT/'source-manifest.json').write_text(json.dumps(before,sort_keys=True));(OUT/'result.json').write_text(json.dumps(report,indent=2));print(json.dumps(report));print((OUT/'scenario.log').read_text()[-6000:])
  if code or not stable:raise SystemExit(code or 2)
  assert state['pdfRequests']==2 and state['cryptographicChecks']==2

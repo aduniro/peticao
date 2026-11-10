@@ -1,3 +1,4 @@
+import A1Assinatura from "@/components/admin/A1Assinatura";
 import HistoricoDocumento from "@/components/admin/HistoricoDocumento";
 import { sessaoAdmin } from "@/lib/admin";
 import { nivelOk, stepupValido } from "@/lib/admin-users";
@@ -48,6 +49,7 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
               <td>
                 <a href={`/api/admin/lotes/${b.id}/pdf`}>PDF</a>{b.signature_kind && b.signature_kind !== "none" && b.signature_kind !== "" ? <> · <a href={`/api/admin/lotes/${b.id}/pdf?assinado=1`}>assinado</a></> : null}{" "}
                 <HistoricoDocumento key={b.id} batchId={b.id} />{" "}
+                {(b.status === "prepared" || b.status === "failed") && <A1Assinatura batchId={b.id} />}{" "}
                 {(b.status === "prepared" || b.status === "failed") && (
                   <>
                     <form method="post" action={`/api/admin/lotes/${b.id}/assinado`} encType="multipart/form-data" style={{ display: "inline" }}><input type="file" name="file" accept="application/pdf" required /> <button>Enviar PDF assinado</button></form>

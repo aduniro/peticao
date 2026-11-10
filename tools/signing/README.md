@@ -2,7 +2,7 @@
 
 Código no candidato `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/tools/signing/`.
 
-Implementa assinatura CMS/PAdES incremental real em memória com pyHanko0.31.0 e valida o resultado exato. Não é homologação ICP-Brasil e não retorna `kind=icp-brasil`. Não instala serviço, abre porta ou envia documento. O root conecta posteriormente ao job durável, autorização Total+stepup, CAS, histórico e aprovação separados.
+Implementa assinatura CMS/PAdES incremental real em memória com pyHanko0.31.0 e valida o resultado exato. Não é homologação ICP-Brasil e não retorna `kind=icp-brasil`. Não instala serviço, abre porta ou envia documento. O candidato já conecta o worker ao job durável, autorização Total+stepup, CAS, histórico e aprovação separados; a ativação operacional permanece pendente.
 
 ## Protocolo
 
@@ -53,3 +53,5 @@ Estes exemplos/APIs fundamentam o adaptador; não constituem prova de homologaç
 O perfil opcional `pades-ad-rb-declared-unhomologated-v1` acrescenta `policyPath` à configuração protegida. Código e fixture com proveniência em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/tools/signing/signature_policy.py` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/tools/signing/fixtures/ad-rb-v1.3.provenance.json`. A fixture é pública e não é credencial; o arquivo usado pelo runtime precisa atender às proteções do loader e ao pin. Nada foi instalado. O perfil anterior não aceita esse campo extra.
 
 A declaração não comprova autenticidade do espelho, LPA vigente, homologação, carimbo do tempo ou classificação ICP. Consulte `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/docs/ETAPA-06-A1-POLITICA-DECLARADA-20261109.md`. Não aprovar o artefato usando o próprio nome técnico do produtor no allowlist do verificador.
+
+O controle A1 administrativo e o ensaio navegador/API atual estão documentados em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/docs/ETAPA-06-A1-CONTROLE-UI-20261109.md`. Nada foi instalado ou ativado na VPS.
