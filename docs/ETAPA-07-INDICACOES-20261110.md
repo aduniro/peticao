@@ -49,3 +49,11 @@ O novo executor compilado exige igualdade exata do manifesto de fontes do build,
 - Ensaio global de schema: exit0 em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/schema-1794310235163390760/result.json`. Inventário de39 tabelas, versões, registros e bootstrap antigo/novo preservados; colunas novas legadas continuam nulas e timestamps preservam microssegundos.
 
 O build fará nova checagem de tipos no estado final, incluindo o ajuste apenas de teste. Next compilado e inspeção visual ainda estão pendentes; não atribuir aceite completo a esta etapa intermediária.
+
+## Aceite local integrado
+
+Build aprovado com exit0 em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/build-1794310323787706348/result.json`. Ensaio Next compilado + PostgreSQL fictício aprovado em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/indicacoes-compiled-1794311884279300698/execution.json`: exit0, fontes/commit/runtime202 estáveis, igualdade integral das fontes do build e portas54382/3057/3058 encerradas.
+
+Abrange1007 códigos, paginação além do60º código e de100 pessoas, permissões, edição com conflito CAS, recuperação de resposta perdida, arquivar/restaurar com stepup e abandono local estritamente legado. Interface verificada em seis larguras, sem overflow ou requisições externas. Bootstrap confirmado separadamente: somente seq/verify_code de confirmados antes do baseline; depois, registros completos preservados pelo fluxo. Nenhum envio real.
+
+Indicações aceita100% LOCAL; não publicada. Próxima etapa: Dispersão, com grafo completo, paginação de interface e CSV integral antes do HTTP200.
