@@ -40,3 +40,13 @@ Após este commit, repetir esquema aditivo, tipos e testes do store integrado. N
 ```bash
 /usr/bin/python3 /mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/tools/admin-qa/final-local.py base-store
 ```
+
+## Resultado integrado da persistência
+
+Commit 9553c86: 14/14 testes integrados (upload anterior e evidência de validação), tipos e ensaio de esquema aditivo aprovados; código e commit estáveis. A migração soma 31 tabelas ao legado sem modificar dados antigos e preserva compatibilidade com o bootstrap anterior. Evidências:
+
+- `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/base-store-1794276273740869656/result.json`
+- `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794276273819719075/result.json`
+- `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/schema-1794276298499244062/result.json`
+
+Esses resultados são do núcleo de evidência: eleição da base, requisição de validação via interface e congelamento do pacote ainda são as próximas etapas. Nenhum banco de produção foi alterado.
