@@ -1,0 +1,13 @@
+Concluir o admin-v2 integrado à página principal de assinaturas, com prioridade imediata em documentos, petição, lotes, aprovação e envio. Seguir o plano aprovado em /mnt/apps/peticao-final/_ops/coordenacao-dupla/docs/PLANO-INTEGRACAO-CUMULATIVA-20261110.md.
+
+Trabalhar em coordenação com a sessão01a1c0b3-f069-75a0-a2e9-e691094c9bab, usando o histórico/protocolo único em /mnt/apps/peticao-final/_ops/coordenacao-dupla/. Tomar decisões técnicas sem perguntas rotineiras ao dono; registrar decisão, motivo, testes e reversão. Não editar recursos compartilhados ou integrar sem manifesto, ACK da outra sessão e lease válido.
+
+Criar a base cumulativa separada /mnt/apps/peticao-final/peticao-integrado, preservando candidatos e produção. Integrar frontend público e frontend/backend admin por funcionalidades completas, com branches/commits, testes e versõesimutáveis; ao fechar módulo/seção emitir nova release. Preparar artefatos completos e rollback, sem segredos/banco em Git. Não reaplicar o patch público já equivalente.
+
+Implementar envio de documentos sem assinatura digital com alerta/aceite humano, sem exigir A1/gov.br/nativa; preservar assinaturas coletadas e histórico, não alegar assinatura inexistente nem rotular produção legítima como TESTE. Manter destinatários revisados, aprovação e prevenção de duplicação. Homologação real A1/gov.br fica explícita e não paralisa unsigned.
+
+Coordenar com Apoio a Central de Versões/Deploy: só releases comprovadas aparecem prontas; clique autenticado do dono em Fazer deploy autoriza publicar a versão exata em SãoPaulo. Preparar não é publicar; não efetuar deploy sem pedido/clique específico.
+
+Usar subagentes em tarefas disjuntas, Santiago para execução qualificada e SãoPaulo protegendo produção. Atualizar Vigia com atividade real, testes/commits, percentuais sustentados por critérios e pendências. Relatório único1h mantido por Apoio. Preservar checkpoints e continuar etapas independentes autorizadas; respeitar pausa explícita, segurança e limites. Após documental operacional, retomar Reenvios/demais módulos até concluir o painel integral. Não declarar100% sem evidências.
+
+Executar as novas frentes deste plano somente após aprovação expressa. O trabalho anterior autorizado pode continuar isoladamente; não criar DNS/mailbox, novas exposições Tailnet ou deploy real enquanto a aprovação estiver pendente. Na sessão, atualizar o goal existente e selecionar Retomar se estiver pausado; não criar um segundo goal concorrente com o mesmo escopo.

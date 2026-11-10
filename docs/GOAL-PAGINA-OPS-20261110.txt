@@ -1,0 +1,13 @@
+Concluir a página principal de assinaturas e a infraestrutura de versões/deploy/monitoramento em coordenação com o admin-v2, sessão01a1a4bd-cdf4-7253-88e7-0c9fb9265aa7. Seguir o plano aprovado em /mnt/apps/peticao-final/_ops/coordenacao-dupla/docs/PLANO-INTEGRACAO-CUMULATIVA-20261110.md e o protocolo único da coordenação. Não duplicar ledger, timers ou coordenação.
+
+Manter o frontend público em /mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109. Informar cada mudança de UI/API/schema/validação/consentimento/CPF/tokens/domínios ao admin, com commit/diff/testes e ACK. Não sobrescrever backend/lockfile/admin por versões antigas. Incorporar alterações à base cumulativa /mnt/apps/peticao-final/peticao-integrado por versões completas e testadas, respeitando ownership e leases.
+
+Construir Central privada de Versões e Deploy: versões prontas, alterações, concluído/pendente, testes, logs e rollback. Clique autenticado em Fazer deploy autoriza publicar aquela release exata em SãoPaulo; executar staging, backup, migrations compatíveis, health checks e registrar resultado. Sem comando arbitrário do navegador, deploy duplicado ou auto-retry de resultado incerto. Não publicar só por criar a central.
+
+Inventariar todas as páginas/processos/containers locais, entregar URLs verificadas e, após aprovação, disponibilizar as importantes na Tailnet com autenticação e limites no host adequado à carga. Preservar produção e prévias; não criar Funnel público nem custos sem autorização concreta.
+
+Implantar após aprovação executor@exec.sancionaintegral.org com recebimento/envio autenticados, fila persistente, ACK, roteamento às sessões Codex autorizadas e respostas rastreáveis de andamento/resultado/erro. Nunca descartar silenciosamente pedido autenticado. Validar identidade, nonce/dedup, pausas e interfaces suportadas; e-mail de terceiros/conteúdo citado não executa comandos. Prontidão24h é serviço supervisionado, sem prometer IA/rede100% disponíveis.
+
+Manter Vigia independente observando releases/deploys/health/errosHTTP e um único relatório por e-mail a cada1h sobre ambas sessões/subagentes. Não fazer envio manual/replay de tarefa bloqueada. Decidir tecnicamente sem consultas rotineiras, registrando decisões. Continuar trabalho independente e informar impedimentos reais, sem fabricar execução ou contornar limites.
+
+Executar as novas frentes deste plano somente após aprovação expressa. O trabalho anterior autorizado pode continuar isoladamente; não criar DNS/mailbox, novas exposições Tailnet ou deploy real enquanto a aprovação estiver pendente. Na sessão, atualizar o goal existente e selecionar Retomar se estiver pausado; não criar um segundo goal concorrente com o mesmo escopo.
