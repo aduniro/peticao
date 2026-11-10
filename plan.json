@@ -9,7 +9,7 @@
     "coordinator": {
       "name": "vigia-coord",
       "uid": 999,
-      "gid": 989
+      "gid": 988
     },
     "worker": {
       "name": "vigia-worker",
@@ -62,5 +62,18 @@
   "peerAckEventSeq": 507,
   "peerAckLedgerEvidenceSha256": "b2684cc9a1a9a467a1477c013f44c3522efb39f6dc9d91e4557c33a7c7aeac6a",
   "governance": "Parent validates existing ledger ACK480/507 and existing lease before invoking apply; no additional authorization system. Lease ID only names the operational checkpoint.",
-  "acceptExistingStage": "Only fully verified identical private worker-owned bytes with empty runs; never overlay or complete a partial transfer."
+  "acceptExistingStage": "Only fully verified identical private worker-owned bytes with empty runs; never overlay or complete a partial transfer.",
+  "serviceGroup": {
+    "name": "admin-v2-exec",
+    "gid": 989
+  },
+  "archiveBytes": 475678720,
+  "optionalStageMarker": {
+    "name": ".staging-owner.json",
+    "ownerUid": 0,
+    "mode": "0600",
+    "singleRegularFile": true,
+    "jobIntent": "cad43f085e374bc5876e4cf246ca8572",
+    "phase": "archive-and-harness-staged-verified-not-executed"
+  }
 }

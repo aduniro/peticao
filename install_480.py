@@ -3,6 +3,7 @@
 from __future__ import annotations
 import argparse
 import hashlib
+import grp
 import json
 import os
 from pathlib import Path
@@ -14,7 +15,7 @@ import stat
 import subprocess
 import tempfile
 
-PLAN_SHA = "b733a533950aec46857676fa718b0f7cb30fe21f1f3286a9147a02783ed266b3"
+PLAN_SHA = "dc650898457a32c3d48eb5dbb3336ff329a977c73288e997f993d4a7a352c3c9"
 SERVICE = "admin-v2-coordinator.service"
 TERMINAL = {"completed", "failed", "interrupted", "canceled"}
 
@@ -90,7 +91,8 @@ def check_host(plan: dict,allow_inactive: bool=False) -> str:
     for key in ['coordinator','worker']:
         e=plan['roles'][key];actual=pwd.getpwnam(e['name'])
         if actual.pw_uid!=e['uid'] or actual.pw_gid!=e['gid']:raise ValueError('role_uid_gid_changed')
-    if 989 not in os.getgrouplist('vigia-worker',986):raise ValueError('worker_missing_existing_exec_group')
+    if grp.getgrnam(plan['serviceGroup']['name']).gr_gid!=plan['serviceGroup']['gid']:raise ValueError('existing_service_group_gid_changed')
+    if plan['serviceGroup']['gid'] not in os.getgrouplist('vigia-worker',986):raise ValueError('worker_missing_existing_exec_group')
     facts=subprocess.check_output(['/usr/bin/systemctl','show',SERVICE,'--property=User,Group,ActiveState'],text=True,timeout=10)
     facts=dict(line.split('=',1) for line in facts.splitlines() if '='in line)
     if facts.get('User')!='vigia-coord' or facts.get('Group')!='admin-v2-exec' or facts.get('ActiveState') not in (['active','inactive'] if allow_inactive else ['active']):raise ValueError('existing_coordinator_service_changed')
@@ -99,10 +101,28 @@ def check_host(plan: dict,allow_inactive: bool=False) -> str:
     if digest(Path('/usr/bin/node'))!=plan['nodeSha256']:raise ValueError('remote_node_changed')
     queue_idle(Path(plan['queue']));return boot
 
+def verify_stage_marker(plan: dict,path: Path) -> None:
+    # Optional provenance receipt, not a new authorization policy. Read one NOFOLLOW descriptor.
+    fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+    try:
+        info=os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid!=0 or stat.S_IMODE(info.st_mode)!=0o600 or info.st_nlink!=1 or info.st_size>8192:raise ValueError('stage_marker_not_root_private_regular')
+        with os.fdopen(fd,'rb',closefd=False)as source:data=source.read(8193)
+        if len(data)>8192:raise ValueError('stage_marker_too_large')
+        value=json.loads(data)
+    finally:os.close(fd)
+    fields={'createdAt','jobIntent','phase','harnessManifestSha256','archiveSha256','runtimeStarted','serviceChanged','archiveVerified','archiveBytes','verifiedAt'}
+    if not isinstance(value,dict) or set(value)!=fields:raise ValueError('stage_marker_fields')
+    expected={'jobIntent':plan['jobId'],'harnessManifestSha256':plan['stagePins']['harness-manifest.json'],'archiveSha256':plan['archiveSha256'],'phase':'archive-and-harness-staged-verified-not-executed','archiveVerified':True,'archiveBytes':plan['archiveBytes'],'runtimeStarted':False,'serviceChanged':False}
+    if any(type(value.get(k)) is not type(v) or value[k]!=v for k,v in expected.items()):raise ValueError('stage_marker_binding_changed')
+
 def verify_stage(plan: dict,dest: Path) -> None:
     for directory in [dest,dest/'inputs',dest/'runs']:private_dir(directory,997)
     if any((dest/'runs').iterdir()):raise ValueError('stage_has_run_reconcile_no_retry')
-    if {p.name for p in dest.iterdir()} != set(plan['stagePins'])|{'inputs','runs'}:raise ValueError('unexpected_stage_entry')
+    allowed=set(plan['stagePins'])|{'inputs','runs'}
+    marker=dest/'.staging-owner.json'
+    if marker.exists() or marker.is_symlink():verify_stage_marker(plan,marker);allowed.add(marker.name)
+    if {p.name for p in dest.iterdir()} != allowed:raise ValueError('unexpected_stage_entry')
     if {p.name for p in (dest/'inputs').iterdir()} != {'runtime.tar','release-manifest.json'}:raise ValueError('stage_incomplete_or_extra_input')
     checks=[(dest/name,h)for name,h in plan['stagePins'].items()]+[(dest/'inputs/runtime.tar',plan['archiveSha256']),(dest/'inputs/release-manifest.json',plan['releaseManifestSha256'])]
     for p,h in checks:

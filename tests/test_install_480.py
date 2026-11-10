@@ -1,4 +1,6 @@
 import copy
+import contextlib
+import os
 import hashlib
 import importlib.util
 import json
@@ -107,6 +109,45 @@ class InstallTests(unittest.TestCase):
    with self.assertRaisesRegex(ValueError,'stage_incomplete_or_extra_input'):m.stage_runtime(self.plan,'1'*32)
    copy.assert_not_called()
   self.assertTrue((dest/'inputs/runtime.tar.partial').exists())
+ def marker_fixture(self):
+  dest=self.stage_fixture();h=dest/'harness-manifest.json';h.write_text('reviewed fixture manifest');self.plan['stagePins'][h.name]=sha(h)
+  value={'createdAt':'2026-11-10T23:00:00Z','verifiedAt':'2026-11-10T23:10:00Z','jobIntent':self.plan['jobId'],'harnessManifestSha256':sha(h),'archiveSha256':self.plan['archiveSha256'],'phase':'archive-and-harness-staged-verified-not-executed','archiveVerified':True,'archiveBytes':475678720,'runtimeStarted':False,'serviceChanged':False}
+  marker=dest/'.staging-owner.json';marker.write_text(json.dumps(value));marker.chmod(0o600);return dest,marker,value
+ @contextlib.contextmanager
+ def marker_metadata(self,path,uid=0,mode=0o600,nlink=1):
+  inode=path.stat().st_ino;actual=m.os.fstat
+  def observed(fd):
+   info=actual(fd)
+   if info.st_ino==inode:
+    values=list(info);values[4]=uid;values[0]=(info.st_mode&~0o777)|mode;values[3]=nlink;return os.stat_result(values)
+   return info
+  with mock.patch.object(m.os,'fstat',side_effect=observed):yield
+ def test_optional_valid_root_marker_preserved_and_role_groups_separate(self):
+  real=m.load_plan();self.assertEqual(real['roles']['coordinator']['gid'],988);self.assertEqual(real['serviceGroup']['gid'],989);self.assertEqual(real['archiveBytes'],475678720)
+  dest,marker,value=self.marker_fixture();before=marker.read_bytes()
+  with self.marker_metadata(marker),mock.patch.object(m,'private_dir'),mock.patch.object(m,'atomic_copy')as copy:
+   self.assertEqual(m.stage_runtime(self.plan,'1'*32),dest);copy.assert_not_called()
+  self.assertEqual(marker.read_bytes(),before)
+ def test_marker_foreign_tamper_and_other_extra_refused(self):
+  dest,marker,value=self.marker_fixture()
+  for key,changed in [('jobIntent','f'*32),('harnessManifestSha256','0'*64),('archiveSha256','0'*64),('phase','executed'),('archiveVerified',False),('archiveBytes',475678721),('archiveBytes','475678720'),('runtimeStarted',True),('serviceChanged',True)]:
+   marker.write_text(json.dumps({**value,key:changed}))
+   with self.marker_metadata(marker),mock.patch.object(m,'private_dir'):
+    with self.assertRaisesRegex(ValueError,'stage_marker_binding_changed'):m.verify_stage(self.plan,dest)
+  marker.write_text(json.dumps(value));(dest/'foreign-note.json').write_text('{}')
+  with self.marker_metadata(marker),mock.patch.object(m,'private_dir'):
+   with self.assertRaisesRegex(ValueError,'unexpected_stage_entry'):m.verify_stage(self.plan,dest)
+  self.assertTrue((dest/'foreign-note.json').exists())
+ def test_marker_wrong_owner_mode_or_link_count_refused(self):
+  dest,marker,value=self.marker_fixture()
+  for options in [dict(uid=1000),dict(mode=0o644),dict(nlink=2)]:
+   with self.marker_metadata(marker,**options),mock.patch.object(m,'private_dir'):
+    with self.assertRaisesRegex(ValueError,'stage_marker_not_root_private_regular'):m.verify_stage(self.plan,dest)
+ def test_marker_symlink_refused_without_deleting_evidence(self):
+  dest,marker,value=self.marker_fixture();target=self.root/'root-receipt.json';marker.rename(target);marker.symlink_to(target)
+  with mock.patch.object(m,'private_dir'):
+   with self.assertRaises(OSError):m.verify_stage(self.plan,dest)
+  self.assertTrue(marker.is_symlink());self.assertTrue(target.exists())
  def test_preimage_symlink_is_refused(self):
   path=Path(self.plan['installPaths']['coordinator.py']);path.unlink();path.symlink_to('/etc/hostname')
   with self.assertRaises(OSError):m.preimages(self.plan)
