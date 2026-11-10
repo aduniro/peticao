@@ -3,3 +3,4 @@ state/
 __pycache__/
 *.pyc
 infra/known_hosts
+infra/admin-mesh-*.json

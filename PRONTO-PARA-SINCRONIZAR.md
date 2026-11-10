@@ -3,7 +3,7 @@
 Esta pasta contém componentes operacionais e não deve ser removida numa limpeza genérica de caches.
 
 Pasta local completa: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110`.
-Data: 10/11/2026. Nenhum código em andamento do admin-v2 foi sincronizado, nenhum merge/deploy foi realizado e nenhum banco de assinaturas foi consultado ou alterado nesta implantação da infraestrutura.
+Data: 10/11/2026. Esta frente de infraestrutura não sincronizou código em andamento, não fez merge/deploy da aplicação e não consultou nem alterou o banco de assinaturas. Posteriormente, o outro agente entregou um checkpoint explícito, registrado na atualização ao final deste documento.
 
 ## Papéis e funcionamento
 
@@ -39,7 +39,7 @@ Executar na máquina local, de qualquer diretório:
 /usr/bin/systemctl --user status admin-v2-vigia-bridge.timer
 ```
 
-Em Santiago: unidades `admin-v2-coordinator.service`, `admin-v2-replicate.timer`, `admin-v2-ssh.service`. Em São Paulo: somente `admin-v2-ssh.service` ativo desta infraestrutura. Configuração declarativa `/etc/admin-v2-cluster.env` e unidades em `/etc/systemd/system`. Observador local: `/home/barre/.config/systemd/user/admin-v2-vigia-bridge.timer`.
+Em Santiago: unidades `admin-v2-coordinator.service`, `admin-v2-replicate.timer`, `admin-v2-ssh.service`. Em São Paulo: `admin-v2-ssh.service` e `admin-mesh-sshd.service` ativos; o coordenador permanece desabilitado. Configuração declarativa `/etc/admin-v2-cluster.env` e unidades em `/etc/systemd/system`. Observador local: `/home/barre/.config/systemd/user/admin-v2-vigia-bridge.timer`.
 
 Logs de jobs em Santiago: `/srv/admin-v2-worker/jobs/UUID/output.log`, resultado `/srv/admin-v2-worker/jobs/UUID/result.json`, artefatos `/srv/admin-v2-worker/jobs/UUID/artifacts`. UUID é o identificador completo retornado pela submissão. Consulta logs: cliente `cluster.py logs --json '{"id":"UUID"}'`, usando o caminho absoluto acima.
 
@@ -69,7 +69,7 @@ Procedimentos completos de recuperação: `/mnt/apps/peticao-final/peticao/.cach
 
 ## Evidências e validação
 
-Evidências locais completas em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/evidencias`. A suíte final passou em26 testes. Foram verificados: sucesso/falha/cancelamento, idempotência, jobs continuando após término do cliente, npm build/typecheck/test em projeto fictício com Node20, replicação SHA256, restauração passiva e promoção isolada após fencing real. A autoridade isolada foi suspensa antes de reativar Santiago. A aplicação de produção continuou HTTP200, com serviços da aplicação, Caddy e PostgreSQL ativos.
+Evidências locais completas em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/evidencias`. A suíte foi ampliada após o acesso bidirecional e o dashboard; veja o resultado final em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/evidencias/testes-finais.log`. Foram verificados: sucesso/falha/cancelamento, idempotência, jobs continuando após término do cliente, npm build/typecheck/test em projeto fictício com Node20, replicação SHA256, restauração passiva e promoção isolada após fencing real. A autoridade isolada foi suspensa antes de reativar Santiago. A aplicação de produção continuou HTTP200, com serviços da aplicação, Caddy e PostgreSQL ativos.
 
 Resultados numéricos e caminhos dos ensaios estão em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/evidencias/testes-finais.log`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/evidencias/live-recovery.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/evidencias/npm-fixtures.json` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/evidencias/artifact-job.json`.
 
@@ -78,3 +78,15 @@ Os testes fictícios comprovam o executor e não representam aprovação funcion
 ## Desligamento reversível da infraestrutura
 
 Não afeta unidades da aplicação. Na máquina local: `/usr/bin/systemctl --user disable --now admin-v2-vigia-bridge.timer`. Em Santiago, como root: `/usr/bin/systemctl disable --now admin-v2-replicate.timer admin-v2-coordinator.service admin-v2-ssh.service`. Em São Paulo, como root: `/usr/bin/systemctl disable --now admin-v2-ssh.service`. Preservar checkpoints e fontes. Revogação das regras sudo deve ser feita separadamente, de forma explícita, após confirmar acesso administrativo alternativo.
+
+## Acesso bidirecional e dispositivos de acompanhamento
+
+O complemento solicitado está em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/ACESSOS-ATUAIS.md`. SSH administrativo privado na porta2223 passou nas seis direções e duas famílias (12 testes). Nas três máquinas, usar `/usr/bin/ssh cluster-local`, `/usr/bin/ssh cluster-santiago` ou `/usr/bin/ssh cluster-sp`; para IPv6 acrescentar `-ipv6` ao alias. Conta administrativa de São Paulo: adunir; a conta de serviço peticao permanece sem login interativo.
+
+Dashboard somente leitura em http://100.80.18.81:8766/ e http://[fd7a:115c:a1e0::3e2f:1252]:8766/. Celular, TL10 e dois registros Haven foram autorizados por seus endereços IPv4/IPv6, sem chaves administrativas. O resumo do Vigia local é exportado a cada30 segundos pelo timer `/home/barre/.config/systemd/user/admin-v2-vigia-export.timer`; local desligado causa resumo antigo devidamente sinalizado, enquanto fila e dashboard continuam em Santiago. Não foi observada abertura visual pelos dispositivos móveis.
+
+## Atualização do checkpoint entregue pelo outro agente
+
+Ao encerrar os acessos, foi encontrado o handoff `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/APP-QA-HANDOFF-20261110.md`, criado por outra frente. O checkpoint real 4eb9349079fb7e89dd3faee58e78300d7308ada4 foi importado por ela em Santiago. O job bd85b84b7c24415d8d22907721b87a20, tipo typecheck, foi consultado por esta frente e está completed/exit0. Evidência local: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/evidencias/primeiro-typecheck-app.json`.
+
+Isso supera a pendência inicial de receber um commit, mas não qualifica builds ou testes completos do app. O handoff pede perfil específico de QA com banco fictício, comandos selecionados, guards de rede/e-mail e manifestos de runtime; não submeter build/test genérico do app antes dessa preparação. A presente frente não executou novos testes reais do app nem modificou o handoff da outra frente. As instruções de próxima sincronização acima descrevem o protocolo e o estado inicial; a fonte atual deve seguir esse handoff específico.

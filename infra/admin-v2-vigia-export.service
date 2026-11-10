@@ -1,0 +1,6 @@
+[Unit]
+Description=Export sanitized local Vigia summary to private dashboard
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/infra/vigia_export.py
+TimeoutStartSec=40

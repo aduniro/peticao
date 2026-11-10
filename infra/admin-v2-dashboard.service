@@ -1,0 +1,31 @@
+[Unit]
+Description=Private tailnet read-only coordination dashboard
+After=network-online.target tailscaled.service
+Requires=tailscaled.service
+
+[Service]
+Type=simple
+User=vigia-coord
+Group=admin-v2-exec
+ExecStart=/usr/bin/python3 /opt/admin-v2-cluster/dashboard.py
+Restart=on-failure
+RestartSec=10
+CPUQuota=5%
+MemoryMax=96M
+TasksMax=24
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6
+ReadOnlyPaths=/srv/admin-v2-coordinator
+
+[Install]
+WantedBy=multi-user.target

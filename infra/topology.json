@@ -35,5 +35,27 @@
     "barre": "awaiting owner local sudo script"
   },
   "deployment": "explicit owner permission required",
-  "admin_source_sync": "not performed; waiting explicit commit after other agent pauses"
+  "admin_source_sync": "Other agent imported explicit checkpoint 4eb9349079fb7e89dd3faee58e78300d7308ada4; typecheck completed exit0. Specific app QA profile pending; no generic real build/test authorized by this infrastructure phase.",
+  "admin_mesh": {
+    "port": 2223,
+    "local_user": "barre",
+    "santiago_user": "sonda",
+    "sp_user": "adunir",
+    "validated_directions": 6,
+    "validated_ipv4_ipv6_connections": 12,
+    "local_linger": true,
+    "sudo_local": "pending owner execution"
+  },
+  "monitoring": {
+    "port": 8766,
+    "read_only": true,
+    "vigia_export_seconds": 30,
+    "stale_after_seconds": 120,
+    "devices": [
+      "a15galaxybb",
+      "TL10",
+      "haven-tailscale-haven-tl10",
+      "haven-tailscale-haven-tl10-dell3576-zorin"
+    ]
+  }
 }
