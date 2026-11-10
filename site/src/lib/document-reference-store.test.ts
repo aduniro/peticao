@@ -75,6 +75,12 @@ test('public reference requires explicit release and rechecks exact current appr
   assert.ok((await c.db.tx(tx=>bindDocumentReferenceTx(tx,version,sha(c.bytes),1))).ok);process.env.DOCUMENT_VERIFICATION_PUBLIC='1';assert.deepEqual(await P.publicDocumentReference(reference.id),{ok:false});
   assert.ok((await V.setDocumentPublication({versionId:version,sha256:sha(c.bytes),enabled:true,expectedRevision:0},actor)).ok);const result=await P.publicDocumentReference(reference.id);assert.ok(result.ok);assert.equal(result.metadata.sha256,sha(c.bytes));assert.equal(result.metadata.signature.onlineValidationPerformed,false);
   for(const hidden of ['PRIVATE','@','bytes','list_hash','recipients','approved_by'])assert.ok(!JSON.stringify(result).includes(hidden));
+  const { NextRequest }=await import("next/server"),{ GET }=await import("../app/api/documentos/referencia/[referencia]/route");
+  const req=(query="")=>new NextRequest("https://documents.example.org/api/documentos/referencia/"+reference.id+query);
+  const params={params:{referencia:reference.id}};
+  const response=await GET(req(),params);assert.equal(response.status,200);assert.match(response.headers.get("cache-control")!,/no-store/);assert.equal(response.headers.get("x-content-type-options"),"nosniff");assert.equal((await response.json()).metadata.sha256,sha(c.bytes));
+  assert.equal((await GET(req("?sha256="+sha(c.bytes)),params)).status,404);
+  assert.equal((await GET(req(),{params:{referencia:randomUUID()}})).status,404);
   assert.ok((await V.setDocumentPublication({versionId:version,sha256:sha(c.bytes),enabled:false,expectedRevision:1},actor)).ok);assert.deepEqual(await P.publicDocumentReference(reference.id),{ok:false});assert.equal((await c.db.query('SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox')).rowCount,0);
  }finally{await c.close();}
 });

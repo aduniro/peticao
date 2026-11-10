@@ -34,3 +34,9 @@ Referências QR reservadas antes do render, snapshot v2 compatível com v1, vín
 Aprovação explícita recebida nesta sessão: retirar “NAO ASSINADO (teste)” somente de novos PDFs preparados para A1. O render target depende da política A1 protegida e do gate servidor; ele não assina nem aprova. PDFs antigos/mode teste continuam inalterados; jobs A1 agora exigem snapshot v2 A1 auditado e histórico de origem preparada.
 
 Rascunhos receberam 11 testes de referência, 4 de snapshot e 9 de jobs/finish; esses números não substituem a validação da integração final. Prévia fictícia A1 inspecionada e texto extraído: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/qr-draft/previa-qr-documental-a1.pdf`. Nenhuma alteração posterior à assinatura e nenhuma alegação de validação criptográfica na prévia.
+
+## Validação do incremento a64e2aa
+
+139 testes documentais aprovados, zero falhas/pulos; tipos e build aprovados com fontes estáveis. Evidências em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/documents-1794269579707948249/result.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794269579719440813/result.json` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/build-1794269667237571193/result.json`.
+
+Cinco testes adicionais de geração real dos quatro modos e rollback de configuração inválida passaram em runner separado sem destinatários. Extração dos quatro PDFs confirmou retirada do rodapé somente para A1/A1+QR, preservação no modo legado/QR, três páginas por arquivo e ausência de alegação de assinatura ICP. Hashes em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/qr-draft/flow-pdfs/verification.json`. O novo teste entra no candidato para as próximas rodadas; a rota QR ganhou asserts HTTP diretos e precisa de reteste específico.
