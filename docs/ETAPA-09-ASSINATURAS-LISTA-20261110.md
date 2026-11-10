@@ -41,3 +41,15 @@ Três fontes de UI portadas com hashes e dependências exatas do manifesto `/mnt
 Cliente comum9/9 aprovado com fontes/HEAD/runtime estáveis em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/signature-client-1794316291537163367/result.json`. Tipos globais exit0 no conjunto integrado em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794316291443009160/result.json`, incluindo a correção pós-auditoria de ambas as exportações. Backend20/20 e auditoria2/2 são rodadas separadas, não somar como uma única suíte.
 
 Build e Next compilado com banco/navegador continuam pendentes antes de marcar a Lista100%.
+
+## Aceite local final da Lista
+
+Build estável em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/build-1794316955855760675/result.json` (HEAD51c64c3). Ensaio final Next/PostgreSQL/navegador exit0 em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/signature-explorer-compiled-1794319630453412733/execution.json`, QAHEAD290ddc6, igualdade integral das fontes do build e runtime202, HEAD/fontes estáveis, portas54388/3073/3074 encerradas.
+
+CSV HTTP e download:20001linhas/11colunas/3372594bytes/SHAe4bf223ca7ce97b3d2108b97baa9c32a9f8a550c541ad33cdf4de7c0d4a24720;351facetas; filtro literal retorna exatamente1registro; fórmulas/quotes/quebras protegidas. Reader sem contato, Editor com telefone autorizado, anônimo/expirado/origem incorreta recusados. Busca por nome não infere e-mail. Resposta perdida preserva página confirmada e retry manual repete o mesmo filtro; resposta tardia não sobrescreve nova consulta;401 limpa dados. Mapa e popup preservam filtros; seis larguras sem overflow, captura390inspecionada. Os80recursos externos bloqueados eram exclusivamente tiles de tile.openstreetmap.org: o teste comprova integração do mapa/filtros, não cartografia externa; o módulo Mapas mantém seu aceite separado.
+
+Baseline20001registros após bootstrap somente1seq+1verify_code; campos completos das assinaturas e vínculos permanecem inalterados durante o fluxo. Auditoria encadeada válida; nenhum envio/job ou mutação de cadastro.
+
+Falhas de QA preservadas: primeiro build foi recusado por commit em andamento (guard agora exige checkout limpo); portas3061/3062 pertenciam a outros serviços e foram preservadas; transporte local encerrou uma conexão (harness passou a usar conexões novas sem retry); timeout de navegador foi comprovadamente causado pelo próprio helper segurando qausente=null. O guard agora exige holdQuerynão-nulo. Prazos, dataset e assertivas não foram relaxados.
+
+Lista de assinaturas aceita100% LOCAL. Não publicada. Próximo módulo: E-mails e pendentes, começando pela consulta global/paginada sem DNS em SSR.
