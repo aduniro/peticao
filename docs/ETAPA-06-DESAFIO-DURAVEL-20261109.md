@@ -25,3 +25,8 @@ Rollback de código: reverter o commit sem remover a tabela ou as configuraçõe
 ## Continuação coordenada
 
 Ainda faltam UI protegida de configuração/emissão, página externa para conferência, textos apresentados ao responsável antes de publicação e prova visual/funcional do fluxo compilado. As APIs não possuem envio automático; qualquer futura entrega exige ação autorizada. O recibo é persistente, mas não é uma assinatura ICP nem um PDF assinado. QR/verificação pública dos bytes e integração desse recibo à apresentação do documento permanecem marcos posteriores. Não anunciar o portal externo como concluído com base nesta bateria.
+
+
+## Atualização de 10/11/2026
+
+A emissão HTTP agora exige intenção e os vínculos do documento/perfil; repetição não rotaciona credenciais. GET autenticado por requestId recupera somente metadados, sem token/senha. O formato antigo de corpo descrito acima é histórico. Contrato e evidências atuais em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/docs/ETAPA-06-EMISSAO-PRESIDENTE-IDEMPOTENTE-20261110.md`. Nenhum endpoint foi publicado na VPS por esse incremento.

@@ -13,6 +13,11 @@ import { normalizeRegistryBirth, parseBirth } from "./birth";
 import { config } from "./config";
 import { issuePresidentChallenge, confirmPresidentChallenge, presidentDocumentRevision, presidentAccessHashes, type PresidentChallengeStore, type PresidentDocumentRevision } from "./president-portal-contract";
 
+export type PresidentIssueIntent = { requestId: string; expectedDocumentVersion: string; expectedProfileFingerprint: string };
+const requestUuid = (value: unknown): value is string => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
+function issueIntent(value: PresidentIssueIntent) {
+  return value && Object.keys(value).sort().join(",") === "expectedDocumentVersion,expectedProfileFingerprint,requestId" && requestUuid(value.requestId) && typeof value.expectedDocumentVersion === "string" && /^[a-f0-9]{64}$/.test(value.expectedDocumentVersion) && typeof value.expectedProfileFingerprint === "string" && /^[a-f0-9]{64}$/.test(value.expectedProfileFingerprint) ? { ...value } : null;
+}
 const PROFILE = "president_profile_v1";
 const unavailable = { ok: false as const, error: "unavailable" as const };
 type Profile = { version: 1; revision: number; responsibleId: number; cpfHash: string; whatsappCipher: string | null; enabled: boolean };
@@ -66,7 +71,7 @@ export async function readPresidentProfile(actor: SessaoAdmin) {
     await bounded(client);
     if (!await authorized(client, actor)) return { ok: false as const, error: "forbidden" };
     const p = await profile(client), user = p && await account(client, p.responsibleId);
-    return { ok: true as const, profile: p && user ? { revision: p.revision, responsibleId: p.responsibleId, name: user.nome, email: user.email, enabled: p.enabled, hasCpf: true, hasWhatsapp: !!p.whatsappCipher } : null };
+    return { ok: true as const, profile: p && user ? { revision: p.revision, responsibleId: p.responsibleId, name: user.nome, email: user.email, enabled: p.enabled, hasCpf: true, hasWhatsapp: !!p.whatsappCipher, fingerprint: fingerprint(p,user) } : null };
   });
 }
 
@@ -117,19 +122,21 @@ export async function readConfiguredPresidentAccess(input:{token:string;password
 }
 
 /** Actual PostgreSQL state machine. No provider call occurs while holding a transaction. */
-export function postgresPresidentChallengeStore(actor: SessaoAdmin | null = null): PresidentChallengeStore {
+export function postgresPresidentChallengeStore(actor: SessaoAdmin | null = null, request: PresidentIssueIntent | null = null): PresidentChallengeStore {
+  const intent = request ? issueIntent(request) : null;
   return {
     async issue(input) {
       return tx(async client => {
         await bounded(client);
         if (!await authorized(client, actor) || input.issuedBy !== actor!.userId) return false;
+        if (request && !intent || intent && (!safeEqual(intent.expectedDocumentVersion, input.documentVersion) || (await client.query("SELECT 1 FROM president_challenges WHERE issued_by=$1 AND request_id=$2", [actor!.userId, intent.requestId])).rowCount)) return false;
         const p = await profile(client), user = p && await account(client, p.responsibleId), doc = await document(client, input.batchId);
-        if (!p?.enabled || !user || !doc || p.responsibleId !== input.responsibleId || !safeEqual(presidentDocumentRevision(doc), input.documentVersion)) return false;
+        if (!p?.enabled || !user || !doc || p.responsibleId !== input.responsibleId || !safeEqual(presidentDocumentRevision(doc), input.documentVersion) || intent && !safeEqual(intent.expectedProfileFingerprint, fingerprint(p,user))) return false;
         const now = Number((await client.query("SELECT extract(epoch FROM clock_timestamp())*1000 ms")).rows[0].ms);
         if (Math.abs(input.createdAt - now) > 30_000 || input.expiresAt - input.createdAt !== 600_000) return false;
         await client.query("UPDATE president_challenges SET state='revoked',lease_token=NULL,lease_until=NULL WHERE batch_id=$1 AND state IN ('issued','verifying')", [input.batchId]);
-        await client.query("INSERT INTO president_challenges(id,batch_id,responsible_id,issued_by,profile_revision,responsible_fingerprint,document_version,token_hash,password_hash,created_at,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)", [input.id,input.batchId,p.responsibleId,input.issuedBy,p.revision,fingerprint(p,user),input.documentVersion,input.tokenHash,input.passwordHash,new Date(input.createdAt).toISOString(),new Date(input.expiresAt).toISOString()]);
-        await audit("president_challenge_issued", null, { challengeId: input.id, batchId: input.batchId, responsibleId: p.responsibleId, userId: actor!.userId, por: actor!.email, documentVersion: input.documentVersion, profileRevision: p.revision }, client);
+        await client.query("INSERT INTO president_challenges(id,batch_id,responsible_id,issued_by,profile_revision,responsible_fingerprint,document_version,token_hash,password_hash,created_at,expires_at,request_id,request_fingerprint) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)", [input.id,input.batchId,p.responsibleId,input.issuedBy,p.revision,fingerprint(p,user),input.documentVersion,input.tokenHash,input.passwordHash,new Date(input.createdAt).toISOString(),new Date(input.expiresAt).toISOString(),intent?.requestId ?? null,intent ? sha256(JSON.stringify([actor!.userId,input.batchId,intent.expectedDocumentVersion,intent.expectedProfileFingerprint])) : null]);
+        await audit("president_challenge_issued", null, { challengeId: input.id, batchId: input.batchId, responsibleId: p.responsibleId, userId: actor!.userId, por: actor!.email, documentVersion: input.documentVersion, profileRevision: p.revision, ...(intent ? { requestId: intent.requestId } : {}) }, client);
         return true;
       });
     },
@@ -159,11 +166,14 @@ export function postgresPresidentChallengeStore(actor: SessaoAdmin | null = null
   };
 }
 
-export async function issueConfiguredPresidentChallenge(batchId: number, actor: SessaoAdmin, provider: CpfProvider | null = defaultProvider()) {
-  if (!validId(batchId) || !provider) return unavailable;
+export async function issueConfiguredPresidentChallenge(batchId: number, actor: SessaoAdmin, provider: CpfProvider | null = defaultProvider(), request?: PresidentIssueIntent) {
+  const intent = request ? issueIntent(request) : null;
+  if (!validId(batchId) || !provider || request && !intent) return unavailable;
   try {
-    const data = await tx(async client => { await bounded(client); if (!await authorized(client,actor)) return null; const p=await profile(client),doc=await document(client,batchId); return p?.enabled && doc ? {document:doc,responsibleId:p.responsibleId,issuedBy:actor.userId} : null; });
-    return data ? issuePresidentChallenge(data,{store:postgresPresidentChallengeStore(actor),key:config.pepper()}) : unavailable;
+    const data = await tx(async client => { await bounded(client); if (!await authorized(client,actor)) return null; const p=await profile(client),doc=await document(client,batchId),user=p && await account(client,p.responsibleId); return p?.enabled && doc && user && (!intent || safeEqual(intent.expectedProfileFingerprint,fingerprint(p,user))) ? {document:doc,responsibleId:p.responsibleId,issuedBy:actor.userId} : null; });
+    if (!data || intent && !safeEqual(intent.expectedDocumentVersion, presidentDocumentRevision(data.document))) return unavailable;
+    const result = await issuePresidentChallenge(data,{store:postgresPresidentChallengeStore(actor,intent),key:config.pepper()});
+    return result.ok && intent ? { ...result, requestId: intent.requestId } : result;
   } catch { return unavailable; }
 }
 
@@ -202,4 +212,22 @@ export async function capturePresidentOwnConfirmation(input: { batchId: number; 
       return { ...frozen, bytes };
     });
   } catch { return unavailable; }
+}
+
+
+/** Actor-scoped recovery of issuance metadata. Credentials are never reconstructed or returned. */
+export async function readPresidentChallengeRequest(requestId: string, actor: SessaoAdmin | null) {
+  const failure=(error:"parameters"|"forbidden"|"not_found"|"unavailable")=>({ok:false as const,error});
+  if (!requestUuid(requestId)) return failure("parameters");
+  try {
+    return await tx(async client => {
+      await bounded(client); if (!await authorized(client, actor)) return failure("forbidden");
+      const row = (await client.query<Challenge & { created_at: Date; request_fingerprint: string }>("SELECT * FROM president_challenges WHERE issued_by=$1 AND request_id=$2 FOR SHARE", [actor!.userId, requestId])).rows[0];
+      if (!row) return failure("not_found");
+      const credentialsExpired = row.expires_at.getTime() <= Date.now();
+      const isCurrent = ["issued","verifying","consumed"].includes(row.state) && (row.state === "consumed" || !credentialsExpired) && !!await boundDocument(client,row,row.state === "consumed");
+      await audit("president_challenge_request_read",null,{requestId,challengeId:row.id,batchId:row.batch_id,userId:actor!.userId},client);
+      return { ok:true as const,requestId,challengeId:row.id,batchId:row.batch_id,documentVersion:row.document_version,state:row.state,createdAt:row.created_at.toISOString(),expiresAt:row.expires_at.toISOString(),credentialsExpired,credentialsRecoverable:false as const,isCurrent,receiptId:row.state === "consumed" ? row.receipt_id : null };
+    });
+  } catch { return failure("unavailable"); }
 }

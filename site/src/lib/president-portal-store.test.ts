@@ -126,7 +126,8 @@ test("rotas protegidas exigem nível/stepup, limites/origem e confirmam com prov
     assert.equal((await P.POST(req("/api/admin/presidente/perfil","{"))).status,400);
     assert.equal((await P.POST(req("/api/admin/presidente/perfil","x".repeat(2049)))).status,413);
     assert.equal((await I.POST(req("/api/admin/presidente/desafio",{batchId:"1"}))).status,400);
-    const response=await I.POST(req("/api/admin/presidente/desafio",{batchId:c.batch}));assert.equal(response.status,200);assert.equal(response.headers.get("cache-control"),"private, no-store");const issued=await response.json();assert.ok(issued.ok);
+    const documentVersion=(await c.issue()).documentVersion,profile=await c.S.readPresidentProfile(c.actor);assert.ok(profile.ok);assert.ok(profile.profile);
+    const response=await I.POST(req("/api/admin/presidente/desafio",{batchId:c.batch,requestId:"00000000-0000-4000-8000-000000000100",expectedDocumentVersion:documentVersion,expectedProfileFingerprint:profile.profile.fingerprint}));assert.equal(response.status,200);assert.equal(response.headers.get("cache-control"),"private, no-store");const issued=await response.json();assert.ok(issued.ok);
     assert.equal((await C.POST(req("/api/presidente/confirmar",{...issued,...identity},"","https://evil.example.test"))).status,403);
     const confirmation={token:issued.token,password:issued.password,cpf:"529.982.247-25",birthDate:"01/01/2000"};
     const confirmed=await C.POST(req("/api/presidente/confirmar",confirmation,""));assert.equal(confirmed.status,200);assert.equal((await confirmed.json()).icpBrasil,false);
@@ -165,4 +166,47 @@ test("native capture cannot rewrite an existing signed source and returns no byt
   await c.db.query("UPDATE batches SET signed_pdf=$1,signed_pdf_sha256=$2,signature_kind='externa-nao-validada' WHERE id=$3",[c.bytes,digest(c.bytes),c.batch]);
   const next=await consumed(c),before=await c.documents();assert.deepEqual(await c.S.capturePresidentOwnConfirmation(next.input,c.actor),{ok:false,error:'unavailable'});assert.deepEqual(await c.documents(),before);await c.noMail();assert.ok((await c.db.verifyAuditChain()).ok);
  }finally{await c.db._closeDbForTests();}
+});
+
+
+test("one president access intent cannot rotate credentials on a repeated or concurrent POST",async()=>{
+ const c=await fixture("t_president_issue_intent_once");try{
+  const V=await import('./president-portal-contract'),profile=await c.S.readPresidentProfile(c.actor);assert.ok(profile.ok);assert.ok(profile.profile);const intent={expectedProfileFingerprint:profile.profile.fingerprint,requestId:'00000000-0000-4000-8000-000000000101',expectedDocumentVersion:V.presidentDocumentRevision({batchId:c.batch,seq:1,kind:'final',listHash:'a'.repeat(64),originalPdf:c.bytes,signedPdf:null,signatureKind:'none'})};
+  const results=await Promise.all([c.S.issueConfiguredPresidentChallenge(c.batch,c.actor,c.provider,intent),c.S.issueConfiguredPresidentChallenge(c.batch,c.actor,c.provider,intent)]);
+  assert.equal(results.filter(r=>r.ok).length,1,'one identity must issue credentials only once, without replacing its first challenge');
+  assert.equal((await c.db.query('SELECT 1 FROM president_challenges')).rowCount,1);const issued=results.find(r=>r.ok);assert.ok(issued);assert.ok(issued.ok);
+  const before=(await c.db.query('SELECT row_to_json(p)::text data FROM president_challenges p')).rows;
+  assert.equal((await c.S.issueConfiguredPresidentChallenge(c.batch,c.actor,c.provider,intent)).ok,false);assert.deepEqual((await c.db.query('SELECT row_to_json(p)::text data FROM president_challenges p')).rows,before);
+  assert.ok((await c.S.confirmConfiguredPresidentChallenge({...issued,...identity},c.provider)).ok,'the first credential remains usable');await c.noMail();
+ }finally{await c.db._closeDbForTests();}
+});
+
+
+async function newAccessIntent(c:Awaited<ReturnType<typeof fixture>>,requestId:string){const V=await import('./president-portal-contract'),p=await c.S.readPresidentProfile(c.actor);assert.ok(p.ok);assert.ok(p.profile);return{requestId,expectedProfileFingerprint:p.profile.fingerprint,expectedDocumentVersion:V.presidentDocumentRevision({batchId:c.batch,seq:1,kind:'final',listHash:'a'.repeat(64),originalPdf:c.bytes,signedPdf:null,signatureKind:'none'})};}
+test("request recovery never discloses credentials, resets guesses or changes the original identity",async()=>{
+ const c=await fixture("t_president_issue_intent_recovery");try{
+  const intent=await newAccessIntent(c,'00000000-0000-4000-8000-000000000102'),issued=await c.S.issueConfiguredPresidentChallenge(c.batch,c.actor,c.provider,intent);assert.ok(issued.ok);
+  const wrong=issued.password==='AAAAAAAAAAAA'?'BBBBBBBBBBBB':'AAAAAAAAAAAA';assert.equal((await c.S.confirmConfiguredPresidentChallenge({...issued,...identity,password:wrong},c.provider)).ok,false);
+  const before=(await c.db.query('SELECT row_to_json(p)::text data FROM president_challenges p')).rows;
+  const recovered=await c.S.readPresidentChallengeRequest(intent.requestId,c.actor);assert.ok(recovered.ok);assert.equal(recovered.challengeId,issued.id);assert.equal(recovered.credentialsRecoverable,false);assert.equal(recovered.isCurrent,true);
+  const payload=JSON.stringify(recovered);for(const secret of [issued.token,issued.password,cpf,identity.birthDate])assert.equal(payload.includes(secret),false);
+  assert.equal((await c.S.issueConfiguredPresidentChallenge(c.batch,c.actor,c.provider,intent)).ok,false);assert.deepEqual((await c.db.query('SELECT row_to_json(p)::text data FROM president_challenges p')).rows,before);
+  for(const command of ["UPDATE president_challenges SET request_id='00000000-0000-4000-8000-000000000199'","UPDATE president_challenges SET request_fingerprint=repeat('f',64)","UPDATE president_challenges SET document_version='changed'","UPDATE president_challenges SET expires_at=expires_at+interval '1 second'","DELETE FROM president_challenges","TRUNCATE president_challenges CASCADE"])await assert.rejects(c.db.query(command),/president_request_identity_immutable/);
+  assert.deepEqual((await c.db.query('SELECT row_to_json(p)::text data FROM president_challenges p')).rows,before);
+  const confirmation=await c.S.confirmConfiguredPresidentChallenge({...issued,...identity},c.provider);assert.ok(confirmation.ok);
+  const consumed=await c.S.readPresidentChallengeRequest(intent.requestId,c.actor);assert.ok(consumed.ok);assert.equal(consumed.state,'consumed');assert.equal(consumed.receiptId,confirmation.receiptId);await c.noMail();assert.ok((await c.db.verifyAuditChain()).ok);
+ }finally{await c.db._closeDbForTests();}
+});
+test("issuance HTTP requires document/profile intent; exact GET is private, actor scoped and inert",async()=>{
+ const c=await fixture("t_president_issue_intent_http");process.env.CPF_FORCE_MOCK='1';process.env.CPF_MOCK_DATA=JSON.stringify({[cpf]:{nome:'Pessoa Responsavel QA',nasc:'01/01/2000'}});
+ try{
+  const I=await import('../app/api/admin/presidente/desafio/route'),intent=await newAccessIntent(c,'00000000-0000-4000-8000-000000000103'),path='http://localhost/api/admin/presidente/desafio',body={batchId:c.batch,...intent};
+  const req=(method:string,url=path,data?:unknown,token=c.session.token)=>new NextRequest(url,{method,headers:{host:'localhost',origin:'http://localhost',cookie:'adm='+token,'content-type':'application/json'},...(data===undefined?{}:{body:JSON.stringify(data)})});
+  assert.equal((await I.POST(req('POST',path,{batchId:c.batch}))).status,400);assert.equal((await I.POST(req('POST',path,{...body,expectedProfileFingerprint:'f'.repeat(64)}))).status,409);assert.equal((await c.db.query('SELECT 1 FROM president_challenges')).rowCount,0);
+  const created=await I.POST(req('POST',path,body));assert.equal(created.status,200);const issued=await created.json();assert.ok(issued.token);assert.equal((await I.POST(req('POST',path,body))).status,409);
+  const rowState=async()=>(await c.db.query('SELECT row_to_json(p)::text data FROM president_challenges p')).rows;const before=await rowState(),recovered=await I.GET(req('GET',path+'?requestId='+intent.requestId));assert.equal(recovered.status,200);assert.equal(recovered.headers.get('cache-control'),'private, no-store');const result=await recovered.json();assert.equal(result.challengeId,issued.id);assert.equal(result.credentialsRecoverable,false);assert.equal(JSON.stringify(result).includes(issued.token),false);assert.equal(JSON.stringify(result).includes(issued.password),false);assert.deepEqual(await rowState(),before);
+  const second=await c.U.abrirSessao(2,'127.0.0.1');await c.db.query("UPDATE admin_users SET nivel='total' WHERE id=2;UPDATE admin_sessions SET stepup_ate=now()+interval '10 minutes' WHERE user_id=2");assert.equal((await I.GET(req('GET',path+'?requestId='+intent.requestId,undefined,second.token))).status,404);
+  assert.equal((await I.GET(req('GET',path+'?requestId='+intent.requestId+'&requestId='+intent.requestId))).status,400);assert.equal((await I.GET(req('GET',path+'?token='+issued.token))).status,400);assert.equal((await I.GET(req('GET',path+'?requestId='+intent.requestId,undefined,''))).status,401);
+  await c.S.configurePresidentProfile(c.actor,{responsibleId:2,enabled:true,expectedRevision:1});const revoked=await c.S.readPresidentChallengeRequest(intent.requestId,c.actor);assert.ok(revoked.ok);assert.equal(revoked.state,'revoked');assert.equal(revoked.isCurrent,false);await c.noMail();
+ }finally{delete process.env.CPF_FORCE_MOCK;delete process.env.CPF_MOCK_DATA;await c.db._closeDbForTests();}
 });

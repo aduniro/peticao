@@ -416,6 +416,35 @@ const SCHEMA_SQL = `
     CHECK((state='consumed')=(receipt_id IS NOT NULL))
   );
   CREATE INDEX IF NOT EXISTS president_challenges_batch ON president_challenges(batch_id,created_at);
+  ALTER TABLE president_challenges ADD COLUMN IF NOT EXISTS request_id UUID;
+  ALTER TABLE president_challenges ADD COLUMN IF NOT EXISTS request_fingerprint TEXT CHECK(request_fingerprint IS NULL OR request_fingerprint ~ '^[a-f0-9]{64}$');
+  DO $president_request$ BEGIN
+    IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='president_challenges'::regclass AND conname='president_challenge_request_pair') THEN
+      ALTER TABLE president_challenges ADD CONSTRAINT president_challenge_request_pair CHECK((request_id IS NULL)=(request_fingerprint IS NULL));
+    END IF;
+  END $president_request$;
+  CREATE UNIQUE INDEX IF NOT EXISTS president_challenges_request_uq ON president_challenges(issued_by,request_id) WHERE request_id IS NOT NULL;
+  CREATE OR REPLACE FUNCTION president_request_identity_immutable() RETURNS trigger LANGUAGE plpgsql AS $$
+  BEGIN
+    IF TG_OP='TRUNCATE' THEN
+      IF EXISTS(SELECT 1 FROM president_challenges WHERE request_id IS NOT NULL) THEN RAISE EXCEPTION 'president_request_identity_immutable'; END IF;
+      RETURN NULL;
+    END IF;
+    IF TG_OP='DELETE' THEN
+      IF OLD.request_id IS NOT NULL THEN RAISE EXCEPTION 'president_request_identity_immutable'; END IF;
+      RETURN OLD;
+    END IF;
+    IF OLD.request_id IS DISTINCT FROM NEW.request_id OR OLD.request_fingerprint IS DISTINCT FROM NEW.request_fingerprint OR
+      (OLD.request_id IS NOT NULL AND (to_jsonb(OLD)-ARRAY['state','attempts','lease_token','lease_until','receipt_id','confirmed_at']) IS DISTINCT FROM (to_jsonb(NEW)-ARRAY['state','attempts','lease_token','lease_until','receipt_id','confirmed_at'])) THEN
+      RAISE EXCEPTION 'president_request_identity_immutable';
+    END IF;
+    RETURN NEW;
+  END $$;
+  DROP TRIGGER IF EXISTS president_request_identity_immutable_row ON president_challenges;
+  CREATE TRIGGER president_request_identity_immutable_row BEFORE UPDATE OR DELETE ON president_challenges FOR EACH ROW EXECUTE FUNCTION president_request_identity_immutable();
+  DROP TRIGGER IF EXISTS president_request_identity_immutable_truncate ON president_challenges;
+  CREATE TRIGGER president_request_identity_immutable_truncate BEFORE TRUNCATE ON president_challenges FOR EACH STATEMENT EXECUTE FUNCTION president_request_identity_immutable();
+
   CREATE TABLE IF NOT EXISTS admin_referral_requests (
     actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
     input_hash TEXT NOT NULL, referrer_id INTEGER NOT NULL REFERENCES referrers(id),
