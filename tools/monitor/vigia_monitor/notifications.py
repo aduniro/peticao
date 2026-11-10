@@ -11,6 +11,8 @@ def deliver_one(store):
   row=db.execute("SELECT * FROM outbox WHERE state='queued' ORDER BY CASE WHEN id LIKE 'stalled:%' THEN 0 ELSE 1 END,at,id LIMIT 1").fetchone()
   if not row:return False
   row=dict(row)
+  from .mail_policy import suppress_mail
+  if suppress_mail(db,row,now()):return True
   db.execute("UPDATE outbox SET state='sending',updated_at=? WHERE id=?",(now(),row['id']))
  try:
   result=subprocess.run(['/usr/bin/node',str(Path('/mnt/apps/peticao-final/peticao/tools/monitor/mail.mjs'))],input=json.dumps({'subject':row['subject'],'body':row['body']}),capture_output=True,text=True,timeout=40)

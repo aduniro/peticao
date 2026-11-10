@@ -11,7 +11,8 @@ class Daemon:
   self.store=store or Store();self.collector=Collector(self.store,remote);self.stop=threading.Event();self.mail=mail;self.pool=concurrent.futures.ThreadPoolExecutor(max_workers=2);self.work={};self.last_progress=time.monotonic();self.mail_busy=False
  def notifications(self):
   if not self.mail:return
-  if time.monotonic()-self.last_progress>=1800:
+  from .mail_policy import hourly_tree_owns_summary
+  if not hourly_tree_owns_summary(self.store) and time.monotonic()-self.last_progress>=1800:
    tasks=self.store.rows("SELECT * FROM tasks WHERE state IN ('running','waiting','paused')")
    if tasks:
     body='# Andamento das tarefas\n\n'+'\n\n'.join(f"## {r['title']}\n\nEstado: {r['state']}. Etapa: {r['stage']}.\n\n{r['detail']}\n\nAmbiente: {r['environment']}. Estimativa informada: {r['eta'] or 'não informada'}." for r in tasks)
