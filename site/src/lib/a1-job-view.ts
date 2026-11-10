@@ -21,6 +21,8 @@ export type A1JobViewEvent =
   | { type: "read_started" }
   | { type: "read_received"; availability: A1AvailabilityObservation }
   | { type: "read_transport_failed" }
+  | { type: "intent_read_received"; requestId: string; job: A1JobObservation }
+  | { type: "intent_read_failed"; requestId: string; error: string }
   | { type: "request_started"; intent: A1SigningIntent }
   | { type: "request_admitted"; requestId: string; job: A1JobObservation }
   | { type: "request_rejected"; requestId: string; error: string }
@@ -94,6 +96,20 @@ export function updateA1JobView(state: A1JobViewState, event: A1JobViewEvent): A
     return { ...state, intent: { ...intent }, job: null, postPending: true, errorCode: null, usedRequestIds: [...state.usedRequestIds, intent.requestId] };
   }
   if (!state.intent || event.requestId !== state.intent.requestId) return state;
+  if (event.type === "intent_read_failed") return {
+    ...state, readPending: false, refreshRequired: true,
+    resultUncertain: state.resultUncertain || !state.job, errorCode: event.error,
+  };
+  if (event.type === "intent_read_received") {
+    if (event.job.requestId !== state.intent.requestId || !compatibleJob(state, event.job)) return {
+      ...state, readPending: false, resultUncertain: true, refreshRequired: true, errorCode: "job_binding_mismatch",
+    };
+    if (state.job?.jobId === event.job.jobId && event.job.revision < state.job.revision) return { ...state, readPending: false };
+    return {
+      ...state, job: { ...event.job }, readPending: false, postPending: false,
+      resultUncertain: false, refreshRequired: ["failed", "stale", "cancelled"].includes(event.job.state), errorCode: null,
+    };
+  }
   if (event.type === "request_transport_failed") return state.job && !state.postPending ? state : { ...state, postPending: false, resultUncertain: true, refreshRequired: true, errorCode: "request_transport_failed" };
   if (event.type === "request_rejected") return { ...state, postPending: false, refreshRequired: true, errorCode: event.error };
   if (!compatibleJob(state, event.job, true)) return { ...state, postPending: false, resultUncertain: true, refreshRequired: true, errorCode: "job_binding_mismatch" };
