@@ -27,3 +27,11 @@ Teste preliminar deste incremento: 24/24 casos (estado, transporte e seis cenár
 No commit 6fa8e93: 170/170 testes documentais e build aprovados com fontes estáveis. O primeiro typecheck concorreu com o build e falhou porque `.next/types` foi recriado; a evidência foi preservada. Repetido após o build, passou com fontes estáveis. O runner agora possui locks distintos para Next/build/tipos e PostgreSQL, além de registrar a estabilidade do commit, evitando repetir essa concorrência.
 
 O cenário adicional distingue falha terminal comprovada de resultado incerto: depois de conhecer a falha da intenção exata, a próxima consulta é de disponibilidade. Somente uma nova ação explícita, com outro requestId e bindings atuais, pode criar solicitação. Sete cenários puros de reconciliação passaram; a rodada integrada desse incremento será repetida.
+
+## Respostas atrasadas e rascunho visual
+
+O ensaio adicional reproduziu uma resposta de recusa do POST chegando depois de o GET exato já comprovar o job. O reducer agora mantém a comprovação atual, assim como já fazia para falha atrasada de transporte. O teste falhou antes da correção e passou depois; log privado preservado em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/a1-reconciliation-draft/late-rejection-before-fix.log`. Conjunto puro: 26/26 após a correção.
+
+O controle visual permanece fora da árvore de produção, em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/a1-reconciliation-draft/A1Assinatura.tsx`, aguardando aprovação dos seus textos. Ensaio no navegador com API fictícia: seis larguras (360, 390, 768, 1024, 1440 e 1920), duplo clique com somente um POST, resposta perdida recuperada por GET da intenção, sem retry ou overflow. Isso não é ensaio navegador→backend real nem homologação ICP-Brasil.
+
+Checkpoint 9444372: build, tipos e rodada A1 integrados aprovados, commits/fontes estáveis. A trava do runner foi observada adiando build até os tipos liberarem o mesmo recurso.

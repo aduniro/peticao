@@ -86,3 +86,11 @@ test("after an exact terminal failure, a separate availability GET permits only 
   assert.equal(updateA1JobView(available, { type: "request_started", intent: next }).postPending, true);
   assert.equal(a1JobView(available).effects.repeatPost, false);
 });
+
+
+test("a delayed POST rejection does not undo a result already confirmed by exact GET", async () => {
+  const state = started();
+  const observed = await readA1Reconciliation(state, fake(json({ ok: true, job: job({ state: "succeeded", revision: 5, outputVersionId: "30000000-0000-4000-8000-000000000001", outputSha256: "b".repeat(64) }) }), []));
+  const confirmed = applyA1Reconciliation(state, observed);
+  assert.equal(updateA1JobView(confirmed, { type: "request_rejected", requestId, error: "conflict" }), confirmed);
+});

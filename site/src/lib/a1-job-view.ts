@@ -111,7 +111,7 @@ export function updateA1JobView(state: A1JobViewState, event: A1JobViewEvent): A
     };
   }
   if (event.type === "request_transport_failed") return state.job && !state.postPending ? state : { ...state, postPending: false, resultUncertain: true, refreshRequired: true, errorCode: "request_transport_failed" };
-  if (event.type === "request_rejected") return { ...state, postPending: false, refreshRequired: true, errorCode: event.error };
+  if (event.type === "request_rejected") return state.job && !state.postPending ? state : { ...state, postPending: false, refreshRequired: true, errorCode: event.error };
   if (!compatibleJob(state, event.job, true)) return { ...state, postPending: false, resultUncertain: true, refreshRequired: true, errorCode: "job_binding_mismatch" };
   if (state.job?.jobId === event.job.jobId && event.job.revision < state.job.revision) return state;
   return { ...state, job: { ...event.job }, postPending: false, resultUncertain: false, refreshRequired: false, errorCode: null };
