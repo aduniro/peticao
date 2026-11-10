@@ -1,0 +1,9 @@
+{
+  "node_path": "/srv/admin-v2-worker/toolchains/node-v20.19.2-linux-x64/bin/node",
+  "node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+  "runtime_dir": "/srv/admin-v2-worker/versions/0a5f734/runtime",
+  "schema_source_dir": "/srv/admin-v2-worker/jobs/JOB-ID/history-native-r4/schema-sources",
+  "release_manifest": "/srv/admin-v2-worker/jobs/JOB-ID/history-native-r4/release-manifest.json",
+  "coord_cli_prefix": ["/srv/admin-v2-worker/bin/coord-forwarder"],
+  "expected_cgroup": "/system.slice/admin-v2-job-JOB-ID.service"
+}

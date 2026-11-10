@@ -1,0 +1,9 @@
+import pathlib,os,subprocess,json,uuid
+ROOT=pathlib.Path(__file__).resolve().parent;run=ROOT/'runs'/('guard-selftests-'+uuid.uuid4().hex[:8]);run.mkdir(mode=0o700,parents=True);(run/'empty').mkdir(mode=0o700)
+config=json.loads(pathlib.Path(os.environ['HISTORY_SMOKE_CONFIG']).read_text()) if os.environ.get('HISTORY_SMOKE_CONFIG') else {};node=config.get('node_path','/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node')
+env={'PATH':'/usr/bin:/bin','NODE_ENV':'production','DATABASE_URL':'postgres://fixture_only:fixture_only@127.0.0.1:55485/fixture_only','MAIL_PROVIDER':'dev','MAIL_PROVIDERS':'dev','CRON_SECRET':'','WHATSAPP_ENABLED':'0','RECIPIENTS':'','APPROVER_EMAIL':'','SIGNER':'none','RUNTIME_SMOKE_RUN':str(run),'RUNTIME_SMOKE_PORT':'31385','FUNCTIONAL_PGDATA':str(run/'postgres'),'NODE_OPTIONS':'--import='+str(ROOT/'functional-guard.mjs')}
+for key in ['HOME','SECRETS_DIR','PETICAO_CONFIG_DIR','CREDENTIALS_DIRECTORY','GEO_DIR']:env[key]=str(run/'empty')
+cases={'other-db-port':"require('node:net').connect(55484,'127.0.0.1')",'external-tcp':"require('node:net').connect(443,'192.0.2.1')",'dns':"require('node:dns').lookup('example.invalid',()=>{})",'tls':"require('node:tls').connect(443,'example.invalid')",'udp':"require('node:dgram').createSocket('udp4').send(Buffer.from('x'),53,'192.0.2.1')",'child':"require('node:child_process').spawn('/usr/bin/true')",'listener':"require('node:net').createServer().listen(31386,'127.0.0.1')",'fetch':"fetch('https://example.invalid')"};results=[]
+for name,code in cases.items():
+ p=subprocess.run([node,'--eval',code],cwd=run,env=env,text=True,capture_output=True,timeout=10);results.append({'case':name,'denied':p.returncode!=0 and 'RUNTIME_SMOKE_FORBIDDEN' in p.stderr})
+(ROOT/'guard-test-results.json').write_text(json.dumps(results,indent=2)+'\n');print(json.dumps(results));assert all(x['denied'] for x in results)

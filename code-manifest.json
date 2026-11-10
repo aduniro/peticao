@@ -1,0 +1,99 @@
+{
+  "classification": "R4_NATIVE_HARNESS_PREPARED_NOT_HTTP_QUALIFIED",
+  "executedPopulatedHttpChecks": 0,
+  "files": {
+    ".gitignore": {
+      "bytes": 120,
+      "sha256": "febf932d6d488176d0246d772e3f7d3ae99e508f7b486bc54611c9b5ea0a4155"
+    },
+    "README.md": {
+      "bytes": 6893,
+      "sha256": "42201b8d985ed37ca6fd87644d4bbbc0879fa90838e852f30824bd758bb7fe40"
+    },
+    "build_bundle.py": {
+      "bytes": 2656,
+      "sha256": "06b47c7182d859c88ba575895b268f43192227a7c782e894adb097c436900de1"
+    },
+    "fixture.cjs": {
+      "bytes": 5448,
+      "sha256": "a34574271520fbefcd1e508601aae6d950873db25f2aad6c0f0226151d32a31e"
+    },
+    "functional-guard.mjs": {
+      "bytes": 4206,
+      "sha256": "c36d4cdfbf7c892f3696b1a5e2521955651a7057eb6cd33783d36724a00ee62f"
+    },
+    "functional_smoke.py": {
+      "bytes": 18168,
+      "sha256": "dc7c55b3e32aee6afa607f8b6ec909a315424d2cea28fe1394ac20f7b1de3078"
+    },
+    "generate_manifest.py": {
+      "bytes": 1591,
+      "sha256": "319daa80fe9093156e85f4609a6e2cbe4c27c4ef818ad2b7dc7d49b9e6a46451"
+    },
+    "native_pg.py": {
+      "bytes": 11862,
+      "sha256": "1299b54acce50346e5832a8511c1427607e847f11ec1b36725c2a07b376d51cd"
+    },
+    "profile.proposed.json": {
+      "bytes": 1388,
+      "sha256": "abba4616608958a5e6cecf5efb7a416c56ea1e8fbe1b27a39453dc5bc2d8557d"
+    },
+    "release-manifest.json": {
+      "bytes": 1832274,
+      "sha256": "12b7d8a8e617c98c7d4f22b9e0865b8e3cde63e8d8933b871f65cceb68f72576"
+    },
+    "remote-config.example.json": {
+      "bytes": 561,
+      "sha256": "4f4d9219e24f3ecb53fe3347372312c4826d31d526b3eea8eecb78c9214db600"
+    },
+    "schema-source-manifest.json": {
+      "bytes": 676,
+      "sha256": "0e837a472ac1274bd433335fa88e98110edd5082de88645d09d8828950810a51"
+    },
+    "schema-sources/batch-a1-schema.ts": {
+      "bytes": 6036,
+      "sha256": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b"
+    },
+    "schema-sources/batch-package-schema.ts": {
+      "bytes": 2945,
+      "sha256": "7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4"
+    },
+    "schema-sources/db.ts": {
+      "bytes": 48732,
+      "sha256": "dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824"
+    },
+    "schema-sources/document-reference-schema.ts": {
+      "bytes": 2075,
+      "sha256": "b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c"
+    },
+    "schema-sources/petition-base-schema.ts": {
+      "bytes": 6805,
+      "sha256": "d21a4289e522ca3a9570d8de5a4d80a69b6468a4e5a9744c2a4de3bc3e3c72ab"
+    },
+    "schema-sources/president-own-a1-schema.ts": {
+      "bytes": 3438,
+      "sha256": "24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408"
+    },
+    "schema-sources/president-own-document-schema.ts": {
+      "bytes": 3031,
+      "sha256": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3"
+    },
+    "test_guard.py": {
+      "bytes": 1902,
+      "sha256": "e6353c51e9bfcb6c165e64d87dbb62cfe562dc703270da6c5f553320f263fa47"
+    },
+    "test_native_pg.py": {
+      "bytes": 9643,
+      "sha256": "533bc5569958c0aa195ca10cac735689cc8d8049174e9b346edc20f5607283eb"
+    },
+    "test_runtime_preflight.py": {
+      "bytes": 1964,
+      "sha256": "338341b55ee583ef7e1621cedd4c49718e12d5b75e9fe9a9da9f14ed7924df82"
+    }
+  },
+  "httpChecksUnchangedFromR3Sha256": "7452fd5dfc107591d50e49ebc0308932c16da07b2f08c5842b097fa02a18a5ac",
+  "operationalReady": false,
+  "plannedHttpChecks": 19,
+  "runtimeSourceCommit": "0a5f734da4f9b8a35a10a20eaa9fb4fd5adb0e4f",
+  "schema_version": 1
+}

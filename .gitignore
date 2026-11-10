@@ -1,0 +1,11 @@
+/runs/
+/bundles/
+/__pycache__/
+/active-lease.json
+/remote-config.json
+/*results*.json
+/*.log
+.env*
+*.sqlite
+*.db
+*.dump

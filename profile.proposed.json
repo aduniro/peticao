@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "profile_id": "history-populated-native-pg17-r4",
+  "integration": "Existing coordinated queue only; pending peer review and typed-profile registration",
+  "runtime_source_commit": "0a5f734da4f9b8a35a10a20eaa9fb4fd5adb0e4f",
+  "runtime_manifest_sha256": "12b7d8a8e617c98c7d4f22b9e0865b8e3cde63e8d8933b871f65cceb68f72576",
+  "run_as": "vigia-worker",
+  "command_contract": ["/usr/bin/python3", "<staged-profile>/functional_smoke.py"],
+  "postgres": {"backend": "native", "version": "17.11", "bin": "/usr/lib/postgresql/17/bin", "port": 55485, "host": "127.0.0.1"},
+  "app": {"node": "20.19.2", "modules": "115", "napi": "9", "port": 31385, "host": "127.0.0.1", "node_heap_mib": 1536},
+  "resources_proposed": {"cpu_cores": 2, "memory_max_bytes": 3221225472, "pids_max": 256, "soft_timeout_seconds": 600, "executor_hard_timeout_seconds": 720, "cleanup_reserve_seconds": 120, "kill_mode": "control-group", "max_concurrent_heavy_jobs": 1, "minimum_free_disk_bytes": 2147483648},
+  "request_requires": ["source/manifest pins", "coordinator peer ACK", "fresh central lease", "dedicated bounded existing-executor cgroup", "private runtime staging", "captured binary/version metadata", "output collection and cgroup drain"],
+  "planned_http_checks": 19,
+  "executed_populated_http_checks": 0,
+  "auto_retry": false,
+  "deployment": false,
+  "operationalReady": false
+}
