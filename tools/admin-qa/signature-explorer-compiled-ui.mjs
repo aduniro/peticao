@@ -8,7 +8,7 @@ const escape=v=>v.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
 const apiPath="/api/admin/assinaturas/explorar";
 function filters(params,key){const raw=params.get(key);return raw===null?[]:params.get("listas")==="json"?JSON.parse(raw):raw.split(",");}
 export async function runSignatureExplorerCompiledUi({browser,base,readerSession,editorSession,output,total,facets,literalInstitution,literalCampus,phone,expectedCsvSha}){
- assert.equal(base,"http://127.0.0.1:3061");assert.equal(process.env.DATABASE_URL,"postgres://peticao:peticao@127.0.0.1:54384/peticao");assert.equal(output,process.env.QA_OUTPUT_DIR);assert.ok(total>20000&&facets>300);assert.match(expectedCsvSha,/^[a-f0-9]{64}$/);
+ assert.equal(base,"http://127.0.0.1:3073");assert.equal(process.env.DATABASE_URL,"postgres://peticao:peticao@127.0.0.1:54388/peticao");assert.equal(output,process.env.QA_OUTPUT_DIR);assert.ok(total>20000&&facets>300);assert.match(expectedCsvSha,/^[a-f0-9]{64}$/);
  const pageErrors=[],externalBlocked=[],consoleErrors=[],requests=[],shots=[],summaryCaptures=[],csvDownloads=[];const contexts=[];
  const make=async(session,role)=>{
   const context=await browser.newContext({viewport:{width:1280,height:900},acceptDownloads:true,locale:"pt-BR"});contexts.push(context);await context.addCookies([{name:"adm",value:session.token,url:base,httpOnly:true,sameSite:"Lax"}]);
