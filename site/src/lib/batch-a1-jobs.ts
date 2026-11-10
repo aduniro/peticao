@@ -262,3 +262,48 @@ export async function getA1Availability(batchId:number,actor:Actor|null,expected
 
 /** Render target only: no signature, approval or delivery. */
 export async function a1PreparationEnabledTx(c:PoolClient) { return (process.env.SIGNER ?? "none") === "none" && !!await policy(c); }
+
+
+export { closeExpiredA1Intent } from "./a1-expired-contract";
+import { closeExpiredA1Intent, type CloseExpiredA1Intent } from "./a1-expired-contract";
+const closeEvent="batch_a1_expired_closed";
+function closeFingerprint(input:CloseExpiredA1Intent,actorId:number){
+ return digest(JSON.stringify(["peticao-a1-expired-close-v1",actorId,input.batchId,input.requestId,input.jobId,input.expectedRevision,input.expectedDocumentVersion,input.expectedOwnArtifactId??null]));
+}
+async function closeRecord(c:PoolClient,batchId:number,requestId:string,actorId:number){
+ const rows=(await c.query<{data:string}>("SELECT data FROM audit_log WHERE event=$1 AND data::jsonb->>'userId'=$2 AND data::jsonb->>'closeRequestId'=$3 ORDER BY id LIMIT 2",[closeEvent,String(actorId),requestId])).rows;
+ if(rows.length!==1)return rows.length?false:null;
+ const d=JSON.parse(rows[0].data);
+ if(d.batchId!==batchId||!uuid(d.jobId)||!sha(d.fingerprint)||!integer(d.closedRevision)||!uuid(d.inputArtifactVersionId)||!sha(d.inputSha256)||!sha(d.documentVersion))return false;
+ return d as {batchId:number;jobId:string;fingerprint:string;closedRevision:number;inputArtifactVersionId:string;inputSha256:string;documentVersion:string;ownArtifactId:string|null};
+}
+async function closedReplay(c:PoolClient,d:Exclude<Awaited<ReturnType<typeof closeRecord>>,null|false>,requestId:string){
+ const j=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE id=$1 AND batch_id=$2 FOR UPDATE",[d.jobId,d.batchId])).rows[0];
+ if(!j||j.state!=="stale"||j.revision!==d.closedRevision||j.error_code!=="authorization_changed"||j.lease_token||j.lease_until||j.input_artifact_version_id!==d.inputArtifactVersionId||j.input_sha256!==d.inputSha256||j.document_version!==d.documentVersion||await a1OwnArtifactIdTx(c,j.input_artifact_version_id)!==d.ownArtifactId)return error("conflict");
+ return {ok:true as const,closed:true as const,closeRequestId:requestId,job:await metadata(c,j),replayed:true};
+}
+/** Explicit closure only: no signer, provider, file deletion, promotion or new admission. */
+export async function closeExpiredA1Job(value:CloseExpiredA1Intent,actor:Actor|null){
+ const input=closeExpiredA1Intent(value);if(!input)return error("parameters");
+ return tx(async c=>{
+  await bounded(c);if(!await authorized(c,actor))return error("forbidden");
+  const fingerprint=closeFingerprint(input,actor!.userId);
+  const prior=await closeRecord(c,input.batchId,input.requestId,actor!.userId);
+  if(prior===false)return error("request_conflict");
+  if(prior)return prior.fingerprint===fingerprint?closedReplay(c,prior,input.requestId):error("request_conflict");
+  const batch=(await c.query("SELECT id FROM batches WHERE id=$1 FOR UPDATE",[input.batchId])).rows[0];if(!batch)return error("not_found");
+  const j=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE id=$1 AND batch_id=$2 FOR UPDATE",[input.jobId,input.batchId])).rows[0];if(!j)return error("not_found");
+  if(j.revision!==input.expectedRevision||j.document_version!==input.expectedDocumentVersion||await a1OwnArtifactIdTx(c,j.input_artifact_version_id)!==(input.expectedOwnArtifactId??null))return error("conflict");
+  if(!["queued","running","validating"].includes(j.state))return error("not_closeable");
+  const now=Number((await c.query("SELECT extract(epoch FROM clock_timestamp())*1000 ms")).rows[0].ms);
+  if(j.authorization_expires_at.getTime()>now||j.lease_until&&j.lease_until.getTime()>now)return error("not_expired");
+  const row=(await c.query<JobRow>("UPDATE batch_a1_jobs SET state='stale',revision=revision+1,lease_token=NULL,lease_until=NULL,error_code='authorization_changed',updated_at=clock_timestamp() WHERE id=$1 AND revision=$2 RETURNING *",[j.id,input.expectedRevision])).rows[0];if(!row)return error("conflict");
+  await audit(closeEvent,null,{userId:actor!.userId,batchId:j.batch_id,jobId:j.id,closeRequestId:input.requestId,fingerprint,closedRevision:row.revision,documentVersion:j.document_version,inputArtifactVersionId:j.input_artifact_version_id,inputSha256:j.input_sha256,ownArtifactId:input.expectedOwnArtifactId??null,previousState:j.state,reason:"authorization_and_lease_expired"},c);
+  return {ok:true as const,closed:true as const,closeRequestId:input.requestId,job:await metadata(c,row),replayed:false};
+ });
+}
+/** Actor-scoped recovery of an already completed close; never executes closure. */
+export async function getExpiredA1Closure(batchId:number,requestId:string,actor:Actor|null){
+ if(!integer(batchId)||!uuid(requestId))return error("parameters");
+ return tx(async c=>{await bounded(c);if(!await authorized(c,actor))return error("forbidden");const d=await closeRecord(c,batchId,requestId,actor!.userId);return d===false?error("conflict"):d?closedReplay(c,d,requestId):error("not_found");});
+}

@@ -95,7 +95,6 @@ export async function runPresidentOwnPdfExtension({ browser, base, sessionToken,
     });
     const page = await context.newPage(); page.on("pageerror", error => pageErrors.push(error.message));
     await page.goto(`${base}/admin/presidente?lote=${sourceBatchId}`); await region(page).waitFor();
-    await page.waitForFunction(() => { const b = [...document.querySelectorAll("button")].find(e => e.textContent === "Conferir solicitação"); return b && !b.disabled; });
     await button(region(page), "Conferir solicitação").click(); await ownRegion(page).waitFor();
     await button(ownRegion(page), "Gerar PDF da confirmação").click();
     await ownRegion(page).getByText("Não foi possível confirmar o resultado. Confira a geração antes de tentar outra ação.", { exact: true }).waitFor();
@@ -109,10 +108,8 @@ export async function runPresidentOwnPdfExtension({ browser, base, sessionToken,
     assert.equal(durable[0].sha256, committed.sha256);
     // Reload clears view metadata. Reopening the consumed issuance and its own intent is explicit readback only.
     await page.reload(); await region(page).waitFor();
-    await page.waitForFunction(() => { const b = [...document.querySelectorAll("button")].find(e => e.textContent === "Conferir solicitação"); return b && !b.disabled; });
     assert.equal(await page.evaluate(() => window.__ownPdfPostCalls), 0);
     await button(region(page), "Conferir solicitação").click(); await ownRegion(page).waitFor();
-    await page.waitForFunction(() => { const b = [...document.querySelectorAll("button")].find(e => e.textContent === "Conferir geração do PDF"); return b && !b.disabled; });
     assert.equal(await button(ownRegion(page), "Gerar PDF da confirmação").isDisabled(), true);
     assert.equal(postRequests.length, 1); assert.equal(readbacks.length, 0);
     await button(ownRegion(page), "Conferir geração do PDF").click();

@@ -113,3 +113,24 @@ export async function readPresidentOwnDocumentPdf(id: string, actor: SessaoAdmin
     return { ok: true as const, bytes: Buffer.from(row.bytes), sha256: row.sha256 as string, sourceSha256: row.source_sha256 as string, artifactId: id };
   }); } catch { return fail("unavailable"); }
 }
+
+
+/** Metadata only. Historical downloads independently check the stored bytes and evidence. */
+export async function listPresidentOwnDocumentArtifacts(batchId: number, actor: SessaoAdmin | null, cursor?: string) {
+  if (!Number.isInteger(batchId) || batchId < 1 || batchId > 2147483647 || cursor !== undefined && !ownUuid(cursor)) return fail("parameters");
+  try { return await tx(async c => {
+    if (!await admission(c, actor)) return fail("forbidden");
+    if (!(await c.query("SELECT 1 FROM batches WHERE id=$1 FOR SHARE", [batchId])).rowCount) return fail("not_found");
+    if (cursor && !(await c.query("SELECT 1 FROM president_own_document_artifacts WHERE id=$1 AND batch_id=$2 AND source='president-own'", [cursor, batchId])).rowCount) return fail("parameters");
+    const rows = (await c.query<{ id: string; receipt_id: string; document_version: string; sha256: string; source_sha256: string; byte_length: number; created_by: number; created_text: string }>(`SELECT id,receipt_id,document_version,sha256,source_sha256,octet_length(bytes) byte_length,created_by,
+      to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') created_text
+      FROM president_own_document_artifacts WHERE batch_id=$1 AND source='president-own'
+      AND ($2::uuid IS NULL OR (created_at,id)<(SELECT created_at,id FROM president_own_document_artifacts WHERE id=$2 AND batch_id=$1)) ORDER BY created_at DESC,id DESC LIMIT 21`, [batchId, cursor ?? null])).rows;
+    const documents = rows.slice(0, 20).map(row => ({ artifactId: row.id, batchId, receiptId: row.receipt_id, documentVersion: row.document_version,
+      sha256: row.sha256, sourceSha256: row.source_sha256, byteLength: row.byte_length, createdBy: row.created_by, createdAt: row.created_text,
+      source: "president-own" as const, assurance: "own-confirmation" as const, icpBrasil: false as const, govBr: false as const, dispatchAllowed: false as const }));
+    const nextCursor = rows.length > 20 ? rows[19].id : null;
+    await audit("president_own_documents_listed", null, { batchId, userId: actor!.userId, cursor: cursor ?? null, returned: documents.length, nextCursor }, c);
+    return { ok: true as const, kind: "artifacts" as const, batchId, documents, hasMore: rows.length > 20, nextCursor };
+  }); } catch { return fail("unavailable"); }
+}

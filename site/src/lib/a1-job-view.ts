@@ -3,6 +3,7 @@ export type A1JobViewPhase = "enabled" | "queued" | "running" | "succeeded" | "f
 export type A1JobObservation = {
   jobId: string; requestId?: string; batchId: number; documentVersion: string; policyRevision: number;
   revision: number; state: "queued" | "running" | "validating" | "succeeded" | "failed" | "stale" | "cancelled";
+  authorizationExpiresAt?: string; leaseUntil?: string | null;
   ownArtifactId?: string | null; outputVersionId?: string | null; outputSha256?: string | null; errorCode?: string | null;
 };
 export type A1AvailabilityObservation =

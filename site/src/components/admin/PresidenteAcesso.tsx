@@ -2,6 +2,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { presidentAdminRequest } from "@/lib/president-admin-client";
 import PresidenteDocumentoProprio from "@/components/admin/PresidenteDocumentoProprio";
+import PresidenteHistoricoProprio from "@/components/admin/PresidenteHistoricoProprio";
 
 export type PresidentProfileView = { revision: number; responsibleId: number; name: string; email: string; enabled: boolean; hasCpf: boolean; hasWhatsapp: boolean; fingerprint: string };
 export type PresidentIssueDocumentView = { batchId: number; seq: number; kind: "partial" | "final"; documentVersion: string; originalSha256: string; signedSha256: string | null; listHash: string; signatureKind: string | null };
@@ -33,6 +34,7 @@ const COPY = {
   title: "Assinatura própria do app", profile: "Responsável pela assinatura", save: "Salvar responsável", refresh: "Conferir configuração",
   issue: "Gerar acesso do presidente", check: "Conferir solicitação", retry: "Repetir esta solicitação", replace: "Preparar outro acesso",
   uncertain: "Não foi possível confirmar o resultado. Confira a solicitação antes de tentar outra ação.",
+  dirty: "Há alterações não salvas. Salve ou confira a configuração antes de gerar ou compartilhar um acesso.",
 };
 /** Mount with a key containing actor/session + batch/document version; no secret prop is accepted. */
 export default function PresidenteAcesso({ actorScope, accounts, initialProfile, document }: { actorScope: string; accounts: AccountOption[]; initialProfile: PresidentProfileView | null; document: PresidentIssueDocumentView | null }) {
@@ -44,6 +46,7 @@ export default function PresidenteAcesso({ actorScope, accounts, initialProfile,
   const [whatsapp, setWhatsapp] = useState("");
   const [replaceWhatsapp, setReplaceWhatsapp] = useState(false);
   const [profileUncertain, setProfileUncertain] = useState(false);
+  const [profileEdited, setProfileEdited] = useState(false);
   const [intent, setIntent] = useState<Intent | null>(null);
   const [recovery, setRecovery] = useState<Recovery | null>(null);
   const [credentials, setCredentials] = useState<Credentials | null>(null);
@@ -54,6 +57,8 @@ export default function PresidenteAcesso({ actorScope, accounts, initialProfile,
   const [message, setMessage] = useState("");
   const busy = useRef(false), alive = useRef(true);
   const storageKey = `president-admin-issue:${actorScope}:${document?.batchId ?? "none"}`;
+  const profileDirty = profileEdited || Number(responsible) !== profile?.responsibleId || enabled !== profile?.enabled || cpf.trim() !== "" || replaceWhatsapp;
+  const edited = () => { setProfileEdited(true); setShowCredentials(false); };
   const installIntent = (value: Intent | null) => {
     setIntent(value);
     try { if (value) sessionStorage.setItem(storageKey, JSON.stringify(value)); else sessionStorage.removeItem(storageKey); } catch { /* Raw credentials are never persisted. */ }
@@ -79,7 +84,7 @@ export default function PresidenteAcesso({ actorScope, accounts, initialProfile,
   const acceptProfile = (next: PresidentProfileView | null) => {
     if (next?.fingerprint !== profile?.fingerprint) { setCredentials(null); setRecovery(null); installIntent(null); }
     setProfile(next); setResponsible(String(next?.responsibleId ?? accounts[0]?.id ?? "")); setEnabled(next?.enabled ?? true);
-    setCpf(""); setWhatsapp(""); setReplaceWhatsapp(false); setProfileUncertain(false);
+    setCpf(""); setWhatsapp(""); setReplaceWhatsapp(false); setProfileUncertain(false); setProfileEdited(false);
   };
   const readProfile = async () => {
     const result = await presidentAdminRequest("/api/admin/presidente/perfil", "GET");
@@ -110,7 +115,7 @@ export default function PresidenteAcesso({ actorScope, accounts, initialProfile,
     setMessage("Solicitação conferida. A senha e o código não são recuperados por esta consulta.");
   };
   const issue = async (repeat: boolean) => {
-    if (!document || document.signedSha256 !== null || ![null, "", "none"].includes(document.signatureKind) || !profile?.enabled || profileUncertain || intent && !repeat || repeat && (!intent || !notFound)) return;
+    if (!document || document.signedSha256 !== null || ![null, "", "none"].includes(document.signatureKind) || !profile?.enabled || profileUncertain || profileDirty || intent && !repeat || repeat && (!intent || !notFound)) return;
     const next: Intent = repeat && intent ? intent : { requestId: crypto.randomUUID(), batchId: document.batchId, expectedDocumentVersion: document.documentVersion, expectedProfileFingerprint: profile.fingerprint };
     if (next.expectedProfileFingerprint !== profile.fingerprint || next.expectedDocumentVersion !== document.documentVersion) return;
     installIntent(next); setRecovery(null); setCredentials(null); setShowCredentials(false); setNotFound(false);
@@ -123,30 +128,31 @@ export default function PresidenteAcesso({ actorScope, accounts, initialProfile,
     } else setMessage(COPY.uncertain);
   };
   const nativeEligible = !!document && document.signedSha256 === null && [null, "", "none"].includes(document.signatureKind);
-  const canIssue = nativeEligible && !!profile?.enabled && !profileUncertain && !intent && !pending;
+  const canIssue = nativeEligible && !!profile?.enabled && !profileUncertain && !profileDirty && !intent && !pending;
   const needsCpf = !profile?.hasCpf || profile.responsibleId !== Number(responsible);
   return <section className="box" aria-labelledby={title} aria-busy={pending}>
     <h3 id={title}>{COPY.title}</h3>
     <form onSubmit={event => { event.preventDefault(); void run(saveProfile); }} autoComplete="off">
-      <label>{COPY.profile}<select aria-label={COPY.profile} value={responsible} disabled={pending || profileUncertain} required onChange={event => { setResponsible(event.target.value); setCpf(""); setWhatsapp(""); setReplaceWhatsapp(false); }}>
+      <label>{COPY.profile}<select aria-label={COPY.profile} value={responsible} disabled={pending || profileUncertain} required onChange={event => { edited(); setResponsible(event.target.value); setCpf(""); setWhatsapp(""); setReplaceWhatsapp(false); }}>
         {!accounts.length && <option value="">Nenhuma conta ativa</option>}
         {accounts.map(account => <option key={account.id} value={account.id}>{account.name} · {account.email}</option>)}
       </select></label>
-      <label>CPF do responsável<input type="password" inputMode="numeric" autoComplete="off" maxLength={20} value={cpf} required={needsCpf} disabled={pending || profileUncertain} onChange={event => setCpf(event.target.value)} /></label>
+      <label>CPF do responsável<input type="password" inputMode="numeric" autoComplete="off" maxLength={20} value={cpf} required={needsCpf} disabled={pending || profileUncertain} onChange={event => { edited(); setCpf(event.target.value); }} /></label>
       {!needsCpf && <p className="small">Deixe vazio para preservar o CPF cadastrado.</p>}
-      <label className="adm-check"><input type="checkbox" checked={replaceWhatsapp} disabled={pending || profileUncertain} onChange={event => setReplaceWhatsapp(event.target.checked)} />Alterar WhatsApp do responsável</label>
-      {replaceWhatsapp && <label>WhatsApp<input type="tel" autoComplete="off" placeholder="+5569000000000" maxLength={32} value={whatsapp} pattern="\+[1-9][0-9]{7,14}" disabled={pending || profileUncertain} onChange={event => setWhatsapp(event.target.value)} /><span className="small">Informe com código do país. Vazio remove o número; não envia mensagens.</span></label>}
-      <label className="adm-check"><input type="checkbox" checked={enabled} disabled={pending || profileUncertain} onChange={event => setEnabled(event.target.checked)} />Habilitar acesso do presidente</label>
+      <label className="adm-check"><input type="checkbox" checked={replaceWhatsapp} disabled={pending || profileUncertain} onChange={event => { edited(); setReplaceWhatsapp(event.target.checked); }} />Alterar WhatsApp do responsável</label>
+      {replaceWhatsapp && <label>WhatsApp<input type="tel" autoComplete="off" placeholder="+5569000000000" maxLength={32} value={whatsapp} pattern="\+[1-9][0-9]{7,14}" disabled={pending || profileUncertain} onChange={event => { edited(); setWhatsapp(event.target.value); }} /><span className="small">Informe com código do país. Vazio remove o número; não envia mensagens.</span></label>}
+      <label className="adm-check"><input type="checkbox" checked={enabled} disabled={pending || profileUncertain} onChange={event => { edited(); setEnabled(event.target.checked); }} />Habilitar acesso do presidente</label>
       <p className="small">Salvar altera a versão da configuração e revoga os acessos ainda não confirmados.</p>
       <div className="fim"><button type="submit" className="adm-btn" disabled={pending || profileUncertain || !accounts.length}>{COPY.save}</button><button type="button" className="adm-btn" disabled={pending} onClick={() => void run(readProfile)}>{COPY.refresh}</button></div>
     </form>
+    {profileDirty && <p className="small" role="status">{COPY.dirty}</p>}
     {document && !nativeEligible && <p className="small">Este documento já possui uma versão assinada. Uma confirmação adicional não altera esse arquivo.</p>}
     <div className="fim"><button type="button" className="adm-btn" disabled={!canIssue} onClick={() => void run(() => issue(false))}>{COPY.issue}</button><button type="button" className="adm-btn" disabled={!intent || pending} onClick={() => void run(check)}>{COPY.check}</button>
-      {notFound && intent && <button type="button" className="adm-btn" disabled={pending || profileUncertain || !nativeEligible} onClick={() => void run(() => issue(true))}>{COPY.retry}</button>}
+      {notFound && intent && <button type="button" className="adm-btn" disabled={pending || profileUncertain || profileDirty || !nativeEligible} onClick={() => void run(() => issue(true))}>{COPY.retry}</button>}
     </div>
     {intent && <p className="small" style={{ overflowWrap: "anywhere" }}>Solicitação: <code>{intent.requestId}</code></p>}
     {message && <p role="status">{message}</p>}
-    {credentials && <div className="box">
+    {credentials && !profileDirty && !profileUncertain && <div className="box">
       <p>Abra <a href="/presidente" target="_blank" rel="noopener noreferrer">a página do presidente</a> e informe as credenciais abaixo. Elas não são inseridas no endereço.</p>
       <label className="adm-check"><input type="checkbox" checked={showCredentials} onChange={event => setShowCredentials(event.target.checked)} />Mostrar código e senha</label>
       <label>Código de acesso<input readOnly type={showCredentials ? "text" : "password"} autoComplete="off" value={credentials.token} /></label>
@@ -155,11 +161,12 @@ export default function PresidenteAcesso({ actorScope, accounts, initialProfile,
       <button type="button" className="adm-btn" onClick={() => { setCredentials(null); setShowCredentials(false); }}>Ocultar e descartar credenciais desta tela</button>
     </div>}
     {recovery && <div className="box"><p>Estado: {recovery.state} · {recovery.isCurrent && !recovery.credentialsExpired ? "vínculo atual" : "acesso indisponível"}</p><p>Válido até {new Date(recovery.expiresAt).toLocaleString("pt-BR")}.</p>{recovery.receiptId && <p style={{ overflowWrap: "anywhere" }}>Comprovante: <code>{recovery.receiptId}</code></p>}
-      {document && nativeEligible && !profileUncertain && recovery.state === "consumed" && recovery.isCurrent && recovery.receiptId && (
+      {document && nativeEligible && !profileUncertain && !profileDirty && recovery.state === "consumed" && recovery.isCurrent && recovery.receiptId && (
         <PresidenteDocumentoProprio actorScope={actorScope} batchId={document.batchId} receiptId={recovery.receiptId} expectedDocumentVersion={recovery.documentVersion} />
       )}
-      <label className="adm-check"><input type="checkbox" checked={confirmReplace} disabled={pending} onChange={event => setConfirmReplace(event.target.checked)} />Quero preparar outro acesso. A emissão seguinte revogará o acesso anterior ainda não confirmado.</label>
-      <button type="button" className="adm-btn" disabled={!confirmReplace || pending} onClick={() => { setCredentials(null); setShowCredentials(false); setRecovery(null); setNotFound(false); setConfirmReplace(false); installIntent(null); setMessage("Pronto para uma nova solicitação explícita."); }}>{COPY.replace}</button>
+      <label className="adm-check"><input type="checkbox" checked={confirmReplace} disabled={pending || profileDirty} onChange={event => setConfirmReplace(event.target.checked)} />Quero preparar outro acesso. A emissão seguinte revogará o acesso anterior ainda não confirmado.</label>
+      <button type="button" className="adm-btn" disabled={!confirmReplace || pending || profileDirty} onClick={() => { setCredentials(null); setShowCredentials(false); setRecovery(null); setNotFound(false); setConfirmReplace(false); installIntent(null); setMessage("Pronto para uma nova solicitação explícita."); }}>{COPY.replace}</button>
     </div>}
+    {document && <PresidenteHistoricoProprio actorScope={actorScope} batchId={document.batchId} actionsDisabled={profileDirty || profileUncertain} profileFingerprint={profile?.fingerprint ?? null} documentRevision={document.documentVersion} alreadyMountedReceiptId={document && nativeEligible && !profileUncertain && !profileDirty && recovery?.state === "consumed" && recovery.isCurrent && recovery.receiptId ? recovery.receiptId : null} />}
   </section>;
 }

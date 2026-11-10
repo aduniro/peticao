@@ -96,9 +96,7 @@ export async function runPresidentCombinedA1Extension({ browser, base, sessionTo
     });
     const page = await context.newPage(); page.on("pageerror", error => pageErrors.push(error.message));
     const reopenOwn = async () => {
-      await page.waitForFunction(() => { const b = [...document.querySelectorAll("button")].find(e => e.textContent === "Conferir solicitação"); return b && !b.disabled; });
       await button(adminRegion(page), "Conferir solicitação").click(); await ownRegion(page).waitFor();
-      await page.waitForFunction(() => { const b = [...document.querySelectorAll("button")].find(e => e.textContent === "Conferir geração do PDF"); return b && !b.disabled; });
       await button(ownRegion(page), "Conferir geração do PDF").click(); await ownRegion(page).getByRole("link", { name: "Baixar PDF da confirmação", exact: true }).waitFor();
     };
     await page.goto(`${base}/admin/presidente?lote=${sourceBatchId}`); await reopenOwn();

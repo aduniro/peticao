@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { runPresidentAdminCompiledExtension } from "./president-admin-compiled-extension.mjs";
 import { runPresidentOwnPdfExtension } from "./president-own-pdf-compiled-extension.mjs";
 import { runPresidentCombinedA1Extension } from "./president-combined-a1-compiled-extension.mjs";
+import { runPresidentRecoveryCompiledExtension } from "./president-recovery-compiled-extension.mjs";
+import { runPresidentOwnHistoryCurrentExtension, runPresidentOwnHistoryHistoricalExtension } from "./president-own-history-compiled-extension.mjs";
 import {spawn,execFileSync} from 'node:child_process';
 import {createServer} from 'node:http';
 import {once} from 'node:events';
@@ -91,9 +93,12 @@ try{
  assert.equal((await db.query('SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox UNION ALL SELECT 1 FROM batch_sends')).rowCount,0);assert.equal((await db.query('SELECT 1 FROM signatures')).rowCount,0);assert.ok((await db.verifyAuditChain()).ok);assert.equal(pageErrors.length,0);
  await button('Encerrar acesso').click();assert.equal(await page.locator('#president-token').inputValue(),'');
  const ownPdf = await runPresidentOwnPdfExtension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id,issued:{...issued,requestId:issuedRequestId},documentVersion,profileFingerprint:profile.profile.fingerprint,receiptId:row.receipt_id});
+ const ownHistoryCurrent = await runPresidentOwnHistoryCurrentExtension({browser,base,actor,db,U,output,sourceBatchId:id,ownPdf});
  const combinedA1 = await runPresidentCombinedA1Extension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id,issued:{...issued,requestId:issuedRequestId},documentVersion,profileFingerprint:profile.profile.fingerprint,receiptId:row.receipt_id,ownPdf});
+ const recovery = await runPresidentRecoveryCompiledExtension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id,issued:{...issued,requestId:issuedRequestId},documentVersion,profileFingerprint:profile.profile.fingerprint,receiptId:row.receipt_id,ownPdf});
  const admin = await runPresidentAdminCompiledExtension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id});
+ const ownHistoryHistorical = await runPresidentOwnHistoryHistoricalExtension({browser,base,actor,db,U,output,sourceBatchId:id,ownPdf});
  assert.equal(blockedExternal.length,0);assert.equal(counts.validator,0,'Admission/claim must never call the validator');
- const result={applicationConfirmationCalls:1,physicalConfirmationCalls,ownPdf,combinedA1,admin,ok:true,commit,compiledNextUi:true,bridge:'fictitious Unix socket using supported CPF_VIA_BRIDGE provider',nodeEnv:'production',previewMode:'0',mockGuardPreserved:true,counts,shots,pageErrors,blockedExternal,corruptedHashRefused:true,downloadExactBytes:true,reloadClearsCredentials:true,confirmationResponseLostRecoveredByState:true,noAutomaticConfirmationRetry:true,noRealMessages:true,noBatchMutation:true,noCredentialsInStorageOrUrl:true,realIdentityOrCryptoHomologation:false};
+ const result={applicationConfirmationCalls:1,physicalConfirmationCalls,ownPdf,ownHistoryCurrent,combinedA1,recovery,admin,ownHistoryHistorical,ok:true,commit,compiledNextUi:true,bridge:'fictitious Unix socket using supported CPF_VIA_BRIDGE provider',nodeEnv:'production',previewMode:'0',mockGuardPreserved:true,counts,shots,pageErrors,blockedExternal,corruptedHashRefused:true,downloadExactBytes:true,reloadClearsCredentials:true,confirmationResponseLostRecoveredByState:true,noAutomaticConfirmationRetry:true,noRealMessages:true,noBatchMutation:true,noCredentialsInStorageOrUrl:true,realIdentityOrCryptoHomologation:false};
  writeFileSync(output+'/browser-result.json',JSON.stringify(result,null,2),{mode:0o600});console.log(JSON.stringify({ok:true,commit,counts,shots:shots.length}));
 }finally{await stop();}

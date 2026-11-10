@@ -68,6 +68,8 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
           {batches.length === 0 && <tr><td colSpan={8}>Nenhum lote ainda.</td></tr>}
         </tbody>
       </table></div>
+      {/* MUDAR AQUI: fonte do PDF aceita no upload manual */}
+      <p className="small">Neste upload, envie o PDF original do lote (link “PDF”) após assiná-lo. Para aplicar A1 ao documento com confirmação própria, abra “Presidente da ADUNIR”.</p>
       <p className="small">Fluxo: baixe o PDF do lote, assine com o e-CNPJ da ADUNIR (Adobe, LibreOffice ou Assinador do ITI) e envie o PDF assinado. O site confere a estrutura da assinatura; a validação da cadeia ICP-Brasil usa um validador configurável (ICP_VALIDATOR_URL). Em produção, só lote validado como ICP-Brasil pode ser enviado.</p>
     </div>
     </main>

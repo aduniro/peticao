@@ -37,3 +37,17 @@ export function restoreA1UiIntent(storage: Reader, context: A1UiContext): A1Sign
   } catch { return null; }
 }
 export const a1UiJobMatchesMode = (job: { ownArtifactId?: string | null } | null | undefined, context: A1UiContext) => !!job && a1UiModeValid(context) && (job.ownArtifactId ?? null) === (context.ownArtifactId ?? null);
+
+export const a1UiContextKey = (context: A1UiContext) => baseKey(context);
+/** Retire only the selected pointer; preserve the previous intent record for local inspection. */
+export function retireA1UiIntent(storage: Writer | undefined, context: A1UiContext, expected: A1SigningIntent): { ok: boolean; persisted: boolean } {
+  const base = baseKey(context);
+  if (!base || !storage) return { ok: true, persisted: false };
+  try {
+    const pointer = storage.getItem(`${base}:selected`);
+    if (pointer === null) return { ok: true, persisted: true };
+    const saved = restoreA1UiIntent(storage, context);
+    if (!saved || saved.requestId !== expected.requestId || JSON.stringify(saved) !== JSON.stringify(a1UiIntent(expected, context))) return { ok: false, persisted: false };
+    storage.removeItem(`${base}:selected`); return { ok: true, persisted: true };
+  } catch { return { ok: true, persisted: false }; }
+}

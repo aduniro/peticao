@@ -81,7 +81,8 @@ async function document(client: PoolClient, id: number, allowApproved = false): 
   return { batchId: row.id, seq: row.seq, kind: row.kind, listHash: row.list_hash, originalPdf: row.pdf, signedPdf: row.signed_pdf, signatureKind: row.signature_kind };
 }
 const bytesHash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
-async function boundDocument(client: PoolClient, row: Challenge, allowApproved = false) {
+type PresidentDocumentBinding = Pick<Challenge, "batch_id" | "issued_by" | "responsible_id" | "profile_revision" | "responsible_fingerprint" | "document_version">;
+async function boundDocument(client: PoolClient, row: PresidentDocumentBinding, allowApproved = false) {
   if (!(await client.query("SELECT 1 FROM admin_users WHERE id=$1 AND ativo AND nivel='total' FOR SHARE", [row.issued_by])).rowCount) return null;
   const p = await profile(client), user = p && await account(client, p.responsibleId);
   if (!p?.enabled || !user || p.responsibleId !== row.responsible_id || p.revision !== row.profile_revision || !safeEqual(fingerprint(p, user), row.responsible_fingerprint)) return null;
@@ -191,6 +192,12 @@ export async function confirmConfiguredPresidentChallenge(input: { token: string
   } catch { return unavailable; }
 }
 
+type DurablePresidentReceipt = Pick<Challenge, "state" | "receipt_id" | "confirmed_at" | "expires_at"> & { created_at: Date };
+/** Shared unchanged receipt checks for capture and informational historical inventory. */
+function validConsumedPresidentReceipt(row: DurablePresidentReceipt | null | undefined): row is DurablePresidentReceipt & { state: "consumed"; receipt_id: string; confirmed_at: Date } {
+  return !(!row || row.state !== "consumed" || !row.receipt_id || !(row.confirmed_at instanceof Date) || !Number.isFinite(row.confirmed_at.getTime()) || !(row.created_at instanceof Date) || !(row.expires_at instanceof Date) || row.confirmed_at.getTime() < row.created_at.getTime() || row.confirmed_at.getTime() >= row.expires_at.getTime() || row.confirmed_at.getTime() > Date.now() + 30_000);
+}
+
 /** Server-only capture from a consumed durable receipt. It neither modifies the PDF nor signs/sends. */
 export async function capturePresidentOwnConfirmation(input: { batchId: number; receiptId: string; expectedDocumentVersion: string }, actor: SessaoAdmin | null) {
   if (!input || Object.keys(input).sort().join(",") !== "batchId,expectedDocumentVersion,receiptId" || !validId(input.batchId) || typeof input.receiptId !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(input.receiptId) || typeof input.expectedDocumentVersion !== "string" || !/^[a-f0-9]{64}$/.test(input.expectedDocumentVersion)) return unavailable;
@@ -199,7 +206,7 @@ export async function capturePresidentOwnConfirmation(input: { batchId: number; 
       await bounded(client);
       if (!await authorized(client, actor)) return unavailable;
       const row = (await client.query<Challenge & { created_at: Date }>("SELECT * FROM president_challenges WHERE batch_id=$1 AND receipt_id=$2 FOR SHARE", [input.batchId, input.receiptId])).rows[0];
-      if (!row || row.state !== "consumed" || !row.receipt_id || !(row.confirmed_at instanceof Date) || !Number.isFinite(row.confirmed_at.getTime()) || !(row.created_at instanceof Date) || !(row.expires_at instanceof Date) || row.confirmed_at.getTime() < row.created_at.getTime() || row.confirmed_at.getTime() >= row.expires_at.getTime() || row.confirmed_at.getTime() > Date.now() + 30_000 || !safeEqual(row.document_version, input.expectedDocumentVersion)) return unavailable;
+      if (!validConsumedPresidentReceipt(row) || !safeEqual(row.document_version, input.expectedDocumentVersion)) return unavailable;
       const doc = await boundDocument(client, row);
       // Adding a page after a signed PDF would invalidate that signature. A detached receipt is a separate flow.
       if (!doc || doc.signedPdf || ![null, "", "none"].includes(doc.signatureKind)) return unavailable;
@@ -250,4 +257,39 @@ export async function readPresidentIssueDocumentRevision(batchId: number, actor:
       } };
     });
   } catch { return unavailable; }
+}
+
+
+/** Protected historical inventory. Current is informational; generation/A1 still reauthorize and CAS. */
+export async function listPresidentConsumedReceipts(batchId: number, actor: SessaoAdmin | null, cursor?: string) {
+  const failure = (error: "parameters" | "forbidden" | "not_found" | "unavailable") => ({ ok: false as const, error });
+  if (!validId(batchId) || cursor !== undefined && !requestUuid(cursor)) return failure("parameters");
+  try { return await tx(async client => {
+    await bounded(client);if (!await authorized(client, actor)) return failure("forbidden");
+    if (!(await client.query("SELECT 1 FROM batches WHERE id=$1 FOR SHARE", [batchId])).rowCount) return failure("not_found");
+    if (cursor && !(await client.query("SELECT 1 FROM president_challenges WHERE id=$1 AND batch_id=$2 AND state='consumed' AND receipt_id IS NOT NULL AND confirmed_at IS NOT NULL", [cursor, batchId])).rowCount) return failure("parameters");
+    type Row = PresidentDocumentBinding & DurablePresidentReceipt & { id: string; created_text: string; confirmed_text: string };
+    const rows = (await client.query<Row>(`SELECT id,batch_id,responsible_id,issued_by,profile_revision,responsible_fingerprint,document_version,state,receipt_id,created_at,expires_at,confirmed_at,
+      to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') created_text,
+      to_char(confirmed_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') confirmed_text
+      FROM president_challenges WHERE batch_id=$1 AND state='consumed' AND receipt_id IS NOT NULL AND confirmed_at IS NOT NULL
+      AND ($2::uuid IS NULL OR (created_at,id)<(SELECT created_at,id FROM president_challenges WHERE id=$2 AND batch_id=$1)) ORDER BY created_at DESC,id DESC LIMIT 21`, [batchId, cursor ?? null])).rows;
+    const cache = new Map<string, boolean>();
+    const receipts = [];
+    for (const row of rows.slice(0, 20)) {
+      let isCurrent = false;
+      if (validConsumedPresidentReceipt(row) && /^[a-f0-9]{64}$/.test(row.document_version)) {
+        const key = JSON.stringify([row.batch_id, row.issued_by, row.responsible_id, row.profile_revision, row.responsible_fingerprint, row.document_version]);
+        if (cache.has(key)) isCurrent = cache.get(key)!;
+        else { const doc = await boundDocument(client, row);isCurrent = !!doc && !doc.signedPdf && [null, "", "none"].includes(doc.signatureKind);cache.set(key, isCurrent); }
+      }
+      receipts.push({ challengeId: row.id, receiptId: row.receipt_id!, batchId, responsibleId: row.responsible_id, issuedBy: row.issued_by,
+        documentVersion: /^[a-f0-9]{64}$/.test(row.document_version) ? row.document_version : null,
+        createdAt: row.created_text, confirmedAt: row.confirmed_text, isCurrent,
+        assurance: "own-confirmation" as const, icpBrasil: false as const, govBr: false as const, dispatchAllowed: false as const });
+    }
+    const nextCursor = rows.length > 20 ? rows[19].id : null;
+    await audit("president_own_receipts_listed", null, { batchId, userId: actor!.userId, cursor: cursor ?? null, returned: receipts.length, nextCursor }, client);
+    return { ok: true as const, kind: "receipts" as const, batchId, receipts, hasMore: rows.length > 20, nextCursor };
+  }); } catch { return failure("unavailable"); }
 }
