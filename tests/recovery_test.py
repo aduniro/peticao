@@ -64,6 +64,24 @@ class RecoveryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             r.restore(self.archive, target)
 
+    def test_exact_public_env_examples_survive_capture_verify_restore(self):
+        source = self.primary / "sources" / ("a" * 40) / "tree"
+        examples = {".env.example": "MAIL_PROVIDER=disabled\n", ".env.sample": "PETICAO_TEST_MODE=1\n"}
+        for name, value in examples.items():
+            (source / name).write_text(value)
+        private = [".env", ".env.local", ".env.production", ".env.example.local", ".env.sample.backup"]
+        for name in private:
+            (source / name).write_text("synthetic-private-value")
+        archive = Path(r.snapshot(self.primary, self.root / "example-snapshots")["snapshot"])
+        self.assertTrue(r.verify(archive)["verified"])
+        target = self.root / "example-restore"
+        r.restore(archive, target)
+        restored = target / "sources" / ("a" * 40) / "tree"
+        for name, value in examples.items():
+            self.assertEqual((restored / name).read_text(), value)
+        for name in private:
+            self.assertFalse((restored / name).exists())
+
     def rewrite_archive(self, path, mutate):
         with tarfile.open(self.archive) as tf:
             files = {m.name: tf.extractfile(m).read() for m in tf.getmembers()}

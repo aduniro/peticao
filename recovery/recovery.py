@@ -52,7 +52,7 @@ def safe_name(name):
 
 
 def private_name(parts):
-    return any(p in PRIVATE or p.startswith(".env") or p.endswith((".key", ".pem")) or p.startswith("id_ed25519") or p.startswith("id_rsa") for p in parts)
+    return any(p in PRIVATE or (p.startswith(".env") and p not in {".env.example", ".env.sample"}) or p.endswith((".key", ".pem")) or p.startswith("id_ed25519") or p.startswith("id_rsa") for p in parts)
 
 
 def sha(path):
