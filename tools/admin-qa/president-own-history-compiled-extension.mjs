@@ -3,6 +3,11 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { chmodSync, readFileSync, writeFileSync } from "node:fs";
 const sha = value => createHash("sha256").update(value).digest("hex");
+function assertPrivateNoStore(value) {
+  const directives = new Set(String(value ?? "").toLowerCase().split(",").map(v => v.trim()).filter(Boolean));
+  assert.ok(directives.has("private") && directives.has("no-store"));
+  assert.ok([...directives].every(v => ["private", "no-store", "max-age=0"].includes(v)), "no public/shared/positive-age caching directive is allowed");
+}
 const uuid = value => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
 const inventory = page => page.getByRole("region", { name: "Histórico de confirmações e documentos próprios", exact: true });
 const button = (scope, name) => scope.getByRole("button", { name, exact: true });
@@ -50,7 +55,7 @@ async function runPhase(ctx, phase) {
       const responseWait = page.waitForResponse(response => { const u = new URL(response.url());return u.pathname === `/api/admin/lotes/${sourceBatchId}/presidente/historico` && u.searchParams.get("kind") === kind; });
       // Initially two identical buttons; after receipts are loaded only artifacts retains the initial label.
       await button(inventory(page), refresh ? "Atualizar histórico" : "Consultar histórico").first().click();
-      const response = await responseWait;assert.equal(response.status(), 200);assert.equal(response.headers()["cache-control"], "private, no-store");
+      const response = await responseWait;assert.equal(response.status(), 200);assertPrivateNoStore(response.headers()["cache-control"]);
       const value = await response.json();assert.ok(value.ok && value.batchId === sourceBatchId && value.kind === kind);
       await inventory(page).getByRole("button", { name: "Atualizar histórico", exact: true }).first().waitFor();
       const headingId = await inventory(page).getAttribute("aria-labelledby");
@@ -91,7 +96,7 @@ async function runPhase(ctx, phase) {
     const downloadWait = page.waitForEvent("download");await target.click();
     const response = await responseWait;assert.equal(response.status(), 200);assert.equal(response.headers()["x-document-sha256"], artifact.sha256);
     assert.equal(response.headers()["x-source-document-sha256"], artifact.source_sha256);
-    assert.equal(response.headers()["content-type"], "application/pdf");assert.equal(response.headers()["cache-control"], "private, no-store");
+    assert.equal(response.headers()["content-type"], "application/pdf");assertPrivateNoStore(response.headers()["cache-control"]);
     assert.equal(response.headers()["referrer-policy"], "no-referrer");assert.equal(response.headers()["x-content-type-options"], "nosniff");
     assert.match(response.headers()["content-disposition"] ?? "", /^attachment;/);
     const download = await downloadWait;const path = `${output}/president-own-history-${phase}.pdf`;await download.saveAs(path);chmodSync(path, 0o600);assert.equal(sha(readFileSync(path)), artifact.sha256);
