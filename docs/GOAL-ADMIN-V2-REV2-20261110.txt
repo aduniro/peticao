@@ -1,0 +1,9 @@
+Concluir o admin-v2 integrado à página de assinaturas, seguindo /mnt/apps/peticao-final/_ops/coordenacao-dupla/docs/PLANO-COORDENADO-REV2-20261110.md após aprovação.
+
+Priorizar documentos, petição, PDFs, aprovação e envio dos lotes; oferecer o caminho sem assinatura digital com alerta e confirmação, preservando assinaturas coletadas, histórico e prevenção de duplicidade. Respeitar atividades bloqueadas, sem repeti-las por outro caminho, e continuar etapas independentes permitidas.
+
+Enquanto o responsável define os novos formulários, instituições e domínios na outra sessão, avançar nas partes administrativas e de empacotamento independentes. Receber os contratos públicos de API/banco, revisar impactos e adaptar o admin-v2 antes de integrar as mudanças cadastrais.
+
+Trabalhar na base cumulativa /mnt/apps/peticao-final/peticao-integrado, com branches, commits, testes, releases completas e retorno documentado. Usar somente a coordenação existente; exigir manifesto, ACK e lease válido para integração. Preservar originais, dados e segredos.
+
+Após documental operacional, seguir Campanha, Assinaturas, Comunicação, Mapas e Visão Geral. Delegar tarefas disjuntas e manter Vigia e relatório único por hora com atividade e percentuais comprovados. Decidir detalhes técnicos sem consultas rotineiras, registrando decisões. Não publicar sem autorização específica da versão. Aguardar aprovação desta revisão antes de reativar a execução; respeitar pausas e limites.
