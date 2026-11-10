@@ -1,3 +1,4 @@
+import { freezeOwnConfirmation } from "./president-native-contract";
 import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { audit, tx } from "./db";
@@ -177,5 +178,28 @@ export async function confirmConfiguredPresidentChallenge(input: { token: string
       const birth = normalizeRegistryBirth(value.birthDate); if (!birth || !parseBirth(birth)) return false;
       return (await verifyIdentity({cpf:value.cpf,method:"nascimento",value:birth,declaredName:p.user.nome,provider})).ok;
     }});
+  } catch { return unavailable; }
+}
+
+/** Server-only capture from a consumed durable receipt. It neither modifies the PDF nor signs/sends. */
+export async function capturePresidentOwnConfirmation(input: { batchId: number; receiptId: string; expectedDocumentVersion: string }, actor: SessaoAdmin | null) {
+  if (!input || Object.keys(input).sort().join(",") !== "batchId,expectedDocumentVersion,receiptId" || !validId(input.batchId) || typeof input.receiptId !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(input.receiptId) || typeof input.expectedDocumentVersion !== "string" || !/^[a-f0-9]{64}$/.test(input.expectedDocumentVersion)) return unavailable;
+  try {
+    return await tx(async client => {
+      await bounded(client);
+      if (!await authorized(client, actor)) return unavailable;
+      const row = (await client.query<Challenge & { created_at: Date }>("SELECT * FROM president_challenges WHERE batch_id=$1 AND receipt_id=$2 FOR SHARE", [input.batchId, input.receiptId])).rows[0];
+      if (!row || row.state !== "consumed" || !row.receipt_id || !(row.confirmed_at instanceof Date) || !Number.isFinite(row.confirmed_at.getTime()) || !(row.created_at instanceof Date) || !(row.expires_at instanceof Date) || row.confirmed_at.getTime() < row.created_at.getTime() || row.confirmed_at.getTime() >= row.expires_at.getTime() || row.confirmed_at.getTime() > Date.now() + 30_000 || !safeEqual(row.document_version, input.expectedDocumentVersion)) return unavailable;
+      const doc = await boundDocument(client, row);
+      // Adding a page after a signed PDF would invalidate that signature. A detached receipt is a separate flow.
+      if (!doc || doc.signedPdf || ![null, "", "none"].includes(doc.signatureKind)) return unavailable;
+      const p = await profile(client), user = p && await account(client, p.responsibleId);
+      if (!p || !user) return unavailable;
+      const bytes = Buffer.from(doc.originalPdf);
+      const frozen = freezeOwnConfirmation({ version: 1, state: "consumed", method: "own-confirmation", receiptId: row.receipt_id, challengeId: row.id, batchId: doc.batchId, responsibleId: row.responsible_id, documentVersion: row.document_version, sourceSha256: bytesHash(bytes), listHash: doc.listHash, accountFingerprint: row.responsible_fingerprint, signerName: user.nome, confirmedAt: row.confirmed_at.toISOString() }, bytes);
+      if (!frozen.ok) return unavailable;
+      await audit("president_own_confirmation_captured", null, { challengeId: row.id, receiptId: row.receipt_id, batchId: row.batch_id, documentVersion: row.document_version, evidenceDigest: frozen.evidenceDigest, sourceSha256: frozen.snapshot.sourceSha256, userId: actor!.userId }, client);
+      return { ...frozen, bytes };
+    });
   } catch { return unavailable; }
 }

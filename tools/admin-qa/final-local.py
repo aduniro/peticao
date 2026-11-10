@@ -7,7 +7,7 @@ SITE = ROOT / "site"
 NODE = Path("/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node")
 NODE_SHA = "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac"
 parser = argparse.ArgumentParser()
-parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http", "base-validation", "base-store", "packages", "package-delivery", "base-http", "base-client"])
+parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http", "base-validation", "base-store", "packages", "package-delivery", "base-http", "base-client", "president-native"])
 parser.add_argument("--test-name-pattern", help="Run only matching test names; result is directed QA, not a full suite")
 args = parser.parse_args()
 if args.test_name_pattern and (args.mode in ["types", "build", "schema"] or len(args.test_name_pattern)>256): parser.error("Pattern is limited to test modes and 256 characters")
@@ -30,8 +30,8 @@ commit_before = subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "rev-p
 scratch = base / (args.mode + "-" + str(time.time_ns()))
 scratch.mkdir(mode=0o700, parents=True)
 for d in ["empty", "tmp"]: (scratch / d).mkdir(mode=0o700)
-assert not subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "ls-files", "--others", "--exclude-standard", "site", "deploy/test", "tools/signing"], text=True).strip(), "Track source files before freezing QA"
-tracked = subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "ls-files", "site", "deploy/test", "tools/signing"], text=True).splitlines()
+assert not subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "ls-files", "--others", "--exclude-standard", "site", "deploy", "tools/signing"], text=True).strip(), "Track source files before freezing QA"
+tracked = subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "ls-files", "site", "deploy", "tools/signing"], text=True).splitlines()
 def manifest():
     return {f: hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in tracked if (ROOT/f).is_file()}
 short = Path("/mnt/apps/peticao-final/_qa") / ("a1-" + str(time.time_ns()))
@@ -43,7 +43,7 @@ env = {k: os.environ[k] for k in ["HOME", "LANG", "LC_ALL"] if k in os.environ}
 env.update(PATH=str(NODE.parent)+":/usr/bin:/bin", NODE_ENV="test", MAIL_PROVIDER="dev", SIGNER="none", NEXT_TELEMETRY_DISABLED="1",
     GEO_DIR=str(geo), DEV_DB_PORT="54375", DEV_DB_DIR=str(scratch/"postgres"), TMPDIR=str(short), DATABASE_URL="postgres://peticao:peticao@127.0.0.1:54375/peticao",
     HASH_PEPPER="QA-ADMIN-FINAL-NEVER-PRODUCTION-0123456789", SECRETS_DIR=str(scratch/"empty"), PETICAO_CONFIG_DIR=str(scratch/"empty"), CREDENTIALS_DIRECTORY=str(scratch/"empty"))
-if args.mode in ["targeted", "full", "schema", "regression", "documents", "a1-http", "base-store", "packages", "package-delivery", "base-http"]:
+if args.mode in ["targeted", "full", "schema", "regression", "documents", "a1-http", "base-store", "packages", "package-delivery", "base-http", "president-native"]:
     with socket.socket() as s: assert s.connect_ex(("127.0.0.1",54375)) != 0, "QA port occupied"
 if args.mode == "types": command=[str(NODE),"node_modules/typescript/bin/tsc","--noEmit","--incremental","false"]
 elif args.mode == "build":
@@ -54,6 +54,7 @@ elif args.mode == "base-validation": command=[str(NODE),"--import","tsx","--test
 elif args.mode == "schema": command=[str(NODE),"scripts/with-db.mjs",str(NODE),"--import","tsx","../deploy/test/admin-schema-upgrade.mjs"]
 else:
     if args.mode == "full": files=sorted(str(p.relative_to(SITE)) for folder in [SITE/"src/lib",SITE/"src/i18n"] for p in folder.glob("*.test.ts"))
+    elif args.mode == "president-native": files=["src/lib/"+f+".test.ts" for f in ["president-native-contract", "president-portal-store", "president-access"]]
     elif args.mode == "base-http": files=["src/lib/petition-base-route.test.ts"]
     elif args.mode == "package-delivery": files=["src/lib/"+f+".test.ts" for f in ["batch-package-delivery","batches","batch-rejection-recovery","batch-document-reservation","batch-mutation-atomicity", "mail-rollback"]]
     elif args.mode == "packages": files=["src/lib/"+f+".test.ts" for f in ["batch-package-contract","batch-package-store","petition-base-selection","petition-base-store","petition-base-validation-store"]]

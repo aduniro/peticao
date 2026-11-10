@@ -134,3 +134,35 @@ test("rotas protegidas exigem nível/stepup, limites/origem e confirmam com prov
     await c.db.query("UPDATE admin_users SET nivel='edicao' WHERE id=1");assert.equal((await I.POST(req("/api/admin/presidente/desafio",{batchId:c.batch}))).status,403);await c.noMail();
   }finally{delete process.env.CPF_FORCE_MOCK;delete process.env.CPF_MOCK_DATA;await c.db._closeDbForTests();}
 });
+
+
+async function consumed(c:Awaited<ReturnType<typeof fixture>>){const issued=await c.issue(),receipt=await c.S.confirmConfiguredPresidentChallenge({...issued,...identity},c.provider);assert.ok(receipt.ok);return{issued,receipt,input:{batchId:c.batch,receiptId:receipt.receiptId,expectedDocumentVersion:issued.documentVersion}};}
+test("native capture loads only durable consumed evidence and preserves document, receipt and credentials",async t=>{
+ const c=await fixture("t_native_capture_durable");try{
+  const {issued,receipt,input}=await consumed(c),before=await c.documents(),state=(await c.db.query('SELECT row_to_json(p)::text data FROM president_challenges p')).rows;
+  const captured=await c.S.capturePresidentOwnConfirmation(input,c.actor);assert.ok(captured.ok);assert.ok(captured.bytes.equals(c.bytes));assert.equal(captured.snapshot.receiptId,receipt.receiptId);assert.equal(captured.snapshot.signerName,'Pessoa Responsavel QA');assert.equal(captured.snapshot.sourceSha256,digest(c.bytes));assert.equal(captured.icpBrasil,false);assert.equal(captured.dispatchAllowed,false);assert.ok(Object.isFrozen(captured.snapshot));
+  const publicMetadata=JSON.stringify({...captured,bytes:undefined});for(const secret of [issued.token,issued.password,cpf,identity.birthDate])assert.equal(publicMetadata.includes(secret),false);
+  const now=Date.now();t.mock.method(Date,'now',()=>now+601000);const historical=await c.S.capturePresidentOwnConfirmation(input,c.actor);assert.ok(historical.ok,'consumed durable receipt survives the authentication challenge deadline');assert.equal(historical.evidenceDigest,captured.evidenceDigest);
+  assert.deepEqual(await c.documents(),before);assert.deepEqual((await c.db.query('SELECT row_to_json(p)::text data FROM president_challenges p')).rows,state);await c.noMail();assert.ok((await c.db.verifyAuditChain()).ok);
+ }finally{await c.db._closeDbForTests();}
+});
+test("native capture refuses unconsumed, foreign, stale or unprivileged evidence without mutation",async()=>{
+ const c=await fixture("t_native_capture_guards");try{
+  const issued=await c.issue();const nonexistent={batchId:c.batch,receiptId:'00000000-0000-4000-8000-000000000001',expectedDocumentVersion:issued.documentVersion};assert.equal((await c.S.capturePresidentOwnConfirmation(nonexistent,c.actor)).ok,false);
+  const receipt=await c.S.confirmConfiguredPresidentChallenge({...issued,...identity},c.provider);assert.ok(receipt.ok);const input={...nonexistent,receiptId:receipt.receiptId};
+  for(const bad of [{...input,batchId:c.batch+1},{...input,expectedDocumentVersion:'f'.repeat(64)},{...input,password:'NOT-ACCEPTED'}])assert.equal((await c.S.capturePresidentOwnConfirmation(bad,c.actor)).ok,false);
+  assert.equal((await c.S.capturePresidentOwnConfirmation(input,null)).ok,false);await c.db.query('UPDATE admin_sessions SET stepup_ate=NULL WHERE user_id=1');assert.equal((await c.S.capturePresidentOwnConfirmation(input,c.actor)).ok,false);await c.db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '10 minutes' WHERE user_id=1");
+  await c.db.query("UPDATE admin_users SET nome='Outro Nome QA' WHERE id=2");assert.equal((await c.S.capturePresidentOwnConfirmation(input,c.actor)).ok,false);await c.db.query("UPDATE admin_users SET nome='Pessoa Responsavel QA' WHERE id=2");
+  const altered=Buffer.concat([c.bytes,Buffer.from('modified')]);await c.db.query('UPDATE batches SET pdf=$1,pdf_sha256=$2 WHERE id=$3',[altered,digest(altered),c.batch]);assert.equal((await c.S.capturePresidentOwnConfirmation(input,c.actor)).ok,false);await c.db.query('UPDATE batches SET pdf=$1,pdf_sha256=$2 WHERE id=$3',[c.bytes,digest(c.bytes),c.batch]);
+  await c.S.configurePresidentProfile(c.actor,{responsibleId:2,enabled:true,expectedRevision:1});assert.equal((await c.S.capturePresidentOwnConfirmation(input,c.actor)).ok,false);
+  assert.equal((await c.db.query("SELECT 1 FROM audit_log WHERE event='president_own_confirmation_captured'")).rowCount,0);await c.noMail();
+ }finally{await c.db._closeDbForTests();}
+});
+test("native capture cannot rewrite an existing signed source and returns no bytes after audit failure",async()=>{
+ const c=await fixture("t_native_capture_signed_audit");try{
+  const first=await consumed(c);await c.db.query("CREATE FUNCTION qa_native_capture_fault() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='president_own_confirmation_captured' THEN RAISE EXCEPTION 'QA native audit'; END IF;RETURN NEW;END $$;CREATE TRIGGER qa_native_capture_fault BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION qa_native_capture_fault()");
+  assert.deepEqual(await c.S.capturePresidentOwnConfirmation(first.input,c.actor),{ok:false,error:'unavailable'});await c.db.query('DROP TRIGGER qa_native_capture_fault ON audit_log');
+  await c.db.query("UPDATE batches SET signed_pdf=$1,signed_pdf_sha256=$2,signature_kind='externa-nao-validada' WHERE id=$3",[c.bytes,digest(c.bytes),c.batch]);
+  const next=await consumed(c),before=await c.documents();assert.deepEqual(await c.S.capturePresidentOwnConfirmation(next.input,c.actor),{ok:false,error:'unavailable'});assert.deepEqual(await c.documents(),before);await c.noMail();assert.ok((await c.db.verifyAuditChain()).ok);
+ }finally{await c.db._closeDbForTests();}
+});
