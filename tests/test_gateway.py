@@ -1,6 +1,6 @@
 import subprocess,sys,concurrent.futures,importlib.util,json,pathlib,hashlib,hmac,os,secrets,sqlite3,tempfile,threading,time,unittest,struct
 from unittest.mock import patch
-P=pathlib.Path('/mnt/apps/peticao-final/_ops/controle-operacional/infra/local_codex_gateway.py');SPEC=importlib.util.spec_from_file_location('gateway',P);g=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(g)
+P=pathlib.Path(__file__).resolve().parents[1]/'infra'/'local_codex_gateway.py';SPEC=importlib.util.spec_from_file_location('gateway',P);g=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(g)
 class GatewayTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory(dir="/dev/shm" if pathlib.Path("/dev/shm").is_dir() else None);self.root=pathlib.Path(self.tmp.name);self.key=b'fixture-hmac-secret-key-32-bytes!!';self.k=self.root/'hmac';self.k.write_bytes(self.key);self.k.chmod(0o600);self.adapter=g.FixtureAdapter();self.g=g.Gateway(self.k,self.root/'receipts.sqlite',self.adapter)

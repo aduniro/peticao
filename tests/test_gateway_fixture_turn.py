@@ -1,6 +1,6 @@
 import importlib.util,pathlib,tempfile,unittest,json
 from unittest.mock import patch
-P=pathlib.Path('/mnt/apps/peticao-final/_ops/controle-operacional/infra/qualify_fixture_turn.py');SPEC=importlib.util.spec_from_file_location('fixture_qualification',P);q=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(q)
+P=pathlib.Path(__file__).resolve().parents[1]/'infra'/'qualify_fixture_turn.py';SPEC=importlib.util.spec_from_file_location('fixture_qualification',P);q=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(q)
 class FixtureQualificationTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory(dir="/dev/shm" if pathlib.Path("/dev/shm").is_dir() else None);self.addCleanup(self.tmp.cleanup);root=pathlib.Path(self.tmp.name);schema=root/'schema';schema.mkdir()

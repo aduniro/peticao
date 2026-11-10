@@ -1,6 +1,6 @@
 import concurrent.futures,contextlib,dataclasses,hashlib,hmac,http.client,importlib.util,io,json,os,pathlib,socket,stat,tempfile,threading,unittest
 from unittest.mock import patch
-P=pathlib.Path('/mnt/apps/peticao-final/_ops/controle-operacional/infra/mailersend_ingress.py');S=importlib.util.spec_from_file_location('mailersend_ingress',P);m=importlib.util.module_from_spec(S);import sys;sys.modules[S.name]=m;S.loader.exec_module(m)
+P=pathlib.Path(__file__).resolve().parents[1]/'infra'/'mailersend_ingress.py';S=importlib.util.spec_from_file_location('mailersend_ingress',P);m=importlib.util.module_from_spec(S);import sys;sys.modules[S.name]=m;S.loader.exec_module(m)
 class Tests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory(dir='/dev/shm' if pathlib.Path('/dev/shm').is_dir() else None);self.addCleanup(self.tmp.cleanup);self.root=pathlib.Path(self.tmp.name);self.secret=b'fixture-per-forward-secret-not-owner';self.secret_file=self.root/'forward.secret';self.secret_file.write_bytes(self.secret);self.secret_file.chmod(0o600)
