@@ -11,9 +11,9 @@ Esta ferramenta não edita o app, não faz merge/deploy, não envia e-mail e nã
 | Ator | Sessão | Checkout acompanhado |
 |---|---|---|
 | apoio | 01a1c0b3-f069-75a0-a2e9-e691094c9bab | /mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109 |
-| admin | 01a1a4bd-cdf4-7253-88e7-0c9fb9265aa7 | /mnt/dev/peticao e /mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109 |
+| admin | 01a1a4bd-cdf4-7253-88e7-0c9fb9265aa7 | /mnt/dev/peticao, /mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109 e /mnt/apps/peticao-final/peticao-integrado |
 
-Os três caminhos são árvores físicas distintas. No inventário inicial, a consolidação estava no branch main, HEAD b9e8ae2574125df90d80fc18ef24832f5d646ce0; /mnt/dev/peticao no branch integracao-admin-vps, HEAD 5b78e1871351c00ba96458689d31764211f4ee29; candidato real admin no branch admin-v2-final-20261109, HEAD 0a5f734da4f9b8a35a10a20eaa9fb4fd5adb0e4f. Esses valores são checkpoints observados, não promessa de estado atual. Nenhum arquivo da aplicação foi alterado nesta implementação.
+Os três caminhos do inventário original são árvores físicas distintas. No inventário inicial, a consolidação estava no branch main, HEAD b9e8ae2574125df90d80fc18ef24832f5d646ce0; /mnt/dev/peticao no branch integracao-admin-vps, HEAD 5b78e1871351c00ba96458689d31764211f4ee29; candidato real admin no branch admin-v2-final-20261109, HEAD 0a5f734da4f9b8a35a10a20eaa9fb4fd5adb0e4f. Esses valores são checkpoints observados, não promessa de estado atual. Nenhum arquivo da aplicação foi alterado nesta implementação.
 
 ## Consultar e registrar
 
@@ -39,7 +39,7 @@ Para registrar alteração intencional que o outro coordenador precisa conhecer:
 
 ## Reservar arquivos antes de editar
 
-O mesmo caminho relativo nas três árvores mapeia para o mesmo recurso lógico. Por exemplo, as três grafias absolutas de site/src/lib/db.ts convertem-se em code:site/src/lib/db.ts. Um diretório conflita com todos seus descendentes. Paths físicos fora das árvores usam path:/caminho/absoluto; a grafia `path:` também é normalizada e exige caminho absoluto. Labels semelhantes sem relação de ancestralidade não conflitam.
+O mesmo caminho relativo nas quatro árvores autorizadas mapeia para o mesmo recurso lógico. Por exemplo, as quatro grafias absolutas de site/src/lib/db.ts convertem-se em code:site/src/lib/db.ts. Um diretório conflita com todos seus descendentes. Paths físicos fora das árvores usam path:/caminho/absoluto; a grafia `path:` também é normalizada e exige caminho absoluto. Labels semelhantes sem relação de ancestralidade não conflitam.
 
 Reserva do editor da página (ajustar aos arquivos realmente tocados):
 
@@ -98,4 +98,12 @@ Executar testes sem app/VPS/produção, com dados fictícios e banco temporário
 /usr/bin/python3 -m unittest discover -s /mnt/apps/peticao-final/_ops/coordenacao-dupla/tools -p test_coord.py -v
 ```
 
-14 testes passaram: concorrência entre dois processos, independência de arquivos, normalização física/lógica, manifestos/ACKs, fencing/token, expiração sem takeover, reconciliação dupla, eventos imutáveis e observação sem conteúdo/artefatos pessoais. A ferramenta não é um daemon e o término do subagente não significa monitoramento contínuo. Watcher e e-mail horário são serviços separados mantidos pelo pai.
+15 testes passaram: concorrência entre dois processos, independência de arquivos, normalização física/lógica, manifestos/ACKs, fencing/token, expiração sem takeover, reconciliação dupla, eventos imutáveis e observação sem conteúdo/artefatos pessoais. A ferramenta não é um daemon e o término do subagente não significa monitoramento contínuo. Watcher e e-mail horário são serviços separados mantidos pelo pai.
+
+## Extensão ao candidato integrado — 10/11/2026
+
+Após aprovação do plano pelo responsável (referência informada pelo coordenador: evento93), o único ledger local passou a reconhecer também `/mnt/apps/peticao-final/peticao-integrado`. Verificado no momento da extensão: worktree no branch `integration/admin-v2-publico-20261110`, HEAD `0a5f734da4f9b8a35a10a20eaa9fb4fd5adb0e4f`. Não houve alteração de fontes, merge ou deploy nesta extensão.
+
+O participante admin mantém sua sessão e os dois repositórios anteriores, acrescentando o integrado. Paths sob esse root coalescem para `code:` como nos candidatos anteriores. O prefixo parecido `/mnt/apps/peticao-final/peticao-integrado-outra` fica fora desse mapeamento; somente o root explicitamente cadastrado e seus descendentes são reconhecidos. A regressão valida exclusão entre os candidatos e esse limite.
+
+O banco `/mnt/apps/peticao-final/_ops/coordenacao-dupla/state/coord.sqlite` permanece a autoridade única. Um adaptador remoto deve encaminhar chamadas para esse CLI/ledger; não inicializar outro banco em Santiago nem adotar uma fila paralela para substituir o lock. A ausência de conectividade com o ledger exige falhar fechado para mutações coordenadas. Esta extensão não modifica o watcher, timers, e-mail ou política de publicação.

@@ -12,10 +12,21 @@ class Tests(unittest.TestCase):
  def manifest(self):
   n=self.l.announce('apoio','Manifesto ficticio de testes',['code:'],{'manifest':{'commit':'a'*40,'files':['site/src/fictitious.ts'],'api_contracts':'sem alteracao','database':'sem alteracao','tests':['fixture assertions passaram'],'destination':'/tmp/fixture-target'}})
   self.l.ack('admin',n['seq']);return n['seq']
- def test_normalization_same_logical_resource_across_three_worktrees(self):
+ def test_normalization_same_logical_resource_across_four_worktrees(self):
   expected='code:site/src/lib/db.ts'
   for r in coord.ROOTS:self.assertEqual(coord.resource(str(r/'site/src/lib/db.ts')),expected)
   self.assertTrue(coord.overlaps('code:site/src','code:site/src/lib/db.ts'));self.assertFalse(coord.overlaps('code:site/src/lib/a','code:site/src/lib/abc'))
+ def test_integrated_root_excludes_candidates_without_broad_prefix_alias(self):
+  integrated=pathlib.Path('/mnt/apps/peticao-final/peticao-integrado')
+  self.assertIn(integrated,coord.ROOTS)
+  target='site/src/lib/db.ts'
+  lease=self.l.acquire('apoio',[str(coord.ROOTS[1]/target)])
+  for root in (coord.ROOTS[0],coord.ROOTS[2],integrated):
+   with self.assertRaises(RuntimeError):self.l.acquire('admin',[str(root/target)])
+  self.assertEqual(coord.resource(str(integrated/target)),'code:'+target)
+  sibling=pathlib.Path('/mnt/apps/peticao-final/peticao-integrado-outra')/target
+  self.assertEqual(coord.resource(str(sibling)),'path:'+str(sibling))
+  self.assertFalse(coord.overlaps(str(sibling),str(integrated/target)))
  def test_exclusive_concurrent_processes_only_one_owner(self):
   with concurrent.futures.ProcessPoolExecutor(max_workers=2) as p:result=list(p.map(compete,[str(self.db)]*2,['apoio','admin']))
   self.assertEqual(sum(x is not None for x in result),1)

@@ -11,7 +11,7 @@ def app_path(name):
  if any(x in ('secrets','preview-state','.git','node_modules','.next') or x.startswith('.env') for x in parts):return False
  if pathlib.PurePosixPath(name).suffix.lower() in PRIVATE_EXTENSIONS:return False
  return any(name==x or name.startswith(x+'/') for x in APP_PATHS)
-ROOTS=[pathlib.Path(x) for x in ['/mnt/dev/peticao','/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109','/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109']]
+ROOTS=[pathlib.Path(x) for x in ['/mnt/dev/peticao','/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109','/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109','/mnt/apps/peticao-final/peticao-integrado']]
 def stamp():return dt.datetime.now(dt.timezone.utc).isoformat()
 def encode(x):return json.dumps(x,ensure_ascii=False,sort_keys=True,separators=(',',':'))
 def resource(value):
