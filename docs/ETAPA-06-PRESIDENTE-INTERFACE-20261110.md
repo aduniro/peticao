@@ -24,3 +24,5 @@ Tipos/build e testes dirigidos do conjunto integrado; navegador compilado com pr
 ## Conjunto integrado dirigido
 
 45/45 testes e tipos estritos passaram com fontes/commit estáveis, staged sobre8d1b8c6. Evidências: /mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/president-native-1794298052573298275/result.json e /mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794298052490379197/result.json. SHA dos arquivos conferidos antes de registrar commit. Harness compilado inclui fluxo externo e extensão admin real; execução ainda pendente.
+
+Build de produção local c243f56 aprovado, fontes/commit estáveis: /mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/build-1794298225674826326/result.json. Gate de testes mantém mock de identidade proibido em produção; QA compilada usará somente bridgeUnix fictício suportado.

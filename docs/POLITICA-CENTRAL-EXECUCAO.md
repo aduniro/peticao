@@ -38,7 +38,7 @@ Interrupções externas (queda, limite de uso ou encerramento da sessão) e impe
 
 A prioridade não autoriza deploy ou merge: **nenhuma publicação, merge ou integração/sincronização de código com a VPS, em qualquer direção, sem permissão explícita do responsável**. Inspeções somente leitura não autorizam incorporar as fontes inspecionadas. Enquanto uma publicação aguarda autorização, continuar as partes independentes do plano em ambiente isolado, preservando o candidato em avaliação. Manter as demais regras de aprovação de avisos e informações ao usuário.
 
-Informar início, retomada, interrupção e conclusão, além de atualizações de andamento. Registrar evidências e estimativas condicionadas aos resultados. Enviar notificações e relatórios somente a operator-78ffa47eeb@example.invalid`, em HTML; consolidar andamento a cada30 minutos durante trabalho ativo. Aceite do provedor não comprova entrega.
+Informar início, retomada, interrupção e conclusão, além de atualizações de andamento. Registrar evidências e estimativas condicionadas aos resultados. Enviar notificações e relatórios somente a operator-78ffa47eeb@example.invalid`, em HTML; enviar a árvore de progresso do admin-v2 a cada uma hora, identificando o snapshot de evidências e a atividade atual separadamente. Aceite do provedor não comprova entrega.
 
 ## Referências operacionais
 
@@ -74,3 +74,10 @@ ativos ou continuidade em segundo plano sem evidência verificável.
 Manter no Vigia a atividade real, etapas, subtarefas, agentes efetivamente ativos,
 testes, commits, percentuais sustentados por critérios e estimativas condicionadas.
 Nenhum deploy, merge ou sincronização de código com a VPS sem autorização expressa.
+
+## Notificações de madrugada — 10/11/2026
+
+Até07h de10/11/2026 no fuso America/Porto_Velho, manter somente o email horário da
+árvore admin-v2. Suprimir os demais emails genéricos e de incidentes, preservando
+os eventos no Vigia e sem drenar a fila noturna em rajada depois. Essa exceção não
+suspende execução, coleta, testes nem atualizações visíveis no terminal.
