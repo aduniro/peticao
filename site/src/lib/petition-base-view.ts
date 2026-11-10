@@ -3,7 +3,7 @@ export type ValidationRefusal = { status: number; error: string };
 export function validationRefusal(result: BaseHttpResult<unknown>): ValidationRefusal | null {
   // These gate receipts alone never prove non-reservation: an authenticated,
   // exact GET must still return not_found before the controller releases them.
-  return result.kind === "rejected" && ((result.status === 400 && result.error === "parameters") || (result.status === 404 && result.error === "not_found") || (result.status === 409 && ["document_conflict", "profile_unavailable", "disabled"].includes(result.error)) || (result.status === 401 && result.error === "authentication_required") || (result.status === 403 && result.error === "stepup_required") || (result.status === 429 && result.error === "request_rejected")) ? { status: result.status, error: result.error } : null;
+  return result.kind === "rejected" && ((result.status === 400 && result.error === "parameters") || (result.status === 404 && result.error === "not_found") || (result.status === 409 && ["document_conflict", "profile_unavailable", "disabled"].includes(result.error)) || (result.status === 401 && result.error === "authentication_required") || (result.status === 403 && ["stepup_required", "request_rejected", "forbidden"].includes(result.error)) || (result.status === 429 && result.error === "request_rejected")) ? { status: result.status, error: result.error } : null;
 }
 /** A refusal is released only when exact readback independently proves no durable reservation. */
 export function releaseUnrecordedValidation(pending: BasePending, outcome: BaseHttpResult<unknown> | null): boolean {

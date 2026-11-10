@@ -10,6 +10,8 @@ const journal = { ok: true, ...input, attemptId: "33333333-3333-4333-8333-333333
 
 for (const gate of [
   { status: 403, body: { ok: false, erro: "stepup" }, error: "stepup_required" },
+  { status: 403, body: { ok: false, erro: "O seu nível de acesso não permite esta ação." }, error: "request_rejected" },
+  { status: 403, body: { ok: false, error: "forbidden" }, error: "forbidden" },
   { status: 401, body: { ok: false, erro: "Não autorizado." }, error: "authentication_required" },
   { status: 429, body: { ok: false, erro: "Muitas ações em pouco tempo. Aguarde um minuto." }, error: "request_rejected" },
 ]) {
@@ -45,8 +47,12 @@ test("lost POST after reservation and a pending GET preserve identity, even afte
   const pending = await readBaseValidation(input, transport);
   assert.equal(releaseUnrecordedValidation(original, pending), false);
   assert.ok(pending.kind === "success"); assert.equal(matchBaseRecovery(original, pending.value), "pending");
-  const oldReceipt = { ...original, refusal: { status: 403, error: "stepup_required" } };
-  assert.equal(releaseUnrecordedValidation(oldReceipt, pending), false);
+  for (const error of ["stepup_required", "request_rejected", "forbidden"]) {
+    const oldReceipt = { ...original, refusal: { status: 403, error } };
+    const restored = parseBasePending(JSON.parse(JSON.stringify(oldReceipt)), 7); assert.ok(restored);
+    assert.equal(releaseUnrecordedValidation(restored, pending), false);
+    assert.equal(releaseUnrecordedValidation(restored, { kind: "success", value: { kind: "validation", validation: { ...journal, contextMatches: false } } }), false);
+  }
   assert.equal(releaseUnrecordedValidation(original, { kind: "rejected", status: 404, error: "not_found" }), false);
   assert.equal(posts, 1); assert.equal(gets, 2);
 });
@@ -61,7 +67,7 @@ test("actor refusal, collision and uncertain reads never release a gate-refused 
     { kind: "uncertain" },
   ];
   for (const failure of failures) assert.equal(releaseUnrecordedValidation(restored, failure), false);
-  for (const [status, error] of [[403, "forbidden"], [403, "request_rejected"], [401, "parameters"], [429, "arbitrary_error"], [409, "profile_conflict"], [409, "request_conflict"]] as const) {
+  for (const [status, error] of [[403, "unknown_denial"], [403, "parameters"], [401, "parameters"], [429, "arbitrary_error"], [409, "profile_conflict"], [409, "request_conflict"]] as const) {
     assert.equal(validationRefusal({ kind: "rejected", status, error }), null);
     assert.equal(parseBasePending({ ...original, refusal: { status, error } }, 7), null);
   }
