@@ -458,6 +458,17 @@ const SCHEMA_SQL = `
     result JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY(actor_id,request_id)
   );
+  -- Additive evolution; no backfill or inference of historical operation.
+  ALTER TABLE admin_referral_mutations ADD COLUMN IF NOT EXISTS operation TEXT;
+  ALTER TABLE admin_referral_mutations ADD COLUMN IF NOT EXISTS expected_version BIGINT;
+  DO $referral_recovery$ BEGIN
+   IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='admin_referral_mutations'::regclass AND conname='admin_referral_mutation_context_check') THEN
+    ALTER TABLE admin_referral_mutations ADD CONSTRAINT admin_referral_mutation_context_check CHECK(
+     (operation IS NULL AND expected_version IS NULL)
+     OR (operation IS NOT NULL AND operation IN ('edit','archive','restore') AND expected_version IS NOT NULL AND expected_version>0)
+    );
+   END IF;
+  END; $referral_recovery$;
   CREATE TABLE IF NOT EXISTS admin_domain_catalog_requests (
     actor_id INTEGER NOT NULL REFERENCES admin_users(id), request_id UUID NOT NULL,
     input_hash TEXT NOT NULL, domain TEXT NOT NULL REFERENCES institutional_domains(domain),

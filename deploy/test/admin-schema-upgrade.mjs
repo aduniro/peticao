@@ -90,7 +90,7 @@ try{
  const referralState=(await c.query("SELECT row_to_json(r)::text raw FROM referrers r ORDER BY id")).rows;
  const referralActor=(await c.query("INSERT INTO admin_users(email,nome,nivel,senha_hash) VALUES('qa-referral-migration@example.test','QA Migration','total','QA-NOT-A-REAL-HASH') RETURNING id")).rows[0].id;
  await c.query("INSERT INTO admin_referral_mutations(actor_id,request_id,input_hash,referrer_id,result,created_at) SELECT $1,'00000000-0000-4000-8000-000000000020','QA-INPUT',id,'{\"ok\":true,\"row\":{\"version\":\"3\"}}'::jsonb,'2026-11-09T01:00:00.123456Z' FROM referrers WHERE code='ABCDEFG'",[referralActor]);
- const mutationLedger=(await c.query("SELECT row_to_json(q)::text raw FROM admin_referral_mutations q")).rows;
+ const mutationLedger=(await c.query("SELECT row_to_json(q)::text raw FROM (SELECT actor_id,request_id,input_hash,referrer_id,result,created_at FROM admin_referral_mutations ORDER BY actor_id,request_id) q")).rows;
  const migratedDomain=(await c.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE domain='qa-catalog.example'")).rows.map(r=>JSON.parse(r.raw));
  assert.deepEqual(migratedDomain.map(({admin_catalog,admin_catalog_version,admin_archived_at,institution_id,include_subdomains,...d})=>d),originalDomain,"Domain effective policy and unknown fields survive overlay migration");
  assert.ok(migratedDomain.every(d=>d.institution_id===null&&d.include_subdomains===true),"Additive institution binding defaults preserve legacy decisions");
@@ -103,7 +103,9 @@ try{
 
  await c.query(newSql);await c.query(oldSql);
  assert.deepEqual((await c.query("SELECT row_to_json(r)::text raw FROM referrers r ORDER BY id")).rows,referralState,"Replay and old bootstrap preserve administrative archive/revision, including microseconds");
- assert.deepEqual((await c.query("SELECT row_to_json(q)::text raw FROM admin_referral_mutations q")).rows,mutationLedger,"Replay and old bootstrap preserve exact stored mutation results/intentions");
+ assert.deepEqual((await c.query("SELECT row_to_json(q)::text raw FROM (SELECT actor_id,request_id,input_hash,referrer_id,result,created_at FROM admin_referral_mutations ORDER BY actor_id,request_id) q")).rows,mutationLedger,"Replay and old bootstrap preserve exact stored mutation results/intentions");
+ assert.ok((await c.query("SELECT operation,expected_version FROM admin_referral_mutations")).rows.every(r=>r.operation===null&&r.expected_version===null),"Legacy mutation recovery context stays unknown; never infer edit or a version");
+ assert.deepEqual((await c.query("SELECT column_name,is_nullable,data_type FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='admin_referral_mutations' AND column_name IN ('operation','expected_version') ORDER BY column_name")).rows,[{column_name:"expected_version",is_nullable:"YES",data_type:"bigint"},{column_name:"operation",is_nullable:"YES",data_type:"text"}],"Recovery context is strictly additive and nullable");
  assert.deepEqual((await c.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE domain='qa-catalog.example'")).rows,domainCatalogState,"Overlay, effective policy, unknown keys and archive microseconds survive DDL replay/old bootstrap");
  assert.deepEqual((await c.query("SELECT row_to_json(q)::text raw FROM admin_domain_catalog_requests q")).rows,domainCatalogLedger,"Domain catalog intention and exact result survive DDL replay/old bootstrap");
 

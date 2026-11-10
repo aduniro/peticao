@@ -5,8 +5,20 @@ import { randomUUID } from "node:crypto";
 (process.env as Record<string, string>).NODE_ENV = "test";
 delete process.env.PREVIEW_MODE;
 delete process.env.ADMIN_NO_PASSWORD;
+const RECOVERY_SCHEMA_SQL=String.raw`-- Additive evolution; no backfill or inference of historical operation.
+ALTER TABLE admin_referral_mutations ADD COLUMN IF NOT EXISTS operation TEXT;
+ALTER TABLE admin_referral_mutations ADD COLUMN IF NOT EXISTS expected_version BIGINT;
+DO $referral_recovery$ BEGIN
+ IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='admin_referral_mutations'::regclass AND conname='admin_referral_mutation_context_check') THEN
+  ALTER TABLE admin_referral_mutations ADD CONSTRAINT admin_referral_mutation_context_check CHECK(
+   (operation IS NULL AND expected_version IS NULL)
+   OR (operation IS NOT NULL AND operation IN ('edit','archive','restore') AND expected_version IS NOT NULL AND expected_version>0)
+  );
+ END IF;
+END; $referral_recovery$;
+`;
 async function setup(schema: string) {
-  const db = await import("./db"); await db._openForTests(schema);
+  const db = await import("./db"); await db._openForTests(schema);await db.query(RECOVERY_SCHEMA_SQL);
   const users = await import("./admin-users"), M = await import("./admin-referral-management");
   const created = await users.criarUsuario({ email: "qa-management@example.test", nome: "QA Operator", nivel: "total", senha: "QA-Tests-2026-Ficticia" }); assert.ok(created.ok);
   const session = await users.abrirSessao(created.usuario.id, "127.0.0.1"), actor = (await users.sessaoPorToken(session.token))!;
@@ -116,4 +128,100 @@ test("administrative pagination keeps active and archived inventories separate w
     const archived = await c.M.listAdministrativeReferrals(c.actor, { filter: "archived" }); assert.ok(archived.ok); assert.equal(archived.rows.length, 1);
     assert.equal((await (await import("./referrals")).allReferrerStats()).length, 3);
   } finally { await c.db._closeDbForTests(); }
+});
+
+
+test("recovery returns exact durable operation/context after newer mutations, scoped to actor",async()=>{
+ const c=await setup("t_referral_recovery_exact");try{
+  const input=c.input("edit");const result=await c.M.manageAdministrativeReferral(input,c.actor);assert.ok(result.ok);assert.deepEqual(result,{ok:true,requestId:input.requestId,operation:"edit",context:{id:c.row.id,expectedVersion:"1"},row:{id:c.row.id,code:"ABCDEFG",label:"QA Alterado",version:"2",archivedAt:null},changed:true});
+  assert.ok((await c.M.manageAdministrativeReferral(c.input("edit","2",{label:"QA Later"}),c.actor)).ok);
+  const before=(await c.db.query("SELECT row_to_json(r)::text raw FROM referrers r")).rows;
+  assert.deepEqual(await c.M.readAdministrativeReferralMutation(input.requestId,c.actor),result);
+  assert.deepEqual((await c.db.query("SELECT row_to_json(r)::text raw FROM referrers r")).rows,before);
+  const other=(await c.db.query("INSERT INTO admin_users(email,nome,nivel,senha_hash)VALUES('qa-other@example.test','QA Other','total','QA-NO-LOGIN')RETURNING id")).rows[0];const session=await c.users.abrirSessao(other.id,"127.0.0.1");const actor=(await c.users.sessaoPorToken(session.token))!;
+  assert.deepEqual(await c.M.readAdministrativeReferralMutation(input.requestId,actor),{ok:false,error:"not_found"});
+  assert.deepEqual(await c.M.readAdministrativeReferralMutation(randomUUID(),c.actor),{ok:false,error:"not_found"});
+  assert.equal((await c.db.query("SELECT 1 FROM admin_referral_mutations")).rowCount,2);assert.ok((await c.db.verifyAuditChain()).ok);
+ }finally{await c.db._closeDbForTests();}
+});
+test("recovery authorization derives archival operation from ledger, not current role or request",async()=>{
+ const c=await setup("t_referral_recovery_permissions");try{
+  const edit=c.input("edit");assert.ok((await c.M.manageAdministrativeReferral(edit,c.actor)).ok);const archive=c.input("archive","2");assert.ok((await c.M.manageAdministrativeReferral(archive,c.actor)).ok);
+  await c.db.query("UPDATE admin_sessions SET stepup_ate=NULL WHERE id=$1",[c.actor.sessaoId]);
+  assert.ok((await c.M.readAdministrativeReferralMutation(edit.requestId,c.actor)).ok);assert.deepEqual(await c.M.readAdministrativeReferralMutation(archive.requestId,c.actor),{ok:false,error:"forbidden"});assert.deepEqual(await c.M.manageAdministrativeReferral(archive,c.actor),{ok:false,error:"forbidden"});
+  await c.db.query("UPDATE admin_users SET nivel='edicao' WHERE id=$1",[c.actor.userId]);await c.db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '15 minutes' WHERE id=$1",[c.actor.sessaoId]);
+  assert.deepEqual(await c.M.readAdministrativeReferralMutation(archive.requestId,c.actor),{ok:false,error:"forbidden"});assert.ok((await c.M.readAdministrativeReferralMutation(edit.requestId,c.actor)).ok);
+  await c.db.query("UPDATE admin_users SET nivel='leitura' WHERE id=$1",[c.actor.userId]);assert.deepEqual(await c.M.readAdministrativeReferralMutation(edit.requestId,c.actor),{ok:false,error:"forbidden"});
+  await c.db.query("UPDATE admin_users SET nivel='total',ativo=false WHERE id=$1",[c.actor.userId]);assert.deepEqual(await c.M.readAdministrativeReferralMutation(edit.requestId,c.actor),{ok:false,error:"forbidden"});
+ }finally{await c.db._closeDbForTests();}
+});
+test("legacy schema evolution preserves historical result and POST replay but GET fails closed",async()=>{
+ const c=await setup("t_referral_recovery_legacy");try{
+  // Reproduce the old ledger schema before applying the additive migration.
+  await c.db.query("ALTER TABLE admin_referral_mutations DROP CONSTRAINT admin_referral_mutation_context_check;ALTER TABLE admin_referral_mutations DROP COLUMN operation;ALTER TABLE admin_referral_mutations DROP COLUMN expected_version");
+  const input=c.input("edit");const legacy={ok:true,row:{id:c.row.id,code:"ABCDEFG",label:"QA Alterado",version:"2",archivedAt:null},changed:true};
+  const {hmac}=await import("./security");const hash=hmac("admin-referral-mutation:v1:"+JSON.stringify([c.actor.userId,c.row.id,"1","edit","QA Alterado"]));
+  await c.db.query("UPDATE referrers SET label='QA Alterado',admin_version=2 WHERE id=$1",[c.row.id]);await c.db.query("INSERT INTO admin_referral_mutations(actor_id,request_id,input_hash,referrer_id,result,created_at)VALUES($1,$2,$3,$4,$5::jsonb,'2026-11-09T01:00:00.123456Z')",[c.actor.userId,input.requestId,hash,c.row.id,JSON.stringify(legacy)]);
+  const before=(await c.db.query("SELECT row_to_json(q)::text raw FROM (SELECT actor_id,request_id,input_hash,referrer_id,result,created_at FROM admin_referral_mutations) q")).rows;
+  await c.db.query(RECOVERY_SCHEMA_SQL);await c.db.query(RECOVERY_SCHEMA_SQL);
+  assert.deepEqual((await c.db.query("SELECT row_to_json(q)::text raw FROM (SELECT actor_id,request_id,input_hash,referrer_id,result,created_at FROM admin_referral_mutations) q")).rows,before);
+  assert.deepEqual(await c.M.readAdministrativeReferralMutation(input.requestId,c.actor),{ok:false,error:"legacy_unavailable"});
+  assert.deepEqual(await c.M.manageAdministrativeReferral(input,c.actor),legacy);
+  const next=c.input("edit","2",{label:"QA Post Upgrade"});const upgraded=await c.M.manageAdministrativeReferral(next,c.actor);assert.ok(upgraded.ok);assert.deepEqual(await c.M.readAdministrativeReferralMutation(next.requestId,c.actor),upgraded);
+  assert.deepEqual(await c.M.manageAdministrativeReferral(input,c.actor),legacy);assert.deepEqual(await c.M.manageAdministrativeReferral(next,c.actor),upgraded);
+  assert.deepEqual((await c.db.query("SELECT operation,expected_version::text FROM admin_referral_mutations WHERE request_id=$1",[input.requestId])).rows[0],{operation:null,expected_version:null});
+  await assert.rejects(c.db.query("UPDATE admin_referral_mutations SET operation='archive' WHERE request_id=$1",[input.requestId]),/admin_referral_mutation_context_check/);
+  await assert.rejects(c.db.query("UPDATE admin_referral_mutations SET expected_version=1 WHERE request_id=$1",[input.requestId]),/admin_referral_mutation_context_check/);
+  assert.ok((await c.db.verifyAuditChain()).ok);
+ }finally{await c.db._closeDbForTests();}
+});
+test("corrupt envelope/context/HMAC is never returned as successful recovery",async()=>{
+ const c=await setup("t_referral_recovery_corrupt");try{
+  const input=c.input("edit");const result=await c.M.manageAdministrativeReferral(input,c.actor);assert.ok(result.ok);
+  const original=(await c.db.query("SELECT result FROM admin_referral_mutations WHERE request_id=$1",[input.requestId])).rows[0].result;
+  for(const patch of [{...original,operation:"archive"},{...original,context:{id:c.row.id,expectedVersion:"2"}},{...original,row:{...original.row,id:c.row.id+1}},{...original,row:{...original.row,label:"Tampered QA"}},{...original,row:{...original.row,version:"999"}},{...original,secret:"unexpected"}]){
+   await c.db.query("UPDATE admin_referral_mutations SET result=$2::jsonb WHERE request_id=$1",[input.requestId,JSON.stringify(patch)]);assert.deepEqual(await c.M.readAdministrativeReferralMutation(input.requestId,c.actor),{ok:false,error:"conflict"});
+  }
+  await c.db.query("UPDATE admin_referral_mutations SET result=$2::jsonb,input_hash='tampered' WHERE request_id=$1",[input.requestId,JSON.stringify(original)]);assert.deepEqual(await c.M.readAdministrativeReferralMutation(input.requestId,c.actor),{ok:false,error:"conflict"});
+ }finally{await c.db._closeDbForTests();}
+});
+test("GET recovery query whitelist, archival stepup and private headers are enforced",async()=>{
+ const c=await setup("t_referral_recovery_http");try{
+  const {NextRequest}=await import("next/server"),api=await import("../app/api/admin/indicacoes/gestao/route");
+  const get=(query:string,cookie=true)=>new NextRequest("http://localhost/api/admin/indicacoes/gestao"+query,{headers:{host:"localhost",cookie:cookie?`adm=${c.token}`:""}});
+  for(const query of ["?unknown=1","?filter=all&filter=all","?limit=2&limit=3","?before=01","?before=2147483648","?requestId="+randomUUID()+"&filter=all","?requestId="+randomUUID()+"&requestId="+randomUUID(),"?requestId=bad"]){const r=await api.GET(get(query));assert.equal(r.status,400,query);assert.equal(r.headers.get("cache-control"),"private, no-store");}
+  const denied=await api.GET(get("",false));assert.equal(denied.status,401);assert.equal(denied.headers.get("referrer-policy"),"no-referrer");assert.equal(denied.headers.get("x-content-type-options"),"nosniff");
+  const input=c.input("archive");const result=await c.M.manageAdministrativeReferral(input,c.actor);assert.ok(result.ok);
+  const read=await api.GET(get("?requestId="+input.requestId));assert.equal(read.status,200);assert.deepEqual(await read.json(),result);for(const key of ["manage_token","input_hash","actor_id"])assert.equal(JSON.stringify(result).includes(key),false);
+  await c.db.query("UPDATE admin_sessions SET stepup_ate=NULL WHERE id=$1",[c.actor.sessaoId]);const stale=await api.GET(get("?requestId="+input.requestId));assert.equal(stale.status,403);assert.deepEqual(await stale.json(),{ok:false,erro:"stepup"});
+  const inv=await api.GET(get("?filter=all&limit=100"));assert.equal(inv.status,200);assert.equal((await inv.json()).rows.length,1);
+ }finally{await c.db._closeDbForTests();}
+});
+test("new intent envelope retains bigint strings at maximum and normalized no-op labels",async()=>{
+ const c=await setup("t_referral_recovery_bigint");try{
+  await c.db.query("UPDATE referrers SET admin_version=9223372036854775807 WHERE id=$1",[c.row.id]);
+  const input=c.input("edit","9223372036854775807",{label:"  QA   Original  "});const result=await c.M.manageAdministrativeReferral(input,c.actor);assert.ok(result.ok);assert.equal(result.changed,false);assert.equal(result.row.version,"9223372036854775807");assert.deepEqual(await c.M.readAdministrativeReferralMutation(input.requestId,c.actor),result);
+  assert.deepEqual(await c.M.manageAdministrativeReferral(c.input("archive","9223372036854775807"),c.actor),{ok:false,error:"conflict"});
+ }finally{await c.db._closeDbForTests();}
+});
+test("pure mutation parser closes keys, operation and bigint boundaries",async()=>{
+ const {parseReferralMutationIntent}=await import("./admin-referral-management");const v={id:1,version:"1",requestId:randomUUID(),operation:"edit"as const,label:" QA   Name "};assert.deepEqual(parseReferralMutationIntent(v),{...v,label:"QA Name"});
+ for(const patch of [{id:0},{id:2147483648},{version:"01"},{version:"9223372036854775808"},{version:1},{requestId:"00000000-0000-1000-8000-000000000000"},{extra:true},{operation:"restore"},{label:"x"},{label:"a".repeat(81)}])assert.equal(parseReferralMutationIntent({...v,...patch}),null);
+ assert.deepEqual(parseReferralMutationIntent({id:1,version:"9223372036854775807",requestId:v.requestId,operation:"archive"}),{id:1,version:"9223372036854775807",requestId:v.requestId,operation:"archive"});
+});
+
+test("partially migrated ledger context corruption is conflict, never legacy authorization",async()=>{
+ const c=await setup("t_referral_recovery_partial_context");try{
+  const input=c.input("edit");assert.ok((await c.M.manageAdministrativeReferral(input,c.actor)).ok);
+  // Explicit fictitious partial-migration fixture: remove only this CHECK locally,
+  // never alter production or disable application authorization/binding checks.
+  await c.db.query("ALTER TABLE admin_referral_mutations DROP CONSTRAINT admin_referral_mutation_context_check");
+  for(const [operation,version]of [["invalid","1"],[null,"1"],["edit",null],["edit","0"]]){
+   await c.db.query("UPDATE admin_referral_mutations SET operation=$2,expected_version=$3::bigint WHERE request_id=$1",[input.requestId,operation,version]);
+   assert.deepEqual(await c.M.readAdministrativeReferralMutation(input.requestId,c.actor),{ok:false,error:"conflict"});
+  }
+  await c.db.query("UPDATE admin_referral_mutations SET operation=NULL,expected_version=NULL WHERE request_id=$1",[input.requestId]);assert.deepEqual(await c.M.readAdministrativeReferralMutation(input.requestId,c.actor),{ok:false,error:"legacy_unavailable"});
+  await c.db.query("UPDATE admin_referral_mutations SET operation='edit',expected_version=1 WHERE request_id=$1",[input.requestId]);await c.db.query(RECOVERY_SCHEMA_SQL);
+  const restored=await c.M.readAdministrativeReferralMutation(input.requestId,c.actor);assert.ok(restored.ok);assert.ok((await c.db.verifyAuditChain()).ok);
+ }finally{await c.db._closeDbForTests();}
 });
