@@ -31,8 +31,8 @@
       "sha256": "319daa80fe9093156e85f4609a6e2cbe4c27c4ef818ad2b7dc7d49b9e6a46451"
     },
     "native_pg.py": {
-      "bytes": 11862,
-      "sha256": "1299b54acce50346e5832a8511c1427607e847f11ec1b36725c2a07b376d51cd"
+      "bytes": 12139,
+      "sha256": "d82695d92b36e41f1e3ebd41e68520c64cc37e48ba9fb1be48ad4e6d678b3c1c"
     },
     "profile.proposed.json": {
       "bytes": 1388,
@@ -83,8 +83,8 @@
       "sha256": "e6353c51e9bfcb6c165e64d87dbb62cfe562dc703270da6c5f553320f263fa47"
     },
     "test_native_pg.py": {
-      "bytes": 9643,
-      "sha256": "533bc5569958c0aa195ca10cac735689cc8d8049174e9b346edc20f5607283eb"
+      "bytes": 10179,
+      "sha256": "eb547bc5da9ebf64fe8a378b76c6e6df809bf2ba23bd7e0aacea613a7f4384ab"
     },
     "test_runtime_preflight.py": {
       "bytes": 1964,

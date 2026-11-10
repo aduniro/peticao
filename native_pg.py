@@ -68,6 +68,7 @@ class NativePG:
  def initialize(self):
   self.check_marker()
   if any(self.data.iterdir()):raise OwnershipError('refuse initdb on nonempty directory')
+  self.events.append('initdb-requested')
   self.command([str(PG_BIN/'initdb'),'-D',str(self.data),'-U',USER,'--auth-local=scram-sha-256','--auth-host=scram-sha-256','--encoding=UTF8','--no-locale','--pwfile='+str(self.run/'initdb-password')],env=self.env,timeout=60)
   if (self.data/'PG_VERSION').read_text().strip()!='17':raise OwnershipError('initialized wrong PG major')
   self.events.append('initialized')
@@ -113,6 +114,7 @@ class NativePG:
   if not self.prepared:return {'stopped':True,'neverPrepared':True}
   self.check_marker();identity=self.observe()
   if identity is None:
+   if 'initdb-requested' in self.events and 'initialized' not in self.events:return {'stopped':False,'uncertain':True,'reason':'initdb interrupted; executor must drain only this job cgroup before claiming cleanup','events':self.events}
    if 'start-requested' in self.events and 'started' not in self.events:return {'stopped':False,'uncertain':True,'reason':'start interrupted without durable PID; executor must reconcile and drain only this job cgroup','events':self.events}
    if self.identity is not None:
     try:

@@ -53,6 +53,14 @@ class LifecycleTests(unittest.TestCase):
   self.fx.pg.prepare();(self.fx.pg.data/'unrelated').write_text('preserve')
   with self.assertRaises(n.OwnershipError):self.fx.pg.initialize()
   self.assertFalse(any(pathlib.Path(a[0]).name=='initdb' and '--version' not in a for a,e,t in self.fx.calls))
+ def test_interrupted_initdb_is_uncertain_until_executor_drain(self):
+  self.fx.pg.prepare();original=self.fx.pg.command
+  def cancelled(args,**kw):
+   if pathlib.Path(args[0]).name=='initdb' and '--version' not in args:raise n.Cancelled('initdb cancelled')
+   return original(args,**kw)
+  self.fx.pg.command=cancelled
+  with self.assertRaises(n.Cancelled):self.fx.pg.initialize()
+  out=self.fx.pg.stop();self.assertTrue(out['uncertain']);self.assertFalse(out['stopped']);self.assertFalse(any(a[-1]=='stop' for a,e,t in self.fx.calls))
  def test_cancelled_start_without_pid_is_uncertain_no_stop(self):
   self.prepared();self.fx.start_mode='cancel-before-pid'
   with self.assertRaises(n.Cancelled):self.fx.pg.start()
