@@ -40,11 +40,30 @@ async function runPhase(ctx, phase) {
   const fresh = await U.sessaoPorToken(session.token);assert.ok(fresh && fresh.nivel === "total");assert.notEqual(fresh.sessaoId, actor.sessaoId);
   await db.query("UPDATE admin_sessions SET stepup_ate=now()+interval '10 minutes' WHERE id=$1 AND user_id=$2", [fresh.sessaoId, actor.userId]);
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true, locale: "pt-BR" });
-  const errors = [], external = [], requests = [], shots = [];
+  const errors = [], external = [], requests = [], shots = [], historyWaiters = [];
+  const historyPath = `/api/admin/lotes/${sourceBatchId}/presidente/historico`;
+  const historyPattern = url => url.origin === base && url.pathname === historyPath;
+  const nextHistory = kind => new Promise((resolve, reject) => {
+    const waiter = { kind, resolve, reject, timer: null };
+    waiter.timer = setTimeout(() => { const index = historyWaiters.indexOf(waiter);if (index >= 0) historyWaiters.splice(index, 1);reject(new Error("History GET was not captured within the QA deadline")); }, 30_000);
+    historyWaiters.push(waiter);
+  });
   try {
     await context.addCookies([{ name: "adm", value: session.token, url: base, httpOnly: true, sameSite: "Lax" }]);
     // No init script, storage state or recovered UUIDs: the only seeded value is a fresh admin cookie.
     await context.route("**/*", route => { const u = new URL(route.request().url());return u.origin === base || u.protocol === "blob:" ? route.continue() : (external.push(u.hostname), route.abort()); });
+    // Read the real handler's body through APIRequestContext before a browser navigation can discard CDP bodies.
+    await context.route(historyPattern, async route => {
+      const request = route.request(), url = new URL(request.url()), kind = url.searchParams.get("kind");
+      assert.equal(request.method(), "GET");assert.equal(url.origin, base);assert.equal(url.searchParams.size, 1);assert.ok(["receipts", "artifacts"].includes(kind));
+      const response = await route.fetch({ maxRedirects: 0 });assert.equal(response.status(), 200);assertPrivateNoStore(response.headers()["cache-control"]);
+      assert.equal(response.headers()["referrer-policy"], "no-referrer");assert.equal(response.headers()["x-content-type-options"], "nosniff");
+      const bytes = await response.body();assert.ok(bytes.length <= 65536);const value = JSON.parse(bytes.toString("utf8"));
+      assert.ok(value.ok && value.batchId === sourceBatchId && value.kind === kind);
+      await route.fulfill({ response, body: bytes });
+      const index = historyWaiters.findIndex(waiter => waiter.kind === kind);
+      if (index >= 0) { const [waiter] = historyWaiters.splice(index, 1);clearTimeout(waiter.timer);waiter.resolve(value); }
+    });
     const page = await context.newPage();page.on("pageerror", e => errors.push(e.message));
     page.on("request", request => { const u = new URL(request.url());if (u.origin === base && u.pathname.startsWith("/api/")) requests.push({ method: request.method(), path: u.pathname, query: u.search }); });
     await page.goto(`${base}/admin/presidente?lote=${sourceBatchId}`);await inventory(page).waitFor();
@@ -52,11 +71,9 @@ async function runPhase(ctx, phase) {
     assert.deepEqual(storageBefore, { local: {}, session: {} }, "fresh browser must not contain prior issuance/generation UUIDs");
     assert.equal(requests.filter(r => r.path.endsWith("/presidente/historico")).length, 0, "inventory remains explicit GET");
     const readKind = async (kind, refresh = false) => {
-      const responseWait = page.waitForResponse(response => { const u = new URL(response.url());return u.pathname === `/api/admin/lotes/${sourceBatchId}/presidente/historico` && u.searchParams.get("kind") === kind; });
+      const responseWait = nextHistory(kind);
       // Initially two identical buttons; after receipts are loaded only artifacts retains the initial label.
-      await button(inventory(page), refresh ? "Atualizar histórico" : "Consultar histórico").first().click();
-      const response = await responseWait;assert.equal(response.status(), 200);assertPrivateNoStore(response.headers()["cache-control"]);
-      const value = await response.json();assert.ok(value.ok && value.batchId === sourceBatchId && value.kind === kind);
+      const [value] = await Promise.all([responseWait, button(inventory(page), refresh ? "Atualizar histórico" : "Consultar histórico").first().click()]);
       await inventory(page).getByRole("button", { name: "Atualizar histórico", exact: true }).first().waitFor();
       const headingId = await inventory(page).getAttribute("aria-labelledby");
       await page.waitForFunction(id => document.getElementById(id)?.closest("section")?.getAttribute("aria-busy") === "false", headingId);
@@ -114,9 +131,12 @@ async function runPhase(ctx, phase) {
     assert.deepEqual(await page.evaluate(() => ({ local: { ...localStorage }, session: { ...sessionStorage } })), { local: {}, session: {} });
     assert.equal(requests.filter(r => r.method !== "GET").length, 0);assert.deepEqual(await snapshots(db, sourceBatchId, artifact.id), before);
     assert.ok((await db.verifyAuditChain()).ok);assert.deepEqual(errors, []);assert.deepEqual(external, []);
-    const result = { ok: true, phase, compiledNextRealHandlers: true, freshAdminSession: true, emptyBrowserStorage: true, noIntentUuidSeed: true, receiptDiscovered: true, receiptCurrent: receipt.isCurrent, ownPdfDiscovered: true, preparationEnabled: phase === "current", ownA1UnavailableForHistorical: phase === "historical", noMutations: true, dirtyProfileBlocksOwnPreparation: phase === "current", downloadAvailableDuringDirtyProfile: phase === "current", profileReadRequiresFreshReceiptRead: phase === "current", sourceProfileArtifactsMailUnchanged: true, download: { artifactId: artifact.id, path, sha256: artifact.sha256 }, requests, shots, errors, external };
+    const result = { ok: true, phase, compiledNextRealHandlers: true, metadataCapturedBeforeBrowserFulfill: true, freshAdminSession: true, emptyBrowserStorage: true, noIntentUuidSeed: true, receiptDiscovered: true, receiptCurrent: receipt.isCurrent, ownPdfDiscovered: true, preparationEnabled: phase === "current", ownA1UnavailableForHistorical: phase === "historical", noMutations: true, dirtyProfileBlocksOwnPreparation: phase === "current", downloadAvailableDuringDirtyProfile: phase === "current", profileReadRequiresFreshReceiptRead: phase === "current", sourceProfileArtifactsMailUnchanged: true, download: { artifactId: artifact.id, path, sha256: artifact.sha256 }, requests, shots, errors, external };
     writeFileSync(`${output}/own-history-${phase}-browser-result.json`, JSON.stringify(result, null, 2), { mode: 0o600 });return result;
-  } finally { try { await context.close(); } finally { await U.encerrarSessao(session.token); } }
+  } finally {
+    for (const waiter of historyWaiters.splice(0)) { clearTimeout(waiter.timer);waiter.reject(new Error("QA history capture closed")); }
+    try { await context.close(); } finally { await U.encerrarSessao(session.token); }
+  }
 }
 /** Call immediately after ownPdfExtension; before combined A1 or profile-changing admin extensions. */
 export const runPresidentOwnHistoryCurrentExtension = ctx => runPhase(ctx, "current");
