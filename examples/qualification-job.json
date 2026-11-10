@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "job_id": "10000000-0000-4000-8000-000000000001",
+  "intent_id": "20000000-0000-4000-8000-000000000001",
+  "kind": "qualification_delivery",
+  "target_worker": "santiago",
+  "source": {
+    "commit": "1111111111111111111111111111111111111111",
+    "ref": "worker/admin-v2-qualification",
+    "repository_path": "/srv/admin-v2-executor/repos/qualification",
+    "bundle_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "source_manifest_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "wrapper_sha256": "7530df86a86999d2d9d0f5644992e9b353de30bc4b25beceb4199b4e457580d1"
+  },
+  "runtime": {
+    "node_version": "20.19.2",
+    "node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+    "next_version": "14.2.35",
+    "package_lock_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "assets_manifest_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+    "assets_count": 202
+  },
+  "integration": {
+    "ref": "integration/admin-v2-pilot",
+    "expected_base": "6666666666666666666666666666666666666666"
+  },
+  "env": {
+    "NODE_ENV": "test",
+    "MAIL_PROVIDER": "dev",
+    "MAIL_PROVIDERS": "dev",
+    "SIGNER": "none",
+    "CRON_SECRET": "",
+    "BATCH_A1_ENABLED": "0",
+    "A1_VALIDATION_ENABLED": "0",
+    "PRESIDENT_OWN_ENABLED": "0"
+  },
+  "resources": {
+    "cpu_cores": 2,
+    "memory_mib": 4096,
+    "timeout_seconds": 600
+  },
+  "safety": {
+    "production": false,
+    "external_messages": false,
+    "automatic_retry": false
+  }
+}

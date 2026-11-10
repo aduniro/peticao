@@ -1,0 +1,22 @@
+{
+  "at": "2026-11-10T17:23:56.295472+00:00",
+  "command": [
+    "/usr/bin/python3",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests",
+    "-v"
+  ],
+  "cwd": "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft",
+  "exit": 0,
+  "tests": 35,
+  "duration_seconds": 11.31,
+  "log_sha256": "9f67c7177236b773499b80d0adbedc9912c5b8e3defc4d2da830258f787486c2",
+  "runtime_activation": false,
+  "actual_jobs_enqueued": 0,
+  "remote_operations": 0,
+  "application_changes": false,
+  "review_required": true
+}

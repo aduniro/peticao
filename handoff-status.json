@@ -1,0 +1,36 @@
+{
+  "at": "2026-11-10T17:23:56.295472+00:00",
+  "pipeline_state": "prepared_local_not_activated",
+  "logical_coordinator": "local",
+  "integration_and_build_host": "santiago",
+  "production_sao_paulo_role": "read_only_initially",
+  "frontend_integration": "not_performed_by_this_pipeline; awaits selected frozen commit and exact merge evidence",
+  "backend_integration": "not_performed_by_this_pipeline; awaits selected frozen commit and exact merge evidence",
+  "application_approved_commit": null,
+  "expected_runtime": {
+    "node": "20.19.2",
+    "node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+    "next": "14.2.35",
+    "assets_count": 202
+  },
+  "lockfile_global": {
+    "state": "not_approved_for_job",
+    "observed_reference_sha256": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
+    "observed_reference_commit": "735ff36762a39eca6ab1b2f859c835f25705f592",
+    "path": "/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/site/package-lock.json"
+  },
+  "infra_READY_received": false,
+  "source_bundle_transferred": false,
+  "worker_installed": false,
+  "daemon_started": false,
+  "actual_application_merge": false,
+  "deployment": false,
+  "speedup_measured": false,
+  "tests": {
+    "passed": 35,
+    "failed": 0,
+    "seconds": 11.31,
+    "scope": "Python contracts/SQLite local/CLI plus Git repositories in temporary fixtures only",
+    "log": "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft/validation.log"
+  }
+}

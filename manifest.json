@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-11-10T17:26:52.097556+00:00",
+  "root": "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft",
+  "branch": "ops/executors-draft",
+  "files": {
+    ".gitignore": {
+      "bytes": 34,
+      "sha256": "bec631eb7308e2b9c49f0b53df8324c0422adf9ccf50e604cd2fecf2aecc2f34"
+    },
+    "GIT-INTEGRATION.md": {
+      "bytes": 6036,
+      "sha256": "e948a21f75f99acbf4ffa3a94c76b731c911cf230e7a949b197f625ccf6aeee5"
+    },
+    "README.md": {
+      "bytes": 10159,
+      "sha256": "3d3d9afefafd9ce860e5051dea9669db308b5ac30b9f6f276e87202ff4e8f6da"
+    },
+    "admin_exec/__init__.py": {
+      "bytes": 68,
+      "sha256": "6752c815d76cdd381b92551a93b75ecb15ce172e32e319cfd038d0f6a8cc2cc8"
+    },
+    "admin_exec/queue.py": {
+      "bytes": 16411,
+      "sha256": "912f1ae0b5bdfb113868379aed2a200108a81698c993f08e4e98b7d712168137"
+    },
+    "cli.py": {
+      "bytes": 5045,
+      "sha256": "d79a1c832eafd11377c02d7bf5374efa2119895b1f271d379f76aab567c5c6d6"
+    },
+    "config.json": {
+      "bytes": 2248,
+      "sha256": "076a37c0dae58e53852cbf80922e7276c46413145a40d85acfd4aa1e830d784e"
+    },
+    "examples/qualification-job.json": {
+      "bytes": 1617,
+      "sha256": "eac6567055d8c6a24001540a17797220b639771e5d2de737ec54e328bb763eb0"
+    },
+    "examples/qualification-plan.json": {
+      "bytes": 850,
+      "sha256": "3296e497081d9fe64bc5ac80341768d75b347ad721afbaa82cdd2dd31a527651"
+    },
+    "git_transport.py": {
+      "bytes": 17069,
+      "sha256": "a721ab9f7894bc38a986589698af11228abc255d668a151c1d4e1d2c597d446f"
+    },
+    "handoff-status.json": {
+      "bytes": 1515,
+      "sha256": "ad0cef98e6cf960c51b561e45be0f68739c5d7e0227b8915427e4d596676f984"
+    },
+    "integration.py": {
+      "bytes": 10015,
+      "sha256": "d3dd034bdee67de91c63da3684ad32a3f6305ec7023dcd9b352052618ccee526"
+    },
+    "protocol.py": {
+      "bytes": 17056,
+      "sha256": "6be0f1649b4603bf13e66822cbb9c2be6f86608f90e71f422a976bc42904ce32"
+    },
+    "tests/__init__.py": {
+      "bytes": 38,
+      "sha256": "7a61034ac839a9616c877b7a6fd12c9a1961da7c7b6b2d08d7b4a764338f1e0f"
+    },
+    "tests/helpers.py": {
+      "bytes": 3580,
+      "sha256": "d8f6568808a859ecf88ba2a684ea7092c28e71f8a706d799a2bda0a073b9f7cd"
+    },
+    "tests/test_cli.py": {
+      "bytes": 2578,
+      "sha256": "29521bcb6873386366a7e2a14a60d0818583a17d85136216804c250c02f5d8e3"
+    },
+    "tests/test_git_integration.py": {
+      "bytes": 15358,
+      "sha256": "f74e8a8c271a6801f39280318cb7d686709f286db556c00f6420b767ff51f91a"
+    },
+    "tests/test_protocol.py": {
+      "bytes": 4487,
+      "sha256": "1d7a7bfb36b1c1c8cb3d8f117cca790634bac859a236d80ae5e7d602fc3fcf57"
+    },
+    "tests/test_queue.py": {
+      "bytes": 8350,
+      "sha256": "856b9964544d6c663a217fd0f95cb5a1792f225b3fcea9dc9271c839039d2fa4"
+    },
+    "transport-manifest.json": {
+      "bytes": 2112,
+      "sha256": "e74ce68f16ed71377bc1433d0e50270582316e7f400da1e2858184e0b1e7ca22"
+    },
+    "validation-tail.txt": {
+      "bytes": 5296,
+      "sha256": "c84839161ae030d0b5e610d336ce8797bc958ed36b625dec8e0da6b3b4196fe2"
+    },
+    "validation.log": {
+      "bytes": 5778,
+      "sha256": "9f67c7177236b773499b80d0adbedc9912c5b8e3defc4d2da830258f787486c2"
+    },
+    "verification.json": {
+      "bytes": 530,
+      "sha256": "2cbe4ce9c0b374bb8c0417e563d6b49900e42b2210e2b679d138d095c063eafc"
+    }
+  },
+  "external_protocol": {
+    "path": "/mnt/apps/peticao-final/peticao/docs/PROTOCOLO-EXECUTORES-ADMIN-V2-20261110.md",
+    "sha256": "79023e2af895bd27f6bac5fd2766eeb4bd6da46542ad979ce4934684550478aa"
+  },
+  "validation": {
+    "tests": 35,
+    "failed": 0,
+    "exit_code": 0,
+    "duration_seconds": 11.31,
+    "evidence": "validation.log"
+  },
+  "activation": {
+    "execution_enabled": false,
+    "queue_exists": false,
+    "jobs": 0,
+    "remote_operations": 0,
+    "application_changes": false,
+    "worker_installed": false,
+    "daemon_started": false,
+    "deploy": false,
+    "READY_received": false
+  },
+  "next_gate": "Independent infra READY; frozen application source/runtime manifests and exact qualification acceptance before any activation"
+}

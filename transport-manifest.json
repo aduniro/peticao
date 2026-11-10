@@ -1,0 +1,31 @@
+{
+  "owned_files": {
+    "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft/git_transport.py": "a721ab9f7894bc38a986589698af11228abc255d668a151c1d4e1d2c597d446f",
+    "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft/integration.py": "d3dd034bdee67de91c63da3684ad32a3f6305ec7023dcd9b352052618ccee526",
+    "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft/tests/test_git_integration.py": "f74e8a8c271a6801f39280318cb7d686709f286db556c00f6420b767ff51f91a",
+    "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft/GIT-INTEGRATION.md": "e948a21f75f99acbf4ffa3a94c76b731c911cf230e7a949b197f625ccf6aeee5"
+  },
+  "contract_dependencies": {
+    "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft/protocol.py": "6be0f1649b4603bf13e66822cbb9c2be6f86608f90e71f422a976bc42904ce32",
+    "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft/admin_exec/queue.py": "912f1ae0b5bdfb113868379aed2a200108a81698c993f08e4e98b7d712168137",
+    "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft/config.json": "076a37c0dae58e53852cbf80922e7276c46413145a40d85acfd4aa1e830d784e"
+  },
+  "validation": {
+    "git_fixture_tests_passed": 11,
+    "git_fixture_test_session": 24493,
+    "post_guard_targeted_tests_passed": 2,
+    "post_guard_session": 78025,
+    "python_compile_exit": 0,
+    "only_temporary_fictitious_git_and_sqlite": true,
+    "application_candidate_changed": false,
+    "ssh_remote_push_service_or_deploy_executed": false,
+    "real_executor_activated": false,
+    "real_config_execution_enabled": false,
+    "joint_final_tests_passed": 35,
+    "joint_final_tests_failed": 0,
+    "joint_final_tests_seconds": 11.31,
+    "joint_final_tests_evidence": "/mnt/apps/peticao-final/_ops/admin-v2-executors/orchestrator-draft/validation.log",
+    "joint_final_tests_evidence_sha256": "9f67c7177236b773499b80d0adbedc9912c5b8e3defc4d2da830258f787486c2"
+  },
+  "status": "Implementation checkpoint; dry-run default; real execution awaits independent infra READY and explicit activation. No cluster-active claim."
+}
