@@ -11,15 +11,16 @@ const states = ["queued", "running", "validating", "succeeded", "failed", "stale
 const badInput = { kind: "rejected" as const, status: 400, error: "parameters" };
 const uncertain = { kind: "uncertain" as const };
 function validIntent(v: A1SigningIntent) {
-  return object(v) && Object.keys(v).sort().join(",") === "batchId,expectedDocumentVersion,expectedPolicyRevision,requestId" && id(v.batchId) && uuid(v.requestId) && hash(v.expectedDocumentVersion) && id(v.expectedPolicyRevision);
+  return object(v) && ["batchId,expectedDocumentVersion,expectedPolicyRevision,requestId","batchId,expectedDocumentVersion,expectedOwnArtifactId,expectedPolicyRevision,requestId"].includes(Object.keys(v).sort().join(",")) && id(v.batchId) && uuid(v.requestId) && hash(v.expectedDocumentVersion) && id(v.expectedPolicyRevision) && (!Object.hasOwn(v,"expectedOwnArtifactId") || uuid(v.expectedOwnArtifactId));
 }
 function job(raw: unknown, batchId: number): A1JobObservation | null {
   if (!object(raw) || !uuid(raw.jobId) || !uuid(raw.requestId) || raw.batchId !== batchId || !hash(raw.documentVersion) || !id(raw.policyRevision) || !id(raw.revision) || typeof raw.state !== "string" || !states.includes(raw.state)) return null;
   if (raw.outputVersionId !== undefined && raw.outputVersionId !== null && !uuid(raw.outputVersionId) || raw.outputSha256 !== undefined && raw.outputSha256 !== null && !hash(raw.outputSha256) || raw.errorCode !== undefined && raw.errorCode !== null && !machine(raw.errorCode)) return null;
-  return { jobId: raw.jobId, requestId: raw.requestId, batchId, documentVersion: raw.documentVersion, policyRevision: raw.policyRevision, revision: raw.revision, state: raw.state as A1JobObservation["state"], outputVersionId: raw.outputVersionId as string | null | undefined, outputSha256: raw.outputSha256 as string | null | undefined, errorCode: raw.errorCode as string | null | undefined };
+  if (raw.ownArtifactId !== undefined && raw.ownArtifactId !== null && !uuid(raw.ownArtifactId)) return null;
+  return { ownArtifactId: raw.ownArtifactId as string | null | undefined,jobId: raw.jobId, requestId: raw.requestId, batchId, documentVersion: raw.documentVersion, policyRevision: raw.policyRevision, revision: raw.revision, state: raw.state as A1JobObservation["state"], outputVersionId: raw.outputVersionId as string | null | undefined, outputSha256: raw.outputSha256 as string | null | undefined, errorCode: raw.errorCode as string | null | undefined };
 }
 function matches(value: A1JobObservation, intent: A1SigningIntent) {
-  return value.requestId === intent.requestId && value.documentVersion === intent.expectedDocumentVersion && value.policyRevision === intent.expectedPolicyRevision;
+  return value.requestId === intent.requestId && value.documentVersion === intent.expectedDocumentVersion && value.policyRevision === intent.expectedPolicyRevision && (value.ownArtifactId ?? null) === (intent.expectedOwnArtifactId ?? null);
 }
 async function exchange<T>(path: string, method: "GET" | "POST", body: unknown, parse: (raw: Record<string, unknown>, status: number) => T | null, fetcher: typeof fetch, timeoutMs: number): Promise<A1HttpResult<T>> {
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 60_000) return badInput;
@@ -49,14 +50,15 @@ async function exchange<T>(path: string, method: "GET" | "POST", body: unknown, 
   try { return await Promise.race([work(), deadline]); } catch { return uncertain; }
   finally { if (timer !== undefined) clearTimeout(timer); void reader?.cancel().catch(() => {}); }
 }
-export async function readA1Availability(batchId: number, fetcher: typeof fetch = fetch, timeoutMs = 15_000): Promise<A1HttpResult<A1AvailabilityObservation>> {
-  if (!id(batchId)) return badInput;
-  return exchange(`/api/admin/lotes/${batchId}/a1`, "GET", undefined, raw => {
+export async function readA1Availability(batchId: number, fetcher: typeof fetch = fetch, timeoutMs = 15_000, expectedOwnArtifactId?: string): Promise<A1HttpResult<A1AvailabilityObservation>> {
+  if (!id(batchId) || expectedOwnArtifactId!==undefined&&!uuid(expectedOwnArtifactId)) return badInput;
+  return exchange(`/api/admin/lotes/${batchId}/a1${expectedOwnArtifactId===undefined?"":"?expectedOwnArtifactId="+encodeURIComponent(expectedOwnArtifactId)}`, "GET", undefined, raw => {
+    if ((raw.ownArtifactId??null)!==(expectedOwnArtifactId??null))return null;
     if (typeof raw.available !== "boolean" || raw.error !== undefined && !machine(raw.error)) return null;
     if (raw.documentVersion !== undefined && !hash(raw.documentVersion) || raw.policyRevision !== undefined && !id(raw.policyRevision)) return null;
     if (raw.available && (!hash(raw.documentVersion) || !id(raw.policyRevision))) return null;
-    const selected = raw.latestJob == null ? null : job(raw.latestJob, batchId); if (raw.latestJob != null && !selected) return null;
-    return { ok: true, available: raw.available, error: raw.error as string | undefined, documentVersion: raw.documentVersion as string | undefined, policyRevision: raw.policyRevision as number | undefined, latestJob: selected };
+    const selected = raw.latestJob == null ? null : job(raw.latestJob, batchId); if (raw.latestJob != null && (!selected || expectedOwnArtifactId!==undefined && selected.ownArtifactId!==expectedOwnArtifactId)) return null;
+    return { ok: true, available: raw.available, error: raw.error as string | undefined, documentVersion: raw.documentVersion as string | undefined, policyRevision: raw.policyRevision as number | undefined, latestJob: selected, ...(expectedOwnArtifactId===undefined?{}:{ownArtifactId:expectedOwnArtifactId}) };
   }, fetcher, timeoutMs);
 }
 /** An absent intent is still only a read outcome, never permission to resend a POST. */
@@ -68,7 +70,7 @@ export async function readA1Intent(intent: A1SigningIntent, fetcher: typeof fetc
 export async function submitA1Intent(intent: A1SigningIntent, fetcher: typeof fetch = fetch, timeoutMs = 20_000): Promise<A1HttpResult<A1JobObservation>> {
   if (!validIntent(intent)) return badInput;
   const expected = { ...intent };
-  const body = { requestId: expected.requestId, expectedDocumentVersion: expected.expectedDocumentVersion, expectedPolicyRevision: expected.expectedPolicyRevision };
+  const body = { requestId: expected.requestId, expectedDocumentVersion: expected.expectedDocumentVersion, expectedPolicyRevision: expected.expectedPolicyRevision, ...(expected.expectedOwnArtifactId === undefined ? {} : { expectedOwnArtifactId: expected.expectedOwnArtifactId }) };
   return exchange(`/api/admin/lotes/${expected.batchId}/a1`, "POST", body, (raw, status) => {
     if (typeof raw.replayed !== "boolean" || status !== (raw.replayed ? 200 : 202)) return null;
     const value = job(raw.job, expected.batchId); return value && matches(value, expected) ? value : null;

@@ -4,9 +4,10 @@ import { updateA1JobView, type A1JobViewEvent, type A1JobViewState } from "./a1-
 export type A1Reconciliation = { batchId: number; requestId: string | null; event: A1JobViewEvent };
 
 /** One GET only. Apply through the current state, not the captured pre-request state. */
-export async function readA1Reconciliation(state: A1JobViewState, fetcher: typeof fetch = fetch, timeoutMs = 15_000): Promise<A1Reconciliation> {
+export async function readA1Reconciliation(state: A1JobViewState, fetcher: typeof fetch = fetch, timeoutMs = 15_000, expectedOwnArtifactId?: string): Promise<A1Reconciliation> {
   const batchId = state.batchId;
   const intent = state.intent ? { ...state.intent } : null;
+  if(expectedOwnArtifactId!==undefined && intent && intent.expectedOwnArtifactId!==expectedOwnArtifactId)return {batchId,requestId:intent.requestId,event:{type:"intent_read_failed",requestId:intent.requestId,error:"job_binding_mismatch"}};
   const needsAvailability = !!state.job && ["failed", "stale", "cancelled"].includes(state.job.state) && !state.resultUncertain && !state.postPending;
   if (intent && !needsAvailability) {
     const result = await readA1Intent(intent, fetcher, timeoutMs);
@@ -17,7 +18,7 @@ export async function readA1Reconciliation(state: A1JobViewState, fetcher: typeo
         : { type: "intent_read_failed", requestId: intent.requestId, error: result.kind === "rejected" ? result.error : "read_transport_failed" },
     };
   }
-  const result = await readA1Availability(batchId, fetcher, timeoutMs);
+  const result = await readA1Availability(batchId, fetcher, timeoutMs, intent?.expectedOwnArtifactId??expectedOwnArtifactId);
   return {
     batchId, requestId: intent?.requestId ?? null,
     event: result.kind === "success" ? { type: "read_received", availability: result.value }

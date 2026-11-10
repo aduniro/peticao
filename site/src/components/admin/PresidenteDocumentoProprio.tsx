@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
+import A1Assinatura from "@/components/admin/A1Assinatura";
 import { ownPdfDownloadPath, ownPdfIntent, ownPdfMetadata, ownPdfRequest, ownPdfUuid, type OwnPdfIntent, type OwnPdfMetadata } from "@/lib/president-own-document-client";
 
 type Props = { actorScope: string; batchId: number; receiptId: string; expectedDocumentVersion: string };
@@ -86,7 +87,10 @@ function DocumentoPorConfirmacao({ actorScope, batchId, receiptId, expectedDocum
         {document.sha256 && <><dt>SHA256 do PDF</dt><dd><code>{document.sha256}</code></dd></>}
         {document.sourceSha256 && <><dt>SHA256 do PDF original</dt><dd><code>{document.sourceSha256}</code></dd></>}
       </dl>
-      {download && <a className="adm-btn" href={download} referrerPolicy="no-referrer">{COPY.download}</a>}
+      {download && <>
+        <a className="adm-btn" href={download} referrerPolicy="no-referrer">{COPY.download}</a>
+        <A1Assinatura actorScope={actorScope} batchId={batchId} ownArtifactId={document.artifactId} documentRevision={expectedDocumentVersion} />
+      </>}
     </>}
     {canFresh && <div className="box">
       <label className="adm-check"><input type="checkbox" checked={acknowledged} disabled={pending} onChange={event => setAcknowledged(event.target.checked)} />Quero fazer uma nova solicitação para o mesmo lote e comprovante.</label>

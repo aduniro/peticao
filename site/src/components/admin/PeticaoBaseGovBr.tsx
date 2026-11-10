@@ -2,10 +2,11 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { readBaseInventory, readBaseSelection, readBasePacketReview, uploadBase, validateBase, selectBase, prepareBasePacket, readBaseIntent, type BaseHttpResult, type BaseArtifactView, type BaseReviewView, type BaseSelectionView } from "@/lib/petition-base-request";
+import { appendBaseInventoryPage, type BaseInventoryPage } from "@/lib/petition-base-pagination";
 import { parseBasePending, matchBaseRecovery, basePendingRequestId, type BasePending } from "@/lib/petition-base-view";
 
 // MUDAR AQUI: controles aprovados pelo proprietário; preservar os estilos existentes.
-const COPY = { title: "Petição-base gov.br", upload: "Carregar PDF assinado", validate: "Conferir assinatura", select: "Selecionar esta versão", prepare: "Preparar pacote para revisão", prepared: "Pacote preparado", separate: "Os PDFs do lote e da petição-base serão mantidos como arquivos separados.", uncertain: "Não foi possível confirmar o resultado. Atualize o documento antes de tentar novamente." };
+const COPY = { title: "Petição-base gov.br", upload: "Carregar PDF assinado", validate: "Conferir assinatura", select: "Selecionar esta versão", prepare: "Preparar pacote para revisão", prepared: "Pacote preparado", separate: "Os PDFs do lote e da petição-base serão mantidos como arquivos separados.", uncertain: "Não foi possível confirmar o resultado. Atualize o documento antes de tentar novamente.", more: "Carregar mais", moreFailed: "Não foi possível carregar mais documentos. Tente novamente." };
 type Props = { batchId: number; actorId: number; petitionTextVersion: string };
 export default function PeticaoBaseGovBr(props: Props) {
   const router = useRouter(), refresh = useCallback(() => router.refresh(), [router]);
@@ -14,7 +15,10 @@ export default function PeticaoBaseGovBr(props: Props) {
 export function PeticaoBaseGovBrControl({ batchId, actorId, petitionTextVersion, onPrepared }: Props & { onPrepared?: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null), fileInput = useRef<HTMLInputElement>(null), title = useId();
   const mounted = useRef(false), generation = useRef(0), busy = useRef(false), pendingRef = useRef<BasePending | null>(null), notified = useRef<string | null>(null);
-  const [artifacts, setArtifacts] = useState<BaseArtifactView[]>([]), [selected, setSelected] = useState<BaseSelectionView | null>(null), [bindingMatches, setBindingMatches] = useState(false), [review, setReview] = useState<BaseReviewView | null>(null);
+  const inventoryRef = useRef<BaseInventoryPage | null>(null);
+  const [inventory, setInventory] = useState<BaseInventoryPage | null>(null), [paging, setPaging] = useState(false), [pagingError, setPagingError] = useState(false);
+  const artifacts = inventory?.artifacts ?? [];
+  const [selected, setSelected] = useState<BaseSelectionView | null>(null), [bindingMatches, setBindingMatches] = useState(false), [review, setReview] = useState<BaseReviewView | null>(null);
   const [pending, setPending] = useState<BasePending | null>(null), [loading, setLoading] = useState(false), [posting, setPosting] = useState(false), [uncertain, setUncertain] = useState(false), [ready, setReady] = useState(false);
   const storageKey = `petition-base:v1:${actorId}:${batchId}`;
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; generation.current++; }; }, []);
@@ -27,11 +31,12 @@ export function PeticaoBaseGovBrControl({ batchId, actorId, petitionTextVersion,
   function setIntent(value: BasePending | null) { pendingRef.current = value; setPending(value); }
   async function refresh() {
     const token = ++generation.current; setLoading(true); setReady(false);
+    inventoryRef.current = null;setInventory(null);setPagingError(false);
     const intent = pendingRef.current;
     const [inventory, selection, snapshot, outcome] = await Promise.all([readBaseInventory(), readBaseSelection(), readBasePacketReview(batchId), intent ? readBaseIntent(intent.kind, basePendingRequestId(intent), batchId) : Promise.resolve(null)]);
     if (!mounted.current || token !== generation.current) return;
     setLoading(false);
-    if (inventory.kind === "success") { setArtifacts(inventory.value.artifacts); }
+    if (inventory.kind === "success") { inventoryRef.current = inventory.value;setInventory(inventory.value); }
     if (selection.kind === "success") { setSelected(selection.value.selection); setBindingMatches(selection.value.currentBindingMatches); }
     if (snapshot.kind === "success") setReview(snapshot.value);
     const readsOk = inventory.kind === "success" && selection.kind === "success" && snapshot.kind === "success";
@@ -46,6 +51,18 @@ export function PeticaoBaseGovBrControl({ batchId, actorId, petitionTextVersion,
     }
     // 404 may race an in-flight POST. It never authorizes a new automatic submission.
     if (intent && outcome?.kind !== "success") setUncertain(true);
+  }
+  async function loadMore() {
+    const previous = inventoryRef.current, cursor = previous?.nextCursor;
+    if (!previous || !cursor || busy.current || loading || posting || !ready || pendingRef.current) return;
+    const token = generation.current;busy.current = true;setPaging(true);setPagingError(false);
+    try {
+      const result = await readBaseInventory(undefined, 15_000, cursor);
+      if (!mounted.current || token !== generation.current) return;
+      const merged = result.kind === "success" ? appendBaseInventoryPage(previous, result.value, cursor) : null;
+      if (!merged) { setPagingError(true);return; }
+      inventoryRef.current = merged;setInventory(merged);
+    } finally { busy.current = false;if (mounted.current) setPaging(false); }
   }
   async function mutate(intent: BasePending, operation: () => Promise<BaseHttpResult<unknown>>) {
     if (busy.current || pendingRef.current || !ready) return;
@@ -90,22 +107,25 @@ export function PeticaoBaseGovBrControl({ batchId, actorId, petitionTextVersion,
     void mutate({ kind: "package", input }, () => prepareBasePacket(input));
   }
   function close() { dialog.current?.close(); trigger.current?.focus(); }
-  const disabled = loading || posting || !ready || pending !== null;
+  const disabled = loading || posting || paging || !ready || pending !== null;
   const prepared = review?.latestPackage && review.latestPackage.documentVersion === review.documentVersion && review.latestPackage.selectionId === selected?.selectionId && review.latestPackage.baseSha256 === selected?.sha256 && bindingMatches;
   return <>
     <button ref={trigger} type="button" className="v2-btn v2-btn-sec" onClick={() => { setIntent(restore()); dialog.current?.showModal(); void refresh(); }}>{COPY.title}</button>
     <dialog ref={dialog} className="adm-modal" aria-labelledby={title} onCancel={event => { event.preventDefault(); close(); }}>
-      <div className="in" aria-busy={loading || posting}>
+      <div className="in" aria-busy={loading || posting || paging}>
         <div className="adm-bar"><h3 id={title}>{COPY.title}</h3><button type="button" className="adm-btn" onClick={close}>Fechar</button></div>
         <p>{COPY.separate}</p>
         {uncertain && <p className="v2-aviso erro" role="alert">{COPY.uncertain}</p>}
         <p><input ref={fileInput} type="file" accept="application/pdf" aria-label="PDF assinado" disabled={disabled} /> <button type="button" className="adm-btn" disabled={disabled} onClick={() => void upload()}>{COPY.upload}</button></p>
-        <button type="button" className="adm-btn" disabled={loading || posting} onClick={() => void refresh()}>Atualizar</button>
+        <button type="button" className="adm-btn" disabled={loading || posting || paging} onClick={() => void refresh()}>Atualizar</button>
         {selected && <p style={{ overflowWrap: "anywhere" }}><a href={`/api/admin/documentos/base/${selected.artifactId}`} target="_blank" rel="noopener">{COPY.title}</a> · <code>{selected.sha256}</code></p>}
         <div className="table-scroll"><table style={{ minWidth: 600 }}><thead><tr><th>Documento</th><th>sha256</th><th>Ações</th></tr></thead><tbody>{artifacts.map(item => <tr key={item.artifactId}>
           <td><a href={`/api/admin/documentos/base/${item.artifactId}`} target="_blank" rel="noopener">PDF</a></td><td style={{ overflowWrap: "anywhere", maxWidth: 240 }}><code>{item.sha256}</code></td>
           <td><button type="button" className="adm-btn" disabled={disabled} onClick={() => void validate(item)}>{COPY.validate}</button> <button type="button" className="adm-btn" disabled={disabled || !item.lastValidationId || selected?.artifactId === item.artifactId && bindingMatches} onClick={() => choose(item)}>{COPY.select}</button></td>
         </tr>)}</tbody></table></div>
+        {/* MUDAR AQUI: paginação explícita somente leitura; mantém as fontes e classes existentes. */}
+        {inventory?.hasMore && <p><button type="button" className="adm-btn" disabled={disabled} onClick={() => void loadMore()}>{COPY.more}</button></p>}
+        {pagingError && <p role="status" className="small">{COPY.moreFailed}</p>}
         <p><button type="button" className="adm-btn" disabled={disabled || !!prepared || !bindingMatches || !selected || !review?.canPrepare || review.selectionId !== selected.selectionId} onClick={prepare}>{COPY.prepare}</button></p>
         {prepared && <p role="status" style={{ overflowWrap: "anywhere" }}>{COPY.prepared} · <code>{review?.latestPackage?.packageDigest}</code></p>}
       </div>

@@ -72,7 +72,8 @@ export async function renderPresidentConfirmation(source: Buffer, snapshot: OwnC
   for (const [label, value] of [
     ["Responsável", confirmed.signerName],
     ["Instituição", "ADUNIR - Seção Sindical do ANDES-SN"],
-    ["Documento", `Petição PLV 12/2026 - lote ${confirmed.batchId}`],
+    ["Documento", "Petição PLV 12/2026"],
+    ["Identificador do lote", String(confirmed.batchId)],
     ["Método", "Confirmação própria do aplicativo"],
     ["Data da confirmação", `${when} (Brasília)`],
     ["Recibo", confirmed.receiptId],

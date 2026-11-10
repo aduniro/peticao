@@ -1,9 +1,8 @@
 "use client";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { brasilia } from "@/lib/time";
-import { appendDocumentHistory, loadDocumentHistoryPage, type DocumentHistoryPage } from "@/lib/document-history-view";
+import { appendDocumentHistory, documentHistorySignatureLabel, loadDocumentHistoryPage, type DocumentHistoryPage } from "@/lib/document-history-view";
 
-const SIGNATURE = { none: "NÃO ASSINADO (teste)", "icp-brasil": "ICP-Brasil", "externa-nao-validada": "Assinado, NÃO validado" };
 /** Explicit metadata lookup only; bytes are requested solely through the protected download link. */
 export default function HistoricoDocumento({ batchId }: { batchId: number }) {
   const trigger = useRef<HTMLButtonElement>(null);
@@ -41,7 +40,7 @@ export default function HistoricoDocumento({ batchId }: { batchId: number }) {
           <thead><tr><th>Versão</th><th>Tipo</th><th>Assinatura</th><th>sha256 do PDF</th><th>Data</th><th>Autor</th><th>Ações</th></tr></thead>
           <tbody>{page.versions.map(row => <tr key={row.id}>
             <td>{row.ordinal}</td><td>{row.variant === "original" ? "original" : "assinado"}{row.source === "legacy-observed" && <div className="small">Histórico anterior</div>}</td>
-            <td>{row.signatureKind ? SIGNATURE[row.signatureKind] : "—"}</td>
+            <td>{documentHistorySignatureLabel(row.signatureKind)}</td>
             <td style={{ maxWidth: 320, overflowWrap: "anywhere" }}><code>{row.sha256}</code><div className="small">Lista sha256: <code>{row.listHash ?? "—"}</code></div></td>
             <td>{brasilia(row.capturedAt)}</td><td>{row.authorId === null ? "—" : `#${row.authorId}`}<div className="small">Registro: {row.recordedBy === null ? "—" : `#${row.recordedBy}`}</div></td>
             <td><a className="adm-btn sm" href={`/api/admin/lotes/${batchId}/versoes/${encodeURIComponent(row.id)}`}>Baixar</a></td>

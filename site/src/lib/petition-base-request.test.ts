@@ -3,14 +3,14 @@ import assert from "node:assert/strict";
 import { readBaseInventory, readBaseSelection, readBasePacketReview, uploadBase, validateBase, selectBase, prepareBasePacket, readBaseIntent } from "./petition-base-request";
 const requestId = "11111111-1111-4111-8111-111111111111", artifactId = "22222222-2222-4222-8222-222222222222", selectionId = "33333333-3333-4333-8333-333333333333", validationId = "44444444-4444-4444-8444-444444444444";
 const sha = "a".repeat(64), version = "b".repeat(64);
-const artifact = { artifactId, sha256: sha, byteLength: 24, usableInPackage: false, lastValidationId: validationId };
+const artifact = { uploadedAt: "2026-11-10T10:00:00.123456Z", artifactId, sha256: sha, byteLength: 24, usableInPackage: false, lastValidationId: validationId };
 const selection = { selectionId, revision: 1, validationId, artifactId, sha256: sha, petitionTextVersion: version, usableInPackage: false };
 const packet = { packageId: requestId, batchId: 7, ordinal: 1, documentVersion: version, selectionId, baseArtifactId: artifactId, baseSha256: sha, batchSha256: sha, packageDigest: sha, approvalRequired: true, dispatchAllowed: false };
 const response = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } });
 const mock = (value: unknown, status = 200) => (async () => response(value, status)) as typeof fetch;
 
 test("base client reads only strict bounded metadata and never treats upload as dispatch permission", async () => {
-  const good = await readBaseInventory(mock({ ok: true, hasMore: false, artifacts: [artifact] })); assert.equal(good.kind, "success");
+  const good = await readBaseInventory(mock({ ok: true, hasMore: false, nextCursor: null, artifacts: [artifact] })); assert.equal(good.kind, "success");
   for (const value of [{ ok: true, artifacts: [artifact, artifact], hasMore: false }, { ok: true, artifacts: [{ ...artifact, usableInPackage: true }], hasMore: false }, { ok: true, artifacts: Array.from({ length: 21 }, () => artifact), hasMore: true }]) assert.equal((await readBaseInventory(mock(value))).kind, "uncertain");
   assert.equal((await readBaseSelection(mock({ ok: true, selection, currentBindingMatches: true }))).kind, "success");
   assert.equal((await readBaseSelection(mock({ ok: true, selection: null }))).kind, "success");

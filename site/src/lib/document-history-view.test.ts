@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { parseDocumentHistoryPage as parse, appendDocumentHistory as append, loadDocumentHistoryPage as load } from "./document-history-view";
+import { parseDocumentHistoryPage as parse, appendDocumentHistory as append, documentHistorySignatureLabel as signatureLabel, loadDocumentHistoryPage as load } from "./document-history-view";
 import HistoricoDocumento from "../components/admin/HistoricoDocumento";
 
 const row = (ordinal = 3, extra = {}) => ({ id: `00000000-0000-4000-8000-${String(ordinal).padStart(12, "0")}`, batch_id: 7, ordinal, variant: "signed", sha256: "a".repeat(64), list_hash: "b".repeat(64), signature_kind: "icp-brasil", source: "upload", author_id: 1, recorded_by: 2, captured_at: "2026-11-09T12:34:56.789Z", byte_length: 123, ...extra });
@@ -53,4 +53,34 @@ test("history renders collapsed with neutral controls and does not fetch metadat
     const html = renderToStaticMarkup(React.createElement(HistoricoDocumento, { batchId: 7 }));
     assert.match(html, /Histórico/); assert.match(html, /<dialog/); assert.ok(!html.includes("<iframe")); assert.ok(!html.includes("/api/admin/lotes/7/versoes/")); assert.equal(calls, 0);
   } finally { globalThis.fetch = old; }
+});
+
+
+test("mixed own/A1/prepared/upload/legacy history stays readable without upgrading the own confirmation", async () => {
+  const raw = response([
+    row(5, { source: "a1-worker", signature_kind: "icp-brasil" }),
+    row(4, { source: "president-own", signature_kind: "own-confirmation" }),
+    row(3, { source: "upload", signature_kind: "externa-nao-validada" }),
+    row(2, { source: "legacy-observed", author_id: null, signature_kind: null }),
+    row(1, { source: "prepared", variant: "original", signature_kind: "none" }),
+  ]);
+  const page = parse(raw, 7); assert.ok(page); assert.equal(page.versions.length, 5);
+  assert.deepEqual(page.versions.map(r => r.source), ["a1-worker", "president-own", "upload", "legacy-observed", "prepared"]);
+  assert.equal(signatureLabel(page.versions[0].signatureKind), "ICP-Brasil");
+  assert.equal(signatureLabel(page.versions[1].signatureKind), "Confirmação própria");
+  assert.notEqual(signatureLabel(page.versions[1].signatureKind), "ICP-Brasil");
+  const loaded = await load((async () => Response.json(raw)) as typeof fetch, 7); assert.ok(loaded.ok); assert.deepEqual(loaded.page, page);
+});
+
+test("history refuses unknown sources and contradictory own/A1 methods; unknown legacy methods stay neutral", () => {
+  for (const extra of [
+    { source: "unknown-source" },
+    { source: "president-own", signature_kind: "icp-brasil" },
+    { source: "president-own", signature_kind: "own-confirmation", variant: "original" },
+    { source: "president-own", signature_kind: "unknown-kind" },
+    { source: "a1-worker", signature_kind: "own-confirmation" },
+    { source: "a1-worker", signature_kind: "icp-brasil", variant: "original" },
+  ]) assert.equal(parse(response([row(1, extra)]), 7), null);
+  const unknown = parse(response([row(1, { signature_kind: "unknown-method" })]), 7); assert.ok(unknown);
+  assert.equal(unknown.versions[0].signatureKind, null); assert.equal(signatureLabel(unknown.versions[0].signatureKind), "—");
 });

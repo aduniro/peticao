@@ -6,8 +6,8 @@ export const dynamic="force-dynamic";
 const reply=(value:unknown,status:number)=>NextResponse.json(value,{status,headers:{"cache-control":"private, no-store","x-content-type-options":"nosniff"}});
 export async function GET(req:NextRequest){
  const denied=await exigirNivel(req,"total",120,{stepup:true});if(denied)return denied;
- const q=req.nextUrl.searchParams;if(q.size&&(q.size!==1||!q.has('requestId')))return reply({ok:false,error:"parameters"},400);
- try{const actor=await quemAge(req),result=q.has('requestId')?await getStagedPetitionBaseRequest(q.get('requestId')!,actor):await listStagedPetitionBases(actor);return reply(result,result.ok?200:result.error==='forbidden'?403:result.error==='not_found'?404:result.error==='parameters'?400:409);}catch{return reply({ok:false,error:"unavailable"},503);}
+ const q=req.nextUrl.searchParams;if(q.size&&(q.size!==1||!q.has('requestId')&&!q.has('cursor')))return reply({ok:false,error:"parameters"},400);
+ try{const actor=await quemAge(req),result=q.has('requestId')?await getStagedPetitionBaseRequest(q.get('requestId')!,actor):await listStagedPetitionBases(actor,q.has('cursor')?q.get('cursor')!:undefined);return reply(result,result.ok?200:result.error==='forbidden'?403:result.error==='not_found'?404:result.error==='parameters'?400:409);}catch{return reply({ok:false,error:"unavailable"},503);}
 }
 export async function POST(req:NextRequest){
  const denied=await exigirNivel(req,"total",10,{stepup:true});if(denied)return denied;

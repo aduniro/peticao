@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Isolated final candidate checks. No production configuration, providers or databases."""
 import argparse, fcntl, hashlib, json, os, socket, subprocess, time, shutil
+from pdfjs_runtime import runtime_manifest
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SITE = ROOT / "site"
@@ -38,6 +39,9 @@ short = Path("/mnt/apps/peticao-final/_qa") / ("a1-" + str(time.time_ns()))
 short.mkdir(mode=0o700, parents=True)
 geo = Path("/mnt/apps/peticao-final/peticao/site/geo-data")
 geo_hashes = {name: hashlib.sha256((geo/name).read_bytes()).hexdigest() for name in ["dbip-city-lite.mmdb", "dbip-asn-lite.mmdb"]}
+if args.mode == "build":
+    subprocess.run([str(NODE), str(SITE/"scripts/prepare-pdfjs-assets.mjs"), "--offline", "--cache-dir", str(ROOT.parent/"admin-v2-retomada-20261109/pdfjs-preview-runtime")], check=True, cwd=SITE)
+runtime_before = runtime_manifest(ROOT, required=args.mode == "build")
 before = manifest()
 env = {k: os.environ[k] for k in ["HOME", "LANG", "LC_ALL"] if k in os.environ}
 env.update(PATH=str(NODE.parent)+":/usr/bin:/bin", NODE_ENV="test", MAIL_PROVIDER="dev", SIGNER="none", NEXT_TELEMETRY_DISABLED="1",
@@ -54,7 +58,7 @@ elif args.mode == "base-validation": command=[str(NODE),"--import","tsx","--test
 elif args.mode == "schema": command=[str(NODE),"scripts/with-db.mjs",str(NODE),"--import","tsx","../deploy/test/admin-schema-upgrade.mjs"]
 else:
     if args.mode == "full": files=sorted(str(p.relative_to(SITE)) for folder in [SITE/"src/lib",SITE/"src/i18n"] for p in folder.glob("*.test.ts"))
-    elif args.mode == "president-native": files=["src/lib/"+f+".test.ts" for f in ["president-native-contract", "president-portal-store", "president-access", "president-native-pdf", "president-client", "president-admin-client", "private-ui-path", "president-own-document-contract", "president-own-document-store", "president-own-document-client"]]
+    elif args.mode == "president-native": files=["src/lib/"+f+".test.ts" for f in ["president-native-contract", "president-portal-store", "president-access", "president-native-pdf", "president-client", "president-admin-client", "private-ui-path", "president-own-document-contract", "president-own-document-store", "president-own-document-client", "president-pdf-preview", "president-own-a1-contract", "president-own-a1-jobs", "president-own-a1-browser", "a1-ui-context", "a1-request", "a1-reconciliation", "a1-job-view", "batch-a1-jobs", "batch-a1-route", "document-history-view", "petition-base-pagination", "petition-base-pagination-store", "petition-base-request"]]
     elif args.mode == "base-http": files=["src/lib/petition-base-route.test.ts"]
     elif args.mode == "package-delivery": files=["src/lib/"+f+".test.ts" for f in ["batch-package-delivery","batches","batch-rejection-recovery","batch-document-reservation","batch-mutation-atomicity", "mail-rollback"]]
     elif args.mode == "packages": files=["src/lib/"+f+".test.ts" for f in ["batch-package-contract","batch-package-store","petition-base-selection","petition-base-store","petition-base-validation-store"]]
@@ -69,11 +73,12 @@ if args.test_name_pattern:
     command[at:at]=["--test-name-pattern",args.test_name_pattern]
 print("Check:",args.mode,"; evidence:",scratch,flush=True)
 with (scratch/"validation.log").open("w") as log: code=subprocess.run(command,cwd=SITE,env=env,stdout=log,stderr=subprocess.STDOUT).returncode
-same = before == manifest()
+runtime_same = runtime_before == runtime_manifest(ROOT, required=bool(runtime_before))
+same = before == manifest() and runtime_same
 shutil.rmtree(short)
 commit_after = subprocess.check_output(["/usr/bin/git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
-result={"commitStable": commit_before == commit_after, "startedCommit": commit_before, "mode":args.mode,"exit":code,"sourceStable":same,"node":"20.19.2","nodeSha256":NODE_SHA,"commit":subprocess.check_output(["/usr/bin/git","-C",str(ROOT),"rev-parse","HEAD"],text=True).strip(),"command":command,"trackedFiles":len(before),"geoData":geo_hashes,"log":str(scratch/"validation.log")}
-(scratch/"result.json").write_text(json.dumps(result,indent=2));(scratch/"source-manifest.json").write_text(json.dumps(before,sort_keys=True))
+result={"commitStable": commit_before == commit_after, "startedCommit": commit_before, "mode":args.mode,"exit":code,"sourceStable":same,"node":"20.19.2","nodeSha256":NODE_SHA,"commit":subprocess.check_output(["/usr/bin/git","-C",str(ROOT),"rev-parse","HEAD"],text=True).strip(),"command":command,"trackedFiles":len(before),"runtimeAssets":len(runtime_before),"runtimeAssetsStable":runtime_same,"geoData":geo_hashes,"log":str(scratch/"validation.log")}
+(scratch/"result.json").write_text(json.dumps(result,indent=2));(scratch/"source-manifest.json").write_text(json.dumps(before,sort_keys=True));(scratch/"runtime-assets-manifest.json").write_text(json.dumps(runtime_before,sort_keys=True))
 print(json.dumps(result),flush=True)
 if code: print((scratch/"validation.log").read_text()[-6000:])
 raise SystemExit(code if same and commit_before == commit_after else 2)

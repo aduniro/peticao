@@ -4,7 +4,7 @@ import { audit, tx } from "./db";
 import { authorizeBatchActor, type BatchActor } from "./batches";
 
 export type DocumentVariant = "original" | "signed";
-export type DocumentCaptureSource = "prepared" | "upload" | "legacy-observed" | "a1-worker";
+export type DocumentCaptureSource = "prepared" | "upload" | "legacy-observed" | "a1-worker" | "president-own";
 export type DocumentVersionInput = {
   batchId: number; variant: DocumentVariant; bytes: Buffer; sha256: string;
   listHash: string; signatureKind: string | null; note: string | null;
@@ -23,7 +23,7 @@ const columns = "id,batch_id,ordinal,variant,sha256,list_hash,signature_kind,not
 
 /** Caller transaction includes the document mutation and audit. Never rewrites an earlier row. */
 export async function appendDocumentVersion(client: PoolClient, input: DocumentVersionInput) {
-  if (!validId(input.batchId) || !["original", "signed"].includes(input.variant) || !["prepared", "upload", "legacy-observed", "a1-worker"].includes(input.source) || !input.bytes.length || !/^[a-f0-9]{64}$/.test(input.sha256) || digest(input.bytes) !== input.sha256 || !input.listHash || [input.authorId, input.recordedBy].some(id => id !== null && !validId(id)) || input.source === "legacy-observed" && input.authorId !== null) throw new Error("invalid_document_version");
+  if (!validId(input.batchId) || !["original", "signed"].includes(input.variant) || !["prepared", "upload", "legacy-observed", "a1-worker", "president-own"].includes(input.source) || !input.bytes.length || !/^[a-f0-9]{64}$/.test(input.sha256) || digest(input.bytes) !== input.sha256 || !input.listHash || [input.authorId, input.recordedBy].some(id => id !== null && !validId(id)) || input.source === "legacy-observed" && input.authorId !== null) throw new Error("invalid_document_version");
   // Lock even when called independently; serial ordinals cannot race with another capture.
   if (!(await client.query("SELECT 1 FROM batches WHERE id=$1 FOR UPDATE", [input.batchId])).rowCount) throw new Error("missing_document_batch");
   const ordinal = Number((await client.query("SELECT COALESCE(MAX(ordinal),0)+1 n FROM batch_document_versions WHERE batch_id=$1", [input.batchId])).rows[0].n);

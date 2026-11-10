@@ -34,3 +34,6 @@ layouts-email-pos-confirmacao/
 # Python compilado
 __pycache__/
 *.pyc
+
+# Generated pinned PDF.js browser runtime; recreated from the asset lock.
+/site/public/vendor/pdfjs/

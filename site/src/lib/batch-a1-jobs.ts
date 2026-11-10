@@ -1,3 +1,5 @@
+import { ownAwareA1Intent, ownAwareA1Fingerprint, type OwnAwareA1Intent } from "./president-own-a1-contract";
+import { a1OwnArtifactIdTx, freezeOwnA1InputTx, readOwnA1InputTx, historicalOwnA1InputTx, ownA1InputAvailableTx } from "./president-own-a1-input-store";
 import { thawPreparation } from "./batch-preparation";
 import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
@@ -19,7 +21,7 @@ export type A1ServerPolicy = {
 };
 export type A1JobState = "queued" | "running" | "validating" | "succeeded" | "failed" | "stale" | "cancelled";
 export type A1JobMetadata = A1WorkerBinding & {
-  batchId: number; requestId:string; inputByteLength: number; listHash: string; state: A1JobState;
+  batchId: number; requestId:string; ownArtifactId?: string | null; inputByteLength: number; listHash: string; state: A1JobState;
   revision: number; attempts: number; policyRevision: number;
   authorizationExpiresAt: string; leaseUntil: string | null; errorCode: string | null;
   createdAt: string; updatedAt: string; outputVersionId:string|null; outputSha256:string|null; validationReportId:string|null;
@@ -41,8 +43,8 @@ const integer = (v: unknown): v is number => Number.isInteger(v) && Number(v)>0 
 const digest = (v: string | Buffer) => createHash("sha256").update(v).digest("hex");
 const error = (code: string) => ({ ok: false as const, error: code });
 const iso = (d: Date) => d.toISOString();
-function metadata(j: JobRow): A1JobMetadata {
-  return { jobId:j.id,batchId:j.batch_id,requestId:j.request_id,inputArtifactVersionId:j.input_artifact_version_id,inputSha256:j.input_sha256,
+async function metadata(c: PoolClient, j: JobRow): Promise<A1JobMetadata> {
+  return { ownArtifactId:await a1OwnArtifactIdTx(c,j.input_artifact_version_id),jobId:j.id,batchId:j.batch_id,requestId:j.request_id,inputArtifactVersionId:j.input_artifact_version_id,inputSha256:j.input_sha256,
     inputByteLength:j.input_byte_length,documentVersion:j.document_version,listHash:j.list_hash,
     credentialVersionId:j.credential_version_id,profileVersion:j.profile_version,trustStoreVersion:j.trust_store_version,
     expectedCnpj:j.expected_cnpj,certificateFingerprintSha256:j.certificate_fingerprint_sha256,
@@ -52,6 +54,7 @@ function metadata(j: JobRow): A1JobMetadata {
 }
 async function bounded(c: PoolClient) {
   await c.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'");
+  await c.query("SELECT pg_advisory_xact_lock(7003)");
 }
 async function authorized(c: PoolClient, actor: Actor | null) {
   if (!integer(actor?.sessaoId) || !await authorizeBatchActor(c,actor!)) return null;
@@ -87,16 +90,16 @@ async function stale(c: PoolClient,j: JobRow,code: "authorization_changed"|"poli
   return error("stale");
 }
 
-export type AdmitA1Job = { batchId:number; requestId:string; expectedDocumentVersion:string; expectedPolicyRevision:number };
+export type AdmitA1Job = OwnAwareA1Intent;
 /** Explicit administrative intent only. No signing/network/provider call occurs in this transaction. */
 export async function admitA1Job(input: AdmitA1Job, actor: Actor | null) {
-  if (!input || Object.keys(input).sort().join(',')!==['batchId','requestId','expectedDocumentVersion','expectedPolicyRevision'].sort().join(',') || !integer(input.batchId) || !uuid(input.requestId) || !sha(input.expectedDocumentVersion) || !integer(input.expectedPolicyRevision)) return error("parameters");
+  const parsed=ownAwareA1Intent(input);if(!parsed)return error("parameters");input=parsed;
   return tx(async c=>{
     await bounded(c);const auth=await authorized(c,actor);if(!auth)return error("forbidden");
     const p=await policy(c);if(!p)return error("disabled");
-    const fingerprint=digest(JSON.stringify([input.batchId,input.requestId,input.expectedDocumentVersion,input.expectedPolicyRevision]));
+    const fingerprint=ownAwareA1Fingerprint(input);
     const existing=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE actor_id=$1 AND request_id=$2 FOR UPDATE",[actor!.userId,input.requestId])).rows[0];
-    if(existing)return existing.request_fingerprint===fingerprint?{ok:true as const,job:metadata(existing),replayed:true}:error("request_conflict");
+    if(existing)return existing.request_fingerprint===fingerprint?{ok:true as const,job:await metadata(c,existing),replayed:true}:error("request_conflict");
     if(p.revision!==input.expectedPolicyRevision)return error("policy_conflict");
     const doc=await currentDocument(c,input.batchId);if(!doc || doc.version!==input.expectedDocumentVersion)return error("document_conflict");
     const active=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE batch_id=$1 AND state IN ('queued','running','validating') FOR UPDATE",[input.batchId])).rows[0];
@@ -105,13 +108,15 @@ export async function admitA1Job(input: AdmitA1Job, actor: Actor | null) {
       if(active.authorization_expires_at.getTime()>now)return error("active_job");
       await stale(c,active,"authorization_changed");
     }
+    const selected=input.expectedOwnArtifactId ? await freezeOwnA1InputTx(c,doc,input.expectedOwnArtifactId,actor!.userId) : doc.original;
+    if(!selected)return error("document_conflict");
     const id=randomUUID();
     const inserted=(await c.query<JobRow>(`INSERT INTO batch_a1_jobs(id,batch_id,request_id,request_fingerprint,actor_id,actor_email,session_id,authorization_id,authorized_at,authorization_expires_at,
       input_artifact_version_id,input_sha256,input_byte_length,document_version,list_hash,batch_revision,credential_version_id,profile_version,trust_store_version,expected_cnpj,certificate_fingerprint_sha256,policy_revision,policy_fingerprint)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,clock_timestamp(),$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22) RETURNING *`,
-      [id,input.batchId,input.requestId,fingerprint,actor!.userId,actor!.email.trim().toLowerCase(),actor!.sessaoId,randomUUID(),auth.expires_at,doc.original.id,doc.original.sha256,doc.original.bytes.length,doc.version,doc.batch.list_hash,doc.batch.batch_revision,p.credentialVersionId,p.profileVersion,p.trustStoreVersion,p.expectedCnpj,p.certificateFingerprintSha256,p.revision,digest(JSON.stringify(p))])).rows[0];
-    await audit("batch_a1_job_admitted",null,{jobId:id,batchId:input.batchId,inputArtifactVersionId:doc.original.id,inputSha256:doc.original.sha256,documentVersion:doc.version,credentialVersionId:p.credentialVersionId,policyRevision:p.revision,userId:actor!.userId},c);
-    return {ok:true as const,job:metadata(inserted),replayed:false};
+      [id,input.batchId,input.requestId,fingerprint,actor!.userId,actor!.email.trim().toLowerCase(),actor!.sessaoId,randomUUID(),auth.expires_at,selected.id,selected.sha256,selected.bytes.length,doc.version,doc.batch.list_hash,doc.batch.batch_revision,p.credentialVersionId,p.profileVersion,p.trustStoreVersion,p.expectedCnpj,p.certificateFingerprintSha256,p.revision,digest(JSON.stringify(p))])).rows[0];
+    await audit("batch_a1_job_admitted",null,{jobId:id,batchId:input.batchId,inputArtifactVersionId:selected.id,inputSha256:selected.sha256,...(input.expectedOwnArtifactId?{ownArtifactId:input.expectedOwnArtifactId}:{}),documentVersion:doc.version,credentialVersionId:p.credentialVersionId,policyRevision:p.revision,userId:actor!.userId},c);
+    return {ok:true as const,job:await metadata(c,inserted),replayed:false};
   });
 }
 
@@ -128,16 +133,17 @@ export async function claimA1Job(jobId: string, expectedRevision: number) {
     const now=Number((await c.query("SELECT extract(epoch FROM clock_timestamp())*1000 ms")).rows[0].ms);
     if(!auth||j.authorization_expires_at.getTime()<=now)return stale(c,j,"authorization_changed");
     if(!p||digest(JSON.stringify(p))!==j.policy_fingerprint)return stale(c,j,"policy_changed");
-    if(!doc||doc.version!==j.document_version||doc.original.id!==j.input_artifact_version_id||doc.original.sha256!==j.input_sha256||doc.original.bytes.length!==j.input_byte_length)return stale(c,j,"document_changed");
+    const selected=doc && (doc.original.id===j.input_artifact_version_id ? doc.original : await readOwnA1InputTx(c,doc,j.input_artifact_version_id));
+    if(!doc||doc.version!==j.document_version||!selected||selected.id!==j.input_artifact_version_id||selected.sha256!==j.input_sha256||selected.bytes.length!==j.input_byte_length)return stale(c,j,"document_changed");
     if(j.lease_until&&j.lease_until.getTime()>now)return error("busy");
     if(j.attempts>=3)return stale(c,j,"attempt_limit");
     const token=randomUUID();
     const row=(await c.query<JobRow>("UPDATE batch_a1_jobs SET state='running',revision=revision+1,attempts=attempts+1,lease_token=$2,lease_until=LEAST(clock_timestamp()+interval '120 seconds',authorization_expires_at),error_code=NULL,updated_at=clock_timestamp() WHERE id=$1 AND revision=$3 RETURNING *",[jobId,token,expectedRevision])).rows[0];
     if(!row)return error("conflict");
     await audit("batch_a1_job_claimed",null,{jobId,batchId:j.batch_id,revision:row.revision,attempt:row.attempts,reclaimed:j.state!=='queued'},c);
-    const m=metadata(row);
+    const m=await metadata(c,row);
     const binding:A1WorkerBinding={jobId:m.jobId,documentVersion:m.documentVersion,inputArtifactVersionId:m.inputArtifactVersionId,inputSha256:m.inputSha256,credentialVersionId:m.credentialVersionId,profileVersion:m.profileVersion,trustStoreVersion:m.trustStoreVersion,expectedCnpj:m.expectedCnpj,certificateFingerprintSha256:m.certificateFingerprintSha256};
-    return {ok:true as const,job:m,binding,leaseToken:token,bytes:Buffer.from(doc.original.bytes)};
+    return {ok:true as const,job:m,binding,leaseToken:token,bytes:Buffer.from(selected.bytes)};
   });
 }
 const failureCodes=["signing_failed","validation_failed","worker_unavailable","result_uncertain","input_mismatch"] as const;
@@ -153,11 +159,12 @@ export async function failA1Job(jobId:string,leaseToken:string,expectedRevision:
     if(!j.lease_until||j.lease_until.getTime()<=now)return error("lease_expired");
     if(!auth||j.authorization_expires_at.getTime()<=now)return stale(c,j,"authorization_changed");
     if(!p||digest(JSON.stringify(p))!==j.policy_fingerprint)return stale(c,j,"policy_changed");
-    if(!doc||doc.version!==j.document_version||doc.original.id!==j.input_artifact_version_id)return stale(c,j,"document_changed");
+    const selected=doc && (doc.original.id===j.input_artifact_version_id ? doc.original : await readOwnA1InputTx(c,doc,j.input_artifact_version_id));
+    if(!doc||doc.version!==j.document_version||!selected||selected.id!==j.input_artifact_version_id||selected.sha256!==j.input_sha256||selected.bytes.length!==j.input_byte_length)return stale(c,j,"document_changed");
     const row=(await c.query<JobRow>("UPDATE batch_a1_jobs SET state='failed',revision=revision+1,lease_token=NULL,lease_until=NULL,error_code=$2,updated_at=clock_timestamp() WHERE id=$1 AND revision=$3 AND lease_token=$4 RETURNING *",[jobId,errorCode,expectedRevision,leaseToken])).rows[0];
     if(!row)return error("conflict");
     await audit("batch_a1_job_failed",null,{jobId,batchId:j.batch_id,errorCode,revision:row.revision},c);
-    return {ok:true as const,job:metadata(row)};
+    return {ok:true as const,job:await metadata(c,row)};
   });
 }
 
@@ -167,7 +174,7 @@ export async function getA1Job(jobId:string,actor:Actor|null) {
   return tx(async c=>{
     await bounded(c);if(!await authorized(c,actor))return error("forbidden");
     const j=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE id=$1",[jobId])).rows[0];
-    return j?{ok:true as const,job:metadata(j)}:error("not_found");
+    return j?{ok:true as const,job:await metadata(c,j)}:error("not_found");
   });
 }
 
@@ -178,7 +185,7 @@ export async function getA1JobByRequest(batchId:number,requestId:string,actor:Ac
   return tx(async c=>{
     await bounded(c);if(!await authorized(c,actor))return error("forbidden");
     const j=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE batch_id=$1 AND actor_id=$2 AND request_id=$3",[batchId,actor!.userId,requestId])).rows[0];
-    return j?{ok:true as const,job:metadata(j)}:error("not_found");
+    return j?{ok:true as const,job:await metadata(c,j)}:error("not_found");
   });
 }
 
@@ -195,7 +202,7 @@ export async function finishA1Job(jobId:string,leaseToken:string,expectedRevisio
     // Same lock order as claim: real actor/session/policy, then batch, then job.
     const doc=await currentDocument(c,seen.batch_id);
     const j=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE id=$1 FOR UPDATE",[jobId])).rows[0];if(!j)return error("not_found");
-    const m=metadata(j);
+    const m=await metadata(c,j);
     const binding:A1WorkerBinding={jobId:m.jobId,documentVersion:m.documentVersion,inputArtifactVersionId:m.inputArtifactVersionId,inputSha256:m.inputSha256,credentialVersionId:m.credentialVersionId,profileVersion:m.profileVersion,trustStoreVersion:m.trustStoreVersion,expectedCnpj:m.expectedCnpj,certificateFingerprintSha256:m.certificateFingerprintSha256};
     if(!isVerifiedA1Pdf(proof,output,binding))return error("invalid_proof");
     const now=Number((await c.query("SELECT extract(epoch FROM clock_timestamp())*1000 ms")).rows[0].ms);
@@ -203,16 +210,18 @@ export async function finishA1Job(jobId:string,leaseToken:string,expectedRevisio
       if(!auth||j.authorization_expires_at.getTime()<=now)return error("forbidden");
       if(!p||digest(JSON.stringify(p))!==j.policy_fingerprint)return error("policy_conflict");
       if(j.revision!==expectedRevision+1||j.completed_lease_token_sha256!==digest(leaseToken)||j.output_sha256!==outputSha)return error("conflict");
+      if(m.ownArtifactId){const input=await historicalOwnA1InputTx(c,j.input_artifact_version_id);if(!input||input.sha256!==j.input_sha256||input.bytes.length!==j.input_byte_length)return error("conflict");}
       // A committed output is replayable only while its immutable artifact and current batch still agree.
       const stored=(await c.query("SELECT v.id FROM batch_document_versions v JOIN batches b ON b.id=v.batch_id WHERE v.id=$1 AND v.batch_id=$2 AND v.variant='signed' AND v.sha256=$3 AND v.bytes=$4 AND b.signed_pdf_sha256=$3 AND b.signed_pdf=$4 AND b.signature_kind='icp-brasil'",[j.output_version_id,j.batch_id,outputSha,output])).rows[0];
       if(!stored)return error("conflict");
-      return {ok:true as const,job:metadata(j),outputVersionId:j.output_version_id!,outputSha256:outputSha,validationReportId:j.validation_report_id!,replayed:true};
+      return {ok:true as const,job:await metadata(c,j),outputVersionId:j.output_version_id!,outputSha256:outputSha,validationReportId:j.validation_report_id!,replayed:true};
     }
     if(j.revision!==expectedRevision||j.lease_token!==leaseToken||!['running','validating'].includes(j.state))return error("conflict");
     if(!j.lease_until||j.lease_until.getTime()<=now)return error("lease_expired");
     if(!auth||j.authorization_expires_at.getTime()<=now)return stale(c,j,"authorization_changed");
     if(!p||digest(JSON.stringify(p))!==j.policy_fingerprint)return stale(c,j,"policy_changed");
-    if(!doc||doc.version!==j.document_version||doc.original.id!==j.input_artifact_version_id||doc.original.sha256!==j.input_sha256||doc.original.bytes.length!==j.input_byte_length)return stale(c,j,"document_changed");
+    const selected=doc && (doc.original.id===j.input_artifact_version_id ? doc.original : await readOwnA1InputTx(c,doc,j.input_artifact_version_id));
+    if(!doc||doc.version!==j.document_version||!selected||selected.id!==j.input_artifact_version_id||selected.sha256!==j.input_sha256||selected.bytes.length!==j.input_byte_length)return stale(c,j,"document_changed");
     if(doc.batch.signed_pdf)await preserveObservedDocument(c,{batchId:j.batch_id,variant:'signed',bytes:doc.batch.signed_pdf,sha256:doc.batch.signed_pdf_sha256!,listHash:j.list_hash,signatureKind:doc.batch.signature_kind,note:doc.batch.signed_note??null,recordedBy:j.actor_id});
     const version=await appendDocumentVersion(c,{batchId:j.batch_id,variant:'signed',bytes:output,sha256:outputSha,listHash:j.list_hash,signatureKind:'icp-brasil',note:null,source:'a1-worker',authorId:j.actor_id,recordedBy:j.actor_id});
     const reportId=randomUUID();
@@ -221,25 +230,33 @@ export async function finishA1Job(jobId:string,leaseToken:string,expectedRevisio
     const row=(await c.query<JobRow>("UPDATE batch_a1_jobs SET state='succeeded',revision=revision+1,lease_token=NULL,lease_until=NULL,error_code=NULL,output_version_id=$2,output_sha256=$3,validation_report_id=$4,completed_lease_token_sha256=$5,updated_at=clock_timestamp() WHERE id=$1 AND revision=$6 AND lease_token=$7 RETURNING *",[j.id,version.id,outputSha,reportId,digest(leaseToken),expectedRevision,leaseToken])).rows[0];
     if(!row)throw new Error("a1_finish_compare_and_swap_failed");
     await audit("batch_a1_job_succeeded",null,{jobId:j.id,batchId:j.batch_id,requestId:j.request_id,inputArtifactVersionId:j.input_artifact_version_id,inputSha256:j.input_sha256,outputVersionId:version.id,outputSha256:outputSha,validationReportId:reportId,revision:row.revision,userId:j.actor_id},c);
-    return {ok:true as const,job:metadata(row),outputVersionId:version.id,outputSha256:outputSha,validationReportId:reportId,replayed:false};
+    return {ok:true as const,job:await metadata(c,row),outputVersionId:version.id,outputSha256:outputSha,validationReportId:reportId,replayed:false};
   });
 }
 
 
 /** Availability projection for the admin UI; no activation or confidential material is returned. */
-export async function getA1Availability(batchId:number,actor:Actor|null){
-  if(!integer(batchId))return error("parameters");
+export async function getA1Availability(batchId:number,actor:Actor|null,expectedOwnArtifactId?:string){
+  if(!integer(batchId)||expectedOwnArtifactId!==undefined&&!uuid(expectedOwnArtifactId))return error("parameters");
   return tx(async c=>{
     await bounded(c);if(!await authorized(c,actor))return error("forbidden");
     const p=await policy(c);
     const latest=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE batch_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1",[batchId])).rows[0];
-    const latestJob=latest?metadata(latest):undefined;
-    if(!p)return {ok:true as const,available:false as const,error:"disabled",latestJob};
+    const observedJob=latest?await metadata(c,latest):undefined;
+    // Other modes still count for the active-job guard but are never projected as this own result.
+    const latestJob=expectedOwnArtifactId===undefined || observedJob?.ownArtifactId===expectedOwnArtifactId ? observedJob : undefined;
+    const mode=expectedOwnArtifactId===undefined?{}:{ownArtifactId:expectedOwnArtifactId};
+    if(!p)return {ok:true as const,available:false as const,error:"disabled",latestJob,...mode};
     const doc=await currentDocument(c,batchId);
-    if(!doc)return {ok:true as const,available:false as const,error:"document_unavailable",latestJob};
+    if(!doc)return {ok:true as const,available:false as const,error:"document_unavailable",latestJob,...mode};
+    if(expectedOwnArtifactId!==undefined){
+      const ready=await ownA1InputAvailableTx(c,doc,expectedOwnArtifactId);
+      await audit("batch_a1_own_availability_read",null,{batchId,ownArtifactId:expectedOwnArtifactId,available:ready,userId:actor!.userId},c);
+      if(!ready)return {ok:true as const,available:false as const,error:"own_document_unavailable",documentVersion:doc.version,policyRevision:p.revision,latestJob,...mode};
+    }
     const now=Number((await c.query("SELECT extract(epoch FROM clock_timestamp())*1000 ms")).rows[0].ms);
     const active=latest&&['queued','running','validating'].includes(latest.state)&&latest.authorization_expires_at.getTime()>now;
-    return {ok:true as const,available:!active,documentVersion:doc.version,policyRevision:p.revision,...(active?{error:"active_job"}:{}),latestJob};
+    return {ok:true as const,available:!active,documentVersion:doc.version,policyRevision:p.revision,...(active?{error:"active_job"}:{}),latestJob,...mode};
   });
 }
 

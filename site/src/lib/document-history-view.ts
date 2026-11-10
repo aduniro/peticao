@@ -1,8 +1,8 @@
 /** Browser-safe metadata projection. No binary, note, name or invented legacy author. */
 export type DocumentHistoryRow = {
   id: string; ordinal: number; variant: "original" | "signed"; sha256: string; listHash: string | null;
-  signatureKind: "none" | "icp-brasil" | "externa-nao-validada" | null;
-  source: "prepared" | "upload" | "legacy-observed";
+  signatureKind: "none" | "icp-brasil" | "externa-nao-validada" | "own-confirmation" | null;
+  source: "prepared" | "upload" | "legacy-observed" | "a1-worker" | "president-own";
   authorId: number | null; recordedBy: number | null; capturedAt: string; byteLength: number;
 };
 export type DocumentHistoryPage = { versions: DocumentHistoryRow[]; nextBefore: number | null };
@@ -14,10 +14,13 @@ export function parseDocumentHistoryPage(raw: unknown, batchId: number): Documen
   const versions: DocumentHistoryRow[] = [], ids = new Set<string>();
   let previous = Infinity;
   for (const value of raw.versions) {
-    if (!object(value) || value.batch_id !== batchId || typeof value.id !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value.id) || !id(value.ordinal) || value.ordinal >= previous || ids.has(value.id.toLowerCase()) || !["original", "signed"].includes(String(value.variant)) || !hash(value.sha256) || typeof value.list_hash !== "string" || value.list_hash.length < 1 || value.list_hash.length > 512 || typeof value.source !== "string" || !["prepared", "upload", "legacy-observed"].includes(value.source) || value.author_id !== null && !id(value.author_id) || value.recorded_by !== null && !id(value.recorded_by) || typeof value.captured_at !== "string" || value.captured_at.length > 40 || !Number.isFinite(Date.parse(value.captured_at)) || new Date(value.captured_at).toISOString() !== value.captured_at || !Number.isSafeInteger(value.byte_length) || Number(value.byte_length) < 1 || Object.hasOwn(value, "bytes") || Object.hasOwn(value, "pdf")) return null;
+    if (!object(value) || value.batch_id !== batchId || typeof value.id !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value.id) || !id(value.ordinal) || value.ordinal >= previous || ids.has(value.id.toLowerCase()) || !["original", "signed"].includes(String(value.variant)) || !hash(value.sha256) || typeof value.list_hash !== "string" || value.list_hash.length < 1 || value.list_hash.length > 512 || typeof value.source !== "string" || !["prepared", "upload", "legacy-observed", "a1-worker", "president-own"].includes(value.source) || value.author_id !== null && !id(value.author_id) || value.recorded_by !== null && !id(value.recorded_by) || typeof value.captured_at !== "string" || value.captured_at.length > 40 || !Number.isFinite(Date.parse(value.captured_at)) || new Date(value.captured_at).toISOString() !== value.captured_at || !Number.isSafeInteger(value.byte_length) || Number(value.byte_length) < 1 || Object.hasOwn(value, "bytes") || Object.hasOwn(value, "pdf")) return null;
     if (value.source === "legacy-observed" && value.author_id !== null) return null;
+    // A new source label must never upgrade a confirmation into an ICP claim.
+    if (value.source === "president-own" && (value.variant !== "signed" || value.signature_kind !== "own-confirmation")) return null;
+    if (value.source === "a1-worker" && (value.variant !== "signed" || value.signature_kind !== "icp-brasil")) return null;
     previous = value.ordinal; ids.add(value.id.toLowerCase());
-    const kind = ["none", "icp-brasil", "externa-nao-validada"].includes(String(value.signature_kind)) ? value.signature_kind as DocumentHistoryRow["signatureKind"] : null;
+    const kind = ["none", "icp-brasil", "externa-nao-validada", "own-confirmation"].includes(String(value.signature_kind)) ? value.signature_kind as DocumentHistoryRow["signatureKind"] : null;
     versions.push({ id: value.id, ordinal: value.ordinal, variant: value.variant as DocumentHistoryRow["variant"], sha256: value.sha256, listHash: hash(value.list_hash) ? value.list_hash : null, signatureKind: kind, source: value.source as DocumentHistoryRow["source"], authorId: value.author_id as number | null, recordedBy: value.recorded_by as number | null, capturedAt: value.captured_at, byteLength: value.byte_length as number });
   }
   if (raw.nextBefore !== null && (!versions.length || raw.nextBefore !== versions.at(-1)!.ordinal)) return null;
@@ -38,4 +41,16 @@ export async function loadDocumentHistoryPage(fetcher: typeof fetch, batchId: nu
   const page = response.ok ? parseDocumentHistoryPage(raw, batchId) : null;
   if (!page || before !== undefined && page.versions.some(row => row.ordinal >= before)) return { ok: false as const, error: "unavailable" as const };
   return { ok: true as const, page };
+}
+
+
+/** Presentation follows the stored method; it never infers certificate validation from source. */
+export function documentHistorySignatureLabel(kind: DocumentHistoryRow["signatureKind"]) {
+  switch (kind) {
+    case "none": return "NÃO ASSINADO (teste)";
+    case "icp-brasil": return "ICP-Brasil";
+    case "externa-nao-validada": return "Assinado, NÃO validado";
+    case "own-confirmation": return "Confirmação própria";
+    default: return "—";
+  }
 }

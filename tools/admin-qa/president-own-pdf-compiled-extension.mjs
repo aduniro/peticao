@@ -144,7 +144,7 @@ export async function runPresidentOwnPdfExtension({ browser, base, sessionToken,
     assert.deepEqual((await db.query("SELECT id,batch_id,issued_by,request_id,state,receipt_id,document_version,attempts,confirmed_at FROM president_challenges WHERE id=$1", [issued.id])).rows[0], challengeBefore);
     assert.ok((await db.verifyAuditChain()).ok); assert.deepEqual(pageErrors, []); assert.deepEqual(blockedExternal, []);
     const result = {
-      ok: true, compiledAdminOwnPdfUi: true, actualHandlersPostgresAndPdfRenderer: true,
+      ok: true, requestId: ownIntent.requestId, artifactId: committed.artifactId, compiledAdminOwnPdfUi: true, actualHandlersPostgresAndPdfRenderer: true,
       consumedReceiptRecoveredFromLegitimateIssuance: true, generationCommittedThenResponseLost: true,
       applicationGenerationCallsBeforeReload: 1, applicationGenerationCallsAfterReload: 0,
       physicalGenerationRequests: postRequests.length, durableIntentsAdded: 1, immutableArtifactsAdded: 1,

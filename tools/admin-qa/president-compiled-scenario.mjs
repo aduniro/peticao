@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { runPresidentAdminCompiledExtension } from "./president-admin-compiled-extension.mjs";
 import { runPresidentOwnPdfExtension } from "./president-own-pdf-compiled-extension.mjs";
+import { runPresidentCombinedA1Extension } from "./president-combined-a1-compiled-extension.mjs";
 import {spawn,execFileSync} from 'node:child_process';
 import {createServer} from 'node:http';
 import {once} from 'node:events';
@@ -20,9 +21,10 @@ process.env.EGRESS_SOCKET=socket;process.env.CPF_VIA_BRIDGE='1';
 const native='http://127.0.0.1:3056',base='http://127.0.0.1:3055',cpf='52998224725',name='Pessoa Responsavel QA';
 const sha=b=>createHash('sha256').update(b).digest('hex');const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const db=await import(pathToFileURL(site+'/src/lib/db.ts').href),U=await import(pathToFileURL(site+'/src/lib/admin-users.ts').href),S=await import(pathToFileURL(site+'/src/lib/president-portal-store.ts').href),C=await import(pathToFileURL(site+'/src/lib/president-portal-contract.ts').href);
+const P=await import(pathToFileURL(site+'/src/lib/batch-preparation.ts').href),H=await import(pathToFileURL(site+'/src/lib/batch-document-history.ts').href);
 const require=createRequire(site+'/package.json'),{PDFDocument}=require('pdf-lib');
 let server,serverExit,serverLog,proxy,bridge,browser;
-const counts={state:0,document:0,confirm:0,identity:0,analytics:0},pageErrors=[],blockedExternal=[];
+const counts={state:0,document:0,confirm:0,identity:0,analytics:0,validator:0},pageErrors=[],blockedExternal=[];
 let corruptFirstDocument=true,dropFirstConfirmation=true;
 async function stop(){if(browser)await browser.close();if(proxy){proxy.closeAllConnections();await new Promise(r=>proxy.close(r));}if(server){server.kill('SIGTERM');const timer=setTimeout(()=>server.kill('SIGKILL'),10000);await serverExit;clearTimeout(timer);serverLog.end();}if(bridge){bridge.closeAllConnections();await new Promise(r=>bridge.close(r));}await db._closeDbForTests();rmSync(socketDir,{recursive:true,force:true});}
 try{
@@ -32,7 +34,12 @@ try{
  const actor=await U.sessaoPorToken(session.token);assert.ok(actor);
  assert.deepEqual(await S.configurePresidentProfile(actor,{responsibleId:2,cpf,enabled:true,expectedRevision:0}),{ok:true,revision:1});
  const pdf=await PDFDocument.create();pdf.addPage([500,700]).drawText('QA PRESIDENT - FICTITIOUS DOCUMENT ONLY',{x:30,y:650,size:12});const bytes=Buffer.from(await pdf.save());
- const listHash='a'.repeat(64),id=(await db.query("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,n_estrangeiro,list_hash,pdf,pdf_sha256,signature_kind)VALUES(1,'partial','prepared',0,1,0,$1,$2,$3,'none')RETURNING id",[listHash,bytes,sha(bytes)])).rows[0].id;
+ const fixtureRows=[{id:1,name:'QA Pessoa',category:'apoiador',institution:null,role:null,city:'QA',uf:'RO'}];
+ const listHash=sha(Buffer.from(JSON.stringify(fixtureRows))),id=(await db.query("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,n_estrangeiro,list_hash,pdf,pdf_sha256,signature_kind)VALUES(1,'partial','prepared',0,1,0,$1,$2,$3,'none')RETURNING id",[listHash,bytes,sha(bytes)])).rows[0].id;
+ const frozen=P.freezePreparation(fixtureRows,{seq:1,kind:'partial',generatedAt:new Date().toISOString(),listHash,nServidor:0,nApoiador:1,nEstrangeiro:0,signedNote:'',signaturePreparation:'a1'},{kind:'scheduler'});
+ await db.query('INSERT INTO batch_preparations(batch_id,snapshot,snapshot_sha256)VALUES($1,$2,$3)',[id,frozen.snapshot,frozen.sha256]);
+ await db.audit('batch_created',null,{batchId:id,snapshotSha256:frozen.sha256,source:'scheduler'});
+ await db.tx(c=>H.appendDocumentVersion(c,{batchId:id,variant:'original',bytes,sha256:sha(bytes),listHash,signatureKind:'none',note:null,source:'prepared',authorId:actor.userId,recordedBy:actor.userId}));
  const source={batchId:id,seq:1,kind:'partial',listHash,originalPdf:bytes,signedPdf:null,signatureKind:'none'},documentVersion=C.presidentDocumentRevision(source);
  bridge=createServer((req,res)=>{assert.equal(req.method,'GET');if(req.url!=='/cpf/'+cpf){res.writeHead(404);res.end('{}');return;}counts.identity++;res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({success:true,data:{CPF:cpf,NOME:name,NASC:'01/01/2000',NOME_MAE:'Pessoa Mae Ficticia QA'}}));});
  await new Promise(r=>bridge.listen(socket,r));
@@ -45,6 +52,7 @@ try{
  proxy=createServer(async(req,res)=>{try{
   assert.ok(req.url?.startsWith('/')&&!req.url.startsWith('//'));const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;assert.ok(size<=4096);chunks.push(chunk);}const body=Buffer.concat(chunks),path=new URL(req.url,base).pathname;
   if(path==='/api/evento')counts.analytics++;
+  if(path==='/qa-never-call-validator'){counts.validator++;res.writeHead(503,{'content-type':'application/json'});res.end('{}');return;}
   if(path.startsWith('/api/presidente/')){assert.equal(req.method,'POST');assert.ok(!req.headers.cookie,'external credential transport must omit admin cookies');const type=path.split('/').at(-1);if(type==='estado')counts.state++;if(type==='documento')counts.document++;if(type==='confirmar')counts.confirm++;}
   const headers={...req.headers,'x-forwarded-host':req.headers.host,'x-forwarded-for':'127.0.0.1'};for(const key of ['connection','accept-encoding','transfer-encoding'])delete headers[key];
   const response=await fetch(native+req.url,{method:req.method,headers,redirect:'manual',...(body.length?{body}:{})}),data=Buffer.from(await response.arrayBuffer());
@@ -64,12 +72,15 @@ try{
  await page.goto(base+'/presidente');await enter();assert.ok(!page.url().includes(issued.token));
  await button('Abrir PDF para revisão').click();await page.getByRole('status').filter({hasText:'Não foi possível conferir o documento.'}).waitFor();assert.equal(await button('Confirmar assinatura').count(),0);
  await button('Abrir PDF para revisão').click();await button('Confirmar assinatura').waitFor();assert.equal(await button('Confirmar assinatura').isDisabled(),true);
+ await page.getByRole('status').filter({hasText:'Prévia carregada.'}).waitFor();
+ assert.equal(await page.locator('iframe,object,embed').count(),0);
+ assert.ok(await page.locator('canvas').evaluate(c=>{const p=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let dark=0;for(let n=0;n<p.length;n+=4)if(p[n]<120&&p[n+1]<120&&p[n+2]<120)dark++;return dark>20;}),'Actual PDF pixels must be visible');
  const downloadWait=page.waitForEvent('download');await page.getByRole('link',{name:'Baixar PDF conferido',exact:true}).click();const downloaded=await downloadWait;await downloaded.saveAs(output+'/download-ficticio.pdf');
  assert.equal(sha(require('node:fs').readFileSync(output+'/download-ficticio.pdf')),sha(bytes));
- const widths=[320,390,768,992,1280,1920],shots=[];for(const width of widths){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'page overflow '+width);const path=output+'/president-'+width+'.png';await page.screenshot({path,fullPage:true});shots.push({width,path});}
+ const widths=[320,390,768,992,1280,1920],shots=[];for(const width of widths){await page.setViewportSize({width,height:900});await page.waitForFunction(()=>{const c=document.querySelector('canvas');return c&&c.parentElement?.getAttribute('aria-busy')==='false'&&Math.abs(parseFloat(c.style.width)-Math.floor(c.parentElement.getBoundingClientRect().width-2))<=2;});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'page overflow '+width);const path=output+'/president-'+width+'.png';await page.screenshot({path,fullPage:true});shots.push({width,path});}
  // Reload must discard credentials, identity fields and the verified PDF.
  await page.reload();await page.locator('#president-token').waitFor();assert.equal(await page.locator('#president-token').inputValue(),'');assert.equal(await page.locator('#president-password').inputValue(),'');
- assert.equal(await page.locator('iframe').count(),0);await enter();await button('Abrir PDF para revisão').click();await button('Confirmar assinatura').waitFor();
+ assert.equal(await page.locator('canvas,iframe').count(),0);await enter();await button('Abrir PDF para revisão').click();await button('Confirmar assinatura').waitFor();
  await page.getByRole('checkbox').check();await page.locator('#president-cpf').fill(cpf);await page.locator('#president-birth').fill('2000-01-01');await button('Confirmar assinatura').click();
  await page.getByRole('status').filter({hasText:'Não foi possível confirmar o resultado.'}).waitFor();assert.equal(await page.evaluate(()=>window.__presidentConfirmationCalls),1);assert.ok(counts.confirm>=1);const physicalConfirmationCalls=counts.confirm;await delay(500);assert.equal(await page.evaluate(()=>window.__presidentConfirmationCalls),1);assert.equal(counts.confirm,physicalConfirmationCalls);assert.equal(await button('Confirmar assinatura').isDisabled(),true);
  await button('Conferir situação').click();await page.getByText('Confirmação registrada',{exact:true}).first().waitFor();
@@ -80,8 +91,9 @@ try{
  assert.equal((await db.query('SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox UNION ALL SELECT 1 FROM batch_sends')).rowCount,0);assert.equal((await db.query('SELECT 1 FROM signatures')).rowCount,0);assert.ok((await db.verifyAuditChain()).ok);assert.equal(pageErrors.length,0);
  await button('Encerrar acesso').click();assert.equal(await page.locator('#president-token').inputValue(),'');
  const ownPdf = await runPresidentOwnPdfExtension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id,issued:{...issued,requestId:issuedRequestId},documentVersion,profileFingerprint:profile.profile.fingerprint,receiptId:row.receipt_id});
+ const combinedA1 = await runPresidentCombinedA1Extension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id,issued:{...issued,requestId:issuedRequestId},documentVersion,profileFingerprint:profile.profile.fingerprint,receiptId:row.receipt_id,ownPdf});
  const admin = await runPresidentAdminCompiledExtension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id});
- assert.equal(blockedExternal.length,0);
- const result={applicationConfirmationCalls:1,physicalConfirmationCalls,ownPdf,admin,ok:true,commit,compiledNextUi:true,bridge:'fictitious Unix socket using supported CPF_VIA_BRIDGE provider',nodeEnv:'production',previewMode:'0',mockGuardPreserved:true,counts,shots,pageErrors,blockedExternal,corruptedHashRefused:true,downloadExactBytes:true,reloadClearsCredentials:true,confirmationResponseLostRecoveredByState:true,noAutomaticConfirmationRetry:true,noRealMessages:true,noBatchMutation:true,noCredentialsInStorageOrUrl:true,realIdentityOrCryptoHomologation:false};
+ assert.equal(blockedExternal.length,0);assert.equal(counts.validator,0,'Admission/claim must never call the validator');
+ const result={applicationConfirmationCalls:1,physicalConfirmationCalls,ownPdf,combinedA1,admin,ok:true,commit,compiledNextUi:true,bridge:'fictitious Unix socket using supported CPF_VIA_BRIDGE provider',nodeEnv:'production',previewMode:'0',mockGuardPreserved:true,counts,shots,pageErrors,blockedExternal,corruptedHashRefused:true,downloadExactBytes:true,reloadClearsCredentials:true,confirmationResponseLostRecoveredByState:true,noAutomaticConfirmationRetry:true,noRealMessages:true,noBatchMutation:true,noCredentialsInStorageOrUrl:true,realIdentityOrCryptoHomologation:false};
  writeFileSync(output+'/browser-result.json',JSON.stringify(result,null,2),{mode:0o600});console.log(JSON.stringify({ok:true,commit,counts,shots:shots.length}));
 }finally{await stop();}

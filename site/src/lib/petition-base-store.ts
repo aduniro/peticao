@@ -1,3 +1,4 @@
+import { baseInventoryCursor, parseBaseInventoryCursor } from "./petition-base-pagination";
 import { createHash, randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { audit,tx } from "./db";
@@ -22,12 +23,14 @@ export async function getStagedPetitionBaseRequest(requestId:string,actor:Sessao
  });
 }
 /** Limited metadata inventory only. A recorded validation is not a fresh permission to select/send. */
-export async function listStagedPetitionBases(actor:SessaoAdmin|null){
+export async function listStagedPetitionBases(actor:SessaoAdmin|null,cursor?:string){
+ const before=cursor===undefined?null:parseBaseInventoryCursor(cursor);if(cursor!==undefined&&!before)return error('parameters');
  if(process.env.GOVBR_BASE_ENABLED!=='1')return error('disabled');
  return tx(async c=>{
   await bounded(c);if(!await authorized(c,actor))return error('forbidden');
-  const rows=(await c.query<{id:string;sha256:string;byte_length:number;uploaded_at:Date;validation_id:string|null;validated_at:Date|null}>(`SELECT a.id,a.sha256,octet_length(a.bytes) byte_length,a.uploaded_at,v.id validation_id,v.created_at validated_at FROM petition_base_artifacts a LEFT JOIN LATERAL(SELECT t.id,r.validation_id FROM petition_base_validation_attempts t LEFT JOIN petition_base_validation_results r ON r.attempt_id=t.id WHERE t.artifact_id=a.id ORDER BY t.ordinal DESC LIMIT 1)j ON true LEFT JOIN LATERAL(SELECT id,created_at FROM petition_base_validations WHERE artifact_id=a.id AND (j.id IS NULL OR id=j.validation_id) ORDER BY created_at DESC,id DESC LIMIT 1)v ON true ORDER BY a.uploaded_at DESC,a.id DESC LIMIT 21`)).rows;
-  return{ok:true as const,hasMore:rows.length>20,artifacts:rows.slice(0,20).map(r=>({...projection(r),uploadedAt:r.uploaded_at.toISOString(),lastValidationId:r.validation_id,lastValidatedAt:r.validated_at?.toISOString()??null}))};
+  const rows=(await c.query<{id:string;sha256:string;byte_length:number;uploaded_at:string;validation_id:string|null;validated_at:Date|null}>(`SELECT a.id,a.sha256,octet_length(a.bytes) byte_length,to_char(a.uploaded_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') uploaded_at,v.id validation_id,v.created_at validated_at FROM petition_base_artifacts a LEFT JOIN LATERAL(SELECT t.id,r.validation_id FROM petition_base_validation_attempts t LEFT JOIN petition_base_validation_results r ON r.attempt_id=t.id WHERE t.artifact_id=a.id ORDER BY t.ordinal DESC LIMIT 1)j ON true LEFT JOIN LATERAL(SELECT id,created_at FROM petition_base_validations WHERE artifact_id=a.id AND (j.id IS NULL OR id=j.validation_id) ORDER BY created_at DESC,id DESC LIMIT 1)v ON true WHERE ($1::timestamptz IS NULL OR (a.uploaded_at,a.id)<($1::timestamptz,$2::uuid)) ORDER BY a.uploaded_at DESC,a.id DESC LIMIT 21`,[before?.uploadedAt??null,before?.artifactId??null])).rows;
+  const page=rows.slice(0,20),last=page.at(-1);
+  return{ok:true as const,hasMore:rows.length>20,nextCursor:rows.length>20&&last?baseInventoryCursor({uploadedAt:last.uploaded_at,artifactId:last.id}):null,artifacts:page.map(r=>({...projection(r),uploadedAt:r.uploaded_at,lastValidationId:r.validation_id,lastValidatedAt:r.validated_at?.toISOString()??null}))};
  });
 }
 /** Only immutable private staging. Upload, filename, a PDF header or owner authorization never establish signature validity. */

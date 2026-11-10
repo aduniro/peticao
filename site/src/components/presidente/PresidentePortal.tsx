@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import PresidentPdfPreview from "./PresidentPdfPreview";
 import { parsePresidentConfirmation, parsePresidentState, presidentJsonRequest, presidentPdfRequest, samePresidentDocument, validPresidentCredentials, type PresidentCredentials, type PresidentState } from "@/lib/president-client";
 
 /** Credentials, identity fields and PDF URLs remain in this page's memory only. */
@@ -12,6 +13,7 @@ export default function PresidentePortal() {
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [cpf, setCpf] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -27,6 +29,7 @@ export default function PresidentePortal() {
     if (url.current) URL.revokeObjectURL(url.current);
     url.current = null;
     setPdfUrl(null);
+    setPreviewBytes(null);
     setReviewed(false);
   }
   useEffect(() => () => { epoch.current++; if (url.current) URL.revokeObjectURL(url.current); }, []);
@@ -81,7 +84,7 @@ export default function PresidentePortal() {
       if (!current()) return;
       if (!result.ok) { setMessage("Não foi possível conferir o documento. Consulte a situação e abra novamente antes de confirmar."); return; }
       const next = URL.createObjectURL(new Blob([new Uint8Array(result.data).buffer], { type: "application/pdf" }));
-      url.current = next; setPdfUrl(next); setMessage("Documento conferido. Revise o PDF antes de confirmar.");
+      url.current = next; setPdfUrl(next); setPreviewBytes(new Uint8Array(result.data)); setMessage("Documento conferido. Revise o PDF antes de confirmar.");
     });
   }
   async function confirm(event: FormEvent) {
@@ -117,7 +120,7 @@ export default function PresidentePortal() {
           <p><button type="button" onClick={loadPdf} disabled={!!busy || uncertain || expire}>Abrir PDF para revisão</button></p>
           {pdfUrl && <>
             <p><a className="btn" href={pdfUrl} download={`documento-lote-${state.document.seq}.pdf`} referrerPolicy="no-referrer">Baixar PDF conferido</a></p>
-            <iframe title={`Documento do lote ${state.document.seq}`} src={pdfUrl} sandbox="" referrerPolicy="no-referrer" style={{ width: "100%", height: "60vh", minHeight: 300, border: "1px solid var(--line)" }} />
+            {previewBytes && <PresidentPdfPreview bytes={previewBytes} />}
             <form className="form" onSubmit={confirm} autoComplete="off">
               <label className="consent"><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)} disabled={!!busy || uncertain || expire} />Li o documento e confirmo minha assinatura nesta versão.</label>
               <label htmlFor="president-cpf">CPF<input id="president-cpf" name="president-cpf" type="text" inputMode="numeric" autoComplete="off" value={cpf} onChange={e => setCpf(e.target.value)} maxLength={14} required disabled={!!busy || uncertain || expire} /></label>

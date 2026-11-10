@@ -1,3 +1,4 @@
+import { baseInventoryCursor, baseInventoryTimestamp, compareBaseInventoryRows, parseBaseInventoryCursor, type BaseInventoryPage, type BaseInventoryArtifact } from "./petition-base-pagination";
 /** Browser-safe transport for explicit base/policy operations. Never retries a POST. */
 export type BaseHttpResult<T> = { kind: "success"; value: T } | { kind: "rejected"; status: number; error: string } | { kind: "uncertain" };
 export type BaseArtifactView = { artifactId: string; sha256: string; byteLength: number; lastValidationId: string | null };
@@ -52,11 +53,21 @@ async function exchange<T>(path: string, method: "GET" | "POST", body: Record<st
   try { return await Promise.race([work(), deadline]); } catch { return uncertain; }
   finally { if (timer !== undefined) clearTimeout(timer); void reader?.cancel().catch(() => {}); }
 }
-export function readBaseInventory(fetcher: typeof fetch = fetch, timeoutMs = 15_000) {
-  return exchange("/api/admin/documentos/base", "GET", undefined, raw => {
-    if (!Array.isArray(raw.artifacts) || raw.artifacts.length > 20 || typeof raw.hasMore !== "boolean") return null;
-    const artifacts = raw.artifacts.map(artifact); if (artifacts.some(x => x === null) || new Set(artifacts.map(x => x!.artifactId)).size !== artifacts.length) return null;
-    return { artifacts: artifacts as BaseArtifactView[], hasMore: raw.hasMore };
+export function readBaseInventory(fetcher: typeof fetch = fetch, timeoutMs = 15_000, cursor?: string): Promise<BaseHttpResult<BaseInventoryPage>> {
+  const before = cursor === undefined ? null : parseBaseInventoryCursor(cursor);
+  if (cursor !== undefined && !before) return Promise.resolve(invalid);
+  return exchange(`/api/admin/documentos/base${cursor === undefined ? "" : `?cursor=${encodeURIComponent(cursor)}`}`, "GET", undefined, raw => {
+    if (!Array.isArray(raw.artifacts) || raw.artifacts.length > 20 || typeof raw.hasMore !== "boolean" || raw.hasMore && (raw.artifacts.length !== 20 || !parseBaseInventoryCursor(raw.nextCursor)) || !raw.hasMore && raw.nextCursor !== null) return null;
+    const artifacts: BaseInventoryArtifact[] = [];
+    for (const value of raw.artifacts) {
+      const item = artifact(value);
+      if (!item || !object(value) || !baseInventoryTimestamp(value.uploadedAt)) return null;
+      const entry = { ...item, uploadedAt: value.uploadedAt };
+      if (before && compareBaseInventoryRows(entry, before) >= 0 || artifacts.length && compareBaseInventoryRows(artifacts[artifacts.length - 1], entry) <= 0 || artifacts.some(old => old.artifactId === entry.artifactId)) return null;
+      artifacts.push(entry);
+    }
+    if (raw.hasMore && raw.nextCursor !== baseInventoryCursor(artifacts[artifacts.length - 1])) return null;
+    return { artifacts, hasMore: raw.hasMore, nextCursor: raw.nextCursor as string | null };
   }, fetcher, timeoutMs);
 }
 export function readBaseSelection(fetcher: typeof fetch = fetch, timeoutMs = 15_000) {

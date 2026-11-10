@@ -3,13 +3,13 @@ export type A1JobViewPhase = "enabled" | "queued" | "running" | "succeeded" | "f
 export type A1JobObservation = {
   jobId: string; requestId?: string; batchId: number; documentVersion: string; policyRevision: number;
   revision: number; state: "queued" | "running" | "validating" | "succeeded" | "failed" | "stale" | "cancelled";
-  outputVersionId?: string | null; outputSha256?: string | null; errorCode?: string | null;
+  ownArtifactId?: string | null; outputVersionId?: string | null; outputSha256?: string | null; errorCode?: string | null;
 };
 export type A1AvailabilityObservation =
   | { ok: false; error: string }
-  | { ok: true; available: boolean; error?: string; documentVersion?: string; policyRevision?: number; latestJob?: A1JobObservation | null };
+  | { ok: true; available: boolean; error?: string; documentVersion?: string; policyRevision?: number; latestJob?: A1JobObservation | null; ownArtifactId?: string | null };
 export type A1SigningIntent = {
-  batchId: number; requestId: string; expectedDocumentVersion: string; expectedPolicyRevision: number;
+  batchId: number; requestId: string; expectedDocumentVersion: string; expectedPolicyRevision: number; expectedOwnArtifactId?: string;
 };
 export type A1JobViewState = {
   batchId: number; availability: A1AvailabilityObservation | null; intent: A1SigningIntent | null;
@@ -63,8 +63,9 @@ export function a1JobView(state: A1JobViewState) {
 }
 
 function compatibleJob(state: A1JobViewState, job: A1JobObservation, directResponse = false) {
-  if (job.batchId !== state.batchId || !uuid(job.jobId) || !hash(job.documentVersion) || !positive(job.policyRevision) || !positive(job.revision) || !states.has(job.state)) return false;
+  if (job.batchId !== state.batchId || !uuid(job.jobId) || !hash(job.documentVersion) || !positive(job.policyRevision) || !positive(job.revision) || !states.has(job.state) || job.ownArtifactId != null && !uuid(job.ownArtifactId)) return false;
   if (!state.intent) return true;
+  if ((job.ownArtifactId ?? null) !== (state.intent.expectedOwnArtifactId ?? null)) return false;
   if (job.documentVersion !== state.intent.expectedDocumentVersion || job.policyRevision !== state.intent.expectedPolicyRevision) return false;
   if (job.requestId && job.requestId !== state.intent.requestId) return false;
   return directResponse || job.requestId === state.intent.requestId || state.job?.jobId === job.jobId;
@@ -77,6 +78,7 @@ export function updateA1JobView(state: A1JobViewState, event: A1JobViewEvent): A
     const availability = event.availability;
     if (!availability.ok) return { ...state, availability: { ...availability }, readPending: false, refreshRequired: true, errorCode: availability.error };
     const incoming = availability.latestJob;
+    if (availability.ownArtifactId != null && (!uuid(availability.ownArtifactId) || incoming && incoming.ownArtifactId !== availability.ownArtifactId)) return { ...state, availability: { ...availability, available: false }, readPending: false, refreshRequired: true, errorCode: "job_binding_mismatch" };
     if (incoming && !compatibleJob(state, incoming)) return { ...state, availability: { ...availability }, readPending: false, refreshRequired: true, errorCode: "job_binding_mismatch" };
     if (incoming && state.job?.jobId === incoming.jobId && incoming.revision < state.job.revision) return { ...state, readPending: false };
     const correlated = !!incoming && compatibleJob(state, incoming);
@@ -92,6 +94,8 @@ export function updateA1JobView(state: A1JobViewState, event: A1JobViewEvent): A
     const available = state.availability;
     const intent = event.intent;
     if (!a1JobView(state).controls.canRequest || !available?.ok || intent.batchId !== state.batchId || !uuid(intent.requestId)
+      || (intent.expectedOwnArtifactId??null)!==(available.ownArtifactId??null)
+      || Object.hasOwn(intent,"expectedOwnArtifactId") && !uuid(intent.expectedOwnArtifactId)
       || state.usedRequestIds.includes(intent.requestId) || intent.expectedDocumentVersion !== available.documentVersion || intent.expectedPolicyRevision !== available.policyRevision) return state;
     return { ...state, intent: { ...intent }, job: null, postPending: true, errorCode: null, usedRequestIds: [...state.usedRequestIds, intent.requestId] };
   }

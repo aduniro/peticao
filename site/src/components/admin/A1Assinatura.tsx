@@ -4,44 +4,59 @@ import { useRouter } from "next/navigation";
 import { a1JobView, createA1JobViewState, updateA1JobView, type A1JobViewState } from "@/lib/a1-job-view";
 import { readA1Reconciliation, applyA1Reconciliation } from "@/lib/a1-reconciliation";
 import { submitA1Intent } from "@/lib/a1-request";
+import { a1UiJobMatchesMode, a1UiModeValid, rememberA1UiIntent, restoreA1UiIntent, type A1UiContext } from "@/lib/a1-ui-context";
 
-// Textos aprovados expressamente em 09/11/2026; não alterar sem revisão do responsável.
+// MUDAR AQUI: textos A1 já aprovados; contexto do PDF próprio acrescentado por decisão reversível do Goal.
 const COPY = {
   action: "Assinar com certificado A1", queued: "Aguardando assinatura", running: "Assinatura em andamento",
   check: "Conferir assinatura", failure: "Falha na assinatura",
   uncertain: "Não foi possível confirmar o resultado. Atualize o documento antes de tentar novamente.",
 };
-/** Existing admin classes, no certificate fields and no automatic mutation. */
-export default function A1Assinatura({ batchId, currentSignedSha256 }: { batchId: number; currentSignedSha256?: string | null }) {
+type Props = A1UiContext & { currentSignedSha256?: string | null };
+/** Mode/source changes unmount state. An ownArtifactId is a binding, never authorization. */
+export default function A1Assinatura({ batchId, currentSignedSha256, actorScope, ownArtifactId, documentRevision }: Props) {
   const router = useRouter();
-  return <A1PorLote key={batchId} batchId={batchId} onPublished={sha256 => { if (sha256 !== currentSignedSha256) router.refresh(); }} />;
+  const key = `${actorScope ?? "memory"}:${batchId}:${ownArtifactId ?? "original"}:${documentRevision ?? "current"}:${currentSignedSha256 ?? "unsigned"}`;
+  return <A1PorLote key={key} batchId={batchId} actorScope={actorScope} ownArtifactId={ownArtifactId} documentRevision={documentRevision} onPublished={sha256 => { if (sha256 !== currentSignedSha256) router.refresh(); }} />;
 }
 
-export function A1PorLote({ batchId, onPublished }: { batchId: number; onPublished?: (sha256: string) => void }) {
+export function A1PorLote({ batchId, actorScope, ownArtifactId, documentRevision, onPublished }: A1UiContext & { onPublished?: (sha256: string) => void }) {
+  const context: A1UiContext = { batchId, actorScope, ownArtifactId, documentRevision };
+  const modeValid = a1UiModeValid(context);
   const [state, setState] = useState(() => createA1JobViewState(batchId));
-  const [open, setOpen] = useState(false);
-  const remainingReads = useRef(12);
-  const refreshedOutput = useRef<string | null>(null);
+  const [hydrated, setHydrated] = useState(false), [open, setOpen] = useState(false);
+  const remainingReads = useRef(12), refreshedOutput = useRef<string | null>(null);
   const current = useRef(state), alive = useRef(true), trigger = useRef<HTMLButtonElement>(null), dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const publish = (next: A1JobViewState) => { current.current = next; if (alive.current) setState(next); };
-  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  useEffect(() => {
+    alive.current = true;
+    try {
+      const restored = restoreA1UiIntent(sessionStorage, context);
+      if (restored) publish({ ...createA1JobViewState(batchId), intent: restored, usedRequestIds: [restored.requestId], resultUncertain: true, refreshRequired: true, errorCode: "request_transport_failed" });
+    } catch { /* Storage is optional; old callers without actor/session scope remain memory-only. */ }
+    setHydrated(true);
+    return () => { alive.current = false; };
+  }, []);
 
   const check = async () => {
     const captured = current.current;
-    if (captured.readPending) return;
+    if (!hydrated || !modeValid || captured.readPending) return;
     publish(updateA1JobView(captured, { type: "read_started" }));
-    const result = await readA1Reconciliation(captured);
+    const result = await readA1Reconciliation(captured, undefined, 15_000, ownArtifactId ?? undefined);
+    // The original-mode endpoint may expose the latest global job. Never present another source as this mode's result.
+    const event = result.event;
+    if (event.type === "read_received" && event.availability.ok && event.availability.latestJob && !a1UiJobMatchesMode(event.availability.latestJob, context)) result.event = { type: "read_received", availability: { ...event.availability, latestJob: null } };
     if (alive.current) publish(applyA1Reconciliation(current.current, result));
   };
   const submit = async () => {
     const before = current.current, available = before.availability;
-    if (!a1JobView(before).controls.canRequest || !available?.ok || !available.documentVersion || !available.policyRevision) return;
-    const intent = { batchId: before.batchId, requestId: crypto.randomUUID(), expectedDocumentVersion: available.documentVersion, expectedPolicyRevision: available.policyRevision };
+    if (!hydrated || !modeValid || !a1JobView(before).controls.canRequest || !available?.ok || !available.documentVersion || !available.policyRevision) return;
+    const intent = { batchId: before.batchId, requestId: crypto.randomUUID(), expectedDocumentVersion: available.documentVersion, expectedPolicyRevision: available.policyRevision, ...(ownArtifactId == null ? {} : { expectedOwnArtifactId: ownArtifactId }) };
     const pending = updateA1JobView(before, { type: "request_started", intent });
     if (pending === before) return;
-    remainingReads.current = 12;
-    publish(pending);
+    try { rememberA1UiIntent(sessionStorage, context, intent); } catch { /* Hidden intent remains bound in memory. */ }
+    remainingReads.current = 12; publish(pending);
     const result = await submitA1Intent(intent);
     if (!alive.current || current.current.batchId !== intent.batchId) return;
     publish(updateA1JobView(current.current, result.kind === "success"
@@ -51,32 +66,31 @@ export function A1PorLote({ batchId, onPublished }: { batchId: number; onPublish
   };
   const close = () => { setOpen(false); dialog.current?.close(); requestAnimationFrame(() => trigger.current?.focus()); };
   const view = a1JobView(state);
+  const matchingJob = a1UiJobMatchesMode(state.job, context);
   useEffect(() => {
     const denied = ["authentication_required", "stepup_required", "forbidden", "rate_limited"].includes(state.errorCode ?? "");
     const inProgress = state.postPending || state.resultUncertain || !!state.job && ["queued", "running", "validating"].includes(state.job.state);
-    if (!open || state.readPending || denied || !inProgress || remainingReads.current <= 0) return;
+    if (!open || !hydrated || !modeValid || state.readPending || denied || !inProgress || remainingReads.current <= 0) return;
     const timer = setTimeout(() => { remainingReads.current--; void check(); }, 3_000);
     return () => clearTimeout(timer);
-  }, [open, state]);
+  }, [open, state, hydrated]);
   useEffect(() => {
     const sha256 = state.job?.outputSha256;
-    if (view.signaturePublished && sha256 && refreshedOutput.current !== sha256) {
-      refreshedOutput.current = sha256;
-      onPublished?.(sha256);
-    }
-  }, [view.signaturePublished, state.job?.outputSha256, onPublished]);
-  const status = view.phase === "queued" ? COPY.queued : view.phase === "running" ? COPY.running : view.signaturePublished ? "ICP-Brasil" : view.phase === "failed" ? COPY.failure : "—";
+    if (view.signaturePublished && matchingJob && sha256 && refreshedOutput.current !== sha256) { refreshedOutput.current = sha256; onPublished?.(sha256); }
+  }, [view.signaturePublished, matchingJob, state.job?.outputSha256, onPublished]);
+  const status = view.phase === "queued" ? COPY.queued : view.phase === "running" ? COPY.running : view.signaturePublished && matchingJob ? "ICP-Brasil" : view.phase === "failed" ? COPY.failure : "—";
   return <>
-    <button ref={trigger} type="button" className="v2-btn v2-btn-sec" onClick={() => { remainingReads.current = 12; setOpen(true); dialog.current?.showModal(); void check(); }}>{COPY.action}</button>
+    <button ref={trigger} type="button" className="v2-btn v2-btn-sec" disabled={!hydrated || !modeValid} onClick={() => { remainingReads.current = 12; setOpen(true); dialog.current?.showModal(); void check(); }}>{COPY.action}</button>
     <dialog ref={dialog} className="adm-modal" aria-labelledby={titleId} onCancel={event => { event.preventDefault(); close(); }}>
       <div className="in" aria-busy={state.readPending || state.postPending}>
-        <div className="adm-bar"><h3 id={titleId}>{COPY.action} · {batchId}</h3><button type="button" className="adm-btn" onClick={close}>Fechar</button></div>
+        <div className="adm-bar"><h3 id={titleId}>{COPY.action} · {batchId}{ownArtifactId != null ? " · confirmação própria" : ""}</h3><button type="button" className="adm-btn" onClick={close}>Fechar</button></div>
+        {ownArtifactId != null && <p className="small" style={{ overflowWrap: "anywhere" }}>PDF da confirmação própria: <code>{ownArtifactId}</code></p>}
         <p role="status">{status}</p>
         {(state.resultUncertain || state.errorCode || view.completionUnproven) && <p className="v2-aviso erro" role="alert">{COPY.uncertain}</p>}
         <div className="fim">
-          <button type="button" className="adm-btn" disabled={!view.controls.canRequest} onClick={() => void submit()}>{COPY.action}</button>
-          <button type="button" className="adm-btn" disabled={!view.controls.canCheckResult} onClick={() => void check()}>{COPY.check}</button>
-          {view.controls.canReadSignedVersion && state.job?.outputVersionId && <a className="adm-btn" href={`/api/admin/lotes/${batchId}/versoes/${encodeURIComponent(state.job.outputVersionId)}`}>Baixar PDF assinado</a>}
+          <button type="button" className="adm-btn" disabled={!hydrated || !modeValid || !view.controls.canRequest} onClick={() => void submit()}>{COPY.action}</button>
+          <button type="button" className="adm-btn" disabled={!hydrated || !modeValid || !view.controls.canCheckResult} onClick={() => void check()}>{COPY.check}</button>
+          {view.controls.canReadSignedVersion && matchingJob && state.job?.outputVersionId && <a className="adm-btn" href={`/api/admin/lotes/${batchId}/versoes/${encodeURIComponent(state.job.outputVersionId)}`}>Baixar PDF assinado</a>}
         </div>
       </div>
     </dialog>
