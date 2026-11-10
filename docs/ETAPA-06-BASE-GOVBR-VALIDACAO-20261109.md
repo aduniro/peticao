@@ -60,3 +60,7 @@ A evidência passa a registrar fingerprint de configuração (nullable apenas pa
 Rascunho: nove testes PostgreSQL e tipos aprovados. Cobrem concorrência/replay, CAS, autorização/hash/texto/perfil, mudança do verificador, recibo legado, rollback, imutabilidade, leitura com validação desativada, alteração de CPF mesmo sem incremento indevido da revisão, desligamento durante espera e constraints. O primeiro harness falhou em imports relativos; a evidência foi preservada antes da correção. Depois deste commit, executar as rodadas integradas e o esquema32.
 
 A leitura informa a revisão atual e se o perfil/contexto ainda correspondem. `usableInPackage` permanece falso até implementar o pacote: eleger não equivale a enviar. Nenhuma interface nova, texto visível ou banco da VPS foi alterado por este incremento.
+
+## Primeira integração da eleição
+
+Em 0079f2e (código funcional 1d5fbd8), tipos e esquema32 passaram; store/eleição ficou em 22/23. A falha era a expectativa de mensagem do teste: com a FK nova, TRUNCATE simples da tabela de validação é recusado pela dependência antes do trigger. O teste passa a aceitar essa recusa e exige explicitamente que TRUNCATE CASCADE seja barrado pelo trigger, preservando as linhas. Nenhuma proteção SQL foi retirada. Evidência da rodada original: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/base-store-1794277790521938978/result.json`. Repetir os 23 testes após a correção; não declarar esse resultado original aprovado.

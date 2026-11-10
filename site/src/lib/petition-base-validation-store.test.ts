@@ -75,7 +75,8 @@ test("DDL replay and immutable fences preserve validation bytes, hashes, authors
     const input = await c.proof(); assert.ok((await persistPetitionBaseValidation(input, c.actor)).ok);
     const rows = async () => (await c.db.query("SELECT row_to_json(v)::text value FROM petition_base_validations v ORDER BY id")).rows; const before = await rows();
     await c.db.query(PETITION_BASE_SCHEMA_SQL); await c.db.query(PETITION_BASE_SCHEMA_SQL); assert.deepEqual(await rows(), before);
-    for (const sql of ["UPDATE petition_base_validations SET report=report", "DELETE FROM petition_base_validations", "TRUNCATE petition_base_validations", "TRUNCATE petition_base_artifacts CASCADE"]) await assert.rejects(c.db.query(sql), /immutable/);
+    await assert.rejects(c.db.query("TRUNCATE petition_base_validations"), /immutable|referenced in a foreign key constraint/);
+    for (const sql of ["UPDATE petition_base_validations SET report=report", "DELETE FROM petition_base_validations", "TRUNCATE petition_base_validations CASCADE", "TRUNCATE petition_base_artifacts CASCADE"]) await assert.rejects(c.db.query(sql), /immutable/);
     assert.deepEqual(await rows(), before);
   } finally { await c.close(); }
 });
