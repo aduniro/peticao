@@ -1,9 +1,14 @@
 import { NextRequest,NextResponse } from "next/server";
 import {exigirNivel,quemAge} from "@/lib/admin-api";
 import {readBatchMultipart,BATCH_PDF_BYTES} from "@/lib/batch-http-input";
-import {stagePetitionBase} from "@/lib/petition-base-store";
+import {stagePetitionBase,listStagedPetitionBases} from "@/lib/petition-base-store";
 export const dynamic="force-dynamic";
 const reply=(value:unknown,status:number)=>NextResponse.json(value,{status,headers:{"cache-control":"private, no-store","x-content-type-options":"nosniff"}});
+export async function GET(req:NextRequest){
+ const denied=await exigirNivel(req,"total",120,{stepup:true});if(denied)return denied;
+ if(req.nextUrl.searchParams.size)return reply({ok:false,error:"parameters"},400);
+ try{const result=await listStagedPetitionBases(await quemAge(req));return reply(result,result.ok?200:result.error==='forbidden'?403:409);}catch{return reply({ok:false,error:"unavailable"},503);}
+}
 export async function POST(req:NextRequest){
  const denied=await exigirNivel(req,"total",10,{stepup:true});if(denied)return denied;
  const actor=await quemAge(req);if(!actor?.userId)return reply({ok:false,error:"forbidden"},403);

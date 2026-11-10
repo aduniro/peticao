@@ -30,6 +30,18 @@ async function binding(c:PoolClient,artifactId:string):Promise<PetitionBaseValid
 const boundHash=(b:PetitionBaseValidationBinding)=>digest(JSON.stringify([b.artifactId,b.petitionTextVersion,b.responsibleId,b.profileRevision,b.expectedSignerCpfHash]));
 type Row={id:string;batch_id:number;ordinal:number;document_version:string;selection_id:string;base_validation_id:string;base_artifact_id:string;base_sha256:string;batch_version_id:string;batch_sha256:string;manifest:string;package_digest:string;encoded_budget_bytes:number;reserved_envelope_bytes:number;actor_id:number;request_fingerprint:string;created_at:Date};
 const project=(r:Row)=>({packageId:r.id,batchId:r.batch_id,ordinal:r.ordinal,documentVersion:r.document_version,selectionId:r.selection_id,baseValidationId:r.base_validation_id,baseArtifactId:r.base_artifact_id,baseSha256:r.base_sha256,batchVersionId:r.batch_version_id,batchSha256:r.batch_sha256,packageDigest:r.package_digest,createdBy:r.actor_id,createdAt:r.created_at.toISOString(),approvalRequired:true as const,dispatchAllowed:false as const});
+/** Review metadata only. It cannot freeze a package, validate a signature or approve a batch. */
+export async function getBatchPackageReview(batchId:number,actor:SessaoAdmin|null){
+ if(!id(batchId))return error('parameters');
+ return tx(async c=>{
+  if(!await authorized(c,actor))return error('forbidden');
+  const batch=(await c.query<ApprovalRow>('SELECT * FROM batches WHERE id=$1',[batchId])).rows[0];if(!batch)return error('not_found');
+  const version=documentVersion(batch),latest=(await c.query<Row>('SELECT * FROM batch_packages WHERE batch_id=$1 AND document_version=$2 ORDER BY ordinal DESC LIMIT 1',[batchId,version])).rows[0];
+  const selected=(await c.query<{id:string;artifact_sha256:string}>('SELECT id,artifact_sha256 FROM petition_base_selections ORDER BY revision DESC LIMIT 1')).rows[0];
+  const configured=enabled();
+  return{ok:true as const,batchId,documentVersion:version,configured,canPrepare:configured&&!!selected&&!batch.approved_at&&['prepared','failed'].includes(batch.status)&&!!batch.pdf&&!!batch.signed_pdf&&batch.signature_kind==='icp-brasil',selectionId:selected?.id??null,selectionSha256:selected?.artifact_sha256??null,latestPackage:latest?project(latest):null};
+ });
+}
 /** Explicit package preparation only. A new version requires CAS and no approval/delivery already started. */
 export async function prepareBatchPackage(input:{batchId:number;requestId:string;expectedDocumentVersion:string;expectedSelectionId:string;expectedPackageRevision:number},actor:SessaoAdmin|null){
  if(!enabled())return error('disabled');
