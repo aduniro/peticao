@@ -83,3 +83,7 @@ independentes autorizadas continuam durante diagnósticos de continuidade.
 ## Domínios e instituições
 
 Aplicar `docs/POLITICA-CENTRAL-DOMINIOS-INSTITUICOES.md`: titularidade específica com evidência oficial e formulário Servidor temporariamente restrito às instituições vinculadas ao MEC.
+
+## Ampliação de IA e Configurações somente após a base concluída
+
+Decisão do responsável em 09/11/2026: manter OpenAI como motor atual. Não implementar agora o seletor multiprovedor/modelo/esforço, catálogo dinâmico, credenciais/login, modelos próprios, roteamento por módulo ou reorganização completa de Configurações. Essa ampliação fica por último, após concluir e validar a base funcional integral da plataforma. Requisitos registrados em `docs/POS-100-CONFIGURACOES-IA-MULTIPROVEDOR.md`. Perguntas sobre essa ampliação não substituem a prioridade atual.
