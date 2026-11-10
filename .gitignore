@@ -1,0 +1,14 @@
+evidence/
+harness/
+manifest.json
+profile.patch
+REVIEW.md
+infra/gateway.py
+__pycache__/
+*.pyc
+*.sqlite*
+*.log
+*.bundle
+*.tar*
+lease*.json
+run*.json
