@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { chmodSync, readFileSync, writeFileSync } from "node:fs";
 const sha = value => createHash("sha256").update(value).digest("hex");
-const uuid = value => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
+const uuid = value => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
 const inventory = page => page.getByRole("region", { name: "Histórico de confirmações e documentos próprios", exact: true });
 const button = (scope, name) => scope.getByRole("button", { name, exact: true });
 function guard(ctx) {
@@ -12,9 +12,9 @@ function guard(ctx) {
   assert.equal(process.env.MAIL_PROVIDER, "dev");assert.equal(process.env.MAIL_PROVIDERS, "dev");
   assert.equal(process.env.QA_SITE_DIR, "/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/site");
   assert.equal(ctx.output, process.env.QA_OUTPUT_DIR);
-  assert.ok(ctx.actor?.nivel === "total" && ctx.actor?.sessaoId && Number.isInteger(ctx.sourceBatchId));
+  assert.ok(ctx.actor?.nivel === "total" && Number.isInteger(ctx.actor?.userId) && ctx.actor.userId > 0 && Number.isInteger(ctx.actor?.sessaoId) && ctx.actor.sessaoId > 0 && Number.isInteger(ctx.sourceBatchId) && ctx.sourceBatchId > 0 && ctx.sourceBatchId <= 2147483647);
   assert.ok(ctx.U?.abrirSessao && ctx.U?.sessaoPorToken && ctx.U?.encerrarSessao);
-  assert.ok(uuid(ctx.ownPdf?.artifactId));assert.match(ctx.ownPdf?.download?.sha256 ?? "", /^[a-f0-9]{64}$/);
+  assert.ok(uuid(ctx.ownPdf?.artifactId));assert.equal(ctx.ownPdf?.download?.artifactId, ctx.ownPdf.artifactId);assert.match(ctx.ownPdf?.download?.sha256 ?? "", /^[a-f0-9]{64}$/);assert.match(ctx.ownPdf?.download?.sourceSha256 ?? "", /^[a-f0-9]{64}$/);
 }
 async function snapshots(db, batchId, artifactId) {
   const batch = (await db.query("SELECT row_to_json(b)::text value FROM batches b WHERE id=$1", [batchId])).rows[0];
@@ -28,7 +28,7 @@ async function runPhase(ctx, phase) {
   guard(ctx);
   const { browser, base, actor, db, U, sourceBatchId, ownPdf, output } = ctx;
   const artifact = (await db.query("SELECT id,receipt_id,document_version,bytes,sha256,source_sha256 FROM president_own_document_artifacts WHERE id=$1 AND batch_id=$2", [ownPdf.artifactId, sourceBatchId])).rows[0];
-  assert.ok(artifact && sha(artifact.bytes) === artifact.sha256 && artifact.sha256 === ownPdf.download.sha256);
+  assert.ok(artifact && sha(artifact.bytes) === artifact.sha256 && artifact.sha256 === ownPdf.download.sha256 && artifact.source_sha256 === ownPdf.download.sourceSha256);
   const before = await snapshots(db, sourceBatchId, artifact.id);
   // New durable admin session, not the session that issued the challenge/generated the own PDF.
   const session = await U.abrirSessao(actor.userId, "127.0.0.1");
