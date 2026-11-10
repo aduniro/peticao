@@ -29,3 +29,16 @@ O modo navegador usa o componente atual, handlers reais e PostgreSQL próprio na
 ## Pendências
 
 Executar tipos, build e o modo navegador após este commit; registrar a evidência do componente já integrado. Permanecem separados: homologação real, provisionamento operacional do certificado/validador, base gov.br validada, pacote final e demais módulos. Não há deploy ou instalação/ativação de serviço neste incremento.
+
+## Resultado do incremento integrado
+
+Commit funcional 468769f: build e tipos aprovados com código/commit estáveis. Ensaio do componente padrão (com useRouter/contexto AppRouter de QA), navegador, APIs reais, PostgreSQL isolado e assinador sintético aprovado. Seis larguras, refresh solicitado uma vez, download com SHA256 exato, política divergente recusada. Seis POSTs físicos para duas intenções; um único job por intenção e somente uma versão assinada no caso positivo. Zero aprovações, envios e erros de página.
+
+Evidências absolutas:
+
+- `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/a1-e2e-ui-1794274856894755859/result.json`
+- `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/a1-e2e-ui-1794274856894755859/scenario-result.json`
+- `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/build-1794274857381910697/result.json`
+- `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794274925271449586/result.json`
+
+O incremento não mudou esquema. A regressão integral de 839 casos permanece vinculada a 9d88a8b; o novo componente foi coberto pelos checks acima. Homologação real e os demais módulos não foram declarados concluídos.
