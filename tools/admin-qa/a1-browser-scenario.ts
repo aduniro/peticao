@@ -32,8 +32,9 @@ async function main(){
    const created=await createBatch('partial');assert.ok(created);return (await query<ApprovalRow>('SELECT * FROM batches WHERE id=$1',[created.id])).rows[0];
   }
   const component="/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/site/src/components/admin/A1Assinatura";
-  writeFileSync(join(root,"ui-entry.tsx"),`import React from "react"; import {createRoot} from "react-dom/client"; import {A1PorLote} from "${component}";
-createRoot(document.getElementById("root")!).render(<div className="adm v2 adm-solo"><div className="adm-content v2-main"><main className="v2-pagina"><section className="v2-secao"><A1PorLote batchId={Number(new URLSearchParams(location.search).get("batch"))} onPublished={sha=>{document.documentElement.dataset.publishedSha=sha;document.documentElement.dataset.publications=String(Number(document.documentElement.dataset.publications??0)+1);}} /></section></main></div></div>);`);
+  writeFileSync(join(root,"ui-entry.tsx"),`import React from "react"; import {createRoot} from "react-dom/client"; import A1Assinatura from "${component}"; import {AppRouterContext} from "next/dist/shared/lib/app-router-context.shared-runtime";
+const router={back(){},forward(){},push(){},replace(){},prefetch(){return Promise.resolve();},refresh(){document.documentElement.dataset.refreshes=String(Number(document.documentElement.dataset.refreshes??0)+1);}};
+createRoot(document.getElementById("root")!).render(<AppRouterContext.Provider value={router}><div className="adm v2 adm-solo"><div className="adm-content v2-main"><main className="v2-pagina"><section className="v2-secao"><A1Assinatura batchId={Number(new URLSearchParams(location.search).get("batch"))} currentSignedSha256={null} /></section></main></div></div></AppRouterContext.Provider>);`);
   const { build } = await import("/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules/esbuild/lib/main.js");
   await build({entryPoints:[join(root,"ui-entry.tsx")],outfile:join(root,"bundle.js"),bundle:true,tsconfig:"/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/site/tsconfig.json",platform:"browser",format:"iife",jsx:"automatic",define:{"process.env.NODE_ENV":'"production"'}});
   const css=["globals.css","admin/admin.css","admin/v2.css"].map(n=>readFileSync(join("/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/site/src/app",n),"utf8")).join("\n");
@@ -85,7 +86,7 @@ createRoot(document.getElementById("root")!).render(<div className="adm v2 adm-s
   await page.getByRole("dialog").getByRole("button",{name:"Conferir assinatura",exact:true}).click();
   const link=page.getByRole("dialog").getByRole("link",{name:"Baixar PDF assinado"});await link.waitFor();
   const downloaded=await context.request.get(origin+await link.getAttribute("href"));assert.equal(downloaded.status(),200);assert.equal(sha(await downloaded.body()),after.signed_pdf_sha256);
-  assert.equal(await page.evaluate(()=>document.documentElement.dataset.publishedSha),after.signed_pdf_sha256);
+  assert.equal(await page.evaluate(()=>document.documentElement.dataset.refreshes),"1");
   const widths=[];for(const width of [360,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);widths.push(width);await page.screenshot({path:join(root,`a1-http-${width}.png`)});}
   assert.equal(new Set(browserInputs.map(i=>i.requestId)).size,1);
   const replayAfter=await POST(request(first.id,'POST',input),params);assert.equal(replayAfter.status,200);assert.equal((await replayAfter.json()).job.jobId,job.job.jobId);assert.equal((await (await cron()).json()).state,'empty');
@@ -100,7 +101,7 @@ createRoot(document.getElementById("root")!).render(<div className="adm v2 adm-s
   assert.equal((await query('SELECT 1 FROM batch_a1_validations')).rowCount,1);assert.equal((await query('SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox UNION ALL SELECT 1 FROM batch_sends')).rowCount,0);
   const audit=await import('/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/site/src/lib/db');assert.ok((await audit.verifyAuditChain()).ok);
   const safe=JSON.stringify(latest);for(const forbidden of ['synthetic-password','leaseToken','pdfBase64','/certificates/'])assert.ok(!safe.includes(forbidden));
-  const result={browserToActualApi:true,actualPostgres:true,adminComponent:true,renderHarness:"isolated-react-with-actual-api",browserPosts,logicalBrowserIntents:new Set(browserInputs.map(i=>i.requestId)).size,widths,pageErrors,ok:true,syntheticOnly:true,notIcpHomologation:true,mailProvider:'dev',realUnixBroker:true,realWorker:true,realSyntheticCryptography:true,validatorTrust:'synthetic-contract-simulation-only',profile:fixture.policy.profileVersion,successJobId:job.job.jobId,outputSha256:sha(after.signed_pdf),wrongPolicyBlocked:true,replaySignedVersions:1,approvals:0,mailMessages:0};
+  const result={browserToActualApi:true,actualPostgres:true,adminComponent:true,renderHarness:"isolated-react-with-actual-api",nextRouterRefreshChecked:true,browserPosts,logicalBrowserIntents:new Set(browserInputs.map(i=>i.requestId)).size,widths,pageErrors,ok:true,syntheticOnly:true,notIcpHomologation:true,mailProvider:'dev',realUnixBroker:true,realWorker:true,realSyntheticCryptography:true,validatorTrust:'synthetic-contract-simulation-only',profile:fixture.policy.profileVersion,successJobId:job.job.jobId,outputSha256:sha(after.signed_pdf),wrongPolicyBlocked:true,replaySignedVersions:1,approvals:0,mailMessages:0};
   writeFileSync(join(root,'scenario-result.json'),JSON.stringify(result,null,2),{mode:0o600,flag:"wx"});console.log(JSON.stringify(result));
  }finally{if(browser)await browser.close();if(httpServer)await new Promise<void>(resolve=>httpServer!.close(()=>resolve()));await _closeDbForTests();}
 }main();

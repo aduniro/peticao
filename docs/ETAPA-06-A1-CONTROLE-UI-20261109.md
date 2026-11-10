@@ -24,7 +24,7 @@ Executável absoluto, de qualquer diretório local:
 /mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/a1-worker-venv/bin/python /mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/tools/admin-qa/a1-e2e.py --browser
 ```
 
-O modo navegador usa o componente atual, handlers reais e PostgreSQL próprio na porta 54377. O banco e as credenciais sintéticas temporários usam diretório 0700 em `/run/user/1000/peticao-a1-qa`, apagado ao terminar; evidências ficam no projeto. O modo API anterior permanece disponível sem a flag. Não se alteram fsync, serviços, gates ou bancos de produção. O ensaio é um host React isolado com APIs reais, não o shell Next inteiro nem homologação operacional.
+O modo navegador usa o componente atual, handlers reais e PostgreSQL próprio na porta 54377. O banco e as credenciais sintéticas temporários usam diretório 0700 em `/run/user/1000/peticao-a1-qa`, apagado ao terminar; evidências ficam no projeto. O modo API anterior permanece disponível sem a flag. Não se alteram fsync, serviços, gates ou bancos de produção. O ensaio é um host React isolado com APIs reais e contexto AppRouter que registra refresh: testa o componente padrão e o pedido de atualização, mas não executa o shell Next inteiro nem constitui homologação operacional.
 
 ## Pendências
 
