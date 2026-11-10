@@ -9,7 +9,7 @@ const digest = (v: Buffer | string) => createHash("sha256").update(v).digest("he
 const uuid = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(v);
 const hash = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
 const id = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v > 0 && v <= 2147483647;
-const error = (code: "disabled" | "parameters" | "forbidden" | "not_found" | "profile_unavailable" | "profile_conflict" | "invalid_proof") => ({ ok: false as const, error: code });
+const error = (code: "disabled" | "parameters" | "forbidden" | "not_found" | "profile_unavailable" | "profile_conflict" | "invalid_proof" | "request_conflict") => ({ ok: false as const, error: code });
 const enabled = () => process.env.GOVBR_BASE_ENABLED === "1" && petitionBaseValidationReady();
 async function authorized(c: PoolClient, actor: SessaoAdmin | null) {
   await c.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'; SELECT pg_advisory_xact_lock(7003)");
@@ -69,9 +69,9 @@ export async function persistPetitionBaseValidation(input: { binding: PetitionBa
 }
 
 /** Reserve before external I/O. Pending, failed and unavailable checks invalidate earlier cached proof. */
-export async function beginPetitionBaseValidation(artifactId: string, expectedSha256: string, actor: SessaoAdmin | null) {
+export async function beginPetitionBaseValidation(artifactId: string, expectedSha256: string, actor: SessaoAdmin | null, requestId: string = randomUUID()) {
   if (!enabled()) return error("disabled");
-  if (!uuid(artifactId) || !hash(expectedSha256)) return error("parameters");
+  if (!uuid(requestId) || !uuid(artifactId) || !hash(expectedSha256)) return error("parameters");
   return tx(async c => {
     if (!await authorized(c, actor)) return error("forbidden");
     if (!enabled()) return error("disabled");
@@ -79,10 +79,13 @@ export async function beginPetitionBaseValidation(artifactId: string, expectedSh
     const file = await artifact(c, artifactId); if (!file) return error("not_found");
     if (file.sha256 !== expectedSha256) return { ok: false as const, error: "document_conflict" as const };
     const policy = petitionBaseValidationPolicyFingerprint(); if (!policy) return error("disabled");
+    const previous = await validationIntentTx(c, requestId, artifactId, expectedSha256, actor!);
+    if (previous) return previous.ok ? { ...previous, replayed: true as const } : previous;
     const attemptId = randomUUID();
     await c.query("INSERT INTO petition_base_validation_attempts(id,artifact_id,artifact_sha256,binding_sha256,validator_configuration_sha256,actor_id) VALUES($1,$2,$3,$4,$5,$6)", [attemptId, artifactId, file.sha256, bindingFingerprint(current), policy, actor!.userId]);
+    await c.query("INSERT INTO petition_base_validation_intents(request_id,attempt_id,actor_id) VALUES($1,$2,$3)", [requestId, attemptId, actor!.userId]);
     await audit("petition_base_validation_started", null, { attemptId, artifactId, sha256: file.sha256, userId: actor!.userId }, c);
-    return { ok: true as const, attemptId, bytes: Buffer.from(file.bytes), binding: { ...current } };
+    return { ok: true as const, replayed: false as const, requestId, attemptId, bytes: Buffer.from(file.bytes), binding: { ...current } };
   });
 }
 /** Latest START order wins, regardless of the order external responses arrive. Historical proof is preserved. */
@@ -110,5 +113,25 @@ export async function finishPetitionBaseValidation(attemptId: string, outcome: {
     }
     const effective = await effectivePetitionBaseValidationIdTx(c, attempt.artifact_id);
     return { ok: true as const, isCurrent: effective.journaled && effective.attemptId === attemptId && effective.validationId === validationId && validationId !== null };
+  });
+}
+
+/** Read the exact intent, never the latest artifact result. Authorization and binding remain live. */
+async function validationIntentTx(c: PoolClient, requestId: string, artifactId: string, expectedSha256: string, actor: SessaoAdmin) {
+  const row = (await c.query<{ actor_id: number; attempt_id: string; artifact_id: string; artifact_sha256: string; binding_sha256: string; validator_configuration_sha256: string; state: "valid" | "rejected" | "unavailable" | null; validation_id: string | null }>(`SELECT i.actor_id,i.attempt_id,a.artifact_id,a.artifact_sha256,a.binding_sha256,a.validator_configuration_sha256,r.state,r.validation_id FROM petition_base_validation_intents i JOIN petition_base_validation_attempts a ON a.id=i.attempt_id LEFT JOIN petition_base_validation_results r ON r.attempt_id=a.id WHERE i.request_id=$1`, [requestId])).rows[0];
+  if (!row) return null;
+  if (row.actor_id !== actor.userId || row.artifact_id !== artifactId || row.artifact_sha256 !== expectedSha256) return error("request_conflict");
+  const current = await binding(c, artifactId);
+  if (!current || bindingFingerprint(current) !== row.binding_sha256 || petitionBaseValidationPolicyFingerprint() !== row.validator_configuration_sha256) return error("profile_conflict");
+  const effective = await effectivePetitionBaseValidationIdTx(c, artifactId);
+  return { ok: true as const, method: "gov-br-advanced" as const, usableInPackage: false as const, requestId, attemptId: row.attempt_id, artifactId, sha256: expectedSha256, state: row.state ?? "pending" as const, validationId: row.validation_id, isCurrent: effective.journaled && effective.attemptId === row.attempt_id && row.state === "valid" && effective.validationId === row.validation_id };
+}
+export async function readPetitionBaseValidationIntent(requestId: string, artifactId: string, expectedSha256: string, actor: SessaoAdmin | null) {
+  if (!enabled()) return error("disabled");
+  if (!uuid(requestId) || !uuid(artifactId) || !hash(expectedSha256)) return error("parameters");
+  return tx(async c => {
+    if (!await authorized(c, actor)) return error("forbidden");
+    if (!enabled()) return error("disabled");
+    return await validationIntentTx(c, requestId, artifactId, expectedSha256, actor!) ?? error("not_found");
   });
 }

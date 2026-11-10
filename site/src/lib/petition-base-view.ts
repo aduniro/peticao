@@ -1,5 +1,5 @@
-import type { BaseIntentView, BasePacketIntent, BaseSelectionIntent } from "./petition-base-request";
-export type BasePending = { kind: "upload"; requestId: string; sha256: string } | { kind: "selection"; input: BaseSelectionIntent } | { kind: "package"; input: BasePacketIntent };
+import type { BaseValidationIntent, BaseIntentView, BasePacketIntent, BaseSelectionIntent } from "./petition-base-request";
+export type BasePending = { kind: "validation"; input: BaseValidationIntent } | { kind: "upload"; requestId: string; sha256: string } | { kind: "selection"; input: BaseSelectionIntent } | { kind: "package"; input: BasePacketIntent };
 const uuid = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(v);
 const hash = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
@@ -11,13 +11,19 @@ export function parseBasePending(raw: unknown, batchId: number): BasePending | n
   if (Object.keys(raw).sort().join(",") !== "input,kind" || !object(raw.input)) return null;
   const p = raw.input;
   if (!uuid(p.requestId)) return null;
+  if (raw.kind === "validation" && Object.keys(p).sort().join(",") === "artifactId,requestId,sha256" && uuid(p.artifactId) && hash(p.sha256)) return { kind: "validation", input: { requestId: p.requestId, artifactId: p.artifactId, sha256: p.sha256 } };
   if (raw.kind === "selection" && Object.keys(p).sort().join(",") === "expectedRevision,expectedTextVersion,requestId,reviewedSha256,validationId" && revision(p.expectedRevision) && hash(p.expectedTextVersion) && uuid(p.validationId) && hash(p.reviewedSha256)) return { kind: "selection", input: { requestId: p.requestId, expectedRevision: Number(p.expectedRevision), expectedTextVersion: p.expectedTextVersion, validationId: p.validationId, reviewedSha256: p.reviewedSha256 } };
   if (raw.kind === "package" && Object.keys(p).sort().join(",") === "batchId,expectedDocumentVersion,expectedPackageRevision,expectedSelectionId,requestId" && p.batchId === batchId && hash(p.expectedDocumentVersion) && revision(p.expectedPackageRevision) && uuid(p.expectedSelectionId)) return { kind: "package", input: { batchId, requestId: p.requestId, expectedDocumentVersion: p.expectedDocumentVersion, expectedPackageRevision: Number(p.expectedPackageRevision), expectedSelectionId: p.expectedSelectionId } };
   return null;
 }
 export const basePendingRequestId = (p: BasePending) => p.kind === "upload" ? p.requestId : p.input.requestId;
 /** Exact matching is independent of the currently selected artifact or whichever GET finishes last. */
-export function matchBaseRecovery(pending: BasePending, observed: BaseIntentView): "current" | "obsolete" | "mismatch" {
+export function matchBaseRecovery(pending: BasePending, observed: BaseIntentView): "current" | "obsolete" | "mismatch" | "pending" {
+  if (pending.kind === "validation" && observed.kind === "validation") {
+    const p = pending.input, v = observed.validation;
+    if (p.requestId !== v.requestId || p.artifactId !== v.artifactId || p.sha256 !== v.sha256) return "mismatch";
+    return v.state === "pending" ? "pending" : v.isCurrent ? "current" : "obsolete";
+  }
   if (pending.kind === "upload" && observed.kind === "upload") return observed.artifact.sha256 === pending.sha256 ? "current" : "mismatch";
   if (pending.kind === "selection" && observed.kind === "selection") {
     const p = pending.input, v = observed.selection;

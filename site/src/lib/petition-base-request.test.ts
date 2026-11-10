@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readBaseInventory, readBaseSelection, readBasePacketReview, uploadBase, validateBase, selectBase, prepareBasePacket, readBaseIntent } from "./petition-base-request";
+import { readBaseInventory, readBaseSelection, readBasePacketReview, uploadBase, validateBase, selectBase, prepareBasePacket, readBaseIntent, readBaseValidation } from "./petition-base-request";
 const requestId = "11111111-1111-4111-8111-111111111111", artifactId = "22222222-2222-4222-8222-222222222222", selectionId = "33333333-3333-4333-8333-333333333333", validationId = "44444444-4444-4444-8444-444444444444";
 const sha = "a".repeat(64), version = "b".repeat(64);
 const artifact = { uploadedAt: "2026-11-10T10:00:00.123456Z", artifactId, sha256: sha, byteLength: 24, usableInPackage: false, lastValidationId: validationId };
@@ -50,10 +50,15 @@ test("GET recovery binds the original request and preserves an obsolete outcome 
   assert.equal((await readBaseIntent("selection", requestId, 7, mock({ ok: true, requestId, selection, isCurrent: true }))).kind, "success");
   assert.deepEqual(await readBaseIntent("package", requestId, 7, mock({ ok: false, error: "not_found" }, 404)), { kind: "rejected", status: 404, error: "not_found" });
 });
-test("validation requires matching artifact, exact SHA and the dedicated gov.br method", async () => {
-  const value = { ok: true, validationId, artifactId, sha256: sha, validationState: "valid", method: "gov-br-advanced", usableInPackage: false };
-  assert.equal((await validateBase(artifactId, sha, mock(value))).kind, "success");
-  for (const changed of [{ ...value, artifactId: requestId }, { ...value, sha256: version }, { ...value, method: "icp-brasil" }, { ...value, usableInPackage: true }]) assert.equal((await validateBase(artifactId, sha, mock(changed))).kind, "uncertain");
+test("validation identity is exact and a lost response recovers with GET only", async () => {
+  const value = { ok: true, requestId, attemptId: validationId, validationId, artifactId, sha256: sha, state: "valid", isCurrent: true };
+  assert.equal((await validateBase(artifactId, sha, mock(value), 1000, requestId)).kind, "success");
+  for (const changed of [{ ...value, artifactId: requestId }, { ...value, sha256: version }, { ...value, requestId: artifactId }, { ...value, state: "pending" }]) assert.equal((await validateBase(artifactId, sha, mock(changed), 1000, requestId)).kind, "uncertain");
+  let posts = 0, gets = 0;
+  const transport = (async (_path, init) => { if (init?.method === "POST") { posts++; throw Error("lost response"); } gets++; return response(value); }) as typeof fetch;
+  assert.equal((await validateBase(artifactId, sha, transport, 1000, requestId)).kind, "uncertain");
+  assert.equal((await readBaseValidation({ requestId, artifactId, sha256: sha }, transport)).kind, "success");
+  assert.equal(posts, 1); assert.equal(gets, 1);
 });
 test("multipart upload carries only the file and request identity and checks returned bytes/hash", async () => {
   const file = new File(["%PDF-1.7 fixture1234567890"], "qa.pdf", { type: "application/pdf" });

@@ -23,3 +23,13 @@ test("another SHA, selection, revision, batch or operation cannot resolve an int
   for (const value of [{ ...packaged, ordinal: 2 }, { ...packaged, batchId: 8 }, { ...packaged, documentVersion: hash }, { ...packaged, selectionId: artifactId }]) assert.equal(matchBaseRecovery({ kind: "package", input: prepare }, { kind: "package", package: value, isCurrent: true }), "mismatch");
   assert.equal(matchBaseRecovery({ kind: "package", input: prepare }, { kind: "selection", selection: selected, isCurrent: true }), "mismatch");
 });
+
+test("validation intent survives serialization and pending recovery cannot release it", () => {
+ const input = { requestId: "11111111-1111-4111-8111-111111111111", artifactId: "22222222-2222-4222-8222-222222222222", sha256: "a".repeat(64) };
+ const pending = { kind: "validation" as const, input };
+ assert.deepEqual(parseBasePending(JSON.parse(JSON.stringify(pending)), 7), pending);
+ const observed = { kind: "validation" as const, validation: { ...input, attemptId: input.requestId, state: "pending" as const, validationId: null, isCurrent: false } };
+ assert.equal(matchBaseRecovery(pending, observed), "pending");
+ assert.equal(matchBaseRecovery(pending, { ...observed, validation: { ...observed.validation, requestId: input.artifactId } }), "mismatch");
+ assert.equal(matchBaseRecovery(pending, { ...observed, validation: { ...observed.validation, state: "unavailable" } }), "obsolete");
+});
