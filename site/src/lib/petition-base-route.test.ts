@@ -114,7 +114,7 @@ for (const gate of [
   { name: "origin", status: 403, error: "request_rejected" },
   { name: "rate", status: 429, error: "request_rejected" },
 ] as const) {
- test(`real validation route ${gate.name} refusal creates no intent and recovers only by admitted exact GET`, async () => {
+ test(`real validation route ${gate.name} refusal creates no intent and recovers only by admitted exact GET`, async (t) => {
   const c = await fixture("t_base_http_gate_" + gate.name), service = await verifier();
   try {
    const users = await import("./admin-users"), session = await users.abrirSessao(1, "127.0.0.1");
@@ -122,11 +122,11 @@ for (const gate of [
    const input = { requestId: randomUUID(), artifactId: c.artifactId, sha256: hash(bytes) };
    const params = { params: { id: c.artifactId } }, path = "/api/admin/documentos/base/" + c.artifactId + "/validar";
    const index = ["session", "level", "stepup", "origin", "rate"].indexOf(gate.name);
-   const gateIp = "198.51.100." + (110 + index), recoveryIp = "198.51.100." + (120 + index);
+   const gateIp = "198.51.100." + (110 + index);
    let admitted = false, posts = 0, reads = 0;
    const request = (method: string, url: string, body?: string) => new NextRequest("http://qa.local" + url, {
     method,
-    headers: { host: "qa.local", origin: !admitted && gate.name === "origin" ? "https://outside.invalid" : "http://qa.local", cookie: "adm=" + (!admitted && gate.name === "session" ? "" : session.token), "content-type": "application/json", "x-forwarded-for": admitted ? recoveryIp : gateIp },
+    headers: { host: "qa.local", origin: !admitted && gate.name === "origin" ? "https://outside.invalid" : "http://qa.local", cookie: "adm=" + (!admitted && gate.name === "session" ? "" : session.token), "content-type": "application/json", "x-forwarded-for": gateIp },
     ...(body === undefined ? {} : { body }),
    });
    if (gate.name === "level") await c.db.query("UPDATE admin_users SET nivel='leitura' WHERE id=1");
@@ -150,7 +150,9 @@ for (const gate of [
    assert.equal(releaseUnrecordedValidation(pending, await readBaseValidation(input, transport, 5000)), false);
    assert.deepEqual(await snapshot(), before); assert.equal(service.calls(), 0);
    await c.db.query("UPDATE admin_users SET nivel='total' WHERE id=1; UPDATE admin_sessions SET stepup_ate=clock_timestamp()+interval '9 minutes' WHERE user_id=1");
-   // Independent admitted fixture IP: this does not claim that the old rate window expired.
+   // Expire this same in-memory bucket without sleeping or changing PostgreSQL's clock.
+   // node:test restores the clock mock when this sequential fixture ends.
+   if (gate.name === "rate") { const now = Date.now(); t.mock.method(Date, "now", () => now + 61_000); }
    admitted = true;
    const recovered = await readBaseValidation(input, transport, 5000);
    assert.deepEqual(recovered, { kind: "rejected", status: 404, error: "not_found" });
