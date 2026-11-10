@@ -23,7 +23,9 @@ const a1Match=/export const BATCH_A1_SCHEMA_SQL = (`[\s\S]*?`);/.exec(a1Source);
 assert.ok(a1Match);assert.ok(!a1Match[1].includes("${"));
 const referenceSource=readFileSync(resolve(here,"../../site/src/lib/document-reference-schema.ts"),"utf8");
 const referenceMatch=/export const DOCUMENT_REFERENCE_SCHEMA_SQL = (`[\s\S]*?`);/.exec(referenceSource);assert.ok(referenceMatch);assert.ok(!referenceMatch[1].includes("${"));
-const newSql=Function("return "+match[1])()+"\n"+Function("return "+a1Match[1])()+"\n"+Function("return "+referenceMatch[1])();
+const baseSource=readFileSync(resolve(here,"../../site/src/lib/petition-base-schema.ts"),"utf8");
+const baseMatch=/export const PETITION_BASE_SCHEMA_SQL = (`[\s\S]*?`);/.exec(baseSource);assert.ok(baseMatch);assert.ok(!baseMatch[1].includes("${"));
+const newSql=Function("return "+match[1])()+"\n"+Function("return "+a1Match[1])()+"\n"+Function("return "+referenceMatch[1])()+"\n"+Function("return "+baseMatch[1])();
 const schemaName="admin_upgrade_rehearsal_"+process.pid;
 let db;
 const pool=new Pool({connectionString:process.env.DATABASE_URL,max:1});const c=await pool.connect();
@@ -105,7 +107,7 @@ try{
  const archivedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows;
  await c.query(newSql);await c.query(newSql);await c.query(oldSql);
  assert.deepEqual((await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows,archivedSenders,"DDL replay and old bootstrap must not reset archive decisions or revisions");
-assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_domain_catalog_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_a1_jobs","batch_a1_validations","batch_document_versions","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_reply_group_items","contact_reply_groups","contact_triage_jobs","document_reference_bindings","document_references","ebserh_units","institution_registry","mail_inbound_messages","mail_message_attempts","mail_message_events","mail_messages","president_challenges"]);
+assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_domain_catalog_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_a1_jobs","batch_a1_validations","batch_document_versions","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_reply_group_items","contact_reply_groups","contact_triage_jobs","document_reference_bindings","document_references","ebserh_units","institution_registry","mail_inbound_messages","mail_message_attempts","mail_message_events","mail_messages","petition_base_artifacts","petition_base_upload_requests","president_challenges"]);
  await c.query(`INSERT INTO mail_inbound_messages(id,account,external_key,content_hash,sender_hash,recipients_hash,thread_root,correlation,content_cipher,received_at,created_at,expires_at)
    VALUES('00000000-0000-4000-8000-000000000050','qa-inbox','QA-EXTERNAL-HASH','QA-CONTENT-HASH','QA-SENDER-HASH','QA-RECIPIENTS-HASH','00000000-0000-4000-8000-000000000050','new','QA-NOT-A-REAL-CIPHER','2026-11-08T10:00:00.123456Z','2026-11-08T10:00:00.234567Z','2026-12-08T10:00:00.345678Z')`);
  const inboundState=async()=>(await c.query("SELECT row_to_json(m)::text raw FROM mail_inbound_messages m ORDER BY id")).rows;
@@ -251,7 +253,7 @@ assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin
  console.log("PASS legacy contact history migration: original IDs, results, authors and timestamps preserved; no historical message eligible for dispatch.");
  console.log("PASS sender catalogue upgrade: ciphertext, identity, paused state, archive revision and microsecond timestamps survive replay and old bootstrap.");
  console.log("PASS referral intent upgrade: request ownership, allocation, fingerprint and microsecond timestamp preserved.");
- console.log("PASS real startup on old schema plus DDL replay: twenty-eight additive tables, institutional/EBSERH links, three administrative domain catalog columns, two nullable message correlation columns, two administrative referral version/archive columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
+ console.log("PASS real startup on old schema plus DDL replay: thirty additive tables, institutional/EBSERH links, three administrative domain catalog columns, two nullable message correlation columns, two administrative referral version/archive columns and two sender revision/archive columns; original definitions, signer records and settings preserved; old schema bootstrap remains compatible.");
 }finally{
  if(db)await db._closeDbForTests();
  await c.query("RESET search_path");await c.query(`DROP SCHEMA IF EXISTS ${schemaName} CASCADE`);c.release();await pool.end();delete process.env.DATABASE_SCHEMA;

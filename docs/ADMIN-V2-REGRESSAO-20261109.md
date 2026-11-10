@@ -40,3 +40,9 @@ Rascunhos receberam 11 testes de referência, 4 de snapshot e 9 de jobs/finish; 
 139 testes documentais aprovados, zero falhas/pulos; tipos e build aprovados com fontes estáveis. Evidências em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/documents-1794269579707948249/result.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794269579719440813/result.json` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/build-1794269667237571193/result.json`.
 
 Cinco testes adicionais de geração real dos quatro modos e rollback de configuração inválida passaram em runner separado sem destinatários. Extração dos quatro PDFs confirmou retirada do rodapé somente para A1/A1+QR, preservação no modo legado/QR, três páginas por arquivo e ausência de alegação de assinatura ICP. Hashes em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/qr-draft/flow-pdfs/verification.json`. O novo teste entra no candidato para as próximas rodadas; a rota QR ganhou asserts HTTP diretos e precisa de reteste específico.
+
+## Checkpoint documental 023d8b3
+
+144 testes documentais aprovados sem falhas/pulos; tipos e SQL28 aprovados com fontes estáveis. Evidência em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/documents-1794269817051177648/result.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794270174879127244/result.json` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/schema-1794269790201802947/result.json`. Build anterior a64e2aa usa o mesmo código runtime; 023d8b3 acrescenta somente testes e evidências.
+
+Incremento seguinte: staging privado da petição-base, sem validação/promoção/envio, com provas e pendências em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/docs/ETAPA-06-PETICAO-BASE-STAGING-20261109.md`.
