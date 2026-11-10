@@ -8,7 +8,7 @@ export type BaseSelectionIntent = { requestId: string; expectedRevision: number;
 export type BasePacketIntent = { requestId: string; batchId: number; expectedDocumentVersion: string; expectedSelectionId: string; expectedPackageRevision: number };
 export type BaseReviewView = { batchId: number; documentVersion: string; configured: boolean; canPrepare: boolean; approvalReady: boolean; selectionId: string | null; latestPackage: BasePacketView | null };
 export type BaseValidationIntent = { requestId: string; artifactId: string; sha256: string };
-export type BaseValidationView = BaseValidationIntent & { attemptId: string; state: "pending" | "valid" | "rejected" | "unavailable"; validationId: string | null; isCurrent: boolean };
+export type BaseValidationView = BaseValidationIntent & { attemptId: string; state: "pending" | "valid" | "rejected" | "unavailable"; contextMatches: boolean; validationId: string | null; isCurrent: boolean };
 export type BaseIntentView = { kind: "validation"; validation: BaseValidationView } | { kind: "upload"; artifact: BaseArtifactView } | { kind: "selection"; selection: BaseSelectionView; isCurrent: boolean } | { kind: "package"; package: BasePacketView; isCurrent: boolean };
 const uuid = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(v);
 const hash = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
@@ -92,8 +92,8 @@ export function uploadBase(requestId: string, file: File, expectedSha256: string
   return exchange("/api/admin/documentos/base", "POST", form, raw => { const value = artifact(raw); return value && value.sha256 === expectedSha256 && value.byteLength === file.size ? value : null; }, fetcher, timeoutMs);
 }
 function validation(raw: Record<string, unknown>, input: BaseValidationIntent): BaseValidationView | null {
-  if (raw.requestId !== input.requestId || raw.artifactId !== input.artifactId || raw.sha256 !== input.sha256 || !uuid(raw.attemptId) || !["pending", "valid", "rejected", "unavailable"].includes(String(raw.state)) || typeof raw.isCurrent !== "boolean" || (raw.state === "valid" ? !uuid(raw.validationId) : raw.validationId !== null) || raw.isCurrent && raw.state !== "valid") return null;
-  return { ...input, attemptId: raw.attemptId, state: raw.state as BaseValidationView["state"], validationId: raw.validationId as string | null, isCurrent: raw.isCurrent };
+  if (raw.requestId !== input.requestId || raw.artifactId !== input.artifactId || raw.sha256 !== input.sha256 || !uuid(raw.attemptId) || !["pending", "valid", "rejected", "unavailable"].includes(String(raw.state)) || typeof raw.contextMatches !== "boolean" || typeof raw.isCurrent !== "boolean" || (raw.state === "valid" ? !uuid(raw.validationId) : raw.validationId !== null) || raw.isCurrent && (raw.state !== "valid" || !raw.contextMatches)) return null;
+  return { ...input, attemptId: raw.attemptId, state: raw.state as BaseValidationView["state"], validationId: raw.validationId as string | null, contextMatches: raw.contextMatches, isCurrent: raw.isCurrent };
 }
 export function validateBase(artifactId: string, expectedSha256: string, fetcher: typeof fetch = fetch, timeoutMs = 45_000, requestId?: string) {
   if (!uuid(requestId) || !uuid(artifactId) || !hash(expectedSha256)) return Promise.resolve(invalid);

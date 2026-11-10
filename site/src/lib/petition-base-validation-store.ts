@@ -117,21 +117,20 @@ export async function finishPetitionBaseValidation(attemptId: string, outcome: {
 }
 
 /** Read the exact intent, never the latest artifact result. Authorization and binding remain live. */
-async function validationIntentTx(c: PoolClient, requestId: string, artifactId: string, expectedSha256: string, actor: SessaoAdmin) {
+async function validationIntentTx(c: PoolClient, requestId: string, artifactId: string, expectedSha256: string, actor: SessaoAdmin, allowObsolete = false) {
   const row = (await c.query<{ actor_id: number; attempt_id: string; artifact_id: string; artifact_sha256: string; binding_sha256: string; validator_configuration_sha256: string; state: "valid" | "rejected" | "unavailable" | null; validation_id: string | null }>(`SELECT i.actor_id,i.attempt_id,a.artifact_id,a.artifact_sha256,a.binding_sha256,a.validator_configuration_sha256,r.state,r.validation_id FROM petition_base_validation_intents i JOIN petition_base_validation_attempts a ON a.id=i.attempt_id LEFT JOIN petition_base_validation_results r ON r.attempt_id=a.id WHERE i.request_id=$1`, [requestId])).rows[0];
   if (!row) return null;
   if (row.actor_id !== actor.userId || row.artifact_id !== artifactId || row.artifact_sha256 !== expectedSha256) return error("request_conflict");
   const current = await binding(c, artifactId);
-  if (!current || bindingFingerprint(current) !== row.binding_sha256 || petitionBaseValidationPolicyFingerprint() !== row.validator_configuration_sha256) return error("profile_conflict");
+  const contextMatches = enabled() && !!current && bindingFingerprint(current) === row.binding_sha256 && petitionBaseValidationPolicyFingerprint() === row.validator_configuration_sha256;
+  if (!allowObsolete && !contextMatches) return error("profile_conflict");
   const effective = await effectivePetitionBaseValidationIdTx(c, artifactId);
-  return { ok: true as const, method: "gov-br-advanced" as const, usableInPackage: false as const, requestId, attemptId: row.attempt_id, artifactId, sha256: expectedSha256, state: row.state ?? "pending" as const, validationId: row.validation_id, isCurrent: effective.journaled && effective.attemptId === row.attempt_id && row.state === "valid" && effective.validationId === row.validation_id };
+  return { ok: true as const, method: "gov-br-advanced" as const, usableInPackage: false as const, requestId, attemptId: row.attempt_id, artifactId, sha256: expectedSha256, state: row.state ?? "pending" as const, validationId: row.validation_id, contextMatches, isCurrent: contextMatches && effective.journaled && effective.attemptId === row.attempt_id && row.state === "valid" && effective.validationId === row.validation_id };
 }
 export async function readPetitionBaseValidationIntent(requestId: string, artifactId: string, expectedSha256: string, actor: SessaoAdmin | null) {
-  if (!enabled()) return error("disabled");
   if (!uuid(requestId) || !uuid(artifactId) || !hash(expectedSha256)) return error("parameters");
   return tx(async c => {
     if (!await authorized(c, actor)) return error("forbidden");
-    if (!enabled()) return error("disabled");
-    return await validationIntentTx(c, requestId, artifactId, expectedSha256, actor!) ?? error("not_found");
+      return await validationIntentTx(c, requestId, artifactId, expectedSha256, actor!, true) ?? error("not_found");
   });
 }

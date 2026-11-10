@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { readBaseInventory, readBaseSelection, readBasePacketReview, uploadBase, validateBase, selectBase, prepareBasePacket, readBaseIntent, readBaseValidation, type BaseHttpResult, type BaseArtifactView, type BaseReviewView, type BaseSelectionView } from "@/lib/petition-base-request";
 import { appendBaseInventoryPage, type BaseInventoryPage } from "@/lib/petition-base-pagination";
-import { parseBasePending, matchBaseRecovery, basePendingRequestId, type BasePending } from "@/lib/petition-base-view";
+import { parseBasePending, matchBaseRecovery, validationRefusal, releaseUnrecordedValidation, basePendingRequestId, type BasePending } from "@/lib/petition-base-view";
 
 // MUDAR AQUI: controles aprovados pelo proprietário; preservar os estilos existentes.
 const COPY = { title: "Petição-base gov.br", upload: "Carregar PDF assinado", validate: "Conferir assinatura", select: "Selecionar esta versão", prepare: "Preparar pacote para revisão", prepared: "Pacote preparado", separate: "Os PDFs do lote e da petição-base serão mantidos como arquivos separados.", uncertain: "Não foi possível confirmar o resultado. Atualize o documento antes de tentar novamente.", more: "Carregar mais", moreFailed: "Não foi possível carregar mais documentos. Tente novamente." };
@@ -41,6 +41,10 @@ export function PeticaoBaseGovBrControl({ batchId, actorId, petitionTextVersion,
     if (snapshot.kind === "success") setReview(snapshot.value);
     const readsOk = inventory.kind === "success" && selection.kind === "success" && snapshot.kind === "success";
     setReady(readsOk); if (!readsOk) setUncertain(true);
+    if (intent && releaseUnrecordedValidation(intent, outcome)) {
+      if (save(null)) setIntent(null);
+      setUncertain(true); return;
+    }
     if (intent && outcome?.kind === "success") {
       const match = matchBaseRecovery(intent, outcome.value);
       if (match !== "mismatch" && match !== "pending") {
@@ -71,6 +75,10 @@ export function PeticaoBaseGovBrControl({ batchId, actorId, petitionTextVersion,
     // The authoritative result is recovered by exact GET, even after a rejected/lost response.
     try {
       const result = await operation();
+      if (intent.kind === "validation") {
+        const refusal = validationRefusal(result);
+        if (refusal) { const refused = { ...intent, refusal }; if (save(refused)) setIntent(refused); }
+      }
       if (mounted.current && intent.kind !== "validation" && result.kind === "rejected" && result.error !== "request_conflict") {
         // A conclusive protocol refusal creates no intent. Release only this local intent; no retry.
         if (save(null)) setIntent(null);

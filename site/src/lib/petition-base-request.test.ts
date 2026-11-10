@@ -51,7 +51,7 @@ test("GET recovery binds the original request and preserves an obsolete outcome 
   assert.deepEqual(await readBaseIntent("package", requestId, 7, mock({ ok: false, error: "not_found" }, 404)), { kind: "rejected", status: 404, error: "not_found" });
 });
 test("validation identity is exact and a lost response recovers with GET only", async () => {
-  const value = { ok: true, requestId, attemptId: validationId, validationId, artifactId, sha256: sha, state: "valid", isCurrent: true };
+  const value = { ok: true, requestId, attemptId: validationId, validationId, artifactId, sha256: sha, state: "valid", contextMatches: true, isCurrent: true };
   assert.equal((await validateBase(artifactId, sha, mock(value), 1000, requestId)).kind, "success");
   for (const changed of [{ ...value, artifactId: requestId }, { ...value, sha256: version }, { ...value, requestId: artifactId }, { ...value, state: "pending" }]) assert.equal((await validateBase(artifactId, sha, mock(changed), 1000, requestId)).kind, "uncertain");
   let posts = 0, gets = 0;

@@ -223,9 +223,32 @@ test('validation replay and exact recovery never repeat an accepted verifier cal
   await c.db.query(PETITION_BASE_SCHEMA_SQL);assert.deepEqual((await c.db.query('SELECT row_to_json(i)::text v FROM petition_base_validation_intents i')).rows,before);
   for(const sql of ['UPDATE petition_base_validation_intents SET created_at=created_at','DELETE FROM petition_base_validation_intents','TRUNCATE petition_base_validation_intents'])await assert.rejects(c.db.query(sql),/immutable/);
   await c.db.query("UPDATE settings SET value=jsonb_set(value::jsonb,'{revision}','2')::text WHERE key='president_profile_v1'");
-  assert.equal((await RECOVER_VALIDATION(req('GET',path+query),params)).status,409);assert.equal((await VALIDATE(req('POST',path,input),params)).status,409);assert.equal(service.calls(),1);
+  const obsolete=await(await RECOVER_VALIDATION(req('GET',path+query),params)).json();assert.equal(obsolete.contextMatches,false);assert.equal(obsolete.isCurrent,false);assert.equal((await VALIDATE(req('POST',path,input),params)).status,409);assert.equal(service.calls(),1);
   await c.db.query('UPDATE admin_sessions SET stepup_ate=NULL');
   assert.equal((await RECOVER_VALIDATION(req('GET',path+query),params)).status,403);assert.equal(service.calls(),1);
   await c.noSend();
+ }finally{release();await service.close();await c.close();}
+});
+
+test('recovery distinguishes no reservation from obsolete in-flight context',async()=>{
+ const c=await fixture('t_base_http_intent_context');let release!:()=>void,started!:()=>void;
+ const ready=new Promise<void>(r=>{started=r;}),hold=new Promise<void>(r=>{release=r;});
+ const service=await verifier(async()=>{started();await hold;});
+ try{
+  const req=await requestFactory(c),path='/api/admin/documentos/base/'+c.artifactId+'/validar',params={params:{id:c.artifactId}};
+  const requestId=randomUUID(),input={requestId,expectedSha256:hash(bytes)},query='?requestId='+requestId+'&expectedSha256='+hash(bytes);
+  process.env.GOVBR_BASE_VALIDATION_ENABLED='0';
+  const denied=await VALIDATE(req('POST',path,input),params);assert.equal(denied.status,409);assert.equal((await denied.json()).error,'disabled');
+  assert.equal((await RECOVER_VALIDATION(req('GET',path+query),params)).status,404);assert.equal(service.calls(),0);
+  process.env.GOVBR_BASE_VALIDATION_ENABLED='1';
+  await c.db.query("UPDATE settings SET value=$1 WHERE key='president_profile_v1'",[JSON.stringify({...c.profile,enabled:false})]);
+  const noProfile=await VALIDATE(req('POST',path,input),params);assert.equal(noProfile.status,409);assert.equal((await noProfile.json()).error,'profile_unavailable');
+  assert.equal((await RECOVER_VALIDATION(req('GET',path+query),params)).status,404);assert.equal(service.calls(),0);
+  await c.db.query("UPDATE settings SET value=$1 WHERE key='president_profile_v1'",[JSON.stringify(c.profile)]);
+  const pending=VALIDATE(req('POST',path,input),params);await Promise.race([ready,new Promise((_,reject)=>setTimeout(()=>reject(Error('fixture did not start')),3000))]);
+  process.env.GOVBR_BASE_VALIDATION_ACCEPTED_PROFILES='["QA-CHANGED-POLICY"]';
+  const obsolete=await(await RECOVER_VALIDATION(req('GET',path+query),params)).json();assert.equal(obsolete.state,'pending');assert.equal(obsolete.contextMatches,false);assert.equal(obsolete.isCurrent,false);
+  release();await pending;assert.equal(service.calls(),1);
+  assert.equal((await c.db.query('SELECT 1 FROM petition_base_validation_intents')).rowCount,1);await c.noSend();
  }finally{release();await service.close();await c.close();}
 });
