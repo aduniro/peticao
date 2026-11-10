@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exigirNivel, quemAge } from "@/lib/admin-api";
-import { admitA1Job, getA1Availability } from "@/lib/batch-a1-jobs";
+import { admitA1Job, getA1Availability, getA1JobByRequest } from "@/lib/batch-a1-jobs";
 import { a1ValidationReady } from "@/lib/a1-validation";
 import { batchId } from "@/lib/batch-http-input";
 import { readLimitedText } from "@/lib/http-body";
@@ -14,8 +14,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const denied = await exigirNivel(req, "total", 120, { stepup: true }); if (denied) return denied;
   const actor = await quemAge(req), id = batchId(params.id);
   if (!actor?.userId) return reply({ ok: false, error: "forbidden" }, 403);
-  if (id === null || req.nextUrl.searchParams.size) return reply({ ok: false, error: "parameters" }, 400);
+  if (id === null) return reply({ ok: false, error: "parameters" }, 400);
+  const query = req.nextUrl.searchParams;
+  if (query.size && (query.size !== 1 || !query.has("requestId"))) return reply({ ok: false, error: "parameters" }, 400);
   try {
+    if (query.has("requestId")) {
+      const result = await getA1JobByRequest(id, query.get("requestId")!, actor);
+      return reply(result, result.ok ? 200 : statusFor(result.error));
+    }
     const result = await getA1Availability(id, actor);
     return reply(result.ok ? { ...result, available: result.available && a1ValidationReady() } : result, result.ok ? 200 : statusFor(result.error));
   } catch { return reply({ ok: false, error: "unavailable" }, 503); }

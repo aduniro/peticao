@@ -58,6 +58,21 @@ test("A1 API: autenticação/origem/limites, admissão idempotente e GET sem ass
     assert.equal((await query("SELECT 1 FROM batch_a1_jobs")).rowCount,1);
     assert.equal((await query("SELECT 1 FROM batch_document_versions WHERE variant='signed'")).rowCount,0);
     assert.equal((await query("SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox UNION ALL SELECT 1 FROM batch_sends")).rowCount,0);
+    const scoped=(requestId:string,token=total.token,suffix="")=>new NextRequest("http://qa.local/api/admin/lotes/1/a1?requestId="+encodeURIComponent(requestId)+suffix,{headers:{host:"qa.local",cookie:"adm="+token}});
+    const exact=await GET(scoped(input.requestId),params);assert.equal(exact.status,200);assert.equal((await exact.json()).job.jobId,admitted.job.jobId);
+    assert.equal((await GET(scoped("bad"),params)).status,400);
+    assert.equal((await GET(scoped(input.requestId,total.token,"&requestId="+input.requestId),params)).status,400);
+    assert.equal((await GET(scoped(input.requestId,total.token,"&other=1"),params)).status,400);
+    assert.equal((await GET(scoped(randomUUID()),params)).status,404);
+    assert.equal((await GET(scoped(input.requestId),{params:{id:"2"}})).status,404);
+    const other=await abrirSessao(2,"127.0.0.1");await query("UPDATE admin_users SET nivel='total' WHERE id=2");await query("UPDATE admin_sessions SET stepup_ate=clock_timestamp()+interval '9 minutes' WHERE user_id=2");
+    assert.equal((await GET(scoped(input.requestId,other.token),params)).status,404);
+    delete process.env.BATCH_A1_ENABLED;assert.equal((await GET(scoped(input.requestId),params)).status,200);process.env.BATCH_A1_ENABLED='1';
+    const jobs=await import("./batch-a1-jobs");const claimed=await jobs.claimA1Job(admitted.job.jobId,admitted.job.revision);assert.ok(claimed.ok);assert.ok((await jobs.failA1Job(claimed.job.jobId,claimed.leaseToken,claimed.job.revision,"signing_failed")).ok);
+    const nextInput={...input,requestId:randomUUID()};const next=await POST(req('POST',JSON.stringify(nextInput)),params);assert.equal(next.status,202);const newer=await next.json();assert.notEqual(newer.job.jobId,admitted.job.jobId);
+    const older=await GET(scoped(input.requestId),params);const olderJob=(await older.json()).job;assert.equal(olderJob.jobId,admitted.job.jobId);assert.equal(olderJob.state,"failed");
+    assert.equal((await (await GET(req('GET'),params)).json()).latestJob.jobId,newer.job.jobId);
+    assert.equal(JSON.stringify(olderJob).includes("leaseToken"),false);
     await query("UPDATE admin_users SET ativo=false WHERE id=1");assert.equal((await GET(req('GET'),params)).status,401);
   } finally {
     for(const key of ['BATCH_A1_ENABLED','A1_VALIDATION_ENABLED','ICP_VALIDATOR_URL','A1_VALIDATION_ACCEPTED_POLICIES'])delete process.env[key];

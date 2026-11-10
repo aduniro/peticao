@@ -172,6 +172,16 @@ export async function getA1Job(jobId:string,actor:Actor|null) {
 }
 
 
+/** Read one persisted intent for the current account and batch; absence never authorizes retry. */
+export async function getA1JobByRequest(batchId:number,requestId:string,actor:Actor|null) {
+  if(!integer(batchId)||!uuid(requestId))return error("parameters");
+  return tx(async c=>{
+    await bounded(c);if(!await authorized(c,actor))return error("forbidden");
+    const j=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE batch_id=$1 AND actor_id=$2 AND request_id=$3",[batchId,actor!.userId,requestId])).rows[0];
+    return j?{ok:true as const,job:metadata(j)}:error("not_found");
+  });
+}
+
 /** Caller must obtain a runtime verification proof before opening this transaction. */
 export async function finishA1Job(jobId:string,leaseToken:string,expectedRevision:number,bytes:Buffer,proof:VerifiedA1Pdf) {
   if(!uuid(jobId)||!uuid(leaseToken)||!integer(expectedRevision)||!Buffer.isBuffer(bytes)||!bytes.length||bytes.length>A1_MAX_PDF_BYTES)return error("parameters");
