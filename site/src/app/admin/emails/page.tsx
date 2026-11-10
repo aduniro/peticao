@@ -6,7 +6,6 @@ import { brasilia } from "@/lib/time";
 import { outboxStats } from "@/lib/mail/outbox";
 import { query } from "@/lib/db";
 import { alertasEmail } from "@/lib/mail/alertas";
-import { resumoEngajamento } from "@/lib/mail/engajamento";
 import PendentesTable from "@/components/admin/PendentesTable";
 import { readPendingEmailPage } from "@/lib/pending-email-admin-store";
 import RecuperarFila from "@/components/admin/RecuperarFila";
@@ -37,7 +36,8 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
   const blackEmails = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason='invalid'")).rows[0].n;
   const suppressed = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason IN ('bounce','complaint')")).rows[0].n;
   const alertas = await alertasEmail({ pendingTotal: pending.ok ? pending.summary.global.total : null });
-  const eng = await resumoEngajamento();
+  const pendingCounts = pending.ok ? pending.summary.global : null;
+  const engagementUpdated = (await query<{ value: string | null }>("SELECT MAX(updated_at)::text value FROM mail_engagement")).rows[0].value;
   const status_b = status.brevo?.data, rp = status.respostas?.data; void status_b;
   // Recheck the whole SSR response after potentially lengthy reads, including recovery/preview permissions.
   const current = await sessaoAdmin();
@@ -57,19 +57,22 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
         <button>Sincronizar agora</button> <span className="small">(o agendador faz isso sozinho a cada 10 minutos)</span>
       </form>
 
-      <h2>Os pendentes abriram os e-mails?</h2>
-      <p className="small">Situação de cada cadastro <strong>aguardando confirmação</strong>, pelo melhor sinal recebido dos provedores (Brevo, MailerSend e SendPulse). “Entregue e nunca aberto” é o sinal mais próximo de spam, mas não é prova: leitores que bloqueiam imagens não registram abertura. No SendPulse, abertura e clique só chegam depois de cadastrado o webhook no painel deles; o SES só informa devoluções. <a href="/admin/emails/entregas">Ver a lista por pessoa (nome, contato e situação)</a>.</p>
+      {/* MUDAR AQUI: estados do último sinal conhecido, na mesma consulta global da lista de pendentes. */}
+      <h2>Sinais registrados para os cadastros pendentes</h2>
+      <p className="small">{pending.ok && <>Resumo da consulta inicial de {brasilia(pending.asOf, true)}. </>}Cada cadastro aguardando confirmação aparece pelo último sinal cronológico registrado para seu endereço. O histórico pode incluir mensagens anteriores e não comprova entrega, abertura ou clique da confirmação atual. Aceite pelo provedor não equivale a entrega; ausência de abertura não comprova spam. <a href="/admin/emails/entregas">Ver cadastros e endereços com sinais registrados</a>.</p>
+      {!pendingCounts && <p className="v2-aviso erro" role="alert">Não foi possível consultar os sinais dos pendentes. Atualize a página para tentar novamente.</p>}
       <table className="adm-table"><tbody>
-        <tr><td>Aguardando confirmação</td><td><strong>{eng.pendentes}</strong></td></tr>
-        <tr><td>Clicaram no e-mail (e não confirmaram)</td><td>{eng.clicou}</td></tr>
-        <tr><td>Abriram, sem clicar</td><td>{eng.abriu}</td></tr>
-        <tr><td>Entregue e nunca aberto (possível spam)</td><td>{eng.entregueSemAbrir}</td></tr>
-        <tr><td>Devolvido (hard/soft bounce, bloqueio)</td><td>{eng.devolvido}</td></tr>
-        <tr><td>Sem registro nos provedores consultados</td><td>{eng.semRegistro}</td></tr>
+        <tr><td>Aguardando confirmação</td><td><strong>{pendingCounts?.total ?? "—"}</strong></td></tr>
+        <tr><td>Último sinal: clique registrado</td><td>{pendingCounts?.byState.clicked ?? "—"}</td></tr>
+        <tr><td>Último sinal: abertura registrada</td><td>{pendingCounts?.byState.opened ?? "—"}</td></tr>
+        <tr><td>Último sinal: entrega registrada</td><td>{pendingCounts?.byState.delivered ?? "—"}</td></tr>
+        <tr><td>Último sinal: devolução, bloqueio ou reclamação</td><td>{pendingCounts?.byState.adverse ?? "—"}</td></tr>
+        <tr><td>Último sinal: aceite pelo provedor</td><td>{pendingCounts?.byState.accepted ?? "—"}</td></tr>
+        <tr><td>Sem sinal registrado nas fontes disponíveis</td><td>{pendingCounts?.byState.unrecorded ?? "—"}</td></tr>
       </tbody></table>
       <form method="post" action="/api/admin/emails/engajamento" style={{ margin: "10px 0" }}>
         Buscar entregas, aberturas e cliques dos últimos <select name="dias" defaultValue="30"><option value="7">7 dias</option><option value="14">14 dias</option><option value="30">30 dias</option><option value="60">60 dias</option><option value="90">90 dias</option></select> <button>Atualizar engajamento</button>
-        <span className="small"> Última atualização: {eng.ultimaAtualizacao ?? "nunca"}. Pode levar alguns minutos.</span>
+        <span className="small"> Última atualização do agregado legado: {engagementUpdated ? brasilia(engagementUpdated, true) : "nunca"}. Pode levar alguns minutos.</span>
       </form>
 
       <h2 id="fila" tabIndex={-1}>Fila de reenvio e lista negra</h2>

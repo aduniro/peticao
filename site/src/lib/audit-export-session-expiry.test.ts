@@ -6,7 +6,7 @@ import type { PoolClient } from "pg";
 delete process.env.PREVIEW_MODE;
 delete process.env.ADMIN_NO_PASSWORD;
 
-type AuditKind = "signatures" | "dispersion" | "pending";
+type AuditKind = "signatures" | "dispersion" | "pending" | "delivery";
 
 /**
  * The BEFORE INSERT trigger spends time AFTER the audit's initial authorization.
@@ -16,6 +16,7 @@ type AuditKind = "signatures" | "dispersion" | "pending";
  * produce a false positive. The old implementation returns true and commits.
  */
 async function auditExpiryScenario(kind: AuditKind) {
+  const event = kind === "delivery" ? "export_entregas" : "export_internal_base";
   const url = new URL(process.env.DATABASE_URL!);
   assert.equal(url.protocol, "postgres:");
   assert.equal(url.hostname, "127.0.0.1");
@@ -52,7 +53,7 @@ async function auditExpiryScenario(kind: AuditKind) {
       CREATE FUNCTION qa_export_expiry_pause() RETURNS trigger LANGUAGE plpgsql AS $$
       DECLARE before_valid boolean; after_valid boolean;
       BEGIN
-        IF NEW.event='export_internal_base' THEN
+        IF NEW.event='${event}' THEN
           SELECT expira_em>clock_timestamp() INTO before_valid FROM admin_sessions WHERE id=${sessionId};
           RAISE NOTICE 'QA_EXPORT_EXPIRY_BEFORE:%', CASE WHEN before_valid THEN 'valid' ELSE 'expired' END;
           PERFORM pg_sleep(0.75);
@@ -67,10 +68,11 @@ async function auditExpiryScenario(kind: AuditKind) {
     const auditExport = kind === "signatures"
       ? (await import("./signature-explorer-admin-store")).auditSignatureExport
       : kind === "dispersion" ? (await import("./dispersion-admin-store")).auditDispersionExport
-      : (await import("./pending-email-admin-store")).auditPendingEmailExport;
+      : kind === "pending" ? (await import("./pending-email-admin-store")).auditPendingEmailExport
+      : (await import("./mail-delivery-admin-store")).auditMailDeliveryExport;
     pool = db.getPool();
     pool.on("acquire", attach);
-    const previousCount = Number((await db.query("SELECT count(*)::text n FROM audit_log WHERE event='export_internal_base'")).rows[0].n);
+    const previousCount = Number((await db.query("SELECT count(*)::text n FROM audit_log WHERE event=$1", [event])).rows[0].n);
 
     // All setup/import/bootstrap work is complete before opening the short window.
     await db.query("UPDATE admin_sessions SET expira_em=clock_timestamp()+interval '500 milliseconds' WHERE id=$1", [sessionId]);
@@ -83,7 +85,7 @@ async function auditExpiryScenario(kind: AuditKind) {
 
     assert.deepEqual(messages, ["QA_EXPORT_EXPIRY_BEFORE:valid", "QA_EXPORT_EXPIRY_AFTER:expired"], "prove authorization initially succeeded and time expired inside audit, rather than another failure");
     assert.equal(result, false, "an expired session cannot release the prepared export");
-    assert.equal(Number((await db.query("SELECT count(*)::text n FROM audit_log WHERE event='export_internal_base'")).rows[0].n), previousCount, "final authorization failure rolls back the audit entry atomically");
+    assert.equal(Number((await db.query("SELECT count(*)::text n FROM audit_log WHERE event=$1", [event])).rows[0].n), previousCount, "final authorization failure rolls back the audit entry atomically");
     assert.ok((await db.verifyAuditChain()).ok);
     assert.equal(Number((await db.query("SELECT count(*)::text n FROM mail_outbox")).rows[0].n), 0);
   } finally {
@@ -103,4 +105,8 @@ test("dispersion CSV audit rechecks a session that expires during the audit writ
 
 test("pending CSV audit rechecks a session that expires during the audit write and rolls back", async () => {
   await auditExpiryScenario("pending");
+});
+
+test("delivery CSV audit rechecks a session that expires during the audit write and rolls back", async () => {
+  await auditExpiryScenario("delivery");
 });

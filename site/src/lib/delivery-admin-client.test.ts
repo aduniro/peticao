@@ -1,0 +1,39 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { parseMailDeliveryResult,readMailDelivery,readDeliveryJson } from "./delivery-admin-client";
+import type { MailDeliveryReadResult,MailDeliveryRow } from "./mail-delivery-admin-contract";
+const stamp="2026-11-10T02:00:00.123456Z";
+function registration(id:number):MailDeliveryRow{return{recordKey:`registration:${id}`,rowKind:"registration",cadastroId:id,email:"shared@example.test",nome:"QA Pessoa "+id,categoria:"servidor",instituicao:"Instituto QA",cargo:"QA",campus:"QA",universidade:"",cidadeUf:"Porto Velho/RO",pais:"",cadastro:id===1?"confirmado":"aguardando",cadastradoEm:"2026-11-10T00:00:00.000001Z",confirmadoEm:id===1?stamp:"",whatsapp:"",envios:2,ultimoEnvio:stamp,ultimoTipo:"confirmacao",provedores:"qa",situacao:"aceito",entregueEm:"",abertoEm:"",clicouEm:"",devolucao:"",devolucaoMotivo:"",devolucaoEm:"",evidence:{scope:"address_aggregate",registrationLink:"email_only",messageKinds:"all",providerScope:null,providersAll:["qa"],lastSignal:{state:"accepted",at:stamp,provider:"qa",source:"legacy_log"},relationToCurrentConfirmation:"not_proven",timestamps:"earliest_recorded_history",legacyEngagementFirstOnly:false,acceptedLogRecords:2,acceptedJournalAttempts:0,sendCountMeaning:"legacy_accepted_log_records_not_unique_messages",contactState:"absent"}};}
+function standalone():MailDeliveryRow{const r=registration(3);return{...r,recordKey:"unregistered:other@example.test",rowKind:"unregistered_address",cadastroId:null,email:"other@example.test",nome:"",categoria:"",instituicao:"",cargo:"",campus:"",cidadeUf:"",cadastro:"",cadastradoEm:"",confirmadoEm:"",envios:0,ultimoEnvio:"",ultimoTipo:"",provedores:"",situacao:"sem_registro",evidence:{...r.evidence,scope:"none",registrationLink:"none",lastSignal:null,providersAll:[],acceptedLogRecords:0}};}
+function fixture():MailDeliveryReadResult{return{ok:true,asOf:stamp,unit:"registration_or_unregistered_address",total:3,pagina:1,limite:50,linhas:[registration(2),registration(1),standalone()],inventory:{records:3,registrations:2,pending:1,confirmed:1,unregisteredAddresses:1},summary:{total:3,registrations:2,pending:1,confirmed:1,unregisteredAddresses:1,byState:{clicou:0,abriu:0,entregue:0,devolvido:0,aceito:2,sem_registro:1}},providerScope:null,coverage:{inventoryRecords:3,matched:3,totalRowsReturned:3,complete:true,signalsComplete:true}};}
+test("registrations sharing an address remain separate units, and unregistered address totals are explicit",()=>{
+ const result=parseMailDeliveryResult(fixture());assert.ok(result);assert.equal(result.linhas.length,3);assert.equal(result.linhas.filter(r=>r.email==="shared@example.test").length,2);assert.equal(result.summary.registrations,2);assert.equal(result.summary.unregisteredAddresses,1);assert.equal(result.linhas[0].situacao,"aceito");
+ const page=parseMailDeliveryResult({...fixture(),pagina:100,linhas:[],coverage:{...fixture().coverage,totalRowsReturned:0}},{page:100});assert.ok(page);assert.equal(page.total,3);
+});
+test("no artificial50000 cap or falsely complete short page is accepted",()=>{
+ const v=fixture();v.total=50001;v.inventory={records:50001,registrations:50001,pending:50001,confirmed:0,unregisteredAddresses:0};v.summary={total:50001,registrations:50001,pending:50001,confirmed:0,unregisteredAddresses:0,byState:{clicou:0,abriu:0,entregue:0,devolvido:0,aceito:50001,sem_registro:0}};v.linhas=Array.from({length:50},(_,i)=>({...registration(50001-i),cadastro:"aguardando",confirmadoEm:""}));v.coverage={inventoryRecords:50001,matched:50001,totalRowsReturned:50,complete:true,signalsComplete:true};assert.ok(parseMailDeliveryResult(v));assert.equal(parseMailDeliveryResult({...v,linhas:v.linhas.slice(0,49),coverage:{...v.coverage,totalRowsReturned:49}}),null);
+});
+test("exact DTO excludes payloads and enforces identity, scoped state, count and ordering",()=>{
+ for(const patch of [{token:"secret"},{evidence:{...registration(2).evidence,payload:"secret"}},{recordKey:"registration:99"},{situacao:"entregue"},{envios:99}])assert.equal(parseMailDeliveryResult({...fixture(),linhas:[{...registration(2),...patch},registration(1),standalone()]}),null);
+ assert.equal(parseMailDeliveryResult({...fixture(),linhas:[registration(1),registration(2),standalone()]}),null);
+ assert.equal(parseMailDeliveryResult({...fixture(),linhas:[registration(2),registration(2),standalone()]}),null);
+ assert.equal(parseMailDeliveryResult({...fixture(),coverage:{...fixture().coverage,signalsComplete:false}}),null);
+});
+test("contact consent/unavailability never becomes false empty availability or disclosed phone",()=>{
+ for(const contactState of ["absent","withheld_no_opt_in","unavailable"]as const){const v=fixture();v.linhas[0].evidence.contactState=contactState;assert.ok(parseMailDeliveryResult(v));v.linhas[0].whatsapp="+5569999990000";assert.equal(parseMailDeliveryResult(v),null);}
+ const v=fixture();v.linhas[0].whatsapp="+5569999990000";v.linhas[0].evidence.contactState="available";assert.ok(parseMailDeliveryResult(v));
+});
+test("provider selection restricts the visible signals and explicit response scope",()=>{
+ const v=fixture();v.providerScope="qa";v.linhas=v.linhas.slice(0,2).map(r=>({...r,evidence:{...r.evidence,providerScope:"qa"}}));v.total=2;v.summary={...v.summary,total:2,unregisteredAddresses:0,byState:{...v.summary.byState,sem_registro:0}};v.coverage={...v.coverage,matched:2,totalRowsReturned:2};assert.ok(parseMailDeliveryResult(v,{filters:{provedor:"qa"}}));assert.equal(parseMailDeliveryResult(v,{filters:{provedor:"other"}}),null);v.linhas[0].evidence.lastSignal!.provider="other";assert.equal(parseMailDeliveryResult(v,{filters:{provedor:"qa"}}),null);
+});
+test("one private GET always requests JSON explicitly and rejects raw invalid query before transport",async()=>{
+ let calls=0;const fake=(async(path:unknown,init:RequestInit)=>{calls++;assert.equal(path,"/api/admin/emails/entregas?formato=json");assert.equal(init.method,"GET");assert.equal(init.credentials,"same-origin");assert.equal(init.redirect,"error");assert.equal(init.cache,"no-store");assert.equal(init.referrerPolicy,"no-referrer");return new Response(JSON.stringify(fixture()),{headers:{"content-type":"application/json"}});})as typeof fetch;
+ assert.ok((await readMailDelivery(new URLSearchParams(),undefined,fake)).ok);for(const query of ["pagina=1&pagina=2","formato=csv","limite=201","busca=%20QA%20","extra=x"])assert.deepEqual(await readMailDelivery(new URLSearchParams(query),undefined,fake),{ok:false,kind:"invalid"});assert.equal(calls,1);
+});
+test("abort/deadline and known403 never wait indefinitely or retry",async()=>{
+ let calls=0;const hang=(()=>{calls++;return new Promise(()=>{});})as typeof fetch;const controller=new AbortController(),request=readMailDelivery(new URLSearchParams(),controller.signal,hang,100);controller.abort();assert.deepEqual(await request,{ok:false,kind:"aborted"});assert.deepEqual(await readMailDelivery(new URLSearchParams(),undefined,hang,5),{ok:false,kind:"uncertain"});assert.equal(calls,2);
+ const stream=new ReadableStream({cancel:()=>new Promise(()=>{})});assert.deepEqual(await readMailDelivery(new URLSearchParams(),undefined,(async()=>new Response(stream,{status:403}))as typeof fetch,5),{ok:false,kind:"http",status:403});
+});
+test("MIME/UTF8/body budget and malformedJSON fail closed",async()=>{
+ for(const response of [new Response('{}',{headers:{"content-type":"text/html"}}),new Response(new Uint8Array([255]),{headers:{"content-type":"application/json"}}),new Response('{',{headers:{"content-type":"application/json"}}),new Response('{}',{headers:{"content-type":"application/json","content-length":"33554433"}})])assert.equal((await readDeliveryJson(new URLSearchParams(),undefined,(async()=>response)as typeof fetch)).ok,false);
+});
