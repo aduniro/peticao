@@ -170,6 +170,10 @@ def install_transaction(plan: dict,backup: Path,control=service,owners: bool=Tru
                 result['rollbackError']='foreign_change_preserved:'+name;safe_restart=False;continue
             if meta['absent']:target.unlink()
             else:atomic_copy(backup/name,target,meta['mode'],meta['uid'] if owners else None,meta['gid'] if owners else None)
+        if safe_restart:
+            try:preimages(plan)
+            except Exception as changed_error:
+                safe_restart=False;result['rollbackError']='preimages_changed_do_not_restart:'+str(changed_error)
         result['codeRollback']=safe_restart
     finally:
         if stopped and safe_restart:

@@ -2,7 +2,7 @@
 
 Repositório privado separado em /mnt/apps/peticao-final/_ops/r0000-cluster-runtime-profile-20261110/installation-dry-run-480. O perfil infra aprovado para revisão continua4ddb04347bbcb63b6be61185f1ff488f10a59b9d, intocado. Este roteiro não é deploy de aplicação e não altera seu pacote/pins.
 
-Executado somente localmente: saída de simulação, compilação Python e13 testes fictícios de filesystem/SQLite/rollback. Sem SSH, sudo, systemctl real, instalação, container, banco real ou runtime real.
+Executado somente localmente: saída de simulação, compilação Python e14 testes fictícios de filesystem/SQLite/rollback. Sem SSH, sudo, systemctl real, instalação, container, banco real ou runtime real.
 
 ## Governança existente
 
@@ -34,6 +34,6 @@ O script NÃO submete trabalho. O pai, após revisar a instalação/staging, pod
 
 ## Provas e limites
 
-13fixtures aprovadas: dry-run sem mutação, pin do plano, preimage alterada/helper inesperado, backupSQLite comWALativo consistente, ordemhelper/core, rollback preserva evento de fila posterior ao backup, job que aparece depois do stop não é perdido, alteração estrangeira mantém serviço parado, usuário semroot não aplica, symlink recusado, staging idêntico reutilizadoRO, transferência parcial preservada semoverlay. py_compile passou.
+14fixtures aprovadas: dry-run sem mutação, pin do plano, preimage alterada/helper inesperado, backupSQLite comWALativo consistente, ordemhelper/core, rollback preserva evento de fila posterior ao backup, job que aparece depois do stop não é perdido, alteração estrangeira durante rollback ou imediatamente apósstop mantém serviço parado, usuário semroot não aplica, symlink recusado, staging idêntico reutilizadoRO, transferência parcial preservada semoverlay. py_compile passou.
 
 Recibos em evidence/ ficam fora do Git. Os testes injetam caminhos temporários e controladores de serviço fictícios; não comprovam instalação remota. A chamada futura real ainda depende de decisão do pai e da lease existente. Nenhum passo configura assinatura, dispara email, publicaTailnet ou faz deploy na produçãoSP.

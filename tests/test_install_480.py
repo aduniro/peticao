@@ -81,6 +81,13 @@ class InstallTests(unittest.TestCase):
    if dst==Path(self.plan['installPaths']['launch.py']):dst.write_text('foreign change');raise OSError('fixture foreign change')
   with mock.patch.object(m,'atomic_copy',side_effect=failing):result=m.install_transaction(self.plan,self.backup,self.control.append,False)
   self.assertEqual(result['exit'],1);self.assertFalse(result['codeRollback']);self.assertIn('foreign_change_preserved',result['rollbackError']);self.assertEqual(self.control,['stop']);self.assertEqual(Path(self.plan['installPaths']['launch.py']).read_text(),'foreign change')
+ def test_preimage_changed_after_stop_does_not_restart_unknown_code(self):
+  path=Path(self.plan['installPaths']['coordinator.py'])
+  def control(action):
+   self.control.append(action)
+   if action=='stop':path.write_text('foreign code after stop')
+  result=m.install_transaction(self.plan,self.backup,control,False)
+  self.assertEqual(result['exit'],1);self.assertFalse(result['codeRollback']);self.assertEqual(self.control,['stop']);self.assertEqual(path.read_text(),'foreign code after stop')
  def test_non_root_apply_rejected_without_service_operation(self):
   with mock.patch.object(sys,'argv',['install_480.py','--apply']),mock.patch.object(m.os,'geteuid',return_value=1000),mock.patch.object(m,'service')as service:
    with self.assertRaises(PermissionError):m.main()
