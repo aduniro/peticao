@@ -75,5 +75,13 @@
     "singleRegularFile": true,
     "jobIntent": "cad43f085e374bc5876e4cf246ca8572",
     "phase": "archive-and-harness-staged-verified-not-executed"
+  },
+  "workerParent": {
+    "path": "/srv/admin-v2-worker",
+    "uid": 999,
+    "gid": 989,
+    "mode": 1528,
+    "modeOctal": "2770",
+    "sgid": true
   }
 }

@@ -148,6 +148,16 @@ class InstallTests(unittest.TestCase):
   with mock.patch.object(m,'private_dir'):
    with self.assertRaises(OSError):m.verify_stage(self.plan,dest)
   self.assertTrue(marker.is_symlink());self.assertTrue(target.exists())
+ def test_worker_parent_full_sgid2770_accepted_and_0770_drift_refused(self):
+  expected=m.load_plan()['workerParent'];self.assertEqual(expected['mode'],0o2770);self.assertEqual(expected['mode'],1528)
+  path=Path('/fixture-worker-parent');values=list(self.root.stat());values[4]=999;values[5]=989
+  with mock.patch.object(Path,'resolve',return_value=path),mock.patch.object(Path,'is_symlink',return_value=False):
+   for mode,valid in [(0o2770,True),(0o770,False)]:
+    values[0]=0o040000|mode
+    with mock.patch.object(Path,'stat',return_value=os.stat_result(values)):
+     if valid:m.verify_worker_parent(path,expected)
+     else:
+      with self.assertRaisesRegex(ValueError,'worker_parent_changed_do_not_chmod'):m.verify_worker_parent(path,expected)
  def test_preimage_symlink_is_refused(self):
   path=Path(self.plan['installPaths']['coordinator.py']);path.unlink();path.symlink_to('/etc/hostname')
   with self.assertRaises(OSError):m.preimages(self.plan)

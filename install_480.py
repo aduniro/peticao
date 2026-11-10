@@ -15,7 +15,7 @@ import stat
 import subprocess
 import tempfile
 
-PLAN_SHA = "dc650898457a32c3d48eb5dbb3336ff329a977c73288e997f993d4a7a352c3c9"
+PLAN_SHA = "8b1ce587bd97be187d538ebebc62cd36f08bda5573adda047708d724ec341640"
 SERVICE = "admin-v2-coordinator.service"
 TERMINAL = {"completed", "failed", "interrupted", "canceled"}
 
@@ -84,6 +84,11 @@ def service(action: str) -> None:
     if action not in {'stop','start'}:raise ValueError('service_action_not_allowed')
     subprocess.run(['/usr/bin/systemctl',action,SERVICE],check=True,timeout=30)
 
+def verify_worker_parent(path: Path,expected: dict) -> None:
+    if path.resolve()!=path or path.is_symlink():raise ValueError('worker_parent_changed_do_not_chmod')
+    worker=path.stat()
+    if (worker.st_uid,worker.st_gid,stat.S_IMODE(worker.st_mode))!=(expected['uid'],expected['gid'],expected['mode']):raise ValueError('worker_parent_changed_do_not_chmod')
+
 def check_host(plan: dict,allow_inactive: bool=False) -> str:
     boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
     a=json.loads(Path(plan['authority']).read_text())
@@ -96,8 +101,7 @@ def check_host(plan: dict,allow_inactive: bool=False) -> str:
     facts=subprocess.check_output(['/usr/bin/systemctl','show',SERVICE,'--property=User,Group,ActiveState'],text=True,timeout=10)
     facts=dict(line.split('=',1) for line in facts.splitlines() if '='in line)
     if facts.get('User')!='vigia-coord' or facts.get('Group')!='admin-v2-exec' or facts.get('ActiveState') not in (['active','inactive'] if allow_inactive else ['active']):raise ValueError('existing_coordinator_service_changed')
-    worker=Path('/srv/admin-v2-worker').stat()
-    if (worker.st_uid,worker.st_gid,stat.S_IMODE(worker.st_mode))!=(999,989,0o770):raise ValueError('worker_parent_changed_do_not_chmod')
+    verify_worker_parent(Path(plan['workerParent']['path']),plan['workerParent'])
     if digest(Path('/usr/bin/node'))!=plan['nodeSha256']:raise ValueError('remote_node_changed')
     queue_idle(Path(plan['queue']));return boot
 
