@@ -14,6 +14,15 @@ DECLARE
   detail text;
   digest text;
 BEGIN
+  -- An old sender has no v2 envelope/intent support. Never downgrade an unresolved package.
+  IF to_regclass('batch_packages') IS NOT NULL THEN
+    IF to_regclass('batches') IS NULL THEN RAISE EXCEPTION 'unsupported_batch_rollback_schema'; END IF;
+    LOCK TABLE batches IN SHARE ROW EXCLUSIVE MODE;
+    LOCK TABLE batch_packages IN SHARE MODE;
+    IF EXISTS(SELECT 1 FROM batch_packages p JOIN batches b ON b.id=p.batch_id WHERE b.status NOT IN ('sent','cancelled')) THEN
+      RAISE EXCEPTION 'batch_package_rollback_blocked';
+    END IF;
+  END IF;
   IF NOT has_messages AND NOT has_link THEN RETURN; END IF;
   IF NOT has_messages OR NOT has_link OR to_regclass('mail_message_attempts') IS NULL THEN RAISE EXCEPTION 'unsupported_mail_rollback_schema'; END IF;
   -- The managed app is stopped. Serialize all updates and the existing audit chain.

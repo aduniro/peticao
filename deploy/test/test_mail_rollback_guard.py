@@ -1,13 +1,13 @@
 import os,pathlib,subprocess,tempfile,unittest
 SOURCE=pathlib.Path(__file__).resolve().parents[1]
 class RollbackGuardTests(unittest.TestCase):
- def scenario(self,active='inactive',pid='0',kill_mode='control-group',unsafe=False,symlink=False):
+ def scenario(self,active='inactive',pid='0',kill_mode='control-group',unsafe=False,symlink=False,a1_active=False,a1_installed=True):
   temp=tempfile.TemporaryDirectory();self.addCleanup(temp.cleanup);root=pathlib.Path(temp.name);bin=root/'bin';bin.mkdir();sql=root/'mail.sql';sql.write_text('SELECT 1;');sql.chmod(0o644);marker=root/'psql-called'
   for name,body in {
    'id':'#!/bin/sh\necho 0\n',
    'runuser':'#!/bin/sh\nshift; shift; shift; exec "$@"\n',
    'systemctl':f'''#!/bin/sh
-case "$*" in *LoadState*) echo loaded;; *KillMode*) echo {kill_mode};; *ActiveState*) echo {active};; *MainPID*) echo {pid};; *) exit 1;; esac
+case "$*" in *peticao-a1-dispatch.service*LoadState*|*peticao-a1-worker.service*LoadState*) echo {"loaded" if a1_installed else "not-found"};; *peticao-a1-dispatch.service*ActiveState*) echo {"active" if a1_active else active};; *peticao-a1-worker.service*ActiveState*) echo {"active" if a1_active else active};; *LoadState*) echo loaded;; *KillMode*) echo {kill_mode};; *ActiveState*) echo {active};; *MainPID*) echo {pid};; *) exit 1;; esac
 ''',
    'psql':f'''#!/bin/sh
 [ -z "${{PGPASSWORD:-}}" ] && [ -z "${{PGHOST:-}}" ] || exit 77
@@ -35,6 +35,10 @@ exit 0
  def test_live_pid_or_unsupported_kill_mode_is_rejected(self):
   for opts in [dict(pid='123'),dict(kill_mode='process')]:
    result,marker=self.scenario(**opts);self.assertNotEqual(result.returncode,0);self.assertFalse(marker.exists())
+ def test_missing_optional_a1_services_preserve_legacy_rollback(self):
+  result,marker=self.scenario(a1_installed=False);self.assertEqual(result.returncode,0,result.stderr.decode());self.assertTrue(marker.exists())
+ def test_active_a1_consumer_is_rejected_before_sql(self):
+  result,marker=self.scenario(a1_active=True);self.assertNotEqual(result.returncode,0);self.assertFalse(marker.exists())
  def test_writable_or_symlinked_sql_is_rejected(self):
   for opts in [dict(unsafe=True),dict(symlink=True)]:
    result,marker=self.scenario(**opts);self.assertNotEqual(result.returncode,0);self.assertFalse(marker.exists())

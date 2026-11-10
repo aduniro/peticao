@@ -8,7 +8,9 @@ NODE = Path("/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x6
 NODE_SHA = "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac"
 parser = argparse.ArgumentParser()
 parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http", "base-validation", "base-store", "packages", "package-delivery", "base-http", "base-client"])
+parser.add_argument("--test-name-pattern", help="Run only matching test names; result is directed QA, not a full suite")
 args = parser.parse_args()
+if args.test_name_pattern and (args.mode in ["types", "build", "schema"] or len(args.test_name_pattern)>256): parser.error("Pattern is limited to test modes and 256 characters")
 assert ROOT == Path("/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109")
 assert hashlib.sha256(NODE.read_bytes()).hexdigest() == NODE_SHA
 for name in [".env", ".env.local", ".env.production", ".env.production.local"]:
@@ -53,7 +55,7 @@ elif args.mode == "schema": command=[str(NODE),"scripts/with-db.mjs",str(NODE),"
 else:
     if args.mode == "full": files=sorted(str(p.relative_to(SITE)) for folder in [SITE/"src/lib",SITE/"src/i18n"] for p in folder.glob("*.test.ts"))
     elif args.mode == "base-http": files=["src/lib/petition-base-route.test.ts"]
-    elif args.mode == "package-delivery": files=["src/lib/"+f+".test.ts" for f in ["batch-package-delivery","batches","batch-rejection-recovery","batch-document-reservation","batch-mutation-atomicity"]]
+    elif args.mode == "package-delivery": files=["src/lib/"+f+".test.ts" for f in ["batch-package-delivery","batches","batch-rejection-recovery","batch-document-reservation","batch-mutation-atomicity", "mail-rollback"]]
     elif args.mode == "packages": files=["src/lib/"+f+".test.ts" for f in ["batch-package-contract","batch-package-store","petition-base-selection","petition-base-store","petition-base-validation-store"]]
     elif args.mode == "base-store": files=["src/lib/petition-base-store.test.ts", "src/lib/petition-base-validation-store.test.ts", "src/lib/petition-base-selection.test.ts"]
     elif args.mode == "a1-http": files=["src/lib/"+f+".test.ts" for f in ["a1-job-view", "a1-request", "a1-reconciliation", "batch-a1-jobs", "batch-a1-route"]]
@@ -61,6 +63,9 @@ else:
     elif args.mode == "regression": files=["src/lib/"+f+".test.ts" for f in ["admin-ip", "ai-context", "batch-document-history", "contact-campus-references", "contact-triage", "geo-coexistencia", "geo-retry", "painel-ui"]]
     else: files=["src/lib/"+f+".test.ts" for f in ["a1-worker-contract","a1-worker-client","a1-validation","a1-job-view","batch-a1-executor","batch-a1-jobs","batch-a1-route","batch-document-history","admin-settings-domains","institution-registry","institutional","server-email","sign-flow"]]
     command=[str(NODE),"scripts/with-db.mjs",str(NODE),"--import","tsx","--test","--test-concurrency=1",*files]
+if args.test_name_pattern:
+    at=command.index("--test-concurrency=1")+1
+    command[at:at]=["--test-name-pattern",args.test_name_pattern]
 print("Check:",args.mode,"; evidence:",scratch,flush=True)
 with (scratch/"validation.log").open("w") as log: code=subprocess.run(command,cwd=SITE,env=env,stdout=log,stderr=subprocess.STDOUT).returncode
 same = before == manifest()

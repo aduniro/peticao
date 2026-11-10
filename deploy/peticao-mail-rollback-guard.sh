@@ -13,9 +13,9 @@ else
   flock -x 9
 fi
 [ "$(systemctl show peticao -p KillMode --value)" = control-group ] || { echo 'Rollback guard: unsupported app process isolation.' >&2; exit 1; }
-for unit in peticao peticao-agendador.service; do
+for unit in peticao peticao-agendador.service peticao-a1-dispatch.service peticao-a1-worker.service; do
   load="$(systemctl show "$unit" -p LoadState --value)"
-  if [ "$unit" = peticao-agendador.service ] && [ "$load" = not-found ]; then continue; fi
+  if [ "$unit" != peticao ] && [ "$load" = not-found ]; then continue; fi
   [ "$load" = loaded ] || exit 1
   state="$(systemctl show "$unit" -p ActiveState --value)"
   case "$state" in inactive|failed) ;; *) echo 'Rollback guard: a managed consumer is still active.' >&2; exit 1;; esac

@@ -36,3 +36,8 @@ Ferramentas promovidas do ensaio privado anterior:
 O novo ensaio deverá perder a resposta do formulário nativo de código e repetir exatamente seu UUID/corpo, além de testar os controles gov.br reais, diário de validação, dois anexos exatos e seis larguras. Só declarar aprovado após consultar o novo resultado. Sintaxe Python/JavaScript já conferida, sem afirmar execução do navegador antes dela acontecer.
 
 Pendências de aceite: executar esse ensaio compilado, avaliar índices/custo das buscas de intenção na auditoria sob volume real, guarda de rollback para emissores antigos e pacotes v2, homologações criptográficas e regressão cumulativa do candidato final. Não houve deploy, merge ou conclusão integral do painel.
+
+
+## Ensaio compilado integrado de 10/11
+
+Commit 99f9fa7: execução aprovada, fontes e commit estáveis, seis larguras e resposta nativa de código perdida/repetida com o mesmo UUID. Um e-mail de código e um pacote dev com dois hashes exatos. Diário de validação registrado. Artefatos: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/govbr-compiled-1794288447853281707/execution.json` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/govbr-compiled-1794288447853281707/browser-result.json`. Revisadas imagens 320 e1280; sem overflow da página, mas tabela estreita do modal móvel ainda pede ajuste de legibilidade. Não chamar essa QA de homologação real.

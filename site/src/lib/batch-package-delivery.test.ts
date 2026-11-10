@@ -192,3 +192,17 @@ test('real code HTTP handler deduplicates one form identity and refuses missing/
   assert.equal(c.mails().length,1);assert.equal((await c.db.query('SELECT 1 FROM batch_sends')).rowCount,0);
  }finally{await c.close();}
 });
+
+
+test('rollback fence refuses unresolved v2 packages before touching queues or audit',async()=>{
+ const c=await deliveryFixture('t_packet_rollback_fence');try{
+  const sql=readFileSync(join(__dirname,'../../../deploy/mail-rollback.sql'),'utf8').replace(/^BEGIN;/m,'').replace(/^COMMIT;/m,'');
+  const snapshot=async()=>(await c.db.query("SELECT 'batch' kind,row_to_json(b)::text value FROM batches b UNION ALL SELECT 'package',row_to_json(p)::text FROM batch_packages p UNION ALL SELECT 'queue',row_to_json(q)::text FROM mail_outbox q UNION ALL SELECT 'audit',row_to_json(a)::text FROM audit_log a ORDER BY kind,value")).rows;
+  for(const status of ['prepared','failed','preparing']){
+   await c.db.query('UPDATE batches SET status=$1 WHERE id=$2',[status,c.batchId]);const before=await snapshot();
+   await assert.rejects(c.db.tx(client=>client.query(sql)),/batch_package_rollback_blocked/);assert.deepEqual(await snapshot(),before);
+  }
+  for(const status of ['sent','cancelled']){await c.db.query('UPDATE batches SET status=$1 WHERE id=$2',[status,c.batchId]);const before=await snapshot();await c.db.tx(client=>client.query(sql));assert.deepEqual(await snapshot(),before);}
+  assert.equal(c.mails().length,0);await c.noSend();
+ }finally{await c.close();}
+});
