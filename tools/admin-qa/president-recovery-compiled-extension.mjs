@@ -5,7 +5,8 @@ import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 const sha = value => createHash("sha256").update(value).digest("hex");
-const uuid = value => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
+const uuid = value => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
+assert.ok(uuid(randomUUID()) && !uuid("not-a-uuid"), "QA UUID guard must accept generated intent IDs before database setup");
 const button = (scope, name) => scope.getByRole("button", { name, exact: true });
 const adminRegion = page => page.getByRole("region", { name: "Assinatura própria do app", exact: true });
 const ownRegion = page => page.getByRole("region", { name: "Documento da confirmação própria", exact: true });
