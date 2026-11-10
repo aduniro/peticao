@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
 import { presidentAdminRequest } from "@/lib/president-admin-client";
+import PresidenteDocumentoProprio from "@/components/admin/PresidenteDocumentoProprio";
 
 export type PresidentProfileView = { revision: number; responsibleId: number; name: string; email: string; enabled: boolean; hasCpf: boolean; hasWhatsapp: boolean; fingerprint: string };
 export type PresidentIssueDocumentView = { batchId: number; seq: number; kind: "partial" | "final"; documentVersion: string; originalSha256: string; signedSha256: string | null; listHash: string; signatureKind: string | null };
@@ -154,6 +155,9 @@ export default function PresidenteAcesso({ actorScope, accounts, initialProfile,
       <button type="button" className="adm-btn" onClick={() => { setCredentials(null); setShowCredentials(false); }}>Ocultar e descartar credenciais desta tela</button>
     </div>}
     {recovery && <div className="box"><p>Estado: {recovery.state} · {recovery.isCurrent && !recovery.credentialsExpired ? "vínculo atual" : "acesso indisponível"}</p><p>Válido até {new Date(recovery.expiresAt).toLocaleString("pt-BR")}.</p>{recovery.receiptId && <p style={{ overflowWrap: "anywhere" }}>Comprovante: <code>{recovery.receiptId}</code></p>}
+      {document && nativeEligible && !profileUncertain && recovery.state === "consumed" && recovery.isCurrent && recovery.receiptId && (
+        <PresidenteDocumentoProprio actorScope={actorScope} batchId={document.batchId} receiptId={recovery.receiptId} expectedDocumentVersion={recovery.documentVersion} />
+      )}
       <label className="adm-check"><input type="checkbox" checked={confirmReplace} disabled={pending} onChange={event => setConfirmReplace(event.target.checked)} />Quero preparar outro acesso. A emissão seguinte revogará o acesso anterior ainda não confirmado.</label>
       <button type="button" className="adm-btn" disabled={!confirmReplace || pending} onClick={() => { setCredentials(null); setShowCredentials(false); setRecovery(null); setNotFound(false); setConfirmReplace(false); installIntent(null); setMessage("Pronto para uma nova solicitação explícita."); }}>{COPY.replace}</button>
     </div>}

@@ -1,6 +1,7 @@
 /** Draft: execute only through the frozen-build isolated runner after integration. */
 import assert from 'node:assert/strict';
 import { runPresidentAdminCompiledExtension } from "./president-admin-compiled-extension.mjs";
+import { runPresidentOwnPdfExtension } from "./president-own-pdf-compiled-extension.mjs";
 import {spawn,execFileSync} from 'node:child_process';
 import {createServer} from 'node:http';
 import {once} from 'node:events';
@@ -36,7 +37,8 @@ try{
  bridge=createServer((req,res)=>{assert.equal(req.method,'GET');if(req.url!=='/cpf/'+cpf){res.writeHead(404);res.end('{}');return;}counts.identity++;res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({success:true,data:{CPF:cpf,NOME:name,NASC:'01/01/2000',NOME_MAE:'Pessoa Mae Ficticia QA'}}));});
  await new Promise(r=>bridge.listen(socket,r));
  const profile=await S.readPresidentProfile(actor);assert.ok(profile.ok&&profile.profile);
- const issued=await S.issueConfiguredPresidentChallenge(id,actor,undefined,{requestId:randomUUID(),expectedDocumentVersion:documentVersion,expectedProfileFingerprint:profile.profile.fingerprint});assert.ok(issued.ok);
+ const issuedRequestId=randomUUID();
+ const issued=await S.issueConfiguredPresidentChallenge(id,actor,undefined,{requestId:issuedRequestId,expectedDocumentVersion:documentVersion,expectedProfileFingerprint:profile.profile.fingerprint});assert.ok(issued.ok);
  const env={...process.env,NODE_ENV:'production',PREVIEW_MODE:'0',PRESIDENT_OWN_ENABLED:'1',CPF_VIA_BRIDGE:'1',EGRESS_SOCKET:socket,APP_URL:base};
  serverLog=createWriteStream(output+'/next-server.log');server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','-H','127.0.0.1','-p','3056'],{cwd:site,env});server.stdout.pipe(serverLog);server.stderr.pipe(serverLog);serverExit=once(server,'exit');
  let ready=false;for(let n=0;n<160;n++){if(server.exitCode!==null)throw Error('Next stopped');try{ready=(await fetch(native+'/presidente',{signal:AbortSignal.timeout(2000)})).status===200;}catch{}if(ready)break;await delay(250);}assert.ok(ready,'Compiled external route is enabled');
@@ -77,8 +79,9 @@ try{
  const sourceAfter=(await db.query('SELECT pdf,pdf_sha256,signed_pdf,approved_at,sent_at FROM batches WHERE id=$1',[id])).rows[0];assert.equal(sha(sourceAfter.pdf),sha(bytes));assert.equal(sourceAfter.signed_pdf,null);assert.equal(sourceAfter.approved_at,null);assert.equal(sourceAfter.sent_at,null);
  assert.equal((await db.query('SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox UNION ALL SELECT 1 FROM batch_sends')).rowCount,0);assert.equal((await db.query('SELECT 1 FROM signatures')).rowCount,0);assert.ok((await db.verifyAuditChain()).ok);assert.equal(pageErrors.length,0);
  await button('Encerrar acesso').click();assert.equal(await page.locator('#president-token').inputValue(),'');
+ const ownPdf = await runPresidentOwnPdfExtension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id,issued:{...issued,requestId:issuedRequestId},documentVersion,profileFingerprint:profile.profile.fingerprint,receiptId:row.receipt_id});
  const admin = await runPresidentAdminCompiledExtension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id});
  assert.equal(blockedExternal.length,0);
- const result={applicationConfirmationCalls:1,physicalConfirmationCalls,admin,ok:true,commit,compiledNextUi:true,bridge:'fictitious Unix socket using supported CPF_VIA_BRIDGE provider',nodeEnv:'production',previewMode:'0',mockGuardPreserved:true,counts,shots,pageErrors,blockedExternal,corruptedHashRefused:true,downloadExactBytes:true,reloadClearsCredentials:true,confirmationResponseLostRecoveredByState:true,noAutomaticConfirmationRetry:true,noRealMessages:true,noBatchMutation:true,noCredentialsInStorageOrUrl:true,realIdentityOrCryptoHomologation:false};
+ const result={applicationConfirmationCalls:1,physicalConfirmationCalls,ownPdf,admin,ok:true,commit,compiledNextUi:true,bridge:'fictitious Unix socket using supported CPF_VIA_BRIDGE provider',nodeEnv:'production',previewMode:'0',mockGuardPreserved:true,counts,shots,pageErrors,blockedExternal,corruptedHashRefused:true,downloadExactBytes:true,reloadClearsCredentials:true,confirmationResponseLostRecoveredByState:true,noAutomaticConfirmationRetry:true,noRealMessages:true,noBatchMutation:true,noCredentialsInStorageOrUrl:true,realIdentityOrCryptoHomologation:false};
  writeFileSync(output+'/browser-result.json',JSON.stringify(result,null,2),{mode:0o600});console.log(JSON.stringify({ok:true,commit,counts,shots:shots.length}));
 }finally{await stop();}

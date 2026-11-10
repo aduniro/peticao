@@ -1,3 +1,4 @@
+import { PRESIDENT_OWN_DOCUMENT_SCHEMA_SQL } from "./president-own-document-schema";
 import { BATCH_PACKAGE_SCHEMA_SQL } from "./batch-package-schema";
 import { PETITION_BASE_SCHEMA_SQL } from "./petition-base-schema";
 import ifesDomains from "./ifes-domains.json";
@@ -724,6 +725,7 @@ function init(): Promise<void> {
       .then(() => getPool().query(DOCUMENT_REFERENCE_SCHEMA_SQL))
       .then(() => getPool().query(PETITION_BASE_SCHEMA_SQL))
       .then(() => getPool().query(BATCH_PACKAGE_SCHEMA_SQL))
+      .then(() => getPool().query(PRESIDENT_OWN_DOCUMENT_SCHEMA_SQL))
       .then(() => seedEbserhUnits())
       .then(() => seedIfesDomains())
       .then(() => seedInstitutionRegistry())
