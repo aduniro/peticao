@@ -2,7 +2,7 @@
 
 Repositório privado separado em /mnt/apps/peticao-final/_ops/r0000-cluster-runtime-profile-20261110/installation-dry-run-480. O perfil infra aprovado para revisão continua4ddb04347bbcb63b6be61185f1ff488f10a59b9d, intocado. Este roteiro não é deploy de aplicação e não altera seu pacote/pins.
 
-Executado somente localmente: saída de simulação, compilação Python e19 testes fictícios de filesystem/SQLite/rollback. Sem SSH, sudo, systemctl real, instalação, container, banco real ou runtime real.
+Executado somente localmente: saída de simulação, compilação Python e21 testes fictícios de filesystem/SQLite/rollback. Sem SSH, sudo, systemctl real, instalação, container, banco real ou runtime real.
 
 ## Governança existente
 
@@ -34,7 +34,7 @@ O script NÃO submete trabalho. O pai, após revisar a instalação/staging, pod
 
 ## Provas e limites
 
-19fixtures aprovadas: dry-run sem mutação, pin do plano, preimage alterada/helper inesperado, backupSQLite comWALativo consistente, ordemhelper/core, rollback preserva evento de fila posterior ao backup, job que aparece depois do stop não é perdido, alteração estrangeira durante rollback ou imediatamente apósstop mantém serviço parado, usuário semroot não aplica, symlink recusado, staging idêntico reutilizadoRO, transferência parcial preservada semoverlay. py_compile passou.
+21fixtures aprovadas: dry-run sem mutação, pin do plano, preimage alterada/helper inesperado, backupSQLite comWALativo consistente, ordemhelper/core, rollback preserva evento de fila posterior ao backup, job que aparece depois do stop não é perdido, alteração estrangeira durante rollback ou imediatamente apósstop mantém serviço parado, usuário semroot não aplica, symlink recusado, staging idêntico reutilizadoRO, transferência parcial preservada semoverlay. py_compile passou.
 
 Recibos em evidence/ ficam fora do Git. Os testes injetam caminhos temporários e controladores de serviço fictícios; não comprovam instalação remota. A chamada futura real ainda depende de decisão do pai e da lease existente. Nenhum passo configura assinatura, dispara email, publicaTailnet ou faz deploy na produçãoSP.
 
@@ -43,3 +43,6 @@ Revisão posterior à inspeção do staging real: aceitar opcionalmente o recibo
 
 
 Revisão SGID: a cópia anterior transferida para operator-480 falhou no --check antes de preimages/inputs por exigir0770. A observação correta é UID999/GID989, stat.S_IMODE2770 (decimal1528), SGIDtrue, semlink. Esta revisão exige exatamente2770 e rejeita0770, semchmod. Não sobrescrever operator-480: o coordenador usará um diretório novo operator-480-v3 para os arquivos revisados. Nenhum apply foi executado por este agente.
+
+
+Revisão backupRoot recém-criado: mkdir0700 sob pai SGID2770 herda2700. O helper cria o backupRoot e, SOMENTE se foi criado nesta chamada, abre descritorDIRECTORY/NOFOLLOW, confere o proprietário e aplica fchmod0700 nesse novo diretório. Não altera o pai nem corrige diretório preexistente. Um backupRoot preexistente2700 permanece intacto e falha no guard. Duas fixtures adicionais comprovam novochild700/parent2770inalterado e preexisting2700preservado. Esta revisão não altera staging/source4ddb nem diretórios da VPS.

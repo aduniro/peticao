@@ -158,6 +158,15 @@ class InstallTests(unittest.TestCase):
      if valid:m.verify_worker_parent(path,expected)
      else:
       with self.assertRaisesRegex(ValueError,'worker_parent_changed_do_not_chmod'):m.verify_worker_parent(path,expected)
+ def test_new_backup_root_under_sgid_parent_is700_without_parent_change(self):
+  parent=self.root/'sgid-parent';parent.mkdir();parent.chmod(0o2770);before=parent.stat().st_mode;child=parent/'backups'
+  self.assertTrue(m.create_private_backup_root(child,os.getuid()));self.assertEqual(child.stat().st_mode&0o7777,0o700);self.assertEqual(parent.stat().st_mode,before)
+ def test_preexisting_backup_root2700_is_preserved_and_refused(self):
+  parent=self.root/'sgid-parent';parent.mkdir();parent.chmod(0o2770);child=parent/'existing';child.mkdir();child.chmod(0o2700);before=parent.stat().st_mode
+  with mock.patch.object(m.os,'fchmod')as chmod:
+   with self.assertRaisesRegex(ValueError,'directory_not_private_owner'):m.create_private_backup_root(child,os.getuid())
+   chmod.assert_not_called()
+  self.assertEqual(child.stat().st_mode&0o7777,0o2700);self.assertEqual(parent.stat().st_mode,before)
  def test_preimage_symlink_is_refused(self):
   path=Path(self.plan['installPaths']['coordinator.py']);path.unlink();path.symlink_to('/etc/hostname')
   with self.assertRaises(OSError):m.preimages(self.plan)

@@ -40,6 +40,20 @@ def private_dir(path: Path, uid: int) -> None:
     s=path.stat()
     if s.st_uid!=uid or stat.S_IMODE(s.st_mode)!=0o700:raise ValueError("directory_not_private_owner")
 
+def create_private_backup_root(path: Path,uid: int) -> bool:
+    created=False
+    try:path.mkdir(mode=0o700);created=True
+    except FileExistsError:pass
+    if created:
+        # A parent with SGID2770 makes mkdir(0700) yield2700. Normalize ONLY this new directory.
+        fd=os.open(path,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        try:
+            if os.fstat(fd).st_uid!=uid:raise ValueError('new_backup_root_owner_changed')
+            os.fchmod(fd,0o700)
+        finally:os.close(fd)
+    private_dir(path,uid)
+    return created
+
 def preimages(plan: dict) -> dict:
     result={}
     for name,path in plan['installPaths'].items():
@@ -217,7 +231,7 @@ def main() -> int:
     # Parent has already verified ACK+lease in the existing ledger. This does not create or grant authorization.
     stage_runtime(plan,args.lease_id)
     check_host(plan)
-    base=Path(plan['backupRoot']);base.mkdir(mode=0o700,exist_ok=True);private_dir(base,0)
+    base=Path(plan['backupRoot']);create_private_backup_root(base,0)
     result=install_transaction(plan,base/args.lease_id)
     if result['exit']==0:
         try:
