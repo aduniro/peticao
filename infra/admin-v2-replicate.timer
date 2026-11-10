@@ -1,0 +1,9 @@
+[Unit]
+Description=Private admin-v2 checkpoint every minute
+[Timer]
+OnBootSec=60
+OnUnitInactiveSec=60
+AccuracySec=5
+Persistent=yes
+[Install]
+WantedBy=timers.target

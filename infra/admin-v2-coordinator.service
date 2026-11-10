@@ -1,0 +1,21 @@
+[Unit]
+Description=Admin-v2 durable queue coordinator
+After=network-online.target tailscaled.service
+Wants=network-online.target
+[Service]
+Type=simple
+User=vigia-coord
+Group=admin-v2-exec
+WorkingDirectory=/opt/admin-v2-cluster
+EnvironmentFile=/etc/admin-v2-cluster.env
+ExecStart=/usr/bin/python3 /opt/admin-v2-cluster/coordinator.py daemon
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=20
+UMask=0007
+CPUQuota=50%
+MemoryMax=512M
+TasksMax=64
+PrivateTmp=yes
+[Install]
+WantedBy=multi-user.target

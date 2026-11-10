@@ -1,0 +1,5 @@
+evidencias/
+state/
+__pycache__/
+*.pyc
+infra/known_hosts

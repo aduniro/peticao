@@ -1,0 +1,6 @@
+[Unit]
+Description=Observe private admin-v2 execution in Vigia
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /mnt/apps/peticao-final/peticao/.cache/admin-v2-executores-20261110/infra/vigia_bridge.py
+TimeoutStartSec=220
