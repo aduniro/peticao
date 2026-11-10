@@ -46,3 +46,9 @@ Cinco testes adicionais de geração real dos quatro modos e rollback de configu
 144 testes documentais aprovados sem falhas/pulos; tipos e SQL28 aprovados com fontes estáveis. Evidência em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/documents-1794269817051177648/result.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794270174879127244/result.json` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/schema-1794269790201802947/result.json`. Build anterior a64e2aa usa o mesmo código runtime; 023d8b3 acrescenta somente testes e evidências.
 
 Incremento seguinte: staging privado da petição-base, sem validação/promoção/envio, com provas e pendências em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/docs/ETAPA-06-PETICAO-BASE-STAGING-20261109.md`.
+
+## Perfil técnico A1 no commit 2539740
+
+155 testes documentais aprovados, tipos e build com fontes estáveis. Python integrado: 7 testes de política, 11 de worker com criptografia sintética e 6 de broker aprovados. Evidências: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/documents-1794271384977566933/result.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794271385152891929/result.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/build-1794271902819809651/result.json` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/a1-policy-research/integrated-python-result.json`.
+
+Ensaio técnico completo API/SQL/Unix/worker/adapter/finish passou com credencial sintética, replay, política divergente e nenhum envio. O adapter verifica criptografia real, mas simula os campos de confiança/revogação ICP; isso não é homologação real. Detalhes em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/docs/ETAPA-06-A1-E2E-SINTETICO-20261109.md`.
