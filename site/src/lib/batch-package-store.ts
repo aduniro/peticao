@@ -50,7 +50,8 @@ export async function getBatchPackageReview(batchId:number,actor:SessaoAdmin|nul
   const version=documentVersion(batch),latest=(await c.query<Row>('SELECT * FROM batch_packages WHERE batch_id=$1 AND document_version=$2 ORDER BY ordinal DESC LIMIT 1',[batchId,version])).rows[0];
   const selected=(await c.query<{id:string;artifact_sha256:string}>('SELECT id,artifact_sha256 FROM petition_base_selections ORDER BY revision DESC LIMIT 1')).rows[0];
   const configured=enabled();
-  return{ok:true as const,batchId,documentVersion:version,configured,canPrepare:configured&&!!selected&&!batch.approved_at&&['prepared','failed'].includes(batch.status)&&!!batch.pdf&&!!batch.signed_pdf&&batch.signature_kind==='icp-brasil',selectionId:selected?.id??null,selectionSha256:selected?.artifact_sha256??null,latestPackage:latest?project(latest):null};
+  const approvalReady=configured&&!!latest&&latest.selection_id===selected?.id&&!batch.approved_at&&['prepared','failed'].includes(batch.status)&&batch.signature_kind==='icp-brasil'&&await batchPackageDispatchReadyTx(c,latest.id)&&(await readFrozenBatchPackageTx(c,latest.id)).ok;
+  return{ok:true as const,batchId,documentVersion:version,configured,approvalReady,canPrepare:configured&&!!selected&&!batch.approved_at&&['prepared','failed'].includes(batch.status)&&!!batch.pdf&&!!batch.signed_pdf&&batch.signature_kind==='icp-brasil',selectionId:selected?.id??null,selectionSha256:selected?.artifact_sha256??null,latestPackage:latest?project(latest):null};
  });
 }
 /** Explicit package preparation only. A new version requires CAS and no approval/delivery already started. */

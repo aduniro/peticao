@@ -53,10 +53,11 @@ export default async function Lotes({ searchParams }: { searchParams: { msg?: st
                 {(b.status === "prepared" || b.status === "failed") && (
                   <>
                     <form method="post" action={`/api/admin/lotes/${b.id}/assinado`} encType="multipart/form-data" style={{ display: "inline" }}><input type="file" name="file" accept="application/pdf" required /> <button>Enviar PDF assinado</button></form>
+                    {process.env.BATCH_PACKAGE_ENABLED === "1" ? <a className="v2-btn v2-btn-sec" href={`/admin/presidente?lote=${b.id}`}>Presidente da ADUNIR</a> : <>
                     <form method="post" action={`/api/admin/lotes/${b.id}/codigo`} style={{ display: "inline" }}><button>Enviar código ao aprovador</button></form>
                     <form method="post" action={`/api/admin/lotes/${b.id}/aprovar`} style={{ display: "inline" }}>
                       <input name="code" inputMode="numeric" maxLength={6} placeholder="código" size={7} required /> <button>Aprovar e enviar</button>
-                    </form>
+                    </form></>}
                     <form method="post" action={`/api/admin/lotes/${b.id}/cancelar`} style={{ display: "inline" }}><button>Cancelar</button></form>
                   </>
                 )}

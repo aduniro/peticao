@@ -5,7 +5,7 @@ export type BaseSelectionView = { selectionId: string; revision: number; validat
 export type BasePacketView = { packageId: string; batchId: number; ordinal: number; documentVersion: string; selectionId: string; baseArtifactId: string; baseSha256: string; batchSha256: string; packageDigest: string };
 export type BaseSelectionIntent = { requestId: string; expectedRevision: number; validationId: string; reviewedSha256: string; expectedTextVersion: string };
 export type BasePacketIntent = { requestId: string; batchId: number; expectedDocumentVersion: string; expectedSelectionId: string; expectedPackageRevision: number };
-export type BaseReviewView = { batchId: number; documentVersion: string; configured: boolean; canPrepare: boolean; selectionId: string | null; latestPackage: BasePacketView | null };
+export type BaseReviewView = { batchId: number; documentVersion: string; configured: boolean; canPrepare: boolean; approvalReady: boolean; selectionId: string | null; latestPackage: BasePacketView | null };
 export type BaseIntentView = { kind: "upload"; artifact: BaseArtifactView } | { kind: "selection"; selection: BaseSelectionView; isCurrent: boolean } | { kind: "package"; package: BasePacketView; isCurrent: boolean };
 const uuid = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(v);
 const hash = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
@@ -68,9 +68,9 @@ export function readBaseSelection(fetcher: typeof fetch = fetch, timeoutMs = 15_
 export function readBasePacketReview(batchId: number, fetcher: typeof fetch = fetch, timeoutMs = 15_000): Promise<BaseHttpResult<BaseReviewView>> {
   if (!id(batchId)) return Promise.resolve(invalid);
   return exchange(`/api/admin/lotes/${batchId}/pacote`, "GET", undefined, raw => {
-    if (raw.batchId !== batchId || !hash(raw.documentVersion) || typeof raw.configured !== "boolean" || typeof raw.canPrepare !== "boolean" || raw.selectionId !== null && !uuid(raw.selectionId)) return null;
+    if (raw.batchId !== batchId || !hash(raw.documentVersion) || typeof raw.configured !== "boolean" || typeof raw.canPrepare !== "boolean" || typeof raw.approvalReady !== "boolean" || raw.selectionId !== null && !uuid(raw.selectionId)) return null;
     const latestPackage = raw.latestPackage === null ? null : packet(raw.latestPackage, batchId); if (raw.latestPackage !== null && !latestPackage) return null;
-    return { batchId, documentVersion: raw.documentVersion, configured: raw.configured, canPrepare: raw.canPrepare, selectionId: raw.selectionId as string | null, latestPackage };
+    return { batchId, documentVersion: raw.documentVersion, configured: raw.configured, canPrepare: raw.canPrepare, approvalReady: raw.approvalReady, selectionId: raw.selectionId as string | null, latestPackage };
   }, fetcher, timeoutMs);
 }
 export function uploadBase(requestId: string, file: File, expectedSha256: string, fetcher: typeof fetch = fetch, timeoutMs = 45_000): Promise<BaseHttpResult<BaseArtifactView>> {

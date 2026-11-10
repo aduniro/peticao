@@ -47,7 +47,7 @@ if args.mode == "types": command=[str(NODE),"node_modules/typescript/bin/tsc","-
 elif args.mode == "build":
     env.update(NODE_ENV="production", PREVIEW_MODE="1", DATABASE_URL="postgres://peticao:peticao@127.0.0.1:1/peticao", ADMIN_PASSWORD="QA-FINAL-NOT-REAL", CPF_CACHE_ENCRYPTION_KEY="QA-ADMIN-FINAL-CACHE-KEY-FICTITIOUS", MAIL_PROVIDERS="dev")
     command=[str(NODE),"node_modules/next/dist/bin/next","build"]
-elif args.mode == "base-client": command=[str(NODE),"--import","tsx","--test","--test-concurrency=1","src/lib/petition-base-request.test.ts"]
+elif args.mode == "base-client": command=[str(NODE),"--import","tsx","--test","--test-concurrency=1","src/lib/petition-base-request.test.ts","src/lib/petition-base-view.test.ts","src/lib/petition-base-control.test.ts"]
 elif args.mode == "base-validation": command=[str(NODE),"--import","tsx","--test","--test-concurrency=1","src/lib/petition-base-validation-http.test.ts","src/lib/petition-base-validation.test.ts"]
 elif args.mode == "schema": command=[str(NODE),"scripts/with-db.mjs",str(NODE),"--import","tsx","../deploy/test/admin-schema-upgrade.mjs"]
 else:

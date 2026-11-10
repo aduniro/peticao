@@ -14,7 +14,7 @@ test("base client reads only strict bounded metadata and never treats upload as 
   for (const value of [{ ok: true, artifacts: [artifact, artifact], hasMore: false }, { ok: true, artifacts: [{ ...artifact, usableInPackage: true }], hasMore: false }, { ok: true, artifacts: Array.from({ length: 21 }, () => artifact), hasMore: true }]) assert.equal((await readBaseInventory(mock(value))).kind, "uncertain");
   assert.equal((await readBaseSelection(mock({ ok: true, selection, currentBindingMatches: true }))).kind, "success");
   assert.equal((await readBaseSelection(mock({ ok: true, selection: null }))).kind, "success");
-  assert.equal((await readBasePacketReview(7, mock({ ok: true, batchId: 7, documentVersion: version, configured: true, canPrepare: true, selectionId, latestPackage: packet }))).kind, "success");
+  assert.equal((await readBasePacketReview(7, mock({ ok: true, batchId: 7, documentVersion: version, configured: true, canPrepare: true, approvalReady: false, selectionId, latestPackage: packet }))).kind, "success");
   assert.equal((await readBasePacketReview(7, mock({ ok: true, batchId: 8 }))).kind, "uncertain");
 });
 test("explicit selection and package POSTs bind the expected revision and immutable identities", async () => {

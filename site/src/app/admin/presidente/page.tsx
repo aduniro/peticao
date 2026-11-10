@@ -1,3 +1,6 @@
+import PeticaoBaseGovBr from "@/components/admin/PeticaoBaseGovBr";
+import { TEXT_VERSION } from "@/content/peticao";
+import { getBatchPackageReview } from "@/lib/batch-package-store";
 import A1Assinatura from "@/components/admin/A1Assinatura";
 import HistoricoDocumento from "@/components/admin/HistoricoDocumento";
 import { sessaoAdmin } from "@/lib/admin";
@@ -33,7 +36,9 @@ export default async function Presidente({ searchParams }: { searchParams: { lot
   if (inspected && !inspected.ok && inspected.error === "forbidden") redirect("/admin?erro=nivel");
   const proof = inspected?.ok ? inspected : null;
   const retrySafe = proof && proof.recipients.some(r => r.state !== "accepted") && proof.recipients.every(r => ["accepted", "rejected", "prepared", "unavailable"].includes(r.state));
-  const canApprove = !!(document && actions?.approval && (!document.approved_at || retrySafe));
+  let packageReady = process.env.BATCH_PACKAGE_ENABLED !== "1";
+  if (document && !document.approved_at && !packageReady) { try { const reviewed = await getBatchPackageReview(document.id, actor); packageReady = reviewed.ok && reviewed.approvalReady; } catch { /* Never open approval without package evidence. */ } }
+  const canApprove = !!(document && actions?.approval && (!document.approved_at ? packageReady : retrySafe));
   return <main className="v2-pagina"><div className="v2-secao">
     <h1>Presidente da ADUNIR</h1>
     <p>Documento final e lotes para revisão, assinatura e aprovação.</p>
@@ -67,6 +72,7 @@ export default async function Presidente({ searchParams }: { searchParams: { lot
       {actions.upload && <form method="post" action={`/api/admin/lotes/${document.id}/assinado?portal=presidente`} encType="multipart/form-data"><input type="file" name="file" accept="application/pdf" aria-label="PDF assinado" required /><button>Enviar PDF assinado</button></form>}
       <p><button type="button" disabled>Assinatura própria do app</button> <button type="button" disabled>gov.br</button></p>
       <p className="small">Esses dois métodos não estão ativos neste candidato. A aprovação por código não altera a validação da assinatura.</p>
+      {process.env.GOVBR_BASE_ENABLED === "1" && <div style={{ margin: "12px 0" }}><PeticaoBaseGovBr key={`${actor.userId}:${document.id}`} actorId={actor.userId} batchId={document.id} petitionTextVersion={TEXT_VERSION} /></div>}
       <h3>3. Aprovação e resultado</h3>
       <p>O código é solicitado para o e-mail do aprovador configurado. A autoria das ações é registrada pela conta conectada.</p>
       {document.status !== "sent" && document.status !== "cancelled" && <>

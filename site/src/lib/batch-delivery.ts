@@ -30,8 +30,12 @@ export async function resolveBatchDeliveryTx(client: PoolClient, row: ApprovalRo
 
 /** New approval must bind the latest frozen package, not infer a base from current settings. */
 export async function pendingBatchDeliveryTx(client: PoolClient, row: ApprovalRow) {
-  const latest = (await client.query<{ id: string; package_digest: string }>("SELECT id,package_digest FROM batch_packages WHERE batch_id=$1 AND document_version=$2 ORDER BY ordinal DESC LIMIT 1", [row.id, documentVersion(row)])).rows[0];
-  if (latest) return resolveBatchDeliveryTx(client, row, { deliveryVersion: 2, packageId: latest.id, packageDigest: latest.package_digest });
+  const latest = (await client.query<{ id: string; package_digest: string; selection_id: string }>("SELECT id,package_digest,selection_id FROM batch_packages WHERE batch_id=$1 AND document_version=$2 ORDER BY ordinal DESC LIMIT 1", [row.id, documentVersion(row)])).rows[0];
+  if (latest) {
+    const selected = (await client.query<{ id: string }>("SELECT id FROM petition_base_selections ORDER BY revision DESC LIMIT 1")).rows[0];
+    if (selected?.id !== latest.selection_id) return null;
+    return resolveBatchDeliveryTx(client, row, { deliveryVersion: 2, packageId: latest.id, packageDigest: latest.package_digest });
+  }
   // Once packet mode is enabled, an absent packet must not silently dispatch only one attachment.
   if (process.env.BATCH_PACKAGE_ENABLED === "1" || (await client.query("SELECT 1 FROM batch_packages WHERE batch_id=$1 LIMIT 1", [row.id])).rowCount) return null;
   return resolveBatchDeliveryTx(client, row);

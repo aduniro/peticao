@@ -116,3 +116,14 @@ test('uncertain v2 transport never opens a new approval or automatic retry',asyn
   assert.deepEqual(await reconcileBatchAcceptance(c.batchId,read.proof,c.actor),{ok:true,updated:0,complete:false});
  }finally{await c.close();}
 });
+
+test('changing the selected base invalidates an unconsumed code until the package is reviewed again',async()=>{
+ const c=await deliveryFixture('t_packet_selected_base_changed');try{
+  const code=await c.code(),validated=await persistPetitionBaseValidation(await c.proof(),c.actor);assert.ok(validated.ok);
+  const captured=await capturePetitionBaseValidationInput(c.artifactId,c.actor);assert.ok(captured.ok);
+  const selected=await selectPetitionBase({requestId:randomUUID(),expectedRevision:1,validationId:validated.validationId,reviewedSha256:hash(bytes),expectedTextVersion:captured.binding.petitionTextVersion},c.actor);assert.ok(selected.ok);
+  assert.equal((await approveAndSend(c.batchId,code,c.actor.email,c.actor)).ok,false);assert.equal(c.mails().filter(m=>m.attachments?.length).length,0);assert.equal((await c.db.query('SELECT approved_at FROM batches')).rows[0].approved_at,null);
+  const next=await prepareBatchPackage({...c.input(),expectedSelectionId:selected.selection.selectionId,expectedPackageRevision:1},c.actor);assert.ok(next.ok);
+  const fresh=await c.code();assert.equal((await approveAndSend(c.batchId,fresh,c.actor.email,c.actor)).ok,true);
+ }finally{await c.close();}
+});
