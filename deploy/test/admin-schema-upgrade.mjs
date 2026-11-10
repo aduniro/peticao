@@ -25,7 +25,9 @@ const referenceSource=readFileSync(resolve(here,"../../site/src/lib/document-ref
 const referenceMatch=/export const DOCUMENT_REFERENCE_SCHEMA_SQL = (`[\s\S]*?`);/.exec(referenceSource);assert.ok(referenceMatch);assert.ok(!referenceMatch[1].includes("${"));
 const baseSource=readFileSync(resolve(here,"../../site/src/lib/petition-base-schema.ts"),"utf8");
 const baseMatch=/export const PETITION_BASE_SCHEMA_SQL = (`[\s\S]*?`);/.exec(baseSource);assert.ok(baseMatch);assert.ok(!baseMatch[1].includes("${"));
-const newSql=Function("return "+match[1])()+"\n"+Function("return "+a1Match[1])()+"\n"+Function("return "+referenceMatch[1])()+"\n"+Function("return "+baseMatch[1])();
+const packageSource=readFileSync(resolve(here,"../../site/src/lib/batch-package-schema.ts"),"utf8");
+const packageMatch=/export const BATCH_PACKAGE_SCHEMA_SQL = (`[\s\S]*?`);/.exec(packageSource);assert.ok(packageMatch);assert.ok(!packageMatch[1].includes("${"));
+const newSql=Function("return "+match[1])()+"\n"+Function("return "+a1Match[1])()+"\n"+Function("return "+referenceMatch[1])()+"\n"+Function("return "+baseMatch[1])()+"\n"+Function("return "+packageMatch[1])();
 const schemaName="admin_upgrade_rehearsal_"+process.pid;
 let db;
 const pool=new Pool({connectionString:process.env.DATABASE_URL,max:1});const c=await pool.connect();
@@ -107,7 +109,7 @@ try{
  const archivedSenders=(await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows;
  await c.query(newSql);await c.query(newSql);await c.query(oldSql);
  assert.deepEqual((await c.query("SELECT row_to_json(s)::text raw FROM whatsapp_senders s ORDER BY id")).rows,archivedSenders,"DDL replay and old bootstrap must not reset archive decisions or revisions");
-assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_domain_catalog_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_a1_jobs","batch_a1_validations","batch_document_versions","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_reply_group_items","contact_reply_groups","contact_triage_jobs","document_reference_bindings","document_references","ebserh_units","institution_registry","mail_inbound_messages","mail_message_attempts","mail_message_events","mail_messages","petition_base_artifacts","petition_base_selections","petition_base_upload_requests","petition_base_validations","president_challenges"]);
+assert.deepEqual((await tables()).filter(name=>!existing.includes(name)),["admin_acoes","admin_ai_requests","admin_domain_catalog_requests","admin_referral_mutations","admin_referral_requests","admin_reset","admin_sessions","admin_stepup","admin_users","batch_a1_jobs","batch_a1_validations","batch_document_versions","batch_packages","batch_preparations","contact_campus_reviews","contact_drafts","contact_replies","contact_reply_group_items","contact_reply_groups","contact_triage_jobs","document_reference_bindings","document_references","ebserh_units","institution_registry","mail_inbound_messages","mail_message_attempts","mail_message_events","mail_messages","petition_base_artifacts","petition_base_selections","petition_base_upload_requests","petition_base_validations","president_challenges"]);
  await c.query(`INSERT INTO mail_inbound_messages(id,account,external_key,content_hash,sender_hash,recipients_hash,thread_root,correlation,content_cipher,received_at,created_at,expires_at)
    VALUES('00000000-0000-4000-8000-000000000050','qa-inbox','QA-EXTERNAL-HASH','QA-CONTENT-HASH','QA-SENDER-HASH','QA-RECIPIENTS-HASH','00000000-0000-4000-8000-000000000050','new','QA-NOT-A-REAL-CIPHER','2026-11-08T10:00:00.123456Z','2026-11-08T10:00:00.234567Z','2026-12-08T10:00:00.345678Z')`);
  const inboundState=async()=>(await c.query("SELECT row_to_json(m)::text raw FROM mail_inbound_messages m ORDER BY id")).rows;

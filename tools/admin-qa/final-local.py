@@ -7,7 +7,7 @@ SITE = ROOT / "site"
 NODE = Path("/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node")
 NODE_SHA = "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac"
 parser = argparse.ArgumentParser()
-parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http", "base-validation", "base-store"])
+parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http", "base-validation", "base-store", "packages"])
 args = parser.parse_args()
 assert ROOT == Path("/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109")
 assert hashlib.sha256(NODE.read_bytes()).hexdigest() == NODE_SHA
@@ -41,7 +41,7 @@ env = {k: os.environ[k] for k in ["HOME", "LANG", "LC_ALL"] if k in os.environ}
 env.update(PATH=str(NODE.parent)+":/usr/bin:/bin", NODE_ENV="test", MAIL_PROVIDER="dev", SIGNER="none", NEXT_TELEMETRY_DISABLED="1",
     GEO_DIR=str(geo), DEV_DB_PORT="54375", DEV_DB_DIR=str(scratch/"postgres"), TMPDIR=str(short), DATABASE_URL="postgres://peticao:peticao@127.0.0.1:54375/peticao",
     HASH_PEPPER="QA-ADMIN-FINAL-NEVER-PRODUCTION-0123456789", SECRETS_DIR=str(scratch/"empty"), PETICAO_CONFIG_DIR=str(scratch/"empty"), CREDENTIALS_DIRECTORY=str(scratch/"empty"))
-if args.mode in ["targeted", "full", "schema", "regression", "documents", "a1-http", "base-store"]:
+if args.mode in ["targeted", "full", "schema", "regression", "documents", "a1-http", "base-store", "packages"]:
     with socket.socket() as s: assert s.connect_ex(("127.0.0.1",54375)) != 0, "QA port occupied"
 if args.mode == "types": command=[str(NODE),"node_modules/typescript/bin/tsc","--noEmit","--incremental","false"]
 elif args.mode == "build":
@@ -51,6 +51,7 @@ elif args.mode == "base-validation": command=[str(NODE),"--import","tsx","--test
 elif args.mode == "schema": command=[str(NODE),"scripts/with-db.mjs",str(NODE),"--import","tsx","../deploy/test/admin-schema-upgrade.mjs"]
 else:
     if args.mode == "full": files=sorted(str(p.relative_to(SITE)) for folder in [SITE/"src/lib",SITE/"src/i18n"] for p in folder.glob("*.test.ts"))
+    elif args.mode == "packages": files=["src/lib/"+f+".test.ts" for f in ["batch-package-contract","batch-package-store","petition-base-selection","petition-base-store","petition-base-validation-store"]]
     elif args.mode == "base-store": files=["src/lib/petition-base-store.test.ts", "src/lib/petition-base-validation-store.test.ts", "src/lib/petition-base-selection.test.ts"]
     elif args.mode == "a1-http": files=["src/lib/"+f+".test.ts" for f in ["a1-job-view", "a1-request", "a1-reconciliation", "batch-a1-jobs", "batch-a1-route"]]
     elif args.mode == "documents": files=sorted(str(p.relative_to(SITE)) for p in (SITE/"src/lib").glob("*.test.ts") if p.name.startswith(("batch", "document", "president", "a1-", "petition-base")))

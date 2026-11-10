@@ -79,7 +79,8 @@ test("audit failure rolls back selection; immutable DDL preserves the successful
   const input=await intent(c);await c.db.query("CREATE FUNCTION qa_select_fault() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='petition_base_selected' THEN RAISE EXCEPTION 'QA select audit'; END IF; RETURN NEW; END $$; CREATE TRIGGER qa_select_fault BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION qa_select_fault()");
   await assert.rejects(selectPetitionBase(input,c.actor),/QA select audit/);assert.equal((await c.db.query('SELECT 1 FROM petition_base_selections')).rowCount,0);await c.db.query('DROP TRIGGER qa_select_fault ON audit_log');
   assert.ok((await selectPetitionBase(input,c.actor)).ok);const rows=async()=>(await c.db.query('SELECT row_to_json(s)::text value FROM petition_base_selections s ORDER BY revision')).rows;const before=await rows();await c.db.query(PETITION_BASE_SCHEMA_SQL);await c.db.query(PETITION_BASE_SCHEMA_SQL);assert.deepEqual(await rows(),before);
-  for(const sql of ['UPDATE petition_base_selections SET revision=revision','DELETE FROM petition_base_selections','TRUNCATE petition_base_selections','TRUNCATE petition_base_validations CASCADE'])await assert.rejects(c.db.query(sql),/immutable/);
+  await assert.rejects(c.db.query('TRUNCATE petition_base_selections'),/immutable|referenced in a foreign key constraint/);
+  for(const sql of ['UPDATE petition_base_selections SET revision=revision','DELETE FROM petition_base_selections','TRUNCATE petition_base_selections CASCADE','TRUNCATE petition_base_validations CASCADE'])await assert.rejects(c.db.query(sql),/immutable/);
   assert.deepEqual(await rows(),before);await c.noSend();
  }finally{await c.close();}
 });

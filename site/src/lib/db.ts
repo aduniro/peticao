@@ -1,3 +1,4 @@
+import { BATCH_PACKAGE_SCHEMA_SQL } from "./batch-package-schema";
 import { PETITION_BASE_SCHEMA_SQL } from "./petition-base-schema";
 import ifesDomains from "./ifes-domains.json";
 import { DOCUMENT_REFERENCE_SCHEMA_SQL } from "./document-reference-schema";
@@ -693,6 +694,7 @@ function init(): Promise<void> {
       .then(() => getPool().query(BATCH_A1_SCHEMA_SQL))
       .then(() => getPool().query(DOCUMENT_REFERENCE_SCHEMA_SQL))
       .then(() => getPool().query(PETITION_BASE_SCHEMA_SQL))
+      .then(() => getPool().query(BATCH_PACKAGE_SCHEMA_SQL))
       .then(() => seedEbserhUnits())
       .then(() => seedIfesDomains())
       .then(() => seedInstitutionRegistry())
