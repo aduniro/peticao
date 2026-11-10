@@ -48,3 +48,16 @@ Proveniência da integração: backend em `/mnt/apps/peticao-final/peticao/.cach
 Ressalva para a próxima coorte: o resumo legado de engajamento ainda usa melhor sinal, enquanto esta consulta usa último sinal cronológico. Não exigir igualdade das distribuições nem apresentar o módulo inteiro como saneado enquanto entregas/histórico e resumo não forem reconciliados.
 
 Fixture dirigida pós-correção adversa aprovada: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/emails-pendentes-adverse-ui-next-draft/browser-fixture/result.json`. UI real com transporte fictício: razão16.384bytes ASCII/emoji íntegra, clique posterior preservado, filtro adverso mostra histórico, seis larguras sem clipping/overflow; somente GET, servidor3876 encerrado. Essa fixture não substitui Next/PG integrado.
+
+## Aceite da consulta — 100% LOCAL
+
+Ensaio integrado concluído com exit0 em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/pending-email-compiled-1794323690486823079/execution.json`. QAHEAD e840ea9123da76247414b962ecc781f9efd77dc1; build3ea0815e06eed307cef0e643180f347544ee6389. Igualdade integral do mapa de fontes da aplicação, commit estável durante a execução e202arquivos runtime iguais ao build. Portas54389/3075/3076 fechadas após execução.
+
+-601pendentes percorridos integralmente e601facetas; totais globais/filtrados separados, filtros literais, opções e registros além do antigo limite500 acessíveis.
+-CSV34colunas/601linhas/162692bytes, SHA256 `865145cae00527e20c5701a196d5fdf009033c2878f98a5ad51ce0181adc635c`; download browser e API iguais. Exportações filtradas uma/zero linhas, escaping/newline/fórmula preservados.
+-SSR/GET reais com Edição; Leitura403, anônimo/expirado401, origem inadequada403; controles de recuperação/prévia protegidos continuam negados sem Total/stepup.
+-Resposta de página perdida seguida de retry manual, resposta antiga ignorada,401limpa linhas/CSV, clique posterior mantém evento adverso histórico legível em seis larguras, motivo16384unidades UTF16/emoji íntegro. Screenshot inspecionado: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/pending-email-compiled-1794323690486823079/pending-history-emoji-320.png`.
+-604registros integrais preservados, zero backfill seq/verify_code; mensagens/filas/eventos/referrers/lotes/checks sem alteração, cadeia de auditoria válida. Auditoria registra arquivo preparado, não entrega.
+-GuardQA instalado no Next; zero tentativas DNS/fetch/TCP externo, zero mutações.25GETs browser e20capturas; erros de console restritos à falha de leitura deliberada e401.
+
+Este aceite cobre somente **Consultar confirmações pendentes**. Não conclui entregas/histórico, correções/reenvios, sincronização nem o módulo inteiro. Próxima coorte: entregas/aberturas/cliques, seus filtros/totais/exportação e reconciliação do resumo legado. Nenhuma publicação, merge ou VPS.
