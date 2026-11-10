@@ -93,11 +93,11 @@ test("campanha: instituição pelo e-mail, origem, gerações, mesmo aparelho e 
   assert.equal(by.Eva.origin, "direto"); // código inexistente → sem origem
   const s = disp.summarize(rows);
   assert.deepEqual([s.total, s.confirmed], [5, 3]);
-  assert.deepEqual(s.byOrigin.pessoal, { total: 2, confirmed: 2 });
+  assert.deepEqual(s.byOrigin.pessoal, { total: 2, confirmed: 2, pending: 0 });
   assert.deepEqual(s.byGeneration.map((g) => [g.generation, g.total]), [[0, 3], [1, 1], [2, 1]]);
   assert.deepEqual([s.spreaders[0].name, s.spreaders[0].reach, s.spreaders[1].name, s.spreaders[1].reach], ["Ana Maria Souza", 2, "Bruno Lima", 1]); // alcance inclui convidados dos convidados
   assert.deepEqual([s.sameDevice, s.notSameDevice], [1, 1]);
-  assert.ok(s.deepShare > 0.33 && s.deepShare < 0.34); // 1 de 3 confirmadas está na geração 2
+  assert.ok(s.deepShare !== null && s.deepShare > 0.33 && s.deepShare < 0.34); // 1 de 3 confirmadas está na geração 2
 
   // lista pública: só confirmadas, mais recente primeiro, nome mascarado
   const items = await feed.recentSignatures(8);

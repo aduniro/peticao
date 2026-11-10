@@ -8,7 +8,7 @@ SITE = ROOT / "site"
 NODE = Path("/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node")
 NODE_SHA = "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac"
 parser = argparse.ArgumentParser()
-parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http", "base-validation", "base-store", "packages", "package-delivery", "base-http", "base-client", "president-native", "referrals"])
+parser.add_argument("mode", choices=["types", "build", "targeted", "schema", "full", "regression", "documents", "a1-http", "base-validation", "base-store", "packages", "package-delivery", "base-http", "base-client", "president-native", "referrals", "dispersion"])
 parser.add_argument("--test-name-pattern", help="Run only matching test names; result is directed QA, not a full suite")
 args = parser.parse_args()
 if args.test_name_pattern and (args.mode in ["types", "build", "schema"] or len(args.test_name_pattern)>256): parser.error("Pattern is limited to test modes and 256 characters")
@@ -44,10 +44,10 @@ if args.mode == "build":
 runtime_before = runtime_manifest(ROOT, required=args.mode == "build")
 before = manifest()
 env = {k: os.environ[k] for k in ["HOME", "LANG", "LC_ALL"] if k in os.environ}
-env.update(PATH=str(NODE.parent)+":/usr/bin:/bin", NODE_ENV="test", MAIL_PROVIDER="dev", SIGNER="none", NEXT_TELEMETRY_DISABLED="1",
+env.update(PATH=str(NODE.parent)+":/usr/bin:/bin", NODE_ENV="test", MAIL_PROVIDER="dev", MAIL_PROVIDERS="dev", SIGNER="none", NEXT_TELEMETRY_DISABLED="1",
     GEO_DIR=str(geo), DEV_DB_PORT="54375", DEV_DB_DIR=str(scratch/"postgres"), TMPDIR=str(short), DATABASE_URL="postgres://peticao:peticao@127.0.0.1:54375/peticao",
     HASH_PEPPER="QA-ADMIN-FINAL-NEVER-PRODUCTION-0123456789", SECRETS_DIR=str(scratch/"empty"), PETICAO_CONFIG_DIR=str(scratch/"empty"), CREDENTIALS_DIRECTORY=str(scratch/"empty"))
-if args.mode in ["targeted", "full", "schema", "regression", "documents", "a1-http", "base-store", "packages", "package-delivery", "base-http", "president-native", "referrals"]:
+if args.mode in ["targeted", "full", "schema", "regression", "documents", "a1-http", "base-store", "packages", "package-delivery", "base-http", "president-native", "referrals", "dispersion"]:
     with socket.socket() as s: assert s.connect_ex(("127.0.0.1",54375)) != 0, "QA port occupied"
 if args.mode == "types": command=[str(NODE),"node_modules/typescript/bin/tsc","--noEmit","--incremental","false"]
 elif args.mode == "build":
@@ -59,6 +59,7 @@ elif args.mode == "schema": command=[str(NODE),"scripts/with-db.mjs",str(NODE),"
 else:
     if args.mode == "full": files=sorted(str(p.relative_to(SITE)) for folder in [SITE/"src/lib",SITE/"src/i18n"] for p in folder.glob("*.test.ts"))
     elif args.mode == "president-native": files=["src/lib/"+f+".test.ts" for f in ["president-native-contract", "president-portal-store", "president-access", "president-native-pdf", "president-client", "president-admin-client", "private-ui-path", "president-own-document-contract", "president-own-document-store", "president-own-document-client", "president-own-history-client", "president-own-history-store", "a1-expired-contract", "a1-expired-jobs", "a1-recovery-control", "president-pdf-preview", "president-own-a1-contract", "president-own-a1-jobs", "president-own-a1-browser", "a1-ui-context", "a1-request", "a1-reconciliation", "a1-job-view", "batch-a1-jobs", "batch-a1-route", "document-history-view", "petition-base-pagination", "petition-base-pagination-store", "petition-base-request"]]
+    elif args.mode == "dispersion": files=["src/lib/"+f+".test.ts" for f in ["dispersion-graph", "dispersion-admin-contract", "dispersion-csv", "dispersion-admin-client", "dispersion-admin-store", "campaign"]]
     elif args.mode == "referrals": files=["src/lib/"+f+".test.ts" for f in ["referrals", "admin-referrals", "admin-referral-management", "referral-admin-stats-contract", "referral-admin-stats-store", "referral-admin-client"]]
     elif args.mode == "base-http": files=["src/lib/petition-base-route.test.ts"]
     elif args.mode == "package-delivery": files=["src/lib/"+f+".test.ts" for f in ["batch-package-delivery","batches","batch-rejection-recovery","batch-document-reservation","batch-mutation-atomicity", "mail-rollback"]]
