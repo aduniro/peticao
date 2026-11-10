@@ -77,14 +77,16 @@ export function PeticaoBaseGovBrControl({ batchId, actorId, petitionTextVersion,
     const result = await validateBase(item.artifactId, item.sha256);
     busy.current = false; if (!mounted.current) return; setPosting(false); setUncertain(result.kind !== "success"); await refresh(); if (result.kind === "success") onPrepared?.();
   }
+  function newRequestId() { try { return crypto.randomUUID(); } catch { setUncertain(true); return null; } }
   function choose(item: BaseArtifactView) {
-    if (!item.lastValidationId) return;
-    const input = { requestId: crypto.randomUUID(), expectedRevision: selected?.revision ?? 0, validationId: item.lastValidationId, reviewedSha256: item.sha256, expectedTextVersion: petitionTextVersion };
+    if (!item.lastValidationId) return; const requestId = newRequestId(); if (!requestId) return;
+    const input = { requestId, expectedRevision: selected?.revision ?? 0, validationId: item.lastValidationId, reviewedSha256: item.sha256, expectedTextVersion: petitionTextVersion };
     void mutate({ kind: "selection", input }, () => selectBase(input));
   }
   function prepare() {
     if (!review || !selected || !bindingMatches || review.selectionId !== selected.selectionId || !review.canPrepare) return;
-    const input = { requestId: crypto.randomUUID(), batchId, expectedDocumentVersion: review.documentVersion, expectedSelectionId: selected.selectionId, expectedPackageRevision: review.latestPackage?.ordinal ?? 0 };
+    const requestId = newRequestId(); if (!requestId) return;
+    const input = { requestId, batchId, expectedDocumentVersion: review.documentVersion, expectedSelectionId: selected.selectionId, expectedPackageRevision: review.latestPackage?.ordinal ?? 0 };
     void mutate({ kind: "package", input }, () => prepareBasePacket(input));
   }
   function close() { dialog.current?.close(); trigger.current?.focus(); }
@@ -105,7 +107,7 @@ export function PeticaoBaseGovBrControl({ batchId, actorId, petitionTextVersion,
           <td><button type="button" className="adm-btn" disabled={disabled} onClick={() => void validate(item)}>{COPY.validate}</button> <button type="button" className="adm-btn" disabled={disabled || !item.lastValidationId || selected?.artifactId === item.artifactId && bindingMatches} onClick={() => choose(item)}>{COPY.select}</button></td>
         </tr>)}</tbody></table></div>
         <p><button type="button" className="adm-btn" disabled={disabled || !!prepared || !bindingMatches || !selected || !review?.canPrepare || review.selectionId !== selected.selectionId} onClick={prepare}>{COPY.prepare}</button></p>
-        {prepared && <p role="status" style={{ overflowWrap: "anywhere" }}>{COPY.prepared} · <code>{review.latestPackage!.packageDigest}</code></p>}
+        {prepared && <p role="status" style={{ overflowWrap: "anywhere" }}>{COPY.prepared} · <code>{review?.latestPackage?.packageDigest}</code></p>}
       </div>
     </dialog>
   </>;

@@ -6,7 +6,7 @@ const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v ===
 const revision = (v: unknown) => Number.isSafeInteger(v) && Number(v) >= 0 && Number(v) < 2147483647;
 /** Storage contains identities only. It cannot contain files, verifier claims, secrets or an arbitrary URL. */
 export function parseBasePending(raw: unknown, batchId: number): BasePending | null {
-  if (!object(raw)) return null;
+  if (!Number.isSafeInteger(batchId) || batchId < 1 || batchId > 2147483647 || !object(raw)) return null;
   if (raw.kind === "upload") return Object.keys(raw).sort().join(",") === "kind,requestId,sha256" && uuid(raw.requestId) && hash(raw.sha256) ? { kind: "upload", requestId: raw.requestId, sha256: raw.sha256 } : null;
   if (Object.keys(raw).sort().join(",") !== "input,kind" || !object(raw.input)) return null;
   const p = raw.input;
