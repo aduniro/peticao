@@ -1,10 +1,16 @@
 from __future__ import annotations
-import datetime as dt, hashlib, json, os, sqlite3, uuid
+import datetime as dt, hashlib, json, os, sqlite3, time, uuid
 from contextlib import contextmanager
 from pathlib import Path
 
 STATE=Path(os.environ.get('VIGIA_STATE','/mnt/apps/peticao-final/_externos/home/barre/.local/state/peticao-monitor'))
 STATES={'queued','running','waiting','paused','completed','failed','interrupted'}
+BUSY_TIMEOUT_MS=10000
+INITIALIZE_ATTEMPTS=3
+
+def sqlite_busy(error):
+ code=getattr(error,'sqlite_errorcode',None)
+ return isinstance(error,sqlite3.OperationalError) and isinstance(code,int) and (code & 255) in (sqlite3.SQLITE_BUSY,sqlite3.SQLITE_LOCKED)
 def now():return dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
 def uid():return uuid.uuid4().hex
 def encode(value):return json.dumps(value,ensure_ascii=False,sort_keys=True)
@@ -14,40 +20,60 @@ class Store:
  def __init__(self,path=None):
   self.path=Path(path or STATE/'monitor.sqlite');self.path.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
   if self.path.parent==Path.home()/'.local/state/peticao-monitor':self.path.parent.chmod(0o700)
-  with self.connect() as db:
-   db.executescript('''
-   PRAGMA journal_mode=WAL;
-   CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY,title TEXT NOT NULL,state TEXT NOT NULL,cwd TEXT NOT NULL,environment TEXT,scope TEXT,stage TEXT,detail TEXT,eta TEXT,created_at TEXT,updated_at TEXT,thread_id TEXT,import_hash TEXT);
-   CREATE TABLE IF NOT EXISTS steps(task_id TEXT,id TEXT,parent TEXT,title TEXT,state TEXT,weight REAL,detail TEXT,PRIMARY KEY(task_id,id));
-   CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT UNIQUE,at TEXT,task_id TEXT,kind TEXT,title TEXT,data TEXT);
-   CREATE INDEX IF NOT EXISTS events_task ON events(task_id,seq);
-   CREATE TABLE IF NOT EXISTS snapshots(source TEXT PRIMARY KEY,at TEXT,status TEXT,payload TEXT);
-   CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY,task_id TEXT,kind TEXT,body TEXT,state TEXT,at TEXT,updated_at TEXT,pid INTEGER,exit_code INTEGER,control TEXT);
-   CREATE TABLE IF NOT EXISTS threads(task_id TEXT,host TEXT,id TEXT,PRIMARY KEY(task_id,host));
-   CREATE TABLE IF NOT EXISTS output(seq INTEGER PRIMARY KEY AUTOINCREMENT,request_id TEXT,at TEXT,kind TEXT,text TEXT);
-   CREATE TABLE IF NOT EXISTS approvals(id TEXT PRIMARY KEY,request_id TEXT,rpc_id TEXT,method TEXT,payload TEXT,at TEXT,expires REAL,decision TEXT,answered INTEGER DEFAULT 0);
-   CREATE TABLE IF NOT EXISTS mail(id TEXT PRIMARY KEY,at TEXT,subject TEXT,state TEXT,provider_id TEXT,detail TEXT);
-   CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY,at TEXT,subject TEXT,body TEXT,state TEXT,updated_at TEXT);
-   CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY,value TEXT);
-   ''')
-   from .quota import initialize as initialize_quota
-   initialize_quota(db)
-   from .supervision import initialize
-   initialize(db)
-   existing={r[1] for r in db.execute('PRAGMA table_info(steps)')}
-   for column in ['started_at','finished_at','updated_at','eta']:
-    if column not in existing:db.execute(f'ALTER TABLE steps ADD COLUMN {column} TEXT')
-   if 'context' not in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:db.execute('ALTER TABLE requests ADD COLUMN context TEXT')
-   if 'failure_class' not in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:db.execute('ALTER TABLE requests ADD COLUMN failure_class TEXT')
-   for column,definition in [('run_report','TEXT'),('activity_count','INTEGER NOT NULL DEFAULT 0')]:
-    if column not in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:db.execute(f'ALTER TABLE requests ADD COLUMN {column} {definition}')
+  self._initialize_with_retry()
   self.path.chmod(0o600)
   for suffix in ('-wal','-shm'):
    sidecar=Path(str(self.path)+suffix)
    if sidecar.is_file():sidecar.chmod(0o600)
+ def _schema_current(self,db):
+  # A WAL reader need not acquire the global writer lock to open a ready store.
+  tables={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+  expected={'tasks','steps','events','snapshots','requests','threads','output','approvals','mail','outbox','meta','quota_policy','quota_waits','supervision','workflow_steps'}
+  if not expected<=tables:return False
+  if str(db.execute('PRAGMA journal_mode').fetchone()[0]).lower()!='wal':return False
+  if not db.execute("SELECT 1 FROM sqlite_master WHERE type='index' AND name='events_task'").fetchone():return False
+  migrations={'steps':{'started_at','finished_at','updated_at','eta'},'requests':{'context','failure_class','run_report','activity_count'},'supervision':{'saved_context'},'workflow_steps':{'retry_after','transient_retries','require_report','continuations'}}
+  return all(columns<={r[1] for r in db.execute('PRAGMA table_info('+table+')')} for table,columns in migrations.items())
+ def _initialize_with_retry(self):
+  # Only idempotent schema setup is retried, never a job, request or mail effect.
+  for attempt in range(INITIALIZE_ATTEMPTS):
+   try:
+    with self.connect() as db:
+     if not self._schema_current(db):self._initialize_schema(db)
+    return
+   except sqlite3.OperationalError as error:
+    if not sqlite_busy(error) or attempt+1>=INITIALIZE_ATTEMPTS:raise
+    time.sleep(.05*(2**attempt))
+ def _initialize_schema(self,db):
+  db.executescript('''
+  PRAGMA journal_mode=WAL;
+  CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY,title TEXT NOT NULL,state TEXT NOT NULL,cwd TEXT NOT NULL,environment TEXT,scope TEXT,stage TEXT,detail TEXT,eta TEXT,created_at TEXT,updated_at TEXT,thread_id TEXT,import_hash TEXT);
+  CREATE TABLE IF NOT EXISTS steps(task_id TEXT,id TEXT,parent TEXT,title TEXT,state TEXT,weight REAL,detail TEXT,PRIMARY KEY(task_id,id));
+  CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,id TEXT UNIQUE,at TEXT,task_id TEXT,kind TEXT,title TEXT,data TEXT);
+  CREATE INDEX IF NOT EXISTS events_task ON events(task_id,seq);
+  CREATE TABLE IF NOT EXISTS snapshots(source TEXT PRIMARY KEY,at TEXT,status TEXT,payload TEXT);
+  CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY,task_id TEXT,kind TEXT,body TEXT,state TEXT,at TEXT,updated_at TEXT,pid INTEGER,exit_code INTEGER,control TEXT);
+  CREATE TABLE IF NOT EXISTS threads(task_id TEXT,host TEXT,id TEXT,PRIMARY KEY(task_id,host));
+  CREATE TABLE IF NOT EXISTS output(seq INTEGER PRIMARY KEY AUTOINCREMENT,request_id TEXT,at TEXT,kind TEXT,text TEXT);
+  CREATE TABLE IF NOT EXISTS approvals(id TEXT PRIMARY KEY,request_id TEXT,rpc_id TEXT,method TEXT,payload TEXT,at TEXT,expires REAL,decision TEXT,answered INTEGER DEFAULT 0);
+  CREATE TABLE IF NOT EXISTS mail(id TEXT PRIMARY KEY,at TEXT,subject TEXT,state TEXT,provider_id TEXT,detail TEXT);
+  CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY,at TEXT,subject TEXT,body TEXT,state TEXT,updated_at TEXT);
+  CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY,value TEXT);
+  ''')
+  from .quota import initialize as initialize_quota
+  initialize_quota(db)
+  from .supervision import initialize
+  initialize(db)
+  existing={r[1] for r in db.execute('PRAGMA table_info(steps)')}
+  for column in ['started_at','finished_at','updated_at','eta']:
+   if column not in existing:db.execute(f'ALTER TABLE steps ADD COLUMN {column} TEXT')
+  if 'context' not in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:db.execute('ALTER TABLE requests ADD COLUMN context TEXT')
+  if 'failure_class' not in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:db.execute('ALTER TABLE requests ADD COLUMN failure_class TEXT')
+  for column,definition in [('run_report','TEXT'),('activity_count','INTEGER NOT NULL DEFAULT 0')]:
+   if column not in {r[1] for r in db.execute('PRAGMA table_info(requests)')}:db.execute(f'ALTER TABLE requests ADD COLUMN {column} {definition}')
  @contextmanager
  def connect(self):
-  db=sqlite3.connect(self.path,timeout=10);db.row_factory=sqlite3.Row;db.execute('PRAGMA busy_timeout=10000')
+  db=sqlite3.connect(self.path,timeout=BUSY_TIMEOUT_MS/1000);db.row_factory=sqlite3.Row;db.execute('PRAGMA busy_timeout='+str(BUSY_TIMEOUT_MS))
   try:yield db;db.commit()
   except Exception:db.rollback();raise
   finally:db.close()
