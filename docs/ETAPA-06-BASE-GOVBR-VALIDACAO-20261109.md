@@ -23,3 +23,20 @@ Variáveis próprias do backend: GOVBR_BASE_VALIDATION_ENABLED, GOVBR_BASE_VALID
 ## Próxima implementação
 
 Persistir somente a prova interna validada, rechecando sessão/Total/stepup, bytes e perfil após a consulta externa. Seleção da base deverá ser explícita e versionada; pacote de cada lote congelará a versão escolhida, sem substituição automática nos retries. A validação da assinatura não comprova conteúdo da petição: o fluxo deve registrar revisão/autorização da base exata pelo responsável. Backend de persistência/eleição, pacote e interface ainda pendentes. Nenhum deploy ou alteração do banco de produção.
+
+## Evidência persistida, ainda sem eleição ou envio
+
+O incremento seguinte acrescenta `petition_base_validations` ao mesmo bootstrap aditivo (31 tabelas adicionadas ao legado). FK composta vincula UUID e SHA256 do arquivo; índice adicional não altera os artefatos existentes. Triggers impedem UPDATE/DELETE/TRUNCATE e constraints recusam evidência incompleta, assinatura classificada como ICP no fluxo gov.br e CPF bruto no campo de titular.
+
+`/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/site/src/lib/petition-base-validation-store.ts` separa captura em transação curta da consulta externa e da persistência. Ao persistir, exige novamente Total, sessão/stepup atuais, perfil ativo, mesma revisão, texto atual, bytes/hash e capacidade interna válida na configuração vigente. Prova repetida produz replay com a autoria/data originais; auditoria e evidência são atômicas. O resultado continua `usableInPackage:false`: validar não elege a base, aprova ou envia lote. Nenhuma rota de HTTP aceita JSON como prova interna.
+
+Rascunho: sete testes PostgreSQL e tipos aprovados (captura/auth, replay concorrente, mudança de perfil/texto/verificador/arquivo, rollback de auditoria, imutabilidade/replay DDL e constraints). Contrato anterior 05224f1 passou sete grupos pelo runner e tipos com fontes/commit estáveis:
+
+- `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/base-validation-1794275539620316358/result.json`
+- `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794275539615389046/result.json`
+
+Após este commit, repetir esquema aditivo, tipos e testes do store integrado. Não houve modificação do banco da VPS.
+
+```bash
+/usr/bin/python3 /mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/tools/admin-qa/final-local.py base-store
+```
