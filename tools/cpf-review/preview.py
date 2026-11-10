@@ -36,6 +36,15 @@ def snapshot(database):
     db.execute('PRAGMA query_only=ON')
     db.execute('BEGIN')
     names = {r['record_id']: dict(r) for r in db.execute('SELECT * FROM name_decisions')}
+    verifications = {}
+    if db.execute("SELECT 1 FROM sqlite_master WHERE name='trt3_consultas'").fetchone():
+      for proof in db.execute("""SELECT t.* FROM trt3_consultas t JOIN name_decisions n
+        ON n.record_id=t.record_id AND n.version=t.nome_decisao_versao
+        WHERE t.estado='aplicado' AND t.record_revision=n.record_revision
+        AND t.nome_aprovado=n.selected_name ORDER BY t.consultado_em,t.rowid"""):
+        verifications[proof['record_id']] = {key: proof[key] for key in (
+          'consultado_em','data_local','hora_local','fuso_horario','codigo_verificador',
+          'numero_certidao','expedido_em_trt3','auditoria_id')}
     accepted, excluded = [], Counter()
     for raw in db.execute('SELECT * FROM records ORDER BY id'):
       row = dict(raw)
@@ -72,6 +81,7 @@ def snapshot(database):
           'email_domain_kind': record.get('email_domain_kind'),
           'name_decision_version': name['version'], 'record_revision': row['revision'],
           'name_revision': name['name_revision'],
+          'trt3_consulta': verifications.get(row['id']),
         })
     db.execute('COMMIT')
     accepted.sort(key=lambda r: (r.get('confirmed_at') or '', r['id']))
@@ -118,6 +128,17 @@ def _lines(record):
     'Confirmação (UTC): ' + _shown(record.get('confirmed_at')),
     'Código de verificação: ' + _shown(record.get('verify_code')),
     'Conferência do nome pela API no aplicativo: ' + ('Registrada' if record.get('api_name_check') == 'match' else 'Não registrada'),
+  ] + _trt3_lines(record)
+
+
+def _trt3_lines(record):
+  proof=record.get('trt3_consulta')
+  if not proof:
+    return []
+  return [
+    'Consulta do nome no TRT3: '+datetime.fromisoformat(proof['data_local']).strftime('%d/%m/%Y')+' '+str(proof['hora_local']).split('.')[0]+' ('+str(proof['fuso_horario'])+')',
+    'Código de autenticidade TRT3: '+str(proof['codigo_verificador']),
+    'Certidão TRT3: '+_shown(proof.get('numero_certidao'))+' | Expedição: '+_shown(proof.get('expedido_em_trt3')),
   ]
 
 
