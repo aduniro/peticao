@@ -216,5 +216,23 @@ class GlobalTests(unittest.TestCase):
         self.assertEqual(state['state'],'completed');self.assertIn('exact child',state['summary'])
         self.assertEqual(len(self.bridge.submissions),1)
 
+    def test_220_byte_receipt_with_provider_characters_submits_reconciles_and_polls(self):
+        self.ready();receipt='receipt:/'+'x'*209+'=='
+        self.assertEqual(len(receipt),220)
+        original=self.bridge.submit
+        def submit(*args,**kwargs):return original(*args,**kwargs)|{'receipt':receipt}
+        self.bridge.submit=submit
+        result=self.dispatch();child=result['child_id']
+        self.assertEqual(result['state'],'running');self.assertEqual(result['receipt'],receipt)
+        self.bridge.poll_result='mismatch';self.poll()
+        self.assertEqual(self.coordinator.status('fixture-parent')['children'][0]['state'],'uncertain')
+        for invalid in ['x'*257,'bad\nreceipt','bad?receipt']:
+            with self.assertRaises(ValueError):self.coordinator.reconcile('fixture-parent',child,state='running',receipt=invalid,proof='fixture-auth',lease='fixture-lease')
+        self.coordinator.reconcile('fixture-parent',child,state='running',receipt=receipt,proof='fixture-auth',lease='fixture-lease')
+        self.bridge.poll_result='completed';self.poll()
+        state=self.coordinator.status('fixture-parent')['children'][0]
+        self.assertEqual(state['state'],'completed');self.assertEqual(state['receipt'],receipt)
+        self.assertEqual(len(self.bridge.submissions),1)
+
 
 if __name__=='__main__':unittest.main()

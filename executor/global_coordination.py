@@ -45,6 +45,12 @@ def identifier(value):
     return value
 
 
+def validate_receipt(value):
+    if not isinstance(value,str) or not re.fullmatch(r'[A-Za-z0-9_.:/=-]{1,256}',value):
+        raise ValueError('invalid_provider_receipt')
+    return value
+
+
 def text(value, limit):
     if not isinstance(value, str) or not value.strip() or len(value.encode()) > limit:
         raise ValueError('invalid_bounded_text')
@@ -233,7 +239,7 @@ class GlobalCoordinator:
                 result=self.adapter.submit(row['route'],row['id'],row['instruction'],{'parent_id':parent_id,'child_id':row['id'],'target_id':self.registry[row['route']]['target_id'],'effect_key':row['effect_key'],'resources':json.loads(row['resources']),**authority})
                 state=result.get('state') if isinstance(result,dict) else None
                 receipt=result.get('receipt') if isinstance(result,dict) else None
-                if state=='accepted' and isinstance(receipt,str) and re.fullmatch('[A-Za-z0-9_.:/=-]{1,256}',receipt): final='running'
+                if state=='accepted':receipt=validate_receipt(receipt);final='running'
                 elif state=='rejected': final='failed'; receipt=None
                 else: final='uncertain'; receipt=None
             except Exception:
@@ -259,7 +265,9 @@ class GlobalCoordinator:
             except Exception: return {'child_id':row['id'],'state':'running','reason':'observation_unavailable'}
             with self.db() as db:
                 self.permit(lease,parent_id,db)
-                if not isinstance(result,dict) or result.get('receipt')!=row['receipt']:
+                try:correlated=isinstance(result,dict) and validate_receipt(result.get('receipt'))==row['receipt']
+                except ValueError:correlated=False
+                if not correlated:
                     self.change(db,row,'uncertain','receipt_mismatch')
                 elif result.get('state') in {'completed','failed'}:
                     summary=text(result.get('summary'),4096)
@@ -279,8 +287,8 @@ class GlobalCoordinator:
         if state not in {'running','completed','failed'}: raise ValueError('uncertain_cannot_return_to_queue')
         payload={'parent_id':parent_id,'child_id':child_id,'state':state,'receipt':receipt,'summary':summary}
         self.authorize('reconciliation',payload,proof)
-        if state=='running': identifier(receipt)
-        else: summary=text(summary,4096)
+        if state=='running' or receipt is not None:validate_receipt(receipt)
+        if state!='running':summary=text(summary,4096)
         with self.exclusive(),self.db() as db:
             db.execute('BEGIN IMMEDIATE');self.permit(lease,parent_id,db)
             row=db.execute("SELECT * FROM children WHERE parent=? AND id=? AND state='uncertain'",(parent_id,child_id)).fetchone()
