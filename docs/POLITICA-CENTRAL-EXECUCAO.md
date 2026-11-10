@@ -46,3 +46,7 @@ Informar início, retomada, interrupção e conclusão, além de atualizações 
 - Checkpoints e resultados: `docs/ADMIN-V2-PROGRESSO-20261106.md`.
 - Contexto dos agentes do Vigia: `tools/monitor/CONTEXTO.md`.
 - `AGENTS.md`, aprovações existentes e as demais políticas continuam aplicáveis. Preservar assinaturas, hashes, datas, decisões locais, segredos e versões anteriores.
+
+## Ampliação de IA e Configurações somente após a base concluída
+
+Decisão do responsável em 09/11/2026: manter OpenAI como motor atual. Não implementar agora o seletor multiprovedor/modelo/esforço, catálogo dinâmico, credenciais/login, modelos próprios, roteamento por módulo ou reorganização completa de Configurações. Essa ampliação fica por último, após concluir e validar a base funcional integral da plataforma. Requisitos registrados em `docs/POS-100-CONFIGURACOES-IA-MULTIPROVEDOR.md`. Perguntas sobre essa ampliação não substituem a prioridade atual.

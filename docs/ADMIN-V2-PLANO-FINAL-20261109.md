@@ -18,3 +18,7 @@ A1 automático primeiro, e-CNPJ ADUNIR. Certificado e senha persistentes em cred
 ## Preservação e evidências
 13 conflitos públicos mantêm blobs exatos main. institutional.ts mantém controles transacionais do ator e FK institucional. Rota de diagnóstico preserva níveis administrativos. WIPs IA/editor do checkpoint33ea133 continuam nas origens; o novo candidato usa fontes8cdd97a e exclui novos WIPs sem validação. Não reexecutar ação interrompida por segurança por outro caminho.
 670/670 é evidência histórica8cdd97a, não valida este merge. Cada etapa produz prova atual e commit próprio. Percentual por critérios aceitos, não quantidade de testes ou pulso. Atualizar Vigia/terminal e relatório owner a cada30min. QA usa dados fictícios/dev; deploy público possui ensaio protegido de DDL em cópia local do dump. Nenhum envio real nos testes.
+
+## Backlog posterior à conclusão — IA e Configurações
+
+Manter OpenAI durante a conclusão. A ampliação de Configurações, seletor de empresas/modelos/esforço, catálogo atualizado, autenticação oficial e criptografada, modelos próprios e roteamento por tarefa foi expressamente adiada pelo dono em 09/11/2026. Executar por último, após a base funcional integral estar concluída e validada. Especificação: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/docs/POS-100-CONFIGURACOES-IA-MULTIPROVEDOR.md`. Registrar não autoriza implementar agora.
