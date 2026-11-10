@@ -19,8 +19,25 @@ const db=await import(pathToFileURL(site+"/src/lib/db.ts").href),U=await import(
 const base="http://127.0.0.1:3057",native="http://127.0.0.1:3058",delay=ms=>new Promise(r=>setTimeout(r,ms)),sha=v=>createHash("sha256").update(v).digest("hex");
 let server,serverExit,serverLog,proxy,browser;const external=[],errors=[];const alphabet="23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 const code=n=>{let v=n,s="";for(let i=0;i<7;i++){s=alphabet[v%alphabet.length]+s;v=Math.floor(v/alphabet.length);}return s;};
-async function stop(){if(browser)await browser.close();if(proxy){proxy.closeAllConnections();await new Promise(r=>proxy.close(r));}if(server){server.kill("SIGTERM");const timer=setTimeout(()=>server.kill("SIGKILL"),10000);await serverExit;clearTimeout(timer);serverLog.end();}await db._closeDbForTests();}
-try{
+let stopPromise;
+async function stop(){
+ if(stopPromise)return stopPromise;
+ stopPromise=(async()=>{
+  const failures=[];
+  const cleanup=async job=>{try{await job();}catch(error){failures.push(error);}};
+  if(browser)await cleanup(()=>browser.close());
+  if(proxy)await cleanup(async()=>{proxy.closeAllConnections();await new Promise((resolve,reject)=>proxy.close(error=>error?reject(error):resolve()));});
+  if(server)await cleanup(async()=>{const live=server.exitCode===null&&server.signalCode===null;if(live)server.kill("SIGTERM");const timer=setTimeout(()=>{if(server.exitCode===null&&server.signalCode===null)server.kill("SIGKILL");},10000);try{await serverExit;}finally{clearTimeout(timer);serverLog?.end();}});
+  await cleanup(()=>db._closeDbForTests());
+  if(failures.length)throw failures[0];
+ })();return stopPromise;
+}
+let rejectFatal,originalFailure=null;
+const fatal=new Promise((_,reject)=>{rejectFatal=reject;});void fatal.catch(()=>{});
+const onFatal=error=>{originalFailure??=error;rejectFatal(originalFailure);};
+const onSignal=()=>onFatal(new Error("QA interrupted; cleaning only owned resources"));
+process.on("unhandledRejection",onFatal);process.on("uncaughtException",onFatal);process.on("SIGTERM",onSignal);process.on("SIGINT",onSignal);
+async function run(){
  await db._openForTests("qa_indicacoes_compiled_browser");
  await db.query("INSERT INTO admin_users(id,email,nome,nivel,senha_hash)VALUES(1,'qa-ref-owner@example.test','QA Ref Owner','total','QA-NOT-A-LOGIN-HASH'),(2,'qa-ref-reader@example.test','QA Ref Reader','leitura','QA-NOT-A-LOGIN-HASH')");
  const ownerSession=await U.abrirSessao(1,"127.0.0.1"),readerSession=await U.abrirSessao(2,"127.0.0.1");await db.query("UPDATE admin_sessions SET stepup_ate=clock_timestamp()+interval '15 minutes' WHERE user_id=1");const actor=await U.sessaoPorToken(ownerSession.token);assert.ok(actor);
@@ -41,4 +58,12 @@ try{
  assert.equal(sha((await db.query("SELECT COALESCE(jsonb_agg(to_jsonb(s) ORDER BY id),'[]'::jsonb)::text raw FROM signatures s")).rows[0].raw),peopleBefore);
  assert.equal((await db.query("SELECT (SELECT count(*) FROM mail_outbox)+(SELECT count(*) FROM mail_messages)+(SELECT count(*) FROM batch_sends) n")).rows[0].n,"0");assert.ok((await db.verifyAuditChain()).ok);
  writeFileSync(output+"/indicacoes-compiled-result.json",JSON.stringify({ok:true,commit,runId,compiledNextUi:true,realHandlersAndDatabase:true,noRealMail:true,immutableReferralBindingsAndSignatures:true,...result},null,2));console.log(JSON.stringify({ok:true,compiledNextUi:true,groups:result.groups}));
-}finally{await stop();}
+}
+try{await Promise.race([run(),fatal]);}
+catch(error){originalFailure??=error;console.error(originalFailure);process.exitCode=1;}
+finally{
+ try{await stop();}catch(error){if(!originalFailure){originalFailure=error;console.error(error);}else console.error(JSON.stringify({cleanupFailure:error?.name??"Error",originalFailurePreserved:true}));process.exitCode=1;}
+ finally{process.off("unhandledRejection",onFatal);process.off("uncaughtException",onFatal);process.off("SIGTERM",onSignal);process.off("SIGINT",onSignal);}
+}
+// Exit only after owned-resource cleanup; a failed UI promise may still own bounded polling/rate-window timers.
+if(originalFailure)process.exit(1);

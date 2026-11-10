@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { writeFileSync } from "node:fs";
+import { assertPrivateHeaders } from "./indicacoes-compiled-guards.mjs";
 import { runIndicacoesLegacyCompiledUi } from "./indicacoes-compiled-legacy.mjs";
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const b=(scope,name)=>scope.getByRole("button",{name,exact:true});
@@ -10,7 +11,6 @@ const row=(scope,code)=>scope.locator("tbody>tr").filter({has:scope.page().locat
 async function poll(check,label,ms=20000){const end=Date.now()+ms;while(Date.now()<end){if(await check())return;await delay(25);}throw Error("QA deadline: "+label);}
 const idle=scope=>poll(async()=>await scope.getAttribute("aria-busy")==="false","region idle");
 const enabled=locator=>poll(async()=>await locator.count()===1&&await locator.isEnabled(),"scoped control enabled");
-function privateHeaders(headers){const directives=(headers["cache-control"]??"").toLowerCase().split(",").map(v=>v.trim().split("=")[0]);assert.ok(directives.includes("private")&&directives.includes("no-store"));assert.equal(headers["referrer-policy"],"no-referrer");assert.equal(headers["x-content-type-options"],"nosniff");}
 /** Real time, no clock patch/rate guard weakening. Logs keep a long QA wait observable. */
 async function rateWindow(label){for(let i=0;i<3;i++){console.log(JSON.stringify({qaPhase:"rate-window",label,elapsedSeconds:i*20,requiredSeconds:61}));await delay(20000);}await delay(1000);}
 export async function runIndicacoesCompiledUi({browser,base,db,U,actor,ownerSession,readerSession,output,codes,uuid}){
@@ -18,7 +18,7 @@ export async function runIndicacoesCompiledUi({browser,base,db,U,actor,ownerSess
  const records=[],posted=[],errors=[],external=[],shots=[];let lostNonce=null;
  async function contextFor(token,loseFirst=false){const context=await browser.newContext({viewport:{width:390,height:900},locale:"pt-BR"});await context.addCookies([{name:"adm",value:token,url:base,httpOnly:true,sameSite:"Lax"}]);await context.addInitScript(()=>{window.__referralApplicationPosts=0;const original=window.fetch;window.fetch=(...args)=>{const target=args[0]instanceof Request?args[0].url:String(args[0]),method=args[1]?.method??(args[0]instanceof Request?args[0].method:"GET");if(new URL(target,location.origin).pathname==="/api/admin/indicacoes/gestao"&&method.toUpperCase()==="POST")window.__referralApplicationPosts++;return original.apply(window,args);};});
  await context.route("**/*",r=>{const u=new URL(r.request().url());return u.origin===base||u.protocol==="blob:"?r.continue():(external.push(u.hostname),r.abort());});
- await context.route(url=>url.origin===base&&url.pathname.startsWith("/api/admin/indicacoes"),async route=>{const request=route.request(),url=new URL(request.url()),input=request.method()==="POST"?request.postDataJSON():null;if(input)assert.ok(uuid(input.requestId),"full UUIDv4 before handler/DB");const response=await route.fetch({maxRedirects:0}),bytes=await response.body();assert.ok(bytes.length<=4*1024*1024);const data=JSON.parse(bytes.toString("utf8"));privateHeaders(response.headers());const record={method:request.method(),path:url.pathname,query:url.search,status:response.status(),input,data};records.push(record);if(input)posted.push(record);
+ await context.route(url=>url.origin===base&&url.pathname.startsWith("/api/admin/indicacoes"),async route=>{const request=route.request(),url=new URL(request.url()),input=request.method()==="POST"?request.postDataJSON():null;if(input)assert.ok(uuid(input.requestId),"full UUIDv4 before handler/DB");const response=await route.fetch({maxRedirects:0}),bytes=await response.body();assert.ok(bytes.length<=4*1024*1024);const data=JSON.parse(bytes.toString("utf8"));assertPrivateHeaders(response.headers());const record={method:request.method(),path:url.pathname,query:url.search,status:response.status(),input,data};records.push(record);if(input)posted.push(record);
  if(loseFirst&&input?.operation==="edit"&&(lostNonce===null||lostNonce===input.requestId)){lostNonce??=input.requestId;assert.ok(response.ok()&&data.ok&&data.requestId===lostNonce);return route.abort("failed");}
  return route.fulfill({response,body:bytes});});return context;}
  const reader=await contextFor(readerSession.token),owner=await contextFor(ownerSession.token,true);
@@ -33,7 +33,7 @@ export async function runIndicacoesCompiledUi({browser,base,db,U,actor,ownerSess
  while(await b(details,"Carregar mais pessoas").count()){await b(details,"Carregar mais pessoas").click();await poll(async()=>await details.locator("li").count()>people,"people append");people=await details.locator("li").count();}
  assert.equal(people,126);const names=await details.locator("li").allTextContents();assert.equal(new Set(names).size,126);
  const totals=records.filter(r=>r.path.endsWith("/estatisticas")&&r.status===200);assert.ok(totals.length>=20);for(const r of totals)assert.deepEqual(r.data.totals,{codes:1007,personalCodes:3,organizationCodes:1004,visits:4,signed:150,pending:45});
- const deny=await reader.request.get(base+"/api/admin/indicacoes/gestao?filter=all");assert.equal(deny.status(),403);privateHeaders(deny.headers());
+ const deny=await reader.request.get(base+"/api/admin/indicacoes/gestao?filter=all");assert.equal(deny.status(),403);assertPrivateHeaders(deny.headers());
  await b(consultation(readPage),"Atualizar indicações").click();await poll(async()=>await consultation(readPage).locator("tbody>tr").count()===50,"refresh resets cursor");
  for(const width of[320,390,768,992,1280,1920]){await readPage.setViewportSize({width,height:900});assert.equal(await readPage.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);const path=`${output}/indicacoes-read-${width}.png`;await readPage.screenshot({path,fullPage:true});shots.push({width,path});}
  assert.equal(posted.length,0);await rateWindow("read-to-edit-CAS");
