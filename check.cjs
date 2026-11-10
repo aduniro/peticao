@@ -1,0 +1,1 @@
+const fs=require('node:fs');const assert=require('node:assert/strict');assert.equal(process.versions.node.split('.')[0],'20');fs.mkdirSync('artifacts',{recursive:true});fs.writeFileSync('artifacts/result.json',JSON.stringify({kind:process.argv[2],node:process.version}));console.log('FICTITIOUS PROJECT PASSED '+process.argv[2]);
