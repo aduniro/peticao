@@ -50,3 +50,27 @@ Informar início, retomada, interrupção e conclusão, além de atualizações 
 ## Ampliação de IA e Configurações somente após a base concluída
 
 Decisão do responsável em 09/11/2026: manter OpenAI como motor atual. Não implementar agora o seletor multiprovedor/modelo/esforço, catálogo dinâmico, credenciais/login, modelos próprios, roteamento por módulo ou reorganização completa de Configurações. Essa ampliação fica por último, após concluir e validar a base funcional integral da plataforma. Requisitos registrados em `docs/POS-100-CONFIGURACOES-IA-MULTIPROVEDOR.md`. Perguntas sobre essa ampliação não substituem a prioridade atual.
+
+## Perguntas paralelas e agente de apoio — 10/11/2026
+
+Determinação expressa do responsável: perguntas durante a execução não suspendem
+nem substituem a prioridade do admin-v2 completo. Encaminhar essas perguntas a
+um subagente de apoio, quando houver capacidade disponível e execução permitida,
+e manter o agente principal no desenvolvimento, integração local e validação do
+escopo aprovado. Incorporar as respostas do apoio sem encerrar o trabalho principal.
+
+Ao terminar uma etapa, selecionar e executar a próxima etapa independente já
+autorizada. Não encerrar o turno apenas para responder uma pergunta ou apresentar
+um status intermediário. Pedidos explícitos de pausa ou mudança de prioridade
+continuam prevalecendo. Aprovações pendentes bloqueiam somente o trabalho que
+depende delas.
+
+A delegação não autoriza contornar limites de créditos, bloqueios de segurança ou
+permissões, nem duplicar alterações concorrentes nos mesmos arquivos. Se o apoio
+não puder executar, informar a indisponibilidade, responder brevemente quando
+possível e prosseguir na etapa independente autorizada. Nunca declarar agentes
+ativos ou continuidade em segundo plano sem evidência verificável.
+
+Manter no Vigia a atividade real, etapas, subtarefas, agentes efetivamente ativos,
+testes, commits, percentuais sustentados por critérios e estimativas condicionadas.
+Nenhum deploy, merge ou sincronização de código com a VPS sem autorização expressa.
