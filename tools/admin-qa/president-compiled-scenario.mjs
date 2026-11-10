@@ -95,7 +95,9 @@ try{
  const ownPdf = await runPresidentOwnPdfExtension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id,issued:{...issued,requestId:issuedRequestId},documentVersion,profileFingerprint:profile.profile.fingerprint,receiptId:row.receipt_id});
  const ownHistoryCurrent = await runPresidentOwnHistoryCurrentExtension({browser,base,actor,db,U,output,sourceBatchId:id,ownPdf});
  const combinedA1 = await runPresidentCombinedA1Extension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id,issued:{...issued,requestId:issuedRequestId},documentVersion,profileFingerprint:profile.profile.fingerprint,receiptId:row.receipt_id,ownPdf});
+ console.log('Respecting real shared rate window before recovery mutations'); await delay(61_000);
  const recovery = await runPresidentRecoveryCompiledExtension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id,issued:{...issued,requestId:issuedRequestId},documentVersion,profileFingerprint:profile.profile.fingerprint,receiptId:row.receipt_id,ownPdf});
+ console.log('Respecting real shared rate window before profile mutations'); await delay(61_000);
  const admin = await runPresidentAdminCompiledExtension({browser,base,sessionToken:session.token,actor,db,store:S,output,sourceBatchId:id});
  const ownHistoryHistorical = await runPresidentOwnHistoryHistoricalExtension({browser,base,actor,db,U,output,sourceBatchId:id,ownPdf});
  assert.equal(blockedExternal.length,0);assert.equal(counts.validator,0,'Admission/claim must never call the validator');
