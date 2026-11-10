@@ -57,6 +57,8 @@ import {GET as BASES} from "../app/api/admin/documentos/base/route";
 import {GET as CURRENT,POST as SELECT} from "../app/api/admin/documentos/base/selecao/route";
 import {POST as VALIDATE, GET as RECOVER_VALIDATION} from "../app/api/admin/documentos/base/[id]/validar/route";
 import {GET as REVIEW,POST as PREPARE} from "../app/api/admin/lotes/[id]/pacote/route";
+import { validateBase, readBaseValidation } from "./petition-base-request";
+import { validationRefusal, releaseUnrecordedValidation, type BasePending } from "./petition-base-view";
 let requestNumber=0;
 async function requestFactory(c:Awaited<ReturnType<typeof fixture>>){
  const U=await import('./admin-users'),total=await U.abrirSessao(1,'127.0.0.1'),reader=await U.abrirSessao(2,'127.0.0.1');await c.db.query("UPDATE admin_sessions SET stepup_ate=clock_timestamp()+interval '9 minutes'");
@@ -104,6 +106,60 @@ test('revoking the actor during external verification prevents evidence persiste
   await Promise.race([ready,new Promise((_,reject)=>setTimeout(()=>reject(new Error('QA verifier did not start')),3000))]);await c.db.query('UPDATE admin_users SET ativo=false WHERE id=1');release();assert.equal((await pending).status,403);assert.equal((await c.db.query('SELECT 1 FROM petition_base_validations')).rowCount,0);await c.noSend();
  }finally{release();await service.close();await c.close();}
 });
+
+for (const gate of [
+  { name: "session", status: 401, error: "authentication_required" },
+  { name: "level", status: 403, error: "request_rejected" },
+  { name: "stepup", status: 403, error: "stepup_required" },
+  { name: "origin", status: 403, error: "request_rejected" },
+  { name: "rate", status: 429, error: "request_rejected" },
+] as const) {
+ test(`real validation route ${gate.name} refusal creates no intent and recovers only by admitted exact GET`, async () => {
+  const c = await fixture("t_base_http_gate_" + gate.name), service = await verifier();
+  try {
+   const users = await import("./admin-users"), session = await users.abrirSessao(1, "127.0.0.1");
+   await c.db.query("UPDATE admin_sessions SET stepup_ate=clock_timestamp()+interval '9 minutes'");
+   const input = { requestId: randomUUID(), artifactId: c.artifactId, sha256: hash(bytes) };
+   const params = { params: { id: c.artifactId } }, path = "/api/admin/documentos/base/" + c.artifactId + "/validar";
+   const index = ["session", "level", "stepup", "origin", "rate"].indexOf(gate.name);
+   const gateIp = "198.51.100." + (110 + index), recoveryIp = "198.51.100." + (120 + index);
+   let admitted = false, posts = 0, reads = 0;
+   const request = (method: string, url: string, body?: string) => new NextRequest("http://qa.local" + url, {
+    method,
+    headers: { host: "qa.local", origin: !admitted && gate.name === "origin" ? "https://outside.invalid" : "http://qa.local", cookie: "adm=" + (!admitted && gate.name === "session" ? "" : session.token), "content-type": "application/json", "x-forwarded-for": admitted ? recoveryIp : gateIp },
+    ...(body === undefined ? {} : { body }),
+   });
+   if (gate.name === "level") await c.db.query("UPDATE admin_users SET nivel='leitura' WHERE id=1");
+   if (gate.name === "stepup") await c.db.query("UPDATE admin_sessions SET stepup_ate=NULL WHERE user_id=1");
+   if (gate.name === "rate") {
+    // Real route admissions consume its ten-request window; invalid bodies reserve nothing.
+    for (let n = 0; n < 10; n++) assert.equal((await VALIDATE(request("POST", path, "{}"), params)).status, 400);
+   }
+   const snapshot = async () => (await c.db.query("SELECT count(*)::int n FROM petition_base_validation_intents UNION ALL SELECT count(*)::int FROM petition_base_validation_attempts UNION ALL SELECT count(*)::int FROM petition_base_validation_results UNION ALL SELECT count(*)::int FROM petition_base_validations")).rows;
+   const before = await snapshot(); assert.ok(before.every(row => row.n === 0));
+   const transport = (async (url, init) => {
+    const method = init?.method ?? "GET", req = request(method, String(url), typeof init?.body === "string" ? init.body : undefined);
+    if (method === "POST") { posts++; return VALIDATE(req, params); }
+    reads++; return RECOVER_VALIDATION(req, params);
+   }) as typeof fetch;
+   const refused = await validateBase(input.artifactId, input.sha256, transport, 5000, input.requestId);
+   assert.deepEqual(refused, { kind: "rejected", status: gate.status, error: gate.error });
+   const refusal = validationRefusal(refused); assert.ok(refusal);
+   const pending: BasePending = { kind: "validation", input, refusal };
+   assert.equal(releaseUnrecordedValidation(pending, null), false);
+   assert.equal(releaseUnrecordedValidation(pending, await readBaseValidation(input, transport, 5000)), false);
+   assert.deepEqual(await snapshot(), before); assert.equal(service.calls(), 0);
+   await c.db.query("UPDATE admin_users SET nivel='total' WHERE id=1; UPDATE admin_sessions SET stepup_ate=clock_timestamp()+interval '9 minutes' WHERE user_id=1");
+   // Independent admitted fixture IP: this does not claim that the old rate window expired.
+   admitted = true;
+   const recovered = await readBaseValidation(input, transport, 5000);
+   assert.deepEqual(recovered, { kind: "rejected", status: 404, error: "not_found" });
+   assert.equal(releaseUnrecordedValidation(pending, recovered), true);
+   assert.equal(posts, 1); assert.equal(reads, 2); assert.equal(service.calls(), 0);
+   assert.deepEqual(await snapshot(), before); await c.noSend();
+  } finally { await service.close(); await c.close(); }
+ });
+}
 test('negative external report remains a rejection with no selection, package or transport',async()=>{
  const c=await fixture('t_base_http_invalid'),service=await verifier(undefined,false);try{
   const req=await requestFactory(c),response=await VALIDATE(req('POST','/api/admin/documentos/base/'+c.artifactId+'/validar',{requestId:randomUUID(),expectedSha256:hash(bytes)}),{params:{id:c.artifactId}});assert.equal(response.status,409);assert.equal(service.calls(),1);
