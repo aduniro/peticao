@@ -64,18 +64,34 @@ export async function prepareBatchPackage(input:{batchId:number;requestId:string
   return{ok:true as const,package:project(saved),isCurrent:true,replayed:false};
  });
 }
+/** Internal exact read. Caller must authorize in the same transaction. Never implies dispatch permission. */
+export async function readFrozenBatchPackageTx(c:PoolClient,packageId:string){
+ if(!uuid(packageId))return error('parameters');
+ const row=(await c.query<Row>('SELECT * FROM batch_packages WHERE id=$1',[packageId])).rows[0];if(!row)return error('not_found');
+ let parsed:unknown;try{parsed=JSON.parse(row.manifest);}catch{return error('integrity');}
+ if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))return error('integrity');const manifest=parsed as BatchPackageManifest;
+ if(manifest.batchId!==row.batch_id||manifest.documentVersion!==row.document_version||manifest.batch?.versionId!==row.batch_version_id||manifest.batch?.sha256!==row.batch_sha256||manifest.basePetition?.artifactId!==row.base_artifact_id||manifest.basePetition?.versionId!==row.base_artifact_id||manifest.basePetition?.sha256!==row.base_sha256)return error('integrity');
+ const signed=(await c.query<{bytes:Buffer}>('SELECT bytes FROM batch_document_versions WHERE id=$1 AND batch_id=$2 AND variant=$3 AND signature_kind=$4',[row.batch_version_id,row.batch_id,'signed','icp-brasil'])).rows[0],base=(await c.query<{bytes:Buffer}>('SELECT bytes FROM petition_base_artifacts WHERE id=$1',[row.base_artifact_id])).rows[0];
+ if(!signed||!base)return error('integrity');const bytes=new Map([[row.batch_version_id,Buffer.from(signed.bytes)],[row.base_artifact_id,Buffer.from(base.bytes)]]);
+ if(!verifyBatchPackage(manifest,row.package_digest,bytes,{maxEncodedBytes:row.encoded_budget_bytes,reservedEnvelopeBytes:row.reserved_envelope_bytes}).ok)return error('integrity');
+ return{ok:true as const,package:project(row),manifest,bytes};
+}
+/** Recheck operational policy for a NEW approval/attempt. Historical reads deliberately do not call this. */
+export async function batchPackageDispatchReadyTx(c:PoolClient,packageId:string){
+ if(!enabled())return false;
+ const row=(await c.query<Row>('SELECT * FROM batch_packages WHERE id=$1',[packageId])).rows[0];if(!row)return false;
+ const current=await binding(c,row.base_artifact_id),policy=petitionBaseValidationPolicyFingerprint();if(!current||!policy)return false;
+ const original=(await c.query<{binding_sha256:string;validator_configuration_sha256:string}>('SELECT binding_sha256,validator_configuration_sha256 FROM petition_base_validations WHERE id=$1',[row.base_validation_id])).rows[0];
+ if(!original||original.binding_sha256!==boundHash(current)||original.validator_configuration_sha256!==policy)return false;
+ const evidence=(await c.query<{report:unknown;report_sha256:string;validator_configuration_sha256:string}>("SELECT report,report_sha256,validator_configuration_sha256 FROM petition_base_validations WHERE artifact_id=$1 AND binding_sha256=$2 AND validator_configuration_sha256=$3 ORDER BY created_at DESC,id DESC LIMIT 1 FOR SHARE",[row.base_artifact_id,boundHash(current),policy])).rows[0];
+ return !!evidence&&isCurrentStoredPetitionBaseEvidence(evidence.report,current,row.base_sha256,evidence.validator_configuration_sha256,evidence.report_sha256)&&enabled()&&policy===petitionBaseValidationPolicyFingerprint();
+}
 /** Authenticated historical read: resolve the exact frozen pair, never the current base selection. Not permission to send. */
 export async function readFrozenBatchPackage(packageId:string,actor:SessaoAdmin|null){
  if(!uuid(packageId))return error('parameters');
  return tx(async c=>{
-  if(!await authorized(c,actor))return error('forbidden');const row=(await c.query<Row>('SELECT * FROM batch_packages WHERE id=$1',[packageId])).rows[0];if(!row)return error('not_found');
-  let parsed:unknown;try{parsed=JSON.parse(row.manifest);}catch{return error('integrity');}
-  if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))return error('integrity');const manifest=parsed as BatchPackageManifest;
-  if(manifest.batchId!==row.batch_id||manifest.documentVersion!==row.document_version||manifest.batch?.versionId!==row.batch_version_id||manifest.batch?.sha256!==row.batch_sha256||manifest.basePetition?.artifactId!==row.base_artifact_id||manifest.basePetition?.versionId!==row.base_artifact_id||manifest.basePetition?.sha256!==row.base_sha256)return error('integrity');
-  const signed=(await c.query<{bytes:Buffer}>('SELECT bytes FROM batch_document_versions WHERE id=$1 AND batch_id=$2 AND variant=$3 AND signature_kind=$4',[row.batch_version_id,row.batch_id,'signed','icp-brasil'])).rows[0],base=(await c.query<{bytes:Buffer}>('SELECT bytes FROM petition_base_artifacts WHERE id=$1',[row.base_artifact_id])).rows[0];
-  if(!signed||!base)return error('integrity');const bytes=new Map([[row.batch_version_id,Buffer.from(signed.bytes)],[row.base_artifact_id,Buffer.from(base.bytes)]]);
-  if(!verifyBatchPackage(manifest,row.package_digest,bytes,{maxEncodedBytes:row.encoded_budget_bytes,reservedEnvelopeBytes:row.reserved_envelope_bytes}).ok)return error('integrity');
-  await audit('batch_package_read',null,{packageId,batchId:row.batch_id,packageDigest:row.package_digest,userId:actor!.userId},c);
-  return{ok:true as const,package:project(row),manifest,bytes};
+  if(!await authorized(c,actor))return error('forbidden');const result=await readFrozenBatchPackageTx(c,packageId);if(!result.ok)return result;
+  await audit('batch_package_read',null,{packageId,batchId:result.package.batchId,packageDigest:result.package.packageDigest,userId:actor!.userId},c);
+  return result;
  });
 }

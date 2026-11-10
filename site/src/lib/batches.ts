@@ -17,8 +17,10 @@ import { rejectedBatchRecipients } from "./batch-rejection";
 import { frozenReplyTo, withReplyTo } from "./mail/payload";
 import { freezePreparation, thawPreparation, type CreationSource } from "./batch-preparation";
 import { appendDocumentVersion, preserveObservedDocument } from "./batch-document-history";
+import { pendingBatchDeliveryTx, resolveBatchDeliveryTx, type DeliveryBinding } from "./batch-delivery";
+import { batchPackageDispatchReadyTx } from "./batch-package-store";
 
-export type BatchActor = { userId: number; email: string };
+export type BatchActor = { userId: number; email: string; sessaoId?: string | null };
 const actorData = (actor: BatchActor) => ({ userId: actor.userId, por: actor.email.trim().toLowerCase() });
 export async function authorizeBatchActor(client: PoolClient, actor: BatchActor) {
   if (!actor || !Number.isInteger(actor.userId) || actor.userId <= 0 || actor.userId > 2147483647 || typeof actor.email !== "string" || actor.email.length > 254) return false;
@@ -216,7 +218,21 @@ export function batchEnvelope(row: ApprovalRow, to: string, pdf: Buffer, sentSha
       };
 }
 
-const approvalHash = (b: ApprovalRow, code: string) => hmac(`code:v2:${b.id}:${documentVersion(b)}:${code}`);
+const approvalHash = (b: ApprovalRow, code: string, binding: DeliveryBinding | null = null) => binding
+  ? hmac(`code:v3:${b.id}:${documentVersion(b)}:${binding.packageId}:${binding.packageDigest}:${code}`)
+  : hmac(`code:v2:${b.id}:${documentVersion(b)}:${code}`);
+async function deliveryForApprovalTx(client: PoolClient, row: ApprovalRow) {
+  if (!row.approved_at) return pendingBatchDeliveryTx(client, row);
+  const records = (await client.query<{ data: string }>("SELECT data FROM audit_log WHERE event='batch_approved' AND data::jsonb->>'batchId'=$1 ORDER BY id LIMIT 2", [String(row.id)])).rows;
+  if (records.length !== 1) return null;
+  let stored; try { stored = JSON.parse(records[0].data); } catch { return null; }
+  return resolveBatchDeliveryTx(client, row, stored);
+}
+async function mayApprovePacketTx(client: PoolClient, actor: BatchActor, binding: DeliveryBinding | null) {
+  if (!binding) return true;
+  return !!actor.sessaoId && !!(await client.query("SELECT 1 FROM admin_sessions WHERE id=$1 AND user_id=$2 AND expira_em>clock_timestamp() AND stepup_ate>clock_timestamp() FOR SHARE", [actor.sessaoId, actor.userId])).rowCount
+    && await batchPackageDispatchReadyTx(client, binding.packageId);
+}
 
 export async function requestApprovalCode(id: number, actor: BatchActor): Promise<void> {
   const to = config.approverEmail();
@@ -228,18 +244,21 @@ export async function requestApprovalCode(id: number, actor: BatchActor): Promis
     if (!row?.pdf) throw new Error("Lote não está pronto para aprovação.");
     const retry = row.approved_at ? await rejectedBatchRecipients(client, row) : null;
     if (row.approved_at ? !retry : row.status !== "prepared") throw new Error("Lote não está pronto para aprovação.");
-    await client.query("UPDATE batches SET approval_code_hash=$1, approval_code_expires_at=$2, approval_attempts=0 WHERE id=$3", [approvalHash(row, code), new Date(Date.now() + 15 * 60_000).toISOString(), id]);
-    await audit(retry ? "batch_retry_code_prepared" : "approval_code_prepared", null, { batchId: id, documentVersion: documentVersion(row), ...(retry ? { recipients: retry } : {}), ...actorData(actor) }, client);
-    return row;
+    const delivery = await deliveryForApprovalTx(client, row);
+    if (!delivery || !await mayApprovePacketTx(client, actor, delivery.binding)) throw new Error("Lote não está pronto para aprovação.");
+    const codeHash = approvalHash(row, code, delivery.binding);
+    await client.query("UPDATE batches SET approval_code_hash=$1, approval_code_expires_at=$2, approval_attempts=0 WHERE id=$3", [codeHash, new Date(Date.now() + 15 * 60_000).toISOString(), id]);
+    await audit(retry ? "batch_retry_code_prepared" : "approval_code_prepared", null, { batchId: id, documentVersion: documentVersion(row), approvalCodeHash: codeHash, ...(delivery.binding ?? {}), ...(retry ? { recipients: retry } : {}), ...actorData(actor) }, client);
+    return { row, codeHash };
   });
-  await sendNow({ to, subject: `Código para aprovar o lote ${b.seq}: ${code}`, text: `Código de aprovação do lote ${b.seq}: ${code}\nVale por 15 minutos. Se não foi você, ignore.` }, "aprovacao", `batch-code:${id}:${approvalHash(b, code)}`);
+  await sendNow({ to, subject: `Código para aprovar o lote ${b.row.seq}: ${code}`, text: `Código de aprovação do lote ${b.row.seq}: ${code}\nVale por 15 minutos. Se não foi você, ignore.` }, "aprovacao", `batch-code:${id}:${b.codeHash}`);
   await audit("approval_code_sent", null, { batchId: id, ...actorData(actor) });
 }
 
 export type ApproveResult = { ok: true; sent: number; failed: number } | { ok: false; reason: string };
 
 export async function approveAndSend(id: number, code: string, approvedBy: string, actor: BatchActor): Promise<ApproveResult> {
-  const admission = await tx<{ ok: false; reason: string } | { ok: true; row: ApprovalRow; pdf: Buffer; sentSha: string; recipients: string[] }>(async client => {
+  const admission = await tx<{ ok: false; reason: string } | { ok: true; row: ApprovalRow; sentSha: string; recipients: string[]; delivery: NonNullable<Awaited<ReturnType<typeof resolveBatchDeliveryTx>>> }>(async client => {
     if (!(await authorizeBatchActor(client, actor))) return { ok: false, reason: "Lote não está disponível para envio." };
     if (((await client.query<{ value: string }>("SELECT value FROM settings WHERE key='sending_enabled'")).rows[0]?.value ?? "true") !== "true") return { ok: false as const, reason: "Envios estão pausados." };
     const row = (await client.query<ApprovalRow>("SELECT * FROM batches WHERE id=$1 FOR UPDATE", [id])).rows[0];
@@ -249,7 +268,9 @@ export async function approveAndSend(id: number, code: string, approvedBy: strin
     try { assertSendable(row.signature_kind); } catch (e) { return { ok: false, reason: (e as Error).message }; }
     if (!row.approval_code_hash || !row.approval_code_expires_at || new Date(row.approval_code_expires_at) < new Date()) return { ok: false, reason: "Solicite um novo código." };
     if (row.approval_attempts >= 5) return { ok: false, reason: "Muitas tentativas. Solicite um novo código." };
-    if (!safeEqual(row.approval_code_hash, approvalHash(row, code.trim()))) {
+    const delivery = await deliveryForApprovalTx(client, row);
+    if (!delivery || !await mayApprovePacketTx(client, actor, delivery.binding)) return { ok: false, reason: "Lote não está disponível para envio." };
+    if (!safeEqual(row.approval_code_hash, approvalHash(row, code.trim(), delivery.binding))) {
       await client.query("UPDATE batches SET approval_attempts = approval_attempts + 1 WHERE id=$1", [id]);
       await audit("approval_code_wrong", null, { batchId: id, ...actorData(actor) }, client);
       return { ok: false, reason: "Código incorreto." };
@@ -259,17 +280,17 @@ export async function approveAndSend(id: number, code: string, approvedBy: strin
 
     const pdf = row.signed_pdf ?? row.pdf;
     const sentSha = pdfDigest(pdf);
-    if (sentSha !== (row.signed_pdf ? row.signed_pdf_sha256 : row.pdf_sha256)) return { ok: false as const, reason: "Lote não está disponível para envio." };
+    if (sentSha !== delivery.sentSha || sentSha !== (row.signed_pdf ? row.signed_pdf_sha256 : row.pdf_sha256)) return { ok: false as const, reason: "Lote não está disponível para envio." };
     if (retry) {
       // Prepared plus an existing approval is the in-flight latch; no new code while sending.
       await client.query("UPDATE batches SET status='prepared',approval_code_hash=NULL WHERE id=$1", [id]);
     } else await client.query("UPDATE batches SET approved_by=$1, approved_at=$2, approval_code_hash=NULL WHERE id=$3", [approvedBy, new Date().toISOString(), id]);
-    await audit(retry ? "batch_retry_approved" : "batch_approved", null, { batchId: id, approvedBy, documentVersion: documentVersion(row), sentSha256: sentSha, recipients, ...actorData(actor) }, client);
-    return { ok: true as const, row, pdf, sentSha, recipients };
+    await audit(retry ? "batch_retry_approved" : "batch_approved", null, { batchId: id, approvedBy, documentVersion: documentVersion(row), sentSha256: sentSha, recipients, ...(delivery.binding ?? {}), ...actorData(actor) }, client);
+    return { ok: true as const, row, sentSha, recipients, delivery };
   });
   if (!admission.ok) return { ok: false, reason: admission.reason };
   // No database transaction spans transport. Consumed approval freezes the document.
-  const { row, pdf, sentSha, recipients } = admission;
+  const { recipients, delivery } = admission;
 
   const done = new Set((await query<{ recipient: string }>("SELECT recipient FROM batch_sends WHERE batch_id=$1 AND ok", [id])).rows.map((r) => r.recipient));
   let sent = 0, failed = 0;
@@ -278,7 +299,8 @@ export async function approveAndSend(id: number, code: string, approvedBy: strin
     let error: unknown;
     try {
       if (!(await sendingEnabled())) throw new Error("envios pausados durante o disparo");
-      const key = batchMessageKey(id, sentSha, to), envelope = batchEnvelope(row, to, pdf, sentSha);
+      if (delivery.binding && !await tx(async client => await authorizeBatchActor(client, actor) && await mayApprovePacketTx(client, actor, delivery.binding))) throw new Error("Lote não está disponível para envio.");
+      const { key, envelope } = delivery.message(to);
       const original = (await query<{ reply_to: string | null }>("SELECT reply_to FROM mail_messages WHERE request_key=$1", [hmac("mail-request-v1:" + key)])).rows[0];
       await sendNow(original ? frozenReplyTo(envelope, original.reply_to) : withReplyTo(envelope), "lote", key, true);
     } catch (e) {

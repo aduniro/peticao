@@ -1,5 +1,6 @@
 import { audit, tx } from "./db";
-import { authorizeBatchActor, batchEnvelope, batchMessageKey, documentVersion, type ApprovalRow, type BatchActor } from "./batches";
+import { authorizeBatchActor, documentVersion, type ApprovalRow, type BatchActor } from "./batches";
+import { resolveBatchDeliveryTx } from "./batch-delivery";
 import { contentFingerprint } from "./mail/archive-codec";
 import { frozenReplyTo } from "./mail/payload";
 import { hmac, safeEqual } from "./security";
@@ -20,13 +21,14 @@ async function inspect(client: PoolClient, id: number, actor: BatchActor) {
   const approval: Approval = JSON.parse(records[0].data), pdf = row.signed_pdf ?? row.pdf;
   const sha = createHash("sha256").update(pdf).digest("hex"), version = documentVersion(row);
   if (approval.documentVersion !== version || approval.sentSha256 !== sha || sha !== (row.signed_pdf ? row.signed_pdf_sha256 : row.pdf_sha256) || !Array.isArray(approval.recipients) || !approval.recipients.length || approval.recipients.length > 2000 || approval.recipients.some(to => typeof to !== "string" || to.length > 254 || to !== to.trim().toLowerCase()) || new Set(approval.recipients).size !== approval.recipients.length) return null;
+  const delivery = await resolveBatchDeliveryTx(client, row, approval); if (!delivery) return null;
   const evidence: Evidence[] = [], proofs: unknown[] = [];
   for (const recipient of [...approval.recipients].sort()) {
-    const key = hmac("mail-request-v1:" + batchMessageKey(id, sha, recipient));
+    const key = hmac("mail-request-v1:" + delivery.message(recipient).key);
     const message = (await client.query<Message>("SELECT id,kind,channel,to_addr,status,content_fingerprint,reply_to FROM mail_messages WHERE request_key=$1 FOR UPDATE", [key])).rows[0];
     let state = "unavailable", acceptedAt: string | null = null, attemptId: string | null = null;
     if (message) {
-      const expected = contentFingerprint(frozenReplyTo(batchEnvelope(row, recipient, pdf, sha), message.reply_to));
+      const expected = contentFingerprint(frozenReplyTo(delivery.message(recipient).envelope, message.reply_to));
       if (message.kind !== "lote" || message.channel !== "transactional" || message.to_addr !== recipient || message.content_fingerprint !== expected) return null;
       state = message.status;
       const attempt = (await client.query<{ id: string; accepted_at: string }>(`SELECT id,to_char(finished_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') accepted_at FROM mail_message_attempts WHERE message_id=$1 AND state='accepted' AND finished_at IS NOT NULL ORDER BY finished_at,id LIMIT 1`, [message.id])).rows[0];
@@ -37,7 +39,7 @@ async function inspect(client: PoolClient, id: number, actor: BatchActor) {
     } else proofs.push([recipient, "unavailable"]);
     evidence.push({ recipient, messageId: message?.id ?? null, state, acceptedAt, attemptId });
   }
-  const proof = hmac("batch-reconciliation:v1:" + JSON.stringify([id, actor.userId, actor.email.trim().toLowerCase(), records[0].id, row.approved_at, version, proofs]));
+  const proof = hmac("batch-reconciliation:v1:" + JSON.stringify([id, actor.userId, actor.email.trim().toLowerCase(), records[0].id, row.approved_at, version, ...(delivery.binding ? [delivery.binding] : []), proofs]));
   return { row, evidence, proof, approvalId: records[0].id };
 }
 
