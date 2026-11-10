@@ -11,7 +11,7 @@ import { readPendingEmailPage } from "@/lib/pending-email-admin-store";
 import RecuperarFila from "@/components/admin/RecuperarFila";
 import { listMailRecovery } from "@/lib/mail/recovery";
 import PreviaEmail from "@/components/admin/PreviaEmail";
-import { mailHistory } from "@/lib/mail/history";
+import { readMailHistoryPage } from "@/lib/mail-history-admin-store";
 import { dominiosLentos, eventosResumo, porProvedor, porSubdominio, porTipo, sesSaude, statusProvedores, verificacoes } from "@/lib/mail/painel";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
   const recuperacao = stepupAtRead
     ? await listMailRecovery().catch(() => null)
     : undefined;
-  const historico = await mailHistory({ limit: 10 }).catch(() => null);
+  const historico = await readMailHistoryPage(sessao, { limit: 10 });
   const [prov, tipos, subs, ses, evs, pending, checks, lentos, status, outbox] = await Promise.all([porProvedor(), porTipo(), porSubdominio(), sesSaude(), eventosResumo(), readPendingEmailPage(sessao, { limit: 50 }), verificacoes(), dominiosLentos(), statusProvedores(), outboxStats()]);
   const blackEmails = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason='invalid'")).rows[0].n;
   const suppressed = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason IN ('bounce','complaint')")).rows[0].n;
@@ -88,7 +88,7 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
       {podeRecuperar && !stepupValido(sessao) ? <p><a href="/admin/confirmar?volta=%2Fadmin%2Femails">Concluir fila sem reenviar</a></p> : null}
       {recuperacao?.ok ? <RecuperarFila initial={recuperacao.records} next={recuperacao.next} names={NOME_TIPO} /> : recuperacao === null || recuperacao?.ok === false ? <p className="v2-aviso erro" role="alert">Não foi possível carregar a lista. Tente novamente.</p> : null}
       {podeRecuperar && !stepupValido(sessao) ? <p><a href="/admin/confirmar?volta=%2Fadmin%2Femails">Ver prévia protegida</a></p> : null}
-      {historico?.ok ? <PreviaEmail initial={historico.records} next={historico.next} names={NOME_TIPO} canPreview={podeRecuperar && stepupValido(sessao)} /> : historico === null || historico?.ok === false ? <p className="v2-aviso erro" role="alert">Não foi possível carregar a lista. Tente novamente.</p> : null}
+      {historico?.ok ? <PreviaEmail initial={historico.records} next={historico.next} names={NOME_TIPO} canPreview={podeRecuperar && stepupValido(sessao)} actorScope={actorScope} initialAsOf={historico.asOf} initialTotal={historico.total} /> : historico === null || historico?.ok === false ? <p className="v2-aviso erro" role="alert">Não foi possível carregar a lista. Tente novamente.</p> : null}
 
       <h2>Provedores: saldo e envios</h2>
       <div className="table-scroll"><table>

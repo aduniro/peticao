@@ -85,7 +85,11 @@ test("rota de metadados exige Edição, respeita revogação/origem e nunca libe
       const response = await GET(request(session.token, `?id=message:${m.id}`));
       assert.equal(response.status, nivel === "leitura" ? 403 : 200);
       if (response.status === 200) {
-        assert.equal(response.headers.get("cache-control"), "no-store"); assert.ok(!(await response.text()).includes("SECRET_"));
+        const cache = new Set((response.headers.get("cache-control") ?? "").split(",").map(value => value.trim().toLowerCase()));
+        assert.ok(cache.has("private") && cache.has("no-store") && cache.has("max-age=0"));
+        assert.equal(response.headers.get("referrer-policy"), "no-referrer");
+        assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+        assert.ok(!(await response.text()).includes("SECRET_"));
         for (const q of ["?id=message:x", "?id=legacy:2147483647", "?limit=51", "?limit=2&limit=3", `?id=message:${m.id}&limit=2`, "?content=1", "?limit=0x20"]) {
           assert.equal((await GET(request(session.token, q))).status, q.includes("2147483647") ? 404 : 400);
         }
