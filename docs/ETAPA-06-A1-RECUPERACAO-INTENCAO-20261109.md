@@ -21,3 +21,9 @@ Validação preliminar: nove grupos de testes de transporte passaram, cobrindo r
 `site/src/lib/a1-reconciliation.ts` consulta a intenção exata quando existe uma solicitação em acompanhamento. Sem intenção, consulta disponibilidade. A observação só se aplica ao lote e à intenção que continuam selecionados quando a resposta chega; respostas atrasadas de outra seleção são descartadas. O reducer conserva a revisão mais recente, exige versão/hash do arquivo publicado para mostrar sucesso e pede disponibilidade atualizada antes de qualquer nova solicitação após falha.
 
 Teste preliminar deste incremento: 24/24 casos (estado, transporte e seis cenários de reconciliação), incluindo 404, timeout, troca de lote/intenção e erro atrasado de POST depois de GET confirmado. Checkpoint anterior 78b2e39: 30/30 na rodada API com PostgreSQL isolado e typecheck aprovados, fonte estável. O novo incremento ainda deve passar pela mesma rodada integrada. Nenhum componente visível ou configuração de produção foi ativado.
+
+## Rodada integrada e disponibilidade após falha
+
+No commit 6fa8e93: 170/170 testes documentais e build aprovados com fontes estáveis. O primeiro typecheck concorreu com o build e falhou porque `.next/types` foi recriado; a evidência foi preservada. Repetido após o build, passou com fontes estáveis. O runner agora possui locks distintos para Next/build/tipos e PostgreSQL, além de registrar a estabilidade do commit, evitando repetir essa concorrência.
+
+O cenário adicional distingue falha terminal comprovada de resultado incerto: depois de conhecer a falha da intenção exata, a próxima consulta é de disponibilidade. Somente uma nova ação explícita, com outro requestId e bindings atuais, pode criar solicitação. Sete cenários puros de reconciliação passaram; a rodada integrada desse incremento será repetida.

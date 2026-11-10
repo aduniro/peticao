@@ -7,7 +7,8 @@ export type A1Reconciliation = { batchId: number; requestId: string | null; even
 export async function readA1Reconciliation(state: A1JobViewState, fetcher: typeof fetch = fetch, timeoutMs = 15_000): Promise<A1Reconciliation> {
   const batchId = state.batchId;
   const intent = state.intent ? { ...state.intent } : null;
-  if (intent) {
+  const needsAvailability = !!state.job && ["failed", "stale", "cancelled"].includes(state.job.state) && !state.resultUncertain && !state.postPending;
+  if (intent && !needsAvailability) {
     const result = await readA1Intent(intent, fetcher, timeoutMs);
     return {
       batchId, requestId: intent.requestId,
@@ -18,7 +19,7 @@ export async function readA1Reconciliation(state: A1JobViewState, fetcher: typeo
   }
   const result = await readA1Availability(batchId, fetcher, timeoutMs);
   return {
-    batchId, requestId: null,
+    batchId, requestId: intent?.requestId ?? null,
     event: result.kind === "success" ? { type: "read_received", availability: result.value }
       : result.kind === "rejected" ? { type: "read_received", availability: { ok: false, error: result.error } }
       : { type: "read_transport_failed" },

@@ -72,3 +72,17 @@ test("initial availability uses only GET and cannot publish an unproven successf
   const result = applyA1Reconciliation(state, observation);
   assert.equal(a1JobView(result).signaturePublished, false); assert.equal(a1JobView(result).completionUnproven, true);
 });
+
+
+test("after an exact terminal failure, a separate availability GET permits only a new explicit intent", async () => {
+  const state = uncertain();
+  const failed = applyA1Reconciliation(state, await readA1Reconciliation(state, fake(json({ ok: true, job: job({ state: "failed", revision: 2 }) }), [])));
+  const calls: string[] = [];
+  const available = applyA1Reconciliation(failed, await readA1Reconciliation(failed, fake(json({ ok: true, available: true, documentVersion, policyRevision: 3, latestJob: job({ state: "failed", revision: 2 }) }), calls)));
+  assert.deepEqual(calls, ["GET /api/admin/lotes/12/a1"]);
+  assert.equal(a1JobView(available).controls.canRequest, true);
+  assert.equal(updateA1JobView(available, { type: "request_started", intent }), available);
+  const next = { ...intent, requestId: "10000000-0000-4000-8000-000000000002" };
+  assert.equal(updateA1JobView(available, { type: "request_started", intent: next }).postPending, true);
+  assert.equal(a1JobView(available).effects.repeatPost, false);
+});
