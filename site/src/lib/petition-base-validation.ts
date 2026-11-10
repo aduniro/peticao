@@ -67,3 +67,20 @@ export function isVerifiedPetitionBase(proof: unknown, bytes: Buffer, binding: P
   const record = proofs.get(proof); if (!record) return false;
   return record.binding === bindingHash(binding) && record.sha256 === digest(bytes) && record.configuration === configuration()?.fingerprint && fresh((proof as VerifiedPetitionBase).metadata.validatedAt);
 }
+
+/** Internal policy identity; never returns a URL or token. A changed verifier requires fresh evidence. */
+export const petitionBaseValidationPolicyFingerprint = () => configuration()?.fingerprint ?? null;
+/** JSONB may reorder keys. Hash a canonical semantic report together with its verifier policy. */
+export function petitionBaseValidationEvidenceDigest(metadata: PetitionBaseValidationMetadata, policyFingerprint: string) {
+  const canonical = JSON.stringify(Object.fromEntries(Object.entries(metadata).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)));
+  return digest(JSON.stringify([canonical, policyFingerprint]));
+}
+/** Accepts only an immutable receipt previously written by the internal verifier, not an HTTP report. */
+export function isCurrentStoredPetitionBaseEvidence(metadata: unknown, binding: PetitionBaseValidationBinding, artifactSha256: string, policyFingerprint: string | null, reportDigest: string) {
+  const config = configuration();
+  if (!config || policyFingerprint !== config.fingerprint || !bindingHash(binding) || !hash(artifactSha256) || !hash(reportDigest) || !metadata || typeof metadata !== "object" || Array.isArray(metadata)) return false;
+  const v = metadata as Record<string, unknown>;
+  const storedKeys = keys.map(k => k === "signerCpf" ? "signerCpfHash" : k);
+  if (Object.keys(v).length !== storedKeys.length || Object.keys(v).some(k => !storedKeys.includes(k)) || v.protocol !== "peticao-base-validation" || v.version !== 1 || v.valid !== true || v.sha256 !== artifactSha256 || v.method !== "gov-br-advanced" || v.signerCpfHash !== binding.expectedSignerCpfHash || !hash(v.certificateFingerprintSha256) || v.integrity !== true || v.govBrChainTrusted !== true || v.coverage !== "entire-file" || v.modificationsAllowed !== true || v.revocation !== "good" || typeof v.profile !== "string" || !config.profiles.includes(v.profile) || !fresh(v.validatedAt) || !name(v.validatorVersion)) return false;
+  return petitionBaseValidationEvidenceDigest(v as unknown as PetitionBaseValidationMetadata, config.fingerprint) === reportDigest;
+}

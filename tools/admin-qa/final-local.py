@@ -51,7 +51,7 @@ elif args.mode == "base-validation": command=[str(NODE),"--import","tsx","--test
 elif args.mode == "schema": command=[str(NODE),"scripts/with-db.mjs",str(NODE),"--import","tsx","../deploy/test/admin-schema-upgrade.mjs"]
 else:
     if args.mode == "full": files=sorted(str(p.relative_to(SITE)) for folder in [SITE/"src/lib",SITE/"src/i18n"] for p in folder.glob("*.test.ts"))
-    elif args.mode == "base-store": files=["src/lib/petition-base-store.test.ts", "src/lib/petition-base-validation-store.test.ts"]
+    elif args.mode == "base-store": files=["src/lib/petition-base-store.test.ts", "src/lib/petition-base-validation-store.test.ts", "src/lib/petition-base-selection.test.ts"]
     elif args.mode == "a1-http": files=["src/lib/"+f+".test.ts" for f in ["a1-job-view", "a1-request", "a1-reconciliation", "batch-a1-jobs", "batch-a1-route"]]
     elif args.mode == "documents": files=sorted(str(p.relative_to(SITE)) for p in (SITE/"src/lib").glob("*.test.ts") if p.name.startswith(("batch", "document", "president", "a1-", "petition-base")))
     elif args.mode == "regression": files=["src/lib/"+f+".test.ts" for f in ["admin-ip", "ai-context", "batch-document-history", "contact-campus-references", "contact-triage", "geo-coexistencia", "geo-retry", "painel-ui"]]

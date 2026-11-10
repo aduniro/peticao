@@ -50,3 +50,13 @@ Commit 9553c86: 14/14 testes integrados (upload anterior e evidência de valida�
 - `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/schema-1794276298499244062/result.json`
 
 Esses resultados são do núcleo de evidência: eleição da base, requisição de validação via interface e congelamento do pacote ainda são as próximas etapas. Nenhum banco de produção foi alterado.
+
+## Eleição explícita e versionada
+
+O próximo incremento acrescenta `petition_base_selections` (32 tabelas aditivas no total), sem trocar arquivos. A escolha exige requestId, revisão esperada, recibo de validação, SHA256 efetivamente revisado e versão do texto. Total/sessão/stepup, perfil, arquivo, configuração do verificador e evidência recente são rechecados na transação. Pedidos concorrentes têm um único vencedor; a repetição de decisão antiga retorna a revisão histórica sem torná-la atual. Auditoria e decisão são atômicas; FK composta e CHECK IS TRUE recusam recibo de outro arquivo e revisão anterior NULL.
+
+A evidência passa a registrar fingerprint de configuração (nullable apenas para preservar recibos anteriores). Recibos sem esse contexto exigem nova validação, sem inventar dados. O digest do relatório usa representação canônica, independente da ordem das chaves em JSONB, e vincula a política do verificador. CPF bruto continua fora do relatório persistido.
+
+Rascunho: nove testes PostgreSQL e tipos aprovados. Cobrem concorrência/replay, CAS, autorização/hash/texto/perfil, mudança do verificador, recibo legado, rollback, imutabilidade, leitura com validação desativada, alteração de CPF mesmo sem incremento indevido da revisão, desligamento durante espera e constraints. O primeiro harness falhou em imports relativos; a evidência foi preservada antes da correção. Depois deste commit, executar as rodadas integradas e o esquema32.
+
+A leitura informa a revisão atual e se o perfil/contexto ainda correspondem. `usableInPackage` permanece falso até implementar o pacote: eleger não equivale a enviar. Nenhuma interface nova, texto visível ou banco da VPS foi alterado por este incremento.

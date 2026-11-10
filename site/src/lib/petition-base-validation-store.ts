@@ -4,7 +4,7 @@ import { TEXT_VERSION } from "@/content/peticao";
 import { audit, tx } from "./db";
 import { authorizeBatchActor } from "./batches";
 import type { SessaoAdmin } from "./admin-users";
-import { isVerifiedPetitionBase, petitionBaseValidationReady, type PetitionBaseValidationBinding } from "./petition-base-validation";
+import { isVerifiedPetitionBase, petitionBaseValidationReady, petitionBaseValidationPolicyFingerprint, petitionBaseValidationEvidenceDigest, type PetitionBaseValidationBinding } from "./petition-base-validation";
 const digest = (v: Buffer | string) => createHash("sha256").update(v).digest("hex");
 const uuid = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(v);
 const hash = (v: unknown): v is string => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
@@ -56,12 +56,13 @@ export async function persistPetitionBaseValidation(input: { binding: PetitionBa
     if (!current || bindingFingerprint(current) !== bindingFingerprint(captured)) return error("profile_conflict");
     const file = await artifact(c, captured.artifactId); if (!file) return error("not_found");
     if (!isVerifiedPetitionBase(proof, file.bytes, current)) return error("invalid_proof");
-    const report = JSON.stringify(proof.metadata), reportHash = digest(report), bound = bindingFingerprint(current)!;
+    const policyFingerprint = petitionBaseValidationPolicyFingerprint(); if (!policyFingerprint) return error("invalid_proof");
+    const report = JSON.stringify(proof.metadata), reportHash = petitionBaseValidationEvidenceDigest(proof.metadata, policyFingerprint), bound = bindingFingerprint(current)!;
     const previous = (await c.query<{ id: string; created_at: Date; created_by: number }>("SELECT id,created_at,created_by FROM petition_base_validations WHERE artifact_id=$1 AND binding_sha256=$2 AND report_sha256=$3", [current.artifactId, bound, reportHash])).rows[0];
     if (previous) return { ok: true as const, validationId: previous.id, artifactId: current.artifactId, sha256: file.sha256, validationState: "valid" as const, method: "gov-br-advanced" as const, usableInPackage: false as const, createdAt: previous.created_at.toISOString(), createdBy: previous.created_by, replayed: true };
     const validationId = randomUUID();
-    const saved = (await c.query<{ created_at: Date }>(`INSERT INTO petition_base_validations(id,artifact_id,artifact_sha256,petition_text_version,responsible_id,profile_revision,signer_cpf_hash,binding_sha256,report_sha256,report,created_by)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11) RETURNING created_at`, [validationId, current.artifactId, file.sha256, current.petitionTextVersion, current.responsibleId, current.profileRevision, current.expectedSignerCpfHash, bound, reportHash, report, actor!.userId])).rows[0];
+    const saved = (await c.query<{ created_at: Date }>(`INSERT INTO petition_base_validations(id,artifact_id,artifact_sha256,petition_text_version,responsible_id,profile_revision,signer_cpf_hash,binding_sha256,report_sha256,validator_configuration_sha256,report,created_by)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12) RETURNING created_at`, [validationId, current.artifactId, file.sha256, current.petitionTextVersion, current.responsibleId, current.profileRevision, current.expectedSignerCpfHash, bound, reportHash, policyFingerprint, report, actor!.userId])).rows[0];
     await audit("petition_base_validated", null, { validationId, artifactId: current.artifactId, sha256: file.sha256, responsibleId: current.responsibleId, profileRevision: current.profileRevision, petitionTextVersion: current.petitionTextVersion, reportSha256: reportHash, userId: actor!.userId }, c);
     return { ok: true as const, validationId, artifactId: current.artifactId, sha256: file.sha256, validationState: "valid" as const, method: "gov-br-advanced" as const, usableInPackage: false as const, createdAt: saved.created_at.toISOString(), createdBy: actor!.userId, replayed: false };
   });
