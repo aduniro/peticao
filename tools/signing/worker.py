@@ -17,6 +17,8 @@ MAX_PDF = 25 * 1024 * 1024
 MAX_REQUEST = ((MAX_PDF + 2) // 3) * 4 + 4096
 CONFIG_PATH = "/etc/peticao-signing/worker.json"
 EXPECTED_CNPJ = "15883671000115"
+DECLARED_PROFILE = "pades-ad-rb-declared-unhomologated-v1"
+PROFILES = {"pades-basic-unhomologated-v1", DECLARED_PROFILE}
 HASH = re.compile(r"^[a-f0-9]{64}$")
 UUID = re.compile(r"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")
 KEYS = {"version", "jobId", "documentVersion", "inputArtifactVersionId", "inputSha256", "credentialVersionId", "profileVersion", "trustStoreVersion", "expectedCnpj", "certificateFingerprintSha256", "pdfBase64"}
@@ -66,7 +68,7 @@ def parse_request(raw):
     for key in ("documentVersion", "inputSha256", "trustStoreVersion", "certificateFingerprintSha256"):
         if not isinstance(req[key], str) or not HASH.fullmatch(req[key]):
             reject("invalid_request")
-    if req["expectedCnpj"] != EXPECTED_CNPJ or req["profileVersion"] != "pades-basic-unhomologated-v1":
+    if req["expectedCnpj"] != EXPECTED_CNPJ or req["profileVersion"] not in PROFILES:
         reject("invalid_request")
     try:
         encoded = req["pdfBase64"]
@@ -87,16 +89,18 @@ def load_config(path):
     try:
         cfg = json.loads(read_protected(path, 16384))
         required = {"version", "credentialVersionId", "pfxPath", "passwordPath", "trustRootsPath", "trustStoreVersion", "profile", "environment"}
+        if isinstance(cfg, dict) and cfg.get("profile") == DECLARED_PROFILE: required.add("policyPath")
         if not isinstance(cfg, dict) or not required <= set(cfg) or set(cfg) - required - {"crlPaths"}:
             reject("configuration_unavailable")
         if type(cfg["version"]) is not int or cfg["version"] != 1 or not UUID.fullmatch(cfg["credentialVersionId"]):
             reject("configuration_unavailable")
-        if cfg["profile"] != "pades-basic-unhomologated-v1" or cfg["environment"] not in {"synthetic-test", "production"}:
+        if cfg["profile"] not in PROFILES or cfg["environment"] not in {"synthetic-test", "production"}:
             reject("configuration_unavailable")
         if not HASH.fullmatch(cfg["trustStoreVersion"]):
             reject("configuration_unavailable")
         paths = [cfg["pfxPath"], cfg["passwordPath"], cfg["trustRootsPath"]]
-        if len(set(paths)) != 3 or Path(cfg["pfxPath"]).parent == Path(cfg["passwordPath"]).parent:
+        if cfg["profile"] == DECLARED_PROFILE: paths.append(cfg["policyPath"])
+        if len(set(paths)) != len(paths) or Path(cfg["pfxPath"]).parent == Path(cfg["passwordPath"]).parent:
             reject("configuration_unavailable")
         if not isinstance(cfg.get("crlPaths", []), list) or len(cfg.get("crlPaths", [])) > 16:
             reject("configuration_unavailable")
@@ -146,6 +150,16 @@ def execute(req, original, cfg):
         reject("policy_version_mismatch")
     if req["credentialVersionId"] != cfg["credentialVersionId"]:
         reject("credential_version_mismatch")
+    declared_policy = None
+    if cfg["profile"] == DECLARED_PROFILE:
+        try:
+            from signature_policy import parse_policy, PINNED_POLICY_FILE_SHA256, PINNED_POLICY_HASH_SHA256
+            declared_policy = parse_policy(read_protected(cfg["policyPath"], 1024*1024), PINNED_POLICY_FILE_SHA256)
+            if declared_policy.policy_hash.hex() != PINNED_POLICY_HASH_SHA256: reject("signature_policy_unavailable")
+        except Exception:
+            reject("signature_policy_unavailable")
+    from pyhanko.sign.ades.api import CAdESSignedAttrSpec
+    cades_spec = CAdESSignedAttrSpec(signature_policy_identifier=declared_policy.identifier()) if declared_policy else None
     # Read all credential material through protected descriptors; pyHanko receives bytes.
     pfx = read_protected(cfg["pfxPath"], 4 * 1024 * 1024)
     password = read_protected(cfg["passwordPath"], 4096)
@@ -188,7 +202,7 @@ def execute(req, original, cfg):
     output = signers.sign_pdf(
         IncrementalPdfFileWriter(io.BytesIO(original)),
         signature_meta=signers.PdfSignatureMetadata(field_name="A1_" + req["jobId"].replace("-", ""),
-            md_algorithm="sha256", subfilter=SigSeedSubFilter.PADES),
+            md_algorithm="sha256", subfilter=SigSeedSubFilter.PADES, cades_signed_attr_spec=cades_spec),
         signer=signer,
     ).getvalue()
     if len(output) > MAX_PDF or not output.startswith(original):
@@ -200,7 +214,7 @@ def execute(req, original, cfg):
     coverage = getattr(status.coverage, "name", "UNKNOWN")
     if not (status.intact and status.valid and status.trusted and status.docmdp_ok and coverage == "ENTIRE_FILE"):
         reject("signature_validation_failed")
-    return {"version": 1, "ok": True, "jobId": req["jobId"], "documentVersion": req["documentVersion"],
+    result = {"version": 1, "ok": True, "jobId": req["jobId"], "documentVersion": req["documentVersion"],
         "inputArtifactVersionId": req["inputArtifactVersionId"], "credentialVersionId": req["credentialVersionId"],
         "profileVersion": req["profileVersion"], "trustStoreVersion": req["trustStoreVersion"], "expectedCnpj": EXPECTED_CNPJ, "certificateFingerprintSha256": req["certificateFingerprintSha256"],
         "inputSha256": digest(original), "outputSha256": digest(output), "pdfBase64": base64.b64encode(output).decode("ascii"),
@@ -210,6 +224,12 @@ def execute(req, original, cfg):
             "profile": cfg["profile"], "environment": cfg["environment"],
             "revocation": "not-required-synthetic-test" if synthetic else "crl-required-validation-passed",
             "timestamp": "not-requested", "icpBrasilQualified": False, "homologated": False}}
+    if declared_policy:
+        attributes = [a for a in signed.embedded_signatures[0].signer_info["signed_attrs"] if a["type"].dotted == "1.2.840.113549.1.9.16.2.15"]
+        if len(attributes) != 1 or len(attributes[0]["values"]) != 1 or attributes[0]["values"][0].dump() != declared_policy.identifier().dump():
+            reject("signature_policy_declaration_mismatch")
+        result["report"]["signaturePolicy"] = {"oid": declared_policy.oid,"hashSha256": declared_policy.policy_hash.hex(),"artifactSha256": declared_policy.file_sha256}
+    return result
 
 def main():
     logging.disable(logging.CRITICAL)

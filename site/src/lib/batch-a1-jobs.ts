@@ -6,7 +6,7 @@ import { authorizeBatchActor, documentVersion, type ApprovalRow } from "./batche
 import { appendDocumentVersion, preserveObservedDocument } from "./batch-document-history";
 import { isVerifiedA1Pdf, type VerifiedA1Pdf } from "./a1-validation";
 import type { SessaoAdmin } from "./admin-users";
-import { A1_MAX_PDF_BYTES, type A1WorkerBinding } from "./a1-worker-contract";
+import { A1_MAX_PDF_BYTES, isA1ProfileVersion, type A1WorkerBinding } from "./a1-worker-contract";
 
 export const BATCH_A1_POLICY_KEY = "batch_a1_policy_v1";
 export const A1_LEASE_SECONDS = 120;
@@ -14,7 +14,7 @@ export { BATCH_A1_SCHEMA_SQL } from "./batch-a1-schema";
 
 export type A1ServerPolicy = {
   version: 1; revision: number; enabled: boolean; credentialActive: boolean;
-  credentialVersionId: string; profileVersion: "pades-basic-unhomologated-v1";
+  credentialVersionId: string; profileVersion: A1WorkerBinding["profileVersion"];
   trustStoreVersion: string; expectedCnpj: "15883671000115"; certificateFingerprintSha256: string;
 };
 export type A1JobState = "queued" | "running" | "validating" | "succeeded" | "failed" | "stale" | "cancelled";
@@ -28,7 +28,7 @@ type Actor = Pick<SessaoAdmin, "userId" | "email" | "sessaoId">;
 type JobRow = {
   id: string; batch_id: number; request_id:string; request_fingerprint: string; actor_id: number; actor_email: string; session_id: number;
   input_artifact_version_id: string; input_sha256: string; input_byte_length: number; document_version: string;
-  list_hash: string; credential_version_id: string; profile_version: "pades-basic-unhomologated-v1";
+  list_hash: string; credential_version_id: string; profile_version: A1WorkerBinding["profileVersion"];
   trust_store_version: string; expected_cnpj: "15883671000115"; certificate_fingerprint_sha256: string;
   policy_revision: number; policy_fingerprint: string; state: A1JobState; revision: number; attempts: number;
   authorization_expires_at: Date; lease_token: string | null; lease_until: Date | null; error_code: string | null;
@@ -65,7 +65,7 @@ async function policy(c: PoolClient): Promise<A1ServerPolicy | null> {
   const row=(await c.query<{value:string}>("SELECT value FROM settings WHERE key=$1 FOR SHARE",[BATCH_A1_POLICY_KEY])).rows[0];
   try {
     const p=row&&JSON.parse(row.value);
-    if (!p || Array.isArray(p) || Object.keys(p).sort().join(',')!==['version','revision','enabled','credentialActive','credentialVersionId','profileVersion','trustStoreVersion','expectedCnpj','certificateFingerprintSha256'].sort().join(',') || p.version!==1 || !integer(p.revision) || p.enabled!==true || p.credentialActive!==true || !uuid(p.credentialVersionId) || p.profileVersion!=="pades-basic-unhomologated-v1" || !sha(p.trustStoreVersion) || p.expectedCnpj!=="15883671000115" || !sha(p.certificateFingerprintSha256)) return null;
+    if (!p || Array.isArray(p) || Object.keys(p).sort().join(',')!==['version','revision','enabled','credentialActive','credentialVersionId','profileVersion','trustStoreVersion','expectedCnpj','certificateFingerprintSha256'].sort().join(',') || p.version!==1 || !integer(p.revision) || p.enabled!==true || p.credentialActive!==true || !uuid(p.credentialVersionId) || !isA1ProfileVersion(p.profileVersion) || !sha(p.trustStoreVersion) || p.expectedCnpj!=="15883671000115" || !sha(p.certificateFingerprintSha256)) return null;
     return {version:1,revision:p.revision,enabled:true,credentialActive:true,credentialVersionId:p.credentialVersionId,profileVersion:p.profileVersion,trustStoreVersion:p.trustStoreVersion,expectedCnpj:p.expectedCnpj,certificateFingerprintSha256:p.certificateFingerprintSha256};
   } catch { return null; }
 }

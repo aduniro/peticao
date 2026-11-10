@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { verifyA1Pdf, isVerifiedA1Pdf, a1ValidationReady, type VerifiedA1Pdf } from "./a1-validation";
-import type { A1WorkerBinding } from "./a1-worker-contract";
+import { A1_AD_RB_POLICY, A1_PROFILE_VERSIONS, type A1WorkerBinding } from "./a1-worker-contract";
 const bytes=Buffer.from("%PDF-A1-VALIDATION-FIXTURE-NOT-CRYPTOGRAPHIC-PROOF");
 const digest=(value:Buffer)=>createHash("sha256").update(value).digest("hex");
 const binding:A1WorkerBinding={jobId:"11111111-1111-4111-8111-111111111111",documentVersion:"a".repeat(64),inputArtifactVersionId:"22222222-2222-4222-8222-222222222222",inputSha256:"d".repeat(64),credentialVersionId:"33333333-3333-4333-8333-333333333333",profileVersion:"pades-basic-unhomologated-v1",trustStoreVersion:"c".repeat(64),expectedCnpj:"15883671000115",certificateFingerprintSha256:"b".repeat(64)};
@@ -59,4 +59,14 @@ test("policy/input mutation during fetch and later token rotation invalidate pro
  process.env.A1_VALIDATION_ACCEPTED_POLICIES=JSON.stringify([{profile,policyOid}]);
  const result=await verifyA1Pdf(bytes,binding,fetchResponse(report()));assert.ok(result.ok);
  process.env.ICP_VALIDATOR_TOKEN="ROTATED";assert.equal(isVerifiedA1Pdf(result.proof,bytes,binding),false);
+}));
+
+test("all unhomologated producer profile names remain forbidden as accepted validation profiles",async()=>fixture(async()=>{
+ for(const producer of A1_PROFILE_VERSIONS){process.env.A1_VALIDATION_ACCEPTED_POLICIES=JSON.stringify([{profile:producer,policyOid:A1_AD_RB_POLICY.oid}]);assert.equal(a1ValidationReady(),false);}
+}));
+test("declared AD-RB binding only accepts matching OID from the independent configured validator (mock contract only)",async()=>fixture(async()=>{
+ const b:A1WorkerBinding={...binding,profileVersion:"pades-ad-rb-declared-unhomologated-v1"};
+ process.env.A1_VALIDATION_ACCEPTED_POLICIES=JSON.stringify([{profile,policyOid:A1_AD_RB_POLICY.oid},{profile,policyOid}]);
+ assert.equal((await verifyA1Pdf(bytes,b,fetchResponse(report()))).ok,false);
+ const accepted=await verifyA1Pdf(bytes,b,fetchResponse({...report(),policyOid:A1_AD_RB_POLICY.oid}));assert.ok(accepted.ok);assert.ok(isVerifiedA1Pdf(accepted.proof,bytes,b));assert.equal(isVerifiedA1Pdf(accepted.proof,bytes,binding),false);
 }));

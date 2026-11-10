@@ -187,3 +187,11 @@ test('A1 finish: revogação, política, documento, aprovação e lease impedem 
 test('A1 refuses legacy test PDFs without explicit frozen A1 preparation',async()=>{
  const f=await fixture('t_a1_legacy_footer',false);try{assert.equal((await admitA1Job(f.input,f.actor) as any).error,'document_conflict');assert.equal((await query('SELECT 1 FROM batch_a1_jobs')).rowCount,0);await f.noSend();}finally{await close();}
 });
+
+test("declared-policy profile persists in the authorized job binding without signing or sending",async()=>{
+ const f=await fixture('t_a1_declared_policy');try{
+  const policy={...f.policy,profileVersion:'pades-ad-rb-declared-unhomologated-v1'};await query("UPDATE settings SET value=$2 WHERE key=$1",[BATCH_A1_POLICY_KEY,JSON.stringify(policy)]);
+  const admitted=await admitA1Job(f.input,f.actor);assert.ok(admitted.ok);assert.equal(admitted.job.profileVersion,policy.profileVersion);
+  const claimed=await claimA1Job(admitted.job.jobId,admitted.job.revision);assert.ok(claimed.ok);assert.equal(claimed.binding.profileVersion,policy.profileVersion);await f.noSend();
+ }finally{await close();}
+});

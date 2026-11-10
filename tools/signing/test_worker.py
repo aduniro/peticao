@@ -9,6 +9,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -132,5 +133,46 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(run.stderr,"")
         self.assertNotIn("synthetic-password",run.stdout)
         self.assertNotIn(str(self.root),run.stdout)
+
+    def test_declared_ad_rb_policy_uses_internal_hash_and_never_qualifies(self):
+        from signature_policy import PINNED_POLICY_FILE_SHA256, PINNED_POLICY_HASH_SHA256
+        policy_path=self.root/"certificates"/"policy.der"
+        policy_path.write_bytes((HERE/"fixtures"/"ad-rb-v1.3.der").read_bytes());policy_path.chmod(0o600)
+        cfg={**self.cfg,"profile":worker.DECLARED_PROFILE,"policyPath":str(policy_path)}
+        req={**self.req,"profileVersion":worker.DECLARED_PROFILE}
+        worker.parse_request(json.dumps(req))
+        result=worker.execute(req,self.pdf,cfg)
+        self.assertEqual(result["report"]["signaturePolicy"],{"oid":"2.16.76.1.7.1.11.1.3","hashSha256":PINNED_POLICY_HASH_SHA256,"artifactSha256":PINNED_POLICY_FILE_SHA256})
+        self.assertFalse(result["report"]["homologated"]);self.assertFalse(result["report"]["icpBrasilQualified"])
+        with self.assertRaisesRegex(worker.Refused,"revocation_evidence_unavailable"):worker.execute(req,self.pdf,{**cfg,"environment":"production","crlPaths":[]})
+        self.assertTrue(base64.b64decode(result["pdfBase64"]).startswith(self.pdf))
+        if os.environ.get("QA_A1_POLICY_RESULT_DIR"):
+            out=Path(os.environ["QA_A1_POLICY_RESULT_DIR"])
+            for name,data in [("request.json",json.dumps(req).encode()),("response.json",json.dumps(result).encode()),("original.pdf",self.pdf)]:
+                with (out/name).open("xb") as f:f.write(data)
+                (out/name).chmod(0o600)
+        try:
+            policy_path.write_bytes(b"not the pinned policy")
+            with self.assertRaisesRegex(worker.Refused,"signature_policy_unavailable"):worker.execute(req,self.pdf,cfg)
+        finally:policy_path.unlink()
+
+    def test_bad_policy_is_rejected_before_credential_material_is_read(self):
+        path=self.root/"certificates"/"bad-policy.der";path.write_bytes(b"bad policy");path.chmod(0o600)
+        cfg={**self.cfg,"profile":worker.DECLARED_PROFILE,"policyPath":str(path)};req={**self.req,"profileVersion":worker.DECLARED_PROFILE}
+        try:
+            with mock.patch.object(worker,"read_protected",wraps=worker.read_protected) as reader:
+                with self.assertRaisesRegex(worker.Refused,"signature_policy_unavailable"):worker.execute(req,self.pdf,cfg)
+                self.assertEqual([call.args[0] for call in reader.call_args_list],[str(path)])
+        finally:path.unlink()
+
+    def test_policy_config_is_required_only_for_declared_profile(self):
+        original=self.config_path.read_bytes()
+        try:
+            for cfg in [{**self.cfg,"profile":worker.DECLARED_PROFILE},{**self.cfg,"policyPath":str(self.root/"policy.der")},{**self.cfg,"profile":"unrecognized"}]:
+                self.config_path.write_text(json.dumps(cfg))
+                with self.assertRaisesRegex(worker.Refused,"configuration_unavailable"):worker.load_config(self.config_path)
+            cfg={**self.cfg,"profile":worker.DECLARED_PROFILE,"policyPath":str(self.root/"policy.der")}
+            self.config_path.write_text(json.dumps(cfg));self.assertEqual(worker.load_config(self.config_path),cfg)
+        finally:self.config_path.write_bytes(original)
 
 if __name__ == "__main__": unittest.main()

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readLimitedText } from "./http-body";
-import { A1_MAX_PDF_BYTES, type A1WorkerBinding } from "./a1-worker-contract";
+import { A1_MAX_PDF_BYTES, A1_AD_RB_POLICY, isA1ProfileVersion, type A1WorkerBinding } from "./a1-worker-contract";
 
 /** Custom adapter v2 contract. This is not the public ITI API protocol. */
 export type A1ValidationMetadata = Readonly<{
@@ -29,7 +29,7 @@ function isOid(value: unknown): value is string {
   return parts[0] === "2" || BigInt(parts[1]) <= 39n;
 }
 function bindingDigest(binding: A1WorkerBinding): string | null {
-  if (!binding || binding.expectedCnpj !== "15883671000115" || binding.profileVersion !== "pades-basic-unhomologated-v1") return null;
+  if (!binding || binding.expectedCnpj !== "15883671000115" || !isA1ProfileVersion(binding.profileVersion)) return null;
   if (![binding.jobId, binding.inputArtifactVersionId, binding.credentialVersionId].every(value => typeof value === "string" && uuid.test(value)) ||
       ![binding.documentVersion, binding.inputSha256, binding.trustStoreVersion, binding.certificateFingerprintSha256].every(value => typeof value === "string" && sha.test(value))) return null;
   return digest(JSON.stringify([binding.jobId, binding.documentVersion, binding.inputArtifactVersionId, binding.inputSha256, binding.credentialVersionId, binding.profileVersion, binding.trustStoreVersion, binding.expectedCnpj, binding.certificateFingerprintSha256]));
@@ -56,7 +56,7 @@ function configuration(): Configuration | null {
     for (const value of values) {
       if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join(",") !== "policyOid,profile" || typeof value.profile !== "string" || !profilePattern.test(value.profile) || !isOid(value.policyOid)) return null;
       // Worker generic output can never be approved by naming it in this allowlist.
-      if (value.profile === "pades-basic-unhomologated-v1") return null;
+      if (isA1ProfileVersion(value.profile)) return null;
       accepted.push({ profile: value.profile, policyOid: value.policyOid });
     }
     accepted.sort((a, b) => `${a.profile}:${a.policyOid}`.localeCompare(`${b.profile}:${b.policyOid}`));
@@ -98,6 +98,7 @@ export async function verifyA1Pdf(bytes: Buffer, binding: A1WorkerBinding, fetch
         report.modificationsAllowed !== true || report.revocation !== "good" ||
         typeof report.profile !== "string" || typeof report.policyOid !== "string" ||
         !config.accepted.some(pair => pair.profile === report.profile && pair.policyOid === report.policyOid) ||
+        binding.profileVersion === "pades-ad-rb-declared-unhomologated-v1" && report.policyOid !== A1_AD_RB_POLICY.oid ||
         !freshUtc(report.validatedAt) || typeof report.validatorVersion !== "string" ||
         !/^[a-zA-Z0-9][a-zA-Z0-9_.:+-]{0,99}$/.test(report.validatorVersion)) return rejected;
     // Reject configuration or caller data changed during external verification.

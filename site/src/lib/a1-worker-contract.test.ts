@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { createA1WorkerRequest, parseA1WorkerResponse, type A1WorkerBinding } from "./a1-worker-contract";
+import { createA1WorkerRequest, parseA1WorkerResponse, A1_AD_RB_POLICY, type A1WorkerBinding } from "./a1-worker-contract";
 const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
 const original = Buffer.from("%PDF-QA-ORIGINAL");
 const binding: A1WorkerBinding = { jobId: "11111111-1111-4111-8111-111111111111", documentVersion: "a".repeat(64), inputArtifactVersionId: "22222222-2222-4222-8222-222222222222", inputSha256: digest(original), credentialVersionId: "33333333-3333-4333-8333-333333333333", profileVersion: "pades-basic-unhomologated-v1", trustStoreVersion: "c".repeat(64), expectedCnpj: "15883671000115", certificateFingerprintSha256: "b".repeat(64) };
@@ -28,4 +28,12 @@ test("wrong binding, altered bytes and false/indeterminate evidence fail closed"
     assert.equal(parseA1WorkerResponse(JSON.stringify(value), binding, original).ok, false);
   }
   assert.equal(parseA1WorkerResponse("not json", binding, original).ok, false);
+});
+
+test("declared-policy profile requires exact pinned internal and artifact hashes without granting qualification",()=>{
+  const b:A1WorkerBinding={...binding,profileVersion:"pades-ad-rb-declared-unhomologated-v1"};
+  const technical=response();const value={...technical,...createA1WorkerRequest(b,original),pdfBase64:technical.pdfBase64,report:{...technical.report,profile:b.profileVersion,signaturePolicy:{...A1_AD_RB_POLICY}}};
+  const result=parseA1WorkerResponse(JSON.stringify(value),b,original);assert.ok(result.ok);assert.equal(result.icpBrasilQualified,false);assert.equal(result.report.homologated,false);
+  for(const policy of [undefined,{...A1_AD_RB_POLICY,hashSha256:A1_AD_RB_POLICY.artifactSha256},{...A1_AD_RB_POLICY,artifactSha256:A1_AD_RB_POLICY.hashSha256},{...A1_AD_RB_POLICY,oid:"1.2.3.4"},{...A1_AD_RB_POLICY,unexpected:true}])assert.equal(parseA1WorkerResponse(JSON.stringify({...value,report:{...value.report,signaturePolicy:policy}}),b,original).ok,false);
+  assert.equal(parseA1WorkerResponse(JSON.stringify({...technical,report:{...technical.report,signaturePolicy:A1_AD_RB_POLICY}}),binding,original).ok,false);
 });

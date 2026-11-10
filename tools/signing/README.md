@@ -47,3 +47,9 @@ O contrato Node está em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-
 - https://docs.pyhanko.eu/en/v0.31.0/api-docs/pyhanko.sign.validation.html
 
 Estes exemplos/APIs fundamentam o adaptador; não constituem prova de homologação ICP-Brasil. Os requisitos normativos e a guarda e-CNPJ do aplicativo permanecem separados.
+
+## Perfil técnico com declaração de política
+
+O perfil opcional `pades-ad-rb-declared-unhomologated-v1` acrescenta `policyPath` à configuração protegida. Código e fixture com proveniência em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/tools/signing/signature_policy.py` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/tools/signing/fixtures/ad-rb-v1.3.provenance.json`. A fixture é pública e não é credencial; o arquivo usado pelo runtime precisa atender às proteções do loader e ao pin. Nada foi instalado. O perfil anterior não aceita esse campo extra.
+
+A declaração não comprova autenticidade do espelho, LPA vigente, homologação, carimbo do tempo ou classificação ICP. Consulte `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/docs/ETAPA-06-A1-POLITICA-DECLARADA-20261109.md`. Não aprovar o artefato usando o próprio nome técnico do produtor no allowlist do verificador.
