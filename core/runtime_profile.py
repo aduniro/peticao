@@ -63,7 +63,9 @@ def validate_inputs(full: bool = False) -> dict:
 def payload(data: dict) -> dict:
     if set(data) != {"action", "id", "kind", "source_commit"} or data.get("kind") != KIND or data.get("source_commit") != SOURCE_COMMIT: raise ValueError("profile_fixed_contract_only")
     job_id(data.get("id"))
-    return {"kind": KIND, **validate_inputs()}
+    # The coordinator and worker have different UIDs. Admission must never read
+    # worker-private staged inputs; these are expected identities, not a receipt.
+    return {"kind": KIND, "source_commit": SOURCE_COMMIT, "runtime_sha256": ARCHIVE_SHA, "manifest_sha256": MANIFEST_SHA, "node_sha256": NODE_SHA}
 
 def argv(job: str) -> list[str]:
     return ["/usr/bin/python3", "/opt/admin-v2-cluster/runtime_profile.py", "run", job_id(job)]

@@ -38,6 +38,18 @@ class RuntimeProfileTests(unittest.TestCase):
         data=self.data();data['source_commit']='b'*40
         with self.assertRaises(ValueError):p.payload(data)
         with self.assertRaises(ValueError):p.argv('../escape')
+    def test_separate_uids_admission_never_reads_worker_private_inputs(self):
+        with mock.patch.object(p, 'validate_inputs', side_effect=PermissionError('worker UID997 directory0700 is not coordinator UID999 readable')) as read:
+            admitted=p.payload(self.data());read.assert_not_called()
+            self.assertEqual(admitted['runtime_sha256'],p.ARCHIVE_SHA)
+        # The executing worker must still reject an inaccessible/mismatched private staging root.
+        with mock.patch.object(p.os, 'getuid', return_value=os.getuid()+997), mock.patch.object(p.subprocess, 'Popen') as start:
+            self.assertEqual(p.run(self.job),1);start.assert_not_called()
+    def test_missing_worker_inputs_refused_without_child_after_admission(self):
+        (self.h/'inputs/runtime.tar').unlink()
+        self.assertEqual(p.payload(self.data())['kind'],p.KIND)
+        with mock.patch.object(p.subprocess, 'Popen') as start:
+            self.assertEqual(p.run(self.job),1);start.assert_not_called()
     def test_pin_tamper_rejected_before_any_child(self):
         (self.h/'smoke.py').write_text('changed')
         with mock.patch.object(p.subprocess,'Popen') as start:
