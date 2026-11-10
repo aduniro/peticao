@@ -91,7 +91,7 @@ export async function runPresidentCombinedA1Extension({ browser, base, sessionTo
       }
       const response = await route.fetch({ maxRedirects: 0 }); const data = await response.json();
       assert.equal(response.status(), 200); assert.equal(data.ok, true);
-      reads.push({ query: target.search, ownArtifactId: data.ownArtifactId ?? null, latestOwnArtifactId: data.latestJob?.ownArtifactId ?? null, jobId: data.job?.jobId ?? null });
+      reads.push({ available: data.available ?? null, error: data.error ?? null, query: target.search, ownArtifactId: data.ownArtifactId ?? null, latestOwnArtifactId: data.latestJob?.ownArtifactId ?? null, jobId: data.job?.jobId ?? null });
       return route.fulfill({ response });
     });
     const page = await context.newPage(); page.on("pageerror", error => pageErrors.push(error.message));
@@ -105,7 +105,13 @@ export async function runPresidentCombinedA1Extension({ browser, base, sessionTo
     await button(ownRegion(page), ACTION).click();
     let modal = page.getByRole("dialog"); await modal.waitFor();
     await modal.getByRole("heading", { name: `${ACTION} · ${sourceBatchId} · confirmação própria`, exact: true }).waitFor();
-    await page.waitForFunction(() => { const b = [...document.querySelectorAll("dialog button")].find(e => e.textContent === "Assinar com certificado A1"); return b && !b.disabled; });
+    try {
+      await page.waitForFunction(() => { const opened = document.querySelector("dialog[open]"); const b = [...(opened?.querySelectorAll("button") ?? [])].find(e => e.textContent === "Assinar com certificado A1"); return b && !b.disabled; });
+    } catch (error) {
+      writeFileSync(`${output}/combined-a1-readiness-debug.json`, JSON.stringify({ reads, controls: await modal.locator("button").evaluateAll(buttons => buttons.map(b => ({ text: b.textContent, disabled: b.disabled }))) }, null, 2), { mode: 0o600 });
+      await page.screenshot({ path: `${output}/combined-a1-readiness-debug.png`, fullPage: true });
+      throw error;
+    }
     assert.ok(reads.some(r => new URL(r.query, base).searchParams.get("expectedOwnArtifactId") === ownArtifactId));
     await button(modal, ACTION).click(); await modal.getByRole("alert").waitFor();
     assert.equal(await page.evaluate(() => window.__combinedA1PostCalls), 1); assert.ok(posts.length >= 1 && admittedJob);
