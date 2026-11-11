@@ -28,6 +28,22 @@ def live_context(expected):
  if not 0<limits['cpuCores']<=2 or not 0<limits['memoryMaxBytes']<=3*1024**3 or not 0<limits['pidsMax']<=256:raise ValueError('LOCAL limits exceeded')
  return limits
 
+def verify_response_observation_v2_previous_attempt():
+ prior=json.loads((ROOT/'PREVIOUS-OBSERVATION-FAILURE.json').read_text());oldrun=ROOT/'runs/85bac19ff37e'
+ if prior.get('classification')!='EXPLICIT_R14_RESPONSE_OBSERVATION_V2_AFTER_FAILED_FIRST_RUN' or prior.get('newMarker')!='execution.response-observation-v2.started' or prior.get('noGenericReplay')is not True or prior.get('oldRun')!=str(oldrun):raise ValueError('only fixed response observation v2 attempt permitted')
+ expected={'root-failure-receipt.json','root-retained-unit.txt','outer-result.json','own-browser-result.json','own-created-proof.json'}
+ if set(prior.get('files',{}))!=expected:raise ValueError('exact previous failure proof set required')
+ for name,pin in prior['files'].items():
+  if digest(oldrun/name)!=pin:raise ValueError('previous failure proof hash drift')
+ if prior.get('failureReceiptSha256')!='6002a111ce453b60eeb2a3229ce57d402cff778d75bb27a79ee483f8d5cc6807' or prior['files']['root-failure-receipt.json']!=prior['failureReceiptSha256'] or digest(ROOT/'execution.started')!=prior.get('oldMarkerSha256'):raise ValueError('root failure receipt and original marker required')
+ failed=json.loads((oldrun/'root-failure-receipt.json').read_text());outer=json.loads((oldrun/'outer-result.json').read_text());unit=dict(line.split('=',1)for line in(oldrun/'root-retained-unit.txt').read_text().splitlines()if'='in line)
+ if failed.get('classification')!='FAILED_BROWSER_GET_RESPONSE_BODY_OBSERVATION_AFTER_OWN_CREATION' or failed.get('exit')!=1 or failed.get('invocation')!='7582e0d58daa4da88d84d4d119229e52' or failed.get('sourceCommit')!='f55595cd348c23ffe559dba2de9150259db9f1e7' or failed.get('plannedBrowserChecks')!=13 or failed.get('partialBrowserChecksPassed')!=4 or failed.get('ownCreationPostedOnce')is not True or failed.get('recoveryDownloadsHistoryReloadQualified')is not False or failed.get('cleanupPassed')is not True or failed.get('runtimeStable')is not True or failed.get('retryPerformed')is not False:raise ValueError('root typed failed observation receipt required')
+ for name in ['outer-result.json','root-retained-unit.txt','own-browser-result.json','own-created-proof.json']:
+  if failed.get('files',{}).get(name)!=prior['files'][name]:raise ValueError('root receipt exact file binding required')
+ if failed.get('executionMarkerSha256')!=prior['oldMarkerSha256'] or any(unit.get(k)!=v for k,v in {'Result':'exit-code','ExecMainCode':'1','ExecMainStatus':'1','LoadState':'loaded','ActiveState':'failed','SubState':'failed','InvocationID':'7582e0d58daa4da88d84d4d119229e52'}.items()):raise ValueError('old retained unit failure and marker must remain')
+ if outer.get('exit')!=1 or outer.get('runtimeStable')is not True or outer.get('originRuntimeStable')is not True or outer.get('postgresCleanup',{}).get('stopped')is not True or outer.get('remainingAppProcesses')!=[]or outer.get('remainingLocalCgroupProcesses')!=[]or outer.get('localPortsClosed')!=[55494,31394]:raise ValueError('old failed outer and drained resources required')
+ return prior
+
 def verify_local_manifest(create_intent=True):
  expected=os.environ.get('LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256','')
  if not re.fullmatch('[a-f0-9]{64}',expected)or digest(ROOT/'local-manifest.json')!=expected:raise ValueError('reviewed LOCAL manifest SHA required')
@@ -35,8 +51,9 @@ def verify_local_manifest(create_intent=True):
  for name,pin in value['files'].items():
   if not name or Path(name).is_absolute()or '..'in Path(name).parts or digest(ROOT/name)!=pin:raise ValueError('LOCAL reviewed file drift')
  if create_intent:
-  fd=os.open(ROOT/'execution.started',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
-  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_R14_OWN_CONFIRMATION_BROWSER','at':time.time(),'unit':UNIT},out)
+  live_context(json.loads(CONFIG.read_text())['expected_cgroup']);prior=verify_response_observation_v2_previous_attempt()
+  fd=os.open(ROOT/'execution.response-observation-v2.started',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_R14_RESPONSE_OBSERVATION_V2_ONLY','at':time.time(),'unit':UNIT,'previousFailureReceiptSha256':prior['failureReceiptSha256'],'oldMarkerSha256':prior['oldMarkerSha256']},out)
  return value
 
 def verify_local_context(config):

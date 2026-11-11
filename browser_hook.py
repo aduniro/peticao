@@ -3,7 +3,7 @@ from pathlib import Path
 import os,json,stat,hashlib,re,subprocess,signal,time
 ROOT=Path('/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111')
 DRIVER=ROOT/'own-browser.cjs'
-DRIVER_SHA='8102c458106c0f566d79ae53d8ddee6afff719b7e9841fe8d09878c418b631a8'
+DRIVER_SHA='d38534abd0f52c950c0db220de1c2ae5a5577f74fd6a3b4d9807a4a7d8bb4b6f'
 NODE_SHA='b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
 UNIT='peticao-r0014-own-document-browser-qa-20261111.service'
 SOURCE='f55595cd348c23ffe559dba2de9150259db9f1e7'
@@ -73,6 +73,8 @@ def validate_result(run,value,generated):
  if value.get('exit')!=0 or value.get('sourceCommit')!=SOURCE or value.get('identityPreconditionSeeded')is not True or value.get('externalIdentityVerified')is not False or value.get('A1OperationTested')is not False or value.get('approvalOrSendAttempted')is not False or value.get('browserTmpRemoved')is not True:raise BrowserHookError('own browser result scope exit cleanup')
  if [(v.get('name'),v.get('passed'))for v in value.get('checks',[])]!=[(n,True)for n in EXPECTED_CHECKS]:raise BrowserHookError('exact13 browser checks')
  if any(value.get(n)!=[]for n in ['blocked','pageErrors','consoleErrors']):raise BrowserHookError('unexpected browser requests or errors')
+ observations=value.get('getObservations',[])
+ if [v.get('phase')for v in observations]!=['receipt_inventory_GET','manual_own_recovery_GET','artifact_inventory_GET','receipt_inventory_GET','manual_own_recovery_GET'] or any(v.get('status')!=200 or v.get('finishedError')is not None or v.get('requestFailed')is not None or v.get('passed')is not True for v in observations):raise BrowserHookError('all five GET observations must finish and commit valid UI')
  if [v['path']for v in value['requests']if v['method']=='POST']!=['/api/admin/presidente/documentos-proprios']:raise BrowserHookError('one explicit own POST only')
  a=generated['artifact']
  if value.get('artifactId')!=a['artifactId'] or value.get('requestId')!=a['requestId']:raise BrowserHookError('same exact immutable artifact request')
@@ -97,7 +99,7 @@ def run_browser_hook(run,cookie,group,node,config,cancellation,fixture,seed,asse
     if event.exists()and generated is None:
      v=read_private_json(event)
      if set(v)!=set(['nonce','sourceCommit','requestId','artifactId'])or v['nonce']!=run.name or v['sourceCommit']!=SOURCE or not re.fullmatch('[a-f0-9-]{36}',v['requestId'])or not re.fullmatch('[a-f0-9-]{36}',v['artifactId']):raise BrowserHookError('fixed own-created event')
-     generated=fixture('inspect');verify_own_state(seed,before,generated)
+     generated=fixture('inspect');verify_own_state(seed,before,generated);proof['generatedState']=generated
      if generated['artifact']['requestId']!=v['requestId']or generated['artifact']['artifactId']!=v['artifactId']:raise BrowserHookError('event exact artifact binding')
      write_private(run/'own-created-proof.json',{'nonce':run.name,'sourceCommit':SOURCE,'artifact':generated['artifact']})
     time.sleep(.1)

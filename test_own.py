@@ -41,6 +41,7 @@ class ResultGateTests(unittest.TestCase):
   for name in ['own-database.pdf','browser-own.pdf','browser-history-own.pdf']:(self.run/'downloads'/name).write_bytes(data)
   (self.run/'own-browser.png').write_bytes(b'\x89PNG\r\n\x1a\nDUMMY');self.generated={'artifact':{'artifactId':'a','requestId':'r','sha256':hashlib.sha256(data).hexdigest(),'byteLength':len(data)}}
   self.value={'exit':0,'sourceCommit':b.SOURCE,'identityPreconditionSeeded':True,'externalIdentityVerified':False,'A1OperationTested':False,'approvalOrSendAttempted':False,'browserTmpRemoved':True,'checks':[{'name':n,'passed':True}for n in b.EXPECTED_CHECKS],'blocked':[],'pageErrors':[],'consoleErrors':[],'requests':[{'method':'POST','path':'/api/admin/presidente/documentos-proprios'}],'artifactId':'a','requestId':'r'}
+  self.value['getObservations']=[{'phase':n,'status':200,'finishedError':None,'requestFailed':None,'passed':True}for n in ['receipt_inventory_GET','manual_own_recovery_GET','artifact_inventory_GET','receipt_inventory_GET','manual_own_recovery_GET']]
  def tearDown(self):self.temp.cleanup()
  def test_complete_result_gate(self):self.assertEqual(b.validate_result(self.run,self.value,self.generated)['passedBrowserChecks'],13)
  def test_missing_check_or_extra_post_never_success(self):

@@ -1,5 +1,5 @@
 {
-  "classification": "R14_FUNCTIONAL_DRAFT_INFRASTRUCTURE_BLOCKED",
+  "classification": "R14_RESPONSE_OBSERVATION_V2_PREPARATION_AFTER_PRESERVED_FAILURE",
   "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "derivedControllerR13Commit": "53accbc147d257ad64ea53f14a46c004c76944a0",
   "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
@@ -11,7 +11,6 @@
   "consumedIdentityReceiptSeeded": true,
   "externalIdentityVerified": false,
   "newRuntimeCopied": false,
-  "actualAppPgDockerBrowserPopplerExecuted": false,
   "infrastructureReady": false,
   "requiresPeerControllerPatchAndNewFreezeBeforeExecution": true,
   "futureBrowserChecks": 13,
@@ -20,5 +19,12 @@
     401,
     403,
     403
-  ]
+  ],
+  "baselineHarnessCommit": "0c7947a924029335593bfe157036cfd305c42133",
+  "baselineActualExecuted": true,
+  "baselineExit": 1,
+  "baselinePartialUiChecks": 4,
+  "observationV2ActualExecuted": false,
+  "GETObservation": "status200+finishednull+request.failure null+new committed typed DOM, no GET response.json",
+  "POSTAckJsonPreserved": true
 }
