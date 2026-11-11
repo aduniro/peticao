@@ -1,0 +1,30 @@
+TAP version 13
+# Subtest: guard only allows exact fixture TCP and synthetic numeric lookup
+ok 1 - guard only allows exact fixture TCP and synthetic numeric lookup
+  ---
+  duration_ms: 8.572035
+  ...
+# Subtest: unknown host or port, Unix socket and DNS are denied without underlying call
+ok 2 - unknown host or port, Unix socket and DNS are denied without underlying call
+  ---
+  duration_ms: 3.292664
+  ...
+# Subtest: spawn, fetch, TLS, UDP and listeners cannot execute
+ok 3 - spawn, fetch, TLS, UDP and listeners cannot execute
+  ---
+  duration_ms: 3.511702
+  ...
+# Subtest: unexpected features, real provider and alternate database fail admission
+ok 4 - unexpected features, real provider and alternate database fail admission
+  ---
+  duration_ms: 15.464009
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 711.032967

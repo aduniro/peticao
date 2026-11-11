@@ -1,0 +1,17 @@
+{
+  "classification": "MINIMAL_ACCEPTED_CONTROLLER_PORT_ONLY",
+  "parentRoot": "/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111",
+  "parentCommit": "af2e4f54469b18eb1a644a76987c281084bd17a4",
+  "DockerPGParentClassSha256": "d9ca352ef331746f3c7ded9ca9b55521f61d7f006e794e59570f4d465d4f88b5",
+  "DockerPGPortClassSha256": "19c24e345326a0625607fc65616c3c839b852e5419ff51bad7e327268abe0fd5",
+  "normalization": [
+    "ROOT",
+    "unit",
+    "Docker namespace",
+    "55496 instead55494",
+    "31396unused instead31394"
+  ],
+  "firstExecutionOnly": true,
+  "copiedPreviousFailureOrR14BrowserCode": false,
+  "realExecuted": false
+}

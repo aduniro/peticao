@@ -1,0 +1,11 @@
+{
+  "classification": "ROOT_OBSERVED_STRICT_TRANSITIVE_TEST_TYPECHECK_NOT_EXECUTION",
+  "path": "/mnt/apps/peticao-final/_ops/materials-pg-test-typecheck-20261111/result.json",
+  "sha256": "92deafe6f910343df5a742c18fd13ec8a13d7725ab771b23762293f4a83832bc",
+  "sourceCommit": "7b7bff946022ef54a0c0b808fe4418d5f6e7473d",
+  "testSha256": "5c6e7e2ab76538f49eece34a7b4645ffc8a18afb988ea48fbbe1edcc3f40952d",
+  "rootReportedDiagnostics": 0,
+  "rootReportedInputs": 507,
+  "lockMatchedPackages": 17,
+  "actualPgExecuted": false
+}

@@ -1,0 +1,55 @@
+TAP version 13
+# Subtest: materials PG17: additive DDL twice, real JSONB hash roundtrip and exact head FK
+ok 1 - materials PG17: additive DDL twice, real JSONB hash roundtrip and exact head FK # SKIP requires an explicit isolated PG17 fixture
+  ---
+  duration_ms: 1.718954
+  ...
+# Subtest: materials PG17: two actors racing one CAS revision append exactly one version
+ok 2 - materials PG17: two actors racing one CAS revision append exactly one version # SKIP requires an explicit isolated PG17 fixture
+  ---
+  duration_ms: 0.152505
+  ...
+# Subtest: materials PG17: concurrent same actor intent is durable and scoped, replay returns original version
+ok 3 - materials PG17: concurrent same actor intent is durable and scoped, replay returns original version # SKIP requires an explicit isolated PG17 fixture
+  ---
+  duration_ms: 0.165871
+  ...
+# Subtest: materials PG17: audit failure atomically rolls back create and revise, without orphan receipt
+ok 4 - materials PG17: audit failure atomically rolls back create and revise, without orphan receipt # SKIP requires an explicit isolated PG17 fixture
+  ---
+  duration_ms: 1.072319
+  ...
+# Subtest: materials PG17: store revalidates role, live session and identity before admission
+ok 5 - materials PG17: store revalidates role, live session and identity before admission # SKIP requires an explicit isolated PG17 fixture
+  ---
+  duration_ms: 0.183829
+  ...
+# Subtest: materials PG17: archive appends history and UPDATE/DELETE guards preserve versions and receipts
+ok 6 - materials PG17: archive appends history and UPDATE/DELETE guards preserve versions and receipts # SKIP requires an explicit isolated PG17 fixture
+  ---
+  duration_ms: 0.138961
+  ...
+# Subtest: materials PG17: library UUID pagination has no overlap and separates archived heads
+ok 7 - materials PG17: library UUID pagination has no overlap and separates archived heads # SKIP requires an explicit isolated PG17 fixture
+  ---
+  duration_ms: 0.152432
+  ...
+# Subtest: materials PG17: ordinal history pagination preserves current head and all old revisions
+ok 8 - materials PG17: ordinal history pagination preserves current head and all old revisions # SKIP requires an explicit isolated PG17 fixture
+  ---
+  duration_ms: 0.19817
+  ...
+# Subtest: materials PG17: disabling feature preserves existing records and rejects every entry point
+ok 9 - materials PG17: disabling feature preserves existing records and rejects every entry point # SKIP requires an explicit isolated PG17 fixture
+  ---
+  duration_ms: 0.216349
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 0
+# fail 0
+# cancelled 0
+# skipped 9
+# todo 0
+# duration_ms 20.184134

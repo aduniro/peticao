@@ -1,0 +1,17 @@
+{
+  "classification": "SOURCE_SYNTAX_ONLY",
+  "pythonParsed": [
+    "docker_control.py",
+    "local_controller.py",
+    "run.py",
+    "test_controller_port.py",
+    "test_profile.py"
+  ],
+  "nodeChecked": [
+    "stage.cjs",
+    "preflight.cjs",
+    "node-guard.mjs"
+  ],
+  "diagnostics": 0,
+  "appPgExecuted": false
+}

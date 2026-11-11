@@ -1,0 +1,87 @@
+{
+  "classification": "STATIC_SOURCE_GRAPH_ONLY_NO_APP_IMPORT",
+  "commit": "7b7bff946022ef54a0c0b808fe4418d5f6e7473d",
+  "files": {
+    "site/src/lib/materials-store.pg.test.ts": {
+      "sha256": "5c6e7e2ab76538f49eece34a7b4645ffc8a18afb988ea48fbbe1edcc3f40952d",
+      "bytes": 18359
+    },
+    "site/src/lib/materials-contract.ts": {
+      "sha256": "bc2e2907cf43362daba09ce18eb84213dbdeeb2d7f0cf8f658c85d2bfc6aaf5b",
+      "bytes": 5401
+    },
+    "site/src/lib/materials-schema.ts": {
+      "sha256": "f0b65d5b26a73173dc8f81ae6e888437502feb6d06cea1fe2fd913ce5ce8cbf3",
+      "bytes": 3565
+    },
+    "site/src/lib/materials-store.ts": {
+      "sha256": "3852ae70cf1dda08bb328dbdd70e422f10c5a961b4a4e8fb04171509a9f114ee",
+      "bytes": 7171
+    },
+    "site/src/lib/admin-levels.ts": {
+      "sha256": "d38d62a4958902180c7498344c12cf0cb49c4e33c4b5a6c894967274dfd05bcd",
+      "bytes": 620
+    },
+    "site/src/lib/db.ts": {
+      "sha256": "dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824",
+      "bytes": 48732
+    },
+    "site/src/lib/verify-code.ts": {
+      "sha256": "3db6beb5b289b933a70c9a50d5fcf745caeea45c5199ab0c1a7fe18c2d0c5ac8",
+      "bytes": 838
+    },
+    "site/src/lib/config.ts": {
+      "sha256": "10dca35854223278af2eb3ff2bc95a873702ac2d17dc38df51b3cf52893f001e",
+      "bytes": 4951
+    },
+    "site/public/data/institution-registry.json": {
+      "sha256": "ebe002715d273cb91cd970b835feeb945c8e3714aa69041ba063cda069b00a55",
+      "bytes": 134223
+    },
+    "site/src/lib/ebserh-units.ts": {
+      "sha256": "39b2c24820cce7a708300e978cd44e493129b8e6ce09f9cbd25bc15ec90b079a",
+      "bytes": 795
+    },
+    "site/public/data/ebserh-units.json": {
+      "sha256": "1562bbad05fba4d3795373284349c5d40014b59b5b4bde9b28bf9f243c395504",
+      "bytes": 16710
+    },
+    "site/src/lib/batch-a1-schema.ts": {
+      "sha256": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
+      "bytes": 6036
+    },
+    "site/src/lib/document-reference-schema.ts": {
+      "sha256": "b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c",
+      "bytes": 2075
+    },
+    "site/src/lib/ifes-domains.json": {
+      "sha256": "94e52a55e00ba79c3b27ab9e929d18fa1306119c4330711a9002a1c73fe84fe9",
+      "bytes": 15993
+    },
+    "site/src/lib/petition-base-schema.ts": {
+      "sha256": "25ea67cd71f653e68a8cc67177f77d39f18b4e56e14d6a8d42e256ddae51764c",
+      "bytes": 7477
+    },
+    "site/src/lib/batch-package-schema.ts": {
+      "sha256": "7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4",
+      "bytes": 2945
+    },
+    "site/src/lib/president-own-document-schema.ts": {
+      "sha256": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
+      "bytes": 3031
+    },
+    "site/src/lib/president-own-a1-schema.ts": {
+      "sha256": "24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408",
+      "bytes": 3438
+    }
+  },
+  "totalBytes": 282360,
+  "externalRoots": [
+    "pg"
+  ],
+  "typescript": "5.9.3",
+  "lockSha256": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
+  "externalLockVersions": {
+    "pg": "8.23.1"
+  }
+}

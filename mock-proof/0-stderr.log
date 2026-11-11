@@ -1,0 +1,16 @@
+test_dependency_inventory_read_only (test_profile.Profile.test_dependency_inventory_read_only) ... ok
+test_environment_does_not_inherit_credentials_or_features (test_profile.Profile.test_environment_does_not_inherit_credentials_or_features) ... ok
+test_exact_nine_tap (test_profile.Profile.test_exact_nine_tap) ... ok
+test_expected_names_match_pinned_test_source (test_profile.Profile.test_expected_names_match_pinned_test_source) ... ok
+test_infra_false_blocks_before_docker_or_stage (test_profile.Profile.test_infra_false_blocks_before_docker_or_stage) ... ok
+test_manifest_gate_cannot_mark_unreviewed_profile (test_profile.Profile.test_manifest_gate_cannot_mark_unreviewed_profile) ... ok
+test_no_duplicate_footer_or_cases (test_profile.Profile.test_no_duplicate_footer_or_cases) ... ok
+test_no_skip_fail_or_partial_success (test_profile.Profile.test_no_skip_fail_or_partial_success) ... ok
+test_timeout90_keeps_network_and_never_retries (test_controller_port.ControllerTests.test_timeout90_keeps_network_and_never_retries) ... ok
+test_normal_create90_and_verified_start (test_controller_port.ControllerTests.test_normal_create90_and_verified_start) ... ok
+test_foreign_object_refuses_cleanup (test_controller_port.ControllerTests.test_foreign_object_refuses_cleanup) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.100s
+
+OK

@@ -1,0 +1,78 @@
+TAP version 13
+# Subtest: guard only allows exact fixture TCP and synthetic numeric lookup
+not ok 1 - guard only allows exact fixture TCP and synthetic numeric lookup
+  ---
+  duration_ms: 4.722093
+  location: '/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/node-guard.test.cjs:13:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'ok')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    evalmachine.<anonymous>:14:18
+    Script.runInContext (node:vm:149:12)
+    Object.runInContext (node:vm:301:6)
+    load (/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/node-guard.test.cjs:11:192)
+    TestContext.<anonymous> (/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/node-guard.test.cjs:13:86)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+  ...
+# Subtest: unknown host or port, Unix socket and DNS are denied without underlying call
+not ok 2 - unknown host or port, Unix socket and DNS are denied without underlying call
+  ---
+  duration_ms: 1.440878
+  location: '/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/node-guard.test.cjs:14:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'ok')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    evalmachine.<anonymous>:14:18
+    Script.runInContext (node:vm:149:12)
+    Object.runInContext (node:vm:301:6)
+    load (/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/node-guard.test.cjs:11:192)
+    TestContext.<anonymous> (/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/node-guard.test.cjs:14:98)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+  ...
+# Subtest: spawn, fetch, TLS, UDP and listeners cannot execute
+not ok 3 - spawn, fetch, TLS, UDP and listeners cannot execute
+  ---
+  duration_ms: 1.216703
+  location: '/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/node-guard.test.cjs:15:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'ok')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    evalmachine.<anonymous>:14:18
+    Script.runInContext (node:vm:149:12)
+    Object.runInContext (node:vm:301:6)
+    load (/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/node-guard.test.cjs:11:192)
+    TestContext.<anonymous> (/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/node-guard.test.cjs:15:73)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+  ...
+# Subtest: unexpected features, real provider and alternate database fail admission
+ok 4 - unexpected features, real provider and alternate database fail admission
+  ---
+  duration_ms: 6.856663
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 1
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 527.175491

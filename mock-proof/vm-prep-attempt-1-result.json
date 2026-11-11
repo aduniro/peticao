@@ -1,0 +1,36 @@
+{
+  "classification": "PURE_PROFILE_MOCKS_NO_APP_PG_DOCKER",
+  "pythonProfileMocks": 8,
+  "pythonCriticalControllerMocks": 3,
+  "nodeVmGuardMocks": 4,
+  "operationalFsyncPreserved": true,
+  "testOnlyFsyncMocked": true,
+  "commands": [
+    {
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "unittest",
+        "-v",
+        "test_profile",
+        "test_controller_port.ControllerTests.test_timeout90_keeps_network_and_never_retries",
+        "test_controller_port.ControllerTests.test_normal_create90_and_verified_start",
+        "test_controller_port.ControllerTests.test_foreign_object_refuses_cleanup"
+      ],
+      "exit": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "3c2770b8cc139f89a2febaf4b8a9bfaf0409ed6eed659d66efb21ac3a9309701"
+    },
+    {
+      "command": [
+        "/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node",
+        "--test",
+        "node-guard.test.cjs"
+      ],
+      "exit": 1,
+      "stdoutSha256": "fed776e7e1732e1d2aa9070d872d6f51a4ddd467b888648d9279ff89a0da5b7e",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "exit": 1
+}

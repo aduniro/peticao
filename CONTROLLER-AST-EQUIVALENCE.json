@@ -1,0 +1,18 @@
+{
+  "classification": "AST_NORMALIZED_STRICT_PORT_NOT_BYTE_IDENTICAL",
+  "parentCommit": "af2e4f54469b18eb1a644a76987c281084bd17a4",
+  "normalizationOnly": [
+    "ROOT",
+    "UNIT",
+    "Docker namespace/label",
+    "55494\u219255496",
+    "31394\u219231396"
+  ],
+  "DockerPGNormalizedAstEqual": true,
+  "dockerControlNormalizedAstEqual": true,
+  "normalizedClassAstSha256": "f706286f55933800f99ff61684facd2136509d6d612b3dee386ab1488480385b",
+  "criticalControllerMockTestsExecuted": 3,
+  "allSixteenParentMocksInheritedClaimed": false,
+  "testOnlyFsyncSpy": true,
+  "operationalFsyncUnchanged": true
+}

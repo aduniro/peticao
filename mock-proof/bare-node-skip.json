@@ -1,0 +1,11 @@
+{
+  "classification": "DIRECT_NODE_TEST_RUNNER_SKIP_ONLY_NO_PG",
+  "commandMode": "node compiled-test.cjs without --test",
+  "exit": 0,
+  "skipped": 9,
+  "passed": 0,
+  "appPgExecuted": false,
+  "sourceCompiledSha": "04654de1bf00f1ebfc9a7420a0d3aea4e6f2d489aea53d7be8b30e8064586b68",
+  "stdoutSha256": "089511d18f25ff6a787253bba0b49ce4d7e134434531d4b4aebb70a7ca6ef4a6",
+  "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
