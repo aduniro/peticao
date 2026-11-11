@@ -18,8 +18,27 @@ def approval_otp(run,before):
  match=re.search(r': (\d{6})$',value['subject']);require(match is not None,'approval subject protocol')
  return match[1]
 
+def verify_sent_batch(snapshot,batch_id):
+ rows=[v for v in snapshot['batches']if v['id']==batch_id]
+ require(len(rows)==1 and rows[0]['status']=='sent' and rows[0]['sent_at']is not None and rows[0]['approval_code_hash']is None,'sent batch timestamp and consumed code')
+ sends=[v for v in snapshot['sends']if v['batch_id']==batch_id]
+ require(len(sends)==1 and sends[0]['ok']is True,'exactly one accepted recipient after dispatch')
+ return True
+
+def verify_reconciled_state(decision,snapshot,batch_id):
+ # f555 counts one INSERT batch_sends plus one transition prepared→sent.
+ require(decision.get('ok')is True and decision.get('complete')is True and decision.get('updated')==2,'reconciliation decision inserts recipient and transitions batch')
+ return verify_sent_batch(snapshot,batch_id)
+
+def verify_document_preservation(before,after):
+ expected={'batches','batch_document_versions','batch_packages','petition_base_artifacts','petition_base_validations','petition_base_selections'}
+ require(isinstance(before,dict)and isinstance(after,dict)and set(before)==expected and set(after)==expected,'complete immutable byte fingerprint inventory')
+ require(all(isinstance(v,str)and re.fullmatch('[a-f0-9]{64}',v)for v in [*before.values(),*after.values()]),'valid byte fingerprints')
+ require(before==after,'document bytes and immutable rows changed')
+ return True
+
 def exercise(run,request,check,fixture,seed):
- records=[];markers=[]
+ records=[];markers=[];immutable_before=fixture('snapshot')['documentByteFingerprints']
  def observe(label,ok):require(ok,label);records.append(label)
  def post(label,batch,kind,values,cookie,expect=303):
   return check(label,'POST',f'/api/admin/lotes/{batch}/{kind}',expect,urllib.parse.urlencode(values),cookie)
@@ -52,7 +71,7 @@ def exercise(run,request,check,fixture,seed):
   require(status==303,'concurrent approval response');return {'check':'concurrent approval '+str(index),'method':'POST','path':'/api/admin/lotes/1/aprovar','status':status,'bytes':len(body),'sha256':hashlib.sha256(body).hexdigest()}
  with concurrent.futures.ThreadPoolExecutor(max_workers=2)as pool:concurrent_results=list(pool.map(approve_once,[1,2]))
  # Both calls were deliberate, distinct race participants. Never repeat after uncertain response.
- after=fixture('snapshot');observe('concurrent approval consumes once and sends one package',after['counts']['batch_sends']==1 and len([v for v in after['messages']if v['kind']=='lote'and v['status']=='accepted'])==1 and row(after,1)['approved_at']is not None and len(spool_state(run))==2)
+ after=fixture('snapshot');observe('concurrent approval consumes once and sends one package',after['counts']['batch_sends']==1 and len([v for v in after['messages']if v['kind']=='lote'and v['status']=='accepted'])==1 and row(after,1)['approved_at']is not None and len(spool_state(run))==2 and verify_sent_batch(after,1))
  verified=fixture('verify-attachments');observe('first archived envelope has both exact PDFs',len(verified['verified'])==1 and verified['verified'][0]['batchId']==1 and verified['verified'][0]['exactBytes'])
  before_replay=spool_state(run);post('consumed approval replay',1,'aprovar',{'code':code1},owner);replayed=fixture('snapshot')
  observe('consumed approval replay emits no second transport',spool_state(run)==before_replay and replayed['counts']==after['counts'])
@@ -63,11 +82,12 @@ def exercise(run,request,check,fixture,seed):
  body,_=check('inspect accepted package','GET','/api/admin/lotes/2/conciliar',200,cookie=owner);inspection=json.loads(body)
  require(inspection.get('ok')and inspection.get('proof')and len(inspection.get('recipients',[]))==1 and inspection['recipients'][0]['state']=='accepted','accepted reconciliation proof');markers.append(inspection['proof'])
  body,_=post('reconcile accepted package',2,'conciliar',{'proof':inspection['proof']},owner,200);decision=json.loads(body)
- observe('HTTP reconciliation records accepted recipient',decision.get('ok')and decision.get('complete')and decision.get('updated')==1)
+ observe('HTTP reconciliation records accepted recipient and sent batch',verify_reconciled_state(decision,fixture('snapshot'),2))
  body,_=post('reconcile same proof replay',2,'conciliar',{'proof':inspection['proof']},owner,200);decision=json.loads(body)
  require(decision=={'ok':True,'updated':0,'complete':True},'reconciliation replay zero')
  final=fixture('snapshot');observe('reconciliation and replay never transport again',spool_state(run)==frozen_spool and final['counts']['mail_messages']==frozen_counts['mail_messages']and final['counts']['mail_message_attempts']==frozen_counts['mail_message_attempts']and final['counts']['batch_sends']==2)
  verified=fixture('verify-attachments');observe('both immutable two-PDF envelopes match exact fixture bytes',len(verified['verified'])==2 and sorted(v['batchId']for v in verified['verified'])==[1,2]and all(v['exactBytes']for v in verified['verified']))
  (run/'private-markers.json').write_text(json.dumps(markers));(run/'private-markers.json').chmod(0o600)
+ observe('all seeded document bytes and immutable metadata preserved',verify_document_preservation(immutable_before,final['documentByteFingerprints']))
  # No credential/code/proof/body/spool filename is returned in technical receipts.
- return {'complete':True,'assertions':records,'concurrentHttpReceipts':concurrent_results,'archivedAttachmentProofs':verified,'spoolFiles':len(frozen_spool),'newApprovalCodes':2,'newAcceptedPackageTransports':2,'realDeliveryConfirmed':False,'syntheticCryptographicClassificationOnly':True,'remaining':['runtime code expiry and five-wrong-attempt threshold','indeterminate dev transport','browser approval interface','real certificate/validator/provider/delivery']}
+ return {'complete':True,'documentByteFingerprintsStable':True,'assertions':records,'concurrentHttpReceipts':concurrent_results,'archivedAttachmentProofs':verified,'spoolFiles':len(frozen_spool),'newApprovalCodes':2,'newAcceptedPackageTransports':2,'realDeliveryConfirmed':False,'syntheticCryptographicClassificationOnly':True,'remaining':['runtime code expiry and five-wrong-attempt threshold','indeterminate dev transport','browser approval interface','real certificate/validator/provider/delivery']}

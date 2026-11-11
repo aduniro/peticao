@@ -1,9 +1,10 @@
 {
-  "classification": "R9_DRAFT_MOCK_QUALIFIED_NOT_EXECUTED",
+  "classification": "R9_REV2_UPDATED2_STATE_BYTE_PRESERVATION_DRAFT_NOT_EXECUTED",
   "files": {
     ".gitignore": "61b3a7ce7f73e51dea5eb339eca40ea4b52ea39dfa35c83e81f974cc71a5e932",
     "PROVENANCE.json": "ca88db4fc0dcb7bedc259c3c35afb19504a01de3e4cce1308778a034477329a1",
-    "README.md": "83f6e27132d2c23ca1f22d065988bce8959ebe1e0e80aa826304cac23a26c24b",
+    "README.md": "0ee93b1a5c137665bdebe9cdd4585e9951dabb73f66cae82bcb047d3661fb232",
+    "baseline-reconciliation-assertion.txt": "95410c6fc308f55bc92b63d03bb91005db7ac26a69c76605d0aed4796343b798",
     "config.json": "bed1dd4905d1b325f7619b0d19421a78ec0ad7b769b20ae43feece5264dbd2ab",
     "contracts/site__src__lib__batch-package-contract.ts": "e9abb2a24b2ff71b322d7136ea97e6dc8f9d425a4b5bfb1b5d29279db38f29e9",
     "contracts/site__src__lib__batch-package-delivery.test.ts": "2914d71218b245a50a3cb79b5ab99a310fb7ba591dd47d5fc4d42ce1d4a90100",
@@ -14,11 +15,11 @@
     "contracts/site__src__lib__petition-base-validation.ts": "961245be359db02455ef7249c1f9517f513aedcfae9152833480bbb0ae882239",
     "contracts/site__src__lib__signer.ts": "d11fa7d8e82eca0ba93eb061eade0c0c6a7167c86a6f5750095e4fcdad5fad97",
     "docker_control.py": "3fe0c3723255e28ffd6f232a5e2144d2f5b71ce605d6e62185fc2df715bbfec9",
-    "fixture.cjs": "2e9889dca9e24ed5599ac44656d0725ece30066efb7fc859846d8cab0de6ad4e",
+    "fixture.cjs": "8caf633631dfe2e0f92c0dcdd57eb6fbed8a04961bf20914e789e900d245d91e",
     "functional-guard.mjs": "33548c2d5ff149bcd4467913d494aaeb3ecab164ea5b9aee0fbb7b7331fc01f8",
-    "functional_smoke.py": "f7daf44e4336c7086f4f0a9269b05e03eacb506cb9e351b4d0d9a16ab96139fa",
+    "functional_smoke.py": "075ad9a5f2553d9540cf79ae547abae6a8ca43495271ef39dec6d783879e20ac",
     "local_controller.py": "bcd2954981881f124c62a5a1cb56c21cc5916405e042ec2f6f364f02bd3b40a8",
-    "package_http.py": "0d7e2aa1d6dd0b9b72440f2367e07e3325900e738380b48e03e2de721a9b8a83",
+    "package_http.py": "219ee6f21436676b66afcc6948dd4fa5957dee778ab3c7114197150a5b93dd38",
     "schema-source-manifest.json": "f7947630d328d92fd372166baeb2ace32ee33149e495c9ff7866d5d075bc6a7e",
     "schema-sources/batch-a1-schema.ts": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
     "schema-sources/batch-package-schema.ts": "7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4",
@@ -30,13 +31,16 @@
     "schema-sources/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
     "seed_contract.cjs": "b2489fe6fa9c4e2a89bdbf9318c7ab02d9cf038689495faffc49c9b62511c8b8",
     "test_profile.py": "f3377f8842a4d0958fa4ce1598b269b2442bf2fa7186bca25c27db2b7e58e779",
+    "test_reconciliation_state.py": "dd90dc85cba97b72f49db8516cfe559dd42ef6c2433629e21277e483ee9eae84",
     "test_seed_contract.cjs": "b2a00e6c0910818334650c379ca0793a92586e1dc14109750d9e84355ad66127"
   },
   "backendCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
   "mocks": {
     "python": 12,
-    "nodeDummy": 3
+    "nodeDummy": 3,
+    "revision2Directed": 9
   },
-  "realAppPgDockerHttpExecuted": false
+  "realAppPgDockerHttpExecuted": false,
+  "baselineCommit": "01c5c69125e409efbc25afba2576fde99f88b826"
 }

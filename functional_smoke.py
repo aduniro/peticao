@@ -126,7 +126,7 @@ def main():
   if p.returncode:raise RuntimeError('fixture '+action+' failed: '+p.stderr[:1200])
   return json.loads(p.stdout)
  pg=DockerPG(run,nonce,EXPECTED_CGROUP,env,NODE,CONFIG);proc=None
- result={'classification':'LOCAL_R0009_TWO_PDF_APPROVAL_PROTOCOL_WITH_DOCKER_PG17','operationalReady':False,'run':str(run),'sourceCommit':manifest['source_commit'],'checks':[],'dbPort':55489,'appPort':31389,'node':'20.19.2','postgresBackend':'local-docker17.11','santiagoExecution':False,'workerJob':False,'limits':limits,'nonce':nonce,'protocolMutatingRequestsExpected':True,'documentByteMutations':0,'deployment':False,'runtimeReusedNotMountReadOnly':True,'stepupNote':'State seeded only after successful real login; email challenge is outside this smoke'}
+ result={'classification':'LOCAL_R0009_TWO_PDF_APPROVAL_PROTOCOL_WITH_DOCKER_PG17','operationalReady':False,'run':str(run),'sourceCommit':manifest['source_commit'],'checks':[],'dbPort':55489,'appPort':31389,'node':'20.19.2','postgresBackend':'local-docker17.11','santiagoExecution':False,'workerJob':False,'limits':limits,'nonce':nonce,'protocolMutatingRequestsExpected':True,'documentBytePreservationExpected':True,'deployment':False,'runtimeReusedNotMountReadOnly':True,'stepupNote':'State seeded only after successful real login; email challenge is outside this smoke'}
  try:
   if time.monotonic()>job_deadline:raise TimeoutError('job budget exhausted before LOCAL Docker PG')
   result['postgresHandshake']=bootstrap_local_fixture(pg,CONFIG)

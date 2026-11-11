@@ -30,7 +30,10 @@ if(action==='seed'){
  const messages=(await c.query('SELECT id,kind,status,request_key FROM mail_messages ORDER BY created_at,id')).rows;const counts={};for(const t of ['batch_sends','mail_messages','mail_message_attempts','mail_outbox'])counts[t]=(await c.query('SELECT count(*)::int n FROM '+t)).rows[0].n;
  const sends=(await c.query('SELECT batch_id,ok FROM batch_sends ORDER BY id')).rows;
  const audits=(await c.query("SELECT event,count(*)::int n FROM audit_log WHERE event IN('batch_approved','approval_code_prepared','batch_recipient_result')GROUP BY event ORDER BY event")).rows;
- console.log(JSON.stringify({batches,messages,counts,sends,audits}));
+ const documentByteFingerprints={};
+ const batchBytes=await c.query("SELECT id,seq,kind,n_servidor,n_apoiador,n_estrangeiro,list_hash,pdf_sha256,signed_pdf_sha256,signature_kind,encode(pdf,'hex') pdf,encode(signed_pdf,'hex') signed_pdf FROM batches ORDER BY id");documentByteFingerprints.batches=digest(JSON.stringify(batchBytes.rows));
+ for(const table of ['batch_document_versions','batch_packages','petition_base_artifacts','petition_base_validations','petition_base_selections']){const rows=(await c.query('SELECT row_to_json(t)::text value FROM '+table+' t ORDER BY id')).rows;documentByteFingerprints[table]=digest(JSON.stringify(rows));}
+ console.log(JSON.stringify({batches,messages,counts,sends,audits,documentByteFingerprints}));
 }else if(action==='verify-attachments'){
  const rows=(await c.query("SELECT id,content_cipher FROM mail_messages WHERE kind='lote' AND status='accepted' ORDER BY created_at,id")).rows;const values=[];
  for(const row of rows){if(!row.content_cipher)throw Error('missing fixture archive');const m=decryptFixtureArchive(row.id,row.content_cipher,process.env.HASH_PEPPER);if(m.to!=='qa-recipient@example.test'||m.attachments?.length!==2)throw Error('fixture two attachments');const matches=[1,2].filter(n=>Buffer.from(m.attachments[0].base64,'base64').equals(fixtureBytes('batch-'+n+'.pdf')));if(matches.length!==1||!Buffer.from(m.attachments[1].base64,'base64').equals(fixtureBytes('base.pdf')))throw Error('archive PDF bytes mismatch');values.push({messageId:row.id,batchId:matches[0],exactBytes:true,hashes:m.attachments.map(a=>digest(Buffer.from(a.base64,'base64')))});}
