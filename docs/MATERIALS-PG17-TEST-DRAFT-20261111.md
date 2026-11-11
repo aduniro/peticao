@@ -1,38 +1,37 @@
-# Materiais — bateria PG17 isolada preparada, NÃO EXECUTADA
+# Materiais — nove testes PostgreSQL17 aprovados em fixture isolada
 
-Arquivo: /mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/site/src/lib/materials-store.pg.test.ts
-Base backend: c02bfaca9def79d01d02ada4bbd5c9738bf443b9, f555 cumulativo. Contrato/schema/store/rotas existentes não foram editados. NenhumPG/aplicativo/build/instalação/merge/deploy foi executado.
+Teste: `/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/site/src/lib/materials-store.pg.test.ts`, commit `7b7bff946022ef54a0c0b808fe4418d5f6e7473d`. Backend `c02bfaca9def79d01d02ada4bbd5c9738bf443b9`, derivado de f555. Nenhuma fonte funcional foi alterada para fazer os testes passarem.
 
-## O que os nove callbacks deverão provar
+## Evidência atual
 
-1. DDL aditivo aplicado primeiro no setup e novamente APÓS criação real, preservando todos registros; JSONB/hash/autoria/head e recusa deFKhead estrangeira noCOMMIT.
-2. Dois atores disputando expectedRevision1: um vencedor,umconflict, exatamente uma revisão/audit/recibo novos.
-3. Mesmoator+requestId em duas sessões: commitúnico/replay; payloaddistinto→request_conflict; depoisdeoutrarevisão,replay/GET retornam versãooriginalsemseapresentarcomoheadatual; outroator não recupera recibo, mas pode usar mesmoUUID emscopepróprio.
-4. Triggerfixture de auditoria falhando reverte createerevise inteiros: nenhumhead/versão/recibo órfão,nemalteração dosregistrosanteriores. SequênciasPG podem consumirnúmeros no rollback e não são alegadasimutáveis.
-5. Leitor não escreve; sessão pertencenteaoutroator/emailforjado/atornulo são recusados; rebaixamento,desativação,trocarsenha,expiração e exclusãodesessão impedem admissão.
-6. Archive apendav2preservandov1; UPDATE/DELETE versões/recibos e DELETEhead recusados; arquivado não é restaurado. Não promete proteção contraTRUNCATE/superuserSQL.
-7. Biblioteca com52materiais e1arquivado:51ativos em páginas50+1, UUIDdescsemrepetição; arquivadosseparados e consultasnãomudamregistros.
-8. Histórico com51revisões: páginas50+1/ordinais51..1, head51preservado.
-9. Featureflagdesligada recusaquatroentrypoints e preserva dados.
+Os nove callbacks executaram e passaram, com zero skips, falhas ou cancelamentos, em PostgreSQL17.11 temporário e Node20.19.2. O typecheck transitivo incluindo o teste passou com zero diagnósticos e 507 entradas. A execução foi local; nenhuma instância de produção foi consultada ou modificada.
 
-Ao completar cada callback deverá também conferir cadeiaauditreal e zeros nas tabelas mail/attempts/outbox/envios/batches/signatures. Tudo éconteúdofictício deMateriais, semPFX/assinatura/provedores/contatos/IA.
+Recibo: `/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/materials-pg17-backend-20261111/attempt-1/receipt.json`, SHA256 `81bf94fdea78f03b9ca2d2cc34a34c34acf87b7189f4631ee83acc4440e12042`.
 
-## Admissão fechada da fixture
+Run: `/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/runs/8e04d376402e`. Perfil ativado `3e823003babd4c0af3a9757ffd604ae1a0087d7d`, manifesto `ab8b376dd44da8ee0e397139b416a2d9dd766499d20d3b2e24f49dfd7dd57a39`. Unidade `peticao-materials-pg17-qa-20261111.service`, invocation `bc98dd4483224801b6b106e3ccc325f1`, saída 0 capturada ainda retida por Root, revisor e Vigia antes de STOP intencional. A auditoria independente satisfez 20 verificações.
 
-Default: sem MATERIALS_PG_FIXTURE exato, os9callbacks ficam SKIP e nãoimportam pg/db/store. Para execução REAL futura, wrapperisolado deverá fornecer SOMENTE osambientesfictícios: MATERIALS_PG_FIXTURE=materials-library-pg17-isolated-v1; DATABASE_URL=postgres://fixture_only:fixture_only@127.0.0.1:55496/fixture_only; MATERIALS_PG_FIXTURE_NONCE com12hex aleatórios iguais acluster_name; NODE_ENV=test; MAIL_PROVIDER=dev eMAIL_PROVIDERS=dev; MATERIALS_LIBRARY_ENABLED=1; APPROVER_EMAIL eRECIPIENTSvazios; SIGNER=none; DATABASE_SCHEMAausente eprocessosempoolherdado.
+## O que os testes demonstraram
 
-AntesdequalquerDDL, verificaserver_version_num170011/currentdatabasefixture_only/currentuserfixture_only/cluster_namenonce/data_directory/var/lib/postgresql/data viaTCPexato. Porta/name/credenciaisfixture sozinhos NÃO bastam; nonce eidentidadereais precisamcoincidir. Cliente tem connectionTimeout3s/queryTimeout5s.
+1. DDL aditivo reaplicado com dados existentes, preservando registros; roundtrip JSONB/hash/autoria e FK do head para a versão exata.
+2. Dois atores disputando a mesma revisão: um sucesso e um conflito, sem duplicação de revisão ou auditoria.
+3. Mesmo ator/pedido em duas sessões: uma admissão e um replay; conteúdo diferente gera conflito. Recuperação posterior retorna a versão original, sem apresentá-la como head atual. Pedidos são separados por ator.
+4. Falha de auditoria reverte criação e revisão inteiras, sem head, versão ou recibo órfão. Sequências PostgreSQL não são alegadas imutáveis após rollback.
+5. Permissões e identidade da sessão são revalidadas; rebaixamento, desativação, troca obrigatória de senha, expiração e exclusão da sessão impedem a escrita.
+6. Arquivamento cria nova versão; versões/recibos antigos não admitem UPDATE/DELETE. Não é proteção contra superuser ou TRUNCATE.
+7. Biblioteca com 51 ativos paginados em 50+1 e arquivados separados, sem repetição ou alteração por leitura.
+8. Histórico com 51 revisões paginadas em 50+1, preservando o head.
+9. Feature flag desligada recusa operações e preserva os dados.
 
-Cada callback cria schema NOVO aleatório t_materials_<nonce>_<random12> semDROP/IFNOTEXISTS; colisãofalha. ApósCREATE, owner/commentvinculamcleanup. Somente o schema criado nesta tentativa pode ser removido; cleanup revalidaURL/cluster/owner/comment eDATABASE_SCHEMAexatoantesdohelper_close. Identidade incerta implica falha/reconciliação dafixture, não limpeza dequalqueroutroschema. db.init real semeia catálogos apenas nesse schemafictício; isto NÃOéconsultasomenteleitura.
+Cada callback conferiu a cadeia real de auditoria e ausência de registros em e-mail, tentativas, spool, envios, lotes e assinaturas.
 
-Oarquivo NÃO criaPG/Docker/serviço/portas eNÃOéumlauncher. A execução exige harnessrootrevisado comNode/deps/guard/PGnonce/limites/unidade/retainedexit/drain. Nunca apontar para banco real. Executar APENAS este arquivo; não invocar npmtestglobala partirdeumambientecomflagdefixture.
+## Isolamento e limpeza
 
-## Evidência realmente observada
+O teste exige opt-in exato, URL de fixture em 127.0.0.1:55496, nonce de 12 hex igual ao cluster_name, usuário/banco fixture_only, versão 170011 e data_directory interno esperado. Cada callback cria um schema novo; a remoção confere URL, nonce, owner, comentário e nome exatos. Não usar esse teste contra banco real ou via npm test global com as flags habilitadas.
 
-/cache completo em /mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-pg17-preparation-20261111:
-- TypeScript5.9.3 transpileapenas:0diagnósticossintáticos; nãoétypechecktransitivo doteste.
-- Node20.19.2 executou SOMENTE saídaCommonJScompilada comambientevazio/optin vazio:9SKIP,0PASS,0FAIL,nenhumcallbackPG. Prova default-skip-result.json pinada.
-- Backend8raízes+store/rotas játeve typechecktransitivoseparado peloPerfil; o NOVOtestePG não foiincluído nessa prova.
-- Nenhuma afirmação deDDL aplicado,transaçãoCAS/auditrollback real, fixture drendada oupassagemdos9testesPG. Todos continuam pendentes de execução.
+A execução terminou com zero schemas remanescentes, spool vazio, guard instalado no PID correto e zero tentativas negadas. Fontes compiladas e dependências permaneceram estáveis. Processos e cgroup foram drenados; container/rede removidos e portas 55496/31396 fechadas. Logs brutos ficam privados no diretório do run; seus hashes constam no recibo.
 
-Próximaetapa: typecheckdoteste/revisãoindependente e pequeno runnerPG17isolado aprovado, depois únicaexecução controlada sem disputar recurso doR16. Não integrar ou publicar estasfontes semgatecorrespondente.
+## Histórico e limites
+
+A preparação inicial observou nove skips e nenhum callback, antes da execução real. Essa evidência continua preservada em `/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-pg17-preparation-20261111/`; ela não foi reclassificada como sucesso PG. O perfil e os registros de revisão permanecem separados.
+
+O aceite é do backend isolado. Não houve teste HTTP da aplicação, editor, exportação, integração cumulativa, migração de produção, deploy ou execução de fluxo bloqueado. Esses passos continuam pendentes.

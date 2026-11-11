@@ -1,9 +1,9 @@
 {
-  "classification": "PREPARACAO_CODIGO_ISOLADO_NOT_INTEGRATED_NOT_DEPLOYABLE",
+  "classification": "ISOLATED_MATERIALS_BACKEND_PG17_QUALIFIED_NOT_INTEGRATED_NOT_DEPLOYABLE",
   "baseCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "branch": "feat/materials-library-backend-20261111",
   "files": {
-    "docs/MATERIALS-LIBRARY-BACKEND-DRAFT-20261111.md": "14fb96bd5da44dc3d20e01469f68500d031ab2a6b757f955e106e26fe3a7d14c",
+    "docs/MATERIALS-LIBRARY-BACKEND-DRAFT-20261111.md": "c14e50c37ff0e9433c9a603f28294ec7a4ba424cb59d94b8abb5fbd54880f2e5",
     "site/src/lib/materials-contract.ts": "bc2e2907cf43362daba09ce18eb84213dbdeeb2d7f0cf8f658c85d2bfc6aaf5b",
     "site/src/lib/materials-contract.test.ts": "fc2e6bb51caff05236b46019f22c4c6a31fd5c85ca0be8866ce04078becc2824",
     "site/src/lib/materials-schema.ts": "f0b65d5b26a73173dc8f81ae6e888437502feb6d06cea1fe2fd913ce5ce8cbf3",
@@ -11,7 +11,9 @@
     "site/src/lib/materials-response.ts": "541810e1cad661201633537444e503ee4915a9c16e15f66a8f0b680d11213df1",
     "site/src/app/api/admin/materiais/route.ts": "22fe8f360dfa8c09883edc5cfdff56f9835cc4b5b61c20b5428b2ec02003f6ea",
     "site/src/app/api/admin/materiais/[id]/route.ts": "6517f800576856a049a0380396a8bf2ec5098e598c10abb2a3e5f83fe77ba9ba",
-    "site/src/app/api/admin/materiais/pedidos/[requestId]/route.ts": "f39daceee652ea671f3b788bfa31853c8030767c19a62ad04e5dc129a431d067"
+    "site/src/app/api/admin/materiais/pedidos/[requestId]/route.ts": "f39daceee652ea671f3b788bfa31853c8030767c19a62ad04e5dc129a431d067",
+    "docs/MATERIALS-PG17-TEST-DRAFT-20261111.md": "37c39e98944b893e965e27a1a62e3138ce864ce4d9a87b635d095ffc542cab95",
+    "site/src/lib/materials-store.pg.test.ts": "5c6e7e2ab76538f49eece34a7b4645ffc8a18afb988ea48fbbe1edcc3f40952d"
   },
   "evidence": {
     "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/result.json": "ad3e3b18c4f9942a41ad7523dc6089a2b23f8ec8f3185b20b10533bd1e181f0e",
@@ -25,14 +27,16 @@
     "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/attempt-1-error.txt": "d37f8bcbac80bef2dd5478f5afc2d1ec40bf8fa495e38918b37b3860dea3a9c6",
     "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/attempt-2-result.json": "0364b1e43c4e4b9122b5a1ae7080b02292700af8abadb545f34eda74767d9195",
     "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/attempt-2-diagnostics.txt": "ecdc5d880712df3239582918d0dd98a4c43af3c8ec8c98f6c252fb5f3f2b7772",
-    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/attempt-2-correction.txt": "df108fef9c040179c14b7fabf96e565a298a770680e86c939d1f09223aaaece1"
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/attempt-2-correction.txt": "df108fef9c040179c14b7fabf96e565a298a770680e86c939d1f09223aaaece1",
+    "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/materials-pg17-backend-20261111/attempt-1/receipt.json": "81bf94fdea78f03b9ca2d2cc34a34c34acf87b7189f4631ee83acc4440e12042",
+    "/mnt/apps/peticao-final/_ops/materials-pg-test-typecheck-20261111/result.json": "92deafe6f910343df5a742c18fd13ec8a13d7725ab771b23762293f4a83832bc"
   },
   "observed": {
     "pureContractTestsPassed": 12,
     "pureContractStrictTypecheckDiagnostics": 0,
     "finalSourceSyntaxDiagnostics": 0,
-    "ddlApplied": false,
-    "realPgStoreTests": false,
+    "ddlApplied": true,
+    "realPgStoreTests": true,
     "build": false,
     "appHttpTests": false,
     "uiRenderingOrExport": false,
@@ -46,19 +50,30 @@
     "lockMatchedPackages": 17,
     "transitiveInputDrift": 0,
     "fullApplicationTypecheck": false,
-    "newPgTestIncludedInTransitiveTypecheck": false
+    "newPgTestIncludedInTransitiveTypecheck": true,
+    "ddlAppliedScope": "isolated synthetic fixture only",
+    "realPgTestsPassed": 9,
+    "realPgTestsSkipped": 0,
+    "newPgTestTransitiveInputFiles": 507,
+    "newPgTestTypecheckDiagnostics": 0
   },
   "pending": [
-    "independent review",
-    "PostgreSQL17 additive DDL/cas/concurrency/audit rollback tests",
-    "separate new PG test typecheck; whole integrated application typecheck and build",
+    "whole integrated application typecheck and build",
     "API auth/origin/rateLimit real HTTP",
     "UI create/edit",
-    "preview/render/export",
+    "preview/render/export integration",
     "library UI and archived material UX",
     "binary export artifact storage",
+    "cumulative schema integration and migration rehearsal",
     "cumulative integration and exact release approval"
   ],
-  "evidenceRevision": 2,
-  "typecheckNote": "Two compiler-host preflight failures retained; corrected only in validation host, no app-code errors or edits"
+  "evidenceRevision": 3,
+  "typecheckNote": "Two compiler-host preflight failures retained; corrected only in validation host, no app-code errors or edits",
+  "pgAcceptance": {
+    "receipt": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/materials-pg17-backend-20261111/attempt-1/receipt.json",
+    "sha256": "81bf94fdea78f03b9ca2d2cc34a34c34acf87b7189f4631ee83acc4440e12042",
+    "sourceCommit": "7b7bff946022ef54a0c0b808fe4418d5f6e7473d",
+    "integrated": false,
+    "deployment": false
+  }
 }
