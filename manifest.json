@@ -7,14 +7,16 @@
   "realBrowserExecuted": false,
   "exportImplemented": false,
   "files": {
-    ".gitignore": "2d50f5b0d7ee5679a8b987fb72ff02f624cf207173bc374bf4ab7bc93b6be2cb",
-    "README.md": "9e94c07f04f219382010f47474c515746a1a696f9d2a72cf614dfe572b8ca85f",
+    ".gitignore": "98cc6687313b538b560dfe286a876cb338779a2b2ea794501b0aad56d7951924",
+    "README.md": "5599a5785102606bf6f89c79b78c7e8e24d731c25e57991a6dc0460266fdfe39",
     "prepare.cjs": "082730206017c25e3be1dafec38723be3ec70b0dca31f1fe77706c2bc8f2f8bc",
-    "run.cjs": "4d1b717b13d36a17c5f6a55d5c46ab5ffbe6a7704a876bb636cba78166f0b762",
+    "run.cjs": "f72f8c883df1f915176a03526c8a4bcb996bc36ff34a39c20004e3fd3721ba3f",
     "source-manifest.json": "67e4a1b46bef82b9a1e3457499369f0b18a25222e2898fe38225f98c964ca206",
     "compiled/materials-contract.js": "fe7ecadd4f9a6a7a2ff167592eb5dbdba1edac16f9d207e101e50a9b73cb000a",
     "compiled/materials-render.js": "eaaf3ab6b7dab7f632aec35ca057a5adb4bcf04dd20c5f25f8ea088455c8fa03",
     "compiled/materials-layout.js": "00dca3ae3ecf22e2655c9a317ae7bc23cd690c0d078956fd96e6774ab309fb82",
     "compiled/materials-dom-collector.js": "92f49557e2a23b573c278d1a1e3926bb402a2d3c4fd1d844fbbf31f2485f2685"
-  }
+  },
+  "negativeRequiresGeometricRejectionAndReadyResources": true,
+  "temporaryRecordedBeforeLaunch": true
 }

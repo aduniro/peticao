@@ -11,3 +11,6 @@ São coletadas duas amostras reais, estilos de imagem, fontes efetivamente infor
 O primeiro diagnóstico não altera regras para aprovar resultados. A hipótese de IMG overflow clip será observada como dado real, preservando qualquer rejeição inesperada. Caso nominal rejeitado não pode ser contado como sucesso. O excesso precisa ser recusado. Não há geração de PDF, app HTTP, banco, integração ou deploy; R16 permanece intocado.
 
 Execução única por marcador exclusivo, Node20 pinado, unidade systemd delimitada e temporário Chromium curto. Capturar unidade retida antes de STOP, conferir fechamento do browser, remoção do temporário e artefatos/hashes. A próxima versão depende de causa concreta e novo registro, não de retry automático.
+
+
+Revisão pré-execução: o caso de excesso agora exige motivo geométrico/scroll, imagens/fontes prontas, ausência de erros e nenhuma regra de clipping como causa alternativa. O diretório temporário é registrado antes do launch; falha/fechamento incerto mantém o diretório e o diagnóstico, sem limpeza cega. A primeira versão2492 não foi executada. A captura de fontes identifica recursos observados naquele momento; não prova um inventário global congelado antes/depois.
