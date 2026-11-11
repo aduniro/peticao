@@ -62,3 +62,8 @@ O teste compilado, executado diretamente com opt-in vazio, registrou nove skips,
 Revisão independente deste freeze, seguida de revisão Root. Somente depois haverá uma ativação explícita com `infra_reviewed=true` e novo hash. Root poderá executar uma tentativa quando o recurso estiver livre e a autorização específica estiver vigente.
 
 Se fontes ou dependências divergirem, o preflight deve falhar. Não se deve importar o aplicativo para descobrir dependências, procurar alternativas para atividades bloqueadas ou ampliar o escopo deste perfil.
+
+
+## Ativação revisada pelo Root
+
+O perfil de preparação08a7 foi revisado pelo Root e por revisor independente, conforme INFRA-ACCEPTANCE.json. Nesta revisão, infra_reviewed passa a true e um novo manifesto será congelado. Os nove callbacks PostgreSQL ainda não foram executados. A execução exige lease exclusiva, comando com o novo hash, marcador único e captura da unidade retida antes de STOP. Fontes de aplicação e testes não foram alteradas na ativação.

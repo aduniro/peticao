@@ -1,6 +1,6 @@
 {
-  "classification": "LOCAL_MATERIALS_PG17_PREPARATION_NOT_EXECUTED",
-  "infraReviewed": false,
+  "classification": "ROOT_PEER_REVIEWED_LOCAL_MATERIALS_PG17_NOT_EXECUTED",
+  "infraReviewed": true,
   "sourceCommit": "7b7bff946022ef54a0c0b808fe4418d5f6e7473d",
   "baseCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "backendCommit": "c02bfaca9def79d01d02ada4bbd5c9738bf443b9",
@@ -28,9 +28,9 @@
     ".gitignore": "7092e37bba1f83cb58e9c8f942ca3c1eb54acc53b194feaa43e4502e9a653f5b",
     "CONTROLLER-AST-EQUIVALENCE.json": "c217b5a470b0a2887f55e321356d90468d233df53f7144530e4ababc97dfb3c5",
     "CONTROLLER-PROVENANCE.json": "ccdde522ed46d8c2b24a301609d8314a87515e60206895dd05cf59fa9568aef2",
-    "README.md": "a4180366e88465f0f52dabdd23c28b14e722ebe591be597514b46bd82b941c7d",
+    "README.md": "f09b476648612af6d720e4f9dfdc94cc86e440edf7391e9217fcde3a06d68ac5",
     "SOURCE-TYPECHECK-PROOF.json": "8a544756ad17599a837c65e21c0ae007a5b3b3a50e2cf6ac4b5aeba0c3251889",
-    "config.json": "827a334ac00fc6673b69aba45d1b0bd35d3c58d1a1a3e92752197597936e16ed",
+    "config.json": "903427cc09a4ff635143b0b3465024db20d948f6c0a9c104c13181dd01682b4b",
     "dependencies-manifest.json": "bcaa18ecc7f74ebbf415ab573192ee6ef91042cae7f7ca17f6364dc2172fe991",
     "docker_control.py": "9814d405a8e8157b75d64a91b73bab54d6e4ce8d9d8378d23a8423035277dc9f",
     "guard-fixture-env.json": "991c943a66aecd49de011df3a73a4075ca5a34f453d06a975f0b3ce55494d6c3",
@@ -57,6 +57,8 @@
     "stage.cjs": "47a4fe53d97e5d13e0b321e976c9fd735cd18a1af295e098bb3faee62f1e8b26",
     "syntax-proof.json": "43a4946d951a95abd54630f70246bf98e724cd3da06ef9a9948e856ae9af2c01",
     "test_controller_port.py": "bb549e9ca6c2de0f3b317bbef5a0c99d13aa0c5ecf5289998e66ca8a3f2aa0fa",
-    "test_profile.py": "f66f648f3aa50f82bb9d2ad567f04c0c3a9421dc28d334d83a39e3b508491639"
-  }
+    "test_profile.py": "f66f648f3aa50f82bb9d2ad567f04c0c3a9421dc28d334d83a39e3b508491639",
+    "INFRA-ACCEPTANCE.json": "c18c2be13535dd6f7f66cb805c7483ed03d233ebf87b4eb59897a69e833bfde6"
+  },
+  "activationProof": "INFRA-ACCEPTANCE.json"
 }

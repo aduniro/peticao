@@ -1,0 +1,11 @@
+{
+  "classification": "ROOT_AND_INDEPENDENT_PEER_ACCEPTED_LOCAL_MATERIALS_PG17_PROFILE",
+  "at": "2026-11-11T06:06:06.213944+00:00",
+  "preparedCommit": "08a7f8c071b0fb8a7cce0e56fea0023eac9e355f",
+  "preparedManifestSha256": "c6d3da6973e4a5de1b10b32a7e467f6637191c9a3ecf404c27aa4ffb37ba3575",
+  "peerReview": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/materials-pg-runner-ro-20261111/review.json",
+  "peerReviewSha256": "0541b4e97544c8c813df2856ad8e3a9f8387f28cff5ace2fad9aafccb085430d",
+  "rootReview": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/materials-pg17-runner-root-gate-20261111/root-review.json",
+  "actualPgExecuted": false,
+  "scope": "nine isolated Materials callbacks only, no app HTTP, production, deployment or blocked flows"
+}
