@@ -1,0 +1,15 @@
+{
+  "site/src/lib/president-portal-contract.ts": "cd1349d03aee8e5edfe94ae821a56415ba38aa4c851fdc601e53440c51403807",
+  "site/src/lib/president-portal-store.ts": "0b5f8222ebda5462f918e3ec3558c7d128cead2e55284e34f010bd9b13b35cd4",
+  "site/src/lib/president-own-document-store.ts": "a83b6024222d74e041970b8fe0aded616aba441148b8368c8f7d9437438fcc86",
+  "site/src/lib/president-own-document-contract.ts": "3839e819c524cf5a26a1ce4b1ec84fb432da661e097488e6ae7e78876a69644f",
+  "site/src/lib/president-native-contract.ts": "f50ba5176ff5ed9108f8db5652f1eb6c3b4702e83d74bba471fcab0e548d5915",
+  "site/src/lib/president-native-pdf.ts": "dce6cdbbf8bc9af08708fdacec8bf1e0f8bede42b528d47dbc2733cb6ab002c8",
+  "site/src/lib/president-own-history-client.ts": "452f9b75d4b5ff65dbf22cbfce6572f3c80de2312c2e795d163a4140cea85c1c",
+  "site/src/components/admin/PresidenteDocumentoProprio.tsx": "175ee25c63457597b2542d6373fba731babd8d28f24c267ff6bb2d6a14345952",
+  "site/src/components/admin/PresidenteHistoricoProprio.tsx": "f4a64497886cd681e2647cd7fef09ee0241d11fb9813d23c9247df7575a5e453",
+  "site/src/components/admin/PresidenteAcesso.tsx": "88f236fc36313a514cfe923bd53a70cafcca874a6272db31fb4722c1f0e0ec26",
+  "site/src/app/api/admin/presidente/documentos-proprios/route.ts": "de1e37f77a02d56a97cd2b3c4481fdebd4d91e2379c3efd92da167a4c61ffcd1",
+  "site/src/app/api/admin/presidente/documentos-proprios/[id]/route.ts": "39622d3d1a80833a5bd947a3d6e1ad842c9879db49d9ea6efeb101125ac57481",
+  "site/src/app/api/admin/lotes/[id]/presidente/historico/route.ts": "70f7e3d30e90f6b4dc17162ba0da26840cd4f39543191f0b7fec6e43d7f947da"
+}

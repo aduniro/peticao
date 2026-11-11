@@ -1,0 +1,10 @@
+{
+  "source": "/mnt/dev/.peticao-r0012-local-pdf-preparation-qa-20261111/runs/73243bf3a4d6/downloads/generated.pdf",
+  "sha256": "a4bc11db09cb778c0145706e22c953abd7375095b28d6995f39628d7c5c2ceea",
+  "bytes": 83680,
+  "originalGeneratedPreviouslyR12F555": true,
+  "newOwnArtifactPreseeded": false,
+  "listHash": "e3b3bd547df3f5f5e90a85d7408b259dde30a7c9589973fa23456c93c0309e0a",
+  "rootReceipt": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0012-pdf-preparation-20261111/attempt-2/receipt.json",
+  "rootReceiptSha256": "148d6d7f3681e6453699bf0e08ce38b59a32020d3a44477c24ffad7258a42dd7"
+}

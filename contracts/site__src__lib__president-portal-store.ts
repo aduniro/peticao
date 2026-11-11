@@ -1,0 +1,295 @@
+import { freezeOwnConfirmation } from "./president-native-contract";
+import { createHash, randomUUID } from "node:crypto";
+import type { PoolClient } from "pg";
+import { audit, tx } from "./db";
+import { authorizeBatchActor } from "./batches";
+import type { SessaoAdmin } from "./admin-users";
+import { cifrar } from "./crypto-dados";
+import { hmac, safeEqual, sha256 } from "./security";
+import { isValidCpf, onlyDigits } from "./cpf";
+import { verifyIdentity } from "./identity";
+import { defaultProvider, type CpfProvider } from "./cpf-check";
+import { normalizeRegistryBirth, parseBirth } from "./birth";
+import { config } from "./config";
+import { issuePresidentChallenge, confirmPresidentChallenge, presidentDocumentRevision, presidentAccessHashes, type PresidentChallengeStore, type PresidentDocumentRevision } from "./president-portal-contract";
+
+export type PresidentIssueIntent = { requestId: string; expectedDocumentVersion: string; expectedProfileFingerprint: string };
+const requestUuid = (value: unknown): value is string => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
+function issueIntent(value: PresidentIssueIntent) {
+  return value && Object.keys(value).sort().join(",") === "expectedDocumentVersion,expectedProfileFingerprint,requestId" && requestUuid(value.requestId) && typeof value.expectedDocumentVersion === "string" && /^[a-f0-9]{64}$/.test(value.expectedDocumentVersion) && typeof value.expectedProfileFingerprint === "string" && /^[a-f0-9]{64}$/.test(value.expectedProfileFingerprint) ? { ...value } : null;
+}
+const PROFILE = "president_profile_v1";
+const unavailable = { ok: false as const, error: "unavailable" as const };
+type Profile = { version: 1; revision: number; responsibleId: number; cpfHash: string; whatsappCipher: string | null; enabled: boolean };
+type Account = { id: number; nome: string; email: string };
+type Challenge = { id: string; batch_id: number; responsible_id: number; issued_by: number; profile_revision: number; responsible_fingerprint: string; document_version: string; password_hash: string; state: string; attempts: number; expires_at: Date; lease_token: string | null; lease_until: Date | null; receipt_id: string | null; confirmed_at: Date | null };
+const validId = (n: number) => Number.isInteger(n) && n > 0 && n <= 2147483647;
+const cpfHash = (cpf: string) => hmac(`president-cpf:v1:${cpf}`);
+async function bounded(client: PoolClient) {
+  await client.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'");
+  await client.query("SELECT pg_advisory_xact_lock(7003)");
+}
+async function authorized(client: PoolClient, actor: SessaoAdmin | null) {
+  if (!actor?.sessaoId || !await authorizeBatchActor(client, actor)) return false;
+  return !!(await client.query("SELECT 1 FROM admin_sessions WHERE id=$1 AND user_id=$2 AND expira_em>now() AND stepup_ate>now() FOR SHARE", [actor.sessaoId, actor.userId])).rowCount;
+}
+async function profile(client: PoolClient): Promise<Profile | null> {
+  const row = (await client.query<{ value: string }>("SELECT value FROM settings WHERE key=$1 FOR SHARE", [PROFILE])).rows[0];
+  if (!row) return null;
+  try {
+    const p = JSON.parse(row.value) as Profile;
+    return p.version === 1 && validId(p.revision) && validId(p.responsibleId) && typeof p.enabled === "boolean" && /^[a-f0-9]{64}$/.test(p.cpfHash) && (p.whatsappCipher === null || typeof p.whatsappCipher === "string") ? p : null;
+  } catch { return null; }
+}
+async function account(client: PoolClient, id: number) {
+  return (await client.query<Account>("SELECT id,nome,email FROM admin_users WHERE id=$1 AND ativo FOR SHARE", [id])).rows[0] ?? null;
+}
+const fingerprint = (p: Profile, user: Account) => sha256(JSON.stringify([p.revision, p.responsibleId, p.cpfHash, user.nome, user.email]));
+
+/** Versioned owner configuration. Names/email come from an existing active account. */
+export async function configurePresidentProfile(actor: SessaoAdmin, input: { responsibleId: number; cpf?: string; whatsapp?: string; enabled: boolean; expectedRevision: number }) {
+  if (!validId(input.responsibleId) || !Number.isInteger(input.expectedRevision) || input.expectedRevision < 0 || input.expectedRevision >= 2147483647 || input.cpf !== undefined && (typeof input.cpf !== "string" || input.cpf.length > 20 || !isValidCpf(input.cpf)) || typeof input.enabled !== "boolean" || input.whatsapp !== undefined && (typeof input.whatsapp !== "string" || input.whatsapp.length > 32 || input.whatsapp !== "" && !/^\+[1-9][0-9]{7,14}$/.test(input.whatsapp))) return { ok: false as const, error: "parameters" };
+  return tx(async client => {
+    await bounded(client);
+    if (!await authorized(client, actor)) return { ok: false as const, error: "forbidden" };
+    const current = await profile(client), existing = (await client.query("SELECT 1 FROM settings WHERE key=$1", [PROFILE])).rowCount;
+    if (existing && !current || (current?.revision ?? 0) !== input.expectedRevision) return { ok: false as const, error: "conflict" };
+    if (!await account(client, input.responsibleId)) return { ok: false as const, error: "parameters" };
+    const sameResponsible = current?.responsibleId === input.responsibleId;
+    if (input.cpf === undefined && !sameResponsible) return { ok: false as const, error: "parameters" };
+    const revision = input.expectedRevision + 1;
+    const value: Profile = { version: 1, revision, responsibleId: input.responsibleId, cpfHash: input.cpf === undefined ? current!.cpfHash : cpfHash(onlyDigits(input.cpf)), whatsappCipher: input.whatsapp === undefined ? sameResponsible ? current!.whatsappCipher : null : input.whatsapp ? cifrar(input.whatsapp, `president-profile:${input.responsibleId}`) : null, enabled: input.enabled };
+    await client.query("INSERT INTO settings(key,value) VALUES($1,$2) ON CONFLICT(key) DO UPDATE SET value=$2", [PROFILE, JSON.stringify(value)]);
+    await client.query("UPDATE president_challenges SET state='revoked',lease_token=NULL,lease_until=NULL WHERE state IN ('issued','verifying')");
+    await audit("president_profile_configured", null, { userId: actor.userId, por: actor.email, responsibleId: value.responsibleId, revision, enabled: value.enabled }, client);
+    return { ok: true as const, revision };
+  });
+}
+
+export async function readPresidentProfile(actor: SessaoAdmin) {
+  return tx(async client => {
+    await bounded(client);
+    if (!await authorized(client, actor)) return { ok: false as const, error: "forbidden" };
+    const p = await profile(client), user = p && await account(client, p.responsibleId);
+    return { ok: true as const, profile: p && user ? { revision: p.revision, responsibleId: p.responsibleId, name: user.nome, email: user.email, enabled: p.enabled, hasCpf: true, hasWhatsapp: !!p.whatsappCipher, fingerprint: fingerprint(p,user) } : null };
+  });
+}
+
+async function document(client: PoolClient, id: number, allowApproved = false): Promise<PresidentDocumentRevision | null> {
+  const row = (await client.query<{ id: number; seq: number; kind: "partial" | "final"; list_hash: string; pdf: Buffer | null; pdf_sha256: string | null; signed_pdf: Buffer | null; signed_pdf_sha256: string | null; signature_kind: string | null }>("SELECT id,seq,kind,list_hash,pdf,pdf_sha256,signed_pdf,signed_pdf_sha256,signature_kind FROM batches WHERE id=$1 AND (status IN ('prepared','failed') OR ($2::boolean AND status='sent')) AND ($2::boolean OR approved_at IS NULL) FOR SHARE", [id,allowApproved])).rows[0];
+  if (!row?.pdf || !safeEqual(bytesHash(row.pdf), row.pdf_sha256 ?? "") || row.signed_pdf && !safeEqual(bytesHash(row.signed_pdf), row.signed_pdf_sha256 ?? "")) return null;
+  return { batchId: row.id, seq: row.seq, kind: row.kind, listHash: row.list_hash, originalPdf: row.pdf, signedPdf: row.signed_pdf, signatureKind: row.signature_kind };
+}
+const bytesHash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
+type PresidentDocumentBinding = Pick<Challenge, "batch_id" | "issued_by" | "responsible_id" | "profile_revision" | "responsible_fingerprint" | "document_version">;
+async function boundDocument(client: PoolClient, row: PresidentDocumentBinding, allowApproved = false) {
+  if (!(await client.query("SELECT 1 FROM admin_users WHERE id=$1 AND ativo AND nivel='total' FOR SHARE", [row.issued_by])).rowCount) return null;
+  const p = await profile(client), user = p && await account(client, p.responsibleId);
+  if (!p?.enabled || !user || p.responsibleId !== row.responsible_id || p.revision !== row.profile_revision || !safeEqual(fingerprint(p, user), row.responsible_fingerprint)) return null;
+  const doc = await document(client, row.batch_id,allowApproved);
+  return doc && safeEqual(presidentDocumentRevision(doc), row.document_version) ? doc : null;
+}
+const binding = async (client:PoolClient,row:Challenge) => !!await boundDocument(client,row);
+
+/** Password-bound reads cannot confirm identity, consume a challenge or send a batch. */
+export async function readConfiguredPresidentAccess(input:{token:string;password:string},includeDocument=false) {
+  try {
+    const credentials=presidentAccessHashes(input,config.pepper());if(!credentials)return unavailable;
+    return await tx(async client=>{
+      await bounded(client);
+      const row=(await client.query<Challenge>("SELECT * FROM president_challenges WHERE token_hash=$1 FOR UPDATE",[credentials.tokenHash])).rows[0];
+      const now=Date.now();
+      if(!row||!["issued","verifying","consumed"].includes(row.state)||row.expires_at.getTime()<=now||row.state==="issued"&&row.attempts>=5)return unavailable;
+      if(!safeEqual(row.password_hash,credentials.passwordHash)) {
+        // Share the confirmation budget before verification starts, without
+        // cancelling an in-flight verification or altering a consumed receipt.
+        if(row.state==="issued") {
+          const attempts=row.attempts+1;
+          await client.query("UPDATE president_challenges SET attempts=$2,state=$3 WHERE id=$1",[row.id,attempts,attempts>=5?"rejected":"issued"]);
+          await audit("president_access_rejected",null,{challengeId:row.id,batchId:row.batch_id,attempt:attempts},client);
+        }
+        return unavailable;
+      }
+      const doc=await boundDocument(client,row,row.state==="consumed");if(!doc)return unavailable;
+      if(row.state==="consumed"&&(!row.receipt_id||!row.confirmed_at))return unavailable;
+      const checkedAt=Date.now();if(row.expires_at.getTime()<=checkedAt)return unavailable;
+      const canConfirm=row.attempts<5&&(row.state==="issued"||row.state==="verifying"&&!!row.lease_until&&row.lease_until.getTime()<=checkedAt);
+      const bytes=doc.signedPdf??doc.originalPdf;
+      const metadata={batchId:doc.batchId,seq:doc.seq,kind:doc.kind,documentVersion:row.document_version,sha256:bytesHash(bytes),byteLength:bytes.byteLength};
+      await audit(includeDocument?"president_document_read":"president_state_read",null,{challengeId:row.id,batchId:row.batch_id,documentVersion:row.document_version,state:row.state},client);
+      return {ok:true as const,state:row.state as "issued"|"verifying"|"consumed",canConfirm,expiresAt:row.expires_at.toISOString(),document:metadata,receipt:row.state==="consumed"?{receiptId:row.receipt_id!,confirmedAt:row.confirmed_at!.toISOString(),assurance:"own-confirmation" as const,icpBrasil:false as const,govBr:false as const}:null,...(includeDocument?{bytes:Buffer.from(bytes)}:{})};
+    });
+  } catch { return unavailable; }
+}
+
+/** Actual PostgreSQL state machine. No provider call occurs while holding a transaction. */
+export function postgresPresidentChallengeStore(actor: SessaoAdmin | null = null, request: PresidentIssueIntent | null = null): PresidentChallengeStore {
+  const intent = request ? issueIntent(request) : null;
+  return {
+    async issue(input) {
+      return tx(async client => {
+        await bounded(client);
+        if (!await authorized(client, actor) || input.issuedBy !== actor!.userId) return false;
+        if (request && !intent || intent && (!safeEqual(intent.expectedDocumentVersion, input.documentVersion) || (await client.query("SELECT 1 FROM president_challenges WHERE issued_by=$1 AND request_id=$2", [actor!.userId, intent.requestId])).rowCount)) return false;
+        const p = await profile(client), user = p && await account(client, p.responsibleId), doc = await document(client, input.batchId);
+        if (!p?.enabled || !user || !doc || p.responsibleId !== input.responsibleId || !safeEqual(presidentDocumentRevision(doc), input.documentVersion) || intent && !safeEqual(intent.expectedProfileFingerprint, fingerprint(p,user))) return false;
+        const now = Number((await client.query("SELECT extract(epoch FROM clock_timestamp())*1000 ms")).rows[0].ms);
+        if (Math.abs(input.createdAt - now) > 30_000 || input.expiresAt - input.createdAt !== 600_000) return false;
+        await client.query("UPDATE president_challenges SET state='revoked',lease_token=NULL,lease_until=NULL WHERE batch_id=$1 AND state IN ('issued','verifying')", [input.batchId]);
+        await client.query("INSERT INTO president_challenges(id,batch_id,responsible_id,issued_by,profile_revision,responsible_fingerprint,document_version,token_hash,password_hash,created_at,expires_at,request_id,request_fingerprint) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)", [input.id,input.batchId,p.responsibleId,input.issuedBy,p.revision,fingerprint(p,user),input.documentVersion,input.tokenHash,input.passwordHash,new Date(input.createdAt).toISOString(),new Date(input.expiresAt).toISOString(),intent?.requestId ?? null,intent ? sha256(JSON.stringify([actor!.userId,input.batchId,intent.expectedDocumentVersion,intent.expectedProfileFingerprint])) : null]);
+        await audit("president_challenge_issued", null, { challengeId: input.id, batchId: input.batchId, responsibleId: p.responsibleId, userId: actor!.userId, por: actor!.email, documentVersion: input.documentVersion, profileRevision: p.revision, ...(intent ? { requestId: intent.requestId } : {}) }, client);
+        return true;
+      });
+    },
+    async claim(input) {
+      return tx(async client => {
+        await bounded(client);
+        const row = (await client.query<Challenge>("SELECT * FROM president_challenges WHERE token_hash=$1 FOR UPDATE", [input.tokenHash])).rows[0];
+        const now = Date.now();
+        if (!row || !["issued", "verifying"].includes(row.state) || row.expires_at.getTime() <= now || row.attempts >= 5 || row.state === "verifying" && row.lease_until!.getTime() > now || !await binding(client,row)) return null;
+        const matches = safeEqual(row.password_hash, input.passwordHash), attempts = row.attempts + 1;
+        await client.query("UPDATE president_challenges SET attempts=$2,state=$3,lease_token=$4,lease_until=$5 WHERE id=$1", [row.id,attempts,matches ? "verifying" : attempts >= 5 ? "rejected" : "issued",matches ? input.leaseId : null,matches ? new Date(Math.min(now+30_000,row.expires_at.getTime())).toISOString() : null]);
+        if (!matches) { await audit("president_challenge_rejected",null,{challengeId:row.id,batchId:row.batch_id,attempt:attempts},client); return null; }
+        return { id: row.id, responsibleId: row.responsible_id, documentVersion: row.document_version };
+      });
+    },
+    async finish(input) {
+      return tx(async client => {
+        await bounded(client);
+        const row = (await client.query<Challenge>("SELECT * FROM president_challenges WHERE id=$1 FOR UPDATE", [input.id])).rows[0], now = Date.now();
+        if (!row || row.state !== "verifying" || row.lease_token !== input.leaseId || row.lease_until!.getTime() <= now || row.expires_at.getTime() <= now || !safeEqual(row.document_version,input.documentVersion) || !await binding(client,row)) return null;
+        const receiptId = input.verified ? randomUUID() : null;
+        await client.query("UPDATE president_challenges SET state=$2,lease_token=NULL,lease_until=NULL,receipt_id=$3,confirmed_at=$4 WHERE id=$1", [row.id,input.verified ? "consumed" : row.attempts >= 5 ? "rejected" : "issued",receiptId,input.verified ? new Date(now).toISOString() : null]);
+        await audit(input.verified ? "president_document_confirmed" : "president_identity_rejected", null, { challengeId: row.id, batchId: row.batch_id, responsibleId: row.responsible_id, documentVersion: row.document_version, receiptId, assurance: "own-confirmation", icpBrasil: false, govBr: false }, client);
+        return receiptId ? { receiptId } : null;
+      });
+    },
+  };
+}
+
+export async function issueConfiguredPresidentChallenge(batchId: number, actor: SessaoAdmin, provider: CpfProvider | null = defaultProvider(), request?: PresidentIssueIntent) {
+  const intent = request ? issueIntent(request) : null;
+  if (!validId(batchId) || !provider || request && !intent) return unavailable;
+  try {
+    const data = await tx(async client => { await bounded(client); if (!await authorized(client,actor)) return null; const p=await profile(client),doc=await document(client,batchId),user=p && await account(client,p.responsibleId); return p?.enabled && doc && user && (!intent || safeEqual(intent.expectedProfileFingerprint,fingerprint(p,user))) ? {document:doc,responsibleId:p.responsibleId,issuedBy:actor.userId} : null; });
+    if (!data || intent && !safeEqual(intent.expectedDocumentVersion, presidentDocumentRevision(data.document))) return unavailable;
+    const result = await issuePresidentChallenge(data,{store:postgresPresidentChallengeStore(actor,intent),key:config.pepper()});
+    return result.ok && intent ? { ...result, requestId: intent.requestId } : result;
+  } catch { return unavailable; }
+}
+
+/** Existing identity verifier, with a configured subject binding and ephemeral CPF/birth. */
+export async function confirmConfiguredPresidentChallenge(input: { token: string; password: string; cpf: string; birthDate: string }, provider: CpfProvider | null = defaultProvider()) {
+  if (!provider) return unavailable;
+  try {
+    const key = config.pepper();
+    return await confirmPresidentChallenge(input,{store:postgresPresidentChallengeStore(),key,verifyIdentity:async value => {
+      const p = await tx(async client => { await bounded(client); const p=await profile(client),user=p && await account(client,p.responsibleId); return p?.enabled && user && p.responsibleId===value.responsibleId ? {p,user} : null; });
+      if (!p || !isValidCpf(value.cpf) || !safeEqual(cpfHash(value.cpf),p.p.cpfHash)) return false;
+      const birth = normalizeRegistryBirth(value.birthDate); if (!birth || !parseBirth(birth)) return false;
+      return (await verifyIdentity({cpf:value.cpf,method:"nascimento",value:birth,declaredName:p.user.nome,provider})).ok;
+    }});
+  } catch { return unavailable; }
+}
+
+type DurablePresidentReceipt = Pick<Challenge, "state" | "receipt_id" | "confirmed_at" | "expires_at"> & { created_at: Date };
+/** Shared unchanged receipt checks for capture and informational historical inventory. */
+function validConsumedPresidentReceipt(row: DurablePresidentReceipt | null | undefined): row is DurablePresidentReceipt & { state: "consumed"; receipt_id: string; confirmed_at: Date } {
+  return !(!row || row.state !== "consumed" || !row.receipt_id || !(row.confirmed_at instanceof Date) || !Number.isFinite(row.confirmed_at.getTime()) || !(row.created_at instanceof Date) || !(row.expires_at instanceof Date) || row.confirmed_at.getTime() < row.created_at.getTime() || row.confirmed_at.getTime() >= row.expires_at.getTime() || row.confirmed_at.getTime() > Date.now() + 30_000);
+}
+
+/** Server-only capture from a consumed durable receipt. It neither modifies the PDF nor signs/sends. */
+export async function capturePresidentOwnConfirmation(input: { batchId: number; receiptId: string; expectedDocumentVersion: string }, actor: SessaoAdmin | null) {
+  if (!input || Object.keys(input).sort().join(",") !== "batchId,expectedDocumentVersion,receiptId" || !validId(input.batchId) || typeof input.receiptId !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(input.receiptId) || typeof input.expectedDocumentVersion !== "string" || !/^[a-f0-9]{64}$/.test(input.expectedDocumentVersion)) return unavailable;
+  try {
+    return await tx(async client => {
+      await bounded(client);
+      if (!await authorized(client, actor)) return unavailable;
+      const row = (await client.query<Challenge & { created_at: Date }>("SELECT * FROM president_challenges WHERE batch_id=$1 AND receipt_id=$2 FOR SHARE", [input.batchId, input.receiptId])).rows[0];
+      if (!validConsumedPresidentReceipt(row) || !safeEqual(row.document_version, input.expectedDocumentVersion)) return unavailable;
+      const doc = await boundDocument(client, row);
+      // Adding a page after a signed PDF would invalidate that signature. A detached receipt is a separate flow.
+      if (!doc || doc.signedPdf || ![null, "", "none"].includes(doc.signatureKind)) return unavailable;
+      const p = await profile(client), user = p && await account(client, p.responsibleId);
+      if (!p || !user) return unavailable;
+      const bytes = Buffer.from(doc.originalPdf);
+      const frozen = freezeOwnConfirmation({ version: 1, state: "consumed", method: "own-confirmation", receiptId: row.receipt_id, challengeId: row.id, batchId: doc.batchId, responsibleId: row.responsible_id, documentVersion: row.document_version, sourceSha256: bytesHash(bytes), listHash: doc.listHash, accountFingerprint: row.responsible_fingerprint, signerName: user.nome, confirmedAt: row.confirmed_at.toISOString() }, bytes);
+      if (!frozen.ok) return unavailable;
+      await audit("president_own_confirmation_captured", null, { challengeId: row.id, receiptId: row.receipt_id, batchId: row.batch_id, documentVersion: row.document_version, evidenceDigest: frozen.evidenceDigest, sourceSha256: frozen.snapshot.sourceSha256, userId: actor!.userId }, client);
+      return { ...frozen, bytes };
+    });
+  } catch { return unavailable; }
+}
+
+
+/** Actor-scoped recovery of issuance metadata. Credentials are never reconstructed or returned. */
+export async function readPresidentChallengeRequest(requestId: string, actor: SessaoAdmin | null) {
+  const failure=(error:"parameters"|"forbidden"|"not_found"|"unavailable")=>({ok:false as const,error});
+  if (!requestUuid(requestId)) return failure("parameters");
+  try {
+    return await tx(async client => {
+      await bounded(client); if (!await authorized(client, actor)) return failure("forbidden");
+      const row = (await client.query<Challenge & { created_at: Date; request_fingerprint: string }>("SELECT * FROM president_challenges WHERE issued_by=$1 AND request_id=$2 FOR SHARE", [actor!.userId, requestId])).rows[0];
+      if (!row) return failure("not_found");
+      const credentialsExpired = row.expires_at.getTime() <= Date.now();
+      const isCurrent = ["issued","verifying","consumed"].includes(row.state) && (row.state === "consumed" || !credentialsExpired) && !!await boundDocument(client,row,row.state === "consumed");
+      await audit("president_challenge_request_read",null,{requestId,challengeId:row.id,batchId:row.batch_id,userId:actor!.userId},client);
+      return { ok:true as const,requestId,challengeId:row.id,batchId:row.batch_id,documentVersion:row.document_version,state:row.state,createdAt:row.created_at.toISOString(),expiresAt:row.expires_at.toISOString(),credentialsExpired,credentialsRecoverable:false as const,isCurrent,receiptId:row.state === "consumed" ? row.receipt_id : null };
+    });
+  } catch { return failure("unavailable"); }
+}
+
+/** Metadata derived from actual bytes, never reconstructed from a browser digest. */
+export async function readPresidentIssueDocumentRevision(batchId: number, actor: SessaoAdmin | null) {
+  if (!validId(batchId)) return { ok: false as const, error: "parameters" as const };
+  try {
+    return await tx(async client => {
+      await bounded(client);
+      if (!await authorized(client, actor)) return { ok: false as const, error: "forbidden" as const };
+      const doc = await document(client, batchId);
+      if (!doc) return unavailable;
+      await audit("president_issue_document_read", null, { batchId, userId: actor!.userId, documentVersion: presidentDocumentRevision(doc) }, client);
+      return { ok: true as const, document: {
+        batchId: doc.batchId, seq: doc.seq, kind: doc.kind,
+        documentVersion: presidentDocumentRevision(doc), originalSha256: bytesHash(doc.originalPdf),
+        signedSha256: doc.signedPdf ? bytesHash(doc.signedPdf) : null,
+        listHash: doc.listHash, signatureKind: doc.signatureKind,
+      } };
+    });
+  } catch { return unavailable; }
+}
+
+
+/** Protected historical inventory. Current is informational; generation/A1 still reauthorize and CAS. */
+export async function listPresidentConsumedReceipts(batchId: number, actor: SessaoAdmin | null, cursor?: string) {
+  const failure = (error: "parameters" | "forbidden" | "not_found" | "unavailable") => ({ ok: false as const, error });
+  if (!validId(batchId) || cursor !== undefined && !requestUuid(cursor)) return failure("parameters");
+  try { return await tx(async client => {
+    await bounded(client);if (!await authorized(client, actor)) return failure("forbidden");
+    if (!(await client.query("SELECT 1 FROM batches WHERE id=$1 FOR SHARE", [batchId])).rowCount) return failure("not_found");
+    if (cursor && !(await client.query("SELECT 1 FROM president_challenges WHERE id=$1 AND batch_id=$2 AND state='consumed' AND receipt_id IS NOT NULL AND confirmed_at IS NOT NULL", [cursor, batchId])).rowCount) return failure("parameters");
+    type Row = PresidentDocumentBinding & DurablePresidentReceipt & { id: string; created_text: string; confirmed_text: string };
+    const rows = (await client.query<Row>(`SELECT id,batch_id,responsible_id,issued_by,profile_revision,responsible_fingerprint,document_version,state,receipt_id,created_at,expires_at,confirmed_at,
+      to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') created_text,
+      to_char(confirmed_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') confirmed_text
+      FROM president_challenges WHERE batch_id=$1 AND state='consumed' AND receipt_id IS NOT NULL AND confirmed_at IS NOT NULL
+      AND ($2::uuid IS NULL OR (created_at,id)<(SELECT created_at,id FROM president_challenges WHERE id=$2 AND batch_id=$1)) ORDER BY created_at DESC,id DESC LIMIT 21`, [batchId, cursor ?? null])).rows;
+    const cache = new Map<string, boolean>();
+    const receipts = [];
+    for (const row of rows.slice(0, 20)) {
+      let isCurrent = false;
+      if (validConsumedPresidentReceipt(row) && /^[a-f0-9]{64}$/.test(row.document_version)) {
+        const key = JSON.stringify([row.batch_id, row.issued_by, row.responsible_id, row.profile_revision, row.responsible_fingerprint, row.document_version]);
+        if (cache.has(key)) isCurrent = cache.get(key)!;
+        else { const doc = await boundDocument(client, row);isCurrent = !!doc && !doc.signedPdf && [null, "", "none"].includes(doc.signatureKind);cache.set(key, isCurrent); }
+      }
+      receipts.push({ challengeId: row.id, receiptId: row.receipt_id!, batchId, responsibleId: row.responsible_id, issuedBy: row.issued_by,
+        documentVersion: /^[a-f0-9]{64}$/.test(row.document_version) ? row.document_version : null,
+        createdAt: row.created_text, confirmedAt: row.confirmed_text, isCurrent,
+        assurance: "own-confirmation" as const, icpBrasil: false as const, govBr: false as const, dispatchAllowed: false as const });
+    }
+    const nextCursor = rows.length > 20 ? rows[19].id : null;
+    await audit("president_own_receipts_listed", null, { batchId, userId: actor!.userId, cursor: cursor ?? null, returned: receipts.length, nextCursor }, client);
+    return { ok: true as const, kind: "receipts" as const, batchId, receipts, hasMore: rows.length > 20, nextCursor };
+  }); } catch { return failure("unavailable"); }
+}

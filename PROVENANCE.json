@@ -1,0 +1,24 @@
+{
+  "classification": "R14_FUNCTIONAL_DRAFT_INFRASTRUCTURE_BLOCKED",
+  "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "derivedControllerR13Commit": "53accbc147d257ad64ea53f14a46c004c76944a0",
+  "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
+  "runtimeReused": "/mnt/dev/.peticao-r0006-local-history-browser-qa-20261111/runs/af07e86c4964/runtime",
+  "originRuntime": "/mnt/dev/.peticao-r0002-production-profile-20261111/export/runtime",
+  "originalPdfSeededFromRealR12": true,
+  "originalPdfSha256": "a4bc11db09cb778c0145706e22c953abd7375095b28d6995f39628d7c5c2ceea",
+  "ownArtifactSeeded": false,
+  "consumedIdentityReceiptSeeded": true,
+  "externalIdentityVerified": false,
+  "newRuntimeCopied": false,
+  "actualAppPgDockerBrowserPopplerExecuted": false,
+  "infrastructureReady": false,
+  "requiresPeerControllerPatchAndNewFreezeBeforeExecution": true,
+  "futureBrowserChecks": 13,
+  "futureBrowserOwnPosts": 1,
+  "futureMetadataGuards": [
+    401,
+    403,
+    403
+  ]
+}

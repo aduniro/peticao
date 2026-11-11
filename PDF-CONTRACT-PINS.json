@@ -1,0 +1,17 @@
+{
+  "site/src/lib/pdf.ts": "b690b71e5ec78704ebe48308161d1da8b65dccbfc1bf9776e76b6525cd36f49e",
+  "site/src/lib/batch-preparation.ts": "7c9b0cf3e49a06f394402dd7ee7578585f15702ece9c5d4969a5067edb140b93",
+  "site/src/lib/batch-document-history.ts": "7cf553d8a2b0666d4a553ed6f3984a79466512115ef371b57294a79744d05275",
+  "site/src/lib/batch-document-history.test.ts": "0311731bc6f50679214a8a883e18b161f5499fd6394a540e821f468bf7f21322",
+  "site/src/lib/document-reference-store.ts": "4abfda9ba5901d0f6382de4ac46be116bb439d94033ebf7b631b0def16497b42",
+  "site/src/lib/batches.ts": "69d47cbf7c4f3bb3453a6ef8df6c838aefd90d5cf6613040a4ead388db6175d2",
+  "site/src/app/api/admin/lotes/criar/route.ts": "675ccc1ff9b1b8a47625b425a79230e65ac19aeb675dd5d220ac540b51097f77",
+  "site/src/app/api/admin/lotes/[id]/pdf/route.ts": "210b567a8ea01c26acac4df2739ab59c8678b18025ade43789edb1e9138b2a65",
+  "site/src/lib/signer.ts": "d11fa7d8e82eca0ba93eb061eade0c0c6a7167c86a6f5750095e4fcdad5fad97",
+  "site/src/lib/batch-a1-jobs.ts": "244a36c8461b5ed62f5c722f7a48b3c5b5fb6bbc7076d86f490488bf73643062",
+  "site/src/lib/batch-a1-jobs.test.ts": "b4246fd93f69ca537bbf637da71280aecb9d6f53157bc4561f8e54ff358267b9",
+  "site/src/lib/document-reference-contract.ts": "bc994af4521fc67d728f0a17357f6ea975d6c235561b657872afaafab7013822",
+  "site/src/lib/card.ts": "8ad19451f162aa4b2ef245fc2734753563114995e728e461172b4ee1e71bb506",
+  "site/src/app/layout.tsx": "047e7bf10e16ff06cfeec1e32fbc46ac86173f9037dd8ee1f01581e22b78a6fb",
+  "site/src/app/icon-192.png/route.ts": "4dae1489d82c0e82adef57b6a2ce3cbc3d09deb80533b6aae9c2baab45d0f329"
+}

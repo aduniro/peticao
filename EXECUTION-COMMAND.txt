@@ -1,0 +1,3 @@
+DO NOT EXECUTE THIS DRAFT. config.infra_reviewed=false is a mandatory preflight refusal.
+Integrate reviewed peer controller with R14 identities, generate NEW commit/manifest, obtain root/independent review and exclusive execution lease before proposing an operator command.
+Current functional draft manifestSHA256=e8ecf45a3fbf862d63b45ca09c2b737d641bc7fee6d6a33e2b373fd61ea8484b
