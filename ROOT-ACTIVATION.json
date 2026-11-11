@@ -1,0 +1,30 @@
+{
+  "classification": "ROOT_ACTIVATION_LOCAL_MATERIALS_NEXT_HTTP_ONLY",
+  "atUtc": "2026-11-11T07:27:36.150088+00:00",
+  "preparedCommit": "8e576e6cb2c8ad1c2ab9013d3822b278a9236963",
+  "sourceCommit": "140ce6b98af23045849335693a82b426fdc9c826",
+  "peerReview": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/materials-app-phase-b-ro-20261111/review.json",
+  "peerReviewSha256": "f14c8bd8fe1029bbc1955bb1887a43eb9560e3478138d27ed30c5281e064ab75",
+  "runtimeManifestSha256": "d01400bd9084e4f85f22bd2aed48d84a44518194cc847c67022ac22892aa7f16",
+  "buildAndExportReceipt": "/mnt/apps/peticao-final/_ops/qa-materials-app-http-20261111/runs/build-1794381678586266120/root-export-receipt.json",
+  "wholeRuntimeVerification": "/mnt/apps/peticao-final/_ops/qa-materials-app-http-20261111/runs/build-1794381678586266120/root-runtime-verification.json",
+  "rootReviewedFiles": [
+    "run.py",
+    "fixture.cjs",
+    "runtime-guard.mjs",
+    "local_controller.py",
+    "docker_control.py",
+    "materials_http.py",
+    "config.json",
+    "schema-source-manifest.json"
+  ],
+  "checksExternalBeforeAndAfter": [
+    "all profile pins",
+    "actual unit retained exit",
+    "runtime inventory",
+    "source Git clean unchanged"
+  ],
+  "noDeployment": true,
+  "r16Resumed": false,
+  "httpAlreadyExecuted": false
+}

@@ -1,5 +1,5 @@
 {
-  "classification": "LOCAL_COMPILED_NEXT_HTTP_PREPARATION_NOT_ACTIVATED",
+  "classification": "LOCAL_COMPILED_NEXT_HTTP_ACTIVATED_NOT_EXECUTED",
   "files": {
     ".gitignore": "ef24d6ee2be0c43e2c380af9ada35dcd5b4883b4e5bddcc528d783caff6fc0c8",
     "CHECKPOINT.md": "1652b1e19503c7d84067e77292ecfda06a2147b30b90c70a52c8870c1e8406f4",
@@ -7,7 +7,7 @@
     "PROVENANCE.json": "719b1aafd8f7a5d0ea397417b98cebe7737831eb4dec58af87c873884e79f5ab",
     "README.md": "50f2f00f942f6ffa9bc7e4e531cc2a9251a400cc86aeb8bd3ee69c989471e873",
     "VALIDATION.json": "151c5fc502abffd8451a1150dcc4afcefefdae92e60d24ccb7ee89f95d06b4fe",
-    "config.json": "6ff8c3ed1c83c42369675311ed9f2d7c4e2eca7346f91ca57e8bcdaed7e42372",
+    "config.json": "357680043fa750b4b07ceee5829dcbada062bf6c69953dde1df92d4c38747e6c",
     "docker_control.py": "c5afbc7a9899a4951a6be5c86442eac1b409ebe3253e152cb406a60ac158d706",
     "fixture.cjs": "d0514677a817db06e141423195e2ef48ee75289e084f5e02eb2c8df8d9483d2b",
     "guard.test.cjs": "1518eb3933dabfe0a09e396f90926229c526b901ebbf392c489c0a230a5b169b",
@@ -28,7 +28,8 @@
     "schema-sources/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
     "test_controller_port.py": "2b1553d4f2a3f49a24e12467dd6b10096599034c5376a4a5a84a3d255ff7d0df",
     "test_http_contract.py": "120a62772aeaffe94b98384adf27b8016d0edaf311a8512cf1c7eee0617c90ef",
-    "test_runtime_admission.py": "3983fa2f825c22caa80f161002f36f8d8b252febe87fe6cdac0970376b386989"
+    "test_runtime_admission.py": "3983fa2f825c22caa80f161002f36f8d8b252febe87fe6cdac0970376b386989",
+    "ROOT-ACTIVATION.json": "db728c61d69b9274a17ac875ee76320449ce64f1dc89a7633c8642b60464c295"
   },
   "noDeployment": true,
   "onlyNewPhaseARuntimeAllowed": true,
