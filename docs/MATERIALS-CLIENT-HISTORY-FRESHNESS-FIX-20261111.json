@@ -1,0 +1,31 @@
+{
+  "classification": "PURE_CLIENT_POST_CONFLICT_HISTORY_START_SEQUENCE_FIX_NOT_INTEGRATED",
+  "baseCommit": "dba5e83f995d158a242cb9aeba63873174075beb",
+  "files": {
+    "site/src/lib/materials-client.ts": "3acaa51457e5e3758f95cddf011cf4aafd30b2b1de1bdf0861cb7503a6d99c89",
+    "site/src/lib/materials-client.test.ts": "1253bbaaa7d23d88856c68b5a404d6c48b718f16c04d0cdfce9f2a6718d1ab82",
+    "docs/MATERIALS-CLIENT-HISTORY-FRESHNESS-FIX-20261111.md": "e986bba9567b15cca5e811e7498d8fe47420c2fae74cbd82e901d2a4f8a3fbaa"
+  },
+  "proofs": {
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-history-freshness-fix-20261111/red-result.json": "bcc5ab3fd76dc06801a0310c69a1dd2c61e81faabaa7b3f22b7c4a70cfd9b9b2",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-history-freshness-fix-20261111/red-stdout.log": "89a51810cc39518f796e2ee83e41357fbcb1119f053b4d2f152ec0efdb1adc3e",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-history-freshness-fix-20261111/red-network-proof.json": "565029d2c2f37899253e01a9c588919c19c23b8e5f1d781828bb9f8aebbc8f59",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-history-freshness-fix-20261111/green-result.json": "57b6f74a5a16dc420405a636e39112ad0fe623ba3dd1f9922595a47c0b76fa4b",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-history-freshness-fix-20261111/green-stdout.log": "f37a52405fe2f32af2bada26ed1bedae99ba9af5882f216c84686ba94ac11582",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-history-freshness-fix-20261111/green-network-proof.json": "db40e299c2cac3e6f440c8fef5a15256c3af167876b5cb0e3c216f65c4806534",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-history-freshness-fix-20261111/typecheck.json": "746d65fd9d4dd5e8beae2ac29069f2cc44f5bf09dfc8fa284459669d40005963"
+  },
+  "red": {
+    "passed": 27,
+    "failed": 1
+  },
+  "green": {
+    "passed": 28,
+    "failed": 0,
+    "strictDiagnostics": 0,
+    "transitiveInputs": 162,
+    "realIoAttempts": 0
+  },
+  "appPgHttpUiStorageIntegrationExecuted": false,
+  "independentPatchReviewPending": true
+}

@@ -158,6 +158,7 @@ export class MaterialsClient {
   private controllers: Partial<Record<keyof MaterialsClient["sequence"], AbortController>> = {};
   private usedRequestIds = new Set<string>();
   private disposed = false;
+  // Start sequence of the last successful history read, not a completion count.
   private historyReads = 0;
   private conflictNeedsRead = 0;
   constructor(context: MaterialsContext, private transport: MaterialsTransport = (url, init) => fetch(url, init), private timeoutMs = 15000) {
@@ -210,7 +211,7 @@ export class MaterialsClient {
     if (!this.current(token)) return failure("obsolete"); this.value.loadingHistory = false;
     const page = wire.kind === "wire" && wire.status === 200 ? parseMaterialsHistory(wire.value, id, before) : null;
     if (!page || !this.seedHead(page.current)) { const error = wire.kind === "failed" ? wire.error : wire.status === 200 ? "protocol" : wireError(wire); this.value.historyError = error; return failure(error); }
-    this.historyReads++; this.value.history = page; return { ok: true, value: copy(page) };
+    this.historyReads = token.sequence; this.value.history = page; return { ok: true, value: copy(page) };
   }
   async save(raw: unknown): Promise<MaterialsResult<MaterialsReceipt>> {
     if (this.disposed) return failure("obsolete");
@@ -234,7 +235,7 @@ export class MaterialsClient {
     if (receipt) return this.confirm(receipt);
     const error = wire.kind === "failed" ? wire.error : wire.status === 200 ? "protocol" : wireError(wire);
     this.value.error = error; this.value.needsReview = true;
-    if (["conflict", "request_conflict", "archived"].includes(error)) this.conflictNeedsRead = this.historyReads + 1;
+    if (["conflict", "request_conflict", "archived"].includes(error)) this.conflictNeedsRead = this.sequence.history + 1;
     this.value.phase = ["conflict", "request_conflict", "archived"].includes(error) ? "conflict" : ["parameters", "auth", "forbidden", "rate_limited", "body_too_large", "disabled", "not_found"].includes(error) ? "rejected" : "uncertain";
     return failure(error);
   }

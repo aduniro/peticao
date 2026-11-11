@@ -92,6 +92,31 @@ test("conflict preserves draft and requires a fresh head read plus explicit revi
   assert.deepEqual(await c.save(revise(id(500), content("Rascunho local"), 2)), { ok: false, error: "request_conflict" });
   assert.ok((await c.save(revise(id(501), content("Rascunho local"), 2))).ok); assert.deepEqual(methods, ["POST", "GET", "POST"]);
 });
+test("a history request started before conflict cannot satisfy the required fresh read", async () => {
+  const oldHistory = deferred<Response>(), mutation = deferred<Response>();
+  const methods: string[] = []; let reads = 0, writes = 0;
+  const c = new MaterialsClient(ctx(), async (_, init) => {
+    methods.push(init.method!);
+    if (init.method === "POST") return ++writes === 1 ? mutation.promise : json({ ok: true, replayed: false, version: version(3, content("Rascunho local")) });
+    reads++;
+    return reads === 1 ? oldHistory.promise : reads === 2 ? json({ ok: false, error: "unavailable" }, 503) : json(history(version(2, content("other actor"))));
+  });
+  c.seedHead(version()); c.setDraft(content("Rascunho local"));
+  const oldRead = c.loadHistory(), saving = c.save(revise());
+  mutation.resolve(json({ ok: false, error: "conflict" }, 409));
+  assert.deepEqual(await saving, { ok: false, error: "conflict" });
+  assert.equal(c.reviewHead(), false);
+  oldHistory.resolve(json(history(version()))); assert.ok((await oldRead).ok);
+  assert.equal(c.reviewHead(), false, "an old request completing after conflict is not a fresh read");
+  assert.equal(c.getState().draft?.title, "Rascunho local");
+  assert.equal((await c.loadHistory()).ok, false);
+  assert.equal(c.reviewHead(), false, "a failed fresh request does not qualify either");
+  assert.ok((await c.loadHistory()).ok); assert.equal(c.reviewHead(), true);
+  assert.equal(c.getState().draft?.title, "Rascunho local");
+  assert.ok((await c.save(revise(id(501), content("Rascunho local"), 2))).ok);
+  assert.deepEqual(methods, ["GET", "POST", "GET", "GET", "POST"]);
+  c.dispose();
+});
 test("replayed receipt cannot overwrite a newer head read while POST was pending", async () => {
   const wait = deferred<Response>(); const c = new MaterialsClient(ctx(), async (_, init) => init.method === "POST" ? wait.promise : json(history(version(3, content("newer head")))));
   c.seedHead(version()); c.setDraft(content("Rascunho local")); const saving = c.save(revise()); assert.ok((await c.loadHistory()).ok);
