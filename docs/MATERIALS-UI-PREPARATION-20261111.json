@@ -1,0 +1,42 @@
+{
+  "classification": "ISOLATED_MATERIALS_UI_DRAFT_PURE_AND_SSR_NOT_BROWSER_READY",
+  "baseCommit": "e08c3cfb34ae0fd7132eebecfa18eec91cd15d7a",
+  "expectedPreviewUpstream": "140ce6b98af23045849335693a82b426fdc9c826",
+  "files": {
+    "site/src/components/admin/MateriaisBiblioteca.tsx": "56f3ba579df7b51ec908cac9766defb717fb9a5deaddf9b31de7b1f9c1aecd09",
+    "site/src/components/admin/MateriaisFormulario.tsx": "3e524a6daf148d37433223535449840f42bfae5e1b46e15e8d4ed697c5b60524",
+    "site/src/components/admin/MateriaisHistorico.tsx": "198f4165dff96510dc099d58ac8d4c76e2fccb83d9a617ae49057970bf4c3f14",
+    "site/src/components/admin/MateriaisPrevia.tsx": "7b6a0faaea560df07ed33f11e231576cf86e67227d63c8de579b8d1a54567720",
+    "site/src/lib/materials-ui.ts": "54b73910c611705b02c4384d873bed99c634af0f57ff0b863cafa29565762269",
+    "site/src/lib/materials-ui-copy.ts": "4827cdeb5741975210c478cc25034b3ae8203cc88144754c3614c9125c7c5673",
+    "site/src/lib/materials-ui.test.ts": "8703a3f385d578971ee890a1b7b0b0a5e551e30427d06bcca3984f55345e2234",
+    "docs/MATERIALS-UI-DRAFT-20261111.md": "668cc506002ee947895482babfc36c5ff28409a4cc85ff83275950ae530e0869"
+  },
+  "typecheck": {
+    "diagnostics": 0,
+    "inputCount": 175,
+    "inputDrift": 0,
+    "packagesLockMatched": 9,
+    "serverFreeClientModules": true
+  },
+  "pureTests": 9,
+  "ssrChecks": 5,
+  "networkAttempts": 0,
+  "proofFiles": {
+    "/mnt/apps/peticao-final/_ops/drafts/materials-ui-20261111/.cache/materials-ui-validation/check.cjs": "77ff0700a7c8146f688ff0c92215d7b76cbfb90f5fb33607f2200623d7caa781",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-ui-20261111/.cache/materials-ui-validation/typecheck.json": "4c8b6613b3ea2ca69125dc01ee28d3c316136c58b1bdb9f39599908d98967500",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-ui-20261111/.cache/materials-ui-validation/deny-network.cjs": "33098bdac0f2e5881c8ae33cf786b84ccec5d9abb6cb5a1e4acb9cae26c7e9a7",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-ui-20261111/.cache/materials-ui-validation/ssr.test.cjs": "79b39c31e0ac849de96b595fe442b8a19e06b40d7416bc312af0ef42a3e4439e",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-ui-20261111/.cache/materials-ui-validation/run-pure.cjs": "ae9975401f03de99e81b126a7ded92128eec836749c906f2b242d956be713b5d",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-ui-20261111/.cache/materials-ui-validation/test-stdout.log": "d64e86ee2d611cd17b2159a65c0f2da537ecbb1b940b281a93e0d77c1e4182d1",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-ui-20261111/.cache/materials-ui-validation/test-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-ui-20261111/.cache/materials-ui-validation/network-proof.json": "8d15b3526da137fe1caa3c1af0cb1c556ed66936fc53b6031fd15a6fe3f1ff18"
+  },
+  "newTexts": "DRAFT_ONLY_NOT_APPROVED_OR_INTEGRATED",
+  "existingHelperBytesUnchanged": true,
+  "menuRouteCssApiRendererChanged": false,
+  "pgBuildHttpBrowserExecuted": false,
+  "integrated": false,
+  "deployed": false,
+  "operationalReady": false
+}
