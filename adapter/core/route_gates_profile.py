@@ -227,7 +227,7 @@ def run(job):
     if log.stat().st_size>8*1024**2:raise ProfileError('wrapper_log_limit')
     same_fence(context,queue_context(job));time.sleep(0.5)
    result['harnessExit']=child.returncode
-  
+
   if child.returncode!=0:raise ProfileError('harness_exit_not_zero')
   same_fence(context,queue_context(job));result['qualification']=validate_receipts(artifacts/'govbr-route-gates',context,child.returncode);after=verify_stage()
   if before!=after:raise ProfileError('runtime_source_input_drift')
