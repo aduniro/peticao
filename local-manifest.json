@@ -127,10 +127,6 @@
   },
   "infrastructureReady": true,
   "requiresReviewedPeerControllerPatchAndNewFreeze": false,
-  "mockTests": {
-    "python": 43,
-    "node": 17
-  },
   "futureBrowserChecks": 13,
   "futureUiOwnPostCount": 1,
   "metadataRefusalStatuses": [
@@ -149,12 +145,22 @@
   "baselineActualExecutionFailed": true,
   "newActualExecutionPerformed": false,
   "GETObservations": 5,
-  "newMarker": "execution.response-observation-v2.started",
+  "newMarker": "execution.finished-diagnostic-v4.started",
   "auxiliaryObserverGetCount": 1,
   "mutableLatestRunExcluded": true,
   "finishedTimeoutMs": 9000,
   "timeoutNeverQualifiesUi": true,
   "affectedPythonTestsRun": 35,
   "nodePureTestsRun": 27,
-  "unchangedControllerTestsInherited": 16
+  "unchangedControllerTestsInherited": 16,
+  "baselineMockTests": {
+    "python": 43,
+    "node": 17
+  },
+  "baselineMockTestsScope": "historical response-observation-v2; not current v4 totals",
+  "mockTests": {
+    "pythonAffectedExecuted": 35,
+    "nodeExecuted": 27,
+    "unchangedDockerControllerCasesInherited": 16
+  }
 }
