@@ -1,0 +1,36 @@
+{
+  "classification": "ISOLATED_MATERIALS_CLIENT_STATE_PREPARED_NOT_INTEGRATED",
+  "baseCommit": "10dc8d27aa033b0e7232651cd709603a6cfd39b5",
+  "branch": "feat/materials-client-state-20261111",
+  "files": {
+    "site/src/lib/materials-client.ts": "967c06f5faec99f8a60777f04cc346ec0498b0e61f2f2edb406108d99d5b44b5",
+    "site/src/lib/materials-client.test.ts": "ba870d13790cf35f49a936b2349ee7b948247fad22567ed15258439687daa005",
+    "docs/MATERIALS-CLIENT-STATE-20261111.md": "21a3127525070d11e0d5a6c5860a7653658268bbb618aa8d3a21f504c73b7b14"
+  },
+  "evidence": {
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-validation/typecheck.json": "6c480a81b7a3aa164d84165154949d20426c47b1a38d884d3d4a2299d93cdedb",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-validation/result.json": "bc66a9d4909e785ad1b0b3d124114764a545738f6726538e287761ffc65b98fc",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-validation/network-proof.json": "fd8e1b8f0da9b2772ec7c9729b62d7df10573a2f23e8bc6987d2ff072609cec5",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-validation/test-stdout.log": "28dd6a57628c722af520de97aabeecce4488be21d80bf9a8f674e22f58c4cc24",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-validation/test-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-client-20261111/.cache/materials-client-validation/stability.json": "e1083e2e218d4a1dc55e8b6838b378577057e888f89600cab6f7750ab25302c0"
+  },
+  "observed": {
+    "pureTestsPassed": 27,
+    "skipped": 0,
+    "strictTransitiveDiagnostics": 0,
+    "typecheckInputs": 162,
+    "inputDrift": 0,
+    "runtimeServerImports": false,
+    "persistentStorage": false,
+    "realIoAttempts": 0,
+    "appHttpPgChromeBuildExecuted": false,
+    "visibleUiTextsOrLayoutChanged": false,
+    "integratedOrDeployed": false
+  },
+  "pending": [
+    "Independent review",
+    "Consumer UI integration in separate scope",
+    "Compiled HTTP/browser integration validation"
+  ]
+}
