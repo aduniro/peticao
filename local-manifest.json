@@ -1,0 +1,33 @@
+{
+  "classification": "LOCAL_R6_BROWSER_HISTORY_DRAFT_NOT_EXECUTED",
+  "root": "/mnt/dev/.peticao-r0006-local-history-browser-qa-20261111",
+  "files": {
+    "PROVENANCE.json": "6aac733abb50b4961461a0c8989704d30eeabb4ab2c6ffc6ce6fe2101e7aff70",
+    "browser_hook.py": "77e723f21531a3d603a385590710e0e5aa7982fa2d8a002748858e16103030b6",
+    "config.json": "b0bc23c6269cfebcf45f5f3ac9bb9d491258d7b60566e1b5f3400c949c269e75",
+    "docker_control.py": "b4a6cbdd65751da31576ef754874006fdaaa334e0fe0a68ac3d4c957c469bfde",
+    "fixture.cjs": "a34574271520fbefcd1e508601aae6d950873db25f2aad6c0f0226151d32a31e",
+    "functional-guard.mjs": "dc4374d08b2490fd624cdb06e85eee6a30b67f7f272a421d95472633dc2b2182",
+    "functional_smoke.py": "758eece039fa6e78223d334fa401ae0c7593bcc178728bdf301df78627042515",
+    "history-browser.cjs": "f405840d45f9529f0442f8b27606d03c4dae18b26670d098119d311b9180b369",
+    "local_controller.py": "3e6401395227b2a78adf9ba0776cd65a7d3a92f9599093cc2999d4767411ac17",
+    "schema-source-manifest.json": "c46b36c4d4a9b31d5b89b8bb2a4c7373370bdf3c6d9281e3ef63ca4b55185a3a",
+    "schema-sources/batch-a1-schema.ts": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
+    "schema-sources/batch-package-schema.ts": "7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4",
+    "schema-sources/db.ts": "dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824",
+    "schema-sources/document-reference-schema.ts": "b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c",
+    "schema-sources/petition-base-schema.ts": "25ea67cd71f653e68a8cc67177f77d39f18b4e56e14d6a8d42e256ddae51764c",
+    "schema-sources/president-own-a1-schema.ts": "24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408",
+    "schema-sources/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
+    "test_browser_hook.py": "370fa34a8da1fdbea42b1faf8f30ad41791f47b42d453754c2e0dd52420d034e"
+  },
+  "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "driverCommit": "4ab6538490be8c2d35bb268a8f619cb86af24808",
+  "driverSha256": "f405840d45f9529f0442f8b27606d03c4dae18b26670d098119d311b9180b369",
+  "mockTests": 15,
+  "actualBrowserOrHttpChecks": 0,
+  "dockerOrPgOrAppExecuted": false,
+  "runtimeCopied": false,
+  "requiresRetainedUnitExitAndWholeDrain": true,
+  "browserCookieExported": false
+}
