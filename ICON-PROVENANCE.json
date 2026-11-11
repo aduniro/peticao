@@ -1,0 +1,38 @@
+{
+  "classification": "EXACT_FIRST_PARTY_DYNAMIC_ICON_ROUTE_ONLY",
+  "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "origin": "http://127.0.0.1:31395",
+  "path": "/icon-192.png",
+  "methods": [
+    "GET",
+    "HEAD"
+  ],
+  "queryAllowed": false,
+  "sourcePins": {
+    "site/src/app/layout.tsx": "047e7bf10e16ff06cfeec1e32fbc46ac86173f9037dd8ee1f01581e22b78a6fb",
+    "site/src/app/icon-192.png/route.ts": "4dae1489d82c0e82adef57b6a2ce3cbc3d09deb80533b6aae9c2baab45d0f329",
+    "site/src/lib/card.ts": "8ad19451f162aa4b2ef245fc2734753563114995e728e461172b4ee1e71bb506"
+  },
+  "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
+  "immutableArchiveExpectedSha256": "2952a2b0d7ffb06b553caa03fdb3d8546981a96118a1cc9aa0ca47da4adc8ee0",
+  "compiledPins": {
+    ".next/server/app-paths-manifest.json": {
+      "bytes": 11188,
+      "sha256": "9a7659b38d4d070041c04a5d7b3634e96f45add981ca4df1a6b2334599103342"
+    },
+    ".next/server/app/icon-192.png/route.js": {
+      "bytes": 7373,
+      "sha256": "b0e8252d2db6610a4c7102b54267a206f2e8404ce9e589df045281594074d7f6"
+    },
+    ".next/server/app/icon-192.png/route.js.nft.json": {
+      "bytes": 621,
+      "sha256": "b785e110698b0cfeb67877f6cb145f11a20d73ed3e35a231b31678c3c5ad1ee8"
+    }
+  },
+  "compiledMapping": {
+    "/icon-192.png/route": "app/icon-192.png/route.js"
+  },
+  "runtimeR6SharedTreeAccessed": false,
+  "moduleExecuted": false,
+  "reusedKnownExactIconRuleFromR10": "c946e0197a20612139352564fdcb6d3d0cf042f3"
+}

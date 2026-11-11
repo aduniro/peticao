@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "files": {
+    "site/src/components/admin/A1Assinatura.tsx": "943f8eedaf1aed0e22b5ff9ab5e2717cd7a8b636ad1a770a39c87a79591df464",
+    "site/src/lib/batch-a1-jobs.ts": "244a36c8461b5ed62f5c722f7a48b3c5b5fb6bbc7076d86f490488bf73643062",
+    "site/src/lib/batch-a1-schema.ts": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
+    "site/src/lib/a1-validation.ts": "b28c2f4f067d494e2610ded079aef1cb8f704b4114a8288621299354a61ae000",
+    "site/src/lib/a1-ui-context.ts": "52a16b89658c7a4ad7ebf215af781f949d70653a3684d63778efefb2a34273f4",
+    "site/src/lib/a1-request.ts": "557fedaa15143edfa9b67f076d4918ab9520bc020bc56f933bafa94d507ad5da",
+    "site/src/lib/a1-job-view.ts": "90458b1de61698e8a90218b9ea53ef6a10418bb377111961b1533d551a96533d",
+    "site/src/lib/a1-reconciliation.ts": "0e181956978178944433e7e0f483ce036fda88f2a0a3858e8a38a57dd2de7b62",
+    "site/src/app/api/admin/lotes/[id]/a1/route.ts": "30aefbda2b12e16815661fe39d8a646d0a5152d13188fd4189f53af7289998d6",
+    "site/src/app/admin/presidente/page.tsx": "9509b9a4985f6e5fb7d91eaf9812e2869e6efb876090b288bd617e2d733b4539"
+  },
+  "scope": "original-mode admission and GET recovery only; no worker/crypto"
+}

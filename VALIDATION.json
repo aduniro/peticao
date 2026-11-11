@@ -1,0 +1,13 @@
+{
+  "scope": "preparation-only",
+  "pythonFocusedMocks": 11,
+  "nodePurePolicyMocks": 10,
+  "exit": 0,
+  "proof": "/mnt/apps/peticao-final/_ops/qa-r0015-a1-admission-browser-20261111/mock-proof/freeze-final/result.json",
+  "proofSha256": "c5eac3688182df2d2e277c2f57549a909e211dd5355e95c4ad604016d2fc655c",
+  "realApp": false,
+  "realPostgres": false,
+  "realDocker": false,
+  "realBrowser": false,
+  "cryptoHomologated": false
+}
