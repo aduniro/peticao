@@ -28,16 +28,19 @@ def verify_spool_identity(path,fd,identity,mode):
  a=os.fstat(fd);b=path.lstat()
  require(path.resolve()==path and not stat.S_ISLNK(b.st_mode) and stat.S_ISDIR(a.st_mode),'canonical spool directory')
  require((a.st_dev,a.st_ino,a.st_uid)==identity==(b.st_dev,b.st_ino,b.st_uid) and a.st_uid==os.getuid(),'same owned spool inode')
- require(stat.S_IMODE(a.st_mode)==mode and stat.S_IMODE(b.st_mode)==mode,'expected private spool mode')
+ allowed={mode} if isinstance(mode,int) else set(mode)
+ require(stat.S_IMODE(a.st_mode)==stat.S_IMODE(b.st_mode) and stat.S_IMODE(a.st_mode) in allowed,'expected private spool mode')
 
 @contextmanager
 def readonly_spool(run,cancellation,proof):
  """Only own existing directory mode changes; no rename, deletion, or global permissions."""
  path=run/'mail-outbox';require(run.resolve()==run and path.parent==run and os.getuid()!=0,'nonroot own run spool')
- fd=os.open(path,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW);a=os.fstat(fd);identity=(a.st_dev,a.st_ino,a.st_uid);before=None;changed=False
+ fd=os.open(path,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW);a=os.fstat(fd);identity=(a.st_dev,a.st_ino,a.st_uid);before=None;restore_admitted=False
  try:
   verify_spool_identity(path,fd,identity,0o700);before=spool_state(run)
-  os.fchmod(fd,0o500);changed=True;verify_spool_identity(path,fd,identity,0o500)
+  # Admission precedes the syscall: TERM may arrive after fchmod changed mode, before Python returns.
+  restore_admitted=True
+  os.fchmod(fd,0o500);verify_spool_identity(path,fd,identity,0o500)
   require(not os.access(path,os.W_OK),'write permission is actually absent')
   proof.update(applied=True,modeBefore='0700',modeDuring='0500',sameInode=True)
   yield
@@ -45,10 +48,12 @@ def readonly_spool(run,cancellation,proof):
   # TERM/INT during restoration are counted by the outer cancellation state, not raised.
   previous=cancellation.cleaning;cancellation.cleaning=True
   try:
-   verify_spool_identity(path,fd,identity,0o500 if changed else 0o700)
-   os.fchmod(fd,0o700);verify_spool_identity(path,fd,identity,0o700)
-   require(before is not None and spool_state(run)==before,'fault changed existing spool files')
-   proof.update(restored=True,modeAfter='0700',sameFilesAndHashes=True)
+   if restore_admitted:
+    # Observe either admitted mode, never infer it from a post-syscall assignment.
+    verify_spool_identity(path,fd,identity,{0o500,0o700})
+    os.fchmod(fd,0o700);verify_spool_identity(path,fd,identity,0o700)
+    require(before is not None and spool_state(run)==before,'fault changed existing spool files')
+    proof.update(restored=True,modeAfter='0700',sameFilesAndHashes=True)
   finally:
    os.close(fd);cancellation.cleaning=previous
 

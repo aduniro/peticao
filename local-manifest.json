@@ -5,7 +5,7 @@
   "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "fixedRequests": 20,
   "fixedAssertions": 5,
-  "pythonPureMocks": 21,
+  "pythonPureMocks": 24,
   "nodePureDummyTests": 3,
   "dbPort": 55491,
   "appPort": 31391,
@@ -14,7 +14,7 @@
   "files": {
     ".gitignore": "61b3a7ce7f73e51dea5eb339eca40ea4b52ea39dfa35c83e81f974cc71a5e932",
     "PROVENANCE.json": "b36cb15f437144fd1220f37c360f8a3f8d46091b63ce0453e615ff1c094ba41e",
-    "README.md": "d3147054cdf14592171f5e7b4470068c54dd232f8aa7aa379188c352396d2940",
+    "README.md": "b2de6da14ed49b2b8b6a8e0ca737c14c34fb35a1e825a8c414778218645f842a",
     "config.json": "689c4f54c5787a4c93a57422135924712a55ee75839a7cbdcb03d3b238c68918",
     "contracts/site__src__app__api__admin__lotes__[id]__aprovar__route.ts.txt": "c29239672506ea16d51f23df92cefc04f35a104b463af342e6415ae51d29f0e5",
     "contracts/site__src__app__api__admin__lotes__[id]__codigo__route.ts.txt": "311e03a2bf9d150a8f497e4e8d2f2d8aa944104c271a02050000fbbbe4e0501d",
@@ -35,6 +35,9 @@
     "functional-guard.mjs": "4f9a6f8448300533cedc80fc424928c096d32f5754f5517a326f8cfb305984e1",
     "functional_smoke.py": "1d8876d018eeec8ba1788830cf55db2442146521404f1fe0078be7772487167e",
     "local_controller.py": "933934d8ab39c3a7f557d643b295343ca5bd7c664e3624f66d5fd054caacdad7",
+    "mock-proof/baseline-c997-package_http.py": "4fb31e1bd5f048b41328b3cb7e4c39efbb5cbc8ff802caacd9e5507a0e3197a3",
+    "mock-proof/baseline-term-window-stderr.log": "dc0c833e110ef14a461ca6343eff6b09d4e0d1194fbb0d4cbe4780bc365c4e29",
+    "mock-proof/baseline-term-window-stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "mock-proof/fixture-syntax-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "mock-proof/fixture-syntax-stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "mock-proof/node-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -42,7 +45,10 @@
     "mock-proof/python-stderr.log": "0214f4d26066ce36fa7abf3807eceb10db1dd3ddcb3cdb8ed36282ac6e62a627",
     "mock-proof/python-stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "mock-proof/result.json": "f38ee5d88111cf440973e3ce87a3a9d036401c2d7bccaf59489661064026cf46",
-    "package_http.py": "4fb31e1bd5f048b41328b3cb7e4c39efbb5cbc8ff802caacd9e5507a0e3197a3",
+    "mock-proof/rev2-python-stderr.log": "9633ca55896692fd31cb7457b6a40dfa9caef5bde2f88e406577e4e0f088d983",
+    "mock-proof/rev2-python-stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "mock-proof/rev2-result.json": "7c3d0a7906c3c3113dce214d088f6d3833e2666a34abc374337ddd0c33bad673",
+    "package_http.py": "2979d1c600184a0dec6dea25070fd718a431db3d423a95c3d5f548f191234c0e",
     "schema-source-manifest.json": "f7947630d328d92fd372166baeb2ace32ee33149e495c9ff7866d5d075bc6a7e",
     "schema-sources/batch-a1-schema.ts": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
     "schema-sources/batch-package-schema.ts": "7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4",
@@ -55,6 +61,9 @@
     "seed_contract.cjs": "c02fe9d0bcddeb2044d925b02d613a102bcd38c56735cb173e2c2e9fb31f3932",
     "test_edge.py": "4bf097ee8a0fceaaa81efd7d39e5ebdbf515ccc40ca52f676cf1cd83c7d34c39",
     "test_profile.py": "1064b78831047f20d07f14e0b5b32e196ccf56b88a0464d29db58324a4500489",
-    "test_seed_contract.cjs": "bccf2336d0fb3e5259327961851ccb0342d61bd432f2612ee2a21e0fb4c2970b"
-  }
+    "test_seed_contract.cjs": "bccf2336d0fb3e5259327961851ccb0342d61bd432f2612ee2a21e0fb4c2970b",
+    "test_term_window.py": "84c8df299e1fecb9b5a7e6814213a3403d0c5d31db419b4ac7e124b1a8a3d858"
+  },
+  "parentDraftCommit": "c9978e586fbb1ab125e9a0542b3a551f9df29a95",
+  "baselineSignalRegressionExit": 1
 }
