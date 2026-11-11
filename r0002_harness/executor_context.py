@@ -4,8 +4,8 @@ import hashlib,json,os,re,signal,stat
 from native_pg import Cancelled,cgroup_of
 WORKER=Path('/srv/admin-v2-worker')
 COORDINATOR=Path('/srv/admin-v2-coordinator')
-KIND='history-populated-native-pg17-r4'
-SOURCE='0a5f734da4f9b8a35a10a20eaa9fb4fd5adb0e4f'
+KIND='history-native-pg17-r0002-v1'
+SOURCE='f55595cd348c23ffe559dba2de9150259db9f1e7'
 def canonical(value):return json.dumps(value,sort_keys=True,separators=(',',':'))
 def regular_json(path,limit=65536):
  fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)

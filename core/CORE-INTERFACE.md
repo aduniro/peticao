@@ -50,3 +50,14 @@ The internal fixed profile runs safe_extract.py → probe.py (11 intended denial
 Artifacts remain in the existing worker work/artifacts export: only allowlisted extraction/result/pid/guard/server/probe technical receipts,32MiB total/16MiB per file. Runtime, dependencies, secrets and arbitrary paths are not exported. A passed profile is SANTIAGO_HTTP_SMOKE_NO_DATABASE_NOT_DEPLOY_QUALIFIED with operationalReady=false; it never starts DB, builds, npm-installs, sends mail, invokes real verifier, deploys, publishes Tailnet or proves browser/signature readiness.
 
 Tests of this draft use synthetic pins/manifests, temporary SQLite queue and harmless fixture child processes only. They do not execute application code, invoke SSH/systemd, or install the proposal. Live target resource/port checks, peer ACK and installation/transfer lease remain prerequisites.
+
+
+## Proposed history-native-pg17-r0002-v1 — PRIVATE, NOT INSTALLED
+
+Draft /mnt/apps/peticao-final/_ops/r0000-cluster-history-native-pg17-r4-20261110/r0002. Preserves installed480profile and genericqueue behavior. The only new contract is submit with action,id32hex,kindhistory-native-pg17-r0002-v1,source_commitf55595cd348c23ffe559dba2de9150259db9f1e7. Admission performs NO private-stage I/O. Expected payload pins are codeconstants, not caller-supplied. No genericRPC/upload/shell/environment/timeout is added.
+
+New installed module proposed:/opt/admin-v2-cluster/history_native_profile.py; coordinator dispatch recognizes this fixedkind; launcher selects CPU200%,Memory3G,swap0,Tasks256,RuntimeMaxSec600,TimeoutStopSec120 (720s total). Existing480andgenericlimits remain unchanged. Source manifest and app/runtime must all beR0002f555; oldR4ca53is ancestry only, not qualification.
+
+Runtime475576320bytes/SHA2952a2... and manifest7b853d... go to /srv/admin-v2-worker/admin-r0002-runtime-qa-20261111/inputs outside import-source64MiB. Selected adapted harness files and schema7 have their own immutable manifest. Full archive/inventory/schema/tool verification occurs in the oneheavyjob beforePG. Full details/pins/proof limits in README.md of this draft. Tokens and local coordinatorSQLite are never transported; existing authority/config/boot/generation/marker/cgroup are verified read-only.
+
+One wrapper starts one fixed Python entrypoint. Only own nativePG55485 and app31385 are allowed; noDocker/npm/build/provider/realDB. Required19checks+guard+cleanup+schema/runtime/PDFproofs precede completion. Technical allowlist exports group-readableartifacts; PGDATA/password/runtime/lease excluded. Missing/uncertain evidence remainsfailed/interrupted, neverautomaticreplay. Operatorroot still controls installation,stage,submission and post-jobcgroup/ports; this patch does none.

@@ -6,13 +6,12 @@ from executor_context import verify_queue_context,CancellationState
 ROOT=pathlib.Path(__file__).resolve().parent
 CONFIG_PATH=os.environ.get('HISTORY_SMOKE_CONFIG')
 CONFIG=json.loads(pathlib.Path(CONFIG_PATH).read_text()) if CONFIG_PATH else {}
-PORTABLE=ROOT.parent/'r0000-portable-runtime-20261110'
-NODE=pathlib.Path(CONFIG.get('node_path','/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node'))
-NODE_SHA=CONFIG.get('node_sha256','b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac')
+NODE=pathlib.Path(CONFIG.get('node_path','/usr/bin/node'))
+NODE_SHA=CONFIG.get('node_sha256','ca0728526aa1cc4e3056decec848ecc6d2c5391cecdd4e21a0ebd221d665c84e')
 EXPECTED_CGROUP=CONFIG.get('expected_cgroup')
-SOURCE=pathlib.Path(CONFIG.get('schema_source_dir',str(ROOT/'schema-sources') if (ROOT/'schema-sources').exists() else str(ROOT.parent/'r0000-production-profile-20261110/runs/build-1794348288170924986/clone/site/src/lib')))
-RUNTIME_SOURCE=pathlib.Path(CONFIG.get('runtime_dir',str(PORTABLE/'export/runtime')))
-RELEASE_MANIFEST=pathlib.Path(CONFIG.get('release_manifest',str(ROOT/'release-manifest.json') if (ROOT/'release-manifest.json').exists() else str(PORTABLE/'export/release-manifest.json')))
+SOURCE=pathlib.Path(CONFIG.get('schema_source_dir',str(ROOT/'schema-sources')))
+RUNTIME_SOURCE=pathlib.Path(CONFIG.get('runtime_dir',str(ROOT/'runtime-source/runtime')))
+RELEASE_MANIFEST=pathlib.Path(CONFIG.get('release_manifest',str(ROOT/'runtime-source/release-manifest.json')))
 DB='postgres://fixture_only:fixture_only@127.0.0.1:55485/fixture_only'
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def verify_runtime_tree(root,manifest):
@@ -68,7 +67,7 @@ def main():
   with socket.socket() as s:
    if s.connect_ex(('127.0.0.1',port))==0:raise RuntimeError('reserved port already occupied')
  if not re.fullmatch('[a-f0-9]{64}',NODE_SHA) or digest(NODE)!=NODE_SHA:raise RuntimeError('node drift')
- if digest(RELEASE_MANIFEST)!='12b7d8a8e617c98c7d4f22b9e0865b8e3cde63e8d8933b871f65cceb68f72576':raise RuntimeError('release manifest pin mismatch')
+ if digest(RELEASE_MANIFEST)!='7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3':raise RuntimeError('release manifest pin mismatch')
  observed=json.loads(command([str(NODE),'--eval',"console.log(JSON.stringify({node:process.versions.node,modules:process.versions.modules,napi:process.versions.napi,arch:process.arch,platform:process.platform}))"],env={'PATH':'/usr/bin:/bin','HOME':str(ROOT),'LANG':'C.UTF-8'}))
  if observed!={'node':'20.19.2','modules':'115','napi':'9','arch':'x64','platform':'linux'}:raise RuntimeError('Node ABI/version target mismatch')
  for path in [NODE,SOURCE,RUNTIME_SOURCE,RELEASE_MANIFEST]:
@@ -99,7 +98,7 @@ def main():
  for name in ['db.ts','batch-a1-schema.ts','document-reference-schema.ts','petition-base-schema.ts','batch-package-schema.ts','president-own-document-schema.ts','president-own-a1-schema.ts']:
   shutil.copy2(SOURCE/name,run/'sources'/name);source_hashes[name]=digest(run/'sources'/name)
   if source_hashes[name]!=expected_schemas[name]:raise RuntimeError('schema source pin mismatch')
- if digest(RELEASE_MANIFEST)!='12b7d8a8e617c98c7d4f22b9e0865b8e3cde63e8d8933b871f65cceb68f72576':raise RuntimeError('release manifest pin mismatch')
+ if digest(RELEASE_MANIFEST)!='7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3':raise RuntimeError('release manifest pin mismatch')
  manifest=json.loads(RELEASE_MANIFEST.read_text())
  def stable():return verify_runtime_tree(run/'runtime',manifest)
  if not stable():raise RuntimeError('runtime copy mismatch')
@@ -114,7 +113,7 @@ def main():
   if p.returncode:raise RuntimeError('fixture '+action+' failed: '+p.stderr[:1200])
   return json.loads(p.stdout)
  pg=NativePG(run,nonce,EXPECTED_CGROUP);proc=None
- result={'classification':'POPULATED_HISTORY_NATIVE_PG17_NOT_HTTP_QUALIFIED_UNTIL_EXECUTED','operationalReady':False,'run':str(run),'sourceCommit':manifest['source_commit'],'checks':[],'dbPort':55485,'appPort':31385,'node':'20.19.2','postgresBackend':'native17.11','limits':limits,'nonce':nonce,'documentMutatingRequests':0,'deployment':False,'stepupNote':'State seeded only after successful real login; email challenge is outside this smoke'}
+ result={'classification':'R0002_POPULATED_HISTORY_NATIVE_PG17_NOT_HTTP_QUALIFIED_UNTIL_EXECUTED','operationalReady':False,'run':str(run),'sourceCommit':manifest['source_commit'],'checks':[],'dbPort':55485,'appPort':31385,'node':'20.19.2','postgresBackend':'native17.11','limits':limits,'nonce':nonce,'documentMutatingRequests':0,'deployment':False,'stepupNote':'State seeded only after successful real login; email challenge is outside this smoke'}
  try:
   if time.monotonic()>job_deadline:raise TimeoutError('job budget exhausted before native PG')
   pg.prepare();pg.initialize();pg.start();result['postgresHandshake']=pg.bootstrap()

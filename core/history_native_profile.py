@@ -1,28 +1,30 @@
 #!/usr/bin/python3
-"""Fixed native-PG17 R4 profile in the SAME bounded queue. No RPC commands/environment or local leases."""
+"""Fixed native-PG17 R0002 history profile in the SAME bounded queue. No RPC commands/environment or local leases."""
 from __future__ import annotations
-import contextlib,hashlib,json,os,re,shutil,signal,stat,subprocess,time
+import contextlib,hashlib,json,os,re,shutil,signal,stat,subprocess,time,importlib.util
 from pathlib import Path
 import runtime_profile as baseline
-KIND='history-populated-native-pg17-r4'
-SOURCE='0a5f734da4f9b8a35a10a20eaa9fb4fd5adb0e4f'
-STAGE=Path('/srv/admin-v2-worker/admin-r0000-history-r4-qa-20261110')
+KIND='history-native-pg17-r0002-v1'
+SOURCE='f55595cd348c23ffe559dba2de9150259db9f1e7'
+STAGE=Path('/srv/admin-v2-worker/admin-r0002-history-native-qa-20261111')
 WORKER=Path('/srv/admin-v2-worker')
 COORDINATOR=Path('/srv/admin-v2-coordinator')
-RUNTIME=Path('/srv/admin-v2-worker/admin-r0000-runtime-qa-20261110/runs/cad43f085e374bc5876e4cf246ca8572-http/runtime')
-RELEASE_MANIFEST=Path('/srv/admin-v2-worker/admin-r0000-runtime-qa-20261110/inputs/release-manifest.json')
+RUNTIME_INPUTS=Path('/srv/admin-v2-worker/admin-r0002-runtime-qa-20261111/inputs')
+RUNTIME_ARCHIVE=RUNTIME_INPUTS/'runtime.tar'
+RELEASE_MANIFEST=RUNTIME_INPUTS/'release-manifest.json'
+ARCHIVE_SHA='2952a2b0d7ffb06b553caa03fdb3d8546981a96118a1cc9aa0ca47da4adc8ee0'
 PG_BIN=Path('/usr/lib/postgresql/17/bin')
 NODE=Path('/usr/bin/node')
 NODE_SHA=baseline.NODE_SHA
-MANIFEST_SHA=baseline.MANIFEST_SHA
-HARNESS_SHA='3882061c021ce3a41a069eb5a13a466aac65dab427930a2b6bbd306b961bf3fa'
-HARNESS_PINS={'functional_smoke.py': '8f78b152c863aac959affe0a40dbd1796bb9fc7a6c2299c53808206a90feb954', 'native_pg.py': 'f46afdacb85f70b339620f9b025154937e75ead095b1a592f7f0a210f7bcbc34', 'fixture.cjs': 'a34574271520fbefcd1e508601aae6d950873db25f2aad6c0f0226151d32a31e', 'functional-guard.mjs': 'c36d4cdfbf7c892f3696b1a5e2521955651a7057eb6cd33783d36724a00ee62f', 'executor_context.py': 'ff391a3fab460528a7624ab34133e36f8bee551b548833bc3f45989d40e432e1', 'schema-source-manifest.json': '0e837a472ac1274bd433335fa88e98110edd5082de88645d09d8828950810a51', 'pg-binary-pins.json': '4053a50714cbb68c9b3dfe0b3a015ffe46f73561b175799fc0547b73cbf7e49d', 'schema-sources/batch-a1-schema.ts': '1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b', 'schema-sources/batch-package-schema.ts': '7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4', 'schema-sources/db.ts': 'dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824', 'schema-sources/document-reference-schema.ts': 'b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c', 'schema-sources/petition-base-schema.ts': 'd21a4289e522ca3a9570d8de5a4d80a69b6468a4e5a9744c2a4de3bc3e3c72ab', 'schema-sources/president-own-a1-schema.ts': '24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408', 'schema-sources/president-own-document-schema.ts': '86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3'}
+MANIFEST_SHA='7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3'
+HARNESS_SHA='c77171cd149c5ccdc89389b95d3433bae46ee75614f75dd4ebc9c4b85e2a71c8'
+HARNESS_PINS={'functional_smoke.py': '437e585f2fbf2a5238affd6017a183803282026b4ff7cfa2c4432b5ad05e8d71', 'native_pg.py': 'f46afdacb85f70b339620f9b025154937e75ead095b1a592f7f0a210f7bcbc34', 'fixture.cjs': 'a34574271520fbefcd1e508601aae6d950873db25f2aad6c0f0226151d32a31e', 'functional-guard.mjs': 'c36d4cdfbf7c892f3696b1a5e2521955651a7057eb6cd33783d36724a00ee62f', 'executor_context.py': '07b6df6b74abebf1a3eef25691eaf06cb27609ba38d2572f0c81710cb4132283', 'runtime_extract.py': '97efcbd8a26720baef84795f0344756018b4e28e596f841e70017533137497a2', 'schema-source-manifest.json': 'c46b36c4d4a9b31d5b89b8bb2a4c7373370bdf3c6d9281e3ef63ca4b55185a3a', 'pg-binary-pins.json': '4053a50714cbb68c9b3dfe0b3a015ffe46f73561b175799fc0547b73cbf7e49d', 'schema-sources/batch-a1-schema.ts': '1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b', 'schema-sources/batch-package-schema.ts': '7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4', 'schema-sources/db.ts': 'dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824', 'schema-sources/document-reference-schema.ts': 'b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c', 'schema-sources/petition-base-schema.ts': '25ea67cd71f653e68a8cc67177f77d39f18b4e56e14d6a8d42e256ddae51764c', 'schema-sources/president-own-a1-schema.ts': '24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408', 'schema-sources/president-own-document-schema.ts': '86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3'}
 SOFT_SECONDS=600
 CLEANUP_SECONDS=120
 TOTAL_SECONDS=720
 EXPECTED_CHECKS=[('unauthenticated history',401),('wrong password',303),('synthetic owner login',303),('step-up enforced',403),('populated document history',200),('history ordinal filter',200),('download version 1',200),('download version 2',200),('cross batch version not found',404),('nonexistent version',404),('malformed version rejected',400),('download without session',401),('reader login',303),('reader history forbidden',403),('reader download forbidden',403),('base documents',200),('president receipts',200),('president artifacts',200),('batch page',200)]
 RECEIPTS=['result.json','pid.json','guard.jsonl','source-manifest.json','postgres.log','server.log','pg-owner.json','pdf-fixtures/manifest.json','pdf-fixtures/version-1.pdf','pdf-fixtures/version-2.pdf','downloads/version-1.pdf','downloads/version-2.pdf']
-def fixed_payload():return {'kind':KIND,'source_commit':SOURCE,'harness_manifest_sha256':HARNESS_SHA,'runtime_manifest_sha256':MANIFEST_SHA,'node_sha256':NODE_SHA}
+def fixed_payload():return {'kind':KIND,'source_commit':SOURCE,'harness_manifest_sha256':HARNESS_SHA,'runtime_manifest_sha256':MANIFEST_SHA,'runtime_archive_sha256':ARCHIVE_SHA,'node_sha256':NODE_SHA}
 def payload(data):
  if set(data)!={'action','id','kind','source_commit'}or data.get('kind')!=KIND or data.get('source_commit')!=SOURCE:raise ValueError('history_fixed_contract_only')
  baseline.job_id(data.get('id'));return fixed_payload()
@@ -64,22 +66,28 @@ def verify_inputs():
  for name,expected in HARNESS_PINS.items():
   p=STAGE/name
   if p.resolve()!=p or baseline.digest(p,2*1024*1024)!=expected:raise ValueError('history_harness_pin:'+name)
+ for directory in [RUNTIME_INPUTS.parent,RUNTIME_INPUTS]:
+  if directory.resolve()!=directory or not directory.is_dir()or directory.stat().st_uid!=os.getuid()or stat.S_IMODE(directory.stat().st_mode)!=0o700:raise ValueError('history_runtime_inputs_not_private')
+ if {x.name for x in RUNTIME_INPUTS.iterdir()}!={'runtime.tar','release-manifest.json'}:raise ValueError('history_runtime_inputs_incomplete_or_extra')
  if baseline.digest(NODE)!=NODE_SHA or baseline.digest(RELEASE_MANIFEST,8*1024*1024)!=MANIFEST_SHA:raise ValueError('history_runtime_tool_pin')
  manifest=read_json(RELEASE_MANIFEST,8*1024*1024)
- if manifest.get('source_commit')!=SOURCE or len(manifest.get('files',{}))!=12043:raise ValueError('history_runtime_manifest_contract')
- if RUNTIME.resolve()!=RUNTIME or not RUNTIME.is_dir():raise ValueError('history_runtime_path')
+ if manifest.get('source_commit')!=SOURCE or manifest.get('release_id')!='r0002-portable-f55595c-20261111' or len(manifest.get('files',{}))!=12043:raise ValueError('history_runtime_manifest_contract')
+ if RUNTIME_ARCHIVE.stat().st_size!=475576320 or baseline.digest(RUNTIME_ARCHIVE,512*1024*1024)!=ARCHIVE_SHA:raise ValueError('history_runtime_archive_pin')
  for name,expected in read_json(STAGE/'pg-binary-pins.json').items():
   if name not in ['postgres','initdb','pg_ctl','psql','pg_isready']:raise ValueError('history_pg_tool_name')
   p=PG_BIN/name;st=p.lstat()
   if not stat.S_ISREG(st.st_mode)or st.st_uid!=0 or st.st_gid!=0 or stat.S_IMODE(st.st_mode)!=0o755 or baseline.digest(p)!=expected:raise ValueError('history_pg_binary_pin:'+name)
- # The pinned R4 runner verifies every runtime/schema byte before native PG prepare/start.
- return {'harnessSha256':HARNESS_SHA,'runtimeManifestSha256':MANIFEST_SHA,'sourceCommit':SOURCE}
+ # Pinned extraction validates the full archive; the runner checks full extracted inventory/schema before PG.
+ return {'harnessSha256':HARNESS_SHA,'runtimeManifestSha256':MANIFEST_SHA,'runtimeArchiveSha256':ARCHIVE_SHA,'runtimeArchiveBytes':475576320,'sourceCommit':SOURCE}
 def prepare(job,context):
- root=WORKER/'jobs'/job/'work/history-native-r4';root.mkdir(mode=0o700);root.chmod(0o700) # ONLY freshly-created own job directory; clear inherited SGID.
+ root=WORKER/'jobs'/job/'work/history-native-r0002';root.mkdir(mode=0o700);root.chmod(0o700) # ONLY freshly-created own job directory; clear inherited SGID.
  for name in HARNESS_PINS:
   dst=root/name;dst.parent.mkdir(mode=0o700,parents=True,exist_ok=True);shutil.copyfile(STAGE/name,dst);dst.chmod(0o600)
   if baseline.digest(dst,2*1024*1024)!=HARNESS_PINS[name]:raise ValueError('history_copy_pin')
- config={'node_path':str(NODE),'node_sha256':NODE_SHA,'expected_cgroup':context['cgroup'],'executor_job_id':job,'executor_config_digest':context['configDigest'],'schema_source_dir':str(root/'schema-sources'),'runtime_dir':str(RUNTIME),'release_manifest':str(RELEASE_MANIFEST)}
+ spec=importlib.util.spec_from_file_location('r0002_runtime_extract',root/'runtime_extract.py');extractor=importlib.util.module_from_spec(spec);spec.loader.exec_module(extractor)
+ extracted=extractor.extract_verified(RUNTIME_ARCHIVE,RELEASE_MANIFEST,root/'runtime-source')
+ if extracted.get('verifiedFiles')!=12043:raise ValueError('history_extraction_inventory')
+ config={'node_path':str(NODE),'node_sha256':NODE_SHA,'expected_cgroup':context['cgroup'],'executor_job_id':job,'executor_config_digest':context['configDigest'],'schema_source_dir':str(root/'schema-sources'),'runtime_dir':str(root/'runtime-source/runtime'),'release_manifest':str(root/'runtime-source/release-manifest.json')}
  path=root/'config.json';path.write_text(json.dumps(config));path.chmod(0o600);return root,path
 def checked_run(root):
  latest=read_json(root/'latest-run.json');run=Path(latest.get('run',''))
@@ -141,6 +149,15 @@ def export(run,target,strict=False):
    dst.chmod(0o660)
   finally:os.close(fd)
 
+def export_extraction(root,target,required):
+ path=root/'runtime-source/extraction-proof.json'
+ if not path.exists():
+  if required:raise ValueError('history_extraction_receipt_missing')
+  return
+ proof=read_json(path)
+ if proof.get('archiveSha256')!=ARCHIVE_SHA or proof.get('manifestSha256')!=MANIFEST_SHA or proof.get('verifiedFiles')!=12043 or proof.get('runtimeStarted')is not False:raise ValueError('history_extraction_receipt_changed')
+ dest=target/'runtime-extraction-proof.json';dest.write_text(json.dumps(proof,indent=2)+'\n');dest.chmod(0o660)
+
 def child_identity(child,context):
  path=Path('/proc')/str(child.pid);fields=(path/'stat').read_text().rsplit(')',1)[1].split()
  if path.stat().st_uid!=os.getuid()or cgroup(child.pid)!=context['cgroup']:raise ValueError('history_child_identity_changed')
@@ -183,7 +200,9 @@ def run(job):
      signal_child(child,context,child_start,signal.SIGKILL);child.wait(timeout=5)
   except BaseException as exc:result['exit']=1;result['cleanupError']=type(exc).__name__+':'+str(exc)[:300]
   try:
-   if root:export(checked_run(root),target,strict=result['exit']==0)
+   if root:
+    export_extraction(root,target,required=result['exit']==0)
+    export(checked_run(root),target,strict=result['exit']==0)
   except Exception as exc:result['exit']=1;result['exportError']=type(exc).__name__+':'+str(exc)[:300]
   (target/'history-profile-result.json').write_text(json.dumps(result,indent=2)+'\n');(target/'history-profile-result.json').chmod(0o660)
   for sig,handler in old.items():signal.signal(sig,handler)

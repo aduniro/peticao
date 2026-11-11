@@ -2,7 +2,7 @@ import ast,copy,hashlib,json,os,signal,sys,tempfile,time,unittest
 from pathlib import Path
 from unittest import mock
 BASE=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(BASE/'core'));sys.path.insert(0,str(BASE/'r4_harness'))
+sys.path.insert(0,str(BASE/'core'));sys.path.insert(0,str(BASE/'r0002_harness'))
 import history_native_profile as p
 import coordinator as c
 import executor_context as e
@@ -12,7 +12,7 @@ class HistoryTests(unittest.TestCase):
  def setUp(self):
   self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name);self.job='4'*32;self.group='/system.slice/admin-v2-job-'+self.job+'.service';self.context={'jobId':self.job,'configDigest':'a'*64,'generation':7,'bootId':'fixture','cgroup':self.group,'parentPid':499999}
   self.worker=self.root/'worker';self.work=self.worker/'jobs'/self.job/'work';self.work.mkdir(parents=True);self.stage=self.root/'stage';self.stage.mkdir(mode=0o700)
-  self.schemas=json.loads((BASE/'r4_harness/schema-source-manifest.json').read_text());self.pg=json.loads((BASE/'r4_harness/pg-binary-pins.json').read_text());(self.stage/'schema-source-manifest.json').write_text(json.dumps(self.schemas));(self.stage/'pg-binary-pins.json').write_text(json.dumps(self.pg))
+  self.schemas=json.loads((BASE/'r0002_harness/schema-source-manifest.json').read_text());self.pg=json.loads((BASE/'r0002_harness/pg-binary-pins.json').read_text());(self.stage/'schema-source-manifest.json').write_text(json.dumps(self.schemas));(self.stage/'pg-binary-pins.json').write_text(json.dumps(self.pg))
   self.patches=[mock.patch.object(p,'WORKER',self.worker),mock.patch.object(p,'STAGE',self.stage)]
   for patch in self.patches:patch.start()
  def tearDown(self):
@@ -32,7 +32,7 @@ class HistoryTests(unittest.TestCase):
   proof={'exit':0,'sourceCommit':p.SOURCE,'nonce':run.name,'run':str(run),'checks':[{'check':label,'status':status}for label,status in p.EXPECTED_CHECKS],'guardInstalled':True,'guardDenials':0,'runtimeStable':True,'originRuntimeStable':True,'remainingAppProcesses':[],'postgresCleanup':{'stopped':True},'socketCleanup':{'removed':True},'documentMutatingRequests':0,'deployment':False,'operationalReady':False,'executorContext':self.context,'postgresHandshake':{'version':'PostgreSQL 17.11 (fixture)','database':'fixture_only','nonce':run.name,'data_directory':str(run/'postgres'),'port':55485},'limits':{'cgroup':self.group,'cpuCores':2,'memoryMaxBytes':3*1024**3,'pidsMax':256},'postgresLifecycle':{'nonce':run.name,'dataDirectory':str(run/'postgres'),'events':['prepared','initialized','started','verified-postgres','verified-fixture_only','stopped','socket-released'],'binaryPins':{name:{'sha256':v}for name,v in self.pg.items()}}}
   (run/'result.json').write_text(json.dumps(proof));return run,proof
  def prepare(self,job,context):
-  root=self.work/'history-native-r4';root.mkdir(mode=0o700);cfg=root/'config.json';cfg.write_text('{}');return root,cfg
+  root=self.work/'history-native-r0002';root.mkdir(mode=0o700);cfg=root/'config.json';cfg.write_text('{}');(root/'runtime-source').mkdir();(root/'runtime-source/extraction-proof.json').write_text(json.dumps({'archiveSha256':p.ARCHIVE_SHA,'manifestSha256':p.MANIFEST_SHA,'verifiedFiles':12043,'runtimeStarted':False}));return root,cfg
  def test_fixed_contract_rejects_arbitrary_environment_shell_paths(self):
   self.assertEqual(p.payload(self.data()),p.fixed_payload())
   for extra in [{'env':{}},{'command':'/bin/sh'},{'runtime':'/tmp/x'},{'project_subdir':'site'},{'duration_seconds':999}]:
@@ -46,6 +46,19 @@ class HistoryTests(unittest.TestCase):
    self.assertIn('runtime-http-r0000-v1',c.KINDS)
    with c.connect()as db:self.assertEqual(db.execute('SELECT count(*) FROM jobs').fetchone()[0],1)
    self.assertFalse((c.ROOT/'sources'/p.SOURCE).exists())
+ def test_f555_runtime_and_all_seven_schema_pins_match_and_480_unchanged(self):
+  self.assertEqual(p.SOURCE,'f55595cd348c23ffe559dba2de9150259db9f1e7');self.assertEqual(p.ARCHIVE_SHA,'2952a2b0d7ffb06b553caa03fdb3d8546981a96118a1cc9aa0ca47da4adc8ee0')
+  self.assertEqual(len(self.schemas),7)
+  for name,want in self.schemas.items():self.assertEqual(hashlib.sha256((BASE/'r0002_harness/schema-sources'/name).read_bytes()).hexdigest(),want)
+  self.assertEqual(self.schemas['petition-base-schema.ts'],'25ea67cd71f653e68a8cc67177f77d39f18b4e56e14d6a8d42e256ddae51764c')
+  self.assertEqual(hashlib.sha256((BASE/'core/runtime_profile.py').read_bytes()).hexdigest(),'afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8')
+  self.assertNotIn('history-populated-native-pg17-r4',c.KINDS)
+ def test_prepare_uses_only_new_private_root_and_fixed_extraction_before_config(self):
+  self.work.chmod(0o2770);source=self.stage/'runtime_extract.py';source.write_text('fixture-only extractor; never executed');pin=hashlib.sha256(source.read_bytes()).hexdigest()
+  spec=mock.Mock();module=mock.Mock();module.extract_verified.return_value={'verifiedFiles':12043}
+  with mock.patch.object(p,'HARNESS_PINS',{'runtime_extract.py':pin}),mock.patch.object(p.importlib.util,'spec_from_file_location',return_value=spec),mock.patch.object(p.importlib.util,'module_from_spec',return_value=module):root,config=p.prepare(self.job,self.context)
+  self.assertEqual(root.stat().st_mode&0o7777,0o700);self.assertEqual(self.work.stat().st_mode&0o7777,0o2770);self.assertEqual(config.stat().st_mode&0o777,0o600)
+  module.extract_verified.assert_called_once_with(p.RUNTIME_ARCHIVE,p.RELEASE_MANIFEST,root/'runtime-source');data=json.loads(config.read_text());self.assertEqual(data['runtime_dir'],str(root/'runtime-source/runtime'));self.assertEqual(data['executor_config_digest'],self.context['configDigest'])
  def test_tampered_or_extra_staging_refused_before_any_child(self):
   with self.assertRaisesRegex(ValueError,'history_unreviewed_stage_files'):p.verify_inputs()
  def test_exact_proof_guard19_pgcleanup_schema_and_limits_required(self):
@@ -110,5 +123,5 @@ class HistoryTests(unittest.TestCase):
    with self.assertRaisesRegex(RuntimeError,'generation/boot'):e.verify_queue_context(self.job,cfg['digest'],self.group)
    (coord/'authority.json').write_text(json.dumps(authority));(folder/'execution.started').unlink()
    with self.assertRaises(FileNotFoundError):e.verify_queue_context(self.job,cfg['digest'],self.group)
-  code=(BASE/'r4_harness/functional_smoke.py').read_text();self.assertNotIn('COORD_PREFIX',code);self.assertNotIn('active-lease.json',code)
+  code=(BASE/'r0002_harness/functional_smoke.py').read_text();self.assertNotIn('COORD_PREFIX',code);self.assertNotIn('active-lease.json',code)
 if __name__=='__main__':unittest.main()

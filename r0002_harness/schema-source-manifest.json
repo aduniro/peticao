@@ -1,0 +1,9 @@
+{
+  "batch-a1-schema.ts": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
+  "batch-package-schema.ts": "7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4",
+  "db.ts": "dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824",
+  "document-reference-schema.ts": "b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c",
+  "petition-base-schema.ts": "25ea67cd71f653e68a8cc67177f77d39f18b4e56e14d6a8d42e256ddae51764c",
+  "president-own-a1-schema.ts": "24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408",
+  "president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3"
+}
