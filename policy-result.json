@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-11T01:30:07.530720+00:00",
+  "tests": 3,
+  "passed": 3,
+  "classification": "POLICY_UNIT_TESTS_ONLY",
+  "realBrowserStarted": false,
+  "postgresStarted": false,
+  "applicationStarted": false
+}

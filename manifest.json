@@ -1,0 +1,12 @@
+{
+  "classification": "DRAFT_BROWSER_DRIVER_REQUIRES_REVIEWED_R4_HOOK_NOT_EXECUTED",
+  "files": {
+    "history-browser.cjs": "5eb58dbd98bd3e34105a066d88e1b15ec10a9fbda2d9447e2dfe61f493e20e42",
+    "history-browser.test.cjs": "bf72d81fb41d0efd022f3c19b20824ea16941986f4176c2c087af3948f3757a8",
+    "README.md": "ae1238ddc4cccc37bd29ea37a32e6d27926bf0781b0d6b60514f13b853cc6495",
+    "policy-result.json": "a8b616bb4f928ea2e1bd117c06f70cc306ba68d0edd8b59cb765134aa4da42fd",
+    ".gitignore": "2942be07e6b21c8287327770f13a647a4c62b807d662b6bf50356542f8de7905"
+  },
+  "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "realBrowserStarted": false
+}
