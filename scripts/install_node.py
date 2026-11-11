@@ -13,6 +13,7 @@ import secrets
 import shutil
 import subprocess
 import tempfile
+import time
 
 EXPECTED_SHA = '265b3ee6a3198ef14033c63ef46cbb32370d83795199fb6d1b01f21575eddbda'
 CONFIG_DIR = Path('/etc/rancher/peticao-k3s')
@@ -33,17 +34,23 @@ def main():
     receipt = json.loads(args.review_receipt.read_text())
     if not receipt.get('peer_ack_verified') or not receipt.get('lease_valid') or receipt.get('node') != args.node:
         raise PermissionError('reviewed_manifest_and_current_lease_required')
+    if receipt.get('lease_expires_at', 0) < time.time() + 240:
+        raise PermissionError('current_lease_needs_at_least_four_minutes')
+    if not 0 <= time.time() - receipt.get('issued_at', 0) <= 60:
+        raise PermissionError('fresh_ledger_receipt_required')
     if args.node == 'sp' and not receipt.get('post_deploy_stable_baseline_verified'):
         raise PermissionError('sp_post_deploy_stable_baseline_required')
     if CONFIG_DIR.exists() or BINARY.exists() or (UNIT_DIR / 'peticao-k3s.service').exists():
         raise FileExistsError('existing_installation_requires_separate_review')
+    if Path('/var/lib/peticao-k3s').exists() or Path('/etc/rancher/k3s').exists() or (UNIT_DIR / 'k3s.service').exists() or (UNIT_DIR / 'k3s-agent.service').exists():
+        raise FileExistsError('existing_kubernetes_state_requires_separate_review')
     binary = args.bundle / 'k3s'
     if hashlib.sha256(binary.read_bytes()).hexdigest() != EXPECTED_SHA:
         raise ValueError('binary_checksum_mismatch')
     config = json.loads((args.bundle / 'config.yaml').read_text())
     if config.get('node-name') != 'peticao-' + args.node or config.get('data-dir') != '/var/lib/peticao-k3s':
         raise ValueError('unexpected_node_configuration')
-    expected_files = ['config.yaml', 'guard.nft', 'peticao-k3s.service', 'peticao-k3s-guard.service']
+    expected_files = ['config.yaml', 'guard.nft', 'apply_guard.py', 'peticao-k3s.service', 'peticao-k3s-guard.service']
     hashes = {name: hashlib.sha256((args.bundle / name).read_bytes()).hexdigest() for name in expected_files}
     if hashes != receipt.get('manifest_sha256'):
         raise ValueError('reviewed_files_changed')
@@ -77,7 +84,7 @@ def main():
     BINARY.parent.mkdir(parents=True, mode=0o755)
     shutil.copyfile(binary, BINARY)
     BINARY.chmod(0o755)
-    for name in ('config.yaml', 'guard.nft'):
+    for name in ('config.yaml', 'guard.nft', 'apply_guard.py'):
         shutil.copyfile(args.bundle / name, CONFIG_DIR / name)
         (CONFIG_DIR / name).chmod(0o600)
     for name in ('peticao-k3s.service', 'peticao-k3s-guard.service'):

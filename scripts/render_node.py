@@ -27,6 +27,8 @@ def render(name, mem_total, cpu_total, routes):
     reserve_cpu = max(0.75 if name == 'santiago' else 0.5, cpu_total - node['max_cpu'])
     reserve_memory = max(1792 if name == 'santiago' else 1536,
                          (mem_total // 2**20) - node['max_memory_gib'] * 1024)
+    if cpu_total <= reserve_cpu or mem_total <= (reserve_memory + 512) * 2**20:
+        raise ValueError('insufficient_capacity_after_system_reserves')
     config = {
         'data-dir': '/var/lib/peticao-k3s',
         'node-name': 'peticao-' + name,
@@ -105,14 +107,22 @@ Wants=network-pre.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/sbin/nft -f /etc/rancher/peticao-k3s/guard.nft
+ExecStart=/usr/bin/python3 /etc/rancher/peticao-k3s/apply_guard.py
 
 [Install]
 WantedBy=multi-user.target
 '''
+    apply_guard = '''#!/usr/bin/python3
+import pathlib, subprocess
+path = pathlib.Path('/etc/rancher/peticao-k3s/guard.nft')
+prior = subprocess.run(['/usr/sbin/nft', 'list', 'table', 'inet', 'peticao_k3s_guard'], capture_output=True, timeout=15)
+transaction = ('delete table inet peticao_k3s_guard\\n' if prior.returncode == 0 else '') + path.read_text()
+subprocess.run(['/usr/sbin/nft', '--check', '-f', '-'], input=transaction, text=True, check=True, timeout=15)
+subprocess.run(['/usr/sbin/nft', '-f', '-'], input=transaction, text=True, check=True, timeout=15)
+'''
     return {'config.yaml': json.dumps(config, indent=2) + '\n',
             'guard.nft': firewall, 'peticao-k3s.service': service,
-            'peticao-k3s-guard.service': guard}
+            'peticao-k3s-guard.service': guard, 'apply_guard.py': apply_guard}
 
 
 if __name__ == '__main__':

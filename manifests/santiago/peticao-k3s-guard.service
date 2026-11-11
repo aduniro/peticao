@@ -7,7 +7,7 @@ Wants=network-pre.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/sbin/nft -f /etc/rancher/peticao-k3s/guard.nft
+ExecStart=/usr/bin/python3 /etc/rancher/peticao-k3s/apply_guard.py
 
 [Install]
 WantedBy=multi-user.target

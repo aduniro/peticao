@@ -81,6 +81,22 @@ com acesso restrito; `downloads/`, `evidence/` e `state/` não entram em Git.
 leitura; seu resultado HTTP não substitui os gates de identidade da release,
 pressão e reserva de recursos.
 
+`collect_baseline.py` é o coletor preparado para a janela posterior ao deploy:
+usa uma pasta nova por execução, confere build/PID/boot, GET público e local,
+CPU e memória. `production_gate.py` recusa janela curta, lacunas, troca de
+versão/processo e pressão. O probe único já foi executado; ele não qualifica SP.
+
+`execution_claims.py` implementa a reserva durável na mesma base SQLite da fila
+existente, sem daemon ou fila adicional. Testes com processos concorrentes
+comprovaram um único início e recusa de repetição após reabrir o banco. O módulo
+ainda precisa ser ligado ao backend Kubernetes, autenticação do runner e
+atestado real de Job/Pod; os testes unitários não provam essa integração.
+
+`prepare_receipt.py` consulta ACKs e fencing reais antes de produzir recibo
+curto para `install_node.py`. Recusa sucessão pendente, arquivo alterado,
+checkout sujo e lease sem margem. A emissão para SP permanece fechada até
+implementar a verificação do recibo de deploy e baseline posterior.
+
 Referências técnicas: [requisitos K3s](https://docs.k3s.io/installation/requirements),
 [opções do servidor](https://docs.k3s.io/cli/server) e
 [configuração avançada](https://docs.k3s.io/advanced).
