@@ -245,6 +245,18 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(self.row(job)['state'], 'interrupted')
         self.assertEqual(self.row(job)['error'], 'missing_execution_receipt')
 
+    def test_failed_runner_preserves_reported_exit_code_and_receipt(self):
+        job = self.submit()
+        core.dispatch_once()
+        token = self.start_pod(job)
+        self.backend.authorize_start(job, 'test-pod', 'pod-uid', token)
+        self.backend.complete_execution(job, 'test-pod', 'pod-uid', token, 7, {'synthetic_failure': True}, [])
+        self.api.jobs[job]['status'] = {'conditions': [{'type': 'Failed', 'status': 'True'}]}
+        core.reconcile()
+        self.assertEqual(self.row(job)['state'], 'failed')
+        self.assertEqual(self.row(job)['exit_code'], 7)
+        self.assertEqual(core.rpc({'action': 'status', 'id': job})['result']['exit_code'], 7)
+
     def test_changed_queued_profile_does_not_block_valid_work(self):
         invalid = self.submit(1, 'build')
         valid = self.submit(2, 'unit')
