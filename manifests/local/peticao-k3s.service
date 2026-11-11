@@ -1,0 +1,21 @@
+[Unit]
+Description=Peticao isolated K3s agent
+Wants=network-online.target
+After=network-online.target tailscaled.service peticao-k3s-guard.service
+Requires=peticao-k3s-guard.service
+
+[Service]
+Type=notify
+User=root
+ExecStart=/usr/local/lib/peticao-k3s/k3s agent --config /etc/rancher/peticao-k3s/config.yaml
+KillMode=process
+Delegate=yes
+LimitNOFILE=1048576
+LimitNPROC=infinity
+TasksMax=infinity
+TimeoutStartSec=180
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

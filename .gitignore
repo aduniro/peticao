@@ -1,0 +1,6 @@
+/state/
+/evidence/
+/downloads/
+/private/
+__pycache__/
+*.pyc

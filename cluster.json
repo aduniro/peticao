@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "k3s_version": "v1.37.2+k3s1",
+  "canonical_root": "/mnt/apps/peticao-final",
+  "runtime_root": "/var/lib/peticao-k3s",
+  "nodes": {
+    "santiago": {
+      "ip": "100.80.18.81",
+      "ssh": "cluster-santiago",
+      "role": "server-worker",
+      "max_cpu": 4,
+      "max_memory_gib": 7,
+      "max_heavy_jobs": 1
+    },
+    "local": {
+      "ip": "100.105.193.63",
+      "role": "worker",
+      "max_cpu": 4,
+      "max_memory_gib": 16,
+      "max_heavy_jobs": 1
+    },
+    "sp": {
+      "ip": "100.109.6.122",
+      "ssh": "peticao-root",
+      "role": "production-worker",
+      "max_cpu": 2,
+      "max_memory_gib": 3,
+      "max_jobs": 1
+    }
+  },
+  "global_max_jobs": 4,
+  "global_max_heavy_jobs": 2,
+  "production_origin": "https://sancionaintegral.org",
+  "baseline_seconds": 1800,
+  "baseline_interval_seconds": 30,
+  "source_commit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "production_deploy_enabled": false,
+  "notes": "Latest owner ceiling: local 4 vCPU/16 GiB; Santiago 4 vCPU/7 GiB; SP 2 vCPU/3 GiB. Admission subtracts reserves and actual headroom."
+}

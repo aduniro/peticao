@@ -1,0 +1,13 @@
+[Unit]
+Description=Private ingress guard for Peticao K3s ports
+Before=peticao-k3s.service
+After=network-pre.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/rancher/peticao-k3s/guard.nft
+
+[Install]
+WantedBy=multi-user.target
