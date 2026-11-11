@@ -86,4 +86,4 @@ for (const key of ["spawn", "spawnSync", "exec", "execSync", "execFile", "execFi
 syncBuiltinESMExports();
 record("installed", "node_only_no_egress_reserved_loopback");
 
-assert.equal(process.env.PRESIDENT_OWN_ENABLED,"1");
+assert.equal(process.env.PRESIDENT_OWN_ENABLED,"0");

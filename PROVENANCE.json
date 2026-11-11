@@ -21,5 +21,12 @@
     "send",
     "own mode",
     "response loss retry"
-  ]
+  ],
+  "guardFlagV2": {
+    "baselineCommit": "fec93b0ed178706456f7c3a9f15ea22d41cebb04",
+    "fix": "PRESIDENT_OWN_ENABLED predicate 1 to0; runner remains0",
+    "reviewPath": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0015-a1-admission-gate-review-20261111/REVIEW.md",
+    "reviewSha256": "3dbfb3766a33532624446a5d10f1cd085a775164120a98dff00d4f1ef8cc30de",
+    "actualExecution": false
+  }
 }

@@ -36,6 +36,14 @@ class Admission(unittest.TestCase):
   self.assertIn("'queued'",s);self.assertIn('j.attempts!==0',s);self.assertIn('j.lease_token!==null',s)
  def test_no_previous_failure_gate(self):
   s=(ROOT/'local_controller.py').read_text();self.assertNotIn('verify_reconciled_previous_attempt',s);self.assertIn("ROOT/'execution.started'",s)
+ def test_runner_literal_own_flag_matches_guard_predicate(self):
+  import re
+  tree=ast.parse((ROOT/'functional_smoke.py').read_text());values=[]
+  for node in ast.walk(tree):
+   if isinstance(node,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='env'for t in node.targets)and isinstance(node.value,ast.Dict):
+    values.extend(v.value for k,v in zip(node.value.keys,node.value.values)if isinstance(k,ast.Constant)and k.value=='PRESIDENT_OWN_ENABLED'and isinstance(v,ast.Constant))
+  self.assertEqual(values,['0'])
+  self.assertEqual(re.findall(r'assert\.equal\(process\.env\.PRESIDENT_OWN_ENABLED,"([01])"\);',(ROOT/'functional-guard.mjs').read_text()),values)
  def test_driver_hash_and_syntax(self):
   self.assertEqual(b.DRIVER_SHA,hashlib.sha256((ROOT/'a1-browser.cjs').read_bytes()).hexdigest())
   for p in ROOT.glob('*.py'):ast.parse(p.read_text())
