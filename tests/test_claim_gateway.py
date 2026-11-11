@@ -1,4 +1,5 @@
 import json
+import importlib.util
 from pathlib import Path
 import ssl
 import subprocess
@@ -6,6 +7,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 import urllib.error
 import urllib.request
 
@@ -13,6 +15,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'coordinator'))
 import claim_gateway
 import test_kubernetes_backend as fixtures
+RUNNER_SPEC = importlib.util.spec_from_file_location('tls_job_runner', ROOT / 'runner/job_runner.py')
+runner = importlib.util.module_from_spec(RUNNER_SPEC)
+RUNNER_SPEC.loader.exec_module(runner)
 
 
 class GatewayTests(unittest.TestCase):
@@ -101,3 +106,33 @@ class GatewayTests(unittest.TestCase):
             urllib.request.urlopen(request, context=self.context, timeout=5)
         self.assertEqual(result.exception.code, 413)
         self.assertFalse(self.fixture.backend.claims.status(self.job)['started_at'])
+
+    def test_runner_queries_receipt_after_lost_https_finish_response(self):
+        import socket
+        original = claim_gateway.Handler.reply
+
+        def lose_finish(handler, code, value):
+            if handler.path == '/v1/finish' and code == 200:
+                handler.close_connection = True
+                handler.connection.shutdown(socket.SHUT_RDWR)
+                handler.connection.close()
+                return
+            return original(handler, code, value)
+
+        executions = []
+
+        def execute(plan, run, output):
+            executions.append('once')
+            output.write_bytes(b'guarded synthetic execution\n')
+            return 0
+
+        work = Path(self.fixture.tmp.name) / 'runner-work'
+        work.mkdir()
+        plan = {'source_commit': self.fixture.catalog['unit']['source_commit'], 'manifest_sha256': 'c' * 64}
+        gateway = runner.Gateway(self.token, self.cert, self.url)
+        with patch.object(claim_gateway.Handler, 'reply', lose_finish):
+            result = runner.run_once('unit', self.body, plan, gateway, work, execute)
+        self.assertEqual(result, 0)
+        self.assertEqual(executions, ['once'])
+        self.assertTrue(self.fixture.backend.execution_receipt(self.job, 'pod-uid', self.token)['finished'])
+        self.assertEqual(self.fixture.api.creates, 1)

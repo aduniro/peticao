@@ -68,8 +68,9 @@ def load_catalog(path, owner_uid=0):
 
 
 class Kubectl:
-    def __init__(self, binary='/usr/local/lib/peticao-k3s/k3s', kubeconfig='/etc/admin-v2-kubernetes/kubeconfig'):
-        self.argv = [binary, 'kubectl', '--kubeconfig', kubeconfig, '-n', NAMESPACE, '--request-timeout=10s']
+    def __init__(self, binary='/usr/local/lib/peticao-k3s/kubectl', kubeconfig='/etc/admin-v2-kubernetes/kubeconfig'):
+        # Standalone verified client: k3s kubectl extracts a runtime under HOME.
+        self.argv = [binary, '--kubeconfig', kubeconfig, '-n', NAMESPACE, '--request-timeout=10s']
 
     def call(self, args, body=None):
         try:
@@ -168,6 +169,8 @@ class Backend:
                                                               'env': [{'name': 'PETICAO_JOB_ID', 'value': row['id']},
                                                                       {'name': 'PETICAO_CLAIM_TOKEN', 'value': token},
                                                                       {'name': 'PETICAO_CLAIM_URL', 'value': 'https://100.80.18.81:9444'},
+                                                                      {'name': 'PETICAO_SOURCE_COMMIT', 'value': payload['source_commit']},
+                                                                      {'name': 'PETICAO_SOURCE_MANIFEST_SHA256', 'value': payload['source_manifest_sha256']},
                                                                       {'name': 'POD_NAME', 'valueFrom': {'fieldRef': {'fieldPath': 'metadata.name'}}},
                                                                       {'name': 'POD_UID', 'valueFrom': {'fieldRef': {'fieldPath': 'metadata.uid'}}},
                                                                       {'name': 'NEXT_TELEMETRY_DISABLED', 'value': '1'}],
