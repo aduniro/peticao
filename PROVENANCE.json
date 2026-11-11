@@ -1,0 +1,21 @@
+{
+  "classification": "R13_NATIVE_MODERN_RENDER_BROWSER_DRAFT_NOT_EXECUTED",
+  "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "controllerSourceR12Commit": "903b8c5cf05974042d25a7a59a6541d41554fa98",
+  "browserSecurityR10Commit": "c946e0197a20612139352564fdcb6d3d0cf042f3",
+  "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
+  "newRuntimeCopy": false,
+  "runtimeReusedNotMountReadOnly": true,
+  "seededConfirmedSignatures": 3,
+  "seededBatches": 0,
+  "seededPDFs": 0,
+  "seededHistoryVersions": 0,
+  "syntheticA1RenderMetadataOnly": true,
+  "realA1CredentialsOrCertificateLoaded": false,
+  "realSigningApprovalSending": false,
+  "referenceOriginTextOnly": "https://documents.example.org",
+  "referencePublicEnabled": false,
+  "independentQrDecodeAvailable": false,
+  "appPgDockerHttpBrowserPdfParsingRenderingExecuted": false,
+  "driverSha256": "92238ddb6f050ce281d19811b996e20be553274b62e7f83b90e7a869e3c3de93"
+}
