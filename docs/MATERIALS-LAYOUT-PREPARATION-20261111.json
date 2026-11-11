@@ -1,0 +1,21 @@
+{
+  "classification": "PURE_MATERIAL_LAYOUT_ASSESSMENT_ISOLATED_NOT_EXPORT",
+  "baseCommit": "12224c3f5654f6a4d727d2ee5aa4a0e794060067",
+  "files": {
+    "site/src/lib/materials-layout.ts": "c14059b7a16aa88a5eefe8572c6b34bfd7dde9a8e14cc53204a6d183587787f8",
+    "site/src/lib/materials-layout.test.ts": "c64c606d19168595421dd84afd86f8e7fd3c15a9b8d41dc8481a02252b5724aa",
+    "docs/MATERIALS-LAYOUT-DRAFT-20261111.md": "95c79f2258b4e44ea0fb20a839c10e3c14680c922d4ad5915ce0e4276d881202",
+    "docs/MATERIALS-LAYOUT-COORDINATION-INCIDENT-20261111.md": "87f15c8dc89882de81aeeced0cfb69b023ae6fecdb60e0b1dd0c09c1bf4cd80e"
+  },
+  "proofPath": "/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111/.cache/materials-layout-validation/result.json",
+  "proofSha256": "6afda3b525a8b08fab93ba0e2564221e5c42ec7fdb165e98480eb6eb65ca3272",
+  "testsPassed": 17,
+  "strictDiagnostics": 0,
+  "actualBrowserAppDatabaseHttpPdfExecuted": false,
+  "fitDoesNotAuthorizeExport": true,
+  "integrationPerformed": false,
+  "coordinationIncidentRecorded": true,
+  "priorBlockedFlowResumed": false,
+  "validLeaseFence": 180,
+  "validLeaseEvent": 1300
+}
