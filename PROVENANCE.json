@@ -1,0 +1,20 @@
+{
+  "sourceCommit": "140ce6b98af23045849335693a82b426fdc9c826",
+  "parentRecipes": {
+    "local_controller.py": {
+      "path": "/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/local_controller.py",
+      "sha256": "b273b3042702649e7e89109e3a38671ea85fc334452adf9d353dd1821287c77d"
+    },
+    "docker_control.py": {
+      "path": "/mnt/apps/peticao-final/_ops/qa-materials-pg17-20261111/docker_control.py",
+      "sha256": "9814d405a8e8157b75d64a91b73bab54d6e4ce8d9d8378d23a8423035277dc9f"
+    },
+    "runtime-guard.mjs": {
+      "path": "/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111/functional-guard.mjs",
+      "sha256": "ac9a8ecd2061bf98d56688e7d94b42b0b42ba48d868e5e8acce8769e05cc7d56",
+      "delta": "PG55498, own0, Materials1 only"
+    }
+  },
+  "controllerDelta": "ROOT/unit/PG and app ports/Docker name+label namespace/manifest env only; lifecycle logic unchanged",
+  "realExecution": false
+}
