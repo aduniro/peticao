@@ -25,13 +25,17 @@ Status:200 sucesso/replay,400parâmetros,401/403autenticação/permissão,404nã
 
 ## Validação observada
 
-12testes puros de contrato/mapeamento passaram: Unicode/newlines, limites em bytes, chaves/templates/assets, recusa de getters/protótipos/símbolos/código/caminhos, intents/CAS, hashes canônicos, integridade de versões/projeção e filtros. TypeScript5.9.3/Node20.19.2 existentes foram usados somente leitura: strict typecheck de contrato/schema/testes sem emissão teve0diagnósticos; store/rotas passaram checagem sintática por transpile, que NÃO equivale a typecheck transitivo/build.
+12testes puros de contrato/mapeamento passaram: Unicode/newlines, limites em bytes, chaves/templates/assets, recusa de getters/protótipos/símbolos/código/caminhos, intents/CAS, hashes canônicos, integridade de versões/projeção e filtros. TypeScript5.9.3/Node20.19.2 existentes foram usados somente leitura: strict typecheck inicial de contrato/schema/testes sem emissão teve0diagnósticos. Na entrega inicial store/rotas tinham somente checagem sintática; essa limitação foi superada pela prova transitiva dirigida abaixo, sem equivaler a build ou typecheck da aplicação inteira.
+
+Prova transitiva posterior PASS: `/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/result.json`, SHA9e494e0e88cbcdae3352686bd5dba8db954db1ecb38cd95ff66b257ada4657a8.8raízes explícitas incluem store e3rotas,506inputs/483sourcefiles,17pacotes compatíveis com o lockfile,0diagnósticos,0drift, noEmit=true/incremental=false. Nenhum pacote foi instalado nem fonte app executada. Fontes Materials correspondem ao c02bfac. Os dois impedimentos de preflight do host de compilação foram preservados (metadata de self-reference virtual e base dos aliases), corrigidos apenas no script; não eram erros do app.
+
+O teste PG em `/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/site/src/lib/materials-store.pg.test.ts`, acrescentado no commit7b7bff946022ef54a0c0b808fe4418d5f6e7473d pelo outro autor, ficou explicitamente FORA dessa prova transitiva; sua validação/execução PG permanecem separadas. Nenhum teste foi reexecutado somente por esta atualização documental.
 
 Provas locais ignoradas por Git: `/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/`. Sem npmci, instalação, PG, aplicação, HTTP, render/exportação, IA, contatos, disparos, assinatura, provider ou dados reais. DDL SQL e transações ainda não foram executados.
 
 ## Próximas provas e integração (pendentes)
 
-1. Revisão independente do contrato/DDL/store; typecheck transitivo com dependências da versão integrada.
+1. Revisão independente do contrato/DDL/store. Typecheck transitivo dirigido do backend/rotas já passou; falta typecheck separado do novo teste PG e verificação geral na futura versão integrada.
 2. PG17 sintético exclusivo autorizado: aplicar DDL duas vezes; create/revise/archive reais; versões antigas imutáveis; FK head/ordinal/state; CAS concorrente com dois atores; requestId igual idempotente e distinto conflitante; mudança/revogação de sessão/nível; audit failure rollback sem head órfão; leitura entre edições; paginação. Não chamar banco real.
 3. Ensaiar rotas reais401/403/origin/rateLimit/campos/body limits e recuperação após perda de resposta, sem auto-POST.
 4. Só depois integrar registro aditivo em db.init/migração e featureflag/rotas na base cumulativa; preservar objetos e dados antigos, manter flag desligada como retorno funcional. Não usar DROP de tabelas para rollback.

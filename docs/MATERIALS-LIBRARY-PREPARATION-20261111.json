@@ -3,7 +3,7 @@
   "baseCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "branch": "feat/materials-library-backend-20261111",
   "files": {
-    "docs/MATERIALS-LIBRARY-BACKEND-DRAFT-20261111.md": "56030068eb64d46707f806192171abe4a126c99ee968f83a2957062bfba92667",
+    "docs/MATERIALS-LIBRARY-BACKEND-DRAFT-20261111.md": "14fb96bd5da44dc3d20e01469f68500d031ab2a6b757f955e106e26fe3a7d14c",
     "site/src/lib/materials-contract.ts": "bc2e2907cf43362daba09ce18eb84213dbdeeb2d7f0cf8f658c85d2bfc6aaf5b",
     "site/src/lib/materials-contract.test.ts": "fc2e6bb51caff05236b46019f22c4c6a31fd5c85ca0be8866ce04078becc2824",
     "site/src/lib/materials-schema.ts": "f0b65d5b26a73173dc8f81ae6e888437502feb6d06cea1fe2fd913ce5ce8cbf3",
@@ -18,7 +18,14 @@
     "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/typecheck.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/test-stdout.log": "b5be6001dbc70a1f1f31999056a802f2052cf84a2e9abb1589e2793010c0d528",
     "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/test-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/final-syntax.json": "9a10f2e41d683635eb6ddafa0db9b64528ea6393ea933b85041e6da0948bc93b"
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/final-syntax.json": "9a10f2e41d683635eb6ddafa0db9b64528ea6393ea933b85041e6da0948bc93b",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/result.json": "9e494e0e88cbcdae3352686bd5dba8db954db1ecb38cd95ff66b257ada4657a8",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/diagnostics.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/typecheck.cjs": "16f712e2a627964e30dc939e712eb79f7910363db406b81e1f35787fd24fa646",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/attempt-1-error.txt": "d37f8bcbac80bef2dd5478f5afc2d1ec40bf8fa495e38918b37b3860dea3a9c6",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/attempt-2-result.json": "0364b1e43c4e4b9122b5a1ae7080b02292700af8abadb545f34eda74767d9195",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/attempt-2-diagnostics.txt": "ecdc5d880712df3239582918d0dd98a4c43af3c8ec8c98f6c252fb5f3f2b7772",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-transitive-typecheck-20261111/attempt-2-correction.txt": "df108fef9c040179c14b7fabf96e565a298a770680e86c939d1f09223aaaece1"
   },
   "observed": {
     "pureContractTestsPassed": 12,
@@ -26,23 +33,32 @@
     "finalSourceSyntaxDiagnostics": 0,
     "ddlApplied": false,
     "realPgStoreTests": false,
-    "fullTransitiveTypecheck": false,
     "build": false,
     "appHttpTests": false,
     "uiRenderingOrExport": false,
     "productionDataAccess": false,
     "deployment": false,
-    "aiContactsSigningSend": false
+    "aiContactsSigningSend": false,
+    "targetedStoreRoutesTransitiveTypecheck": true,
+    "transitiveTypecheckDiagnosticCount": 0,
+    "transitiveInputFiles": 506,
+    "transitiveSourceFiles": 483,
+    "lockMatchedPackages": 17,
+    "transitiveInputDrift": 0,
+    "fullApplicationTypecheck": false,
+    "newPgTestIncludedInTransitiveTypecheck": false
   },
   "pending": [
     "independent review",
     "PostgreSQL17 additive DDL/cas/concurrency/audit rollback tests",
-    "strict store/routes project typecheck and build",
+    "separate new PG test typecheck; whole integrated application typecheck and build",
     "API auth/origin/rateLimit real HTTP",
     "UI create/edit",
     "preview/render/export",
     "library UI and archived material UX",
     "binary export artifact storage",
     "cumulative integration and exact release approval"
-  ]
+  ],
+  "evidenceRevision": 2,
+  "typecheckNote": "Two compiler-host preflight failures retained; corrected only in validation host, no app-code errors or edits"
 }
