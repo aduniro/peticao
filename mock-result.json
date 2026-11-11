@@ -1,0 +1,8 @@
+{
+  "tests": 17,
+  "passed": 17,
+  "applicationStarted": false,
+  "dockerExecuted": false,
+  "source": "unittest direct observed exit0",
+  "createdAt": "2026-11-11T01:18:21.370876+00:00"
+}

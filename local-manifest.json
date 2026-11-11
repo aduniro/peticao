@@ -1,0 +1,18 @@
+{
+  "classification": "LOCAL_REVIEWED_ATTEMPT2_SIZE_CORRECTION",
+  "sourceHarness": "58cb9ce6d90cfb5f8b7fe456810948a4c99bb6f9",
+  "derivedStagingPatch": "128MiB to256MiB; exact archive/member/sha/inventory unchanged",
+  "files": {
+    "local_runner.py": "15cab23f15137e0ff26dd5f376ac902dc907ec33a60e84c3ca2c171839cf5fc3",
+    "test_local_runner.py": "cd3d84430e4b74927028c1308ec66ac120d307efc74e10c79bde3b6143a66860",
+    "test_staging_size.py": "49adbdb9eca393b9c99b8cf197fc87b1a8e134ccb26840a40cf9350f430c6919",
+    "local-registry.json": "35c8597b080d0698c18ac8ad1f93122c0dd0e3398b021e541c1573a785e5cd5d",
+    "frozen-pins.json": "7c70df27788bc185cd9dd1a18529cf7e9019682c8f6b67c5d867eea760c62d15",
+    "frozen/dns_guard.cjs": "68a22d886d5218d723b5446931bd70da76bfc9f1fb30ffcc7148fb702ca25268",
+    "frozen/guard_policy.cjs": "b1605f3789260ad02ba5c6f4cd67494bacc6797c28894f9213c649ff96bb651e",
+    "frozen/node_guard.cjs": "f2a0f708159a2d5a081ca084f55496028ba169ce3456d374592ade5c61f2ab20",
+    "frozen/receipts.py": "e3766b2e0c3219252ed853580b5206357a2b2ed434269fca55106d4b293f0c21",
+    "frozen/registry.json": "1a894d10f9ff42ce59ec6d0ce7f7c49661ae965a3a140a28833d6a963fa02afb",
+    "frozen/staging.py": "3074af928b94c409003097a7ad55e4add37cdf3b53de2844c213a02c4b5714e2"
+  }
+}

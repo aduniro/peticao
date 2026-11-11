@@ -1,0 +1,16 @@
+[
+  "/usr/bin/systemd-run",
+  "--user",
+  "--unit=peticao-r0003-local-pg17-qa-attempt2-20261111.service",
+  "--property=CPUQuota=200%",
+  "--property=MemoryMax=3G",
+  "--property=TasksMax=256",
+  "--property=RuntimeMaxSec=720",
+  "--property=TimeoutStopSec=30",
+  "--property=WorkingDirectory=/mnt/dev/.peticao-r0003-local-pg17-qa-20261111/attempt-2",
+  "/usr/bin/python3",
+  "-B",
+  "/mnt/dev/.peticao-r0003-local-pg17-qa-20261111/attempt-2/local_runner.py",
+  "--execute-reviewed-manifest-sha256",
+  "1157b17d305fe336ec72df672e856baabcba8f7665ca73158030aca1e52ef538"
+]
