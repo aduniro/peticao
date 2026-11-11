@@ -9,6 +9,35 @@ class Tests(unittest.TestCase):
   self.tmp=tempfile.TemporaryDirectory();self.db=pathlib.Path(self.tmp.name)/'coord.sqlite';self.l=coord.Ledger(self.db)
   self.l.register('apoio','session-a',[self.tmp.name]);self.l.register('admin','session-b',[self.tmp.name])
  def tearDown(self):self.tmp.cleanup()
+ def handoff_notice(self,**changes):
+  payload={'prior':'admin','replacement':'recovery','session':'session-c','owner_reference':'Owner fixture: replace unavailable coordinator'};payload.update(changes)
+  return self.l.announce('recovery','Successao proposta',['coord:actors'],{'actor_handoff':payload})['seq']
+ def test_handoff_requires_independent_ack_and_preserves_uncertain_lease(self):
+  old=self.l.acquire('admin',['code:old-work'])
+  with self.l.db(True) as d:d.execute('UPDATE leases SET expires=0 WHERE id=?',(old['lease'],))
+  self.l.register('recovery','session-c',[self.tmp.name]);n=self.handoff_notice()
+  with self.assertRaises(RuntimeError):self.l.handoff('recovery','admin',n)
+  self.l.ack('recovery',n)
+  with self.assertRaises(RuntimeError):self.l.handoff('recovery','admin',n)
+  self.l.ack('apoio',n);r=self.l.handoff('recovery','admin',n)
+  self.assertFalse(r['leases_transferred'])
+  status=self.l.status();self.assertFalse(next(a for a in status['actors'] if a['id']=='admin')['active'])
+  self.assertEqual(next(a for a in status['actors'] if a['id']=='admin')['session'],'session-b')
+  self.assertEqual(next(a for a in status['leases'] if a['id']==old['lease'])['state'],'uncertain')
+  with self.assertRaises(RuntimeError):self.l.acquire('recovery',['code:old-work'])
+  with self.assertRaises(PermissionError):self.l.ack('admin',n)
+  with self.assertRaises(PermissionError):self.l.register('admin','session-b',[self.tmp.name])
+  resolution=self.l.propose_resolution('recovery',old['lease'],'aborted','Fixture: old process ended without integration')
+  self.assertTrue(self.l.confirm_resolution('apoio',resolution['resolution'])['confirmed'])
+ def test_handoff_rejects_stale_manifest_and_missing_owner_reference(self):
+  self.l.register('recovery','session-c',[self.tmp.name])
+  for changes in ({'session':'session-wrong'},{'owner_reference':''},{'replacement':'apoio'},{'prior':'apoio'}):
+   n=self.handoff_notice(**changes);self.l.ack('apoio',n)
+   with self.assertRaises(ValueError):self.l.handoff('recovery','admin',n)
+ def test_handoff_cannot_be_self_approved_with_two_actors(self):
+  n=self.l.announce('apoio','Invalid self-approved succession',['coord:actors'],{'actor_handoff':{'prior':'admin','replacement':'apoio','session':'session-a','owner_reference':'fixture'}})['seq']
+  self.l.ack('apoio',n)
+  with self.assertRaises(RuntimeError):self.l.handoff('apoio','admin',n)
  def manifest(self):
   n=self.l.announce('apoio','Manifesto ficticio de testes',['code:'],{'manifest':{'commit':'a'*40,'files':['site/src/fictitious.ts'],'api_contracts':'sem alteracao','database':'sem alteracao','tests':['fixture assertions passaram'],'destination':'/tmp/fixture-target'}})
   self.l.ack('admin',n['seq']);return n['seq']

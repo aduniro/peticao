@@ -47,6 +47,7 @@ class Ledger:
    d.executescript('''
 PRAGMA journal_mode=WAL;
 CREATE TABLE IF NOT EXISTS actors(id TEXT PRIMARY KEY,session TEXT NOT NULL,repos TEXT NOT NULL,registered_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS actor_handoffs(prior TEXT PRIMARY KEY,replacement TEXT NOT NULL,notice_seq INTEGER NOT NULL,owner_reference TEXT NOT NULL,at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,at TEXT NOT NULL,actor TEXT,kind TEXT NOT NULL,summary TEXT NOT NULL,data TEXT NOT NULL,resources TEXT NOT NULL,requires_ack INTEGER NOT NULL DEFAULT 0);
 CREATE TRIGGER IF NOT EXISTS immutable_events_update BEFORE UPDATE ON events BEGIN SELECT RAISE(ABORT,'events_are_append_only'); END;
 CREATE TRIGGER IF NOT EXISTS immutable_events_delete BEFORE DELETE ON events BEGIN SELECT RAISE(ABORT,'events_are_append_only'); END;
@@ -70,6 +71,26 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
   finally:d.close()
  def actor(self,d,a):
   if not d.execute('SELECT 1 FROM actors WHERE id=?',(a,)).fetchone():raise ValueError('Participante nao registrado: '+a)
+  if d.execute('SELECT 1 FROM actor_handoffs WHERE prior=?',(a,)).fetchone():raise PermissionError('Participante sucedido; usar identidade atual: '+a)
+ def active_actors(self,d):
+  return [r['id'] for r in d.execute('SELECT id FROM actors WHERE id NOT IN (SELECT prior FROM actor_handoffs)')]
+ def handoff(self,actor,prior,notice_seq):
+  """Successao com autorizacao explicita e ACK externo; nao transfere leases."""
+  with self.db(True) as d:
+   self.actor(d,actor);self.actor(d,prior)
+   if actor==prior:raise ValueError('Successao exige identidades distintas')
+   e=d.execute('SELECT * FROM events WHERE seq=?',(notice_seq,)).fetchone()
+   if not e or e['actor']!=actor or e['kind']!='notice' or not e['requires_ack']:raise ValueError('Aviso explicito do sucessor exigido')
+   payload=json.loads(e['data']).get('actor_handoff',{})
+   session=d.execute('SELECT session FROM actors WHERE id=?',(actor,)).fetchone()[0]
+   if payload.get('prior')!=prior or payload.get('replacement')!=actor or payload.get('session')!=session or not isinstance(payload.get('owner_reference'),str) or not payload['owner_reference'].strip():raise ValueError('Manifesto de sucessao incompleto')
+   peers=set(self.active_actors(d))-{actor,prior}
+   if not peers:raise RuntimeError('ACK de coordenador independente exigido')
+   ack={r['actor'] for r in d.execute('SELECT actor FROM acks WHERE seq=?',(notice_seq,))}
+   if not peers.issubset(ack):raise RuntimeError('handoff_pending_peer_ack:'+encode(sorted(peers-ack)))
+   d.execute('INSERT INTO actor_handoffs VALUES(?,?,?,?,?)',(prior,actor,notice_seq,payload['owner_reference'],stamp()))
+   seq=self.event(d,actor,'actor_succeeded','Responsavel sucedido; leases e historico preservados',payload,['coord:actors'])
+   return {'prior':prior,'replacement':actor,'seq':seq,'leases_transferred':False}
  def event(self,d,actor,kind,summary,data=None,resources=(),requires_ack=False):
   if len(summary)>2000 or len(encode(data or {}))>32768:raise ValueError('Evento excede limite')
   cur=d.execute('INSERT INTO events(at,actor,kind,summary,data,resources,requires_ack) VALUES(?,?,?,?,?,?,?)',(stamp(),actor,kind,summary,encode(data or {}),encode(list(resources)),int(requires_ack)));return cur.lastrowid
@@ -79,6 +100,7 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
   if any(not pathlib.Path(p).is_dir() for p in repos):raise ValueError('Repositorio inexistente')
   with self.db(True) as d:
    old=d.execute('SELECT * FROM actors WHERE id=?',(actor,)).fetchone()
+   if d.execute('SELECT 1 FROM actor_handoffs WHERE prior=?',(actor,)).fetchone():raise PermissionError('Identidade sucedida nao pode ser reativada por registro')
    if old and old['session']!=session:raise ValueError('Identidade ja pertence a outra sessao')
    d.execute('INSERT OR REPLACE INTO actors VALUES(?,?,?,?)',(actor,session,encode(repos),old['registered_at'] if old else stamp()))
    seq=self.event(d,actor,'registered','Participante registrado',{'session':session,'repos':repos})
@@ -119,7 +141,7 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
      if not isinstance(manifest.get(key),str) or not manifest[key].strip():raise ValueError('manifest_'+key+'_required')
     for key in ('files','tests'):
      if not isinstance(manifest.get(key),list) or not manifest[key] or any(not isinstance(x,str) or not x.strip() for x in manifest[key]):raise ValueError('manifest_'+key+'_required')
-   actors=[r['id'] for r in d.execute('SELECT id FROM actors')]
+   actors=self.active_actors(d)
    if operation in ('deploy','migration','merge') and len(actors)<2:raise RuntimeError('two_coordinators_required')
    pending=[]
    for e in d.execute('SELECT * FROM events WHERE requires_ack=1'):
@@ -165,7 +187,7 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
    lease=d.execute('SELECT * FROM leases WHERE id=?',(r['lease_id'],)).fetchone()
    if lease['state']!='uncertain':raise ValueError('Lease ja reconciliado')
    d.execute('INSERT OR IGNORE INTO resolution_acks VALUES(?,?,?)',(ident,actor,stamp()))
-   actors=[x['id'] for x in d.execute('SELECT id FROM actors')];ack={x['actor'] for x in d.execute('SELECT actor FROM resolution_acks WHERE resolution_id=?',(ident,))}
+   actors=self.active_actors(d);ack={x['actor'] for x in d.execute('SELECT actor FROM resolution_acks WHERE resolution_id=?',(ident,))}
    complete=len(actors)>=2 and set(actors).issubset(ack)
    if complete:d.execute("UPDATE resolutions SET state='confirmed' WHERE id=?",(ident,));d.execute("UPDATE leases SET state='reconciled' WHERE id=?",(r['lease_id'],))
    seq=self.event(d,actor,'reconciliation_confirmed' if complete else 'reconciliation_ack','Reconciliacao conferida pelo participante',{'resolution':ident,'lease':r['lease_id'],'confirmed':complete},json.loads(lease['resources']));return {'resolution':ident,'confirmed':complete,'seq':seq}
@@ -208,12 +230,13 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
   with self.db(True) as d:self.expire(d)
   with self.db() as d:
    actors=[dict(r) for r in d.execute('SELECT * FROM actors')]
-   for a in actors:a['repos']=json.loads(a['repos'])
+   active=set(self.active_actors(d))
+   for a in actors:a['repos']=json.loads(a['repos']);a['active']=a['id'] in active
    leases=[{k:r[k] for k in r.keys() if k!='token'} for r in d.execute("SELECT * FROM leases WHERE state IN ('active','uncertain')")]
    for r in leases:r['resources']=json.loads(r['resources'])
    pending=[]
    for e in d.execute('SELECT seq,actor,summary,resources FROM events WHERE requires_ack=1'):
-    missing=[a['id'] for a in actors if a['id']!=e['actor'] and not d.execute('SELECT 1 FROM acks WHERE actor=? AND seq=?',(a['id'],e['seq'])).fetchone()]
+    missing=[a['id'] for a in actors if a['active'] and a['id']!=e['actor'] and not d.execute('SELECT 1 FROM acks WHERE actor=? AND seq=?',(a['id'],e['seq'])).fetchone()]
     if missing:pending.append({'event':e['seq'],'author':e['actor'],'summary':e['summary'],'resources':json.loads(e['resources']),'missing_ack':missing})
    return {'at':stamp(),'actors':actors,'leases':leases,'pending_ack':pending,'last_seq':d.execute('SELECT COALESCE(MAX(seq),0) FROM events').fetchone()[0]}
 def parser():
@@ -225,6 +248,7 @@ def parser():
  c=cmd('register');c.add_argument('--session',required=True);c.add_argument('--repo',action='append',required=True)
  c=cmd('announce');c.add_argument('--summary',required=True);c.add_argument('--resource',action='append',required=True);c.add_argument('--data-json',default='{}');c.add_argument('--no-require-ack',action='store_true')
  c=cmd('ack');c.add_argument('--event',type=int,required=True)
+ c=cmd('handoff');c.add_argument('--prior',required=True);c.add_argument('--notice-event',type=int,required=True)
  c=cmd('acquire');c.add_argument('--resource',action='append',required=True);c.add_argument('--operation',choices=['edit','deploy','merge','migration','test','inspect'],default='edit');c.add_argument('--ttl',type=int,default=600);c.add_argument('--manifest-event',type=int)
  for name in ('check','renew','release'):
   c=cmd(name);c.add_argument('--lease',required=True);c.add_argument('--token',required=True);c.add_argument('--fence',type=int,required=True)
@@ -241,6 +265,7 @@ def main():
  if c=='register':r=l.register(a.actor,a.session,a.repo)
  elif c=='announce':r=l.announce(a.actor,a.summary,a.resource,json.loads(a.data_json),not a.no_require_ack)
  elif c=='ack':r=l.ack(a.actor,a.event)
+ elif c=='handoff':r=l.handoff(a.actor,a.prior,a.notice_event)
  elif c=='acquire':r=l.acquire(a.actor,a.resource,a.operation,a.ttl,a.manifest_event)
  elif c in ('check','renew','release'):
   extra=([a.ttl] if c=='renew' else [a.outcome,a.summary] if c=='release' else [])
