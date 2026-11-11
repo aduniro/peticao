@@ -1,0 +1,32 @@
+{
+  "classification": "EXACT_HISTORICAL_MATERIAL_PREVIEW_API_DRAFT_PURE_AND_TYPES_VALIDATED",
+  "baseCommit": "49b158d73ef9dc5c75b7c378dfdafca44dcf62bc",
+  "files": {
+    "site/src/lib/materials-preview.ts": "42d0b8c7afc8c76fa3349b5e2b0502dc2629196c8086ccbc9c9ff992a176761b",
+    "site/src/lib/materials-preview.test.ts": "3fb9594622a9769e47bfb73fd1ba2e36205a10e094d4556f678cea3cbe2c5f71",
+    "site/src/app/api/admin/materiais/[id]/previa/route.ts": "78bde20eee8a853defe8d80aab9d812bd3fe862e364c97f57ee9eaf260efd2ca",
+    "docs/MATERIALS-PREVIEW-API-DRAFT-20261111.md": "4f3ebc078b56845192fd03a245b0944ceacb7fab5396c3e4bb0e0eff3a9c9758"
+  },
+  "preserved": {
+    "site/src/lib/materials-render.ts": "1c5578729a2bd3af48070e1220e64eb2afbb54149caecb29cf5a3ce0ad6f167a",
+    "site/src/lib/materials-layout.ts": "c14059b7a16aa88a5eefe8572c6b34bfd7dde9a8e14cc53204a6d183587787f8",
+    "site/src/lib/materials-dom-collector.ts": "cccc8a3d7fd4b09ec6fe937d6be4642869e666ac5f33b299dd6cdeeec7f66b10",
+    "site/src/lib/materials-store.ts": "3852ae70cf1dda08bb328dbdd70e422f10c5a961b4a4e8fb04171509a9f114ee",
+    "site/src/lib/materials-contract.ts": "bc2e2907cf43362daba09ce18eb84213dbdeeb2d7f0cf8f658c85d2bfc6aaf5b"
+  },
+  "proofs": {
+    "/mnt/apps/peticao-final/_ops/drafts/materials-preview-api-20261111/.cache/materials-preview-validation/result.json": "2c08ca3904bbd848da9c85c4fb7f9895e4a6292fad44b77bf7bbab7d85f3231a",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-preview-api-20261111/.cache/materials-preview-transitive-typecheck/result.json": "e3f4c5fec79d3604846a6550966f877117a6980d8a061a838ab81f01f1490645"
+  },
+  "validation": {
+    "pureTests": 11,
+    "strictDiagnostics": 0,
+    "transitiveInputs": 504,
+    "lockMatchedPackages": 17,
+    "transitiveDiagnostics": 0
+  },
+  "actualHttpAppPgBrowserPdfExecuted": false,
+  "integrated": false,
+  "deployReady": false,
+  "exportImplemented": false
+}
