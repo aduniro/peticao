@@ -23,7 +23,7 @@
     "PLAN.md": "8ebf186a1582a93b611270519163613e0c01dc69b19d8118718c7da4c141919c",
     "PROVENANCE.json": "a2d3bb8826c11e7734657f840b4e54c788e225fac22a9bd88105ec8a86a134e1",
     "VALIDATION.json": "df2fcc5945f362a5d05ef4280d009826b4a56b5b25a22e21e65dd06ce073c2a2",
-    "config.json": "e427215987c5ffdeef92e5243a24667c4ee47f232820d88bf039b95d58c4c0d4",
+    "config.json": "ec0f6d1771c7a45ffea477bb0141372d454dab1aa6d3667cb4567bfc2620b06b",
     "dependency-cache-manifest.json": "a5e2a4c61e9bcdb37fa8ad8143671595ea980057715ed66f82fb891a343abbc5",
     "dry-config.mjs": "52ef87052a000347e7f584cdafceaaad6635c03028e93cbbc54cfcf5cbcb7df6",
     "export-identity-tests.log": "9814d733889f73761315565a5fee5e95abc9e2b806ecf204c6653b32fda29f90",
@@ -36,7 +36,8 @@
     "pure-tests.log": "af0f6ac558b2e4df2ad2cfc351a2cd59b242f96bbfacadc2d1dc46a8e1c5e9bd",
     "source-manifest.json": "344cf379c103d8d5cea38200e2d3a7d4dc2398cbe781903904e08832797f9f70",
     "test_export_identity.py": "1520c6ab07307cce88030a5c997cfbec49a4f39cd0acdeca8bc5d38847b9d449",
-    "test_preparation.py": "c2c1136b6dbab4bbfa212c65e86eab0b7dfc23369494419218577b94c65fdb32"
+    "test_preparation.py": "c2c1136b6dbab4bbfa212c65e86eab0b7dfc23369494419218577b94c65fdb32",
+    "ROOT-ACTIVATION.json": "10fe2319a39394e5cc94de10ba7224d5214c9fc7154941d1efb3405671eb6f14"
   },
   "infra_reviewed": false,
   "mustRetainUnitBeforeStop": true,

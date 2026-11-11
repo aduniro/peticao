@@ -1,0 +1,25 @@
+{
+  "classification": "ROOT_BUILD_PHASE_A_ACTIVATION_ONLY",
+  "timestampUtc": "2026-11-11T07:20:36.004385+00:00",
+  "preparedCommit": "4368781c50f76b4048c335b73b0bf6c28c15812d",
+  "sourceCommit": "140ce6b98af23045849335693a82b426fdc9c826",
+  "peerReview": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/materials-app-build-export-ro-20261111/identity-fix/review.json",
+  "peerReviewSha256": "74d76096955fafa5b958978448ad107e59cceee104638413cac567925c7b9730",
+  "rootReviewed": [
+    "production_profile.py",
+    "production-build-guard.mjs",
+    "portable_runtime.py",
+    "source-manifest.json",
+    "PLAN.md"
+  ],
+  "scope": "One local isolated build and exact-source export; HTTP runtime admission remains separate. No merge, deploy or production database.",
+  "unitMustRetainResult": true,
+  "resourceLimits": {
+    "cpuCores": 3,
+    "memoryBytes": 5368709120,
+    "heapMiBPerNode": 3072,
+    "timeoutSeconds": 900,
+    "mustBeEnforcedByCgroup": true
+  },
+  "r16Resumed": false
+}
