@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "kind": "govbr-route-gates-native-pg17-r0003-v1",
+  "source_commit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
+  "backend_source_commit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "node_sha256": "ca0728526aa1cc4e3056decec848ecc6d2c5391cecdd4e21a0ebd221d665c84e",
+  "source_archive_sha256": "f2440846c29ef84613bc4e005d7acaebf70eb1643816c025c229aa14dff545eb",
+  "source_manifest_sha256": "63f1354863106399306f9d9ef10380c71dac82ca7f7dc4861bea0911b303924e",
+  "devdeps_archive_sha256": "ebf056a98596e670bf68ee53ea4daeb45a9fcc7e302ab0bf4bd6a6ff72f99373",
+  "devdeps_manifest_sha256": "db93db3e4c00f4a08d21aa1a775ef180a2e7a5f5e7dbbbbb1b6d143ab84b2f70",
+  "production_archive_sha256": "2952a2b0d7ffb06b553caa03fdb3d8546981a96118a1cc9aa0ca47da4adc8ee0",
+  "production_manifest_sha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
+  "postgres_version_num": "170011",
+  "db_port": 55487,
+  "resources": {
+    "cpu_cores": 2,
+    "memory_bytes": 3221225472,
+    "pids_max": 256,
+    "soft_seconds": 600,
+    "hard_seconds": 720,
+    "test_timeout_seconds": 480
+  },
+  "test_file": "src/lib/petition-base-route.test.ts",
+  "test_pattern": "^real validation route (session|level|stepup|origin|rate) refusal creates no intent and recovers only by admitted exact GET$",
+  "expected_cases": [
+    "session",
+    "level",
+    "stepup",
+    "origin",
+    "rate"
+  ],
+  "node_version": "20.19.2",
+  "tsx_version": "4.23.15",
+  "esbuild_version": "0.28.2",
+  "integration_state": "PRIVATE_DRAFT_NOT_REGISTERED_NOT_EXECUTED",
+  "node_path": "/usr/bin/node",
+  "local_mock_node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac"
+}

@@ -1,0 +1,6 @@
+/artifacts/
+/runs/
+/__pycache__/
+/active-lease.json
+*.log
+.env*
