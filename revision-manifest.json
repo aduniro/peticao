@@ -1,0 +1,41 @@
+{
+  "classification": "PRIVATE_OPERATOR_REV2_DRAFT_NOT_APPLIED",
+  "baseCommit": "d52d817d041d3848c490b1d4640bf8de7d616c38",
+  "candidateProfileCommit": "0ce878406810a4537268e2c7e3c8810e066bd7ef",
+  "supportedInstallKind": "history-native-pg17-r0002-v1",
+  "r3CombinedCandidateInstalledOrPrepared": false,
+  "files": {
+    "install_native.py": {
+      "sha256": "438771ff2ef8f0676bb323bea2388398785087d9c5834b87c949161c9c8dfca6",
+      "bytes": 23845
+    },
+    "plan.json": {
+      "sha256": "f46d9b59a7f98aff85d94c90658acbc2303d58f5dd6bb9fb387f42c4472df3ee",
+      "bytes": 5908
+    },
+    "README.md": {
+      "sha256": "c8a93bb65d58738445ff2e7aacc191e21ee8fa78fa160dc5551700057cef0b7a",
+      "bytes": 6996
+    },
+    "tests/test_install_native.py": {
+      "sha256": "84cfffafb446cc3bee5235a249486b435ef4999412ec72f80ac7dc2c00dee1e3",
+      "bytes": 23074
+    },
+    "validate_revision.py": {
+      "sha256": "844a109bbc4536a7574364c96a7e6e6b8a8ab12b5fa9b3d19e664eea312efb5c",
+      "bytes": 1399
+    },
+    ".gitignore": {
+      "sha256": "ebfb74ec27e213aeb8f5beb0f99a403023cd665e53758b54719ce8038d06f058",
+      "bytes": 94
+    }
+  },
+  "distinctMockTests": 34,
+  "actualApply": false,
+  "ssh": false,
+  "postgres": false,
+  "application": false,
+  "appReleaseReady": false,
+  "maintenanceScope": "SQLite writers while replacing/rolling back code; released before restart",
+  "fencingScope": "caller-supplied ACK boot/generation and cooperative comparisons; no root/HA/filesystem mutex"
+}

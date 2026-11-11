@@ -28,8 +28,9 @@ class InstallTests(unittest.TestCase):
    c.execute('PRAGMA journal_mode=WAL');c.execute('CREATE TABLE jobs(id text,state text)');c.execute('CREATE TABLE events(event text)');c.execute("INSERT INTO jobs VALUES('historical','completed')");c.execute("INSERT INTO events VALUES('preserve me')")
   preserved=self.root/'untouched_runtime_profile.py';preserved.write_text('old fixed runtime profile');self.plan['preservedPins']={str(preserved):sha(preserved)}
   self.quiet=mock.patch.object(m,'quiescent',side_effect=lambda plan,*args:m.queue_idle(Path(plan['queue'])));self.quiet.start()
+  self.fence={'boot_id':'fixture-boot','role':'primary','generation':7};self.fence_patch=mock.patch.object(m,'read_fence',side_effect=lambda plan:dict(self.fence));self.fence_patch.start();self.inputs_patch=mock.patch.object(m,'verify_inputs');self.inputs_patch.start()
   self.control=[];self.backup=self.root/'backup'
- def tearDown(self):self.quiet.stop();self.tmp.cleanup()
+ def tearDown(self):self.inputs_patch.stop();self.fence_patch.stop();self.quiet.stop();self.tmp.cleanup()
  def rows(self):
   with sqlite3.connect(self.plan['queue'])as c:return(c.execute('SELECT * FROM jobs').fetchall(),c.execute('SELECT * FROM events').fetchall())
  def test_default_cli_is_pure_dry_run(self):
@@ -58,17 +59,20 @@ class InstallTests(unittest.TestCase):
    return actual(src,dst,*args,**kwargs)
   with mock.patch.object(m,'atomic_copy',side_effect=tracked):result=m.install_transaction(self.plan,self.backup,self.control.append,False)
   self.assertEqual(result['exit'],0);self.assertFalse(result['queueRestored']);self.assertEqual(self.rows(),before);self.assertEqual(order,['history_native_profile.py','launch.py','coordinator.py']);self.assertEqual(self.control,['stop','start']);self.assertTrue((self.backup/'queue.sqlite').exists())
- def test_rollback_code_preserves_new_queue_event_after_snapshot(self):
+ def test_writer_barrier_blocks_arrival_during_rollback_then_preserves_event_after_release(self):
   actual=m.atomic_copy;failed=False
   def failing(src,dst,*args,**kwargs):
    nonlocal failed
    actual(src,dst,*args,**kwargs)
    if dst==Path(self.plan['installPaths']['launch.py'])and not failed:
     failed=True
-    with sqlite3.connect(self.plan['queue'])as c:c.execute("INSERT INTO events VALUES('arrived after backup; never lose')")
+    with sqlite3.connect(self.plan['queue'],timeout=0)as c:
+     with self.assertRaises(sqlite3.OperationalError):c.execute("INSERT INTO events VALUES('blocked during maintenance')")
     raise OSError('fixture after atomic replace')
   with mock.patch.object(m,'atomic_copy',side_effect=failing):result=m.install_transaction(self.plan,self.backup,self.control.append,False)
-  self.assertEqual(result['exit'],1);self.assertTrue(result['codeRollback']);self.assertFalse(result['queueRestored']);self.assertEqual(len(self.rows()[1]),2);self.assertFalse(Path(self.plan['installPaths']['history_native_profile.py']).exists())
+  self.assertEqual(result['exit'],1);self.assertTrue(result['codeRollback']);self.assertFalse(result['queueRestored']);self.assertEqual(len(self.rows()[1]),1);self.assertFalse(Path(self.plan['installPaths']['history_native_profile.py']).exists())
+  with sqlite3.connect(self.plan['queue'])as c:c.execute("INSERT INTO events VALUES('after writer release; preserve')")
+  self.assertEqual(len(self.rows()[1]),2)
   for name in ['coordinator.py','launch.py']:self.assertEqual(sha(Path(self.plan['installPaths'][name])),self.plan['oldPins'][name])
   self.assertEqual(self.control,['stop','start'])
  def test_foreign_rollback_change_is_preserved_and_service_not_restarted(self):
@@ -188,4 +192,84 @@ class InstallTests(unittest.TestCase):
   # Only SQLite backup(source,destination) snapshot; no copying a snapshot onto live queue.
   self.assertFalse(any(isinstance(node.func,__import__('ast').Attribute)and node.func.attr in {'restore','submit'}for node in calls))
   plan=m.load_plan();self.assertFalse(plan['submitAutomatically']);self.assertFalse(plan['rollbackRestoresQueue']);self.assertFalse(plan['appReleaseReady']);self.assertNotIn('runtime_profile.py',plan['installOrder'])
+
+class Revision2Tests(unittest.TestCase):
+ setUp=InstallTests.setUp
+ tearDown=InstallTests.tearDown
+ rows=InstallTests.rows
+ def test_stop_effect_then_lost_response_recovers_from_observed_inactive(self):
+  active=True
+  def control(action):
+   nonlocal active
+   self.control.append(action)
+   if action=='stop':active=False;raise subprocess.TimeoutExpired('fixed systemctl stop',30)
+   active=True
+  def observed(plan,stopped=False):
+   if stopped and active:raise ValueError('service still active')
+   return m.queue_idle(Path(plan['queue']))
+  before=self.rows()
+  with mock.patch.object(m,'quiescent',side_effect=observed):result=m.install_transaction(self.plan,self.backup,control,False)
+  self.assertEqual(result['exit'],1);self.assertTrue(result['stopObserved']);self.assertTrue(result['codeRollback']);self.assertTrue(result['recoveryStartReturned']);self.assertEqual(self.control,['stop','start']);self.assertTrue(active);self.assertEqual(self.rows(),before)
+ def test_stop_without_effect_does_not_claim_safe_restart(self):
+  def control(action):self.control.append(action);raise subprocess.TimeoutExpired('stop failed without effect',30)
+  def observed(plan,stopped=False):
+   if stopped:raise ValueError('service still active')
+   return m.queue_idle(Path(plan['queue']))
+  with mock.patch.object(m,'quiescent',side_effect=observed):result=m.install_transaction(self.plan,self.backup,control,False)
+  self.assertEqual(self.control,['stop']);self.assertFalse(result['codeRollback']);self.assertFalse(result['stopObserved'])
+ def test_two_connections_exclude_rpc_writer_but_not_reader(self):
+  queue=Path(self.plan['queue']);before=self.rows();barrier=m.QueueWriterBarrier(queue);barrier.acquire()
+  try:
+   barrier.assert_held()
+   with sqlite3.connect(queue,timeout=0)as rpc:
+    self.assertEqual(rpc.execute('SELECT count(*) FROM jobs').fetchone()[0],1)
+    with self.assertRaises(sqlite3.OperationalError):rpc.execute("INSERT INTO events VALUES('RPC blocked')")
+   self.assertEqual(self.rows(),before)
+  finally:barrier.release()
+  with sqlite3.connect(queue,timeout=0)as rpc:rpc.execute("INSERT INTO events VALUES('RPC admitted after cutover')")
+  self.assertEqual(len(self.rows()[1]),2)
+ def test_start_service_fake_can_write_sqlite_only_after_qualified_cutover(self):
+  def control(action):
+   self.control.append(action)
+   if action=='start':
+    checkpoint=json.loads((self.backup/'result.json').read_text());self.assertTrue(checkpoint['cutoverQualified']);self.assertEqual(checkpoint['phase'],'QUALIFIED_CODE_AND_INPUTS_SERVICE_STOPPED')
+    with sqlite3.connect(self.plan['queue'],timeout=0)as c:c.execute("INSERT INTO events VALUES('fake daemon startup write; no deadlock')")
+  result=m.install_transaction(self.plan,self.backup,control,False)
+  self.assertEqual(result['exit'],0);self.assertTrue(result['writerBarrierReleasedBeforeStart']);self.assertEqual(len(self.rows()[1]),2);self.assertEqual(self.control,['stop','start'])
+ def test_generation_change_after_stop_forbids_mutation_rollback_restart(self):
+  before=self.rows()
+  def control(action):
+   self.control.append(action)
+   if action=='stop':self.fence['generation']=8
+  result=m.install_transaction(self.plan,self.backup,control,False,expected_fence={'boot_id':'fixture-boot','role':'primary','generation':7})
+  self.assertEqual(result['exit'],1);self.assertEqual(result['changed'],[]);self.assertFalse(result['codeRollback']);self.assertEqual(self.control,['stop']);self.assertEqual(self.rows(),before)
+ def test_generation_drift_after_atomic_replace_preserves_partial_code_no_restart(self):
+  actual=m.atomic_copy
+  def copied(src,dst,*args,**kw):
+   actual(src,dst,*args,**kw)
+   if dst==Path(self.plan['installPaths']['launch.py']):self.fence['generation']=8
+  with mock.patch.object(m,'atomic_copy',side_effect=copied):result=m.install_transaction(self.plan,self.backup,self.control.append,False)
+  self.assertEqual(result['exit'],1);self.assertFalse(result['codeRollback']);self.assertEqual(self.control,['stop']);self.assertEqual(sha(Path(self.plan['installPaths']['launch.py'])),self.plan['newPins']['launch.py']);self.assertEqual(sha(Path(self.plan['installPaths']['coordinator.py'])),self.plan['oldPins']['coordinator.py'])
+ def test_new_queued_job_after_cutover_blocks_rollback_not_lost(self):
+  def control(action):
+   self.control.append(action)
+   if action=='start':
+    with sqlite3.connect(self.plan['queue'],timeout=0)as c:c.execute("INSERT INTO jobs VALUES('new accepted after qualified cutover','queued')")
+    raise TimeoutError('fake startup response uncertain')
+  result=m.install_transaction(self.plan,self.backup,control,False)
+  self.assertEqual(result['exit'],1);self.assertFalse(result['codeRollback']);self.assertEqual(self.control,['stop','start']);self.assertIn(('new accepted after qualified cutover','queued'),self.rows()[0]);self.assertFalse(result['queueRestored'])
+ def test_inputs_refusal_before_cutover_rolls_back_baseline_then_releases_for_start(self):
+  with mock.patch.object(m,'verify_inputs',side_effect=ValueError('fixture staging drift')):result=m.install_transaction(self.plan,self.backup,self.control.append,False)
+  self.assertEqual(result['exit'],1);self.assertFalse(result['cutoverQualified']);self.assertTrue(result['codeRollback']);self.assertEqual(self.control,['stop','start'])
+ def test_main_apply_requires_expected_context_before_staging(self):
+  args=['install_native.py','--apply','--lease-id','a'*32]
+  with mock.patch.object(sys,'argv',args),mock.patch.object(m.os,'geteuid',return_value=0),mock.patch.object(m,'check_host',return_value=self.fence),mock.patch.object(m,'preimages'),mock.patch.object(m,'stage_runtime')as stage:
+   with self.assertRaisesRegex(ValueError,'expected_boot_and_generation'):m.main()
+   stage.assert_not_called()
+ def test_main_stale_approved_generation_refused_before_staging(self):
+  args=['install_native.py','--apply','--lease-id','a'*32,'--expected-generation','8','--expected-boot-id','11111111-1111-1111-1111-111111111111']
+  with mock.patch.object(sys,'argv',args),mock.patch.object(m.os,'geteuid',return_value=0),mock.patch.object(m,'check_host',return_value=self.fence),mock.patch.object(m,'preimages'),mock.patch.object(m,'stage_runtime')as stage:
+   with self.assertRaisesRegex(ValueError,'boot_generation_changed'):m.main()
+   stage.assert_not_called()
+
 if __name__=='__main__':unittest.main()

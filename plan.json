@@ -63,7 +63,7 @@
   "sourceRoot": "/srv/admin-v2-coordinator/install-inputs-r0002-native",
   "stageRoot": "/srv/admin-v2-worker/admin-r0002-history-native-qa-20261111",
   "runtimeInputs": "/srv/admin-v2-worker/admin-r0002-runtime-qa-20261111/inputs",
-  "backupRoot": "/srv/admin-v2-coordinator/install-backups-r0002-native",
+  "backupRoot": "/srv/admin-v2-coordinator/install-backups-r0002-native-rev2",
   "stagePins": {
     "functional_smoke.py": "84e8640f8ce5915588d3d15bb67d494bd8478889be0f085d185fe47df29cb7a9",
     "native_pg.py": "f46afdacb85f70b339620f9b025154937e75ead095b1a592f7f0a210f7bcbc34",
@@ -103,5 +103,14 @@
   },
   "governance": "Parent validates existing ledger manifest ACK and exclusive lease before apply. No new authorization system. Script never submits jobs or rearms authority.",
   "observabilityEvidence": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/evidence/santiago-drain-observability-roles-ro-20261111.json",
-  "runtimeTransfer": "Separate approved transport, never RPC; existing shared archive reused unchanged and never copied by installer."
+  "runtimeTransfer": "Separate approved transport, never RPC; existing shared archive reused unchanged and never copied by installer.",
+  "revision": 2,
+  "requiresExpectedBootGeneration": true,
+  "maintenance": {
+    "writerBarrier": "existing SQLite BEGIN IMMEDIATE, no DML",
+    "scope": "RPC SQLite writers during code replacement/rollback only",
+    "cutover": "pins+inputs+fence qualified and checkpointed before release",
+    "releaseBeforeServiceStart": true,
+    "authorityLimit": "cooperative boot/generation checks; not a general HA or root filesystem lock"
+  }
 }

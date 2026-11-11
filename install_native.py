@@ -16,7 +16,7 @@ import stat
 import subprocess
 import tempfile
 
-PLAN_SHA = "9882daee4e5f9b2465091a519fb5acb2b44d0370b7d60f26d360e56845ab80b2"
+PLAN_SHA = "f46d9b59a7f98aff85d94c90658acbc2303d58f5dd6bb9fb387f42c4472df3ee"
 SERVICE = "admin-v2-coordinator.service"
 TERMINAL = {"completed", "failed", "interrupted", "canceled"}
 
@@ -104,10 +104,40 @@ def verify_worker_parent(path: Path,expected: dict) -> None:
     worker=path.stat()
     if (worker.st_uid,worker.st_gid,stat.S_IMODE(worker.st_mode))!=(expected['uid'],expected['gid'],expected['mode']):raise ValueError('worker_parent_changed_do_not_chmod')
 
-def check_host(plan: dict,allow_inactive: bool=False) -> str:
+def read_fence(plan: dict) -> dict:
     boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
-    a=json.loads(Path(plan['authority']).read_text())
-    if a.get('role')!='primary' or a.get('armed_boot_id')!=boot or type(a.get('generation'))is not int or a['generation']<1:raise ValueError('authority_not_current_primary')
+    path=Path(plan['authority'])
+    if path.resolve()!=path:raise ValueError('authority_not_canonical')
+    digest(path);value=json.loads(path.read_text())
+    if value.get('role')!='primary' or value.get('armed_boot_id')!=boot or type(value.get('generation'))is not int or value['generation']<1:raise ValueError('authority_not_current_primary')
+    return {'boot_id':boot,'role':'primary','generation':value['generation']}
+
+def assert_fence(plan: dict,expected: dict) -> None:
+    if read_fence(plan)!=expected:raise ValueError('approved_boot_generation_changed')
+
+class QueueWriterBarrier:
+    """Existing SQLite writer lock, no DML. Not an authority/filesystem/HA lock."""
+    def __init__(self,path: Path):self.path=path;self.db=None;self.identity=None
+    def acquire(self):
+        if self.db is not None:self.assert_held();return
+        if self.path.resolve()!=self.path:raise ValueError('queue_path_not_canonical')
+        st=self.path.stat();self.identity=(st.st_dev,st.st_ino)
+        if not stat.S_ISREG(st.st_mode) or st.st_nlink!=1:raise ValueError('queue_regular_single_link')
+        db=sqlite3.connect(self.path.as_uri()+'?mode=rw',uri=True,timeout=3,isolation_level=None)
+        try:db.execute('PRAGMA busy_timeout=3000');db.execute('BEGIN IMMEDIATE')
+        except BaseException:db.close();raise
+        self.db=db;self.assert_held()
+    def assert_held(self):
+        st=self.path.stat()
+        if self.db is None or not self.db.in_transaction or (st.st_dev,st.st_ino)!=self.identity:raise ValueError('queue_writer_exclusion_lost')
+    def release(self):
+        if self.db is None:return
+        try:self.db.rollback()
+        finally:self.db.close();self.db=None
+
+def check_host(plan: dict,allow_inactive: bool=False,*,expected_fence: dict|None=None,require_idle: bool=True) -> dict:
+    fence=read_fence(plan)
+    if expected_fence is not None:assert_fence(plan,expected_fence)
     for key in ['coordinator','worker']:
         e=plan['roles'][key];actual=pwd.getpwnam(e['name'])
         if actual.pw_uid!=e['uid'] or actual.pw_gid!=e['gid']:raise ValueError('role_uid_gid_changed')
@@ -121,7 +151,9 @@ def check_host(plan: dict,allow_inactive: bool=False) -> str:
     for name,want in plan['pgBinaryPins'].items():
         tool=Path(plan['pgBinRoot'])/name;meta=tool.lstat()
         if not stat.S_ISREG(meta.st_mode) or (meta.st_uid,meta.st_gid,stat.S_IMODE(meta.st_mode))!=(0,0,0o755) or digest(tool)!=want:raise ValueError('pg_binary_changed:'+name)
-    quiescent(plan);return boot
+    if require_idle:quiescent(plan)
+    assert_fence(plan,fence)
+    return fence
 
 def verify_harness(plan: dict, dest: Path, uid: int) -> None:
     private_dir(dest,uid)
@@ -229,16 +261,27 @@ def quiescent(plan: dict, stopped: bool=False) -> None:
     verify_preserved(plan)
 
 
-def install_transaction(plan: dict,backup: Path,control=service,owners: bool=True) -> dict:
-    before=preimages(plan);queue=Path(plan['queue']);quiescent(plan)
+def verify_installed(plan: dict) -> None:
+    for name,path in plan['installPaths'].items():
+        if digest(Path(path))!=plan['newPins'][name]:raise ValueError('installed_hash_changed:'+name)
+    verify_preserved(plan)
+
+def checkpoint(backup: Path,result: dict) -> None:
+    path=backup/'result.json';path.write_text(json.dumps(result,indent=2)+'\n');path.chmod(0o600)
+
+def install_transaction(plan: dict,backup: Path,control=service,owners: bool=True,*,expected_fence: dict|None=None) -> dict:
+    expected=read_fence(plan) if expected_fence is None else expected_fence
+    assert_fence(plan,expected);before=preimages(plan);queue=Path(plan['queue']);quiescent(plan)
     if backup.exists() or backup.is_symlink():raise ValueError('checkpoint_exists_no_replay')
     create_private_backup_root(backup,os.getuid())
-    stopped=False;changed=[];safe_restart=True
-    result={'queueRestored':False,'changed':changed,'exit':1,'codeRollback':False}
+    barrier=QueueWriterBarrier(queue);stop_requested=False;stop_observed=False;changed=[];safe_restart=False
+    result={'queueRestored':False,'changed':changed,'exit':1,'codeRollback':False,'expectedFence':expected,'cutoverQualified':False,'writerBarrierReleasedBeforeStart':False,'stopRequested':False,'stopObserved':False}
     try:
-        control('stop');stopped=True
-        # Recheck after stopping dispatch. A queued/running job aborts without deleting it.
-        quiescent(plan,True);preimages(plan)
+        barrier.acquire();barrier.assert_held();assert_fence(plan,expected);quiescent(plan)
+        stop_requested=True;result['stopRequested']=True
+        control('stop')
+        quiescent(plan,True);stop_observed=True;result['stopObserved']=True
+        barrier.assert_held();assert_fence(plan,expected);preimages(plan)
         backup_queue(queue,backup/'queue.sqlite')
         (backup/'preimages.json').write_text(json.dumps(before,indent=2)+'\n');(backup/'preimages.json').chmod(0o600)
         for name,meta in before.items():
@@ -246,24 +289,43 @@ def install_transaction(plan: dict,backup: Path,control=service,owners: bool=Tru
                 atomic_copy(Path(plan['installPaths'][name]),backup/name,0o600)
                 if digest(backup/name)!=meta['sha256']:raise ValueError('backup_preimage_changed')
         for name in plan['installOrder']:
+            barrier.assert_held();assert_fence(plan,expected)
             source=Path(plan['sourceRoot'])/'code'/name;target=Path(plan['installPaths'][name])
             if digest(source)!=plan['newPins'][name]:raise ValueError('source_changed_during_install')
+            meta=before[name]
+            if meta['absent']:
+                if target.exists() or target.is_symlink():raise ValueError('foreign_target_appeared:'+name)
+            elif digest(target)!=meta['sha256']:raise ValueError('foreign_target_changed_before_replace:'+name)
             changed.append(name)
             atomic_copy(source,target,0o644 if name=='history_native_profile.py' else 0o755,0 if owners else None,0 if owners else None)
             if digest(target)!=plan['newPins'][name]:raise ValueError('installed_hash_mismatch')
-        quiescent(plan,True);control('start');stopped=False;result['exit']=0
+            assert_fence(plan,expected)
+        quiescent(plan,True);barrier.assert_held();assert_fence(plan,expected);verify_installed(plan);verify_inputs(plan)
+        result['cutoverQualified']=True;result['phase']='QUALIFIED_CODE_AND_INPUTS_SERVICE_STOPPED'
+        checkpoint(backup,result)
+        # Deliberate cutover: admission may proceed only after complete code/input qualification.
+        # Never await startup/health while holding a DB write lock: daemon startup may write SQLite.
+        barrier.release();result['writerBarrierReleasedBeforeStart']=True
+        assert_fence(plan,expected);result['startRequested']=True;control('start')
+        assert_fence(plan,expected);verify_installed(plan);result['exit']=0;result['phase']='START_RETURNED_POSTCHECK_PENDING'
     except BaseException as e:
         if signal.getsignal(signal.SIGTERM)==cancel_install:signal.signal(signal.SIGTERM,signal.SIG_IGN)
         result['error']=type(e).__name__+':'+str(e)
-        # A start may have succeeded despite a lost response. Never roll code back
-        # until service and all managed jobs are proved stopped/drained again.
-        try:quiescent(plan,True)
+        try:
+            # Authority drift forbids rollback writes and automatic restart under a stale approval.
+            assert_fence(plan,expected)
+            barrier.acquire();barrier.assert_held()
+            if stop_requested:
+                quiescent(plan,True);stop_observed=True;result['stopObserved']=True
+            else:raise ValueError('stop_never_requested_no_restart')
+            assert_fence(plan,expected);safe_restart=True
         except BaseException as drain_error:
-            safe_restart=False;result['rollbackError']='quiescence_unproved_preserve_code:'+str(drain_error)
+            safe_restart=False;result['rollbackError']='fence_or_quiescence_unproved_preserve_code:'+str(drain_error)
         if safe_restart:
             for name in reversed(changed):
                 target=Path(plan['installPaths'][name]);meta=before[name]
                 try:
+                    barrier.assert_held();assert_fence(plan,expected)
                     if not target.exists() and not target.is_symlink() and meta['absent']:continue
                     current=digest(target)
                     if not meta['absent'] and current==meta['sha256']:continue
@@ -272,42 +334,49 @@ def install_transaction(plan: dict,backup: Path,control=service,owners: bool=Tru
                     else:
                         if digest(backup/name)!=meta['sha256']:raise ValueError('backup_preimage_changed:'+name)
                         atomic_copy(backup/name,target,meta['mode'],meta['uid'] if owners else None,meta['gid'] if owners else None)
+                    assert_fence(plan,expected)
                 except BaseException as rollback_error:
                     safe_restart=False;result['rollbackError']=str(rollback_error)
             if safe_restart:
-                try:preimages(plan);verify_preserved(plan)
+                try:barrier.assert_held();assert_fence(plan,expected);preimages(plan);verify_preserved(plan)
                 except BaseException as changed_error:
-                    safe_restart=False;result['rollbackError']='preimages_changed_do_not_restart:'+str(changed_error)
+                    safe_restart=False;result['rollbackError']='preimages_or_fence_changed_do_not_restart:'+str(changed_error)
         result['codeRollback']=safe_restart
     finally:
-        if stopped and safe_restart:
-            try:control('start')
-            except Exception as e:result['restartError']=type(e).__name__+':'+str(e)
-        (backup/'result.json').write_text(json.dumps(result,indent=2)+'\n');(backup/'result.json').chmod(0o600)
+        # Release even on failure. Only own SQLite transaction is rolled back; NO queue snapshot restore.
+        barrier.release()
+        if result['exit']!=0 and stop_requested and stop_observed and safe_restart:
+            try:
+                assert_fence(plan,expected);result['recoveryStartRequested']=True;control('start');result['recoveryStartReturned']=True
+            except BaseException as e:result['restartError']=type(e).__name__+':'+str(e)
+        checkpoint(backup,result)
     return result
 
 def cancel_install(signum,frame):raise KeyboardInterrupt('operator canceled')
 
 def main() -> int:
-    parser=argparse.ArgumentParser();g=parser.add_mutually_exclusive_group();g.add_argument('--dry-run',action='store_true');g.add_argument('--check',action='store_true');g.add_argument('--apply',action='store_true');parser.add_argument('--lease-id');args=parser.parse_args();plan=load_plan()
+    parser=argparse.ArgumentParser();g=parser.add_mutually_exclusive_group();g.add_argument('--dry-run',action='store_true');g.add_argument('--check',action='store_true');g.add_argument('--apply',action='store_true');parser.add_argument('--lease-id');parser.add_argument('--expected-generation',type=int);parser.add_argument('--expected-boot-id');args=parser.parse_args();plan=load_plan()
     if not args.apply and not args.check:
         print(json.dumps({'mode':'DRY_RUN','mutations':False,'plan':plan,'futureSubmitOnlyAfterInstallVerification':{'action':'submit','id':'PARENT_MUST_RESERVE_NEW_JOB_ID','kind':plan['kind'],'source_commit':plan['applicationSourceCommit']}},indent=2));return 0
     if args.apply and os.geteuid()!=0:raise PermissionError('root_required_no_sudo_escalation_in_script')
-    boot=check_host(plan);preimages(plan);verify_inputs(plan)
-    if args.check:print(json.dumps({'mode':'READ_ONLY_CHECK','hostPinsAndQueueValid':True,'applyAuthorized':False}));return 0
+    observed=check_host(plan);preimages(plan);verify_inputs(plan)
+    if args.check:print(json.dumps({'mode':'READ_ONLY_CHECK','hostPinsAndQueueValid':True,'applyAuthorized':False,'observedFence':observed}));return 0
     if not isinstance(args.lease_id,str) or not re.fullmatch('[a-f0-9]{32}',args.lease_id):raise ValueError('existing_lease_id_required_for_checkpoint_name')
+    if type(args.expected_generation)is not int or args.expected_generation<1 or not isinstance(args.expected_boot_id,str) or not re.fullmatch('[a-f0-9-]{36}',args.expected_boot_id):raise ValueError('expected_boot_and_generation_required_from_existing_ACK')
+    expected={'boot_id':args.expected_boot_id,'role':'primary','generation':args.expected_generation}
+    assert_fence(plan,expected)
     # Parent has already verified ACK+lease in the existing ledger. This does not create or grant authorization.
     signal.signal(signal.SIGTERM,cancel_install)
     stage_runtime(plan,args.lease_id)
-    check_host(plan)
+    check_host(plan,expected_fence=expected)
     base=Path(plan['backupRoot']);create_private_backup_root(base,0)
-    result=install_transaction(plan,base/args.lease_id)
+    result=install_transaction(plan,base/args.lease_id,expected_fence=expected)
     if result['exit']==0:
         try:
-            check_host(plan)
+            check_host(plan,expected_fence=expected,require_idle=False)
             for name,path in plan['installPaths'].items():
                 if digest(Path(path))!=plan['newPins'][name]:raise ValueError('post_install_hash')
-            result['postInstallVerified']=True
+            result['postInstallVerified']=True;result['phase']='POST_START_HOST_AND_CODE_VERIFIED_ADMISSION_OPEN'
         except Exception as e:
             result['exit']=1;result['postInstallVerified']=False;result['postInstallError']=type(e).__name__+':'+str(e)
             # The restarted service could have accepted a job; never roll the queue/code back blindly.

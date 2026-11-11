@@ -6,3 +6,5 @@ __pycache__/
 *.log
 *.bundle
 *.tar*
+
+active-lease.json
