@@ -1,0 +1,40 @@
+{
+  "classification": "PURE_MOCKS_NO_APP_PG_DOCKER_CHROME",
+  "pythonTestsRun": 35,
+  "nodeTestsRun": 27,
+  "unchangedDockerControllerTestsInherited": 16,
+  "commands": [
+    {
+      "command": [
+        "/usr/bin/python3",
+        "-m",
+        "unittest",
+        "-v",
+        "test_own",
+        "test_infra_port",
+        "test_observation_gate",
+        "test_history_diagnostic_gate",
+        "test_finished_gate"
+      ],
+      "exit": 0,
+      "TMPDIR": null,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "30c8b063dbf0e2a16eab850b0bacf023cd1b2a0d25073d6d03f6cfb2a28ced77"
+    },
+    {
+      "command": [
+        "/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node",
+        "--test",
+        "own-browser.test.cjs",
+        "observation-v2.test.cjs",
+        "history-diagnostic.test.cjs",
+        "finished-diagnostic.test.cjs"
+      ],
+      "exit": 0,
+      "TMPDIR": "/run/user/1000",
+      "stdoutSha256": "d2034379e429be666e4329a63a742adeb9fc34368d7c3ae321caf8f9330c2ecb",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "exit": 0
+}

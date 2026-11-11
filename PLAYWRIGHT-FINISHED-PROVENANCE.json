@@ -1,0 +1,10 @@
+{
+  "classification": "LOCAL_INSTALLED_PLAYWRIGHT_FINISHED_IMPLEMENTATION_READ_ONLY",
+  "files": {
+    "/home/barre/pdf_temp/scribdl-py/venv/lib/python3.12/site-packages/playwright/driver/package/lib/client/network.js": "385cd7a58fea3cf46d82533b7c041eee41c903cf9179a810da11f4953df4d9e3",
+    "/home/barre/pdf_temp/scribdl-py/venv/lib/python3.12/site-packages/playwright/driver/package/lib/client/browserContext.js": "6ea97975a148f6c5b8706d9525bf2a665494091558dc1497e96373c16537613b"
+  },
+  "networkLines": "543-545: finished races targetClosedScope against _finishedPromise without own deadline",
+  "contextLines": "190-200: requestFinished event resolves response._finishedPromise(null)",
+  "conclusion": "Local API explains unbounded wait surface only; does not establish why any event was absent or blame app/Chromium."
+}

@@ -1,5 +1,5 @@
 {
-  "classification": "R14_HISTORY_DIAGNOSTIC_V3_PREPARATION_AFTER_SECOND_PRESERVED_FAILURE",
+  "classification": "R14_BOUNDED_FINISHED_DIAGNOSTIC_V4_PREPARATION_AFTER_THIRD_PRESERVED_FAILURE",
   "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "derivedControllerR13Commit": "53accbc147d257ad64ea53f14a46c004c76944a0",
   "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
@@ -30,8 +30,17 @@
   "observationV2Exit": 1,
   "observationV2PartialUiChecks": 6,
   "observationV2FailureReceiptSha256": "114aa409203c74d3621047cf8c3399d4368b9fa1541551debf0fb9c924a126a3",
-  "historyDiagnosticV3ActuallyExecuted": false,
+  "historyDiagnosticV3ActuallyExecuted": true,
   "historyDiagnosticAuxiliaryGetCount": 1,
   "historyDiagnosticIsUiProof": false,
-  "mutableLatestRunExcludedAndPreserved": true
+  "mutableLatestRunExcludedAndPreserved": true,
+  "historyDiagnosticV3Exit": 1,
+  "historyDiagnosticV3PartialUiChecks": 7,
+  "historyDiagnosticV3FailureReceiptSha256": "02dc1cb92c7ece01a2088618dcbcec91d2427e43cab9cd9913d467a9e51f513c",
+  "finishedDiagnosticV4ActuallyExecuted": false,
+  "finishedTimeoutMs": 9000,
+  "timeoutAlwaysFailsUiQualification": true,
+  "affectedPythonTestsRun": 35,
+  "nodePureTestsRun": 27,
+  "byteEquivalentControllerTestsInherited": 16
 }

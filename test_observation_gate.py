@@ -33,14 +33,14 @@ class ObservationGateTests(unittest.TestCase):
  def test_marker_is_specific_exclusive_and_preserves_first_failure(self):
   with tempfile.TemporaryDirectory(dir=ROOT/'mock-proof')as t:
    root=Path(t);(root/'execution.started').write_text('PRESERVE-FIRST-FAILURE');(root/'config.json').write_text('{"expected_cgroup":"/mock"}');(root/'local-manifest.json').write_text('{"files":{}}');sha=hashlib.sha256((root/'local-manifest.json').read_bytes()).hexdigest()
-   with mock.patch.object(c,'ROOT',root),mock.patch.object(c,'CONFIG',root/'config.json'),mock.patch.object(c,'live_context'),mock.patch.object(c,'verify_history_diagnostic_v3_previous_attempt',return_value={'failureReceiptSha256':'a'*64,'oldMarkerSha256':'b'*64}),mock.patch.dict(os.environ,{'LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256':sha}):
-    c.verify_local_manifest();self.assertTrue((root/'execution.history-diagnostic-v3.started').exists())
+   with mock.patch.object(c,'ROOT',root),mock.patch.object(c,'CONFIG',root/'config.json'),mock.patch.object(c,'live_context'),mock.patch.object(c,'verify_finished_diagnostic_v4_previous_attempt',return_value={'failureReceiptSha256':'a'*64,'oldMarkerSha256':'b'*64}),mock.patch.dict(os.environ,{'LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256':sha}):
+    c.verify_local_manifest();self.assertTrue((root/'execution.finished-diagnostic-v4.started').exists())
     with self.assertRaises(FileExistsError):c.verify_local_manifest()
    self.assertEqual((root/'execution.started').read_text(),'PRESERVE-FIRST-FAILURE')
  def test_failed_gate_cannot_create_new_marker(self):
   with tempfile.TemporaryDirectory(dir=ROOT/'mock-proof')as t:
    root=Path(t);(root/'config.json').write_text('{"expected_cgroup":"/mock"}');(root/'local-manifest.json').write_text('{"files":{}}');sha=hashlib.sha256((root/'local-manifest.json').read_bytes()).hexdigest()
-   with mock.patch.object(c,'ROOT',root),mock.patch.object(c,'CONFIG',root/'config.json'),mock.patch.object(c,'live_context'),mock.patch.object(c,'verify_history_diagnostic_v3_previous_attempt',side_effect=ValueError('no proof')),mock.patch.dict(os.environ,{'LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256':sha}):
+   with mock.patch.object(c,'ROOT',root),mock.patch.object(c,'CONFIG',root/'config.json'),mock.patch.object(c,'live_context'),mock.patch.object(c,'verify_finished_diagnostic_v4_previous_attempt',side_effect=ValueError('no proof')),mock.patch.dict(os.environ,{'LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256':sha}):
     with self.assertRaises(ValueError):c.verify_local_manifest()
-   self.assertFalse((root/'execution.history-diagnostic-v3.started').exists())
+   self.assertFalse((root/'execution.finished-diagnostic-v4.started').exists())
 if __name__=='__main__':unittest.main()

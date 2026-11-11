@@ -3,7 +3,7 @@ from pathlib import Path
 import os,json,stat,hashlib,re,subprocess,signal,time
 ROOT=Path('/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111')
 DRIVER=ROOT/'own-browser.cjs'
-DRIVER_SHA='1a7c3740e08baba90f943c3b3b904825a7a4e6b28ad3c1a3bed15bb9af9c553c'
+DRIVER_SHA='1a9756a4d78f6c8a5d04bec7f0df1f3a7ee9db368be48c1f6d4ceb701dbef87f'
 NODE_SHA='b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
 UNIT='peticao-r0014-own-document-browser-qa-20261111.service'
 SOURCE='f55595cd348c23ffe559dba2de9150259db9f1e7'
@@ -74,7 +74,7 @@ def validate_result(run,value,generated):
  if [(v.get('name'),v.get('passed'))for v in value.get('checks',[])]!=[(n,True)for n in EXPECTED_CHECKS]:raise BrowserHookError('exact13 browser checks')
  if any(value.get(n)!=[]for n in ['blocked','pageErrors','consoleErrors']):raise BrowserHookError('unexpected browser requests or errors')
  observations=value.get('getObservations',[])
- if [v.get('phase')for v in observations]!=['receipt_inventory_GET','manual_own_recovery_GET','artifact_inventory_GET','receipt_inventory_GET','manual_own_recovery_GET'] or any(v.get('status')!=200 or v.get('finishedError')is not None or v.get('requestFailed')is not None or v.get('passed')is not True for v in observations):raise BrowserHookError('all five GET observations must finish and commit valid UI')
+ if [v.get('phase')for v in observations]!=['receipt_inventory_GET','manual_own_recovery_GET','artifact_inventory_GET','receipt_inventory_GET','manual_own_recovery_GET'] or any(v.get('status')!=200 or v.get('finishedResolved')is not True or v.get('finishedTimedOut')is not False or v.get('finishedError')is not None or v.get('requestFailed')is not None or v.get('passed')is not True for v in observations):raise BrowserHookError('all five GET observations must finish and commit valid UI')
  if [v['path']for v in value['requests']if v['method']=='POST']!=['/api/admin/presidente/documentos-proprios']:raise BrowserHookError('one explicit own POST only')
  a=generated['artifact']
  if value.get('artifactId')!=a['artifactId'] or value.get('requestId')!=a['requestId']:raise BrowserHookError('same exact immutable artifact request')

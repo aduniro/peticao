@@ -23,7 +23,7 @@ class InfraPort(unittest.TestCase):
   with patch.dict(smoke.CONFIG,{'infra_reviewed':False},clear=True):
    with self.assertRaisesRegex(RuntimeError,'blocked pending reviewed'):
     smoke.main()
-  self.assertFalse((ROOT/'execution.history-diagnostic-v3.started').exists())
+  self.assertFalse((ROOT/'execution.finished-diagnostic-v4.started').exists())
   tree=ast.parse((ROOT/'functional_smoke.py').read_text());self.assertIsInstance(tree,ast.Module)
  def test_activation_is_bound_to_accepted_run_and_independent_review(self):
   self.assertIs(json.loads((ROOT/'config.json').read_text())['infra_reviewed'],True)

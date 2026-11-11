@@ -1,0 +1,12 @@
+{
+  "classification": "INHERIT_UNCHANGED_16_DOCKER_CONTROLLER_MOCKS_NOT_NEW_RUN",
+  "baselineCommit": "af2e4f54469b18eb1a644a76987c281084bd17a4",
+  "DockerPGClassSha256": "d9ca352ef331746f3c7ded9ca9b55521f61d7f006e794e59570f4d465d4f88b5",
+  "dockerControlSha256": "c2168ca101b4ca3eb772993d9735b594db6b225d779a1d949b1137618a94f042",
+  "testFileSha256": "85d822f13286d93982a73929792bda812d1eb92aa1b49a22f2e1eb373861e5cf",
+  "priorSuiteResultSha256": "89b71c24682ea285aa29c81b12c9e8d032af2b83ad396a78429906bc5061a52f",
+  "priorSuitePython47Includes16ControllerCases": true,
+  "classBytesIdentical": true,
+  "realDockerCalled": false,
+  "note": "Aggregate mock attempted45s then15s; partialoutput stopped at foreign-label mock. Isolated case passed4.082s; faulthandler at4s showed directory os.fsync in unchanged record_operation:124. Environmental mocked unit I/O wait, no application inference or durability weakening."
+}
