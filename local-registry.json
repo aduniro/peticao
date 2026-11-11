@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "kind": "govbr-route-gates-native-pg17-r0003-v1",
+  "source_commit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
+  "backend_source_commit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+  "source_archive_sha256": "f2440846c29ef84613bc4e005d7acaebf70eb1643816c025c229aa14dff545eb",
+  "source_manifest_sha256": "63f1354863106399306f9d9ef10380c71dac82ca7f7dc4861bea0911b303924e",
+  "devdeps_archive_sha256": "ebf056a98596e670bf68ee53ea4daeb45a9fcc7e302ab0bf4bd6a6ff72f99373",
+  "devdeps_manifest_sha256": "db93db3e4c00f4a08d21aa1a775ef180a2e7a5f5e7dbbbbb1b6d143ab84b2f70",
+  "production_archive_sha256": "2952a2b0d7ffb06b553caa03fdb3d8546981a96118a1cc9aa0ca47da4adc8ee0",
+  "production_manifest_sha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
+  "postgres_version_num": "170011",
+  "db_port": 55487,
+  "resources": {
+    "cpu_cores": 2,
+    "memory_bytes": 3221225472,
+    "pids_max": 256,
+    "soft_seconds": 600,
+    "hard_seconds": 720,
+    "test_timeout_seconds": 480
+  },
+  "test_file": "src/lib/batch-document-history.test.ts",
+  "test_pattern": ".*",
+  "expected_cases": [
+    "histórico é append-only e download preserva bytes/hash com auditoria e acesso Total",
+    "upload preserva original e variantes legadas sem fabricar autoria; versões novas não apagam anteriores",
+    "captura concorrente tem ordinais únicos; observação repetida não fabrica versões",
+    "auditoria falhando reverte versões e troca de bytes; download também falha fechado",
+    "preparo grava os bytes publicados e autoria conhecida na mesma transação",
+    "rotas históricas exigem sessão/stepup e retornam somente variante selecionada"
+  ],
+  "node_version": "20.19.2",
+  "tsx_version": "4.23.15",
+  "esbuild_version": "0.28.2",
+  "integration_state": "PRIVATE_DRAFT_NOT_REGISTERED_NOT_EXECUTED",
+  "node_path": "/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node",
+  "local_mock_node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+  "classification": "LOCAL_CORE_HISTORY6_NEW_PG_PROOF_AND8_VIEW_INHERITED",
+  "production_archive_path": "/mnt/dev/.peticao-r0002-production-profile-20261111/export/runtime.tar",
+  "artifacts_path": "/mnt/apps/peticao-final/_ops/r0003-govbr-route-nativepg-harness-20261111/artifacts",
+  "harness_commit": "58cb9ce6d90cfb5f8b7fe456810948a4c99bb6f9",
+  "docker_image": "sha256:665dc7b37ac52a17e298511414c21d23ffa4e6a6ef6225b3e5d59c7afb35e994",
+  "reused_source": "/mnt/dev/.peticao-r0003-local-pg17-qa-20261111/attempt-2/runs/71931338c422/source",
+  "f555_history_pins": {
+    "site/src/lib/batch-document-history.test.ts": "0311731bc6f50679214a8a883e18b161f5499fd6394a540e821f468bf7f21322",
+    "site/src/lib/document-history-view.test.ts": "2276d0dc529ba10190260edb1a86c2629bb72e9c8726f1c04f4ce721ea950da8",
+    "site/src/lib/batch-document-history.ts": "7cf553d8a2b0666d4a553ed6f3984a79466512115ef371b57294a79744d05275",
+    "site/src/lib/document-history-view.ts": "a40e8c70ac7bed3c5d1d9af6ae86e8b9f7e9a14478dc30218847bfb071e9eb19",
+    "site/src/components/admin/HistoricoDocumento.tsx": "d4ca209ee1bae4fe3021b2834e417dc3a546419d7f0691419f9e857548127d9f",
+    "site/src/lib/batches.ts": "69d47cbf7c4f3bb3453a6ef8df6c838aefd90d5cf6613040a4ead388db6175d2",
+    "site/src/lib/db.ts": "dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824",
+    "site/src/lib/batch-a1-schema.ts": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
+    "site/src/lib/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
+    "site/src/lib/president-own-a1-schema.ts": "24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408"
+  },
+  "test_suites": [
+    {
+      "test_file": "src/lib/batch-document-history.test.ts",
+      "test_pattern": ".*",
+      "expected_cases": [
+        "histórico é append-only e download preserva bytes/hash com auditoria e acesso Total",
+        "upload preserva original e variantes legadas sem fabricar autoria; versões novas não apagam anteriores",
+        "captura concorrente tem ordinais únicos; observação repetida não fabrica versões",
+        "auditoria falhando reverte versões e troca de bytes; download também falha fechado",
+        "preparo grava os bytes publicados e autoria conhecida na mesma transação",
+        "rotas históricas exigem sessão/stepup e retornam somente variante selecionada"
+      ]
+    }
+  ],
+  "inherited_view": {
+    "tests": 8,
+    "proof": "/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/president-native-1794306537726264712",
+    "sourceByteIdenticalToF555": true,
+    "rerunPlanned": false
+  }
+}

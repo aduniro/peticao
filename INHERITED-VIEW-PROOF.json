@@ -1,0 +1,23 @@
+{
+  "classification": "BYTE_IDENTICAL_PRIOR_VIEW_TESTS_INHERITED_NOT_RERUN",
+  "proofRoot": "/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/president-native-1794306537726264712",
+  "sourceCommit": "9811f81225486e6d7dfe4e96cf88d8e4e91cce1e",
+  "equivalentTo": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "tests": 8,
+  "tapRange": [
+    72,
+    79
+  ],
+  "exit": 0,
+  "sourceStable": true,
+  "filePins": {
+    "site/src/lib/document-history-view.ts": "a40e8c70ac7bed3c5d1d9af6ae86e8b9f7e9a14478dc30218847bfb071e9eb19",
+    "site/src/lib/document-history-view.test.ts": "2276d0dc529ba10190260edb1a86c2629bb72e9c8726f1c04f4ce721ea950da8",
+    "site/src/components/admin/HistoricoDocumento.tsx": "d4ca209ee1bae4fe3021b2834e417dc3a546419d7f0691419f9e857548127d9f"
+  },
+  "evidencePins": {
+    "result.json": "7681d33635f27c360be9f566441d7c6f79e0ca5c5aa1e657ce55024904b72429",
+    "source-manifest.json": "7b9e983bc18a6c83b34d9d18aa913be95607c820a683840f0013678d58b07db2",
+    "validation.log": "6328d814793988739dd77e257aa8526a832e5e18b1b0121d4a9297ba1ba198ed"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "classification": "LOCAL_PREPARATION_ONLY",
+  "baseRunner": "/mnt/dev/.peticao-r0003-local-pg17-qa-20261111/attempt-2/local_runner.py",
+  "baseRunnerSha256": "15cab23f15137e0ff26dd5f376ac902dc907ec33a60e84c3ca2c171839cf5fc3",
+  "sourceCommit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
+  "f555": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "gitSiteDiff": [
+    "site/src/lib/petition-base-route.test.ts"
+  ],
+  "coreHistorySourceByteIdentical": true,
+  "stagedSourceFullInventoryWillBeVerifiedBeforePg": true,
+  "newLargeSourceCopy": false,
+  "frozenGuard58cbUnchanged": true
+}
