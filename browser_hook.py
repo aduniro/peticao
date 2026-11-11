@@ -3,7 +3,7 @@ from pathlib import Path
 import os,json,stat,hashlib,re,subprocess,signal,time
 ROOT=Path('/mnt/dev/.peticao-r0006-local-history-browser-qa-20261111')
 DRIVER=ROOT/'history-browser.cjs'
-DRIVER_SHA='f405840d45f9529f0442f8b27606d03c4dae18b26670d098119d311b9180b369'
+DRIVER_SHA='e0a0019d9af52528d574cdcd80d3a5473d75e74fc46ad44afaaf1ed3c0567ffa'
 NODE_SHA='b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
 UNIT='peticao-r0006-local-history-browser-qa-20261111.service'
 SOURCE='f55595cd348c23ffe559dba2de9150259db9f1e7'
@@ -71,6 +71,7 @@ def make_config(run,cookie,fixtures,group):
 def browser_environment(run):
  return {'PATH':'/usr/bin:/bin','HOME':str(run/'empty'),'TMPDIR':str(run/'tmp'),'LANG':'C.UTF-8','PLAYWRIGHT_DISABLE_FORCED_CHROMIUM_PROXIED_LOOPBACK':'1'}
 def validate_result(run,result,fixtures):
+ if result.get('browserTmpRemoved')is not True:raise BrowserHookError('short private Chromium temp must be removed after close')
  if result.get('exit')!=0 or result.get('sourceCommit')!=SOURCE or result.get('syntheticSession')is not True or result.get('stepupSeeded')is not True or result.get('browserLoginUiTested')is not False or result.get('otpFlowTested')is not False or result.get('realCertificateUsed')is not False or result.get('deployment')is not False:raise BrowserHookError('browser result identity/scope/exit')
  if [(v.get('name'),v.get('passed'))for v in result.get('checks',[])]!=[(name,True)for name in EXPECTED_CHECKS]:raise BrowserHookError('exact21 browser checks required')
  for key in ['pageErrors','consoleErrors','externalRequestsBlocked','mutationsBlocked']:
@@ -85,7 +86,7 @@ def validate_result(run,result,fixtures):
   proofs.append({'ordinal':item['ordinal'],'sha256':item['sha256'],'bytes':item['bytes']})
  shot=run/'history-desktop.png'
  if shot.resolve()!=shot or not shot.is_file()or shot.is_symlink()or shot.stat().st_size>16*1024**2 or not shot.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'):raise BrowserHookError('technical browser PNG required')
- return {'passedBrowserChecks':len(EXPECTED_CHECKS),'browserPdfBodiesMatched':True,'browserDownloads':proofs,'screenshotSha256':sha(shot)}
+ return {'browserTmpRemoved':True,'passedBrowserChecks':len(EXPECTED_CHECKS),'browserPdfBodiesMatched':True,'browserDownloads':proofs,'screenshotSha256':sha(shot)}
 
 def run_browser_hook(run,cookie,fixtures,group,node,config,cancellation):
  from local_controller import verify_local_context

@@ -14,7 +14,7 @@ class HookTests(unittest.TestCase):
   for n in [1,2]:
    data=b'%PDF-MOCK-'+str(n).encode();name='version-'+str(n)+'.pdf';(self.run/'pdf-fixtures'/name).write_bytes(data);(self.run/'downloads'/('browser-'+name)).write_bytes(data);self.fixtures.append({'ordinal':n,'id':str(n)*8+'-'+str(n)*4+'-4'+str(n)*3+'-8'+str(n)*3+'-'+str(n)*12,'filename':name,'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data)})
   (self.run/'history-desktop.png').write_bytes(b'\x89PNG\r\n\x1a\nMOCK')
-  self.value={'exit':0,'sourceCommit':b.SOURCE,'syntheticSession':True,'stepupSeeded':True,'browserLoginUiTested':False,'otpFlowTested':False,'realCertificateUsed':False,'deployment':False,'checks':[{'name':name,'passed':True}for name in b.EXPECTED_CHECKS],'pageErrors':[],'consoleErrors':[],'externalRequestsBlocked':[],'mutationsBlocked':[],'requests':[{'method':'GET','path':'/api/admin/lotes/1/versoes/'+v['id']}for v in reversed(self.fixtures)]}
+  self.value={'browserTmpRemoved':True,'exit':0,'sourceCommit':b.SOURCE,'syntheticSession':True,'stepupSeeded':True,'browserLoginUiTested':False,'otpFlowTested':False,'realCertificateUsed':False,'deployment':False,'checks':[{'name':name,'passed':True}for name in b.EXPECTED_CHECKS],'pageErrors':[],'consoleErrors':[],'externalRequestsBlocked':[],'mutationsBlocked':[],'requests':[{'method':'GET','path':'/api/admin/lotes/1/versoes/'+v['id']}for v in reversed(self.fixtures)]}
   self.patches=[mock.patch.object(b,'ROOT',self.root),mock.patch.object(b,'DRIVER',self.driver),mock.patch.object(c,'verify_local_context'),mock.patch.object(b,'group_snapshot',return_value={}),mock.patch.object(b,'process_identity',return_value={'pid':222,'startTicks':'222','pgid':222}),mock.patch.object(b,'cleanup_browser',return_value={'browserProcessesDrained':True,'cleanupActions':[],'wholeUnitDrained':False})]
   for p in self.patches:p.start()
   original=b.sha
@@ -69,6 +69,17 @@ class HookTests(unittest.TestCase):
   for key in ['pageErrors','consoleErrors','externalRequestsBlocked','mutationsBlocked']:
    value={**self.value,key:['MOCK']}
    with self.subTest(key=key),self.assertRaises(b.BrowserHookError):b.validate_result(self.run,value,self.fixtures)
+ def test_short_tmp_cleanup_required_for_success(self):
+  for value in [False,None]:
+   with self.subTest(value=value),self.assertRaises(b.BrowserHookError):b.validate_result(self.run,{**self.value,'browserTmpRemoved':value},self.fixtures)
+ def test_new_static_marker_is_atomic_and_keeps_original(self):
+  root=self.root;original=b'PRESERVED FAILED ATTEMPT';(root/'execution.started').write_bytes(original)
+  (root/'PREVIOUS-ATTEMPT-TERMINAL.json').write_text(json.dumps({'previousOuterExit':1,'previousCleanupComplete':True,'previousCgroupObservedAbsent':True,'originalExecutionMarkerSha256':hashlib.sha256(original).hexdigest()}))
+  manifest={'files':{}};(root/'local-manifest.json').write_text(json.dumps(manifest));pin=hashlib.sha256((root/'local-manifest.json').read_bytes()).hexdigest()
+  with mock.patch.object(c,'ROOT',root),mock.patch.dict(os.environ,LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256=pin):
+   c.verify_local_manifest();self.assertTrue((root/'execution.browser-short-tmp-v2.started').is_file())
+   with self.assertRaises(FileExistsError):c.verify_local_manifest()
+  self.assertEqual((root/'execution.started').read_bytes(),original)
  def test_pdf_drift_rejected(self):
   (self.run/'downloads/browser-version-1.pdf').write_bytes(b'DRIFT')
   with self.assertRaises(b.BrowserHookError):b.validate_result(self.run,self.value,self.fixtures)

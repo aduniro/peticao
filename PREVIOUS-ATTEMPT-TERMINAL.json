@@ -1,0 +1,12 @@
+{
+  "classification": "PREVIOUS_FAILED_ATTEMPT_RECONCILED_NO_GENERIC_REPLAY",
+  "observedAtUtc": "2026-11-11T02:02:04.296465+00:00",
+  "previousReceipt": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0006-authenticated-history-browser-20261111/attempt-1/receipt.json",
+  "previousReceiptSha256": "837cffa418ce886df7ecc1bf26ba001df9f76062cbc47a23c329a35a205346f5",
+  "previousTerminalUnitEvidenceSha256": "cd2974548fa05f5a788e7f9af79aa8e92c14c939909d80c787132f9501996c13",
+  "previousOuterExit": 1,
+  "previousCleanupComplete": true,
+  "previousCgroupObservedAbsent": true,
+  "originalExecutionMarkerSha256": "3a6eb8a58369fca4b6a2c411c0211f7d0a087546bb3d83a47d9e85ac2385ae8a",
+  "nextStaticMarker": "execution.browser-short-tmp-v2.started"
+}

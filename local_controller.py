@@ -35,8 +35,11 @@ def verify_local_manifest(create_intent=True):
  for name,pin in value['files'].items():
   if not name or Path(name).is_absolute()or '..'in Path(name).parts or digest(ROOT/name)!=pin:raise ValueError('LOCAL reviewed file drift')
  if create_intent:
-  with(ROOT/'execution.started').open('x')as out:json.dump({'mode':'LOCAL_ONLY','at':time.time(),'unit':UNIT},out)
-  (ROOT/'execution.started').chmod(0o600)
+  prior=json.loads((ROOT/'PREVIOUS-ATTEMPT-TERMINAL.json').read_text())
+  if prior.get('previousOuterExit')!=1 or prior.get('previousCleanupComplete')is not True or prior.get('previousCgroupObservedAbsent')is not True or digest(ROOT/'execution.started')!=prior.get('originalExecutionMarkerSha256'):raise ValueError('previous failed attempt reconciliation required')
+  marker=ROOT/'execution.browser-short-tmp-v2.started'
+  fd=os.open(marker,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_ONLY_SHORT_TMP_V2','at':time.time(),'unit':UNIT},out)
  return value
 
 def verify_local_context(config):
@@ -111,7 +114,7 @@ ALLOW=['result.json','pid.json','guard.jsonl','source-manifest.json','pg-handsha
 def finalize_local(run,result,group):
  try:
   if result.get('exit')==0:
-   if result.get('browser',{}).get('exit')!=0 or result.get('browser',{}).get('browserProcessesDrained')is not True:raise ValueError('authenticated browser hook required')
+   if result.get('browser',{}).get('exit')!=0 or result.get('browser',{}).get('browserProcessesDrained')is not True or result.get('browser',{}).get('browserTmpRemoved')is not True:raise ValueError('authenticated browser hook required')
    if [(c.get('check'),c.get('status'))for c in result.get('checks',[])]!=EXPECTED_CHECKS or result.get('remainingAppProcesses')or not result.get('postgresCleanup',{}).get('stopped'):raise ValueError('local history gates incomplete')
   path=Path('/sys/fs/cgroup')/group.lstrip('/')/'cgroup.procs';remaining=[int(x)for x in path.read_text().split()if int(x)!=os.getpid()]
   result['remainingLocalCgroupProcesses']=remaining

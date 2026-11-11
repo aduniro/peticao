@@ -10,8 +10,11 @@
   "guardOnlyDifference": "FUNCTIONAL_PGDATA namespace assert now actual container /var/lib/postgresql/data",
   "schemaSourceManifestSha256": "c46b36c4d4a9b31d5b89b8bb2a4c7373370bdf3c6d9281e3ef63ca4b55185a3a",
   "r4LocalBaseManifestSha256": "40c3d148834180de0254e6f90d62b8b5124fa94df7ff356721db976ca11677a2",
-  "driverCommit": "4ab6538490be8c2d35bb268a8f619cb86af24808",
-  "driverSha256": "f405840d45f9529f0442f8b27606d03c4dae18b26670d098119d311b9180b369",
+  "driverCommit": "f0f2f710b40342d550d4b486c831b56e055bf8dc",
+  "driverSha256": "e0a0019d9af52528d574cdcd80d3a5473d75e74fc46ad44afaaf1ed3c0567ffa",
   "browserHookAdded": "after19HTTP before after snapshot; same owner cookie, no additional login or session",
-  "newRuntimeCopied": false
+  "newRuntimeCopied": false,
+  "previousR6FrozenCommit": "cc4d23441d10f2daefbb4dfd46821e095291b1d7",
+  "shortTmpRevision": "v2, child Chromium only; no global TMPDIR or sandbox relaxation",
+  "previousAttemptConfirmedFailedAndCleaned": true
 }
