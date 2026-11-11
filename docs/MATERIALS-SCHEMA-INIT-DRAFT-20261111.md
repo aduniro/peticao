@@ -12,4 +12,6 @@ O DDL preserva versões/recibos e admite reaplicação conforme a bateria Postgr
 
 Esta alteração ainda não foi integrada, aplicada em produção ou validada pelo aplicativo compilado. A prova HTTP anterior continua vinculada à fonte `140ce6b98af23045849335693a82b426fdc9c826`, não a este novo diff. A futura união deve executar a inicialização real sobre um banco fictício inicialmente vazio, repetir o acesso preservando os materiais criados, verificar as tabelas/constraints e testar a flag desligada antes do aceite.
 
+Typecheck transitivo dirigido da alteração `f7759ebb2ed72492895301edec0144b1a91ca8c4`: 506 arquivos de entrada, zero diagnósticos, zero divergências das versões do lock e zero alterações dos arquivos lidos. Evidências em `/mnt/apps/peticao-final/_ops/drafts/materials-schema-init-20261111/.cache/materials-schema-init-validation/result.json` e `/mnt/apps/peticao-final/_ops/drafts/materials-schema-init-20261111/.cache/materials-schema-init-validation/diagnostics.txt`. A verificação não executou banco, aplicativo, HTTP ou build.
+
 Não foram alterados os fluxos bloqueados de envio sem assinatura, editor de Contatos/IA ou preparação R16.
