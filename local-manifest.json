@@ -1,17 +1,25 @@
 {
-  "classification": "R10_PACKAGE_BROWSER_DRAFT_MOCKS_ONLY_NOT_EXECUTED",
+  "classification": "R10_ICON_V2_EXACT_ASSET_CORRECTION_DRAFT_NOT_EXECUTED",
   "files": {
     ".gitignore": "61b3a7ce7f73e51dea5eb339eca40ea4b52ea39dfa35c83e81f974cc71a5e932",
-    "PROVENANCE.json": "f1b881953e664172cb4b64663ce9ae8c35bc7735ee7b9bdd88975e2d33f637ce",
-    "README.md": "35a89c635d78aba47298fe835b049454bf2f4bdf3d5d15fb6161839a7c1bf37d",
+    "ICON-PROVENANCE.json": "ceb864acdb5575d952a07d4a4a4c8a2270bcc2c2123ddd7db54d3d055888cade",
+    "PREVIOUS-ATTEMPT-TERMINAL.json": "d0b965c43453360f07b85f16740ff7600f21d5cc65df359eb972a71623b6e50f",
+    "PROVENANCE.json": "d0482a3e8be8f49a050f53bee6bfe2a20057f38370fb47b4dce052247768ce59",
+    "README.md": "95ee93a841e343a2f46495e27e43af7638aa60bf17e35d6860c59ee91872ce3e",
     "baseline-reconciliation-assertion.txt": "95410c6fc308f55bc92b63d03bb91005db7ac26a69c76605d0aed4796343b798",
-    "browser_hook.py": "8b618833f5b1a1213f471cc25d195d48c68c24ac5acfaca23cdd6a64563c8aaf",
+    "browser_hook.py": "dbdb00d6741e7255274225ef0f85249deb6757cf8da7d32a56aca7b3d52064c3",
     "config.json": "66198d34267d644cbab9151b554cbcba028293dd8f7e70cab992083a51db0d5a",
+    "contracts/compiled__.next__server__app-paths-manifest.json": "9a7659b38d4d070041c04a5d7b3634e96f45add981ca4df1a6b2334599103342",
+    "contracts/compiled__.next__server__app__icon-192.png__route.js": "b0e8252d2db6610a4c7102b54267a206f2e8404ce9e589df045281594074d7f6",
+    "contracts/compiled__.next__server__app__icon-192.png__route.js.nft.json": "b785e110698b0cfeb67877f6cb145f11a20d73ed3e35a231b31678c3c5ad1ee8",
+    "contracts/site__src__app__icon-192.png__route.ts": "4dae1489d82c0e82adef57b6a2ce3cbc3d09deb80533b6aae9c2baab45d0f329",
+    "contracts/site__src__app__layout.tsx": "047e7bf10e16ff06cfeec1e32fbc46ac86173f9037dd8ee1f01581e22b78a6fb",
     "contracts/site__src__lib__batch-package-contract.ts": "e9abb2a24b2ff71b322d7136ea97e6dc8f9d425a4b5bfb1b5d29279db38f29e9",
     "contracts/site__src__lib__batch-package-delivery.test.ts": "2914d71218b245a50a3cb79b5ab99a310fb7ba591dd47d5fc4d42ce1d4a90100",
     "contracts/site__src__lib__batch-package-store.ts": "08538e096a5f3f8d48585428853763fd9c4c4986a0c4a6a4bb065a8c66d21fac",
     "contracts/site__src__lib__batch-reconciliation.ts": "35161273192c5d85c80c10d4d9c2cdb5244cc1580cdad61c775e93cdc0ee4d2a",
     "contracts/site__src__lib__batches.ts": "69d47cbf7c4f3bb3453a6ef8df6c838aefd90d5cf6613040a4ead388db6175d2",
+    "contracts/site__src__lib__card.ts": "8ad19451f162aa4b2ef245fc2734753563114995e728e461172b4ee1e71bb506",
     "contracts/site__src__lib__mail__archive-codec.ts": "7047fddcff6dd34c7a299430418ed632161de2b64ccab647b922bfefc1ac31ec",
     "contracts/site__src__lib__petition-base-validation.ts": "961245be359db02455ef7249c1f9517f513aedcfae9152833480bbb0ae882239",
     "contracts/site__src__lib__signer.ts": "d11fa7d8e82eca0ba93eb061eade0c0c6a7167c86a6f5750095e4fcdad5fad97",
@@ -19,10 +27,12 @@
     "fixture.cjs": "16fda83077a426c62d1fbe471193de21de9b5ed4e6990815f2cb682a92d0ca29",
     "functional-guard.mjs": "3e8293db91c635d2acf45ab9c77b1ec81faacf7843709f57c70798a37c40202d",
     "functional_smoke.py": "d27bf9ecd8d25bce93dce6e439cc707a4d96549ac72c195f4e124951e285b18a",
-    "local_controller.py": "2d4550c4972bdfde8b68fc54b4d3bfcb67177dff8ff310ee79f28dc534a85b2b",
-    "package-browser.cjs": "3e3a48aa14a5e93f6b3938b026bcb8c589ab6cf86362a435d221593b2b1d4860",
+    "icon-v2-policy.test.cjs": "862eda03e021ed9208cd8043b3f915bc8aa9ef94e631078b248fa88473faf837",
+    "local_controller.py": "ba7678d822aa5199765e52b18c0a591c01aea9ca0529e3ac4a3f1f8581135629",
+    "package-browser.cjs": "66459b2f62acdeba20941de44eed66e296c8b6068d2e93ddddda74f327c52198",
     "package-browser.test.cjs": "fec7f2bb49f375c62155d5456d551d3adfc39cb20eb1a4c82b470d163d98659f",
     "package_http.py": "46d0b49bc68e3823dd730407402a6bbc9388169127268231d6bc9dd5b86af31e",
+    "policy-fixtures/baseline-6367-package-browser.cjs": "3e3a48aa14a5e93f6b3938b026bcb8c589ab6cf86362a435d221593b2b1d4860",
     "schema-source-manifest.json": "f7947630d328d92fd372166baeb2ace32ee33149e495c9ff7866d5d075bc6a7e",
     "schema-sources/batch-a1-schema.ts": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
     "schema-sources/batch-package-schema.ts": "7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4",
@@ -34,6 +44,7 @@
     "schema-sources/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
     "seed_contract.cjs": "46457e9f23e4e23671b9a655f7f71ac8d1dd76139da7b07bcae7300ad40ec840",
     "test_browser_hook.py": "50401e41f9a66dfb3c764dad3b1392faf3d789740022d9517829be129e2190e4",
+    "test_icon_v2_gate.py": "2fe03710eae620129c702303c82e1eed48071f2484e2b4dda3f32fcb272d5fcb",
     "test_reconciliation_state.py": "dd90dc85cba97b72f49db8516cfe559dd42ef6c2433629e21277e483ee9eae84"
   },
   "backendCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
@@ -41,7 +52,13 @@
   "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
   "mocks": {
     "nodePolicy": 11,
-    "python": 18
+    "python": 18,
+    "iconV2DirectedNode": 3,
+    "iconV2DirectedPython": 5
   },
-  "realAppPgDockerBrowserHttpExecuted": false
+  "baselineCommit": "6367e742b91b97c115fb79e0e6f1ffc43a4ffad2",
+  "baselineAttempt1Executed": true,
+  "baselineAttempt1Exit": 1,
+  "baselineReceiptSha256": "9592287a94bdcaa04e0bfab471e82f9b3686477e131d7657b1f4ce37e44920af",
+  "revision2RealAppPgDockerBrowserHttpExecuted": false
 }

@@ -1,5 +1,5 @@
 {
-  "classification": "R10_BROWSER_DRAFT_NOT_EXECUTED",
+  "classification": "R10_ICON_V2_PREPARATION_ONLY_AFTER_PRESERVED_FAILED_BASELINE",
   "backendCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "contractSourcePins": {
     "site/src/lib/batches.ts": "69d47cbf7c4f3bb3453a6ef8df6c838aefd90d5cf6613040a4ead388db6175d2",
@@ -17,12 +17,14 @@
   "noNewRuntimeCopy": true,
   "noMountReadOnlyClaim": true,
   "sourceR6Preserved": true,
-  "realAppPgDockerHttpExecuted": false,
   "syntheticSqlCryptographicPreconditionOnly": true,
   "derivedR9Commit": "e450abdd1b80389a2919bbd27bf06fd467ff0585",
   "derivedR6DriverCommit": "f0f2f710b40342d550d4b486c831b56e055bf8dc",
   "R6GetOnlyDriverUnmodified": true,
   "chromeBinarySha256": "481fea1516a1f2b76454664272f12cd9dd1f20117b21e1f1498e08bc7f872c00",
-  "newBrowserDriverSha256": "3e3a48aa14a5e93f6b3938b026bcb8c589ab6cf86362a435d221593b2b1d4860",
-  "realAppPgDockerBrowserHttpExecuted": false
+  "newBrowserDriverSha256": "66459b2f62acdeba20941de44eed66e296c8b6068d2e93ddddda74f327c52198",
+  "baselineAttempt1Executed": true,
+  "baselineAttempt1Exit": 1,
+  "baselineReceiptSha256": "9592287a94bdcaa04e0bfab471e82f9b3686477e131d7657b1f4ce37e44920af",
+  "revision2RealAppPgDockerBrowserHttpExecuted": false
 }

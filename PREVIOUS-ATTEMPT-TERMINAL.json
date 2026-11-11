@@ -1,0 +1,13 @@
+{
+  "classification": "EXPLICIT_TERMINAL_FAILED_ATTEMPT_BEFORE_ICON_V2_ONLY",
+  "receiptPath": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0010-package-browser-20261111/attempt-1/receipt.json",
+  "receiptSha256": "9592287a94bdcaa04e0bfab471e82f9b3686477e131d7657b1f4ce37e44920af",
+  "retainedUnitPath": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0010-package-browser-20261111/attempt-1/retained-unit.json",
+  "retainedUnitSha256": "c4d3c56f6159ad4c085c5976b8514372855ffcdedb8e1ed5b0dfe0c8259401d5",
+  "oldMarkerSha256": "75287359ee53b5ac75b66bc3390a8e2ee6eb51ed56926b91f7188c92b0652464",
+  "oldRun": "/mnt/dev/.peticao-r0010-local-package-browser-qa-20261111/runs/2310073c187d",
+  "oldOuterSha256": "30971836ea1abcd4218b0b2ff71779a939706c2d2c00da05bd930987cdbb22fd",
+  "previousInvocation": "9f31f0157c4745738f72818908631807",
+  "newMarker": "execution.browser-icon-v2.started",
+  "noGenericReplay": true
+}

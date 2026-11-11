@@ -1,0 +1,6 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');const current=require('./package-browser.cjs'),baseline=require('./policy-fixtures/baseline-6367-package-browser.cjs');
+const origin='http://127.0.0.1:31390',cfg={assetPaths:[],packages:[]};
+test('baseline refuses the exact pinned first-party dynamic icon while icon-v2 admits GET and HEAD',()=>{for(const method of ['GET','HEAD']){assert.equal(baseline.classifyRequest(origin+'/icon-192.png',method,null,{},cfg,null),'unreviewed-get');assert.equal(current.classifyRequest(origin+'/icon-192.png',method,null,{},cfg,null),'allowed');}});
+test('query fragment other origin credentials and other icon remain refused',()=>{for(const url of [origin+'/icon-192.png?x=1',origin+'/icon-192.png#x',origin+'/icon-512.png',origin+'/apple-icon.png','http://127.0.0.1:31391/icon-192.png','http://x:y@127.0.0.1:31390/icon-192.png'])assert.ok(!['allowed','allowed-post'].includes(current.classifyRequest(url,'GET',null,{},cfg,null)));});
+test('icon exception never admits POST PUT or DELETE',()=>{for(const method of ['POST','PUT','DELETE'])assert.equal(current.classifyRequest(origin+'/icon-192.png',method,'',{},cfg,null),'mutation');});

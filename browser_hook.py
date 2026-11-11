@@ -3,7 +3,7 @@ from pathlib import Path
 import os,json,stat,hashlib,re,subprocess,signal,time
 ROOT=Path('/mnt/dev/.peticao-r0010-local-package-browser-qa-20261111')
 DRIVER=ROOT/'package-browser.cjs'
-DRIVER_SHA='3e3a48aa14a5e93f6b3938b026bcb8c589ab6cf86362a435d221593b2b1d4860'
+DRIVER_SHA='66459b2f62acdeba20941de44eed66e296c8b6068d2e93ddddda74f327c52198'
 NODE_SHA='b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
 UNIT='peticao-r0010-local-package-browser-qa-20261111.service'
 SOURCE='f55595cd348c23ffe559dba2de9150259db9f1e7'

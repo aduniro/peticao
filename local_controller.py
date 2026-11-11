@@ -28,6 +28,19 @@ def live_context(expected):
  if not 0<limits['cpuCores']<=2 or not 0<limits['memoryMaxBytes']<=3*1024**3 or not 0<limits['pidsMax']<=256:raise ValueError('LOCAL limits exceeded')
  return limits
 
+def verify_icon_v2_previous_attempt():
+ prior=json.loads((ROOT/'PREVIOUS-ATTEMPT-TERMINAL.json').read_text())
+ if prior.get('classification')!='EXPLICIT_TERMINAL_FAILED_ATTEMPT_BEFORE_ICON_V2_ONLY'or prior.get('newMarker')!='execution.browser-icon-v2.started'or prior.get('noGenericReplay')is not True:raise ValueError('only explicit icon-v2 retry permitted')
+ expected_root=Path('/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0010-package-browser-20261111/attempt-1')
+ receipt_path=expected_root/'receipt.json';unit_path=expected_root/'retained-unit.json'
+ if prior.get('receiptPath')!=str(receipt_path)or prior.get('retainedUnitPath')!=str(unit_path)or digest(receipt_path)!=prior.get('receiptSha256')or prior.get('receiptSha256')!='9592287a94bdcaa04e0bfab471e82f9b3686477e131d7657b1f4ce37e44920af'or digest(unit_path)!=prior.get('retainedUnitSha256'):raise ValueError('root terminal failure proof hash/path required')
+ receipt=json.loads(receipt_path.read_text());unit=json.loads(unit_path.read_text());old_run=ROOT/'runs/2310073c187d'
+ if receipt.get('exit')!=1 or receipt.get('classification')!='LOCAL_BROWSER_ATTEMPT_FAILED_ASSET_ALLOWLIST'or receipt.get('run')!=str(old_run)or prior.get('oldRun')!=str(old_run)or receipt.get('sourceCommit')!='f55595cd348c23ffe559dba2de9150259db9f1e7':raise ValueError('prior exact failed browser attempt required')
+ if any(unit.get(k)!=v for k,v in {'Result':'exit-code','ExecMainStatus':'1','MainPID':'0','ControlGroup':'','InvocationID':'9f31f0157c4745738f72818908631807'}.items())or receipt.get('unitBeforeStop')!=unit:raise ValueError('prior retained unit failure evidence required')
+ if receipt.get('independentPortsClosed')!=[55490,31390]or not receipt.get('independentCgroupRemoved')or receipt.get('independentDockerAbsent')is not True or receipt.get('browserTmpRemoved')is not True or receipt.get('browserProcessesDrained')is not True or receipt.get('runtimeAndOriginStable')is not True:raise ValueError('prior cleanup proof required')
+ if digest(ROOT/'execution.started')!=prior.get('oldMarkerSha256')or digest(old_run/'outer-result.json')!=prior.get('oldOuterSha256')or receipt.get('artifacts',{}).get('outer-result.json')!=prior.get('oldOuterSha256'):raise ValueError('preserved prior marker/result required')
+ return prior
+
 def verify_local_manifest(create_intent=True):
  expected=os.environ.get('LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256','')
  if not re.fullmatch('[a-f0-9]{64}',expected)or digest(ROOT/'local-manifest.json')!=expected:raise ValueError('reviewed LOCAL manifest SHA required')
@@ -35,8 +48,11 @@ def verify_local_manifest(create_intent=True):
  for name,pin in value['files'].items():
   if not name or Path(name).is_absolute()or '..'in Path(name).parts or digest(ROOT/name)!=pin:raise ValueError('LOCAL reviewed file drift')
  if create_intent:
-  fd=os.open(ROOT/'execution.started',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
-  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_R9_PACKAGE_HTTP','at':time.time(),'unit':UNIT},out)
+  live_context(json.loads(CONFIG.read_text())['expected_cgroup'])
+  prior=verify_icon_v2_previous_attempt()
+  fd=os.open(ROOT/'execution.browser-icon-v2.started',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_R10_BROWSER_EXACT_ICON_V2','at':time.time(),'unit':UNIT,'priorFailedReceiptSha256':prior['receiptSha256'],'oldMarkerSha256':prior['oldMarkerSha256']},out)
+
  return value
 
 def verify_local_context(config):

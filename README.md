@@ -1,6 +1,6 @@
 # R10 — aprovação e conciliação no browser do portal do presidente
 
-Preparação privada em `/mnt/dev/.peticao-r0010-local-package-browser-qa-20261111`. **Não executou browser, app, HTTP, PostgreSQL ou Docker.** Somente mocks/política pura e verificação sintática. Exige revisão independente, lease de execução nova e conferência das portas antes de qualquer ensaio.
+Preparação privada em `/mnt/dev/.peticao-r0010-local-package-browser-qa-20261111`. **Baseline6367 executada e falhou legitimamente por ícone GET fora da allowlist. Esta revisão2 ainda NÃO executou browser/app/HTTP/PostgreSQL/Docker.** Preparação v2 somente com mocks/política pura e verificação sintática. Exige revisão independente, lease de execução nova e conferência das portas antes de qualquer ensaio.
 
 Deriva do R9 rev2 aprovado e já executado separadamente; não modifica R9/R6/origens. O driver R6 somenteGET permanece intacto. Novo driver `/mnt/dev/.peticao-r0010-local-package-browser-qa-20261111/package-browser.cjs` permite somente cinco POSTs nativos, em sequência e um por fase:
 
@@ -35,3 +35,11 @@ Unidade fixa `peticao-r0010-local-package-browser-qa-20261111.service`, CPU2/Mem
 Preparação:11testesNode de política (semPlaywright/Chrome) e18mocksPython passaram; inclui nove regressões herdadas de estado/bytes doR9, sem reexecutar app. Não representa18checks reais de browser.
 
 Pendentes explícitos: expiração/cincoerros/indeterminateHTTP, browserreplay/concorrência, mudança deconfiggates, ICP/certificado/validadorreal, entregaOTP/email, produçãoSP. R9/provasanteriores continuam separadas. Roteiro: `/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/approval-otp-reconciliation-audit-20261111/BROWSER-NEXT.md`.
+
+## Revisão2: correção exclusiva do ícone local
+
+Baseline6367e742b91b97c115fb79e0e6f1ffc43a4ffad2, tentativa `/mnt/dev/.peticao-r0010-local-package-browser-qa-20261111/runs/2310073c187d`:15checksUI aprovados/5POSTs, falha no gate de request por7GET `/icon-192.png` não classificados. Causa do harness, não evidência de falha de negócio. Prova central: `/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0010-package-browser-20261111/attempt-1/receipt.json`, SHA9592287a94bdcaa04e0bfab471e82f9b3686477e131d7657b1f4ce37e44920af. Marcador/run/logs anteriores preservados.
+
+A mudança de rede é UMA exceção: GET/HEAD, origem `http://127.0.0.1:31390`, pathname exato `/icon-192.png`, semquery/hash/credenciais. Não admite outros ícones, outra origem/porta, POST/PUT/DELETE. Os5POSTs de negócio, guardNode e demais gates não mudam. Fonte f555 layout+route+card e membros compilados app-paths/route/nft foram pinados em ICON-PROVENANCE.json; pequenos membros vieram do arquivo exportado R2, sem acessar árvore compartilhada R6 durante R11. Não foram executados.
+
+Nova execução futura exige manifesto revisado, contexto boundedunit e reciboROOT exato de falha1+unidade anterior1+cleanup; oldmarker/outer-result devem conservar hashes. Só então cria `execution.browser-icon-v2.started` viaO_EXCL. Não existe retry genérico ou reuso do marcador original. Três regressõesNode novas provam baseline rejeita ícone e exceção é exata; cinco mocksPython provam gate/rejeições/novo marcador exclusivo. Todos passaram. Não se repetiram os29mocks anteriores. V2 depende de novo ensaio real e revisão; a tentativa antiga continua classificada como falha.
