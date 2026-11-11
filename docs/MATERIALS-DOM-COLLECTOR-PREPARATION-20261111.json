@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "classification": "PURE_DOM_COLLECTOR_DRAFT",
+  "baseCommit": "3e26c4cf2b6c46205a2734e84ca741ec35b2e311",
+  "files": {
+    "site/src/lib/materials-dom-collector.ts": "040096477f564eaa466cd37807571a90d17a252ae7f3bb3f9b71f2c65ca48795",
+    "site/src/lib/materials-dom-collector.test.ts": "32b6543a0065deb7961410655de6ff17266bddcd9b8a1ac32e43010c67ad21e2",
+    "docs/MATERIALS-DOM-COLLECTOR-DRAFT-20261111.md": "115a3f04f87176e391848fb794837175a251b8918777fc7abe8856322ad83067"
+  },
+  "tests": {
+    "simulatedDom": 12,
+    "strictDiagnostics": 0,
+    "result": "/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111/.cache/materials-dom-collector-validation/result.json",
+    "resultSha256": "3f10c9ad8cad7e6ae8ea5ab9898da630a10d2661f6874de1c9035cca897f0e7b"
+  },
+  "browserAppPgHttpPdfExecuted": false,
+  "exportReady": false,
+  "unchanged": [
+    "site/src/lib/materials-layout.ts",
+    "site/src/lib/materials-render.ts"
+  ]
+}
