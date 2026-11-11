@@ -19,7 +19,10 @@ export function collectMaterialLayout(): MaterialLayoutSample {
     const s = getComputedStyle(el);
     if (s.display === "none" || s.visibility !== "visible" || s.opacity !== "1" || s.contentVisibility !== "visible") errors.add("hidden_style");
     if (s.transform !== "none" || s.filter !== "none" && !(el.tagName === "IMG" && s.filter === "grayscale(1)")) errors.add("unsupported_effect");
-    return [s.overflowX, s.overflowY].some(v => v !== "visible") || s.clipPath !== "none" ||
+    // Replaced IMG clips its own paint by default in Chromium. Contain preserves the full logo.
+    const containedImage = el.tagName === "IMG" && s.objectFit === "contain";
+    const overflowClipped = [s.overflowX, s.overflowY].some(v => v !== "visible" && !(containedImage && v === "clip"));
+    return el.tagName === "IMG" && !containedImage || overflowClipped || s.clipPath !== "none" ||
       s.clip !== "auto" || s.maskImage !== "none" || s.textOverflow === "ellipsis" || !["none", "0", ""].includes(s.webkitLineClamp);
   };
   const noExtraText = (el: Element) => {

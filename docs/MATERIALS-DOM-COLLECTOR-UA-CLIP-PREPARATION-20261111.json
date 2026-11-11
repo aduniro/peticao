@@ -1,0 +1,23 @@
+{
+  "classification": "UA_IMG_CLIP_FIX_PURE_TESTED_PENDING_NEW_REAL_BROWSER_ATTEMPT",
+  "baseCommit": "3f96a06a8e3557099c94df19e1b95a3496496bfe",
+  "files": {
+    "site/src/lib/materials-dom-collector.ts": "cccc8a3d7fd4b09ec6fe937d6be4642869e666ac5f33b299dd6cdeeec7f66b10",
+    "site/src/lib/materials-dom-collector.test.ts": "e93c62f7bedec301dd6b03da4d6609a03d7be5fd31c9503390c0a443d8921890",
+    "docs/MATERIALS-DOM-COLLECTOR-UA-CLIP-FIX-20261111.md": "5aae45e9e0ead59a681c3a8ef1ec20b5f725a04ce7088fe53599088297829428"
+  },
+  "audit": {
+    "path": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/materials-layout-browser-result-ro-20261111/audit.json",
+    "sha256": "05a8c4405b1410540c8913dcf44598deeb3cefcc55a7be79c79b28951d31dcd9"
+  },
+  "proofs": {
+    "/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111/.cache/materials-dom-collector-ua-clip-validation/result.json": "c108f75c39eb1d6dc40344617098800c619a30d3bab5ad39e3cddf21b445fbe0",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111/.cache/materials-dom-collector-ua-clip-validation/baseline-regression-result.json": "0dd9633dea5c1f962e5ebdca74d06fea3352d05de3b6670c9a6704c80f8c4494",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111/.cache/materials-dom-collector-ua-clip-validation/stdout.log": "6fa493c040af365d98acb969d1ffef1d50119d3675f20ab6d592d25f8aebbdd5",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111/.cache/materials-dom-collector-ua-clip-validation/stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "testCount": 17,
+  "strictDiagnostics": 0,
+  "actualBrowserAppPgHttpPdfExecuted": false,
+  "exportReady": false
+}

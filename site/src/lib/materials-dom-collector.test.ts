@@ -6,7 +6,7 @@ import { collectMaterialLayout } from "./materials-dom-collector";
 
 function fixture(copies = 1) {
   const style = { display: "block", visibility: "visible", opacity: "1", contentVisibility: "visible", transform: "none", filter: "none",
-    overflowX: "visible", overflowY: "visible", clipPath: "none", clip: "auto", maskImage: "none", textOverflow: "clip", webkitLineClamp: "none" };
+    overflowX: "visible", overflowY: "visible", objectFit: "contain", clipPath: "none", clip: "auto", maskImage: "none", textOverflow: "clip", webkitLineClamp: "none" };
   type Rect = { x: number; y: number; width: number; height: number };
   interface El {
     tagName: string; className: string; children: El[]; childNodes: { nodeType: number; nodeValue: string }[];
@@ -108,4 +108,35 @@ test("only the renderer grayscale filter is allowed for the logo", () => {
   const f = fixture(), img = f.panels[0].children[0].children[0];
   img.style.filter = "grayscale(1)"; assert.equal(f.run().errors.length, 0);
   img.style.filter = "opacity(0)"; assert.equal(f.run().errors.includes("unsupported_effect"), true);
+});
+
+test("nominal replaced IMG clip plus contain does not report image clipping", () => {
+  const f = fixture(), img = f.panels[0].children[0].children[0];
+  img.style.overflowX = img.style.overflowY = "clip";
+  assert.equal(f.run().errors.length, 0);
+});
+test("IMG hidden, auto and scroll overflow remain refused even with contain", () => {
+  for (const overflow of ["hidden", "auto", "scroll"]) {
+    const f = fixture(), img = f.panels[0].children[0].children[0]; img.style.overflowX = overflow;
+    assert.equal(f.run().errors.includes("image_clipping"), true);
+  }
+});
+test("cover, fill and other IMG fits never stand in for a contained logo", () => {
+  for (const fit of ["cover", "fill", "none", "scale-down"]) {
+    const f = fixture(), img = f.panels[0].children[0].children[0]; img.style.objectFit = fit;
+    assert.equal(f.run().errors.includes("image_clipping"), true);
+    img.style.overflowX = img.style.overflowY = "clip";
+    assert.equal(f.run().errors.includes("image_clipping"), true);
+  }
+});
+test("IMG nominal overflow does not bypass masks, clip-path or visibility", () => {
+  for (const [key, value, reason] of [["maskImage", "url(dummy)", "image_clipping"], ["clipPath", "inset(20%)", "image_clipping"], ["visibility", "hidden", "hidden_style"], ["opacity", "0", "hidden_style"]] as const) {
+    const f = fixture(), img = f.panels[0].children[0].children[0]; img.style.overflowX = img.style.overflowY = "clip"; img.style[key] = value;
+    assert.equal(f.run().errors.includes(reason), true);
+  }
+});
+test("nominal IMG does not exempt ancestor or text overflow clip", () => {
+  const f = fixture(), img = f.panels[0].children[0].children[0]; img.style.overflowX = img.style.overflowY = "clip";
+  f.panels[0].style.overflowY = "clip"; f.panels[0].children[2].style.overflowY = "clip";
+  const sample = f.run(); assert.equal(sample.errors.includes("ancestor_clipping"), true); assert.equal(sample.panels[0].blocks[2].clipped, true);
 });

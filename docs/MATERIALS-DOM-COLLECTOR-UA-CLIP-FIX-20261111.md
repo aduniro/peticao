@@ -1,0 +1,13 @@
+# Correção específica: overflow nominal do IMG substituído
+
+Worktree local: `/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111`. Base anterior preservada: `3f96a06a8e3557099c94df19e1b95a3496496bfe`.
+
+O diagnóstico real anterior foi executado pelo Root e terminou em falha, sem reclassificar os nove casos nominais como sucesso. A auditoria `/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/materials-layout-browser-result-ro-20261111/audit.json`, SHA `05a8c4405b1410540c8913dcf44598deeb3cefcc55a7be79c79b28951d31dcd9`, confirmou nas vinte amostras `overflowX/Y: clip` e `object-fit: contain` no IMG, recursos prontos e erro de coleta exclusivamente `image_clipping`. O excesso também apresentou overflow geométrico, mas continuou não qualificado por esse erro alternativo.
+
+A alteração em `/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111/site/src/lib/materials-dom-collector.ts` separa somente o overflow do IMG substituído. Após a estrutura exata da imagem ser verificada, `visible` e `clip` são aceitos se `object-fit` for `contain`. `hidden`, `auto` e `scroll` continuam recusados. `cover`, `fill`, `none` e `scale-down` não equivalem ao logo contido. Máscaras, clip-path, clip, elipse, clamp, efeitos, invisibilidade e opacidade não foram liberados. Recortes em textos e ancestrais permanecem erros. O avaliador continua conferindo limites, dimensões e recursos; renderizador e avaliador/testes anteriores permanecem idênticos.
+
+## Validação desta revisão
+
+Dezessete testes simulados passaram com Node 20.19.2 e TypeScript 5.9.3; typecheck estrito sem diagnósticos. Os doze testes anteriores permanecem, com estilo object-fit contain explícito no mock do IMG. Cinco regressões cobrem o caso nominal confirmado, overflow proibido, fits não contidos, recortes/visibilidade e preservação de recortes em ancestrais/textos. A função continua serializada numa VM sem imports em runtime. O novo teste nominal foi também executado contra o coletor compilado da base `3f96a06`: falhou como esperado, comprovando que detecta o defeito anterior. Provas isoladas estão em `/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111/.cache/materials-dom-collector-ua-clip-validation/result.json` e `baseline-regression-result.json`.
+
+Não foi executado Chrome, aplicação, PG, HTTP ou PDF nesta correção. O diagnóstico real falho e seu marcador não foram alterados. Ainda é necessária uma nova tentativa explicitamente autorizada pelo Root, com novo perfil vinculado à prova anterior e nove nominais mais o negativo estrito. Esta revisão não afirma fit real, exportação, integração ou conclusão do módulo. R16 permanece intocado.
