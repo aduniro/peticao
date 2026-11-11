@@ -1,0 +1,30 @@
+{
+  "classification": "LOCAL_R4_DRAFT_NOT_EXECUTED_NOT_DEPLOYABLE",
+  "root": "/mnt/dev/.peticao-r0004-local-history-http-qa-20261111",
+  "files": {
+    "PROVENANCE.json": "c78a13b52208ced83e3aa9ab40b1caf6845c0b880a8f9124e37282aedf573e6c",
+    "config.json": "00d1bf43685d3448f0c7250203e6e2e294e0b81a36e296f3b5c11525e4c0e8af",
+    "docker_control.py": "7c146730bd03292f8157626280b101d5136cc4f347598536437a0a74887cd796",
+    "fixture.cjs": "a34574271520fbefcd1e508601aae6d950873db25f2aad6c0f0226151d32a31e",
+    "functional-guard.mjs": "dc4374d08b2490fd624cdb06e85eee6a30b67f7f272a421d95472633dc2b2182",
+    "functional_smoke.py": "f764b999f36a3d177f7740a360dc6291341744479be98d1f06cbca6b11a467af",
+    "local_controller.py": "8499a3c276a78b32a02b2d1549450532c661150960e7d6c8ac6d74ad24c083d2",
+    "schema-source-manifest.json": "c46b36c4d4a9b31d5b89b8bb2a4c7373370bdf3c6d9281e3ef63ca4b55185a3a",
+    "schema-sources/batch-a1-schema.ts": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
+    "schema-sources/batch-package-schema.ts": "7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4",
+    "schema-sources/db.ts": "dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824",
+    "schema-sources/document-reference-schema.ts": "b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c",
+    "schema-sources/petition-base-schema.ts": "25ea67cd71f653e68a8cc67177f77d39f18b4e56e14d6a8d42e256ddae51764c",
+    "schema-sources/president-own-a1-schema.ts": "24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408",
+    "schema-sources/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
+    "test_local_history.py": "f22a3c65a82216c245b1e85c23909eab36e5ce152d85a07d82e3ee2d8829aa7a"
+  },
+  "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "r4Freeze": "0ce878406810a4537268e2c7e3c8810e066bd7ef",
+  "mockTests": 13,
+  "actualHttpChecks": 0,
+  "dockerOrPgOrAppExecuted": false,
+  "oneRuntimeCopy": true,
+  "unitRemainAfterExitRequired": true,
+  "requiresReviewedExecution": true
+}

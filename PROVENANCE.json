@@ -1,0 +1,12 @@
+{
+  "classification": "LOCAL_DRAFT_NOT_EXECUTED",
+  "r4Source": "/mnt/apps/peticao-final/_ops/r0000-cluster-history-native-pg17-r4-20261110/r0002",
+  "r4Freeze": "0ce878406810a4537268e2c7e3c8810e066bd7ef",
+  "r3DockerControllerSource": "/mnt/dev/.peticao-r0003-local-pg17-qa-20261111/attempt-2/local_runner.py",
+  "r3DockerControllerSha256": "15cab23f15137e0ff26dd5f376ac902dc907ec33a60e84c3ca2c171839cf5fc3",
+  "httpBlockSha256": "7452fd5dfc107591d50e49ebc0308932c16da07b2f08c5842b097fa02a18a5ac",
+  "httpBlockByteIdentical": true,
+  "fixtureByteIdentical": true,
+  "guardOnlyDifference": "FUNCTIONAL_PGDATA namespace assert now actual container /var/lib/postgresql/data",
+  "schemaSourceManifestSha256": "c46b36c4d4a9b31d5b89b8bb2a4c7373370bdf3c6d9281e3ef63ca4b55185a3a"
+}
