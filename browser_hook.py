@@ -3,7 +3,7 @@ from pathlib import Path
 import os,json,stat,hashlib,re,subprocess,signal,time
 ROOT=Path('/mnt/apps/peticao-final/_ops/qa-r0015-a1-admission-browser-20261111')
 DRIVER=ROOT/'a1-browser.cjs'
-DRIVER_SHA='13262828812956f7d1f2b1cb28c91934e7b5738e97c88ec2df7286e287a37b19'
+DRIVER_SHA='7196f8a88c21faf821f2965d90988788490b316481fe6490e9500dae4f803170'
 NODE_SHA='b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
 UNIT='peticao-r0015-a1-admission-browser-qa-20261111.service'
 SOURCE='f55595cd348c23ffe559dba2de9150259db9f1e7'
@@ -67,7 +67,7 @@ def make_config(run,cookie,group,assets,seed):
  if run.parent!=ROOT/'runs'or not re.fullmatch('[a-f0-9]{12}',run.name)or run.resolve()!=run:raise BrowserHookError('exact local R15 run')
  if not group.startswith('/user.slice/')or not group.endswith('/'+UNIT):raise BrowserHookError('exact bounded unit')
  if not re.fullmatch(r'adm=[A-Za-z0-9_.~-]{16,4096}',cookie):raise BrowserHookError('synthetic cookie required')
- return {'run':str(run),'sourceCommit':SOURCE,'origin':'http://127.0.0.1:31395','cgroup':group,'cookie':cookie,'assetPaths':assets,'documentVersion':seed['documentVersion'],'sourceSha256':seed['pdfSha256'],'historyVersionId':seed['historyVersionId'],'pdfBytes':seed['pdfBytes'],'policyRevision':1,'cryptographicOperationTested':False}
+ return {'run':str(run),'sourceCommit':SOURCE,'origin':'http://127.0.0.1:31395','cgroup':group,'cookie':cookie,'assetPaths':assets,'documentVersion':seed['documentVersion'],'sourceSha256':seed['pdfSha256'],'historyVersionId':seed['historyVersionId'],'pdfBytes':seed['pdfBytes'],'policyRevision':1,'cryptographicOperationTested':False,'initialDbJobs':seed['counts']['batch_a1_jobs']}
 def browser_environment(run):return {'PATH':'/usr/bin:/bin','HOME':str(run/'empty'),'TMPDIR':str(run/'tmp'),'LANG':'C.UTF-8','PLAYWRIGHT_DISABLE_FORCED_CHROMIUM_PROXIED_LOOPBACK':'1'}
 def validate_result(run,value,generated):
  if value.get('exit')!=0 or value.get('sourceCommit')!=SOURCE or value.get('cryptographicOperationTested')is not False or value.get('workerExecuted')is not False or value.get('approvalOrSendAttempted')is not False or value.get('browserTmpRemoved')is not True:raise BrowserHookError('admission-only browser scope')

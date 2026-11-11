@@ -7,3 +7,5 @@ mock-proof/
 __pycache__/
 *.bundle
 correction-lease.json
+empty-job-correction-lease.json
+latest-run.json

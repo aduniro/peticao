@@ -28,5 +28,14 @@
     "reviewPath": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0015-a1-admission-gate-review-20261111/REVIEW.md",
     "reviewSha256": "3dbfb3766a33532624446a5d10f1cd085a775164120a98dff00d4f1ef8cc30de",
     "actualExecution": false
+  },
+  "emptyLatestJobV3": {
+    "baselineCommit": "3768dfccced64d7d204718df53983fd0212d05f6",
+    "priorFailedRun": "/mnt/apps/peticao-final/_ops/qa-r0015-a1-admission-browser-20261111/runs/878ca95289c6",
+    "priorFailedReceiptSha256": "463e23505f1cb1a9eecec448ac67a03a83bbdfa12076684114946bca83526c9e",
+    "fix": "Raw original availability accepts only latestJob absent/null with mandatory binding and private DB0; source application unchanged",
+    "newMarker": "execution.empty-latest-job-v3.started",
+    "previousA1Posts": 0,
+    "currentRevisionActualExecution": false
   }
 }

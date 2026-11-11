@@ -1,0 +1,14 @@
+{
+  "classification": "EXPLICIT_R15_EMPTY_LATEST_JOB_V3_AFTER_FAILED_FIRST_EXECUTION",
+  "oldRun": "/mnt/apps/peticao-final/_ops/qa-r0015-a1-admission-browser-20261111/runs/878ca95289c6",
+  "newMarker": "execution.empty-latest-job-v3.started",
+  "noGenericReplay": true,
+  "failureReceiptSha256": "463e23505f1cb1a9eecec448ac67a03a83bbdfa12076684114946bca83526c9e",
+  "files": {
+    "root-failure-receipt.json": "463e23505f1cb1a9eecec448ac67a03a83bbdfa12076684114946bca83526c9e",
+    "root-retained-unit.txt": "b3e6eb449a0ea540d56e7fd3a0209f7c6a6adf6761f086a6aae67671bcfd8f59",
+    "outer-result.json": "dece3d0c2a17356757f6173348a4af5774951f5ea4c1015a56d0813423df25c6",
+    "a1-browser-result.json": "5b5f01ff2de48687100d5584a71a22c5dd6295ed6acb6d71aaa5a2a7c2af9f30"
+  },
+  "oldMarkerSha256": "f4f7c2c7191a46740c6c95dfb4ea93dfb337b10676789e6674a0ae7e13f83d94"
+}

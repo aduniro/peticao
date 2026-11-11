@@ -28,6 +28,23 @@ def live_context(expected):
  if not 0<limits['cpuCores']<=2 or not 0<limits['memoryMaxBytes']<=3*1024**3 or not 0<limits['pidsMax']<=256:raise ValueError('LOCAL limits exceeded')
  return limits
 
+def verify_empty_latest_job_v3_previous_attempt():
+ prior=json.loads((ROOT/'PREVIOUS-EMPTY-JOB-FAILURE.json').read_text());oldrun=ROOT/'runs/878ca95289c6'
+ if prior.get('classification')!='EXPLICIT_R15_EMPTY_LATEST_JOB_V3_AFTER_FAILED_FIRST_EXECUTION'or prior.get('oldRun')!=str(oldrun)or prior.get('newMarker')!='execution.empty-latest-job-v3.started'or prior.get('noGenericReplay')is not True:raise ValueError('only fixed empty latestJob correction permitted')
+ expected={'root-failure-receipt.json','root-retained-unit.txt','outer-result.json','a1-browser-result.json'}
+ if set(prior.get('files',{}))!=expected:raise ValueError('exact prior failed proof set')
+ for name,pin in prior['files'].items():
+  if digest(oldrun/name)!=pin:raise ValueError('prior failed proof hash drift')
+ if prior.get('failureReceiptSha256')!='463e23505f1cb1a9eecec448ac67a03a83bbdfa12076684114946bca83526c9e'or prior['files']['root-failure-receipt.json']!=prior['failureReceiptSha256']or digest(ROOT/'execution.started')!=prior.get('oldMarkerSha256'):raise ValueError('root failed receipt and original marker required')
+ failed=json.loads((oldrun/'root-failure-receipt.json').read_text());outer=json.loads((oldrun/'outer-result.json').read_text());unit=dict(line.split('=',1)for line in(oldrun/'root-retained-unit.txt').read_text().splitlines()if'='in line)
+ required={'classification':'FAILED_A1_INITIAL_AVAILABILITY_OBSERVER_EMPTY_JOB_OPTIONAL_FIELD','sourceCommit':'f55595cd348c23ffe559dba2de9150259db9f1e7','qaCommit':'3768dfccced64d7d204718df53983fd0212d05f6','invocation':'3a34984f3f5a478f820f27dd528f1d50','exit':1,'httpChecks':5,'partialBrowserChecksPassed':2,'plannedBrowserChecks':18,'browserA1Posts':0,'nativeOriginalCreationHttpPosts':1,'queuedOrCryptographicOperationQualified':False,'cleanupPassed':True,'runtimeStable':True,'retryPerformed':False}
+ if any(failed.get(k)!=v for k,v in required.items()):raise ValueError('typed failed initial availability receipt required')
+ for name in expected-{'root-failure-receipt.json'}:
+  if failed.get('files',{}).get(name)!=prior['files'][name]:raise ValueError('root receipt exact proof binding')
+ if failed.get('executionMarkerSha256')!=prior['oldMarkerSha256']or any(unit.get(k)!=v for k,v in {'Result':'exit-code','ExecMainCode':'1','ExecMainStatus':'1','LoadState':'loaded','ActiveState':'failed','SubState':'failed','InvocationID':'3a34984f3f5a478f820f27dd528f1d50'}.items()):raise ValueError('retained failed unit and marker required')
+ if outer.get('exit')!=1 or outer.get('runtimeStable')is not True or outer.get('originRuntimeStable')is not True or outer.get('postgresCleanup',{}).get('stopped')is not True or outer.get('remainingAppProcesses')!=[]or outer.get('remainingLocalCgroupProcesses')!=[]or outer.get('localPortsClosed')!=[55495,31395]:raise ValueError('failed outer and drained resources required')
+ return prior
+
 def verify_local_manifest(create_intent=True):
  expected=os.environ.get('LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256','')
  if not re.fullmatch('[a-f0-9]{64}',expected)or digest(ROOT/'local-manifest.json')!=expected:raise ValueError('reviewed LOCAL manifest SHA required')
@@ -35,8 +52,9 @@ def verify_local_manifest(create_intent=True):
  for name,pin in value['files'].items():
   if not name or Path(name).is_absolute()or '..'in Path(name).parts or digest(ROOT/name)!=pin:raise ValueError('LOCAL reviewed file drift')
  if create_intent:
-  fd=os.open(ROOT/'execution.started',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
-  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_R15_A1_ORIGINAL_ADMISSION_BROWSER','at':time.time(),'unit':UNIT},out)
+  live_context(json.loads(CONFIG.read_text())['expected_cgroup']);prior=verify_empty_latest_job_v3_previous_attempt()
+  fd=os.open(ROOT/'execution.empty-latest-job-v3.started',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_R15_EMPTY_LATEST_JOB_V3_ONLY','at':time.time(),'unit':UNIT,'previousFailureReceiptSha256':prior['failureReceiptSha256'],'oldMarkerSha256':prior['oldMarkerSha256']},out)
  return value
 
 def verify_local_context(config):
