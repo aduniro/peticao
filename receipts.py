@@ -20,11 +20,21 @@ def guard_check(events,job,nonce,*,allow_unexpected=False):
  if unexpected and not allow_unexpected:raise ValueError('unexpected guard denials: '+str(len(unexpected)))
  return out
 
+def verify_export(folder):
+ manifest=json.loads((folder/'export-manifest.json').read_text());expected=set(manifest['files'])|{'export-manifest.json'}
+ if {p.name for p in folder.iterdir()}!=expected or manifest.get('publication')!='COMPLETE_TECHNICAL_EXPORT':raise ValueError('incomplete export inventory')
+ for name,pin in manifest['files'].items():
+  if name not in ALLOWLIST:raise ValueError('unexpected export name')
+  p=folder/name
+  if p.is_symlink()or not p.is_file()or hashlib.sha256(p.read_bytes()).hexdigest()!=pin:raise ValueError('export bytes changed')
+ return manifest
+
 def export(run,target,job,nonce):
  if run.resolve()!=run or run.name!=nonce or target.exists():raise ValueError('export identity/destination')
  proof=json.loads((run/'result.json').read_text())
  if proof.get('job')!=job or proof.get('nonce')!=nonce:raise ValueError('result identity')
- target.mkdir(mode=0o770);os.chown(target,-1,target.parent.stat().st_gid);target.chmod(0o2770);budget=0;files={}
+ # Staging is private under the run, OUTSIDE the collector's work/artifacts tree.
+ stage=run/'export-staging';stage.mkdir(mode=0o700);stage.chmod(0o700);budget=0;files={};gid=target.parent.stat().st_gid
  for name in ALLOWLIST:
   p=run/name
   if not p.exists():continue
@@ -34,8 +44,14 @@ def export(run,target,job,nonce):
    if not stat.S_ISREG(st.st_mode)or st.st_nlink!=1 or st.st_size>8*1024**2:raise ValueError('receipt metadata')
    budget+=st.st_size
    if budget>24*1024**2:raise ValueError('receipt budget')
-   with os.fdopen(fd,'rb',closefd=False)as src,(target/name).open('xb')as dest:shutil.copyfileobj(src,dest)
+   with os.fdopen(fd,'rb',closefd=False)as src,(stage/name).open('xb')as dest:
+    shutil.copyfileobj(src,dest);dest.flush();os.fsync(dest.fileno())
   finally:os.close(fd)
-  (target/name).chmod(0o660);files[name]=hashlib.sha256((target/name).read_bytes()).hexdigest()
- (target/'export-manifest.json').write_text(json.dumps({'job':job,'nonce':nonce,'files':files,'excluded':['postgres','pgpass','initdb-password','source','node_modules','local lease','credentials']},indent=2)+'\n');(target/'export-manifest.json').chmod(0o660)
+  files[name]=hashlib.sha256((stage/name).read_bytes()).hexdigest()
+ manifest=stage/'export-manifest.json';manifest.write_text(json.dumps({'job':job,'nonce':nonce,'publication':'COMPLETE_TECHNICAL_EXPORT','requiresOuterJobExitZeroAndDrainedCgroup':True,'files':files,'excluded':['postgres','pgpass','initdb-password','source','node_modules','local lease','credentials']},indent=2)+'\n')
+ verify_export(stage)
+ for p in stage.iterdir():os.chown(p,-1,gid);p.chmod(0o660)
+ os.chown(stage,-1,gid);stage.chmod(0o2770)
+ if target.exists():raise ValueError('export destination appeared')
+ os.rename(stage,target) # Same job/work filesystem; publish only complete checked receipts.
  return files

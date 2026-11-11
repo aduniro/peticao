@@ -16,16 +16,13 @@ const pinnedFile=p=>canonical(p)&&Object.hasOwn(config.pins,p)&&hash(p)===config
 if(!pinnedFile(config.node)||!pinnedFile(config.loader)||!config.esbuildBinaries.every(pinnedFile))throw Error('QA_PIN_DRIFT');
 const {threadId}=require('node:worker_threads');
 function record(event){fs.appendFileSync(config.log,JSON.stringify({...event,pid:process.pid,ppid:process.ppid,threadId,job:config.job,nonce:config.nonce})+'\n',{mode:0o600});}
-const context={uid:process.getuid(),ppid:process.ppid,environment:{...process.env},providerPorts:new Set(),pathHasSymlink:p=>!canonical(p),pinnedFile};
+const context={uid:process.getuid(),ppid:process.ppid,environment:{...process.env},providerServers:new Map(),pathHasSymlink:p=>!canonical(p),pinnedFile};
 policy.install(config,{net,childProcess:cp,context,record});
 const block=transport=>{record({kind:'denial',category:'unexpected-denial',transport});throw Error('QA_NETWORK_BLOCKED_'+transport);};
 const listen=net.Server.prototype.listen;
-net.Server.prototype.listen=function(...args){const v=args[0];const opts=typeof v==='object'&&v!==null?v:{port:v,host:args[1]};if(opts.port!==0||opts.host!=='127.0.0.1'||opts.path!==undefined||context.providerPorts.size>=5)return block('listener');
- this.once('listening',()=>{const a=this.address();if(!a||typeof a==='string'||a.address!=='127.0.0.1')return block('listener-address');context.providerPorts.add(a.port);record({kind:'allowed',transport:'synthetic-listener',port:a.port});});return listen.apply(this,args);};
-const dns=require('node:dns');dns.lookup=function(host,opts,cb){if(typeof opts==='function'){cb=opts;opts={};}if(host!=='127.0.0.1'||typeof cb!=='function')return block('dns');process.nextTick(()=>cb(null,...(opts?.all?[[{address:host,family:4}]]:[host,4])));};
-for(const key of Object.keys(dns)){if(typeof dns[key]==='function'&&key!=='lookup'&&/^(resolve|reverse|lookupService|setServers)/.test(key))dns[key]=()=>block('dns-'+key);}
-for(const key of ['lookup','resolve','resolve4','resolve6','resolveAny','resolveCname','resolveMx','resolveTxt','resolveSrv','reverse','setServers'])if(typeof dns.promises[key]==='function')dns.promises[key]=()=>Promise.reject((()=>{try{block('dns-promise-'+key);}catch(e){return e;}})());
-for(const Klass of[dns.Resolver,dns.promises.Resolver])if(Klass)for(const key of Object.getOwnPropertyNames(Klass.prototype))if(/^(resolve|reverse|setServers)/.test(key)&&typeof Klass.prototype[key]==='function')Klass.prototype[key]=()=>block('dns-resolver-'+key);
+net.Server.prototype.listen=function(...args){const v=args[0];const opts=typeof v==='object'&&v!==null?v:{port:v,host:args[1]};if(opts.port!==0||opts.host!=='127.0.0.1'||opts.path!==undefined||context.providerServers.size>=5)return block('listener');
+ this.once('listening',()=>{const a=this.address();if(!a||typeof a==='string'||a.address!=='127.0.0.1')return block('listener-address');policy.registerProvider(context,this);record({kind:'allowed',transport:'synthetic-listener',port:a.port});});return listen.apply(this,args);};
+const dns=require('node:dns');const dnsGuard=require('./dns_guard.cjs');const dnsCovered=dnsGuard.installDns(dns,block);
 const tls=require('node:tls');tls.connect=()=>block('tls');const dgram=require('node:dgram');dgram.createSocket=()=>block('udp');
-const originalFetch=globalThis.fetch;globalThis.fetch=function(input,init){let u;try{u=new URL(typeof input==='string'||input instanceof URL?input:input.url);}catch{return block('fetch-url');}if(u.protocol!=='http:'||u.hostname!=='127.0.0.1'||!context.providerPorts.has(Number(u.port))||u.username||u.password)return block('fetch');return originalFetch.call(this,input,{...init,redirect:'error'});};
-moduleApi.syncBuiltinESMExports();record({kind:'guard-installed',nodeVersion:process.version,nodeTestContext:process.env.NODE_TEST_CONTEXT||null,ipcPolicy:'all-blocked',cgroup:config.cgroup});
+const originalFetch=globalThis.fetch;globalThis.fetch=function(input,init){let u;try{u=new URL(typeof input==='string'||input instanceof URL?input:input.url);}catch{return block('fetch-url');}if(u.protocol!=='http:'||u.hostname!=='127.0.0.1'||!policy.providerActive(context,Number(u.port))||u.username||u.password)return block('fetch');return originalFetch.call(this,input,{...init,redirect:'error'});};
+moduleApi.syncBuiltinESMExports();record({kind:'guard-installed',nodeVersion:process.version,nodeTestContext:process.env.NODE_TEST_CONTEXT||null,ipcPolicy:'all-blocked',dnsCovered,cgroup:config.cgroup});

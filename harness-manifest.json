@@ -5,17 +5,20 @@
   "sourceCommit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
   "backendCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "files": {
-    "run.py": "65dd0491cd5a703bba28247914219501913334650cb3f093efb6f66a089533ea",
+    "run.py": "fcce6bdfaa42caa821da170a7832102de2a61c0125efc83271ea73f5b0c620c1",
     "native_pg.py": "a69d8c3e7b478d3bc9efdef0db52c97678f1fd48fc5b967c9373da24d26f2ee0",
     "worker_context.py": "26a09c95fdd720d8a122371c4c275cb1275f8df6b81861036d39ec2915f2175b",
     "staging.py": "b3f119ff2075f1d8f7d6eb880f32417890c4188787be4bb005929ace9e32c22b",
-    "receipts.py": "c52e9244238e5766bacca52371262463b1ed5c2e4b8e0fa71a1efb23f3e26548",
-    "guard_policy.cjs": "41f990e7d452c9041a4d5b3e7edde6cc7b53b3505075049b0677c14b63fe7a5a",
-    "node_guard.cjs": "c8909e5882fb629ea9669317f423370857721b2f668ab462a6ad0e998531f6b7",
+    "receipts.py": "e3766b2e0c3219252ed853580b5206357a2b2ed434269fca55106d4b293f0c21",
+    "guard_policy.cjs": "b1605f3789260ad02ba5c6f4cd67494bacc6797c28894f9213c649ff96bb651e",
+    "node_guard.cjs": "f2a0f708159a2d5a081ca084f55496028ba169ce3456d374592ade5c61f2ab20",
     "registry.json": "1a894d10f9ff42ce59ec6d0ce7f7c49661ae965a3a140a28833d6a963fa02afb",
-    "pg-binary-pins.json": "4053a50714cbb68c9b3dfe0b3a015ffe46f73561b175799fc0547b73cbf7e49d"
+    "pg-binary-pins.json": "4053a50714cbb68c9b3dfe0b3a015ffe46f73561b175799fc0547b73cbf7e49d",
+    "dns_guard.cjs": "68a22d886d5218d723b5446931bd70da76bfc9f1fb30ffcc7148fb702ca25268"
   },
   "realApplicationTestsExecuted": 0,
   "postgresStarted": false,
-  "externalQueueAdapterMustPinThisManifest": true
+  "externalQueueAdapterMustPinThisManifest": true,
+  "revision": "DNS_ENV_CLEANUP_PROVIDER_ATOMIC_EXPORT_CORRECTION",
+  "supersedesInsufficientCodeCommit": "9a32f022e80066c837fd9ef5c8592d1ca4543c5e"
 }

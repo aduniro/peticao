@@ -47,4 +47,19 @@ Comando **proposto**, executado futuramente somente pelo adaptador dentro da uni
 
 Estimativa inicial, não SLA: extração/hash30–90s, initdb/start5–20s, cinco callbacks30–180s, revisão de hashes10–60s, cleanup15–40s. Reserva total até720s,2CPU3GiB, pelo menos2GiB livres em disco. Antes da primeira execução o adaptador deverá conferir espaço e que a porta55487 não pertence a outro trabalho; se ocupada, falhar sem matar o processo e sem trocar a porta silenciosamente.
 
+## Revisão DNS e ambiente
+
+O freeze9a32 e seu resultado37+5 permanecem preservados como evidência histórica **insuficiente para instalar**: havia seis APIs DNS promises não cobertas. A revisão atual enumera lookup*/resolve*/reverse/setServers nos módulos DNS callback/promises e em toda a cadeia herdada de ambos os Resolver. Cada API é exercitada por fixture com original-spy que deve permanecer zerado. Somente lookup literal127.0.0.1, family0/4, recebe resposta sintética local sem chamar DNS.
+
+O ambiente agora fixa CONTACT_TO=qa@example.test e esvazia CONTACT_BCC/RECIPIENTS/APPROVER_EMAIL/CRON_SECRET; WHATSAPP_ENABLED=0 e diretórios de segredos/config/credenciais/GEO apontam para run/empty privado. Assim não depende dos destinos reais padrão presentes no config.ts da aplicação.
+
 O guard é uma restrição das APIs Node do código QA revisado, não uma barreira OS contra código malicioso ou acesso sudo. Não foram alterados firewall, ACLs, redes, serviços, código publicado ou banco real. Nenhuma prontidão de deploy/produção é afirmada.
+
+
+## Correções adicionais do mesmo freeze revisado
+
+A limpeza Node, a parada PG e a remoção do socket são tentadas independentemente, com erros agregados. Uma identidade PG incerta nunca autoriza sinalizar outro processo; uma falha Node não impede a tentativa segura de parar o PG próprio. Os provedores HTTP agora são um Map de servidores: conexão só é admitida enquanto o objeto continua listening com o mesmo endereço/porta; close remove apenas seu próprio registro. Porta velha/reutilizada não recebe autorização.
+
+A exportação agora é montada em `run/export-staging` privado, fora da árvore do coletor; inventário e hashes são conferidos e o diretório completo é renomeado para `work/artifacts/govbr-route-gates`. Falha na cópia deixa a saída não publicada. Um result.exit=0 isolado continua INSUFICIENTE: o coletor deve exigir manifesto completo com hashes, exit externo0, geração/fence corretos e cgroup drenado.
+
+A rodada dirigida desta revisão inclui74 mocks Node (67 DNS e7 política) e7 fixtures Python afetadas (ambiente, dummies e cleanup/export). A prova anterior37+5 não foi repetida por rotina e permanece histórica/insuficiente para instalar. Nenhum desses números significa que os cinco testes reais da aplicação passaram.

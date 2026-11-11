@@ -42,7 +42,7 @@ def verify_inputs(reg):
  private(ROOT);pinned(Path(reg['node_path']),reg['node_sha256'],128*1024**2)
  code=json.loads((ROOT/'harness-manifest.json').read_text())
  for name,pin in code['files'].items():
-  if '/'in name or name.startswith('.')or name not in {'run.py','native_pg.py','worker_context.py','staging.py','receipts.py','guard_policy.cjs','node_guard.cjs','registry.json','pg-binary-pins.json'}:raise ValueError('unreviewed harness file')
+  if '/'in name or name.startswith('.')or name not in {'run.py','native_pg.py','worker_context.py','staging.py','receipts.py','guard_policy.cjs','node_guard.cjs','dns_guard.cjs','registry.json','pg-binary-pins.json'}:raise ValueError('unreviewed harness file')
   pinned(ROOT/name,pin,2*1024**2)
  for name,pin in json.loads((ROOT/'pg-binary-pins.json').read_text()).items():
   if name not in ['postgres','initdb','pg_ctl','psql','pg_isready']:raise ValueError('unknown PG binary')
@@ -60,7 +60,7 @@ def stage(run,reg):
  expected={n:p['sha256']for n,p in source['files'].items()};expected.update({'site/'+n:p['sha256']for n,p in prod['files'].items()if n.startswith('node_modules/')});expected.update({'site/'+n:p['sha256']for n,p in dev['files'].items()})
  return site,expected,{'sourceFiles':len(source_hashes),'productionFilesVerified':len(prod_hashes),'devFiles':len(dev_hashes),'npmExecuted':False,'backendCommit':reg['backend_source_commit'],'sourceCommit':reg['source_commit']}
 def environment(run,site,guard):
- return {'PATH':'/usr/bin:/bin','HOME':str(run/'empty'),'LANG':'C.UTF-8','NODE_ENV':'test','DATABASE_URL':'postgres://fixture_only:fixture_only@127.0.0.1:55487/fixture_only','HASH_PEPPER':'QA-ONLY-NOT-PRODUCTION-PEPPER-93557bfba931','MAIL_PROVIDER':'dev','MAIL_PROVIDERS':'dev','MAIL_PROVIDERS_MARKETING':'','MAIL_FROM':'qa@example.test','ADMIN_PASSWORD':'QA-ONLY-NEVER-A-REAL-PASSWORD','ADMIN_PASSWORD_FILE':str(run/'empty/nonexistent-admin-password'),'APP_URL':'http://qa.local','SIGNER':'none','TMPDIR':str(run/'tmp'),'TSX_DISABLE_CACHE':'1','TSX_TSCONFIG_PATH':str(site/'tsconfig.json'),'QA_GUARD_CONFIG':str(guard),'NODE_OPTIONS':'--require='+str(ROOT/'node_guard.cjs')}
+ return {'PATH':'/usr/bin:/bin','HOME':str(run/'empty'),'LANG':'C.UTF-8','NODE_ENV':'test','DATABASE_URL':'postgres://fixture_only:fixture_only@127.0.0.1:55487/fixture_only','HASH_PEPPER':'QA-ONLY-NOT-PRODUCTION-PEPPER-93557bfba931','MAIL_PROVIDER':'dev','MAIL_PROVIDERS':'dev','MAIL_PROVIDERS_MARKETING':'','MAIL_FROM':'qa@example.test','ADMIN_PASSWORD':'QA-ONLY-NEVER-A-REAL-PASSWORD','ADMIN_PASSWORD_FILE':str(run/'empty/nonexistent-admin-password'),'CONTACT_TO':'qa@example.test','CONTACT_BCC':'','RECIPIENTS':'','APPROVER_EMAIL':'','CRON_SECRET':'','WHATSAPP_ENABLED':'0','SECRETS_DIR':str(run/'empty'),'PETICAO_CONFIG_DIR':str(run/'empty'),'CREDENTIALS_DIRECTORY':str(run/'empty'),'GEO_DIR':str(run/'empty'),'APP_URL':'http://qa.local','SIGNER':'none','TMPDIR':str(run/'tmp'),'TSX_DISABLE_CACHE':'1','TSX_TSCONFIG_PATH':str(site/'tsconfig.json'),'QA_GUARD_CONFIG':str(guard),'NODE_OPTIONS':'--require='+str(ROOT/'node_guard.cjs')}
 def make_guard(run,site,reg,job,nonce,cgroup):
  loader=site/'node_modules/tsx/dist/loader.mjs';bins=[site/'node_modules/esbuild/bin/esbuild',site/'node_modules/@esbuild/linux-x64/bin/esbuild'];node=Path(reg['node_path']);test=site/reg['test_file']
  value={'schema':1,'job':job,'nonce':nonce,'cgroup':cgroup,'sourceCommit':reg['source_commit'],'dbPort':reg['db_port'],'tsxVersion':reg['tsx_version'],'esbuildVersion':reg['esbuild_version'],'tmpdir':str(run/'tmp'),'site':str(site),'log':str(run/'guard.jsonl'),'node':str(node),'loader':str(loader),'testFile':str(test),'pattern':reg['test_pattern'],'esbuildBinaries':[str(p)for p in bins],'pins':{str(p):digest(p,128*1024**2)for p in [node,loader,*bins]}}
@@ -73,6 +73,19 @@ def verify_staged(source,expected):
   if p.is_file():actual[str(p.relative_to(source))]=digest(p,128*1024**2)
  if actual!=expected:raise ValueError('source/dependency inventory changed')
  return True
+
+def cleanup_owned(child,cgroup,ticks,pg):
+ proof={};errors=[]
+ if child is not None and ticks is not None:
+  try:proof['remainingNodeProcesses']=drain_node(child,cgroup,ticks);proof['nodeGroupDrained']=True
+  except BaseException as exc:errors.append('node: '+type(exc).__name__+': '+str(exc)[:600]);proof['nodeGroupDrained']=False
+ try:proof['postgresCleanup']=pg.stop()
+ except BaseException as exc:errors.append('postgres: '+type(exc).__name__+': '+str(exc)[:600])
+ if proof.get('postgresCleanup',{}).get('stopped')and pg.prepared:
+  try:proof['socketCleanup']=pg.release_socket()
+  except BaseException as exc:errors.append('socket: '+type(exc).__name__+': '+str(exc)[:600])
+ if errors:proof['cleanupErrors']=errors
+ return proof
 
 def main(job):
  os.umask(0o077);reg=json.loads((ROOT/'registry.json').read_text());ctx=WorkerContext(job,reg);attest=ctx.verify();verify_inputs(reg)
@@ -103,13 +116,9 @@ def main(job):
   proof['schemasRemaining']=0;pg.verify_database('fixture_only');proof['sourceAndDependenciesStable']=verify_staged(run/'source',expected);ctx.verify();ok=True
  except BaseException as exc:proof['error']=type(exc).__name__+': '+str(exc)[:1200]
  finally:
-  try:
-   if child is not None and ticks is not None:
-    proof['remainingNodeProcesses']=drain_node(child,ctx.cgroup,ticks);proof['nodeGroupDrained']=True
-   proof['postgresCleanup']=pg.stop()
-   if proof['postgresCleanup'].get('stopped')and pg.prepared:proof['socketCleanup']=pg.release_socket()
-  except BaseException as exc:proof['cleanupError']=type(exc).__name__+': '+str(exc)[:1200];ok=False
-  
+  cleanup=cleanup_owned(child,ctx.cgroup,ticks,pg);proof.update(cleanup)
+  if cleanup.get('cleanupErrors'):ok=False
+
   if (run/'guard.jsonl').exists()and not(run/'guard-summary.json').exists():
    try:
     events=[json.loads(v)for v in(run/'guard.jsonl').read_text().splitlines()];summary=guard_check(events,job,nonce,allow_unexpected=True);write(run/'guard-summary.json',summary);proof.update(summary)

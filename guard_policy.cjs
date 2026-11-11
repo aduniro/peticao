@@ -2,13 +2,27 @@
 const path=require('node:path');
 const ordered=x=>Array.isArray(x)?x.map(ordered):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,ordered(x[k])])):x;
 const equal=(a,b)=>JSON.stringify(ordered(a))===JSON.stringify(ordered(b));
+function providerActive(context,port){
+ const server=context.providerServers.get(port);
+ if(!server?.listening)return false;
+ const address=server.address();return !!address&&typeof address==='object'&&address.address==='127.0.0.1'&&address.port===port;
+}
+function registerProvider(context,server){
+ const address=server.address();
+ if(!server.listening||!address||typeof address!=='object'||address.address!=='127.0.0.1')throw Error('QA_PROVIDER_NOT_LIVE');
+ const port=address.port,previous=context.providerServers.get(port);
+ if(previous&&previous!==server&&providerActive(context,port))throw Error('QA_PROVIDER_COLLISION');
+ context.providerServers.set(port,server);
+ server.once('close',()=>{if(context.providerServers.get(port)===server)context.providerServers.delete(port);});
+ return port;
+}
 function classifyConnect(config,context,input){
  if(input.path!==undefined){
   const exact=path.join(config.tmpdir,'tsx-'+context.uid,String(context.ppid)+'.pipe');
   if(input.path===exact&&!context.pathHasSymlink(input.path))return 'expected-optional-cli-ipc-denial';
   return 'unexpected-denial';
  }
- if(input.host==='127.0.0.1'&&(Number(input.port)===config.dbPort||context.providerPorts.has(Number(input.port))))return 'allow';
+ if(input.host==='127.0.0.1'&&(Number(input.port)===config.dbPort||providerActive(context,Number(input.port))))return 'allow';
  return 'unexpected-denial';
 }
 function nodeChildArgs(config){return ['--import',config.loader,'--test-concurrency=1','--test-name-pattern='+config.pattern,'--test-name-pattern='+config.pattern,config.testFile];}
@@ -37,4 +51,4 @@ function install(config,adapters){
  }
  return {nodeChildArgs:()=>nodeChildArgs(config)};
 }
-module.exports={classifyConnect,authorizeChild,nodeChildArgs,install};
+module.exports={classifyConnect,authorizeChild,nodeChildArgs,install,providerActive,registerProvider};

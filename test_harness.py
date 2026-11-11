@@ -55,7 +55,9 @@ class ExtractTests(unittest.TestCase):
     with self.assertRaises(s.StagingError):s.extract(p,h,e,root/'out')
  def test_env_is_fixed_no_secrets_or_preview_inheritance(self):
   import run
-  env=run.environment(Path('/qa/run'),Path('/qa/site'),Path('/qa/run/guard-config.json'));self.assertEqual(env['DATABASE_URL'],'postgres://fixture_only:fixture_only@127.0.0.1:55487/fixture_only');self.assertEqual(env['MAIL_PROVIDERS'],'dev');self.assertNotIn('PREVIEW_MODE',env);self.assertNotIn('OPENAI_API_KEY',env)
+  env=run.environment(Path('/qa/run'),Path('/qa/site'),Path('/qa/run/guard-config.json'));self.assertEqual(env['DATABASE_URL'],'postgres://fixture_only:fixture_only@127.0.0.1:55487/fixture_only');self.assertEqual(env['MAIL_PROVIDERS'],'dev');self.assertNotIn('PREVIEW_MODE',env);self.assertNotIn('OPENAI_API_KEY',env);self.assertEqual(env['CONTACT_TO'],'qa@example.test');self.assertEqual(env['WHATSAPP_ENABLED'],'0');
+  for key in ['CONTACT_BCC','RECIPIENTS','APPROVER_EMAIL','CRON_SECRET']:self.assertEqual(env[key],'')
+  for key in ['SECRETS_DIR','PETICAO_CONFIG_DIR','CREDENTIALS_DIRECTORY','GEO_DIR']:self.assertEqual(env[key],'/qa/run/empty')
 if __name__=='__main__':unittest.main()
 
 class RunnerTests(unittest.TestCase):
@@ -75,3 +77,25 @@ class RunnerTests(unittest.TestCase):
   with mock.patch.object(run,'NativePG')as pg:
    with self.assertRaises(w.FenceError):w.WorkerContext('../escape',REG)
    pg.assert_not_called()
+
+class CorrectionTests(unittest.TestCase):
+ def test_pg_stop_attempted_when_node_drain_fails(self):
+  import run
+  pg=mock.Mock(prepared=True);pg.stop.return_value={'stopped':True};pg.release_socket.return_value={'removed':True}
+  with mock.patch.object(run,'drain_node',side_effect=ValueError('Node descendant remains')):proof=run.cleanup_owned(mock.Mock(),'/fixture.service','111',pg)
+  pg.stop.assert_called_once();pg.release_socket.assert_called_once();self.assertFalse(proof['nodeGroupDrained']);self.assertIn('Node descendant remains',proof['cleanupErrors'][0])
+ def test_both_cleanup_errors_aggregated_without_retry(self):
+  import run
+  pg=mock.Mock(prepared=True);pg.stop.side_effect=ValueError('PG ownership uncertain')
+  with mock.patch.object(run,'drain_node',side_effect=ValueError('Node uncertain')):proof=run.cleanup_owned(mock.Mock(),'/fixture.service','111',pg)
+  self.assertEqual(len(proof['cleanupErrors']),2);pg.stop.assert_called_once();pg.release_socket.assert_not_called()
+ def test_export_failure_never_publishes_partial_collector_directory(self):
+  with tempfile.TemporaryDirectory()as tmp:
+   root=Path(tmp);run=root/NONCE;run.mkdir();(run/'result.json').write_text(json.dumps({'job':JOB,'nonce':NONCE,'exit':0}));target=root/'export'
+   with mock.patch.object(r.shutil,'copyfileobj',side_effect=OSError('fixture interrupted copy')):
+    with self.assertRaises(OSError):r.export(run,target,JOB,NONCE)
+   self.assertFalse(target.exists());self.assertTrue((run/'export-staging').is_dir())
+ def test_atomic_export_manifest_complete_and_hash_drift_refuses(self):
+  with tempfile.TemporaryDirectory()as tmp:
+   root=Path(tmp);run=root/NONCE;run.mkdir();(run/'result.json').write_text(json.dumps({'job':JOB,'nonce':NONCE,'exit':0}));target=root/'export';r.export(run,target,JOB,NONCE);proof=r.verify_export(target);self.assertTrue(proof['requiresOuterJobExitZeroAndDrainedCgroup']);self.assertFalse((run/'export-staging').exists());(target/'result.json').write_text('drift')
+   with self.assertRaises(ValueError):r.verify_export(target)
