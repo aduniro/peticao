@@ -8,11 +8,11 @@
   "runtime_manifest_sha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
   "release_id": "r0002-portable-f55595c-20261111",
   "files": {
-    "functional_smoke.py": "437e585f2fbf2a5238affd6017a183803282026b4ff7cfa2c4432b5ad05e8d71",
+    "functional_smoke.py": "84e8640f8ce5915588d3d15bb67d494bd8478889be0f085d185fe47df29cb7a9",
     "native_pg.py": "f46afdacb85f70b339620f9b025154937e75ead095b1a592f7f0a210f7bcbc34",
     "fixture.cjs": "a34574271520fbefcd1e508601aae6d950873db25f2aad6c0f0226151d32a31e",
     "functional-guard.mjs": "c36d4cdfbf7c892f3696b1a5e2521955651a7057eb6cd33783d36724a00ee62f",
-    "executor_context.py": "07b6df6b74abebf1a3eef25691eaf06cb27609ba38d2572f0c81710cb4132283",
+    "executor_context.py": "dc0eb17cc1c98ca4f17d2c480322f30d33985295f092c2861ace08ec10ad84a9",
     "runtime_extract.py": "97efcbd8a26720baef84795f0344756018b4e28e596f841e70017533137497a2",
     "schema-source-manifest.json": "c46b36c4d4a9b31d5b89b8bb2a4c7373370bdf3c6d9281e3ef63ca4b55185a3a",
     "pg-binary-pins.json": "4053a50714cbb68c9b3dfe0b3a015ffe46f73561b175799fc0547b73cbf7e49d",

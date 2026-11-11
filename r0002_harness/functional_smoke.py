@@ -2,7 +2,7 @@
 """Own fixture DB and frozen runtime only; no deployment or document mutations."""
 import pathlib,subprocess,os,json,hashlib,time,http.client,urllib.parse,signal,uuid,shutil,socket,importlib.util,re
 from native_pg import NativePG,Cancelled,live_context,cgroup_of
-from executor_context import verify_queue_context,CancellationState
+from executor_context import verify_context_snapshot,CancellationState
 ROOT=pathlib.Path(__file__).resolve().parent
 CONFIG_PATH=os.environ.get('HISTORY_SMOKE_CONFIG')
 CONFIG=json.loads(pathlib.Path(CONFIG_PATH).read_text()) if CONFIG_PATH else {}
@@ -56,13 +56,19 @@ def stop_owned_node(proc,expected_cgroup,start_ticks,proc_root=pathlib.Path('/pr
    os.killpg(proc.pid,signal.SIGKILL);proc.wait(timeout=5)
  return {'remainingProcesses':members(proc.pid),'cgroup':expected_cgroup}
 
+def bootstrap_native_fixture(pg,config):
+ # Re-fence after all runtime/schema copying, and immediately before every PG stage/SQL handshake.
+ for action in [pg.prepare,pg.initialize,pg.start]:
+  verify_context_snapshot(config);action()
+ verify_context_snapshot(config);return pg.bootstrap()
+
 def main():
  os.umask(0o077)
  if not CONFIG_PATH or not EXPECTED_CGROUP:raise RuntimeError('explicit native profile config/cgroup required')
  limits=live_context(EXPECTED_CGROUP)
  job_deadline=time.monotonic()+600
  cancellation=CancellationState();signal.signal(signal.SIGTERM,cancellation.handle)
- executor=verify_queue_context(CONFIG.get('executor_job_id'),CONFIG.get('executor_config_digest'),EXPECTED_CGROUP)
+ executor=verify_context_snapshot(CONFIG)
  for port in [55485,31385]:
   with socket.socket() as s:
    if s.connect_ex(('127.0.0.1',port))==0:raise RuntimeError('reserved port already occupied')
@@ -116,7 +122,7 @@ def main():
  result={'classification':'R0002_POPULATED_HISTORY_NATIVE_PG17_NOT_HTTP_QUALIFIED_UNTIL_EXECUTED','operationalReady':False,'run':str(run),'sourceCommit':manifest['source_commit'],'checks':[],'dbPort':55485,'appPort':31385,'node':'20.19.2','postgresBackend':'native17.11','limits':limits,'nonce':nonce,'documentMutatingRequests':0,'deployment':False,'stepupNote':'State seeded only after successful real login; email challenge is outside this smoke'}
  try:
   if time.monotonic()>job_deadline:raise TimeoutError('job budget exhausted before native PG')
-  pg.prepare();pg.initialize();pg.start();result['postgresHandshake']=pg.bootstrap()
+  result['postgresHandshake']=bootstrap_native_fixture(pg,CONFIG)
   result['seed']=fixture('seed');result['before']=fixture('snapshot')
   log=(run/'server.log').open('w');proc=subprocess.Popen([str(NODE),'node_modules/next/dist/bin/next','start','-H','127.0.0.1','-p','31385'],cwd=run/'runtime',env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
   node_start=(pathlib.Path('/proc')/str(proc.pid)/'stat').read_text().rsplit(')',1)[1].split()[19]

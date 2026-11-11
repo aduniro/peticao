@@ -332,6 +332,80 @@ def reconcile():
                 event(db, row["id"], new, {"exit_code": state.get("exit_code") if state else None, "error": error})
 
 
+CGROUP_ROOT = Path("/sys/fs/cgroup")
+
+
+def managed_job_drain(row, launch_intent=True):
+    """Read only a queue-owned unit/cgroup. Missing/ambiguous evidence blocks admission."""
+    job = validate_id(row["id"])
+    folder = WORKER / "jobs" / job
+    if not folder.exists() and not folder.is_symlink() and row["started_at"] is None and not launch_intent:
+        # Queued cancellation/generation rejection never created a launch intent.
+        return {"drained": True, "reason": "never_launched"}
+    if folder.is_symlink() or not folder.is_dir():
+        return {"drained": False, "reason": "job_folder_unknown"}
+    if os.environ.get("ADMIN_CLUSTER_TEST_INLINE") == "1":
+        # Existing synthetic inline executor has no systemd unit. Its actual
+        # child handles must all be reaped before another fixture can start.
+        return {"drained": all(child.poll() is not None for child in INLINE_CHILDREN), "reason": "inline_children"}
+    unit = "admin-v2-job-" + job + ".service"
+    expected = "/system.slice/" + unit
+    try:
+        observed = subprocess.run(["/usr/bin/systemctl", "show", unit,
+            "--property=Id,LoadState,ActiveState,SubState,MainPID,ControlGroup"],
+            capture_output=True, text=True, check=False, timeout=5)
+        values = dict(line.split("=", 1) for line in observed.stdout.splitlines() if "=" in line)
+        if set(values) != {"Id", "LoadState", "ActiveState", "SubState", "MainPID", "ControlGroup"}:
+            raise ValueError("incomplete_unit_observation")
+        if observed.returncode not in {0, 4} or (observed.returncode == 4 and values["LoadState"] != "not-found"):
+            raise ValueError("unit_query_failed")
+        if values["Id"] != unit or values["ControlGroup"] not in {"", expected}:
+            raise ValueError("foreign_unit_identity")
+        if values["ActiveState"] not in {"inactive", "failed"} or values["SubState"] not in {"dead", "failed"} or values["MainPID"] != "0":
+            return {"drained": False, "reason": "unit_not_quiescent"}
+        if values["LoadState"] not in {"loaded", "not-found"}:
+            raise ValueError("unit_load_unknown")
+        group = CGROUP_ROOT / "system.slice" / unit
+        if group.is_symlink():
+            raise ValueError("cgroup_link")
+        if group.exists():
+            if group.resolve() != group:
+                raise ValueError("cgroup_noncanonical")
+            def regular_text(name):
+                fd = os.open(group / name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                try:
+                    if not stat.S_ISREG(os.fstat(fd).st_mode):
+                        raise ValueError("cgroup_file_invalid")
+                    return os.read(fd, 65537).decode()
+                finally:
+                    os.close(fd)
+            events = dict(line.split() for line in regular_text("cgroup.events").splitlines())
+            if events.get("populated") != "0" or regular_text("cgroup.procs").strip():
+                return {"drained": False, "reason": "cgroup_populated"}
+        state = read_runtime(job)
+        marker = folder / "execution.started"
+        if marker.is_symlink() or not marker.is_file() or not state or state.get("state") not in TERMINAL:
+            # In particular a timed-out launch can still complete late. A missing
+            # unit is not evidence that an unacknowledged launch never happened.
+            raise ValueError("launch_or_finish_unproved")
+        return {"drained": True, "reason": "unit_and_cgroup_drained"}
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        return {"drained": False, "reason": "drain_unknown:" + type(error).__name__}
+
+
+def admission_drain_blocker(db):
+    for previous in db.execute("SELECT * FROM jobs WHERE state != 'queued' ORDER BY created_at,id").fetchall():
+        launch_intent = bool(db.execute("SELECT 1 FROM events WHERE job_id=? AND kind='starting' LIMIT 1", (previous["id"],)).fetchone())
+        proof = managed_job_drain(previous, launch_intent)
+        if not proof["drained"]:
+            diagnostic = {"previous_job": previous["id"], "reason": proof["reason"]}
+            last = db.execute("SELECT data FROM events WHERE kind='dispatch_drain_blocked' ORDER BY seq DESC LIMIT 1").fetchone()
+            if not last or last[0] != canonical(diagnostic):
+                event(db, previous["id"], "dispatch_drain_blocked", diagnostic)
+            return diagnostic
+    return None
+
+
 def dispatch_once():
     current = primary()
     INLINE_CHILDREN[:] = [child for child in INLINE_CHILDREN if child.poll() is None]
@@ -349,6 +423,8 @@ def dispatch_once():
             # Queued jobs from a restored checkpoint require explicit resubmission with a new ID.
             db.execute("UPDATE jobs SET state='interrupted',error='authority_generation_changed',finished_at=?,updated_at=? WHERE id=?", (stamp(), stamp(), row["id"]))
             event(db, row["id"], "interrupted", {"error": "authority_generation_changed"})
+            return None
+        if admission_drain_blocker(db):
             return None
         folder = WORKER / "jobs" / row["id"]
         folder.mkdir(mode=0o2770)

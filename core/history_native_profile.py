@@ -9,6 +9,7 @@ SOURCE='f55595cd348c23ffe559dba2de9150259db9f1e7'
 STAGE=Path('/srv/admin-v2-worker/admin-r0002-history-native-qa-20261111')
 WORKER=Path('/srv/admin-v2-worker')
 COORDINATOR=Path('/srv/admin-v2-coordinator')
+PROC_ROOT=Path('/proc')
 RUNTIME_INPUTS=Path('/srv/admin-v2-worker/admin-r0002-runtime-qa-20261111/inputs')
 RUNTIME_ARCHIVE=RUNTIME_INPUTS/'runtime.tar'
 RELEASE_MANIFEST=RUNTIME_INPUTS/'release-manifest.json'
@@ -17,8 +18,8 @@ PG_BIN=Path('/usr/lib/postgresql/17/bin')
 NODE=Path('/usr/bin/node')
 NODE_SHA=baseline.NODE_SHA
 MANIFEST_SHA='7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3'
-HARNESS_SHA='c77171cd149c5ccdc89389b95d3433bae46ee75614f75dd4ebc9c4b85e2a71c8'
-HARNESS_PINS={'functional_smoke.py': '437e585f2fbf2a5238affd6017a183803282026b4ff7cfa2c4432b5ad05e8d71', 'native_pg.py': 'f46afdacb85f70b339620f9b025154937e75ead095b1a592f7f0a210f7bcbc34', 'fixture.cjs': 'a34574271520fbefcd1e508601aae6d950873db25f2aad6c0f0226151d32a31e', 'functional-guard.mjs': 'c36d4cdfbf7c892f3696b1a5e2521955651a7057eb6cd33783d36724a00ee62f', 'executor_context.py': '07b6df6b74abebf1a3eef25691eaf06cb27609ba38d2572f0c81710cb4132283', 'runtime_extract.py': '97efcbd8a26720baef84795f0344756018b4e28e596f841e70017533137497a2', 'schema-source-manifest.json': 'c46b36c4d4a9b31d5b89b8bb2a4c7373370bdf3c6d9281e3ef63ca4b55185a3a', 'pg-binary-pins.json': '4053a50714cbb68c9b3dfe0b3a015ffe46f73561b175799fc0547b73cbf7e49d', 'schema-sources/batch-a1-schema.ts': '1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b', 'schema-sources/batch-package-schema.ts': '7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4', 'schema-sources/db.ts': 'dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824', 'schema-sources/document-reference-schema.ts': 'b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c', 'schema-sources/petition-base-schema.ts': '25ea67cd71f653e68a8cc67177f77d39f18b4e56e14d6a8d42e256ddae51764c', 'schema-sources/president-own-a1-schema.ts': '24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408', 'schema-sources/president-own-document-schema.ts': '86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3'}
+HARNESS_SHA='0c4c2f2ff7b51e19e6084b1112def1a10b2de1c650c1f46074f396f55a1687e6'
+HARNESS_PINS={'functional_smoke.py': '84e8640f8ce5915588d3d15bb67d494bd8478889be0f085d185fe47df29cb7a9', 'native_pg.py': 'f46afdacb85f70b339620f9b025154937e75ead095b1a592f7f0a210f7bcbc34', 'fixture.cjs': 'a34574271520fbefcd1e508601aae6d950873db25f2aad6c0f0226151d32a31e', 'functional-guard.mjs': 'c36d4cdfbf7c892f3696b1a5e2521955651a7057eb6cd33783d36724a00ee62f', 'executor_context.py': 'dc0eb17cc1c98ca4f17d2c480322f30d33985295f092c2861ace08ec10ad84a9', 'runtime_extract.py': '97efcbd8a26720baef84795f0344756018b4e28e596f841e70017533137497a2', 'schema-source-manifest.json': 'c46b36c4d4a9b31d5b89b8bb2a4c7373370bdf3c6d9281e3ef63ca4b55185a3a', 'pg-binary-pins.json': '4053a50714cbb68c9b3dfe0b3a015ffe46f73561b175799fc0547b73cbf7e49d', 'schema-sources/batch-a1-schema.ts': '1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b', 'schema-sources/batch-package-schema.ts': '7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4', 'schema-sources/db.ts': 'dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824', 'schema-sources/document-reference-schema.ts': 'b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c', 'schema-sources/petition-base-schema.ts': '25ea67cd71f653e68a8cc67177f77d39f18b4e56e14d6a8d42e256ddae51764c', 'schema-sources/president-own-a1-schema.ts': '24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408', 'schema-sources/president-own-document-schema.ts': '86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3'}
 SOFT_SECONDS=600
 CLEANUP_SECONDS=120
 TOTAL_SECONDS=720
@@ -36,26 +37,53 @@ def read_json(path,limit=1024*1024):
   if not stat.S_ISREG(st.st_mode)or st.st_nlink!=1 or st.st_size>limit:raise ValueError('history_json_invalid')
   with os.fdopen(fd,'rb',closefd=False)as stream:data=stream.read(limit+1)
   if len(data)>limit:raise ValueError('history_json_too_large')
-  return json.loads(data)
+  return json.loads(data,object_pairs_hook=strict_pairs,parse_constant=reject_constant)
  finally:os.close(fd)
 def cgroup(pid):
- rows=[s[3:]for s in (Path('/proc')/str(pid)/'cgroup').read_text().splitlines()if s.startswith('0::')]
+ rows=[s[3:]for s in (PROC_ROOT/str(pid)/'cgroup').read_text().splitlines()if s.startswith('0::')]
  if len(rows)!=1:raise ValueError('unified_cgroup_required')
  return rows[0]
+def positive_generation(value):return type(value)is int and value>0
+def parent_identity(state,job,generation,boot,expected_cgroup):
+ if type(state)is not dict or state.get('id')!=job or state.get('state')!='running' or state.get('exit_code')is not None or state.get('finished_at')is not None:raise ValueError('queue_parent_state_not_running_for_job')
+ if not positive_generation(state.get('generation'))or state['generation']!=generation or state.get('boot_id')!=boot:raise ValueError('queue_parent_generation_or_boot_changed')
+ pid=state.get('pid');ticks=state.get('start_ticks')
+ if type(pid)is not int or pid<=0 or type(ticks)is not str or not re.fullmatch('[1-9][0-9]*',ticks):raise ValueError('queue_parent_identity_types')
+ path=PROC_ROOT/str(pid)
+ if path.stat().st_uid!=os.getuid():raise ValueError('queue_parent_uid_changed')
+ def fields():
+  data=(path/'stat').read_text();prefix,sep,tail=data.rpartition(') ')
+  if not sep or not prefix.startswith(str(pid)+' ('):raise ValueError('queue_parent_proc_stat_invalid')
+  values=tail.split()
+  if len(values)<20 or values[0]in {'Z','X','x'}or values[19]!=ticks:raise ValueError('queue_parent_start_ticks_changed_or_dead')
+  return values
+ fields()
+ if current_cgroup(pid)!=expected_cgroup:raise ValueError('queue_parent_cgroup_changed')
+ fields() # Reject reuse between the cgroup and stat observations too.
+ return pid,ticks
+
+def strict_pairs(pairs):
+ result={}
+ for key,value in pairs:
+  if key in result:raise ValueError('duplicate_json_key')
+  result[key]=value
+ return result
+def reject_constant(value):raise ValueError('non_finite_json')
+def current_cgroup(pid):return cgroup(pid)
 def verify_job(job):
- folder=WORKER/'jobs'/baseline.job_id(job);config=read_json(folder/'config.json');authority=read_json(COORDINATOR/'authority.json')
- boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip();expected='/system.slice/admin-v2-job-'+job+'.service'
+ folder=WORKER/'jobs'/baseline.job_id(job);config=read_json(folder/'config.json');authority=read_json(COORDINATOR/'authority.json');state=read_json(folder/'state.json')
+ if type(config)is not dict or type(authority)is not dict:raise ValueError('history_context_json_object_required')
+ boot=(PROC_ROOT/'sys/kernel/random/boot_id').read_text().strip();expected='/system.slice/admin-v2-job-'+job+'.service'
  if config.get('id')!=job or config.get('payload')!=fixed_payload() or config.get('digest')!=hashlib.sha256(json.dumps(config['payload'],sort_keys=True,separators=(',',':')).encode()).hexdigest():raise ValueError('history_job_config_changed')
- if authority.get('role')!='primary'or authority.get('armed_boot_id')!=boot or authority.get('generation')!=config.get('generation'):raise ValueError('history_authority_changed')
+ if not positive_generation(config.get('generation'))or not positive_generation(authority.get('generation'))or authority.get('role')!='primary'or authority.get('armed_boot_id')!=boot or authority['generation']!=config['generation']:raise ValueError('history_authority_generation_boot_changed')
  if cgroup(os.getpid())!=expected:raise ValueError('history_wrong_cgroup')
  marker=folder/'execution.started';fd=os.open(marker,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
  try:
   st=os.fstat(fd)
   if not stat.S_ISREG(st.st_mode)or st.st_nlink!=1 or st.st_uid!=os.getuid():raise ValueError('history_execution_marker_invalid')
  finally:os.close(fd)
- state=read_json(folder/'state.json')
- if state.get('boot_id')!=boot or state.get('generation')!=config['generation']or cgroup(state['pid'])!=expected:raise ValueError('history_parent_state_changed')
- return {'jobId':job,'configDigest':config['digest'],'generation':config['generation'],'bootId':boot,'cgroup':expected,'parentPid':state['pid']}
+ parent,ticks=parent_identity(state,job,config['generation'],boot,expected)
+ return {'jobId':job,'configDigest':config['digest'],'generation':config['generation'],'bootId':boot,'cgroup':expected,'parentPid':parent,'parentStartTicks':ticks}
 def verify_inputs():
  if STAGE.resolve()!=STAGE or not STAGE.is_dir()or STAGE.stat().st_uid!=os.getuid()or stat.S_IMODE(STAGE.stat().st_mode)!=0o700:raise ValueError('history_stage_not_private')
  for path in STAGE.rglob('*'):
@@ -87,7 +115,7 @@ def prepare(job,context):
  spec=importlib.util.spec_from_file_location('r0002_runtime_extract',root/'runtime_extract.py');extractor=importlib.util.module_from_spec(spec);spec.loader.exec_module(extractor)
  extracted=extractor.extract_verified(RUNTIME_ARCHIVE,RELEASE_MANIFEST,root/'runtime-source')
  if extracted.get('verifiedFiles')!=12043:raise ValueError('history_extraction_inventory')
- config={'node_path':str(NODE),'node_sha256':NODE_SHA,'expected_cgroup':context['cgroup'],'executor_job_id':job,'executor_config_digest':context['configDigest'],'schema_source_dir':str(root/'schema-sources'),'runtime_dir':str(root/'runtime-source/runtime'),'release_manifest':str(root/'runtime-source/release-manifest.json')}
+ config={'node_path':str(NODE),'node_sha256':NODE_SHA,'expected_cgroup':context['cgroup'],'executor_job_id':job,'executor_config_digest':context['configDigest'],'executor_generation':context['generation'],'executor_boot_id':context['bootId'],'executor_parent_pid':context['parentPid'],'executor_parent_start_ticks':context['parentStartTicks'],'schema_source_dir':str(root/'schema-sources'),'runtime_dir':str(root/'runtime-source/runtime'),'release_manifest':str(root/'runtime-source/release-manifest.json')}
  path=root/'config.json';path.write_text(json.dumps(config));path.chmod(0o600);return root,path
 def checked_run(root):
  latest=read_json(root/'latest-run.json');run=Path(latest.get('run',''))
@@ -109,7 +137,7 @@ def validate_result(proof,run,context):
  if read_json(run/'source-manifest.json')!=read_json(STAGE/'schema-source-manifest.json'):raise ValueError('history_schema_proof_changed')
  expected_pg=read_json(STAGE/'pg-binary-pins.json');observed_pg=lifecycle.get('binaryPins',{})
  if set(observed_pg)!=set(expected_pg)or any(observed_pg[n].get('sha256')!=v for n,v in expected_pg.items()):raise ValueError('history_pg_pins_proof_changed')
- if any(proof.get('executorContext',{}).get(k)!=context[k]for k in ['jobId','configDigest','generation','bootId','cgroup']):raise ValueError('history_result_context_changed')
+ if any(proof.get('executorContext',{}).get(k)!=context[k]for k in ['jobId','configDigest','generation','bootId','cgroup','parentPid','parentStartTicks']):raise ValueError('history_result_context_changed')
 
 def cgroup_remaining(context):
  path=Path('/sys/fs/cgroup')/context['cgroup'].lstrip('/')/'cgroup.procs';allowed={os.getpid(),context['parentPid']};remaining=[]
@@ -117,7 +145,7 @@ def cgroup_remaining(context):
   pid=int(item)
   if pid in allowed:continue
   try:
-   state=(Path('/proc')/str(pid)/'stat').read_text().rsplit(')',1)[1].split()[0]
+   state=(PROC_ROOT/str(pid)/'stat').read_text().rsplit(')',1)[1].split()[0]
    if state!='Z':remaining.append(pid)
   except FileNotFoundError:pass
  return remaining
@@ -159,7 +187,7 @@ def export_extraction(root,target,required):
  dest=target/'runtime-extraction-proof.json';dest.write_text(json.dumps(proof,indent=2)+'\n');dest.chmod(0o660)
 
 def child_identity(child,context):
- path=Path('/proc')/str(child.pid);fields=(path/'stat').read_text().rsplit(')',1)[1].split()
+ path=PROC_ROOT/str(child.pid);fields=(path/'stat').read_text().rsplit(')',1)[1].split()
  if path.stat().st_uid!=os.getuid()or cgroup(child.pid)!=context['cgroup']:raise ValueError('history_child_identity_changed')
  return fields[19]
 def signal_child(child,context,start_ticks,sig):

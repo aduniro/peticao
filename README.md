@@ -42,3 +42,11 @@ Exportador usa somente allowlist derecibos/resultados/guard/lifecycle/manifestos
 O bloco dos19checks é preservado do harnessca53; o gate/entrypoint/schema/runtime/contexto foram adaptados e precisam revisão específica. Este pacote não é operacionalmentehomologado e não comprovaA1/gov.br real, frontendbrowser ou prontidão de deploy. Próximo passo é revisão/ACK/lease e staging/install separados pelo coordenador; não foram feitos aqui.
 
 Não houve ensaio de rollback do banco da aplicação; rollbackpending do catálogo continua pendente. Criar uma base fictícia nova não homologa upgrade/rollback de dados existentes.
+
+## Revision 3: process identity and admission drain
+
+The wrapper and inner harness require a matching running state.json, positive non-boolean generation, current boot, own UID and unchanged parent PID/start ticks/cgroup. The inner harness rechecks the frozen context before prepare/init/start/bootstrap; no PG stage starts after a changed observation. Duplicate/non-finite JSON is refused.
+
+The existing queue now inspects only known managed job units with systemctl show (no sudo/control command) and the exact corresponding cgroup. DB terminal status alone does not admit another heavy job. Deactivating/active, populated, incomplete/unreadable or uncertain launch evidence blocks dispatch with a deduplicated diagnostic. A garbage-collected unit requires an existing completed execution marker/terminal runtime state and absent/empty cgroup. Queued cancellations proven to have no starting event and no folder are never-launched. Existing inline synthetic fixtures retain their previously explicit test mode and wait for actual child drainage. No replay, privilege expansion, generic RPC, new executor or installed host modification is introduced.
+
+These are synthetic fixtures only; real systemd visibility and R0002 PG17/19HTTP qualification still require reviewed staging and the existing ACK/lease protocol.

@@ -10,7 +10,7 @@ import native_pg as n
 
 class HistoryTests(unittest.TestCase):
  def setUp(self):
-  self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name);self.job='4'*32;self.group='/system.slice/admin-v2-job-'+self.job+'.service';self.context={'jobId':self.job,'configDigest':'a'*64,'generation':7,'bootId':'fixture','cgroup':self.group,'parentPid':499999}
+  self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name);self.job='4'*32;self.group='/system.slice/admin-v2-job-'+self.job+'.service';self.context={'jobId':self.job,'configDigest':'a'*64,'generation':7,'bootId':'fixture','cgroup':self.group,'parentPid':499999,'parentStartTicks':'12345'}
   self.worker=self.root/'worker';self.work=self.worker/'jobs'/self.job/'work';self.work.mkdir(parents=True);self.stage=self.root/'stage';self.stage.mkdir(mode=0o700)
   self.schemas=json.loads((BASE/'r0002_harness/schema-source-manifest.json').read_text());self.pg=json.loads((BASE/'r0002_harness/pg-binary-pins.json').read_text());(self.stage/'schema-source-manifest.json').write_text(json.dumps(self.schemas));(self.stage/'pg-binary-pins.json').write_text(json.dumps(self.pg))
   self.patches=[mock.patch.object(p,'WORKER',self.worker),mock.patch.object(p,'STAGE',self.stage)]
@@ -113,15 +113,51 @@ class HistoryTests(unittest.TestCase):
   with self.assertRaises(e.Cancelled):state.handle(signal.SIGTERM,None)
   state.cleaning=True;state.handle(signal.SIGTERM,None);self.assertEqual(state.signals,2)
  def test_queue_context_generation_digest_marker_and_no_local_lease(self):
-  coord=self.root/'coord';coord.mkdir();folder=self.worker/'jobs'/self.job;cfg={'id':self.job,'payload':p.fixed_payload(),'generation':7};cfg['digest']=hashlib.sha256(e.canonical(cfg['payload']).encode()).hexdigest();(folder/'config.json').write_text(json.dumps(cfg));(folder/'execution.started').write_text('');boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip();authority={'role':'primary','armed_boot_id':boot,'generation':7};(coord/'authority.json').write_text(json.dumps(authority))
-  with mock.patch.multiple(e,WORKER=self.worker,COORDINATOR=coord),mock.patch.object(e,'cgroup_of',return_value=self.group):
-   self.assertEqual(e.verify_queue_context(self.job,cfg['digest'],self.group)['generation'],7)
-   with self.assertRaises(RuntimeError):e.verify_queue_context(self.job,'0'*64,self.group)
-   (coord/'authority.json').write_text(json.dumps({**authority,'generation':8}))
-   with self.assertRaisesRegex(RuntimeError,'generation/boot'):e.verify_queue_context(self.job,cfg['digest'],self.group)
-   (coord/'authority.json').write_text(json.dumps({**authority,'armed_boot_id':'old-boot'}))
-   with self.assertRaisesRegex(RuntimeError,'generation/boot'):e.verify_queue_context(self.job,cfg['digest'],self.group)
-   (coord/'authority.json').write_text(json.dumps(authority));(folder/'execution.started').unlink()
+  coord=self.root/'coord';coord.mkdir();folder=self.worker/'jobs'/self.job
+  cfg={'id':self.job,'payload':p.fixed_payload(),'generation':7};cfg['digest']=hashlib.sha256(e.canonical(cfg['payload']).encode()).hexdigest()
+  (folder/'config.json').write_text(json.dumps(cfg));(folder/'execution.started').write_text('')
+  proc=self.root/'proc';(proc/'sys/kernel/random').mkdir(parents=True);(proc/'sys/kernel/random/boot_id').write_text('fixture')
+  pid=499999;parent=proc/str(pid);parent.mkdir();(parent/'stat').write_text(str(pid)+' (fake parent) '+' '.join(['S']+['0']*18+['12345']))
+  authority={'role':'primary','armed_boot_id':'fixture','generation':7};(coord/'authority.json').write_text(json.dumps(authority))
+  state={'id':self.job,'state':'running','generation':7,'boot_id':'fixture','pid':pid,'start_ticks':'12345','exit_code':None,'finished_at':None}
+  def save(value):(folder/'state.json').write_text(json.dumps(value))
+  save(state)
+  with mock.patch.multiple(e,WORKER=self.worker,COORDINATOR=coord,PROC_ROOT=proc),mock.patch.multiple(p,COORDINATOR=coord,PROC_ROOT=proc),mock.patch.object(e,'current_cgroup',return_value=self.group),mock.patch.object(p,'current_cgroup',return_value=self.group),mock.patch.object(p,'cgroup',return_value=self.group):
+   self.assertEqual(e.verify_queue_context(self.job,cfg['digest'],self.group)['parentStartTicks'],'12345')
+   self.assertEqual(p.verify_job(self.job)['parentStartTicks'],'12345')
+   for change in [{'state':v} for v in ['completed','interrupted','starting','failed','canceled']]+[{'id':'f'*32},{'generation':True},{'generation':0},{'generation':'7'},{'start_ticks':'999'},{'pid':True},{'boot_id':'old'}]:
+    save({**state,**change})
+    for call in [lambda:e.verify_queue_context(self.job,cfg['digest'],self.group),lambda:p.verify_job(self.job)]:
+     with self.subTest(change=change),self.assertRaises((ValueError,RuntimeError)):call()
+   save(state)
+   for generation in [True,0,'7']:
+    (coord/'authority.json').write_text(json.dumps({**authority,'generation':generation}))
+    for call in [lambda:e.verify_queue_context(self.job,cfg['digest'],self.group),lambda:p.verify_job(self.job)]:
+     with self.assertRaises((ValueError,RuntimeError)):call()
+   (coord/'authority.json').write_text(json.dumps(authority))
+   with mock.patch.object(e.os,'getuid',return_value=os.getuid()+1):
+    for module in [e,p]:
+     with self.assertRaisesRegex(ValueError,'uid_changed'):module.parent_identity(state,self.job,7,'fixture',self.group)
+   for module in [e,p]:
+    (parent/'stat').write_text(str(pid)+' (fake parent) '+' '.join(['S']+['0']*18+['12345']))
+    def reused(ignored):
+     (parent/'stat').write_text(str(pid)+' (fake parent) '+' '.join(['S']+['0']*18+['99999']));return self.group
+    with mock.patch.object(module,'current_cgroup',side_effect=reused):
+     with self.assertRaisesRegex(ValueError,'start_ticks'):module.parent_identity(state,self.job,7,'fixture',self.group)
+   (folder/'execution.started').unlink()
    with self.assertRaises(FileNotFoundError):e.verify_queue_context(self.job,cfg['digest'],self.group)
   code=(BASE/'r0002_harness/functional_smoke.py').read_text();self.assertNotIn('COORD_PREFIX',code);self.assertNotIn('active-lease.json',code)
+ def test_context_snapshot_refuses_reused_parent(self):
+  config={'executor_job_id':self.job,'executor_config_digest':self.context['configDigest'],'executor_generation':7,'executor_boot_id':'fixture','expected_cgroup':self.group,'executor_parent_pid':499999,'executor_parent_start_ticks':'12345'}
+  with mock.patch.object(e,'verify_queue_context',return_value=self.context):self.assertEqual(e.verify_context_snapshot(config),self.context)
+  with mock.patch.object(e,'verify_queue_context',return_value={**self.context,'parentStartTicks':'999'}):
+   with self.assertRaisesRegex(ValueError,'changed'):e.verify_context_snapshot(config)
+ def test_context_changes_before_pg_stage_do_not_start_next_stage(self):
+  import functional_smoke as h
+  for failing in [1,2,3,4]:
+   pg=mock.Mock();outcomes=[self.context]*(failing-1)+[ValueError('fence changed')]
+   with mock.patch.object(h,'verify_context_snapshot',side_effect=outcomes):
+    with self.assertRaisesRegex(ValueError,'fence changed'):h.bootstrap_native_fixture(pg,{})
+   actions=[pg.prepare,pg.initialize,pg.start,pg.bootstrap]
+   for index,action in enumerate(actions):self.assertEqual(action.call_count,1 if index<failing-1 else 0)
 if __name__=='__main__':unittest.main()
