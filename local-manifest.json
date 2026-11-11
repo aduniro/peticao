@@ -1,0 +1,42 @@
+{
+  "classification": "R9_DRAFT_MOCK_QUALIFIED_NOT_EXECUTED",
+  "files": {
+    ".gitignore": "61b3a7ce7f73e51dea5eb339eca40ea4b52ea39dfa35c83e81f974cc71a5e932",
+    "PROVENANCE.json": "ca88db4fc0dcb7bedc259c3c35afb19504a01de3e4cce1308778a034477329a1",
+    "README.md": "83f6e27132d2c23ca1f22d065988bce8959ebe1e0e80aa826304cac23a26c24b",
+    "config.json": "bed1dd4905d1b325f7619b0d19421a78ec0ad7b769b20ae43feece5264dbd2ab",
+    "contracts/site__src__lib__batch-package-contract.ts": "e9abb2a24b2ff71b322d7136ea97e6dc8f9d425a4b5bfb1b5d29279db38f29e9",
+    "contracts/site__src__lib__batch-package-delivery.test.ts": "2914d71218b245a50a3cb79b5ab99a310fb7ba591dd47d5fc4d42ce1d4a90100",
+    "contracts/site__src__lib__batch-package-store.ts": "08538e096a5f3f8d48585428853763fd9c4c4986a0c4a6a4bb065a8c66d21fac",
+    "contracts/site__src__lib__batch-reconciliation.ts": "35161273192c5d85c80c10d4d9c2cdb5244cc1580cdad61c775e93cdc0ee4d2a",
+    "contracts/site__src__lib__batches.ts": "69d47cbf7c4f3bb3453a6ef8df6c838aefd90d5cf6613040a4ead388db6175d2",
+    "contracts/site__src__lib__mail__archive-codec.ts": "7047fddcff6dd34c7a299430418ed632161de2b64ccab647b922bfefc1ac31ec",
+    "contracts/site__src__lib__petition-base-validation.ts": "961245be359db02455ef7249c1f9517f513aedcfae9152833480bbb0ae882239",
+    "contracts/site__src__lib__signer.ts": "d11fa7d8e82eca0ba93eb061eade0c0c6a7167c86a6f5750095e4fcdad5fad97",
+    "docker_control.py": "3fe0c3723255e28ffd6f232a5e2144d2f5b71ce605d6e62185fc2df715bbfec9",
+    "fixture.cjs": "2e9889dca9e24ed5599ac44656d0725ece30066efb7fc859846d8cab0de6ad4e",
+    "functional-guard.mjs": "33548c2d5ff149bcd4467913d494aaeb3ecab164ea5b9aee0fbb7b7331fc01f8",
+    "functional_smoke.py": "f7daf44e4336c7086f4f0a9269b05e03eacb506cb9e351b4d0d9a16ab96139fa",
+    "local_controller.py": "bcd2954981881f124c62a5a1cb56c21cc5916405e042ec2f6f364f02bd3b40a8",
+    "package_http.py": "0d7e2aa1d6dd0b9b72440f2367e07e3325900e738380b48e03e2de721a9b8a83",
+    "schema-source-manifest.json": "f7947630d328d92fd372166baeb2ace32ee33149e495c9ff7866d5d075bc6a7e",
+    "schema-sources/batch-a1-schema.ts": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
+    "schema-sources/batch-package-schema.ts": "7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4",
+    "schema-sources/db.ts": "dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824",
+    "schema-sources/document-reference-schema.ts": "b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c",
+    "schema-sources/peticao.ts": "0bdaf41e7320efb40f344a975137d05a562a63ec40cda4444c769deb4d8d5584",
+    "schema-sources/petition-base-schema.ts": "25ea67cd71f653e68a8cc67177f77d39f18b4e56e14d6a8d42e256ddae51764c",
+    "schema-sources/president-own-a1-schema.ts": "24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408",
+    "schema-sources/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
+    "seed_contract.cjs": "b2489fe6fa9c4e2a89bdbf9318c7ab02d9cf038689495faffc49c9b62511c8b8",
+    "test_profile.py": "f3377f8842a4d0958fa4ce1598b269b2442bf2fa7186bca25c27db2b7e58e779",
+    "test_seed_contract.cjs": "b2a00e6c0910818334650c379ca0793a92586e1dc14109750d9e84355ad66127"
+  },
+  "backendCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
+  "mocks": {
+    "python": 12,
+    "nodeDummy": 3
+  },
+  "realAppPgDockerHttpExecuted": false
+}

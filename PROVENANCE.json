@@ -1,0 +1,22 @@
+{
+  "classification": "DRAFT_NOT_EXECUTED",
+  "backendCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "contractSourcePins": {
+    "site/src/lib/batches.ts": "69d47cbf7c4f3bb3453a6ef8df6c838aefd90d5cf6613040a4ead388db6175d2",
+    "site/src/lib/signer.ts": "d11fa7d8e82eca0ba93eb061eade0c0c6a7167c86a6f5750095e4fcdad5fad97",
+    "site/src/lib/batch-package-contract.ts": "e9abb2a24b2ff71b322d7136ea97e6dc8f9d425a4b5bfb1b5d29279db38f29e9",
+    "site/src/lib/batch-package-store.ts": "08538e096a5f3f8d48585428853763fd9c4c4986a0c4a6a4bb065a8c66d21fac",
+    "site/src/lib/petition-base-validation.ts": "961245be359db02455ef7249c1f9517f513aedcfae9152833480bbb0ae882239",
+    "site/src/lib/mail/archive-codec.ts": "7047fddcff6dd34c7a299430418ed632161de2b64ccab647b922bfefc1ac31ec",
+    "site/src/lib/batch-reconciliation.ts": "35161273192c5d85c80c10d4d9c2cdb5244cc1580cdad61c775e93cdc0ee4d2a",
+    "site/src/lib/batch-package-delivery.test.ts": "2914d71218b245a50a3cb79b5ab99a310fb7ba591dd47d5fc4d42ce1d4a90100"
+  },
+  "runtimeReused": "/mnt/dev/.peticao-r0006-local-history-browser-qa-20261111/runs/af07e86c4964/runtime",
+  "originRuntime": "/mnt/dev/.peticao-r0002-production-profile-20261111/export/runtime",
+  "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
+  "noNewRuntimeCopy": true,
+  "noMountReadOnlyClaim": true,
+  "sourceR6Preserved": true,
+  "realAppPgDockerHttpExecuted": false,
+  "syntheticSqlCryptographicPreconditionOnly": true
+}
