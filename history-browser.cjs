@@ -12,13 +12,14 @@ const sha = bytes => crypto.createHash("sha256").update(bytes).digest("hex");
 
 function validateConfig(cfg, filename, currentCgroup) {
   const run = path.dirname(filename);
-  assert.match(run, /^\/mnt\/dev\/\.peticao-r0004-local-history-http-qa-20261111\/runs\/[a-f0-9]{12}$/);
+  const match = run.match(/^\/mnt\/dev\/\.peticao-(r0004-local-history-http|r0006-local-history-browser)-qa-20261111\/runs\/[a-f0-9]{12}$/);
+  assert.ok(match, "explicit reviewed local history fixture root required");
   assert.equal(filename, path.join(run, "browser-config.json"));
   assert.equal(cfg.run, run);
   assert.equal(cfg.sourceCommit, SOURCE);
   assert.equal(cfg.origin, ORIGIN);
   assert.equal(cfg.cgroup, currentCgroup);
-  assert.match(cfg.cgroup, /^\/user\.slice\/.*\/peticao-r0004-local-history-http-qa-20261111\.service$/);
+  assert.ok(cfg.cgroup.startsWith("/user.slice/") && cfg.cgroup.endsWith(`/peticao-${match[1]}-qa-20261111.service`), "fixture root and exact local unit must match");
   assert.match(cfg.cookie, /^adm=[A-Za-z0-9_.~-]{16,4096}$/);
   assert.equal(cfg.syntheticSession, true);
   assert.equal(cfg.stepupSeeded, true);

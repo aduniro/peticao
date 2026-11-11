@@ -14,6 +14,13 @@ test("accepts only exact local fixture run/source/cgroup and declared synthetic 
   assert.throws(() => validateConfig(good(), run + "/browser-config.json", "/another.service"));
 });
 
+test("new browser fixture accepts only its paired R6 root and unit, never a mixed context", () => {
+  const cfg = good(); cfg.run = run.replace("r0004-local-history-http", "r0006-local-history-browser"); cfg.cgroup = group.replace("r0004-local-history-http", "r0006-local-history-browser");
+  assert.equal(validateConfig(cfg, cfg.run + "/browser-config.json", cfg.cgroup), cfg.run);
+  assert.throws(() => validateConfig({ ...cfg, cgroup: group }, cfg.run + "/browser-config.json", group));
+  assert.throws(() => validateConfig({ ...good(), cgroup: cfg.cgroup }, run + "/browser-config.json", cfg.cgroup));
+});
+
 test("rejects swapped PDFs, traversal names and unbounded fixture downloads", () => {
   for (const patch of [{ ordinal: 2 }, { id: "../other" }, { filename: "../../secret.pdf" }, { sha256: "wrong" }, { bytes: -1 }, { bytes: 1024 * 1024 + 1 }]) {
     const c = good(); Object.assign(c.fixtures[0], patch);
