@@ -44,6 +44,24 @@ def verify_response_observation_v2_previous_attempt():
  if outer.get('exit')!=1 or outer.get('runtimeStable')is not True or outer.get('originRuntimeStable')is not True or outer.get('postgresCleanup',{}).get('stopped')is not True or outer.get('remainingAppProcesses')!=[]or outer.get('remainingLocalCgroupProcesses')!=[]or outer.get('localPortsClosed')!=[55494,31394]:raise ValueError('old failed outer and drained resources required')
  return prior
 
+def verify_history_diagnostic_v3_previous_attempt():
+ verify_response_observation_v2_previous_attempt() # First failure and its proofs remain required/preserved.
+ prior=json.loads((ROOT/'PREVIOUS-HISTORY-DOM-FAILURE.json').read_text());oldrun=ROOT/'runs/b450444f60d2'
+ if prior.get('classification')!='EXPLICIT_R14_HISTORY_DIAGNOSTIC_V3_AFTER_FAILED_SECOND_RUN' or prior.get('newMarker')!='execution.history-diagnostic-v3.started' or prior.get('noGenericReplay')is not True or prior.get('oldRun')!=str(oldrun):raise ValueError('fixed second failed history attempt only')
+ expected={'root-failure-receipt.json','root-retained-unit.txt','outer-result.json','own-browser-result.json','browser-hook-result.json'}
+ if set(prior.get('files',{}))!=expected:raise ValueError('exact failed history proof set')
+ for name,pin in prior['files'].items():
+  if digest(oldrun/name)!=pin:raise ValueError('failed history proof hash drift')
+ if prior.get('failureReceiptSha256')!='114aa409203c74d3621047cf8c3399d4368b9fa1541551debf0fb9c924a126a3' or prior['files']['root-failure-receipt.json']!=prior['failureReceiptSha256'] or digest(ROOT/'execution.response-observation-v2.started')!=prior.get('oldMarkerSha256'):raise ValueError('root second failure and v2 marker required')
+ failed=json.loads((oldrun/'root-failure-receipt.json').read_text());outer=json.loads((oldrun/'outer-result.json').read_text());unit=dict(line.split('=',1)for line in(oldrun/'root-retained-unit.txt').read_text().splitlines()if'='in line)
+ required={'classification':'FAILED_OWN_ARTIFACT_HISTORY_DOM_WAIT_AFTER_MANUAL_RECOVERY_AND_DOWNLOAD','sourceCommit':'f55595cd348c23ffe559dba2de9150259db9f1e7','invocation':'bf03dd0a20034218b9a3b88a816c0ab4','exit':1,'partialBrowserChecksPassed':6,'plannedBrowserChecks':13,'ownCreationPostedOnce':True,'manualRecoveryFreshDomPassed':True,'firstDownloadMatchedDb':True,'historyGetStatus':200,'historyDomAndDownloadAndReloadQualified':False,'cleanupPassed':True,'runtimeStable':True,'retryPerformed':False}
+ if any(failed.get(k)!=v for k,v in required.items()):raise ValueError('typed second failed history receipt required')
+ for name in expected-{'root-failure-receipt.json'}:
+  if failed.get('files',{}).get(name)!=prior['files'][name]:raise ValueError('second receipt exact file binding')
+ if failed.get('executionMarkerSha256')!=prior['oldMarkerSha256']or any(unit.get(k)!=v for k,v in {'Result':'exit-code','ExecMainCode':'1','ExecMainStatus':'1','LoadState':'loaded','ActiveState':'failed','SubState':'failed','InvocationID':'bf03dd0a20034218b9a3b88a816c0ab4'}.items()):raise ValueError('second retained failure and marker required')
+ if outer.get('exit')!=1 or outer.get('runtimeStable')is not True or outer.get('originRuntimeStable')is not True or outer.get('postgresCleanup',{}).get('stopped')is not True or outer.get('remainingAppProcesses')!=[]or outer.get('remainingLocalCgroupProcesses')!=[]or outer.get('localPortsClosed')!=[55494,31394]:raise ValueError('second outer failed and resources drained required')
+ return prior
+
 def verify_local_manifest(create_intent=True):
  expected=os.environ.get('LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256','')
  if not re.fullmatch('[a-f0-9]{64}',expected)or digest(ROOT/'local-manifest.json')!=expected:raise ValueError('reviewed LOCAL manifest SHA required')
@@ -51,9 +69,9 @@ def verify_local_manifest(create_intent=True):
  for name,pin in value['files'].items():
   if not name or Path(name).is_absolute()or '..'in Path(name).parts or digest(ROOT/name)!=pin:raise ValueError('LOCAL reviewed file drift')
  if create_intent:
-  live_context(json.loads(CONFIG.read_text())['expected_cgroup']);prior=verify_response_observation_v2_previous_attempt()
-  fd=os.open(ROOT/'execution.response-observation-v2.started',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
-  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_R14_RESPONSE_OBSERVATION_V2_ONLY','at':time.time(),'unit':UNIT,'previousFailureReceiptSha256':prior['failureReceiptSha256'],'oldMarkerSha256':prior['oldMarkerSha256']},out)
+  live_context(json.loads(CONFIG.read_text())['expected_cgroup']);prior=verify_history_diagnostic_v3_previous_attempt()
+  fd=os.open(ROOT/'execution.history-diagnostic-v3.started',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_R14_HISTORY_DIAGNOSTIC_V3_ONLY','at':time.time(),'unit':UNIT,'previousFailureReceiptSha256':prior['failureReceiptSha256'],'oldMarkerSha256':prior['oldMarkerSha256']},out)
  return value
 
 def verify_local_context(config):

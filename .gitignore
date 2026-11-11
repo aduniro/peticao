@@ -7,3 +7,5 @@ mock-proof/
 __pycache__/
 *.bundle
 execution.*.started
+latest-run.json
+diagnostic-preparation-lease.json

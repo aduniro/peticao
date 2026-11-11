@@ -1,0 +1,115 @@
+TAP version 13
+# Subtest: diagnostic captures auxiliary wire and UI failure without declaring UI success
+ok 1 - diagnostic captures auxiliary wire and UI failure without declaring UI success
+  ---
+  duration_ms: 13.287589
+  ...
+# Subtest: diagnostic retains wrong shape/status, not masked by valid old UI
+ok 2 - diagnostic retains wrong shape/status, not masked by valid old UI
+  ---
+  duration_ms: 11.599925
+  ...
+# Subtest: auxiliary header is restricted to exact same-origin artifacts GET
+ok 3 - auxiliary header is restricted to exact same-origin artifacts GET
+  ---
+  duration_ms: 1.978721
+  ...
+# Subtest: real driver bounds locator waits and captures diagnostics before failed UI wait
+ok 4 - real driver bounds locator waits and captures diagnostics before failed UI wait
+  ---
+  duration_ms: 0.725573
+  ...
+# Subtest: GET observation never reads CDP JSON, validates committed typed UI instead
+ok 5 - GET observation never reads CDP JSON, validates committed typed UI instead
+  ---
+  duration_ms: 8.115359
+  ...
+# Subtest: HTTP failure and finished/request errors refuse even old valid DOM
+ok 6 - HTTP failure and finished/request errors refuse even old valid DOM
+  ---
+  duration_ms: 11.820633
+  ...
+# Subtest: wrong committed UI hash artifact link source or UUID fails
+ok 7 - wrong committed UI hash artifact link source or UUID fails
+  ---
+  duration_ms: 2.645151
+  ...
+# Subtest: UI uncertain with stale valid artifact cannot qualify recovery
+ok 8 - UI uncertain with stale valid artifact cannot qualify recovery
+  ---
+  duration_ms: 2.412646
+  ...
+# Subtest: freshness requires busy cleared status then nonbusy completed
+ok 9 - freshness requires busy cleared status then nonbusy completed
+  ---
+  duration_ms: 0.731733
+  ...
+# Subtest: failure diagnostics are bounded fields without headers body or credentials
+ok 10 - failure diagnostics are bounded fields without headers body or credentials
+  ---
+  duration_ms: 1.344424
+  ...
+# Subtest: observer ready ACK is awaited before click, not completion
+ok 11 - observer ready ACK is awaited before click, not completion
+  ---
+  duration_ms: 1.666452
+  ...
+# Subtest: missing observer installation ACK forbids click
+ok 12 - missing observer installation ACK forbids click
+  ---
+  duration_ms: 0.768245
+  ...
+# Subtest: one exact own POST consumes phase and fixes UUID
+ok 13 - one exact own POST consumes phase and fixes UUID
+  ---
+  duration_ms: 19.506518
+  ...
+# Subtest: wrong receipt/document/extra fields rejected before posting
+ok 14 - wrong receipt/document/extra fields rejected before posting
+  ---
+  duration_ms: 3.28128
+  ...
+# Subtest: unarmed other mutation A1/code/challenge prohibited
+ok 15 - unarmed other mutation A1/code/challenge prohibited
+  ---
+  duration_ms: 18.036327
+  ...
+# Subtest: recovery GET binds exact original UUID and never resets consumed POST
+ok 16 - recovery GET binds exact original UUID and never resets consumed POST
+  ---
+  duration_ms: 0.989253
+  ...
+# Subtest: only exact artifact ID downloads and history kinds admitted
+ok 17 - only exact artifact ID downloads and history kinds admitted
+  ---
+  duration_ms: 0.669759
+  ...
+# Subtest: external origin/query/ctype changes refused
+ok 18 - external origin/query/ctype changes refused
+  ---
+  duration_ms: 5.154872
+  ...
+# Subtest: short sandbox temp budget remains bounded
+ok 19 - short sandbox temp budget remains bounded
+  ---
+  duration_ms: 6.181107
+  ...
+# Subtest: actual pinned history wire contract uses documents; pre-fix artifacts assertion fails
+ok 20 - actual pinned history wire contract uses documents; pre-fix artifacts assertion fails
+  ---
+  duration_ms: 17.033027
+  ...
+# Subtest: POST and recovery metadata enforce every wire field and source binding
+ok 21 - POST and recovery metadata enforce every wire field and source binding
+  ---
+  duration_ms: 4.387572
+  ...
+1..21
+# tests 21
+# suites 0
+# pass 21
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 297.686248

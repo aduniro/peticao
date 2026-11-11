@@ -3,7 +3,7 @@ from pathlib import Path
 import os,json,stat,hashlib,re,subprocess,signal,time
 ROOT=Path('/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111')
 DRIVER=ROOT/'own-browser.cjs'
-DRIVER_SHA='d38534abd0f52c950c0db220de1c2ae5a5577f74fd6a3b4d9807a4a7d8bb4b6f'
+DRIVER_SHA='1a7c3740e08baba90f943c3b3b904825a7a4e6b28ad3c1a3bed15bb9af9c553c'
 NODE_SHA='b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac'
 UNIT='peticao-r0014-own-document-browser-qa-20261111.service'
 SOURCE='f55595cd348c23ffe559dba2de9150259db9f1e7'
@@ -81,6 +81,8 @@ def validate_result(run,value,generated):
  for name in ['browser-own.pdf','browser-history-own.pdf']:
   p=run/'downloads'/name
   if p.resolve()!=p or not p.is_file()or p.is_symlink()or p.stat().st_size!=a['byteLength']or sha(p)!=a['sha256']or p.read_bytes()!=(run/'downloads/own-database.pdf').read_bytes():raise BrowserHookError('own download exact bytes')
+ auxiliary=[q for q in value.get('requests',[])if q.get('source')=='observer']
+ if [(q.get('method'),q.get('path'))for q in auxiliary]!=[('GET','/api/admin/lotes/1/presidente/historico')]:raise BrowserHookError('exactly one auxiliary history GET, not UI proof')
  p=run/'own-browser.png'
  if p.resolve()!=p or not p.is_file()or p.is_symlink()or p.stat().st_size>16*1024**2 or not p.read_bytes().startswith(b'\x89PNG\r\n\x1a\n'):raise BrowserHookError('sanitized PNG')
  return {'browserTmpRemoved':True,'passedBrowserChecks':13,'browserOwnDownloadsMatched':True,'screenshotSha256':sha(p)}

@@ -1,0 +1,15 @@
+{
+  "classification": "EXPLICIT_R14_HISTORY_DIAGNOSTIC_V3_AFTER_FAILED_SECOND_RUN",
+  "newMarker": "execution.history-diagnostic-v3.started",
+  "noGenericReplay": true,
+  "oldRun": "/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111/runs/b450444f60d2",
+  "failureReceiptSha256": "114aa409203c74d3621047cf8c3399d4368b9fa1541551debf0fb9c924a126a3",
+  "oldMarkerSha256": "7d35062a910b0ec1bde96f0c7f454039d0a0bd3e6753ef1366409d514451156f",
+  "files": {
+    "root-failure-receipt.json": "114aa409203c74d3621047cf8c3399d4368b9fa1541551debf0fb9c924a126a3",
+    "root-retained-unit.txt": "fe2d0d7f33b6a4fdfba1c117ff15d09e3d60bab34f2c2de74b832e7d752e55c5",
+    "outer-result.json": "b8e5c882ddfb857837fe9c0b4daff19a4c9c8455501799395afbf9a321b6c6b8",
+    "own-browser-result.json": "51e774a8d1bc140365a23b66e0ea8b5c096b6fdc18ecee059533ca1e9ca50a8e",
+    "browser-hook-result.json": "a6e13fd9180ea1938a780b0838b7ef84394dade92a3fe7804757a50819ffc6c4"
+  }
+}

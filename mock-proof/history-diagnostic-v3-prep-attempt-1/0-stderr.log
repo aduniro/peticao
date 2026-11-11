@@ -1,0 +1,72 @@
+test_browser_contract_exact_checks_and_clean_env (test_own.OwnTests.test_browser_contract_exact_checks_and_clean_env) ... ok
+test_duplicate_own_effect_denied (test_own.OwnTests.test_duplicate_own_effect_denied) ... ok
+test_foreign_receipt_provenance_denied (test_own.OwnTests.test_foreign_receipt_provenance_denied) ... ok
+test_identity_seed_not_external_claim (test_own.OwnTests.test_identity_seed_not_external_claim) ... ok
+test_no_secret_export (test_own.OwnTests.test_no_secret_export) ... ok
+test_one_effect_and_source_preserved (test_own.OwnTests.test_one_effect_and_source_preserved) ... ok
+test_original_mutation_denied (test_own.OwnTests.test_original_mutation_denied) ... ok
+test_own_controller_namespace_and_port (test_own.OwnTests.test_own_controller_namespace_and_port) ... ok
+test_pdf_missing_binding_fails (test_own.OwnTests.test_pdf_missing_binding_fails) ... ok
+test_pdf_preserves_source_text_and_appends_binding (test_own.OwnTests.test_pdf_preserves_source_text_and_appends_binding) ... ok
+test_pdf_source_text_mismatch_fails (test_own.OwnTests.test_pdf_source_text_mismatch_fails) ... ok
+test_signing_or_mail_effect_denied (test_own.OwnTests.test_signing_or_mail_effect_denied) ... ok
+test_complete_result_gate (test_own.ResultGateTests.test_complete_result_gate) ... ERROR
+test_foreign_artifact_or_download_rejected (test_own.ResultGateTests.test_foreign_artifact_or_download_rejected) ... ok
+test_infrastructure_review_guard_precedes_execution_marker (test_own.ResultGateTests.test_infrastructure_review_guard_precedes_execution_marker) ... ok
+test_missing_check_or_extra_post_never_success (test_own.ResultGateTests.test_missing_check_or_extra_post_never_success) ... ok
+test_activation_is_bound_to_accepted_run_and_independent_review (test_infra_port.InfraPort.test_activation_is_bound_to_accepted_run_and_independent_review) ... ok
+test_first_marker_preserved_without_r13_failure_gate (test_infra_port.InfraPort.test_first_marker_preserved_without_r13_failure_gate) ... ok
+test_namespace_and_runtime_caps_preserved (test_infra_port.InfraPort.test_namespace_and_runtime_caps_preserved) ... ok
+test_only_safe_metadata_added_to_exports (test_infra_port.InfraPort.test_only_safe_metadata_added_to_exports) ... ok
+test_unreviewed_config_still_stops_before_marker (test_infra_port.InfraPort.test_unreviewed_config_still_stops_before_marker) ... FAIL
+test_cancel_before_admission_has_no_docker_mutation (test_create90_minimal.ControllerTests.test_cancel_before_admission_has_no_docker_mutation) ... ok
+test_cancel_during_metadata_never_clears_uncertain (test_create90_minimal.ControllerTests.test_cancel_during_metadata_never_clears_uncertain) ... ok
+test_deadline_before_admission_has_no_docker_mutation (test_create90_minimal.ControllerTests.test_deadline_before_admission_has_no_docker_mutation) ... ok
+test_deadline_during_metadata_never_clears_uncertain (test_create90_minimal.ControllerTests.test_deadline_during_metadata_never_clears_uncertain) ... ok
+test_foreign_object_refuses_cleanup (test_create90_minimal.ControllerTests.test_foreign_object_refuses_cleanup) ... ok
+test_id_drift_refuses_cleanup (test_create90_minimal.ControllerTests.test_id_drift_refuses_cleanup) ... ok
+test_inspect_error_after_container_mutation_keeps_dependency (test_create90_minimal.ControllerTests.test_inspect_error_after_container_mutation_keeps_dependency) ... ok
+test_inspect_error_after_network_mutation_keeps_dependency (test_create90_minimal.ControllerTests.test_inspect_error_after_network_mutation_keeps_dependency) ... ok
+test_network_timeout_keeps_dependency (test_create90_minimal.ControllerTests.test_network_timeout_keeps_dependency) ... ok
+test_normal_create90_and_verified_start (test_create90_minimal.ControllerTests.test_normal_create90_and_verified_start) ... ok
+test_normal_created_not_started_cleanup_known_ids (test_create90_minimal.ControllerTests.test_normal_created_not_started_cleanup_known_ids) ... ok
+test_signal_during_container_mutation_keeps_dependency (test_create90_minimal.ControllerTests.test_signal_during_container_mutation_keeps_dependency) ... ok
+test_signal_during_network_mutation_keeps_dependency (test_create90_minimal.ControllerTests.test_signal_during_network_mutation_keeps_dependency) ... ok
+test_start_inspection_error_keeps_dependency (test_create90_minimal.ControllerTests.test_start_inspection_error_keeps_dependency) ... ok
+test_start_timeout_never_cleans_uncertain_running_object (test_create90_minimal.ControllerTests.test_start_timeout_never_cleans_uncertain_running_object) ... ok
+test_timeout90_keeps_network_and_never_retries (test_create90_minimal.ControllerTests.test_timeout90_keeps_network_and_never_retries) ... ok
+test_failed_gate_cannot_create_new_marker (test_observation_gate.ObservationGateTests.test_failed_gate_cannot_create_new_marker) ... ok
+test_fixed_root_failure_proof_admitted (test_observation_gate.ObservationGateTests.test_fixed_root_failure_proof_admitted) ... ok
+test_marker_is_specific_exclusive_and_preserves_first_failure (test_observation_gate.ObservationGateTests.test_marker_is_specific_exclusive_and_preserves_first_failure) ... ok
+test_old_marker_or_outer_hash_drift_rejected (test_observation_gate.ObservationGateTests.test_old_marker_or_outer_hash_drift_rejected) ... ok
+test_outer_not_drained_or_failed_unit_wrong_rejected (test_observation_gate.ObservationGateTests.test_outer_not_drained_or_failed_unit_wrong_rejected) ... ok
+test_success_or_missing_cleanup_never_admits (test_observation_gate.ObservationGateTests.test_success_or_missing_cleanup_never_admits) ... ok
+test_exact_second_failure (test_history_diagnostic_gate.DiagnosticGate.test_exact_second_failure) ... ok
+test_mutable_pointer_excluded (test_history_diagnostic_gate.DiagnosticGate.test_mutable_pointer_excluded) ... ok
+test_outer_not_drained_or_marker_changed (test_history_diagnostic_gate.DiagnosticGate.test_outer_not_drained_or_marker_changed) ... ok
+test_wrong_failure_or_missing_cleanup (test_history_diagnostic_gate.DiagnosticGate.test_wrong_failure_or_missing_cleanup) ... ok
+
+======================================================================
+ERROR: test_complete_result_gate (test_own.ResultGateTests.test_complete_result_gate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111/test_own.py", line 46, in test_complete_result_gate
+    def test_complete_result_gate(self):self.assertEqual(b.validate_result(self.run,self.value,self.generated)['passedBrowserChecks'],13)
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111/browser_hook.py", line 85, in validate_result
+    if [(q.get('method'),q.get('path'))for q in auxiliary]!=[('GET','/api/admin/lotes/1/presidente/historico')]:raise BrowserHookError('exactly one auxiliary history GET, not UI proof')
+                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+browser_hook.BrowserHookError: exactly one auxiliary history GET, not UI proof
+
+======================================================================
+FAIL: test_unreviewed_config_still_stops_before_marker (test_infra_port.InfraPort.test_unreviewed_config_still_stops_before_marker)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111/test_infra_port.py", line 26, in test_unreviewed_config_still_stops_before_marker
+    self.assertFalse((ROOT/'execution.response-observation-v2.started').exists())
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 47 tests in 0.419s
+
+FAILED (failures=1, errors=1)
