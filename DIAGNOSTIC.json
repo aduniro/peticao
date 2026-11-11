@@ -1,0 +1,54 @@
+{
+  "classification": "READ_ONLY_DIAGNOSTIC_LATE_DOCKER_CREATE_AFTER_CLIENT_TIMEOUT",
+  "nonce": "97b317f6483b",
+  "containerId": "4a46dbb47ced33665c4362f450510cb8bf384a0b568d80fc62bbe5685d74ad48",
+  "containerName": "peticao-r0013-97b317f6483b-pg",
+  "initialClientTimeoutSeconds": 30,
+  "observedCreatedAfterOuterAbsent": true,
+  "rootManualReconciliation": "/mnt/dev/.peticao-r0013-local-pdf-preparation-browser-qa-20261111/runs/97b317f6483b/root-manual-reconciliation.json",
+  "rootManualRemovedOnlyOwnVerifiedId": true,
+  "originalOuterExitPreserved": 1,
+  "appBrowserPgSeedStarted": false,
+  "readOnlyObservationUtc": "2026-11-11T03:58:41.145427+00:00",
+  "ioPressureAtObservation": {
+    "someAvg10": 50.96,
+    "someAvg60": 51.42,
+    "fullAvg10": 36.85,
+    "fullAvg60": 37.33
+  },
+  "cpuPressureSomeAvg60": 2.91,
+  "memoryPressureSomeAvg60": 0.09,
+  "daemonJournalQuerySince": "2026-11-11T03:55:00Z",
+  "daemonJournalResult": "no entries; does not establish absence of internal latency",
+  "eventObservation": {
+    "type": "container",
+    "action": "destroy",
+    "timeNano": 1794369547451833848,
+    "id": "4a46dbb47ced33665c4362f450510cb8bf384a0b568d80fc62bbe5685d74ad48",
+    "scope": "exact own label only",
+    "streamCaptureTimeoutSeconds": 8,
+    "untilWasFutureUtc": "2026-11-11T04:00:00Z",
+    "notCompleteHistory": true
+  },
+  "timelineFileMetadata": {
+    "docker-intent.json": {
+      "mtimeUtc": "2026-11-11T03:56:03.532474+00:00",
+      "sha256": "b0a3b71ebc7857853c6b2f42f911b73be9e937f02c5690fdba92966c81fee7f8"
+    },
+    "result.json": {
+      "mtimeUtc": "2026-11-11T03:57:06.091589+00:00",
+      "sha256": "0f35db835bff949531248774267f205a63aa795390baf4eab9c1a4798624ec30"
+    },
+    "outer-result.json": {
+      "mtimeUtc": "2026-11-11T03:57:06.095392+00:00",
+      "sha256": "293faf53fb9a51a13f3361d060dca51e85f938d1f05b6fa4e9870e3c85547630"
+    },
+    "root-manual-reconciliation.json": {
+      "mtimeUtc": "2026-11-11T03:59:07.520153+00:00",
+      "sha256": "897835d62c539926fc0ce2ca8472d8af2ed0c65b5cde5c013ff76bebd9893f08"
+    }
+  },
+  "causeAssessment": "I/O pressure observed after failure is consistent with slow daemon persistence; no evidence isolating a storage device or proving causal timing at request admission. Confirmed harness defect is treating one absence observation as sufficient to remove dependency network while create remained uncertain.",
+  "mutationsPerformedByThisAgent": [],
+  "noAllContainerSearch": true
+}

@@ -1,0 +1,1 @@
+Novo intento explícito depois de failureROOT+manualreconciliation da tentativa97b317f6483b. Perfilmínimo executável; consultar CREATE90-REVISION.md. Semretry, semmutação deDockerglobal, coregrace nãointegrado. Nada real executado nesta revisão.

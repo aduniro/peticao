@@ -1,0 +1,18 @@
+{
+  "classification": "EXPLICIT_NEW_CREATE90_ATTEMPT_AFTER_RECONCILED_R13_FAILURE",
+  "oldRun": "/mnt/dev/.peticao-r0013-local-pdf-preparation-browser-qa-20261111/runs/97b317f6483b",
+  "oldNonce": "97b317f6483b",
+  "oldSourceCommit": "53accbc147d257ad64ea53f14a46c004c76944a0",
+  "oldMarker": "/mnt/dev/.peticao-r0013-local-pdf-preparation-browser-qa-20261111/execution.started",
+  "oldMarkerSha256": "ee45420410b73d2e67763cf6977d0f4cba89b9825e600789131fde354056ce3c",
+  "files": {
+    "root-failure-receipt.json": "a8e954486e42c15b2416c6c1bdab741ab825829fe752d330c1a7e75ac1044237",
+    "root-retained-unit.txt": "6d52b648fdbe26141a45762e870fb16194bb0d038105f38710b34de9417cb1d8",
+    "root-manual-reconciliation.json": "897835d62c539926fc0ce2ca8472d8af2ed0c65b5cde5c013ff76bebd9893f08",
+    "outer-result.json": "293faf53fb9a51a13f3361d060dca51e85f938d1f05b6fa4e9870e3c85547630"
+  },
+  "oldContainerId": "4a46dbb47ced33665c4362f450510cb8bf384a0b568d80fc62bbe5685d74ad48",
+  "oldInvocation": "00244f062c8e45218469297c1400875e",
+  "newMarker": "execution.create90-v2.started",
+  "noAutomaticRetry": true
+}
