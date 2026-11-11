@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "kind": "govbr-route-gates-native-pg17-r0003-v1",
+  "kind": "local-core-history-pg17-r0007-v1",
   "source_commit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
   "backend_source_commit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
@@ -33,7 +33,7 @@
   "node_version": "20.19.2",
   "tsx_version": "4.23.15",
   "esbuild_version": "0.28.2",
-  "integration_state": "PRIVATE_DRAFT_NOT_REGISTERED_NOT_EXECUTED",
+  "integration_state": "LOCAL_CORE_HISTORY_R7_DRAFT_NOT_EXECUTED",
   "node_path": "/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node",
   "local_mock_node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
   "classification": "LOCAL_CORE_HISTORY6_NEW_PG_PROOF_AND8_VIEW_INHERITED",

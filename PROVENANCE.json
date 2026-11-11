@@ -10,5 +10,8 @@
   "coreHistorySourceByteIdentical": true,
   "stagedSourceFullInventoryWillBeVerifiedBeforePg": true,
   "newLargeSourceCopy": false,
-  "frozenGuard58cbUnchanged": true
+  "frozenGuard58cbUnchanged": true,
+  "baselineWithPreExecutionBug": "ea9ae83aec032c2f3d5fde228e9f92abdc5eac1e",
+  "revision2": "Single owned_name invariant and protected cleanup cancellation; no real execution",
+  "mockProof": "mock-proof/revision2-result.json"
 }

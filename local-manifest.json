@@ -1,24 +1,26 @@
 {
-  "classification": "LOCAL_CORE_HISTORY6_NEW_PG_DRAFT_WITH8_VIEW_INHERITED",
+  "classification": "LOCAL_CORE_HISTORY_R7_LIFECYCLE_CANCEL_REV2_NOT_EXECUTED",
   "root": "/mnt/dev/.peticao-r0007-local-history-core-pg17-qa-20261111",
   "files": {
     "INHERITED-VIEW-PROOF.json": "b9923113d8108b6421034bb11a79fd4fec65dfeb37e724c34a018127133e183b",
-    "PROVENANCE.json": "d3badb36b0a9bf614e4ce323857c5dbfeb3bd04b05a68ecf919f74756445c979",
+    "PROVENANCE.json": "c616bd3064578e0e19a87d529f01b3c65dccad147a20d875c64283a47abfcc76",
     "frozen/dns_guard.cjs": "68a22d886d5218d723b5446931bd70da76bfc9f1fb30ffcc7148fb702ca25268",
     "frozen/guard_policy.cjs": "b1605f3789260ad02ba5c6f4cd67494bacc6797c28894f9213c649ff96bb651e",
     "frozen/node_guard.cjs": "f2a0f708159a2d5a081ca084f55496028ba169ce3456d374592ade5c61f2ab20",
     "frozen/receipts.py": "e3766b2e0c3219252ed853580b5206357a2b2ed434269fca55106d4b293f0c21",
     "frozen/staging.py": "3074af928b94c409003097a7ad55e4add37cdf3b53de2844c213a02c4b5714e2",
-    "local-registry.json": "b1152615ed59db2a4e818ebd34e43400f6f076ef4f0f73f3b66c13a0b772c015",
-    "local_runner.py": "1441bfee093c9b2d0392427cdac0017d9168b4acc9b3e0dc4beea075b1e87b2c",
-    "test_profile.py": "60f450450d550fc5a2a9f5ff937ba7b0b2baffd9afa1e139009f38a86ac6f59d"
+    "local-registry.json": "e0ee216e08ecaa47a8621666abf0fba833783d490b082614e10b7b53e69190d4",
+    "local_runner.py": "8358cb7bb0b76c443ed1e362b4f63cefb18922d3fd454b9955246762769fd47d",
+    "test_profile.py": "60f450450d550fc5a2a9f5ff937ba7b0b2baffd9afa1e139009f38a86ac6f59d",
+    "test_lifecycle.py": "2491e29222a1bd95f6b6c268a4dedb40b25e5cdc4e6106f1e64aa5ee31c2dcca"
   },
   "sourceCommit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
   "historySourceIdenticalTo": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "newTestCount": 6,
   "inheritedViewTestCount": 8,
-  "mockCount": 7,
+  "mockCount": 13,
   "appPgDockerOrCoreTestsExecuted": false,
   "newLargeCopy": false,
-  "requiresRootReviewedExecution": true
+  "requiresRootReviewedExecution": true,
+  "baselineCommit": "ea9ae83aec032c2f3d5fde228e9f92abdc5eac1e"
 }

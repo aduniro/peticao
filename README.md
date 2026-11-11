@@ -35,3 +35,12 @@ Loader tsx direto, um único arquivo fixo, padrão.* limitado àquele arquivo; g
 Após resultado, drenar somente processos próprios, remover container/rede próprios com mesmosCID/NID e confirmar porta55487fechada. Timeout de create/start ou troca de identidade nunca repete por outro caminho. Resultado interno não basta: root coleta outer-result após export, manifesto+hash, retained-unit ExecMainCode/Status/Result real e cgroup inteiro drenado antes de stop/liberarlease. not-found/default0 não é sucesso. Nenhum deploy/merge; C2 e percentuais só podem mudar após essa prova real ser aceita.
 
 Comando proposto, NÃO EXECUTADO: /mnt/dev/.peticao-r0007-local-history-core-pg17-qa-20261111/EXECUTION-COMMAND.txt. Fresh review/lease exclusivo de execução e conferência de recursos antes de lançar. A auditoria OTP segue documentada em /mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/approval-otp-reconciliation-audit-20261111/PLAN.md e não foi misturada à rodada histórica.
+
+
+## Revision2 — root review corrected before any execution
+
+Baselineea9ae83aec032c2f3d5fde228e9f92abdc5eac1e is preserved. Its main still inspected R3names after creating R7resources: the new main-lifecycle mock fails on that baseline before SQL/Node. All names now derive from one owned_name(nonce,kind) invariant used by creation, ownership validation, inspections and cleanup. The mock executes actual main through networkcreate→inspect→containercreate→inspect→start→reinspect with substituted Docker; no resource is created.
+
+CancellationState counts signals and raises outside cleanup; during finish_run cleanup/export/receipt it defers repeated TERM/INT/ALRM and forces exit1. Node cleanup failure/signals do not skip Docker cleanup or export; a deferred signal during outer receipt writing is repaired to a failed receipt. Retained unit exit and complete drain remain required externally. Thirteen local mocks passed, including each cleanup/export/receipt cancellation stage and an explicit outside-cleanup cancellation. No real signals or Node/PG/Docker/core callbacks were run. Proof: /mnt/dev/.peticao-r0007-local-history-core-pg17-qa-20261111/mock-proof/revision2-result.json.
+
+Registry kind is explicitly local-core-history-pg17-r0007-v1; six callbacks, not five; no remote/nativegovbr authority is claimed. Fresh review/lease remains required before execution.
