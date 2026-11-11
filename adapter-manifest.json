@@ -1,0 +1,37 @@
+{
+  "classification": "PRIVATE_QUEUE_ADAPTER_DRAFT_NOT_INTEGRATED",
+  "kind": "govbr-route-gates-native-pg17-r0003-v1",
+  "harnessManifestSha256": "c6067a99b306b5e2675d7122857567f4348c7de0792f2b2b696b6f01ab042351",
+  "files": {
+    "core/route_gates_profile.py": {
+      "sha256": "bd635462cb52a5bbc42d1d0d3b6a997a5e8fc939880e65f67a4c88d6262034b9",
+      "bytes": 25595
+    },
+    "tests/test_route_gates_profile.py": {
+      "sha256": "fcd3493224c50b62ea09a874e3c7a58d34c070dd43a992bf5849a6abbfb0964b",
+      "bytes": 23100
+    },
+    "contract.json": {
+      "sha256": "b80ecb610504ad2f43abfa5f2a00456afff56166614a266008a4884726e7fb97",
+      "bytes": 2899
+    },
+    "validate_draft.py": {
+      "sha256": "03a01d415558409ee1f0467de356fbdfaed9f9dff8b04e5dc446983baa2ce190",
+      "bytes": 1469
+    },
+    "README.md": {
+      "sha256": "8c4273159fbfd96ee8dd5677ff1c94f883a869d76dcd64b55bc7f7b21fb7c9df",
+      "bytes": 7390
+    },
+    ".gitignore": {
+      "sha256": "3161827f8f6ef6a435914acb6ca8dcfd104cc10cb257bc3146ab21207982e964",
+      "bytes": 56
+    }
+  },
+  "mockTestsPassed": 31,
+  "actualApplicationTests": 0,
+  "actualPostgres": false,
+  "ssh": false,
+  "sharedQueueFilesChanged": false,
+  "remoteStagingAttested": false
+}
