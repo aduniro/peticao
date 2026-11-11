@@ -48,6 +48,10 @@ def initialize():
         CREATE TABLE IF NOT EXISTS inbox(id TEXT PRIMARY KEY,session TEXT,body TEXT,state TEXT,at REAL,result TEXT);
         CREATE TABLE IF NOT EXISTS sends(id TEXT PRIMARY KEY,state TEXT,message_id TEXT,at REAL);
         ''')
+        columns = {r[1] for r in c.execute('PRAGMA table_info(sends)')}
+        for name, kind in [('session', 'TEXT'), ('chat', 'TEXT'), ('ack', 'INTEGER'), ('checked_at', 'REAL')]:
+            if name not in columns:
+                c.execute('ALTER TABLE sends ADD COLUMN ' + name + ' ' + kind)
         # Never automatically repeat a task whose tools might already have run.
         c.execute("UPDATE inbox SET state='interrupted' WHERE state='running'")
         c.execute("UPDATE sends SET state='uncertain' WHERE state='sending'")
@@ -84,8 +88,8 @@ def send_once(receipt, session, text=None, file=None):
     if not cfg.get('owner_chat'):
         return False
     with db() as c:
-        if not c.execute('INSERT OR IGNORE INTO sends VALUES(?,?,?,?)',
-                         (receipt, 'sending', None, time.time())).rowcount:
+        if not c.execute('INSERT OR IGNORE INTO sends(id,state,message_id,at,session,chat) VALUES(?,?,?,?,?,?)',
+                         (receipt, 'sending', None, time.time(), session, cfg['owner_chat'])).rowcount:
             return False
     try:
         body = {'session': session, 'chatId': cfg['owner_chat']}
@@ -98,7 +102,7 @@ def send_once(receipt, session, text=None, file=None):
             result = request('/api/sendText', body)
         mid = message_id(result.get('id'))
         with db() as c:
-            c.execute('UPDATE sends SET state=?,message_id=? WHERE id=?', ('submitted', mid, receipt))
+            c.execute('UPDATE sends SET state=?,message_id=?,ack=? WHERE id=?', ('submitted', mid, result.get('ack'), receipt))
         log('send_submitted', role='executor' if session == cfg['executor'] else 'vigia', receipt=receipt)
         return True
     except Exception as error:
@@ -111,6 +115,44 @@ def send_once(receipt, session, text=None, file=None):
 def respond(receipt, text):
     for offset in range(0, len(text), 3500):
         send_once(receipt + ':' + str(offset), config()['executor'], text[offset:offset + 3500])
+
+
+def refresh_deliveries():
+    """Audit acknowledgments without repeating any send, including uncertain sends."""
+    with db() as c:
+        rows = c.execute("""SELECT id,state,message_id,session,chat FROM sends
+            WHERE state IN ('submitted','delivered') AND message_id IS NOT NULL
+              AND session IS NOT NULL AND chat IS NOT NULL
+              AND at>? AND (checked_at IS NULL OR checked_at<?)
+            ORDER BY COALESCE(checked_at,0),at LIMIT 10""",
+            (time.time() - 86400, time.time() - 30)).fetchall()
+    for row in rows:
+        checked = time.time()
+        try:
+            path = '/api/' + urllib.parse.quote(row['session'], safe='') + '/chats/'
+            path += urllib.parse.quote(row['chat'], safe='') + '/messages/'
+            path += urllib.parse.quote(row['message_id'], safe='')
+            result = request(path)
+            ack = result.get('ack')
+            if type(ack) is not int:
+                continue
+            state = 'read' if ack >= 3 else 'delivered' if ack >= 2 else 'failed' if ack < 0 else row['state']
+            with db() as c:
+                c.execute('UPDATE sends SET state=?,ack=?,checked_at=? WHERE id=?', (state, ack, checked, row['id']))
+            if state != row['state']:
+                log('delivery_updated', receipt=row['id'], state=state, ack=ack)
+        except Exception as error:
+            log('delivery_check_error', receipt=row['id'], error=type(error).__name__)
+        finally:
+            with db() as c:
+                c.execute('UPDATE sends SET checked_at=? WHERE id=?', (checked, row['id']))
+
+
+def maintain_reports():
+    try:
+        mirror_reports()
+    finally:
+        refresh_deliveries()
 
 
 def authorized(message, cfg):
@@ -312,7 +354,7 @@ def run():
                 if time.monotonic() - report_checked > 30 and (report_future is None or report_future.done()):
                     if report_future is not None and report_future.exception():
                         log('report_error', error=type(report_future.exception()).__name__)
-                    report_future = report_pool.submit(mirror_reports)
+                    report_future = report_pool.submit(maintain_reports)
                     report_checked = time.monotonic()
             if state != health:
                 log('health', state=state)

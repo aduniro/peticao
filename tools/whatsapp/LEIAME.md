@@ -69,6 +69,11 @@ em diretórios privados por execução. Um reinício marca execução em andamen
 como interrompida; não repete ferramentas automaticamente. Envios sem resposta
 conclusiva ficam incertos; não são reenviados sem conferência.
 
+O auditor de entrega consulta os recibos das mensagens enviadas sem reenviá-las.
+O SQLite distingue `submitted`, `delivered` e `read` pelos ACKs do WhatsApp.
+Uma consulta de ACK com falha preserva o recibo anterior. Envios incertos não
+entram em uma rotina de repetição.
+
 ## Relatórios
 
 O VIGIA observa os arquivos originais `latest-report.txt` e `latest-report.html`
@@ -100,6 +105,8 @@ O arquivo de configuração existente é preservado.
 
 Texto Codex, imagem Codex, transcrição local de áudio, autorização, recibos
 únicos e recuperação de efeitos incertos passaram nos testes de11/11/2026UTC.
+Dez testes locais validam autorização, deduplicação, conteúdo completo dos
+anexos, recuperação após interrupção e auditoria de entrega sem reenvio.
 O mesh teve SSH bidirecional comprovado nos três pares com a VM. O teste do
 VIGIA retornou ack2 (DEVICE), e o relatório anexado retornou ack3 (READ).
 Isso não comprova um comando recebido e respondido

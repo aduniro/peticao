@@ -43,7 +43,7 @@ class BridgeTests(unittest.TestCase):
         bridge.accept(self.message, 'exec-test')
         with bridge.db() as c:
             c.execute("UPDATE inbox SET state='running'")
-            c.execute("INSERT INTO sends VALUES('s','sending',NULL,1)")
+            c.execute("INSERT INTO sends(id,state,message_id,at) VALUES('s','sending',NULL,1)")
         bridge.initialize()
         with bridge.db() as c:
             self.assertEqual(c.execute('SELECT state FROM inbox').fetchone()[0], 'interrupted')
@@ -84,6 +84,27 @@ class BridgeTests(unittest.TestCase):
             self.assertEqual(base64.b64decode(uploads[0]['data']), report.read_bytes())
             bridge.mirror_reports()
             self.assertEqual(req.call_count, 3)
+
+    def test_delivery_ack_is_checked_without_resending(self):
+        with patch.object(bridge, 'request', return_value={'id': 'test-mid', 'ack': 0}):
+            bridge.send_once('ack-test', 'vigia-test', 'test')
+        with patch.object(bridge, 'request', return_value={'ack': 3}) as req:
+            bridge.refresh_deliveries()
+            self.assertEqual(req.call_count, 1)
+            self.assertTrue(req.call_args.args[0].endswith('/messages/test-mid'))
+        with bridge.db() as c:
+            row = c.execute('SELECT state,ack FROM sends WHERE id=?', ('ack-test',)).fetchone()
+            self.assertEqual((row['state'], row['ack']), ('read', 3))
+        with patch.object(bridge, 'request') as req:
+            bridge.refresh_deliveries()
+            req.assert_not_called()
+
+    def test_uncertain_sends_are_not_retried_by_delivery_audit(self):
+        with patch.object(bridge, 'request', side_effect=TimeoutError):
+            bridge.send_once('ack-uncertain', 'vigia-test', 'test')
+        with patch.object(bridge, 'request') as req:
+            bridge.refresh_deliveries()
+            req.assert_not_called()
 
 
 if __name__ == '__main__':
