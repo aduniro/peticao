@@ -1,0 +1,17 @@
+{
+  "kind": "AST equivalence after explicit ROOT/unit/ports/prefix/manifest-env substitutions; not byte equality",
+  "files": {
+    "local_controller.py": {
+      "normalizedNamespacePortOnly": true,
+      "parentSha256": "b273b3042702649e7e89109e3a38671ea85fc334452adf9d353dd1821287c77d",
+      "portedSha256": "cf3393b63799dc034c01997fe263613c8c2cc9555453d270988b5be26c61cc27"
+    },
+    "docker_control.py": {
+      "normalizedNamespacePortOnly": true,
+      "parentSha256": "9814d405a8e8157b75d64a91b73bab54d6e4ce8d9d8378d23a8423035277dc9f",
+      "portedSha256": "c5afbc7a9899a4951a6be5c86442eac1b409ebe3253e152cb406a60ac158d706"
+    }
+  },
+  "actualPortedMocks": 16,
+  "fsyncOperationalUnchanged": true
+}

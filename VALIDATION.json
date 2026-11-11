@@ -1,0 +1,16 @@
+{
+  "classification": "PREPARATION_ONLY_NO_NEW_RUNTIME_PIN",
+  "sourceCommit": "140ce6b98af23045849335693a82b426fdc9c826",
+  "pythonPureTests": 33,
+  "nodeVmTests": 4,
+  "fixtureSyntax": "pass",
+  "pythonLogSha256": "f4e792e6c5ecf5557de21a09cc202ae6511a5bb317db074e8c204b4e015205eb",
+  "nodeLogSha256": "3bf8a42fa20945cb87363a46966324e5c127ecd343fdf8d7851f61d35ee0421f",
+  "buildExecuted": false,
+  "postgresExecuted": false,
+  "appExecuted": false,
+  "realHttpExecuted": false,
+  "runtimeAvailable": false,
+  "infraReviewed": false,
+  "operationalReady": false
+}

@@ -1,0 +1,38 @@
+test_cancel_before_admission_has_no_docker_mutation (test_controller_port.ControllerTests.test_cancel_before_admission_has_no_docker_mutation) ... ok
+test_cancel_during_metadata_never_clears_uncertain (test_controller_port.ControllerTests.test_cancel_during_metadata_never_clears_uncertain) ... ok
+test_deadline_before_admission_has_no_docker_mutation (test_controller_port.ControllerTests.test_deadline_before_admission_has_no_docker_mutation) ... ok
+test_deadline_during_metadata_never_clears_uncertain (test_controller_port.ControllerTests.test_deadline_during_metadata_never_clears_uncertain) ... ok
+test_foreign_object_refuses_cleanup (test_controller_port.ControllerTests.test_foreign_object_refuses_cleanup) ... ok
+test_id_drift_refuses_cleanup (test_controller_port.ControllerTests.test_id_drift_refuses_cleanup) ... ok
+test_inspect_error_after_container_mutation_keeps_dependency (test_controller_port.ControllerTests.test_inspect_error_after_container_mutation_keeps_dependency) ... ok
+test_inspect_error_after_network_mutation_keeps_dependency (test_controller_port.ControllerTests.test_inspect_error_after_network_mutation_keeps_dependency) ... ok
+test_network_timeout_keeps_dependency (test_controller_port.ControllerTests.test_network_timeout_keeps_dependency) ... ok
+test_normal_create90_and_verified_start (test_controller_port.ControllerTests.test_normal_create90_and_verified_start) ... ok
+test_normal_created_not_started_cleanup_known_ids (test_controller_port.ControllerTests.test_normal_created_not_started_cleanup_known_ids) ... ok
+test_signal_during_container_mutation_keeps_dependency (test_controller_port.ControllerTests.test_signal_during_container_mutation_keeps_dependency) ... ok
+test_signal_during_network_mutation_keeps_dependency (test_controller_port.ControllerTests.test_signal_during_network_mutation_keeps_dependency) ... ok
+test_start_inspection_error_keeps_dependency (test_controller_port.ControllerTests.test_start_inspection_error_keeps_dependency) ... ok
+test_start_timeout_never_cleans_uncertain_running_object (test_controller_port.ControllerTests.test_start_timeout_never_cleans_uncertain_running_object) ... ok
+test_timeout90_keeps_network_and_never_retries (test_controller_port.ControllerTests.test_timeout90_keeps_network_and_never_retries) ... ok
+test_css_hash_denied (test_http_contract.HttpContract.test_css_hash_denied) ... ok
+test_external_endpoint_denied_before_socket (test_http_contract.HttpContract.test_external_endpoint_denied_before_socket) ... ok
+test_json_response_uses_lowercase_content_type (test_http_contract.HttpContract.test_json_response_uses_lowercase_content_type) ... ok
+test_login_uses_lowercase_headers_and_keeps_cookie_memory_only (test_http_contract.HttpContract.test_login_uses_lowercase_headers_and_keeps_cookie_memory_only) ... ok
+test_old_requested_version_and_distinct_new_head (test_http_contract.HttpContract.test_old_requested_version_and_distinct_new_head) ... ok
+test_substituted_head_denied (test_http_contract.HttpContract.test_substituted_head_denied) ... ok
+test_substituted_old_text_denied (test_http_contract.HttpContract.test_substituted_old_text_denied) ... ok
+test_absent_preview_route_denied (test_runtime_admission.Admission.test_absent_preview_route_denied) ... ok
+test_changed_bytes_denied (test_runtime_admission.Admission.test_changed_bytes_denied) ... ok
+test_extra_member_denied (test_runtime_admission.Admission.test_extra_member_denied) ... ok
+test_infra_false_denied (test_runtime_admission.Admission.test_infra_false_denied) ... ok
+test_missing_pin_blocks_main_before_marker_docker_or_socket (test_runtime_admission.Admission.test_missing_pin_blocks_main_before_marker_docker_or_socket) ... ok
+test_new_exact_runtime_accepted (test_runtime_admission.Admission.test_new_exact_runtime_accepted) ... ok
+test_old_or_foreign_runtime_path_denied (test_runtime_admission.Admission.test_old_or_foreign_runtime_path_denied) ... ok
+test_old_source_denied (test_runtime_admission.Admission.test_old_source_denied) ... ok
+test_symlink_denied (test_runtime_admission.Admission.test_symlink_denied) ... ok
+test_wrong_compiled_route_map_denied (test_runtime_admission.Admission.test_wrong_compiled_route_map_denied) ... ok
+
+----------------------------------------------------------------------
+Ran 33 tests in 0.145s
+
+OK
