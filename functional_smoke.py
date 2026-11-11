@@ -62,6 +62,20 @@ def bootstrap_local_fixture(pg,config):
   verify_local_context(config);action()
  verify_local_context(config);return pg.bootstrap()
 
+def observe_readiness(proc,request,clock=time):
+ # With PRESIDENT_OWN_ENABLED0, /presidente is deliberately404. Do not enable it to satisfy QA.
+ deadline=clock.monotonic()+45
+ while True:
+  if proc.poll() is not None:raise RuntimeError('Next terminated early')
+  try:
+   if request('GET','/api/admin/lotes/1/versoes')[0]==401:break
+  except OSError:pass
+  if clock.monotonic()>deadline:raise TimeoutError('Next readiness')
+  clock.sleep(.3)
+ disabled_status=request('GET','/presidente')[0]
+ if disabled_status!=404:raise RuntimeError('disabled president portal must remain404')
+ return {'path':'/api/admin/lotes/1/versoes','status':401,'withoutCookie':True,'disabledPortalPath':'/presidente','disabledPortalStatus':404,'presidentOwnEnabled':'0','notPdfQualification':True}
+
 def main():
  os.umask(0o077)
  if CONFIG_PATH!=str(ROOT/'config.json') or not EXPECTED_CGROUP:raise RuntimeError('explicit LOCAL Docker profile config/cgroup required')
@@ -135,14 +149,7 @@ def main():
    if cookie:headers['Cookie']=cookie
    if body is not None:headers.update({'Content-Type':'application/x-www-form-urlencoded','Origin':'http://127.0.0.1:31392'})
    c.request(method,path,body,headers);response=c.getresponse();data=response.read(8*1024*1024);h={k.lower():v for k,v in response.getheaders()};status=response.status;c.close();return status,data,h
-  deadline=time.monotonic()+45
-  while True:
-   if proc.poll() is not None:raise RuntimeError('Next terminated early')
-   try:
-    if request('GET','/presidente')[0]==200:break
-   except OSError:pass
-   if time.monotonic()>deadline:raise TimeoutError('Next readiness')
-   time.sleep(.3)
+  result['readiness']=observe_readiness(proc,request)
   def check(label,method,path,expect,body=None,cookie=None):
    status,data,headers=request(method,path,body,cookie)
    result['checks'].append({'check':label,'method':method,'path':path,'status':status,'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()})

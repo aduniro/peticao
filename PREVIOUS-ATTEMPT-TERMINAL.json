@@ -1,0 +1,13 @@
+{
+  "classification": "EXPLICIT_TERMINAL_FAILED_READINESS_BEFORE_R12_V2_ONLY",
+  "newMarker": "execution.readiness-v2.started",
+  "noGenericReplay": true,
+  "receiptPath": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0012-pdf-preparation-20261111/attempt-1/receipt.json",
+  "receiptSha256": "b0d4a8a6cbddf2eefc4ceec67a1f9001a160dd8441d7637433704ac51d1187c8",
+  "retainedUnitPath": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0012-pdf-preparation-20261111/attempt-1/retained-unit.json",
+  "retainedUnitSha256": "f4ea75dd153b72bfaf76ea2a038606362bfdbefa7f93cc3c5f8f1151d9ce376a",
+  "oldRun": "/mnt/dev/.peticao-r0012-local-pdf-preparation-qa-20261111/runs/76e41e57bbf0",
+  "oldMarkerSha256": "31069ca42056722bbef674df1e2a0429db3743ea2a06bb7537bca7e0429341cc",
+  "oldOuterSha256": "664c4d396482021ba61ba78e95b9db128ca10ac21085702d5e2e3276f9f07114",
+  "previousInvocation": "ca6a4f18c4ba4cd1929f9f830cec8b90"
+}

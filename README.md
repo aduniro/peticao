@@ -1,6 +1,6 @@
 # R12 — geração real de PDF pelo runtime, com assinaturas fictícias
 
-Rascunho privado `/mnt/dev/.peticao-r0012-local-pdf-preparation-qa-20261111`. **Não executou app, PostgreSQL, Docker, HTTP, geração ou parsing real de PDF.**19mocksPython+1Node com conteúdo dummy passaram; sintaxe conferida. Necessita revisão independente e nova lease de execução.
+Rascunho privado `/mnt/dev/.peticao-r0012-local-pdf-preparation-qa-20261111`. Revisão2 de prontidão, ainda não executada. O baseline903b8c5cf05974042d25a7a59a6541d41554fa98 foi executado uma vez e falhou antes dos10checks/PDF por contrato incorreto de readiness; prova e marcador originais preservados.31mocksPython (19anteriores+12novos)+1Node dummy anterior aprovado com fontesJS inalteradas. Necessita revisão independente e nova lease de execução.
 
 Fonte fixa f55595cd348c23ffe559dba2de9150259db9f1e7. Runtime manifesto7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3 reutilizado diretamente de `/mnt/dev/.peticao-r0006-local-history-browser-qa-20261111/runs/af07e86c4964/runtime`, com origemR2 `/mnt/dev/.peticao-r0002-production-profile-20261111/export/runtime`. Inventários integrais antes/depois, sem cópia grande ou alegação de mountRO; não modificar/limpar origens. Qualquer drift encerra/preserva tentativa, sem restaurar cegamente. R6/R9/R10/R11 permanecem intactos.
 
@@ -25,7 +25,7 @@ As tabelas/esquemas são inicializados na base fictícia; catálogos estáticos 
 9. GET da versãoUUID retornada→200 e mesmosbytes do originalgerado.
 10. RepetirPOST lógico de fecharfinal→303/NadaaFechar; inspectdepois precisa ser idêntico, sem duplicar lote/preparo/versão ou mudar PDF.
 
-Somente esses métodos/paths são admitidos (além do GETpúblico de readiness). Nenhum endpointcodigo/aprovar/conciliar/upload/A1/assinatura/validador é permitido. O teste da interface nesta fatia é **HTML renderizado pelo servidor**, não clique/hidratação de browser. Browser nativo de criação é etapa posterior separada; não promoverSSR a prova de interação.
+Somente esses métodos/paths são admitidos. Antes dos10checks funcionais, a prontidão consulta o GETjápermitido `/api/admin/lotes/1/versoes` SEMcookie e espera401; depois faz um GET `/presidente` e exige404, mantendo PRESIDENT_OWN_ENABLED0. Registra prova separada readiness{path/status401,disabledPortalPath/status404,withoutCookie,notPdfQualification}; os2GETs de preflight não contam como prova de geração nem interação. Nenhum endpoint novo foi admitido. Nenhum endpointcodigo/aprovar/conciliar/upload/A1/assinatura/validador é permitido. O teste da interface nesta fatia é **HTML renderizado pelo servidor**, não clique/hidratação de browser. Browser nativo de criação é etapa posterior separada; não promoverSSR a prova de interação.
 
 ## Prova documental e parsing
 
@@ -40,3 +40,9 @@ PostgreSQL17.11 imagemlocal665dc7... sempull; DBsomente127.0.0.1:55492/app127.0.
 Unidade `peticao-r0012-local-pdf-preparation-qa-20261111.service`: CPU2/Mem3GiB/Tasks256/Runtime720s/grace120s/RemainAfterExityes, orçamento600s. Preflight mantém reserva2GiB+64MiB e conferebinariesPoppler antesdecriarDB. Sucesso exige outerexit0+unidaderetida0/cgroupdrenado/DBDockerpróprioausente/portasfechadas/guardsemdenial/inventáriosestáveis. Mailjournal/attempt/outbox/batch_sends e spool precisampermanecerzero. Cookies/servidorlogs/logsfixture ficamforaGit/export; PDFs exportados contêm apenas os dadosfictícios desse ensaio.
 
 Pendentes explícitos: clique nativo browser e prévia visual/PDF; recuperação de preparo interrompido e concorrência de criação; homologaçãoA1/gov.br real; validação de destinoSãoPaulo e rollback completo. BaselineR7case5 e outros ensaios são evidências separadas, não substituem esta geração peloHTTP de produção.
+
+## Revisão2 e nova tentativa explícita
+
+O baseline esperava GET/presidente200 apesar de configurar PRESIDENT_OWN_ENABLED0. O root confirmou no código que a página nesse estado chama notFound; o status real da tentativa1 não foi registrado, portanto não se afirma que404 foi observado nela. O ensaio novo preserva a configuração0 e registra401protegido+404páginaoff. Mocks controlados executam o blocoEXATOdo baseline com resposta404/clockfake e comprovam timeout; o helper novo aceita401, confirma404 e recusa protected200/404 ou disabledportal200. Nenhuma rede/PG/app/Poppler é usada nos mocks.
+
+Novo marcadorliteral `/mnt/dev/.peticao-r0012-local-pdf-preparation-qa-20261111/execution.readiness-v2.started`, O_EXCL/NOFOLLOW. Só pode ser criado depois de verificar o reciboROOTtipado da falha1 b0d4a8a6cbddf2eefc4ceec67a1f9001a160dd8441d7637433704ac51d1187c8, unidade retida failed/Status1/invocaçãoca6a, cleanup independente, originalexecution.started e outerresult antigos imutáveis. Prova em `/mnt/dev/.peticao-r0012-local-pdf-preparation-qa-20261111/PREVIOUS-ATTEMPT-TERMINAL.json`; não admite retrygenérico nem substituição da tentativa. Novo teste real depende de review/lease e continua pendente. O gate não habilita a página nem altera o aplicativo.

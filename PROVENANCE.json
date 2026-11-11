@@ -1,5 +1,5 @@
 {
-  "classification": "R12_REAL_RUNTIME_PDF_PREPARATION_DRAFT_NOT_EXECUTED",
+  "classification": "R12_READINESS_V2_PREPARATION_AFTER_PRESERVED_FAILED_BASELINE",
   "derivedControllerR9Commit": "e450abdd1b80389a2919bbd27bf06fd467ff0585",
   "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
@@ -12,9 +12,14 @@
   "seededPDFs": 0,
   "seededHistoryVersions": 0,
   "seededCryptographicClassifications": 0,
-  "appPgDockerHttpPdfGenerationParsingExecuted": false,
   "browserInteractionPlannedSeparately": true,
   "SIGNER": "none",
   "APPROVER_EMAIL": "",
-  "RECIPIENTS": ""
+  "RECIPIENTS": "",
+  "baselineHarnessCommit": "903b8c5cf05974042d25a7a59a6541d41554fa98",
+  "baselineAttempt1Executed": true,
+  "baselineAttempt1Exit": 1,
+  "baselinePdfGenerated": false,
+  "baselineReceiptSha256": "b0d4a8a6cbddf2eefc4ceec67a1f9001a160dd8441d7637433704ac51d1187c8",
+  "revision2AppPgDockerHttpPdfGenerationParsingExecuted": false
 }

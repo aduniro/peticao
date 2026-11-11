@@ -28,6 +28,20 @@ def live_context(expected):
  if not 0<limits['cpuCores']<=2 or not 0<limits['memoryMaxBytes']<=3*1024**3 or not 0<limits['pidsMax']<=256:raise ValueError('LOCAL limits exceeded')
  return limits
 
+def verify_readiness_v2_previous_attempt():
+ prior=json.loads((ROOT/'PREVIOUS-ATTEMPT-TERMINAL.json').read_text())
+ if prior.get('classification')!='EXPLICIT_TERMINAL_FAILED_READINESS_BEFORE_R12_V2_ONLY' or prior.get('newMarker')!='execution.readiness-v2.started' or prior.get('noGenericReplay')is not True:raise ValueError('only explicit readiness-v2 attempt permitted')
+ expected_root=Path('/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0012-pdf-preparation-20261111/attempt-1')
+ receipt_path=expected_root/'receipt.json';unit_path=expected_root/'retained-unit.json'
+ if prior.get('receiptPath')!=str(receipt_path) or prior.get('retainedUnitPath')!=str(unit_path) or prior.get('receiptSha256')!='b0d4a8a6cbddf2eefc4ceec67a1f9001a160dd8441d7637433704ac51d1187c8' or digest(receipt_path)!=prior.get('receiptSha256') or digest(unit_path)!=prior.get('retainedUnitSha256'):raise ValueError('exact root terminal failure proof required')
+ receipt=json.loads(receipt_path.read_text());unit=json.loads(unit_path.read_text());old_run=ROOT/'runs/76e41e57bbf0'
+ if receipt.get('classification')!='LOCAL_PDF_PREPARATION_FAILED_READINESS_CONTRACT' or receipt.get('exit')!=1 or receipt.get('run')!=str(old_run) or prior.get('oldRun')!=str(old_run) or receipt.get('sourceCommit')!='f55595cd348c23ffe559dba2de9150259db9f1e7' or receipt.get('httpChecksExecuted')!=0 or receipt.get('pdfGenerated')is not False:raise ValueError('preserved pre-PDF readiness failure required')
+ expected={'MainPID':'0','Result':'exit-code','ExecMainCode':'1','ExecMainStatus':'1','ControlGroup':'','InvocationID':'ca6a4f18c4ba4cd1929f9f830cec8b90'}
+ if any(unit.get(k)!=v for k,v in expected.items()) or receipt.get('unitBeforeStop')!=unit:raise ValueError('exact prior retained failed invocation required')
+ if receipt.get('independentPortsClosed')!=[55492,31392] or receipt.get('independentDockerAbsent')is not True or not receipt.get('independentCgroupRemoved') or receipt.get('runtimeAndOriginStable')is not True or receipt.get('guardDenials')!=0:raise ValueError('prior independent cleanup proof required')
+ if digest(ROOT/'execution.started')!=prior.get('oldMarkerSha256') or digest(old_run/'outer-result.json')!=prior.get('oldOuterSha256') or receipt.get('artifacts',{}).get('outer-result.json')!=prior.get('oldOuterSha256'):raise ValueError('prior original marker and outer result must remain unchanged')
+ return prior
+
 def verify_local_manifest(create_intent=True):
  expected=os.environ.get('LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256','')
  if not re.fullmatch('[a-f0-9]{64}',expected)or digest(ROOT/'local-manifest.json')!=expected:raise ValueError('reviewed LOCAL manifest SHA required')
@@ -35,8 +49,10 @@ def verify_local_manifest(create_intent=True):
  for name,pin in value['files'].items():
   if not name or Path(name).is_absolute()or '..'in Path(name).parts or digest(ROOT/name)!=pin:raise ValueError('LOCAL reviewed file drift')
  if create_intent:
-  fd=os.open(ROOT/'execution.started',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
-  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_R9_PACKAGE_HTTP','at':time.time(),'unit':UNIT},out)
+  live_context(json.loads(CONFIG.read_text())['expected_cgroup'])
+  prior=verify_readiness_v2_previous_attempt()
+  fd=os.open(ROOT/'execution.readiness-v2.started',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+  with os.fdopen(fd,'w')as out:json.dump({'mode':'LOCAL_R12_READINESS_V2_ONLY','at':time.time(),'unit':UNIT,'priorFailedReceiptSha256':prior['receiptSha256'],'oldMarkerSha256':prior['oldMarkerSha256']},out)
  return value
 
 def verify_local_context(config):

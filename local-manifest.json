@@ -1,13 +1,14 @@
 {
-  "classification": "R12_REAL_PDF_GENERATION_HTTP_PREPARATION_ONLY",
+  "classification": "R12_READINESS_V2_AFTER_ROOT_FAILED_BASELINE",
   "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "runtimeManifestSha256": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3",
   "files": {
     ".gitignore": "61b3a7ce7f73e51dea5eb339eca40ea4b52ea39dfa35c83e81f974cc71a5e932",
     "PDF-CONTRACT-PINS.json": "dd185d2fc0d5fb73ddd5e2f19bb793d24c71ec89f72a5a9665cc4a10f31be784",
     "PDF-TOOL-PINS.json": "53b3cf51c87543983ede6bf69c8a93321b02be8580820c560930d67381ce6efd",
-    "PROVENANCE.json": "2530fd6d666114378e4b7670a09058093261d1199053150e3a88b0d6ce0839d1",
-    "README.md": "4d9c98bd139b1c6c19d3ac56e5376fab5bfef64250cadbc455d218608a52167a",
+    "PREVIOUS-ATTEMPT-TERMINAL.json": "32132cadb442820232bb8d619e65379c33676ed820407ace431f3b2e88f401fc",
+    "PROVENANCE.json": "21f0b477531262073fde072f188b56ed2ea431b20573c7a487eccbe25c83a906",
+    "README.md": "2c59067cf6312559e6a86fbd03b30c13d29f86d15d7d53ecb59950b206309316",
     "config.json": "811e06b168aca00acf72675fd83c2ddaddb0fc6b3b5ac4578282b237d9e6c4fd",
     "contracts/site__src__app__api__admin__lotes__[id]__pdf__route.ts": "210b567a8ea01c26acac4df2739ab59c8678b18025ade43789edb1e9138b2a65",
     "contracts/site__src__app__api__admin__lotes__criar__route.ts": "675ccc1ff9b1b8a47625b425a79230e65ac19aeb675dd5d220ac540b51097f77",
@@ -21,8 +22,12 @@
     "docker_control.py": "51c586124c1289f125502c94b9c969092f320a45eabee33c3791cfd22658a457",
     "fixture.cjs": "73ff17aed80a0f84d1b3d68b42dc50e0c0df8bac1bbed469019b353013d200d3",
     "functional-guard.mjs": "a93ebee1bb57d5e7465b1b774781b13fa7a305eaa8d7fa5a6d37bb1771fbff04",
-    "functional_smoke.py": "e00096bb9cea5636f7e9371a45fb710be934fe5c7f0339dd8f97eeed12ecc640",
-    "local_controller.py": "99e51ef037cd3190c8f12e3ed9ec3919637445b1a3ed13de34443e66c5001869",
+    "functional_smoke.py": "388e3a87dde000b1ea5185f7ea0b95666172829c309f19cece5215523e32aafb",
+    "local_controller.py": "a99473fcc463fc53659c8a36e04439d50bc772223310bc7f3c389b41d13c8d6b",
+    "mock-proof/baseline-903b-readiness.txt": "b471f773bb53c0894c5f65ea17ed588579c9ba74243cab2e5fa6ea3046836391",
+    "mock-proof/readiness-v2-result.json": "a3fa366ebb9f6f12002c0cfd51805219f8cc3dae79713850b6404269505bbf33",
+    "mock-proof/readiness-v2-stderr.log": "142e87e845cccfaf33208ea216eeb0bd55024c5802ebf116cf5921d333a6ced4",
+    "mock-proof/readiness-v2-stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "pdf_parse.py": "336d3d78b2768274130914a40f33ebaf0843b457b9cd2d8e58545fb686cba2a4",
     "preparation_http.py": "b62acb22bfcfb1a51f9996bf80213a3f019e884e181d11343ded40a75add127a",
     "schema-source-manifest.json": "f7947630d328d92fd372166baeb2ace32ee33149e495c9ff7866d5d075bc6a7e",
@@ -36,17 +41,26 @@
     "schema-sources/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
     "seed_contract.cjs": "1d2d04c0da7bacc777c3effa5773e949925a64c7566a48bc5693a33d29f847c4",
     "test_pdf_preparation.py": "b588cd814dc4e65b24557fa1708894a3123337bc1c73fd8b992dd956eafaa613",
+    "test_readiness_v2.py": "c53dd09412b7e15b079d1d6a144e0cf17fb724f93c1f82dfe85034b35100bc18",
     "text-version.test.cjs": "664d02ea81934f89d13db672b0051205069fc1e57d5650474905a43aecc07c45"
   },
   "fixedHttpChecks": 10,
   "mocks": {
-    "python": 19,
-    "nodeDummy": 1
+    "python": 31,
+    "nodeDummyPreviousUnchanged": 1
   },
   "seededConfirmedSignatures": 3,
   "seededBatches": 0,
   "seededPDFs": 0,
   "seededHistoryVersions": 0,
-  "appPgDockerHttpPdfGenerationParsingExecuted": false,
-  "browserInteractionPlannedSeparately": true
+  "browserInteractionPlannedSeparately": true,
+  "baselineHarnessCommit": "903b8c5cf05974042d25a7a59a6541d41554fa98",
+  "readinessPreflight": {
+    "path": "/api/admin/lotes/1/versoes",
+    "status": 401,
+    "disabledPortalPath": "/presidente",
+    "disabledPortalStatus": 404,
+    "notPdfQualification": true
+  },
+  "revision2AppPgDockerHttpPdfGenerationParsingExecuted": false
 }
