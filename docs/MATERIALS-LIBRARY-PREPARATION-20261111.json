@@ -1,0 +1,48 @@
+{
+  "classification": "PREPARACAO_CODIGO_ISOLADO_NOT_INTEGRATED_NOT_DEPLOYABLE",
+  "baseCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "branch": "feat/materials-library-backend-20261111",
+  "files": {
+    "docs/MATERIALS-LIBRARY-BACKEND-DRAFT-20261111.md": "56030068eb64d46707f806192171abe4a126c99ee968f83a2957062bfba92667",
+    "site/src/lib/materials-contract.ts": "bc2e2907cf43362daba09ce18eb84213dbdeeb2d7f0cf8f658c85d2bfc6aaf5b",
+    "site/src/lib/materials-contract.test.ts": "fc2e6bb51caff05236b46019f22c4c6a31fd5c85ca0be8866ce04078becc2824",
+    "site/src/lib/materials-schema.ts": "f0b65d5b26a73173dc8f81ae6e888437502feb6d06cea1fe2fd913ce5ce8cbf3",
+    "site/src/lib/materials-store.ts": "3852ae70cf1dda08bb328dbdd70e422f10c5a961b4a4e8fb04171509a9f114ee",
+    "site/src/lib/materials-response.ts": "541810e1cad661201633537444e503ee4915a9c16e15f66a8f0b680d11213df1",
+    "site/src/app/api/admin/materiais/route.ts": "22fe8f360dfa8c09883edc5cfdff56f9835cc4b5b61c20b5428b2ec02003f6ea",
+    "site/src/app/api/admin/materiais/[id]/route.ts": "6517f800576856a049a0380396a8bf2ec5098e598c10abb2a3e5f83fe77ba9ba",
+    "site/src/app/api/admin/materiais/pedidos/[requestId]/route.ts": "f39daceee652ea671f3b788bfa31853c8030767c19a62ad04e5dc129a431d067"
+  },
+  "evidence": {
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/result.json": "ad3e3b18c4f9942a41ad7523dc6089a2b23f8ec8f3185b20b10533bd1e181f0e",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/typecheck.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/test-stdout.log": "b5be6001dbc70a1f1f31999056a802f2052cf84a2e9abb1589e2793010c0d528",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/test-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-library-validation/final-syntax.json": "9a10f2e41d683635eb6ddafa0db9b64528ea6393ea933b85041e6da0948bc93b"
+  },
+  "observed": {
+    "pureContractTestsPassed": 12,
+    "pureContractStrictTypecheckDiagnostics": 0,
+    "finalSourceSyntaxDiagnostics": 0,
+    "ddlApplied": false,
+    "realPgStoreTests": false,
+    "fullTransitiveTypecheck": false,
+    "build": false,
+    "appHttpTests": false,
+    "uiRenderingOrExport": false,
+    "productionDataAccess": false,
+    "deployment": false,
+    "aiContactsSigningSend": false
+  },
+  "pending": [
+    "independent review",
+    "PostgreSQL17 additive DDL/cas/concurrency/audit rollback tests",
+    "strict store/routes project typecheck and build",
+    "API auth/origin/rateLimit real HTTP",
+    "UI create/edit",
+    "preview/render/export",
+    "library UI and archived material UX",
+    "binary export artifact storage",
+    "cumulative integration and exact release approval"
+  ]
+}
