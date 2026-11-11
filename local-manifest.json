@@ -1,15 +1,17 @@
 {
-  "classification": "R14_FUNCTIONAL_PREPARATION_INFRA_BLOCKED_NOT_EXECUTABLE",
+  "classification": "R14_MINIMUM_INFRA_PORT_MOCKS_PASS_REAL_EXECUTION_BLOCKED",
   "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "files": {
     ".gitignore": "61b3a7ce7f73e51dea5eb339eca40ea4b52ea39dfa35c83e81f974cc71a5e932",
     "ICON-PROVENANCE.json": "b4f01679e819908829252618cfda2b7e39d9838d22a8f5f8a471e6aa05c31eff",
+    "INFRA-PORT-PROVENANCE.json": "f547ed4919d07fbf1712be9efe4b801bca89fc3ab8bb112d452f28a9d810c7f6",
+    "INFRA-PORT-VALIDATION.json": "8f804384c9b610a4a6a61180dc3b771b7b31781302e921a6ba734f22af5c18b9",
     "OWN-CONTRACT-PINS.json": "34cf5f4ca621aafc59b123c6c6de0a9e2abc12c41099d95e760740c98dd193dd",
     "PDF-CONTRACT-PINS.json": "9b6c4b12981e89cdb489110e5d193a3a04f51e33e475d299b1ffc97918649a3e",
     "PDF-TOOL-PINS.json": "80357d081a310ef3dd5a88006f780aa89a4315ed5f479080db59c38e18da79ac",
     "PLAN.md": "6100d63dd125eabac3113e86a7a6c575920025b103ecb78890867f7410bea3a2",
     "PROVENANCE.json": "87eb46b962cc38e38b4f7954caa42074e34dd81a6b83d7b335484a49b24b6fce",
-    "README.md": "b4c146b3aa0920f2691cb9b22737427e08c196aca400aee180b8662ba4ae91a1",
+    "README.md": "8db732f4a54672c01d55afef542dab19359dcab5f126259359e3ed0353569a4b",
     "browser_hook.py": "d850ff86a873f6402c7bf45912fc55315ad5d607a36af8db3accc5187d7cf514",
     "config.json": "aaca424d5c1947dcc7485ea303a6518a61bb68aa7c814a9a0a01301ca8cd2159",
     "contracts/site__src__app__api__admin__lotes__[id]__pdf__route.ts": "210b567a8ea01c26acac4df2739ab59c8678b18025ade43789edb1e9138b2a65",
@@ -45,8 +47,8 @@
     "fixtures/original-proof.json": "c820cd64c7bc1ef9b5b9a8c237b87c8fde0497241099e2a7ddf3f599333fd081",
     "fixtures/original.pdf": "a4bc11db09cb778c0145706e22c953abd7375095b28d6995f39628d7c5c2ceea",
     "functional-guard.mjs": "ac9a8ecd2061bf98d56688e7d94b42b0b42ba48d868e5e8acce8769e05cc7d56",
-    "functional_smoke.py": "31fcbfcd5dc3e87831ca93295c039fdf0ab269621fd1d27f23574d50e61c7605",
-    "local_controller.py": "ffe940465573126c7d97e7550895a8bbbee747cbdf7c93a45d83cd02e0005152",
+    "functional_smoke.py": "f59ef4e9e9ef7a6cb662a1ad32f14026fdaebf6fb3f0e25c7f02b0b8a9d5e54a",
+    "local_controller.py": "92f2196f9613f2b71753f68d3cc9fc743dcfe8e1dcbec83b0eb66eecc32ace0a",
     "mock-proof/fixture-syntax-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "mock-proof/fixture-syntax-stdout.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "mock-proof/node-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -68,6 +70,8 @@
     "schema-sources/petition-base-schema.ts": "25ea67cd71f653e68a8cc67177f77d39f18b4e56e14d6a8d42e256ddae51764c",
     "schema-sources/president-own-a1-schema.ts": "24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408",
     "schema-sources/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
+    "test_create90_minimal.py": "85d822f13286d93982a73929792bda812d1eb92aa1b49a22f2e1eb373861e5cf",
+    "test_infra_port.py": "41646507c5ced56e18d0d6e88d832e2a8c5a7c4bdc32ee7cfd0e5a707d0fcf42",
     "test_modern_preparation.py": "ae6dba4d7104e7b0693b8b504e86ab2052cd68b88330f4c1f225dea91f3f5d86",
     "test_own.py": "06e6a7eccec211f1061356a27b619e60559515c60b76783395afc85498ae3e77"
   },
@@ -87,5 +91,8 @@
   ],
   "dbPort": 55494,
   "appPort": 31394,
-  "unit": "peticao-r0014-own-document-browser-qa-20261111.service"
+  "unit": "peticao-r0014-own-document-browser-qa-20261111.service",
+  "infrastructureSourceCommit": "13a25175f3ea1a3e625e97e7c1e38080cbfdba7e",
+  "infra_reviewed": false,
+  "createBudgetSeconds": 90
 }

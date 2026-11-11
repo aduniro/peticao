@@ -1,3 +1,4 @@
 DO NOT EXECUTE THIS DRAFT. config.infra_reviewed=false is a mandatory preflight refusal.
-Integrate reviewed peer controller with R14 identities, generate NEW commit/manifest, obtain root/independent review and exclusive execution lease before proposing an operator command.
-Current functional draft manifestSHA256=e8ecf45a3fbf862d63b45ca09c2b737d641bc7fee6d6a33e2b373fd61ea8484b
+Minimum R13v2 controller port is prepared with R14 identity/ports and 36 pure mocks. Await R13v2 real result plus root/independent review before a new qualification commit and exclusive execution lease. No R13 prior-failure gate was copied.
+Current functional draft manifestSHA256=698ad5c5753db816150038ac6dbcce362a082340bbfeedefb2b25748522a8899
+Caps remain CPUQuota=200% MemoryMax=3G TasksMax=256 RuntimeMaxSec=720 TimeoutStopSec=120 RemainAfterExit=yes; inner deadline=600.

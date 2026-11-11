@@ -50,9 +50,9 @@ def verify_local_context(config):
  SNAPSHOT=value;return value
 
 class DockerPG:
- def __init__(self,run,nonce,group,environment,node,config):
+ def __init__(self,run,nonce,group,environment,node,config,job_deadline,cancellation):
   if not re.fullmatch('[a-f0-9]{12}',nonce)or run.parent!=ROOT/'runs'or run.name!=nonce:raise ValueError('LOCAL nonce/run identity')
-  self.run=run;self.nonce=nonce;self.group=group;self.environment=environment;self.node=node;self.config=config;self.cid=None;self.nid=None;self.prepared=False;self.attempted=False;self.started=False;self.uncertain=False;self.events=[]
+  self.run=run;self.nonce=nonce;self.group=group;self.environment=environment;self.node=node;self.config=config;self.cid=None;self.nid=None;self.prepared=False;self.attempted=False;self.started=False;self.uncertain=False;self.events=[];self.job_deadline=job_deadline;self.cancellation=cancellation;self.phase='not-mutated';self.record_seq=0
   self.data=Path('/var/lib/postgresql/data') # Container namespace only; never a host PGDATA path/mount.
  def fence(self):verify_local_context(self.config)
  def prepare(self):
@@ -62,24 +62,50 @@ class DockerPG:
    with socket.socket()as sock:sock.bind(('127.0.0.1',port))
   self.prepared=True;self.events.append('prepared')
   (self.run/'docker-intent.json').write_text(json.dumps({'mode':'LOCAL','nonce':self.nonce,'labels':d.owned_labels(self.nonce),'image':d.IMAGE,'dataDirectoryContainer':str(self.data),'hostPgPort':55494,'containerPgPort':5432},indent=2)+'\n')
+ def record_operation(self,error_class=None):
+  self.record_seq+=1;target=self.run/'docker-operation-state.json';tmp=self.run/f'docker-operation-{self.record_seq}.tmp'
+  value={'nonce':self.nonce,'phase':self.phase,'uncertain':self.uncertain,'dependencyHeld':self.uncertain,'containerId':self.cid,'networkId':self.nid,'image':d.IMAGE,'expectedContainerName':'peticao-r0014-'+self.nonce+'-pg','expectedNetworkName':'peticao-r0014-'+self.nonce+'-net','createBudgetSeconds':90,'noRetry':True,'resourceAbsenceEstablished':False,'errorClass':error_class}
+  fd=os.open(tmp,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+  with os.fdopen(fd,'w')as out:json.dump(value,out,indent=2);out.write('\n');out.flush();os.fsync(out.fileno())
+  os.replace(tmp,target);fd=os.open(self.run,os.O_RDONLY|os.O_DIRECTORY)
+  try:os.fsync(fd)
+  finally:os.close(fd)
+ def admit_mutation(self,phase):
+  self.fence()
+  required={'network-create-intent':30,'container-create-intent':105,'start-intent':35}[phase]
+  if self.cancellation.signals or time.monotonic()+required>=self.job_deadline:raise Cancelled('cancelled/insufficient global deadline; no Docker mutation admitted')
+  self.uncertain=True;self.phase=phase;self.record_operation()
+ def verify_completion(self,phase):
+  self.fence()
+  if self.cancellation.signals or time.monotonic()>=self.job_deadline:raise Cancelled('cancel/deadline after Docker response; keep dependency held')
+  self.phase=phase;self.uncertain=False;self.record_operation()
+ def uncertain_failure(self,exc):
+  self.uncertain=True;self.phase+='-uncertain'
+  try:self.record_operation(type(exc).__name__)
+  except BaseException:pass # Original exception identity remains the cause; never make this success.
  def initialize(self):
   self.fence()
   if not self.prepared or self.attempted:raise ValueError('prepare once before unique create')
   self.attempted=True
   try:
+   self.admit_mutation('network-create-intent')
    self.nid=d.docker(*d.network_args(self.nonce)).stdout.strip();net=d.inspect_owned('peticao-r0014-'+self.nonce+'-net',self.nonce,'network')
    if net['Id']!=self.nid or net.get('Driver')!='bridge'or net.get('Internal')is not False or net.get('Containers'):raise ValueError('exclusive normal bridge identity')
-   self.cid=d.docker(*d.container_args(self.nonce,self.nid),timeout=30).stdout.strip();obj=d.inspect_owned('peticao-r0014-'+self.nonce+'-pg',self.nonce,'container')
+   self.admit_mutation('container-create-intent')
+   self.cid=d.docker(*d.container_args(self.nonce,self.nid),timeout=90).stdout.strip();obj=d.inspect_owned('peticao-r0014-'+self.nonce+'-pg',self.nonce,'container')
    if d.validate_container(obj,self.nonce,self.nid)!=self.cid:raise ValueError('created ID changed')
-   self.events.append('created')
-  except subprocess.TimeoutExpired:self.uncertain=True;raise Cancelled('Docker create timeout uncertain; do not retry')
+   self.verify_completion('created-verified');self.events.append('created')
+  except BaseException as exc:
+   self.uncertain_failure(exc);raise Cancelled('Docker creation/inspection uncertain; never repeat; dependency held for manual reconciliation')from exc
  def start(self):
   self.fence()
-  if not self.cid or self.started:raise ValueError('single start after create')
-  try:d.docker('start',self.cid,timeout=20)
-  except subprocess.TimeoutExpired:self.uncertain=True;raise Cancelled('Docker start timeout uncertain; do not retry')
-  obj=d.inspect_owned('peticao-r0014-'+self.nonce+'-pg',self.nonce,'container');d.validate_container(obj,self.nonce,self.nid,phase='after_start',expected_cid=self.cid)
-  self.started=True;self.events.append('started')
+  if not self.cid or self.started or self.uncertain:raise ValueError('single start only after fully verified creation')
+  try:
+   self.admit_mutation('start-intent');d.docker('start',self.cid,timeout=20)
+   obj=d.inspect_owned('peticao-r0014-'+self.nonce+'-pg',self.nonce,'container');d.validate_container(obj,self.nonce,self.nid,phase='after_start',expected_cid=self.cid)
+   self.verify_completion('started-verified');self.started=True;self.events.append('started')
+  except BaseException as exc:
+   self.uncertain_failure(exc);raise Cancelled('Docker start/inspection uncertain; dependency held for manual reconciliation')from exc
  def sql(self,query):return d.docker('exec','--env','PGPASSWORD=fixture_only',self.cid,'psql','-h','127.0.0.1','-X','-At','-U','fixture_only','-d','fixture_only','-c',query,timeout=5).stdout.strip()
  def bootstrap(self):
   self.fence();query="SELECT json_build_object('version',current_setting('server_version_num'),'cluster',current_setting('cluster_name'),'database',current_database(),'dataDirectory',current_setting('data_directory'),'containerPort',inet_server_port())";deadline=time.monotonic()+40
@@ -98,6 +124,10 @@ class DockerPG:
   self.events.append('host-tcp-verified');proof={'location':'LOCAL','docker':inside,'hostTCP':host_value,'hostPgPort':55494,'containerPgPort':5432,'image':d.IMAGE,'productionDatabase':False}
   (self.run/'pg-handshake.json').write_text(json.dumps(proof,indent=2)+'\n');return proof
  def stop(self):
+  if self.uncertain:
+   with socket.socket()as sock:
+    sock.settimeout(.3);closed=sock.connect_ex(('127.0.0.1',55494))!=0
+   return {'stopped':False,'uncertain':True,'dependencyHeld':True,'manualReconciliationRequired':True,'cleanupAttempted':False,'resourceAbsenceEstablished':False,'containerId':self.cid,'networkId':self.nid,'phase':self.phase,'hostPgPortClosed':closed,'postgresStarted':None if self.phase.startswith('start')else self.started}
   if not self.attempted:return {'stopped':True,'neverCreated':True,'postgresStarted':False}
   result=d.cleanup(self.nonce,expected_cid=self.cid,expected_nid=self.nid)
   with socket.socket()as sock:result['hostPgPortClosed']=sock.connect_ex(('127.0.0.1',55494))!=0
@@ -106,7 +136,7 @@ class DockerPG:
   result['postgresStarted']=self.started;self.events.append('cleanup-observed');return result
  def report(self):return {'backend':'LOCAL_DOCKER_17_11','nonce':self.nonce,'containerId':self.cid,'networkId':self.nid,'image':d.IMAGE,'events':self.events,'dataDirectoryContainer':str(self.data),'hostPgPort':55494,'containerPgPort':5432,'uncertain':self.uncertain}
 
-ALLOW=['result.json','pid.json','guard.jsonl','source-manifest.json','pg-handshake.json','downloads/own-database.pdf','downloads/browser-own.pdf','downloads/browser-history-own.pdf','own-browser-result.json','browser-hook-result.json','own-browser.png']
+ALLOW=['result.json','pid.json','guard.jsonl','source-manifest.json','pg-handshake.json','docker-operation-state.json','downloads/own-database.pdf','downloads/browser-own.pdf','downloads/browser-history-own.pdf','own-browser-result.json','browser-hook-result.json','own-browser.png']
 def finalize_local(run,result,group):
  try:
   if result.get('exit')==0:

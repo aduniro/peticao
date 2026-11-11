@@ -1,0 +1,12 @@
+{
+  "classification": "MOCKS_PASS_REAL_EXECUTION_NOT_QUALIFIED",
+  "tests": 36,
+  "exit": 0,
+  "proof": "/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111/mock-proof/create90-port/result.json",
+  "proofSha256": "e291910b773ae927c1500f643160b2b1570fe2a25030665c6dfd3d8319d5dd44",
+  "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderrSha256": "ce74904fc0a9a8b3455dbbdb975ccf80a3c00e11d7fcfd6fb4552996921a7971",
+  "infra_reviewed": false,
+  "sourceInfrastructureCommit": "13a25175f3ea1a3e625e97e7c1e38080cbfdba7e",
+  "realExecution": false
+}

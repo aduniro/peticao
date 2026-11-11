@@ -120,7 +120,7 @@ def main():
   (run/(action+'.log')).write_text(p.stdout+p.stderr)
   if p.returncode:raise RuntimeError('fixture '+action+' failed: '+p.stderr[:1200])
   return json.loads(p.stdout)
- pg=DockerPG(run,nonce,EXPECTED_CGROUP,env,NODE,CONFIG);proc=None
+ pg=DockerPG(run,nonce,EXPECTED_CGROUP,env,NODE,CONFIG,job_deadline,cancellation);proc=None
  result={'classification':'LOCAL_R0014_OWN_CONFIRMATION_BROWSER','operationalReady':False,'run':str(run),'sourceCommit':manifest['source_commit'],'checks':[],'dbPort':55494,'appPort':31394,'node':'20.19.2','postgresBackend':'local-docker17.11','santiagoExecution':False,'workerJob':False,'limits':limits,'nonce':nonce,'originalPreviouslyGeneratedR12Seeded':True,'noOwnArtifactSeeded':True,'deployment':False,'runtimeReusedNotMountReadOnly':True,'stepupNote':'State seeded only after successful real login; email challenge is outside this smoke'}
  try:
   if time.monotonic()>job_deadline:raise TimeoutError('job budget exhausted before LOCAL Docker PG')

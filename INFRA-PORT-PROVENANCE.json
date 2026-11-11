@@ -1,0 +1,23 @@
+{
+  "sourceRoot": "/mnt/dev/.peticao-r0013-create-reconciliation-draft-20261111/profile-v2",
+  "sourceCommit": "13a25175f3ea1a3e625e97e7c1e38080cbfdba7e",
+  "sourceManifestSha256": "46b7f51955e22df4484fe1901633f34e1018b4d0c074b9cfce84672e3b0cda1f",
+  "r14BaseCommit": "9c4a5987835d2c96394c7eb717deeb547ce26b49",
+  "scope": [
+    "DockerPG class minimum create90 uncertainty fix",
+    "runner passes deadline and cancellation",
+    "safe metadata export",
+    "pure directed mocks"
+  ],
+  "notCopied": [
+    "R13 previous-failure gate",
+    "R13 attempt markers",
+    "generic reconciliation draft"
+  ],
+  "ports": [
+    55494,
+    31394
+  ],
+  "infra_reviewed": false,
+  "realExecutionPerformed": false
+}

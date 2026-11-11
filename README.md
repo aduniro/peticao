@@ -4,7 +4,7 @@ Rascunho em `/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111
 
 ## Bloqueio de infraestrutura explícito
 
-`config.json` contém `infra_reviewed:false`; `functional_smoke.py` recusa execução ANTES do marcador/DB. O controlador foi herdado de R13 com timeoutcreate30s e cleanupincerto; a falha real R13 mostrou que o daemon pode concluir create depois do timeout. Este candidato NÃO qualifica essa infraestrutura nem altera timeout. Deve receber patch comum que o agentePerfil prepara, adaptado a nomes/pinos próprios, revisão independente e NOVOmanifesto/commit antes de qualquer ensaio. Nunca retry automático nem limpeza de rede enquanto criação incerta. Root decidirá a ordem R13v2/R14. Esse gate intencional precisa permanecerfalse até a integração revisada.
+`config.json` mantém `infra_reviewed:false`; `functional_smoke.py` recusa execução ANTES do marcador/DB. Esta revisão porta somente a correção mínima R13v2 (commit 13a25175f3ea1a3e625e97e7c1e38080cbfdba7e): create único com orçamento de 90s, estado incerto persistido antes de qualquer mutação Docker, confirmação de identidade e fence antes de liberar incerteza. Em timeout, sinal ou erro após mutação, não iniciar/repetir nem remover dependências; recibo falha e exige reconciliação manual. Os limites globais continuam 600s/720s e TimeoutStop120. O aumento de orçamento não comprova causa de I/O resolvida. Nenhum gate de falha anterior R13 foi portado: R14 mantém primeira tentativa própria. Infraestrutura ainda não qualificada; aguarda resultado real R13v2, revisão root/peer e novo freeze autorizado antes de alterar o gate.
 
 ## Precondições honestas
 
