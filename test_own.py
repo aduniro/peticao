@@ -53,8 +53,9 @@ class ResultGateTests(unittest.TestCase):
   with self.assertRaises(b.BrowserHookError):b.validate_result(self.run,self.value,self.generated)
   self.value['artifactId']='a';(self.run/'downloads/browser-own.pdf').write_bytes(b'CHANGED')
   with self.assertRaises(b.BrowserHookError):b.validate_result(self.run,self.value,self.generated)
- def test_infrastructure_is_explicitly_blocked_not_ready(self):
-  import json
-  self.assertFalse(json.loads((Path(__file__).parent/'config.json').read_text())['infra_reviewed']);self.assertIn("CONFIG.get('infra_reviewed')is not True",(Path(__file__).parent/'functional_smoke.py').read_text())
+ def test_infrastructure_review_guard_precedes_execution_marker(self):
+  source=(Path(__file__).parent/'functional_smoke.py').read_text()
+  self.assertIn("CONFIG.get('infra_reviewed')is not True",source)
+  self.assertLess(source.index("if CONFIG.get('infra_reviewed')"),source.index('verify_local_manifest()'))
 
 if __name__=='__main__':unittest.main()

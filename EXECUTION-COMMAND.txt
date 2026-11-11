@@ -1,4 +1,2 @@
-DO NOT EXECUTE THIS DRAFT. config.infra_reviewed=false is a mandatory preflight refusal.
-Minimum R13v2 controller port is prepared with R14 identity/ports and 36 pure mocks. Await R13v2 real result plus root/independent review before a new qualification commit and exclusive execution lease. No R13 prior-failure gate was copied.
-Current functional draft manifestSHA256=698ad5c5753db816150038ac6dbcce362a082340bbfeedefb2b25748522a8899
-Caps remain CPUQuota=200% MemoryMax=3G TasksMax=256 RuntimeMaxSec=720 TimeoutStopSec=120 RemainAfterExit=yes; inner deadline=600.
+# Root and peer reviewed activation; first R14 run still requires a fresh exclusive execution/runtime lease.
+/usr/bin/systemd-run --user --unit=peticao-r0014-own-document-browser-qa-20261111.service --property=RemainAfterExit=yes --property=CPUQuota=200% --property=MemoryMax=3G --property=TasksMax=256 --property=RuntimeMaxSec=720 --property=TimeoutStopSec=120 --property=WorkingDirectory=/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111 --setenv=HISTORY_SMOKE_CONFIG=/mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111/config.json --setenv=LOCAL_HISTORY_REVIEWED_MANIFEST_SHA256=2eb1fa053884d38551b2754bb35d887d3ae87b052ea85d990d80c92d7a61e3ba /usr/bin/python3 -B /mnt/apps/peticao-final/_ops/qa-r0014-own-document-browser-20261111/functional_smoke.py

@@ -1,0 +1,18 @@
+{
+  "classification": "ROOT_REVIEWED_R14_INFRA_ACTIVATION_MOCKS_ONLY",
+  "actualAppPgDockerBrowserExecuted": false,
+  "commands": [
+    {
+      "exit": 0,
+      "log": "1.log",
+      "sha256": "500937c07de42ca592fb933649b222b93abd5d771944aff9e2a7165b7212a3d5"
+    },
+    {
+      "exit": 0,
+      "log": "2.log",
+      "sha256": "2afd326574eeafcfe73050b787710ca182b1a20d9476a8d235a48a7d60bdfec7"
+    }
+  ],
+  "pythonTests": 37,
+  "nodeTests": 9
+}

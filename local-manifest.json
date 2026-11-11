@@ -1,5 +1,5 @@
 {
-  "classification": "R14_MINIMUM_INFRA_PORT_MOCKS_PASS_REAL_EXECUTION_BLOCKED",
+  "classification": "R14_ROOT_PEER_REVIEWED_INFRA_FIRST_REAL_EXECUTION_PENDING",
   "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
   "files": {
     ".gitignore": "61b3a7ce7f73e51dea5eb339eca40ea4b52ea39dfa35c83e81f974cc71a5e932",
@@ -11,9 +11,9 @@
     "PDF-TOOL-PINS.json": "80357d081a310ef3dd5a88006f780aa89a4315ed5f479080db59c38e18da79ac",
     "PLAN.md": "6100d63dd125eabac3113e86a7a6c575920025b103ecb78890867f7410bea3a2",
     "PROVENANCE.json": "87eb46b962cc38e38b4f7954caa42074e34dd81a6b83d7b335484a49b24b6fce",
-    "README.md": "8db732f4a54672c01d55afef542dab19359dcab5f126259359e3ed0353569a4b",
+    "README.md": "31fdea915cebeb54f10037b20f8514f7e9de06bfe4b0f6f6622cda2a0eb9434d",
     "browser_hook.py": "d850ff86a873f6402c7bf45912fc55315ad5d607a36af8db3accc5187d7cf514",
-    "config.json": "aaca424d5c1947dcc7485ea303a6518a61bb68aa7c814a9a0a01301ca8cd2159",
+    "config.json": "c960dfcfd41557cf28df3c22b2ae1a0d22353aee2e8aa745819c2bbfa17b76ba",
     "contracts/site__src__app__api__admin__lotes__[id]__pdf__route.ts": "210b567a8ea01c26acac4df2739ab59c8678b18025ade43789edb1e9138b2a65",
     "contracts/site__src__app__api__admin__lotes__[id]__presidente__historico__route.ts": "70f7e3d30e90f6b4dc17162ba0da26840cd4f39543191f0b7fec6e43d7f947da",
     "contracts/site__src__app__api__admin__lotes__criar__route.ts": "675ccc1ff9b1b8a47625b425a79230e65ac19aeb675dd5d220ac540b51097f77",
@@ -71,15 +71,17 @@
     "schema-sources/president-own-a1-schema.ts": "24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408",
     "schema-sources/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3",
     "test_create90_minimal.py": "85d822f13286d93982a73929792bda812d1eb92aa1b49a22f2e1eb373861e5cf",
-    "test_infra_port.py": "41646507c5ced56e18d0d6e88d832e2a8c5a7c4bdc32ee7cfd0e5a707d0fcf42",
+    "test_infra_port.py": "7afe730d7ec1abb7076b978f17358b9393cac5cc710d64179b629e8ea3f512fd",
     "test_modern_preparation.py": "ae6dba4d7104e7b0693b8b504e86ab2052cd68b88330f4c1f225dea91f3f5d86",
-    "test_own.py": "06e6a7eccec211f1061356a27b619e60559515c60b76783395afc85498ae3e77"
+    "test_own.py": "3702ec9cdb3a30c24231f0215f313e54d80ba31f2da06af47103a350c7a6f54e",
+    "INFRA-ACCEPTANCE.json": "1b4b643f10ba3c88d4f83541e5f8495084d5111da9f4597a002dccfae71010a6",
+    "ROOT-ACTIVATION-VALIDATION.json": "a2ac3c53407b1bbd7c24a4a40ed5e6fe0f61e4a2a31e22145baaf25fd924072d"
   },
-  "infrastructureReady": false,
-  "requiresReviewedPeerControllerPatchAndNewFreeze": true,
+  "infrastructureReady": true,
+  "requiresReviewedPeerControllerPatchAndNewFreeze": false,
   "actualAppPgDockerBrowserPopplerExecuted": false,
   "mockTests": {
-    "python": 16,
+    "python": 37,
     "node": 9
   },
   "futureBrowserChecks": 13,
@@ -93,6 +95,7 @@
   "appPort": 31394,
   "unit": "peticao-r0014-own-document-browser-qa-20261111.service",
   "infrastructureSourceCommit": "13a25175f3ea1a3e625e97e7c1e38080cbfdba7e",
-  "infra_reviewed": false,
-  "createBudgetSeconds": 90
+  "infra_reviewed": true,
+  "createBudgetSeconds": 90,
+  "activationProof": "INFRA-ACCEPTANCE.json"
 }

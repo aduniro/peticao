@@ -1,0 +1,17 @@
+{
+  "decision": "ROOT_APPROVED_FIRST_ISOLATED_EXECUTION",
+  "at": "2026-11-11T04:28:32.604677+00:00",
+  "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "reviewedHarnessCommit": "e6ac0554d9cd5eeda4068d67786cb67e6566e144",
+  "reviewedManifestSha256": "698ad5c5753db816150038ac6dbcce362a082340bbfeedefb2b25748522a8899",
+  "r13AcceptedRun": {
+    "path": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0013-pdf-preparation-browser-20261111/attempt-2/receipt.json",
+    "sha256": "d08227a67955b09dab47c1bdeca26f8459ee32644c7e0c6b9e37818d8b463e22"
+  },
+  "r14IndependentReview": {
+    "path": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/r0014-port-gate-review-20261111/REVIEW.md",
+    "sha256": "462c495c52cf948b92fec792d06cf63bba20bf8fdd87627e99c827da6acdc7b8"
+  },
+  "scope": "First local own-document browser fixture; seeded identity only; no production, real identity, real signing, approval or mail",
+  "realExecutionPerformed": false
+}
