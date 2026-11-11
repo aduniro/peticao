@@ -1,0 +1,61 @@
+{
+  "classification": "PRIVATE_DISJOINT_REVISION_NOT_INTEGRATED",
+  "kind": "govbr-route-gates-native-pg17-r0003-v1",
+  "qaSourceCommit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
+  "backendCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "rpcExactFields": [
+    "action",
+    "id",
+    "kind",
+    "source_commit"
+  ],
+  "rpcAction": "submit",
+  "normalizedPayload": {
+    "kind": "govbr-route-gates-native-pg17-r0003-v1",
+    "source_commit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
+    "project_subdir": "site"
+  },
+  "harnessManifestSha256": "77c122ffab177175be4f0ea8ee0c5b9190b4eaf5c12e5a27c342e25d19ff834d",
+  "harnessPins": {
+    "run.py": "62ab4077748800eee50db8e3a404b1229b3ce8864354efea4d9e71b8aacbea8a",
+    "native_pg.py": "a69d8c3e7b478d3bc9efdef0db52c97678f1fd48fc5b967c9373da24d26f2ee0",
+    "worker_context.py": "26a09c95fdd720d8a122371c4c275cb1275f8df6b81861036d39ec2915f2175b",
+    "staging.py": "3074af928b94c409003097a7ad55e4add37cdf3b53de2844c213a02c4b5714e2",
+    "receipts.py": "e3766b2e0c3219252ed853580b5206357a2b2ed434269fca55106d4b293f0c21",
+    "guard_policy.cjs": "b1605f3789260ad02ba5c6f4cd67494bacc6797c28894f9213c649ff96bb651e",
+    "node_guard.cjs": "f2a0f708159a2d5a081ca084f55496028ba169ce3456d374592ade5c61f2ab20",
+    "registry.json": "1a894d10f9ff42ce59ec6d0ce7f7c49661ae965a3a140a28833d6a963fa02afb",
+    "pg-binary-pins.json": "4053a50714cbb68c9b3dfe0b3a015ffe46f73561b175799fc0547b73cbf7e49d",
+    "dns_guard.cjs": "68a22d886d5218d723b5446931bd70da76bfc9f1fb30ffcc7148fb702ca25268"
+  },
+  "inputPins": {
+    "artifacts/source/source.tar": "f2440846c29ef84613bc4e005d7acaebf70eb1643816c025c229aa14dff545eb",
+    "artifacts/source/source-manifest.json": "63f1354863106399306f9d9ef10380c71dac82ca7f7dc4861bea0911b303924e",
+    "artifacts/devdeps.tar": "ebf056a98596e670bf68ee53ea4daeb45a9fcc7e302ab0bf4bd6a6ff72f99373",
+    "artifacts/devdeps-manifest.json": "db93db3e4c00f4a08d21aa1a775ef180a2e7a5f5e7dbbbbb1b6d143ab84b2f70",
+    "artifacts/production-manifest.json": "7b853db39899691fef6426d0e2dc1b893a48f14c201fc38eedb6f3df9ade2dc3"
+  },
+  "launcherProperties": {
+    "CPUQuota": "200%",
+    "MemoryMax": "3G",
+    "MemorySwapMax": "0",
+    "TasksMax": "256",
+    "RuntimeMaxSec": "600",
+    "TimeoutStopSec": "120",
+    "KillMode": "control-group"
+  },
+  "executionPlusCleanupSeconds": 720,
+  "stageProposed": "/srv/admin-v2-worker/admin-r0003-route-gates-20261111",
+  "commonRuntimeInputsProposed": "/srv/admin-v2-worker/admin-r0002-runtime-qa-20261111/inputs",
+  "remoteStagingAttested": false,
+  "queueCoreModified": false,
+  "actualApplicationTests": 0,
+  "actualPostgres": false,
+  "pending": [
+    "review module+fixtures",
+    "integrate two imports and three adaptation areas in same queue under peer ownership",
+    "remote staged input RO receipt and ACK",
+    "real native PG17/tsx route5 run with outer/cgroup collection gates"
+  ],
+  "revision": "REPEATED_TERM_CLEANUP_AND_SWC_256MIB"
+}

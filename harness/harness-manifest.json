@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "classification": "PRIVATE_DRAFT_NOT_REGISTERED_NOT_EXECUTED",
+  "kind": "govbr-route-gates-native-pg17-r0003-v1",
+  "sourceCommit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
+  "backendCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "files": {
+    "run.py": "62ab4077748800eee50db8e3a404b1229b3ce8864354efea4d9e71b8aacbea8a",
+    "native_pg.py": "a69d8c3e7b478d3bc9efdef0db52c97678f1fd48fc5b967c9373da24d26f2ee0",
+    "worker_context.py": "26a09c95fdd720d8a122371c4c275cb1275f8df6b81861036d39ec2915f2175b",
+    "staging.py": "3074af928b94c409003097a7ad55e4add37cdf3b53de2844c213a02c4b5714e2",
+    "receipts.py": "e3766b2e0c3219252ed853580b5206357a2b2ed434269fca55106d4b293f0c21",
+    "guard_policy.cjs": "b1605f3789260ad02ba5c6f4cd67494bacc6797c28894f9213c649ff96bb651e",
+    "node_guard.cjs": "f2a0f708159a2d5a081ca084f55496028ba169ce3456d374592ade5c61f2ab20",
+    "registry.json": "1a894d10f9ff42ce59ec6d0ce7f7c49661ae965a3a140a28833d6a963fa02afb",
+    "pg-binary-pins.json": "4053a50714cbb68c9b3dfe0b3a015ffe46f73561b175799fc0547b73cbf7e49d",
+    "dns_guard.cjs": "68a22d886d5218d723b5446931bd70da76bfc9f1fb30ffcc7148fb702ca25268"
+  },
+  "realApplicationTestsExecuted": 0,
+  "postgresStarted": false,
+  "externalQueueAdapterMustPinThisManifest": true,
+  "revision": "REPEATED_TERM_CLEANUP_AND_SWC_256MIB",
+  "supersedesInsufficientCodeCommit": "9a32f022e80066c837fd9ef5c8592d1ca4543c5e",
+  "supersedesHarnessCommit": "58cb9ce6d90cfb5f8b7fe456810948a4c99bb6f9"
+}

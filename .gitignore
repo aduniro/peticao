@@ -1,0 +1,8 @@
+evidence/
+manifest.json
+__pycache__/
+*.pyc
+*.sqlite*
+*.tar*
+*.bundle
+*.log
