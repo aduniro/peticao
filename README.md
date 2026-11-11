@@ -48,3 +48,5 @@ Logs TAP/stderr originais permanecem privados na rodada. Exportação pública t
 Root deve revisar manifesto/pins e obter lease exclusivo antes de executar o comando proposto em /mnt/dev/.peticao-r0008-local-package-approval-pg17-qa-20261111/EXECUTION-COMMAND.txt. Aceite exige outer-result pós-export, manifesto/hash, ExecMainCode/ExecMainStatus/Result reais da unidade retida, cgroup inteiro e Docker próprios drenados e porta55487fechada. not-found/default0 não comprova sucesso.
 
 Esta bateria é protocolo/bibliotecas e um handler HTTP chamado diretamente; não é E2E de rede do runtime compilado nem browser do formulário de aprovação. SmokeHTTP posterior continua necessário conforme /mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/approval-otp-reconciliation-audit-20261111/NEXT-V2-BATTERY.md. Não faz merge/deploy e não fecha A1real, entregaOTPexterna ou rollbackintegral.
+
+RawTAP é sempre parseado para13casos/fail/skip ANTES da projeção. result.json contém rawLogSha256 de TAP e stderr após limpeza do filho; os arquivos raw permanecem privados para revisão do root, sem sobrescrita pela exportação.

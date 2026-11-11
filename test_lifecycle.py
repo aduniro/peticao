@@ -35,7 +35,7 @@ if __name__=='__main__':unittest.main()
 class CleanupCancellationTests(unittest.TestCase):
  def run_cleanup(self,phase):
   with tempfile.TemporaryDirectory(dir=Path(__file__).parent)as temp:
-   root=Path(temp);run=root/'runs'/NONCE;run.mkdir(parents=True);state=r.CancellationState();proof={'exit':0,'classification':'MOCK','cancelSignals':0};original_read=Path.read_text;original_write=r.write
+   root=Path(temp);run=root/'runs'/NONCE;run.mkdir(parents=True);state=r.CancellationState();(run/'tap.log').write_bytes(b'MOCK TAP PRIVATE 123456');(run/'stderr.log').write_bytes(b'MOCK STDERR');proof={'exit':0,'classification':'MOCK','cancelSignals':0};original_read=Path.read_text;original_write=r.write
    def read(path,*a,**kw):return ''if str(path)=='/sys/fs/cgroup/mock/cgroup.procs'else original_read(path,*a,**kw)
    def node(*args):
     if phase=='node':state.handle(15,None)
@@ -51,7 +51,7 @@ class CleanupCancellationTests(unittest.TestCase):
    with mock.patch.object(r,'ROOT',root),mock.patch.object(r,'drain',side_effect=node)as drain,mock.patch.object(r,'cleanup',side_effect=pg)as cleanup,mock.patch.object(r,'export',side_effect=export)as out,mock.patch.object(r,'verify_export'),mock.patch.object(r,'write',side_effect=write),mock.patch.object(r.socket,'socket')as sock,mock.patch.object(Path,'read_text',read),mock.patch.object(r.signal,'alarm'):
     sock.return_value.__enter__.return_value.connect_ex.return_value=111
     r.finish_run(run,proof,None,{'cgroup':'/mock'},None,NONCE,CID,NID,True,'a'*32,state)
-   drain.assert_called_once();cleanup.assert_called_once();out.assert_called_once();self.assertFalse(state.cleaning);self.assertEqual(proof['exit'],1);self.assertGreaterEqual(state.signals,1);stored=json.loads((run/'outer-result.json').read_text());self.assertEqual(stored['exit'],1);self.assertEqual(stored['cancelSignals'],state.signals)
+   drain.assert_called_once();cleanup.assert_called_once();out.assert_called_once();self.assertFalse(state.cleaning);self.assertEqual(proof['exit'],1);self.assertGreaterEqual(state.signals,1);stored=json.loads((run/'outer-result.json').read_text());self.assertEqual(stored['exit'],1);self.assertEqual(stored['cancelSignals'],state.signals);self.assertEqual(set(stored['rawLogSha256']),{'tap.log','stderr.log'})
  def test_term_during_node_cleanup_still_attempts_docker_and_export(self):self.run_cleanup('node')
  def test_term_during_docker_cleanup_does_not_skip_export(self):self.run_cleanup('docker')
  def test_repeated_signals_during_export_force_failure(self):self.run_cleanup('export')

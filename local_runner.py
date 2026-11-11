@@ -223,6 +223,12 @@ def finish_run(run,proof,child,context,ticks,nonce,cid,nid,needs_cleanup,job,can
    remaining=[int(v)for v in cg.read_text().split()if int(v)!=os.getpid()];proof['remainingLocalCgroupProcesses']=remaining
    if remaining:proof['exit']=1
   except BaseException as exc:proof['exit']=1;proof['cgroupDrainError']=str(exc)[:200]
+  proof['rawLogSha256']={}
+  try:
+   for name in ['tap.log','stderr.log']:
+    if (run/name).exists():proof['rawLogSha256'][name]=digest(run/name,8*1024**2)
+   if proof.get('testsExecuted')and len(proof['rawLogSha256'])!=2:raise ValueError('raw test logs required')
+  except BaseException as exc:proof['exit']=1;proof['rawLogProofError']=type(exc).__name__
   proof['cancelSignals']=cancellation.signals
   if cancellation.signals:proof['exit']=1
   write(run/'result.json',proof)

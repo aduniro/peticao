@@ -9,8 +9,8 @@
     "frozen/receipts.py": "e3766b2e0c3219252ed853580b5206357a2b2ed434269fca55106d4b293f0c21",
     "frozen/staging.py": "3074af928b94c409003097a7ad55e4add37cdf3b53de2844c213a02c4b5714e2",
     "local-registry.json": "28ada06db41a94e2166ecfb0bf03f886caa79fa41b55ecdf8ef3ae35a1774d97",
-    "local_runner.py": "dd15ff18201bbf3f05903aeb81b2d898a78efd3e5b8d33d9bca4136afad1ac31",
-    "test_lifecycle.py": "5f0569daa6c74311641fccc9cce85abd4b85d6b91090e19b7cbd701fad25707b",
+    "local_runner.py": "6cb0f1f9cdf2c55efa0bdb01e2e2e7549fbbce80a29ad1f3847f878cb7c07a46",
+    "test_lifecycle.py": "f6b61ae50a34eb232c9a5d5562a16b61e4f040b0c95e04096e6505a430e1c828",
     "test_profile.py": "bceaa5d4079a4b9c20ac576899b260369250ce28a46be6b14f805d4d10c999bb"
   },
   "sourceCommit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
@@ -22,5 +22,6 @@
   "newLargeCopy": false,
   "networkHttpE2EStillPending": true,
   "fullCodeRollbackStillPending": true,
-  "r3OuterUnitQualificationStillSeparate": true
+  "r3OuterUnitQualificationStillSeparate": true,
+  "rawLogHashesInResultRequired": true
 }
