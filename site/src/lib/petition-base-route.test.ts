@@ -138,7 +138,18 @@ for (const gate of [
    const snapshot = async () => (await c.db.query("SELECT count(*)::int n FROM petition_base_validation_intents UNION ALL SELECT count(*)::int FROM petition_base_validation_attempts UNION ALL SELECT count(*)::int FROM petition_base_validation_results UNION ALL SELECT count(*)::int FROM petition_base_validations")).rows;
    const before = await snapshot(); assert.ok(before.every(row => row.n === 0));
    const transport = (async (url, init) => {
-    const method = init?.method ?? "GET", req = request(method, String(url), typeof init?.body === "string" ? init.body : undefined);
+    const method = init?.method ?? "GET", target = new URL(String(url), "http://qa.local");
+    assert.equal(target.origin, "http://qa.local"); assert.equal(target.pathname, path);
+    assert.equal(init?.credentials, "same-origin"); assert.equal(init?.cache, "no-store"); assert.equal(init?.redirect, "error");
+    if (method === "POST") {
+     assert.equal(target.search, "");
+     assert.deepEqual(JSON.parse(String(init?.body)), { requestId: input.requestId, expectedSha256: input.sha256 });
+    } else {
+     assert.equal(method, "GET"); assert.equal(init?.body, undefined);
+     assert.deepEqual(Array.from(target.searchParams.keys()).sort(), ["expectedSha256", "requestId"]);
+     assert.equal(target.searchParams.get("requestId"), input.requestId); assert.equal(target.searchParams.get("expectedSha256"), input.sha256);
+    }
+    const req = request(method, target.pathname + target.search, typeof init?.body === "string" ? init.body : undefined);
     if (method === "POST") { posts++; return VALIDATE(req, params); }
     reads++; return RECOVER_VALIDATION(req, params);
    }) as typeof fetch;
