@@ -31,7 +31,7 @@ def package_inventory(site,cache):
  return installed,skipped
 
 def export(build,out):
- from production_profile import verify_profile_pins,verify_dependency_cache
+ from production_profile import COMMIT,verify_profile_pins,verify_dependency_cache
  verify_profile_pins();verify_dependency_cache()
  if out!=ROOT/'export' or out.resolve()!=out:raise ValueError('fixed_new_profile_export_required')
  if build is None:raise ValueError('explicit_build_required')
@@ -42,7 +42,16 @@ def export(build,out):
  for k in ['sourceStable','cloneSourceStable','sourceClean','sourceHeadStable','profileStable','targetEvidenceStable','guardInstalled','assetsStable','processGroupDrained','noPreview','dependencyCacheStable']:
   if result.get(k) is not True:raise ValueError('unqualified build evidence: '+k)
  if result['exit']!=0 or result['networkDenials'] or result['remainingBuildProcesses'] or result['fakeSecretsEmbedded'] or result['postgresStarted'] or result['listenerStarted']:raise ValueError('build failure or unsafe evidence')
- profile=json.loads((build/'profile.json').read_text()); target=pathlib.Path(profile['target']['targetEvidence'])
+ profile=json.loads((build/'profile.json').read_text())
+ frozen=json.loads((ROOT/'source-manifest.json').read_text())
+ if COMMIT!='140ce6b98af23045849335693a82b426fdc9c826' or result.get('sourceCommit')!=COMMIT or profile.get('sourceCommit')!=COMMIT or frozen.get('commit')!=COMMIT:raise ValueError('export_source_commit_mismatch')
+ frozen_files=frozen['files'];actual_source=json.loads((build/'source-manifest.json').read_text())
+ if actual_source!={name:pin['sha256']for name,pin in frozen_files.items()}:raise ValueError('export_source_inventory_mismatch')
+ # Frozen bytes and complete map are admitted before dependencies/output materialization.
+ for name,pin in frozen_files.items():
+  safe(name);source_file=build/'clone'/name
+  if source_file.is_symlink() or not source_file.is_file() or source_file.resolve()!=source_file or source_file.stat().st_size!=pin['bytes']or sha(source_file.read_bytes())!=pin['sha256']:raise ValueError('export_frozen_source_bytes_mismatch')
+ target=pathlib.Path(profile['target']['targetEvidence'])
  if sha(target.read_bytes())!=profile['target']['targetEvidenceSha256']:raise ValueError('target evidence drift')
  # Validate selected tracked source and copied runtime assets against frozen evidence.
  for filename in ['source-manifest.json','runtime-assets-manifest.json']:

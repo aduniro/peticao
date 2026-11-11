@@ -1,0 +1,16 @@
+{
+  "classification": "PURE_EXPORT_SOURCE_IDENTITY_RED_GREEN",
+  "baselineCommit": "09baddad058d5934fe72e0cd63f8dfe691901ce2",
+  "baselineFixtureSha256": "8e3e54cb43b477894ddf5a818291c9496ffdffeacee0f9f45b13ca34cb1dc8a7",
+  "sourceCommit": "140ce6b98af23045849335693a82b426fdc9c826",
+  "tests": 24,
+  "passed": 24,
+  "baselineNegativeAdmissionsReproduced": 6,
+  "fixedNegativeAdmissionsRejected": 6,
+  "additionalChangedBytesRejected": true,
+  "validAdmissionToSentinel": true,
+  "logSha256": "9814d733889f73761315565a5fee5e95abc9e2b806ecf204c6653b32fda29f90",
+  "runtimeOrBuildUsed": false,
+  "appOrPgOrHttpExecuted": false,
+  "infraReviewed": false
+}
