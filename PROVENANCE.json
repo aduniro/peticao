@@ -1,0 +1,46 @@
+{
+  "source": "140ce6b98af23045849335693a82b426fdc9c826",
+  "upstream": {
+    "production_profile.py": {
+      "path": "/mnt/dev/.peticao-r0002-production-profile-20261111/production_profile.py",
+      "sha256": "f50d93b821b3493e9a1262cb072df5a42bfcc65f1272962312243fd8b8f63863"
+    },
+    "production-build-guard.mjs": {
+      "path": "/mnt/dev/.peticao-r0002-production-profile-20261111/production-build-guard.mjs",
+      "sha256": "c9bd0a8746f0d838172f8cf8d82150b8f27378e50b6a518d3efc3b94b8b6e9dd"
+    },
+    "portable_runtime.py": {
+      "path": "/mnt/dev/.peticao-r0002-production-profile-20261111/portable_runtime.py",
+      "sha256": "e69572ff14a6cdd9c95ddb84c45f5431282046992bcd9eb447affb734d987233"
+    },
+    "dry-config.mjs": {
+      "path": "/mnt/dev/.peticao-r0002-production-profile-20261111/dry-config.mjs",
+      "sha256": "7e9b287ef896be59b2186b3d1df05a9dd1e4b8461529990dbc76c84bb0321f31"
+    },
+    "guard-probe.mjs": {
+      "path": "/mnt/dev/.peticao-r0002-production-profile-20261111/guard-probe.mjs",
+      "sha256": "0beef9db90f8d3801a5fb9b497809d9bbff0c070adf26e4901e153eea26fbda2"
+    }
+  },
+  "guardChange": "Only ROOT namespace; DNS/TCP/TLS/UDP/fetch denial and private IPC policy unchanged",
+  "sourceFiles": 1246,
+  "sourceBytes": 20038250,
+  "noBuildExecuted": true,
+  "noAppExecuted": true,
+  "noDatabaseExecuted": true,
+  "cache": {
+    "entries": 12436,
+    "bytes": 545306885,
+    "manifestSha256": "a5e2a4c61e9bcdb37fa8ad8143671595ea980057715ed66f82fb891a343abbc5"
+  },
+  "buildAdaptation": [
+    "source identity140ce",
+    "Git blob allowlist instead of full clone",
+    "all scratch under new Ops root",
+    "immutable dependency cache fingerprint before/after",
+    "activation false before any marker",
+    "exact bounded retained unit identity",
+    "cancellation drains build process group",
+    "new runtime/source identity and fixed export path"
+  ]
+}

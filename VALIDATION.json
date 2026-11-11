@@ -1,0 +1,17 @@
+{
+  "classification": "PREPARATION_ONLY_PURE_TESTS",
+  "tests": 10,
+  "passed": 10,
+  "failed": 0,
+  "logSha256": "af0f6ac558b2e4df2ad2cfc351a2cd59b242f96bbfacadc2d1dc46a8e1c5e9bd",
+  "pythonSyntax": "pass",
+  "nodeGuardSyntax": "pass",
+  "buildExecuted": false,
+  "postgresExecuted": false,
+  "appExecuted": false,
+  "httpExecuted": false,
+  "sourceCommit": "140ce6b98af23045849335693a82b426fdc9c826",
+  "runtimeCreated": false,
+  "phaseBLauncherReady": false,
+  "operationalReady": false
+}

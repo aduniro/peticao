@@ -1,0 +1,18 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import { createRequire } from "node:module";
+const require=createRequire(import.meta.url);
+const ts=require("/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules/typescript");
+const source="/mnt/apps/peticao-final/_ops/drafts/materials-preview-api-20261111/site/src/lib/config.ts";
+const raw=fs.readFileSync(source,"utf8");
+assert.ok(!/^import\s/m.test(raw));
+const js=ts.transpileModule(raw,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const {config,isProd,isPreview}=await import("data:text/javascript;base64,"+Buffer.from(js).toString("base64"));
+assert.equal(isProd,true);assert.equal(isPreview,false);
+assert.equal(config.databaseUrl(),"postgres://build_only:build_only@127.0.0.1:1/build_only");
+assert.ok(config.pepper().length>=32);assert.ok(config.adminPassword().length>=8);
+assert.equal(config.mailProvider(),"dev");assert.deepEqual(config.mailProviders(),["dev"]);
+assert.deepEqual(config.marketingProviders(),[]);assert.equal(config.cronSecret(),"");
+assert.deepEqual(config.recipients(),[]);assert.equal(config.approverEmail(),"");
+assert.equal(config.appUrl(),"https://sancionaintegral.org");
+console.log(JSON.stringify({isProd,isPreview,mailProviders:config.mailProviders(),databasePolicy:"loopback-port1-denied",productionRequiredsValid:true,configSource:source}));

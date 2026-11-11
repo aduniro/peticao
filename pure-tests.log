@@ -1,0 +1,15 @@
+test_activation_closed_before_marker_or_subprocess (test_preparation.Preparation.test_activation_closed_before_marker_or_subprocess) ... ok
+test_build_guard_only_namespace_delta_from_accepted_recipe (test_preparation.Preparation.test_build_guard_only_namespace_delta_from_accepted_recipe) ... ok
+test_cache_changed_bytes_fail_closed (test_preparation.Preparation.test_cache_changed_bytes_fail_closed) ... ok
+test_git_source_has_no_environment_or_runtime_state (test_preparation.Preparation.test_git_source_has_no_environment_or_runtime_state) ... ok
+test_preview_cannot_substitute_head (test_preparation.Preparation.test_preview_cannot_substitute_head) ... ok
+test_preview_content_digest_drift_fails (test_preparation.Preparation.test_preview_content_digest_drift_fails) ... ok
+test_preview_html_substitution_fails (test_preparation.Preparation.test_preview_html_substitution_fails) ... ok
+test_preview_wrong_csp_fails (test_preparation.Preparation.test_preview_wrong_csp_fails) ... ok
+test_requested_old_version_with_new_archived_head (test_preparation.Preparation.test_requested_old_version_with_new_archived_head) ... ok
+test_source_stage_rejects_path_escape_before_git_read (test_preparation.Preparation.test_source_stage_rejects_path_escape_before_git_read) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.018s
+
+OK
