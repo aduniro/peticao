@@ -19,7 +19,7 @@ path = folder / 'config.json'
 if not path.exists():
     path.write_text(json.dumps({
         'api_url': 'http://127.0.0.1:13061', 'api_key': auth['key'],
-        'executor': 'r93d07b', 'vigia': 'r688b96',
+        'executor': 'executor', 'vigia': 'r688b96',
         'owner_chat': '5511900000001@c.us',
         'owner_aliases': ['5511900000001@c.us', '74599471521914@lid'],
         'enabled_at': time.time(), 'reports_enabled': True,

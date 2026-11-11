@@ -5,9 +5,25 @@ Estado privado: `/mnt/dev/peticao/.cache/whatsapp-executor/state`.
 Configuração privada: `/home/barre/.config/whatsapp-executor/config.json`.
 
 O WAHA roda na VM `sanciona-integral` (100.115.154.25), no Compose
-`/home/wa/waha/docker-compose.yml`. O número DDD61 usa a sessão `r93d07b`
+`/home/wa/waha/docker-compose.yml`. O número DDD61 passa a usar a sessão `executor`
 como EXECUTOR; o DDD96 usa `r688b96` como VIGIA. O destino e os aliases do
 responsável ficam somente na configuração privada.
+
+O WAHA foi atualizado para2026.10.1 com imagem fixada por digest no arquivo
+`/home/wa/waha/executor-override.yml`. O Compose original permanece preservado.
+A imagem anterior tem a tag `waha-before-executor:20261111`; configurações e
+sessões consistentes foram copiadas para o diretório privado da VM
+`/home/wa/waha/backups/executor-20261111T003152Z` antes da atualização.
+A sessão antiga `r93d07b` e a terceira sessão não utilizada `ra1fff7` foram
+paradas, preservando seus dados; a sessão nova evita reutilizar o perfil61
+que estava em loop de inicialização. Não considerar a conta61 pareada antes
+de observar `WORKING` e o número correspondente na sessão nova.
+
+Operação do Compose na VM:
+
+```bash
+/usr/bin/docker compose --project-directory /home/wa/waha -f /home/wa/waha/docker-compose.yml -f /home/wa/waha/executor-override.yml up -d
+```
 
 ## Serviços
 

@@ -68,6 +68,23 @@ class BridgeTests(unittest.TestCase):
     def test_message_id_object(self):
         self.assertEqual(bridge.message_id({'_serialized': 'serialized', 'id': 'inner'}), 'serialized')
 
+    def test_report_is_complete_and_not_repeated(self):
+        folder = pathlib.Path(self.tmp.name)
+        report = folder / 'latest-report.txt'
+        report.write_text('Relatório completo de teste com todas as etapas.')
+        report.with_suffix('.html').write_text('<p>Relatório completo de teste.</p>')
+        self.cfg['reports_enabled'] = True
+        with patch.object(bridge, 'REPORT', report), patch.object(bridge, 'MONITOR', folder / 'absent.sqlite'), \
+             patch.object(bridge, 'request', return_value={'id': 'fake-test-receipt'}) as req:
+            bridge.mirror_reports()
+            self.assertEqual(req.call_count, 3)
+            uploads = [call.args[1]['file'] for call in req.call_args_list if call.args[0] == '/api/sendFile']
+            self.assertEqual(len(uploads), 2)
+            import base64
+            self.assertEqual(base64.b64decode(uploads[0]['data']), report.read_bytes())
+            bridge.mirror_reports()
+            self.assertEqual(req.call_count, 3)
+
 
 if __name__ == '__main__':
     unittest.main()
