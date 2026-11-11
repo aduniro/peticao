@@ -1,6 +1,6 @@
 {
   "source": "/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111",
-  "commit": "3f96a06a8e3557099c94df19e1b95a3496496bfe",
+  "commit": "49b158d73ef9dc5c75b7c378dfdafca44dcf62bc",
   "compilerVersion": "5.9.3",
   "compilerSha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675",
   "files": {
@@ -17,8 +17,8 @@
       "compiledSha256": "00dca3ae3ecf22e2655c9a317ae7bc23cd690c0d078956fd96e6774ab309fb82"
     },
     "site/src/lib/materials-dom-collector.ts": {
-      "sourceSha256": "040096477f564eaa466cd37807571a90d17a252ae7f3bb3f9b71f2c65ca48795",
-      "compiledSha256": "92f49557e2a23b573c278d1a1e3926bb402a2d3c4fd1d844fbbf31f2485f2685"
+      "sourceSha256": "cccc8a3d7fd4b09ec6fe937d6be4642869e666ac5f33b299dd6cdeeec7f66b10",
+      "compiledSha256": "a4a7fd2d62d84ce44d7c7fe3cdd8efd5943734da0389fb4e0089bdb90b14e08e"
     }
   }
 }

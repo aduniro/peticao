@@ -1,5 +1,5 @@
 const fs=require('node:fs'),cp=require('node:child_process'),crypto=require('node:crypto'),assert=require('node:assert/strict');
-const ROOT=__dirname,SOURCE='/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111',COMMIT='3f96a06a8e3557099c94df19e1b95a3496496bfe';
+const ROOT=__dirname,SOURCE='/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111',COMMIT='49b158d73ef9dc5c75b7c378dfdafca44dcf62bc';
 const ts=require('/mnt/dev/peticao/site/node_modules/typescript');assert.equal(ts.version,'5.9.3');
 const sha=b=>crypto.createHash('sha256').update(b).digest('hex'),files={};
 for(const name of ['materials-contract.ts','materials-render.ts','materials-layout.ts','materials-dom-collector.ts']){

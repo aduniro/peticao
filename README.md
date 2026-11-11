@@ -14,3 +14,8 @@ Execução única por marcador exclusivo, Node20 pinado, unidade systemd delimit
 
 
 Revisão pré-execução: o caso de excesso agora exige motivo geométrico/scroll, imagens/fontes prontas, ausência de erros e nenhuma regra de clipping como causa alternativa. O diretório temporário é registrado antes do launch; falha/fechamento incerto mantém o diretório e o diagnóstico, sem limpeza cega. A primeira versão2492 não foi executada. A captura de fontes identifica recursos observados naquele momento; não prova um inventário global congelado antes/depois.
+
+
+## Versão explícita após correção comprovada
+
+Este diretório é /mnt/apps/peticao-final/_ops/qa-materials-layout-browser-v2-20261111. Fonte49b158d73ef9dc5c75b7c378dfdafca44dcf62bc altera somente a detecção de overflow do IMG contido; avaliador e renderer permanecem iguais. Antes de criar marcador ou navegador, o perfil exige recibo original de falhae3e9be..., arquivos/marker/unidade retida1 preservados e limpeza anterior comprovada. O primeiro perfil permanece intacto; não há retry genérico. Os dez critérios não foram reduzidos. Esta revisão ainda não foi executada.

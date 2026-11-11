@@ -1,0 +1,17 @@
+{
+  "classification": "EXPLICIT_MATERIALS_IMG_UA_CLIP_FIX_AFTER_FAILED_FIRST_DIAGNOSTIC",
+  "oldRoot": "/mnt/apps/peticao-final/_ops/qa-materials-layout-browser-20261111",
+  "oldFailureReceipt": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/materials-layout-browser-20261111/attempt-1/receipt.json",
+  "oldFailureReceiptSha256": "e3e9be666a1e7978465b57baf7d63d3b34af92b789233b5650f49c7e2d0fef4f",
+  "oldInvocation": "5eadd0a9ea6742e7b427f429c9b4edfd",
+  "oldFiles": {
+    "result.json": "1368625df7979e3287f9a4b260a83595e7edd90eabb1230d9d78646c324b6971",
+    "root-retained-unit.txt": "0ff53b2793a0037ea53df717e5d6b6580ae5e4aac50863c71df8ab7ad10eb64d",
+    "execution.started": "bcbf89e9f90b1c617c5917e763861e9f0a3c2e5baf3ffca46729591717d4f5e4",
+    "manifest.json": "fe809ec18c0855418af6bb38f6a081c61998d48772c279cb3334e3c159930cb3",
+    "temporary.json": "c74afb712a5ed01488bb3bc647d2fbd42bc7af0e15ac2e87b6a5ff7f80932c3b"
+  },
+  "noGenericRetry": true,
+  "oldEvidenceMustRemain": true,
+  "newBrowserExecuted": false
+}

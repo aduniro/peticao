@@ -1,22 +1,25 @@
 {
-  "classification": "OFFLINE_REAL_DOM_MEASUREMENT_INITIAL_DIAGNOSTIC_PREPARED",
-  "sourceCommit": "3f96a06a8e3557099c94df19e1b95a3496496bfe",
+  "classification": "EXPLICIT_CONFIRMED_UA_IMG_CLIP_FIX_QUALIFICATION_PREPARED",
+  "sourceCommit": "49b158d73ef9dc5c75b7c378dfdafca44dcf62bc",
   "casesPlanned": 10,
   "expectedNominalFit": 9,
   "expectedOverflowRejections": 1,
-  "realBrowserExecuted": false,
   "exportImplemented": false,
   "files": {
     ".gitignore": "98cc6687313b538b560dfe286a876cb338779a2b2ea794501b0aad56d7951924",
-    "README.md": "5599a5785102606bf6f89c79b78c7e8e24d731c25e57991a6dc0460266fdfe39",
-    "prepare.cjs": "082730206017c25e3be1dafec38723be3ec70b0dca31f1fe77706c2bc8f2f8bc",
-    "run.cjs": "f72f8c883df1f915176a03526c8a4bcb996bc36ff34a39c20004e3fd3721ba3f",
-    "source-manifest.json": "67e4a1b46bef82b9a1e3457499369f0b18a25222e2898fe38225f98c964ca206",
+    "README.md": "fec820eb96b83be9a5eab88a8e1cd9df09c0180d90a5a1eed7e1d7fed6d94396",
+    "prepare.cjs": "743bce040c7016ec25a54f7eaf513f82d8e2bcf6f7ed2d210e3798362d7795dd",
+    "run.cjs": "d8644cfe450d6a26ad0e5a7481631fe68fb2196c76b29f9e2b78500830325dda",
+    "source-manifest.json": "c12a08f0e8e423b5028a26b3c4212334a9c32bda124964a86bbc7a0fd4f780c8",
     "compiled/materials-contract.js": "fe7ecadd4f9a6a7a2ff167592eb5dbdba1edac16f9d207e101e50a9b73cb000a",
     "compiled/materials-render.js": "eaaf3ab6b7dab7f632aec35ca057a5adb4bcf04dd20c5f25f8ea088455c8fa03",
     "compiled/materials-layout.js": "00dca3ae3ecf22e2655c9a317ae7bc23cd690c0d078956fd96e6774ab309fb82",
-    "compiled/materials-dom-collector.js": "92f49557e2a23b573c278d1a1e3926bb402a2d3c4fd1d844fbbf31f2485f2685"
+    "compiled/materials-dom-collector.js": "a4a7fd2d62d84ce44d7c7fe3cdd8efd5943734da0389fb4e0089bdb90b14e08e",
+    "PREVIOUS-FAILURE.json": "e286abfa3fed606cc481c8fcc3bf539782204a860272ec638e6b831deee5d43e"
   },
   "negativeRequiresGeometricRejectionAndReadyResources": true,
-  "temporaryRecordedBeforeLaunch": true
+  "temporaryRecordedBeforeLaunch": true,
+  "realBrowserExecutedAtFreeze": false,
+  "previousFailureReceiptSha256": "e3e9be666a1e7978465b57baf7d63d3b34af92b789233b5650f49c7e2d0fef4f",
+  "noGenericRetry": true
 }
