@@ -1,0 +1,28 @@
+{
+  "classification": "MATERIALS_PG17_TEST_SOURCE_PREPARED_NOT_EXECUTED",
+  "backendCommit": "c02bfaca9def79d01d02ada4bbd5c9738bf443b9",
+  "files": {
+    "site/src/lib/materials-store.pg.test.ts": "5c6e7e2ab76538f49eece34a7b4645ffc8a18afb988ea48fbbe1edcc3f40952d",
+    "docs/MATERIALS-PG17-TEST-DRAFT-20261111.md": "eb5b7febe8b7207e177475d5efce84995a1efbf62a05c89ab5d30c9532335488"
+  },
+  "evidence": {
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-pg17-preparation-20261111/syntax.json": "03704b3b4db2bee7889b48438131dd055cfb089042257ebbf67674d3e0f0b46d",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-pg17-preparation-20261111/default-skip-result.json": "2669c826882f282e84595dc3bbccf4c7cd9241c8fd1ef502eb3251d586ac16ae",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-pg17-preparation-20261111/default-skip-stdout.log": "680d64860837b068e2a2648c4ab6bec1da506a9dcbb85fcd735dbc6bce2e116c",
+    "/mnt/apps/peticao-final/_ops/drafts/materials-library-20261111/.cache/materials-pg17-preparation-20261111/default-skip-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "callbacksDeclared": 9,
+  "postgresCallbacksExecuted": 0,
+  "defaultSkipObserved": 9,
+  "actualPgPassed": 0,
+  "syntaxDiagnostics": 0,
+  "strictTestTypecheckDone": false,
+  "pgOrAppExecuted": false,
+  "installationBuildMergeDeploy": false,
+  "pending": [
+    "Independent source review",
+    "Test strict transitive typecheck",
+    "Isolated runner source/freeze/approval",
+    "PG17real9callbacks0skip with guard/retainedunit/drain"
+  ]
+}
