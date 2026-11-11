@@ -1,10 +1,10 @@
 {
-  "classification": "DRAFT_BROWSER_DRIVER_REQUIRES_REVIEWED_R4_HOOK_NOT_EXECUTED",
+  "classification": "SHORT_PRIVATE_CHILD_TMPDIR_V2_PREPARED_NOT_EXECUTED",
   "files": {
-    "history-browser.cjs": "f405840d45f9529f0442f8b27606d03c4dae18b26670d098119d311b9180b369",
-    "history-browser.test.cjs": "c6e34816978f85ad3c7d9d24cc6cf707b807db8f1b49e2108414e6384cc32cc7",
-    "README.md": "ee79cf0c5e9ae61ff5613aa15ac35136fb0f35e5318a23c748d165b12a3b7076",
-    "policy-result.json": "3b3df2ca6514eec2c94ccabc4d51fc3f10b65a94de5a87bfeca6ad1e62fcb38f",
+    "history-browser.cjs": "e0a0019d9af52528d574cdcd80d3a5473d75e74fc46ad44afaaf1ed3c0567ffa",
+    "history-browser.test.cjs": "cf7922befa597a804edd0168689b1c1a734df4015ce27bfd46128a77e67acc50",
+    "README.md": "d82b491f75c1645d47575d1bfdf4d17e38d40c27790127b79bc0e6154dfa15c3",
+    "policy-result.json": "03fc9d9d3a017c5645a8f124ddf602aa3af9927b596917aa5627af88f8d01812",
     ".gitignore": "2942be07e6b21c8287327770f13a647a4c62b807d662b6bf50356542f8de7905"
   },
   "sourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",

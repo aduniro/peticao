@@ -1,9 +1,7 @@
 {
-  "at": "2026-11-11T01:39:02.182757+00:00",
-  "tests": 5,
-  "passed": 5,
-  "classification": "POLICY_UNIT_TESTS_ONLY",
-  "realBrowserStarted": false,
-  "postgresStarted": false,
-  "applicationStarted": false
+  "classification": "POLICY_TESTS_ONLY_NO_BROWSER",
+  "tests": 9,
+  "exit": 0,
+  "realRunUserTmpCreated": false,
+  "proof": "/mnt/dev/.peticao-r0005-auth-history-browser-qa-20261111/short-tmp-policy-proof/result.json"
 }

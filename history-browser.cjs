@@ -47,21 +47,75 @@ function verifyDownloadRequests(requests, fixtures) {
   assert.deepEqual(observed, [...fixtures].reverse().map(f => ({ method: "GET", path: `/api/admin/lotes/1/versoes/${f.id}` })));
 }
 
+function socketBudget(tmpdir) {
+  // Linux sockaddr_un.sun_path is108bytes including the terminating NUL.
+  // Reserve64bytes for Chromium's private directory/socket suffix.
+  assert.ok(Buffer.byteLength(tmpdir) + 1 + 64 < 108, "short Chromium Unix socket path budget");
+  return Buffer.byteLength(tmpdir) + 1 + 64;
+}
+function privateParent(parent, api = fs) {
+  assert.equal(parent, `/run/user/${process.getuid()}`);
+  const info = api.lstatSync(parent);
+  assert.ok(info.isDirectory() && !info.isSymbolicLink());
+  assert.equal(info.uid, process.getuid());
+  assert.equal(info.mode & 0o777, 0o700);
+  assert.equal(api.realpathSync(parent), parent);
+  return info;
+}
+function createShortTmp(nonce, api = fs) {
+  assert.match(nonce, /^[a-f0-9]{12}$/);
+  const parent = `/run/user/${process.getuid()}`; privateParent(parent, api);
+  const directory = api.mkdtempSync(path.join(parent, `r6-${nonce}-`));
+  api.chmodSync(directory, 0o700);
+  socketBudget(directory);
+  const info = api.lstatSync(directory);
+  assert.ok(info.isDirectory() && !info.isSymbolicLink());
+  assert.equal(info.uid, process.getuid()); assert.equal(info.mode & 0o777, 0o700);
+  assert.equal(api.realpathSync(directory), directory);
+  return { parent, directory, nonce, uid: info.uid, dev: info.dev, ino: info.ino };
+}
+function removeShortTmp(identity, browserClosed, api = fs) {
+  assert.equal(browserClosed, true, "browser must close before private temp removal");
+  privateParent(identity.parent, api);
+  assert.equal(path.dirname(identity.directory), identity.parent);
+  assert.match(path.basename(identity.directory), new RegExp(`^r6-${identity.nonce}-[A-Za-z0-9]{6}$`));
+  socketBudget(identity.directory);
+  const info = api.lstatSync(identity.directory);
+  assert.ok(info.isDirectory() && !info.isSymbolicLink());
+  assert.equal(api.realpathSync(identity.directory), identity.directory);
+  for (const key of ["uid", "dev", "ino"]) assert.equal(info[key], identity[key]);
+  assert.equal(info.uid, process.getuid()); assert.equal(info.mode & 0o777, 0o700);
+  api.rmSync(identity.directory, { recursive: true, force: false });
+  assert.equal(api.existsSync(identity.directory), false);
+  return true;
+}
+function diagnostic(error, cookie = "") {
+  let value = String(error);
+  for (const secret of [cookie, cookie.startsWith("adm=") ? cookie.slice(4) : ""].filter(Boolean)) {
+    value = value.split(secret).join("[REDACTED]");
+    value = value.split(encodeURIComponent(secret)).join("[REDACTED]");
+  }
+  return value.length <= 4400 ? value : value.slice(0, 2100) + "\n...[diagnostic middle omitted]...\n" + value.slice(-2100);
+}
+let privateCookie = "";
+
 async function execute(filename) {
   const stat = fs.lstatSync(filename);
   assert.ok(stat.isFile() && !stat.isSymbolicLink() && stat.uid === process.getuid() && (stat.mode & 0o077) === 0);
   assert.equal(fs.realpathSync(filename), filename);
-  const cfg = JSON.parse(fs.readFileSync(filename, "utf8"));
+  const cfg = JSON.parse(fs.readFileSync(filename, "utf8")); privateCookie = typeof cfg.cookie === "string" ? cfg.cookie : "";
   const cgroup = fs.readFileSync("/proc/self/cgroup", "utf8").split("\n").find(x => x.startsWith("0::")).slice(3);
   const run = validateConfig(cfg, filename, cgroup);
   assert.equal(sha(fs.readFileSync(CHROME)), CHROME_SHA);
   assert.equal(process.env.PLAYWRIGHT_DISABLE_FORCED_CHROMIUM_PROXIED_LOOPBACK, "1");
   const { chromium } = require("/home/barre/pdf_temp/scribdl-py/venv/lib/python3.12/site-packages/playwright/driver/package");
-  let browser;
-  const result = { classification: "AUTHENTICATED_HISTORY_BROWSER_WITH_SYNTHETIC_HTTP_LOGIN_SESSION", sourceCommit: SOURCE, checks: [], requests: [], pageErrors: [], consoleErrors: [], externalRequestsBlocked: [], mutationsBlocked: [], syntheticSession: true, browserLoginUiTested: false, stepupSeeded: true, otpFlowTested: false, realCertificateUsed: false, deployment: false, exit: 1 };
+  let browser, browserClosed = false, shortTmp;
+  const result = { classification: "AUTHENTICATED_HISTORY_BROWSER_WITH_SYNTHETIC_HTTP_LOGIN_SESSION", sourceCommit: SOURCE, checks: [], requests: [], pageErrors: [], consoleErrors: [], externalRequestsBlocked: [], mutationsBlocked: [], syntheticSession: true, browserLoginUiTested: false, stepupSeeded: true, otpFlowTested: false, realCertificateUsed: false, deployment: false, browserTmpRemoved: false, exit: 1 };
   const check = (name, value) => { result.checks.push({ name, passed: !!value }); assert.ok(value, name); };
   try {
-    browser = await chromium.launch({ executablePath: CHROME, headless: true, chromiumSandbox: true, timeout: 30000, proxy: { server: "http://127.0.0.1:9", bypass: "127.0.0.1,localhost" }, env: { PATH: "/usr/bin:/bin", HOME: run + "/empty", TMPDIR: run + "/tmp", LANG: "C.UTF-8" }, args: ["--disable-background-networking", "--disable-component-update", "--disable-sync", "--no-first-run", "--dns-prefetch-disable"] });
+    shortTmp = createShortTmp(path.basename(run));
+    result.browserTmp = { directory: shortTmp.directory, uid: shortTmp.uid, dev: shortTmp.dev, ino: shortTmp.ino, socketBudget: socketBudget(shortTmp.directory) };
+    browser = await chromium.launch({ executablePath: CHROME, headless: true, chromiumSandbox: true, timeout: 30000, proxy: { server: "http://127.0.0.1:9", bypass: "127.0.0.1,localhost" }, env: { PATH: "/usr/bin:/bin", HOME: run + "/empty", TMPDIR: shortTmp.directory, LANG: "C.UTF-8" }, args: ["--disable-background-networking", "--disable-component-update", "--disable-sync", "--no-first-run", "--dns-prefetch-disable"] });
     result.browserVersion = browser.version();
     const context = await browser.newContext({ viewport: { width: 1366, height: 900 }, acceptDownloads: true, serviceWorkers: "block", extraHTTPHeaders: { DNT: "1" } });
     check("fresh context has no inherited cookies", (await context.cookies()).length === 0);
@@ -114,13 +168,18 @@ async function execute(filename) {
     check("no external application requests", result.externalRequestsBlocked.length === 0);
     check("no application mutation attempted", result.mutationsBlocked.length === 0);
     await context.close(); result.exit = 0;
-  } catch (err) { result.error = String(err).slice(0, 3000); }
+  } catch (err) { result.error = diagnostic(err, cfg.cookie); }
   finally {
-    if (browser) { try { await browser.close(); } catch (err) { result.exit = 1; result.closeError = String(err).slice(0, 1000); } }
+    if (browser) { try { await browser.close(); browserClosed = true; } catch (err) { result.exit = 1; result.closeError = diagnostic(err, cfg.cookie); } }
+    if (shortTmp) {
+      try { result.browserTmpRemoved = removeShortTmp(shortTmp, browserClosed); }
+      catch (err) { result.exit = 1; result.tmpCleanupError = diagnostic(err, cfg.cookie); }
+    }
+    if (result.browserTmpRemoved !== true) result.exit = 1;
     fs.writeFileSync(path.join(run, "history-browser-result.json"), JSON.stringify(result, null, 2));
   }
   return result.exit;
 }
 
-module.exports = { validateConfig, classifyRequest, verifyDownloadRequests };
-if (require.main === module) execute(process.argv[2]).then(code => { process.exitCode = code; }).catch(err => { console.error(err.message); process.exitCode = 1; });
+module.exports = { validateConfig, classifyRequest, verifyDownloadRequests, socketBudget, privateParent, createShortTmp, removeShortTmp, diagnostic };
+if (require.main === module) execute(process.argv[2]).then(code => { process.exitCode = code; }).catch(err => { console.error(diagnostic(err, privateCookie)); process.exitCode = 1; });

@@ -12,3 +12,10 @@ Chromium binary is SHA-pinned, sandbox enabled, fresh context, service workers b
 Checks selected batch page, closed dialog, explicit metadata fetch, newest-first versions, exact hashes/URLs/download bytes and attachment names, Escape/focus, no JS exceptions or application mutation. Screenshot and sanitized history-browser-result.json go to same fixture run. Root collection must additionally prove all process groups/cgroup drain and retained systemd ExecMainStatus/Result; driver result alone insufficient.
 
 Five policy tests passed with local Node20.19.2. No browser/Docker/app/PG executed while preparing. These policy tests do not prove integration. No installation, upload, signature, approval, sending or deployment.
+
+
+## Short child TMPDIR revision2 (prepared, not executed)
+
+Driver allocates a unique `r6-<nonce>-<random>` directory under canonical owner0700 `/run/user/<uid>`, with inode/dev/UID identity. Only Chromium child env TMPDIR uses it; global/driver TMPDIR is unchanged. Its byte budget reserves64bytes plus separator/NUL below Linux108-byte sockaddr_un limit. Sandbox/Secure/Strict/proxy policies stay unchanged. Directory removal requires successful browser.close and unchanged private inode identity; failure leaves an explicit cleanup failure/owned path for reconciliation after unit drain. No directory is removed if identity or close is uncertain.
+
+Diagnostics preserve head and tail after cookie/token redaction. Nine policy cases passed with filesystem adapters only; no browser or real /run/user temp was created during preparation. Proof: /mnt/dev/.peticao-r0005-auth-history-browser-qa-20261111/short-tmp-policy-proof/result.json.
