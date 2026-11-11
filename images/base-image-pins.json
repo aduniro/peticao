@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-11T19:33:48.022526+00:00",
+  "images": {
+    "node": {
+      "tag": "20.19.2-bookworm-slim",
+      "index_digest": "sha256:7cd3fbc830c75c92256fe1122002add9a1c025831af8770cd0bf8e45688ef661",
+      "linux_amd64_digest": "sha256:ae5e29a169a6dbe7f45d552d73674001cc00913a0a8a5967c57a34f92e940ec8",
+      "config_digest": "sha256:c7c6259cce420b30d3993cf5bb599690239f497ea41fccab48d3926d82a98373",
+      "compressed_layer_bytes": 71112490,
+      "source": "https://registry-1.docker.io/v2/library/node/manifests/20.19.2-bookworm-slim"
+    },
+    "postgres": {
+      "tag": "17.11-bookworm",
+      "index_digest": "sha256:665dc7b37ac52a17e298511414c21d23ffa4e6a6ef6225b3e5d59c7afb35e994",
+      "linux_amd64_digest": "sha256:73bedc9eaa0121b92b9b26bb52e5141b3f6f37479c7ef913c0160455763ca80a",
+      "config_digest": "sha256:018dbecf6a31cfed1f83c218b5e428a52ac389ad46e495f72831641db49d85a9",
+      "compressed_layer_bytes": 156195702,
+      "source": "https://registry-1.docker.io/v2/library/postgres/manifests/17.11-bookworm"
+    }
+  }
+}

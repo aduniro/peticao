@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "profiles": {
+    "typecheck": {
+      "enabled": false,
+      "source_commit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+      "source_manifest_sha256": null,
+      "image": null,
+      "cpu_millis": 1000,
+      "memory_mib": 2048,
+      "ephemeral_mib": 8192,
+      "heavy": false,
+      "timeout_seconds": 600,
+      "priority": 50,
+      "approval_reference": null
+    },
+    "unit": {
+      "enabled": false,
+      "source_commit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+      "source_manifest_sha256": null,
+      "image": null,
+      "cpu_millis": 1000,
+      "memory_mib": 1024,
+      "ephemeral_mib": 8192,
+      "heavy": false,
+      "timeout_seconds": 300,
+      "priority": 40,
+      "approval_reference": null
+    },
+    "postgres17": {
+      "enabled": false,
+      "source_commit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+      "source_manifest_sha256": null,
+      "image": null,
+      "cpu_millis": 1000,
+      "memory_mib": 2048,
+      "ephemeral_mib": 8192,
+      "heavy": true,
+      "timeout_seconds": 600,
+      "priority": 40,
+      "approval_reference": null
+    },
+    "build": {
+      "enabled": false,
+      "source_commit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+      "source_manifest_sha256": null,
+      "image": null,
+      "cpu_millis": 2000,
+      "memory_mib": 3072,
+      "ephemeral_mib": 8192,
+      "heavy": true,
+      "timeout_seconds": 1200,
+      "priority": 40,
+      "approval_reference": null
+    },
+    "browser": {
+      "enabled": false,
+      "source_commit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+      "source_manifest_sha256": null,
+      "image": null,
+      "cpu_millis": 1000,
+      "memory_mib": 2048,
+      "ephemeral_mib": 8192,
+      "heavy": true,
+      "timeout_seconds": 600,
+      "priority": 40,
+      "approval_reference": null
+    },
+    "pdf-png": {
+      "enabled": false,
+      "source_commit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+      "source_manifest_sha256": null,
+      "image": null,
+      "cpu_millis": 1000,
+      "memory_mib": 2048,
+      "ephemeral_mib": 8192,
+      "heavy": true,
+      "timeout_seconds": 600,
+      "priority": 40,
+      "approval_reference": null
+    }
+  }
+}

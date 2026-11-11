@@ -1,0 +1,11 @@
+{
+  "source": "Actual installed /opt/admin-v2-cluster files on Santiago",
+  "original_sha256": {
+    "coordinator.py": "a8e93ff093555241d2eeead49d418dc4d5bb4dacecf4aa460c329e8e7cd7adef",
+    "runtime_profile.py": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8",
+    "recovery.py": "9c2b54de92a175822fc973912e25cd4450186d89a66e23ff61a94f150fadaa18",
+    "replicate.py": "0be47519bb4d18691b2d21ed1372e8413f546077c917cae4e730ef111c99026f"
+  },
+  "live_installed_files_unchanged": true,
+  "source_not_deployed": true
+}

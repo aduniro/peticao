@@ -18,62 +18,221 @@
     {
       "apiVersion": "v1",
       "kind": "ServiceAccount",
-      "metadata": {"name": "default", "namespace": "peticao-dev"},
+      "metadata": {
+        "name": "default",
+        "namespace": "peticao-dev"
+      },
       "automountServiceAccountToken": false
     },
     {
       "apiVersion": "v1",
       "kind": "ServiceAccount",
-      "metadata": {"name": "job-runner", "namespace": "peticao-dev"},
+      "metadata": {
+        "name": "job-runner",
+        "namespace": "peticao-dev"
+      },
       "automountServiceAccountToken": false
     },
     {
       "apiVersion": "v1",
       "kind": "ServiceAccount",
-      "metadata": {"name": "queue-coordinator", "namespace": "peticao-dev"},
+      "metadata": {
+        "name": "queue-coordinator",
+        "namespace": "peticao-dev"
+      },
       "automountServiceAccountToken": false
     },
     {
       "apiVersion": "rbac.authorization.k8s.io/v1",
       "kind": "Role",
-      "metadata": {"name": "queue-jobs", "namespace": "peticao-dev"},
+      "metadata": {
+        "name": "queue-jobs",
+        "namespace": "peticao-dev"
+      },
       "rules": [
-        {"apiGroups": ["batch"], "resources": ["jobs"], "verbs": ["create", "get", "list", "watch", "delete"]},
-        {"apiGroups": [""], "resources": ["pods"], "verbs": ["get", "list", "watch"]},
-        {"apiGroups": [""], "resources": ["pods/log"], "verbs": ["get"]},
-        {"apiGroups": [""], "resources": ["events"], "verbs": ["get", "list", "watch"]}
+        {
+          "apiGroups": [
+            "batch"
+          ],
+          "resources": [
+            "jobs"
+          ],
+          "verbs": [
+            "create",
+            "get",
+            "list",
+            "watch",
+            "delete",
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods/log"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "events"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch"
+          ]
+        }
       ]
     },
     {
       "apiVersion": "rbac.authorization.k8s.io/v1",
       "kind": "RoleBinding",
-      "metadata": {"name": "queue-jobs", "namespace": "peticao-dev"},
-      "subjects": [{"kind": "ServiceAccount", "name": "queue-coordinator", "namespace": "peticao-dev"}],
-      "roleRef": {"apiGroup": "rbac.authorization.k8s.io", "kind": "Role", "name": "queue-jobs"}
+      "metadata": {
+        "name": "queue-jobs",
+        "namespace": "peticao-dev"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "queue-coordinator",
+          "namespace": "peticao-dev"
+        }
+      ],
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "queue-jobs"
+      }
     },
     {
       "apiVersion": "networking.k8s.io/v1",
       "kind": "NetworkPolicy",
-      "metadata": {"name": "isolate-all-jobs", "namespace": "peticao-dev"},
-      "spec": {"podSelector": {}, "policyTypes": ["Ingress", "Egress"], "ingress": [], "egress": []}
+      "metadata": {
+        "name": "isolate-all-jobs",
+        "namespace": "peticao-dev"
+      },
+      "spec": {
+        "podSelector": {},
+        "policyTypes": [
+          "Ingress",
+          "Egress"
+        ],
+        "ingress": [],
+        "egress": []
+      }
     },
     {
       "apiVersion": "networking.k8s.io/v1",
       "kind": "NetworkPolicy",
-      "metadata": {"name": "allow-fixed-claim-gateway", "namespace": "peticao-dev"},
-      "spec": {"podSelector": {"matchLabels": {"peticao.dev/managed": "queue"}}, "policyTypes": ["Egress"], "egress": [{"to": [{"ipBlock": {"cidr": "100.80.18.81/32"}}], "ports": [{"protocol": "TCP", "port": 9444}]}]}
+      "metadata": {
+        "name": "allow-fixed-claim-gateway",
+        "namespace": "peticao-dev"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "peticao.dev/managed": "queue"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ],
+        "egress": [
+          {
+            "to": [
+              {
+                "ipBlock": {
+                  "cidr": "100.80.18.81/32"
+                }
+              }
+            ],
+            "ports": [
+              {
+                "protocol": "TCP",
+                "port": 9444
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "apiVersion": "v1",
       "kind": "ResourceQuota",
-      "metadata": {"name": "bounded-jobs", "namespace": "peticao-dev"},
-      "spec": {"hard": {"requests.cpu": "10", "limits.cpu": "10", "requests.memory": "26Gi", "limits.memory": "26Gi", "requests.ephemeral-storage": "32Gi", "limits.ephemeral-storage": "48Gi", "pods": "8", "count/jobs.batch": "4", "services": "0", "persistentvolumeclaims": "0", "secrets": "0"}}
+      "metadata": {
+        "name": "bounded-jobs",
+        "namespace": "peticao-dev"
+      },
+      "spec": {
+        "hard": {
+          "requests.cpu": "10",
+          "limits.cpu": "10",
+          "requests.memory": "26Gi",
+          "limits.memory": "26Gi",
+          "requests.ephemeral-storage": "32Gi",
+          "limits.ephemeral-storage": "48Gi",
+          "pods": "8",
+          "count/jobs.batch": "4",
+          "services": "0",
+          "persistentvolumeclaims": "0",
+          "secrets": "0"
+        }
+      }
     },
     {
       "apiVersion": "v1",
       "kind": "LimitRange",
-      "metadata": {"name": "bounded-containers", "namespace": "peticao-dev"},
-      "spec": {"limits": [{"type": "Container", "default": {"cpu": "500m", "memory": "512Mi", "ephemeral-storage": "2Gi"}, "defaultRequest": {"cpu": "250m", "memory": "256Mi", "ephemeral-storage": "1Gi"}, "max": {"cpu": "4", "memory": "16Gi", "ephemeral-storage": "12Gi"}, "min": {"cpu": "10m", "memory": "32Mi"}}]}
+      "metadata": {
+        "name": "bounded-containers",
+        "namespace": "peticao-dev"
+      },
+      "spec": {
+        "limits": [
+          {
+            "type": "Container",
+            "default": {
+              "cpu": "500m",
+              "memory": "512Mi",
+              "ephemeral-storage": "2Gi"
+            },
+            "defaultRequest": {
+              "cpu": "250m",
+              "memory": "256Mi",
+              "ephemeral-storage": "1Gi"
+            },
+            "max": {
+              "cpu": "4",
+              "memory": "16Gi",
+              "ephemeral-storage": "12Gi"
+            },
+            "min": {
+              "cpu": "10m",
+              "memory": "32Mi"
+            }
+          }
+        ]
+      }
     }
   ]
 }
