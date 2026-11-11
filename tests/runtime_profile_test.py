@@ -112,7 +112,7 @@ class RuntimeProfileTests(unittest.TestCase):
                 if proc.is_alive():proc.kill();proc.join()
     def test_launcher_fixed_timeout_and_cgroup_contract(self):
         text=(Path(__file__).resolve().parents[1]/'infra/launch.py').read_text()
-        for expected in ["('120' if profile else '7200')",'KillMode=control-group','TimeoutStopSec=15','CPUQuota=300%','MemoryMax=5G']:self.assertIn(expected,text)
+        for expected in ["'120' if profile else '7200'",'KillMode=control-group',"'120' if history else '15'","'200%' if history else '300%'","'3G' if history else '5G'"]:self.assertIn(expected,text)
         self.assertEqual(p.TIMEOUT_SECONDS,120)
         self.assertNotIn('shell=True',(Path(__file__).resolve().parents[1]/'core/runtime_profile.py').read_text())
 if __name__=='__main__':unittest.main()

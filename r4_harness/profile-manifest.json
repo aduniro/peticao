@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "profile_id": "history-populated-native-pg17-r4",
+  "original_harness_commit": "ca53ba684fc4021760069e6f79a1ca75475d3e6b",
+  "adaptation": "typed existing queue context, mandatory guard/schema/PG pins, cleanup signal receipts",
+  "runtime_source_commit": "0a5f734da4f9b8a35a10a20eaa9fb4fd5adb0e4f",
+  "files": {
+    "functional_smoke.py": "8f78b152c863aac959affe0a40dbd1796bb9fc7a6c2299c53808206a90feb954",
+    "native_pg.py": "f46afdacb85f70b339620f9b025154937e75ead095b1a592f7f0a210f7bcbc34",
+    "fixture.cjs": "a34574271520fbefcd1e508601aae6d950873db25f2aad6c0f0226151d32a31e",
+    "functional-guard.mjs": "c36d4cdfbf7c892f3696b1a5e2521955651a7057eb6cd33783d36724a00ee62f",
+    "executor_context.py": "ff391a3fab460528a7624ab34133e36f8bee551b548833bc3f45989d40e432e1",
+    "schema-source-manifest.json": "0e837a472ac1274bd433335fa88e98110edd5082de88645d09d8828950810a51",
+    "pg-binary-pins.json": "4053a50714cbb68c9b3dfe0b3a015ffe46f73561b175799fc0547b73cbf7e49d",
+    "schema-sources/batch-a1-schema.ts": "1251d5a401ed201859c13fcb65ce5d88ed3ad9890e5f098a041cc7e5bcd4413b",
+    "schema-sources/batch-package-schema.ts": "7baba1f2fbe3dbcb957d4414ac06ecb25b21ac1f1a713fb7d8c2782b5554eab4",
+    "schema-sources/db.ts": "dfb66f502a11a282b37bc0c2cf06d15995e3cfe1da42223e999d9e12e97b5824",
+    "schema-sources/document-reference-schema.ts": "b851cfa7990ce006829d4c2aca8e8ffabf913ed198238dafdc61ad844702cc7c",
+    "schema-sources/petition-base-schema.ts": "d21a4289e522ca3a9570d8de5a4d80a69b6468a4e5a9744c2a4de3bc3e3c72ab",
+    "schema-sources/president-own-a1-schema.ts": "24b467607679f30e5cb6d986724c311971c55a136ca9b30b7e73d0f2e28c8408",
+    "schema-sources/president-own-document-schema.ts": "86516913713b00734a88b74075adad9adf1ebfc0c1b808e9b9b22c30323a63a3"
+  }
+}

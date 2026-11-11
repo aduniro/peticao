@@ -26,6 +26,7 @@ import tempfile
 import time
 import uuid
 import runtime_profile
+import history_native_profile
 
 ROOT = Path(os.environ.get("ADMIN_CLUSTER_ROOT", "/srv/admin-v2-coordinator"))
 WORKER = Path(os.environ.get("ADMIN_WORKER_ROOT", "/srv/admin-v2-worker"))
@@ -36,7 +37,7 @@ MAX_SOURCE = 500 * 1024 * 1024
 MAX_LOG = 10 * 1024 * 1024
 MAX_ARTIFACTS = 500 * 1024 * 1024
 TERMINAL = {"completed", "failed", "interrupted", "canceled"}
-KINDS = {"fixture-pass", "fixture-fail", "build", "typecheck", "test", runtime_profile.KIND}
+KINDS = {"fixture-pass", "fixture-fail", "build", "typecheck", "test", runtime_profile.KIND, history_native_profile.KIND}
 ID = re.compile(r"[a-f0-9]{32}\Z")
 COMMIT = re.compile(r"[a-f0-9]{40}\Z")
 STOP = False
@@ -176,7 +177,9 @@ def submit(data):
     if kind not in KINDS:
         raise ValueError("unsupported_job_kind")
     payload = {"kind": kind}
-    if kind == runtime_profile.KIND:
+    if kind == history_native_profile.KIND:
+        payload = history_native_profile.payload(data)
+    elif kind == runtime_profile.KIND:
         payload = runtime_profile.payload(data)
     elif kind.startswith("fixture-"):
         duration = data.get("duration_seconds", 0.2)
@@ -369,6 +372,8 @@ def dispatch_once():
 
 def commands(payload, job=None):
     kind = payload["kind"]
+    if kind == history_native_profile.KIND:
+        return [history_native_profile.argv(job)]
     if kind == runtime_profile.KIND:
         return [runtime_profile.argv(job)]
     if kind.startswith("fixture-"):
@@ -486,7 +491,7 @@ def run_job(job):
         payload = config["payload"]
         work = folder / "work"
         work.mkdir()
-        if payload["kind"] != runtime_profile.KIND and not payload["kind"].startswith("fixture-"):
+        if payload["kind"] not in {runtime_profile.KIND, history_native_profile.KIND} and not payload["kind"].startswith("fixture-"):
             source = ROOT / "sources" / payload["source_commit"] / "tree"
             shutil.copytree(source, work, dirs_exist_ok=True)
             for directory, _, files in os.walk(work):
