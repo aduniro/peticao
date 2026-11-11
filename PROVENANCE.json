@@ -1,0 +1,14 @@
+{
+  "classification": "PREPARATION_ONLY_NO_EXECUTION",
+  "baseRunnerCommit": "6e1547572a263a63ed041c301676bfbc5db980ba",
+  "baseRunnerPath": "/mnt/dev/.peticao-r0007-local-history-core-pg17-qa-20261111",
+  "sourceCommit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
+  "runtimeSourceCommit": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "all21ProtocolPinsByteIdentical": true,
+  "testFile": "site/src/lib/batch-package-delivery.test.ts",
+  "newCallbacks": 13,
+  "skipped": 0,
+  "rollbackFenceIncluded": "SQL read and transactional assertions only in own fixture PG; not deploy/production rollback",
+  "largeSourceCopied": false,
+  "guards58cbUnchanged": true
+}

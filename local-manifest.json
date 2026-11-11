@@ -1,0 +1,26 @@
+{
+  "classification": "LOCAL_PACKAGE_PROTOCOL13_DRAFT_NOT_EXECUTED",
+  "root": "/mnt/dev/.peticao-r0008-local-package-approval-pg17-qa-20261111",
+  "files": {
+    "PROVENANCE.json": "e05190bcbdaa4efa18555448446bf77f7a5274ab0d6cecf54dc5e803e300ce8d",
+    "frozen/dns_guard.cjs": "68a22d886d5218d723b5446931bd70da76bfc9f1fb30ffcc7148fb702ca25268",
+    "frozen/guard_policy.cjs": "b1605f3789260ad02ba5c6f4cd67494bacc6797c28894f9213c649ff96bb651e",
+    "frozen/node_guard.cjs": "f2a0f708159a2d5a081ca084f55496028ba169ce3456d374592ade5c61f2ab20",
+    "frozen/receipts.py": "e3766b2e0c3219252ed853580b5206357a2b2ed434269fca55106d4b293f0c21",
+    "frozen/staging.py": "3074af928b94c409003097a7ad55e4add37cdf3b53de2844c213a02c4b5714e2",
+    "local-registry.json": "28ada06db41a94e2166ecfb0bf03f886caa79fa41b55ecdf8ef3ae35a1774d97",
+    "local_runner.py": "dd15ff18201bbf3f05903aeb81b2d898a78efd3e5b8d33d9bca4136afad1ac31",
+    "test_lifecycle.py": "5f0569daa6c74311641fccc9cce85abd4b85d6b91090e19b7cbd701fad25707b",
+    "test_profile.py": "bceaa5d4079a4b9c20ac576899b260369250ce28a46be6b14f805d4d10c999bb"
+  },
+  "sourceCommit": "93557bfba931f8f731807fc9f30f1d88dbafedf1",
+  "protocolSourceByteIdenticalTo": "f55595cd348c23ffe559dba2de9150259db9f1e7",
+  "testCount": 13,
+  "skipped": 0,
+  "mockCount": 15,
+  "dockerNodePgAppOrProtocolCallbacksExecuted": false,
+  "newLargeCopy": false,
+  "networkHttpE2EStillPending": true,
+  "fullCodeRollbackStillPending": true,
+  "r3OuterUnitQualificationStillSeparate": true
+}
