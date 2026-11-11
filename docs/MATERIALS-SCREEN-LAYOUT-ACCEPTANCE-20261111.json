@@ -1,0 +1,17 @@
+{
+  "classification": "OFFLINE_SCREEN_LAYOUT_QUALIFIED_NOT_EXPORT_OR_INTEGRATION",
+  "sourceCommit": "49b158d73ef9dc5c75b7c378dfdafca44dcf62bc",
+  "receipt": "/mnt/apps/peticao-final/_ops/coordenacao-dupla/reviews/goal-acceptance-20261110/materials-layout-browser-20261111/attempt-2/receipt.json",
+  "receiptSha256": "9f989732515c9dcaf17bf6a598f4ecb2286134ef855a269ad339889d486c8d86",
+  "nominalsPassed": 9,
+  "overflowRejectionsQualified": 1,
+  "realSamples": 20,
+  "pngByteIdenticalToPriorDiagnostic": 10,
+  "exportReady": false,
+  "files": {
+    "site/src/lib/materials-layout.ts": "c14059b7a16aa88a5eefe8572c6b34bfd7dde9a8e14cc53204a6d183587787f8",
+    "site/src/lib/materials-dom-collector.ts": "cccc8a3d7fd4b09ec6fe937d6be4642869e666ac5f33b299dd6cdeeec7f66b10",
+    "site/src/lib/materials-render.ts": "1c5578729a2bd3af48070e1220e64eb2afbb54149caecb29cf5a3ce0ad6f167a",
+    "docs/MATERIALS-SCREEN-LAYOUT-ACCEPTANCE-20261111.md": "366e7aa30c7e7dcce67ca0c64aa6b77d5cf6e58398d2ec64b7380e32333abf81"
+  }
+}
