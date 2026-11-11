@@ -69,6 +69,7 @@ def render(name, mem_total, cpu_total, routes):
  chain input {{
   type filter hook input priority -10; policy accept;
   iifname "lo" accept
+  iifname {{ "cni0", "flannel.1" }} ip saddr {POD_CIDR} tcp dport {{ 6443, 10250, 9444 }} accept
   iifname "tailscale0" ip saddr {{ {peers} }} tcp dport {{ 6443, 10250, 5443, 9444 }} accept
   iifname "tailscale0" ip saddr {{ {peers} }} udp dport 8472 accept
   tcp dport {{ 2379, 2380, 6443, 10250, 5443, 9444 }} drop
