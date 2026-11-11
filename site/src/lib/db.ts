@@ -5,6 +5,7 @@ import { PETITION_BASE_SCHEMA_SQL } from "./petition-base-schema";
 import ifesDomains from "./ifes-domains.json";
 import { DOCUMENT_REFERENCE_SCHEMA_SQL } from "./document-reference-schema";
 import { BATCH_A1_SCHEMA_SQL } from "./batch-a1-schema";
+import { MATERIALS_SCHEMA_SQL } from "./materials-schema";
 import { EBSERH_UNITS } from "./ebserh-units";
 import institutionRegistry from "../../public/data/institution-registry.json";
 import { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
@@ -739,6 +740,7 @@ function init(): Promise<void> {
       .then(() => getPool().query(BATCH_PACKAGE_SCHEMA_SQL))
       .then(() => getPool().query(PRESIDENT_OWN_DOCUMENT_SCHEMA_SQL))
       .then(() => getPool().query(PRESIDENT_OWN_A1_SCHEMA_SQL))
+      .then(() => getPool().query(MATERIALS_SCHEMA_SQL))
       .then(() => seedEbserhUnits())
       .then(() => seedIfesDomains())
       .then(() => seedInstitutionRegistry())

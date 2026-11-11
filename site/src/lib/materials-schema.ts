@@ -1,4 +1,4 @@
-/** ADDITIVE draft migration; not registered in db.init and not applied anywhere. */
+/** Additive Materials schema, registered by db.init; production rollout remains separate. */
 export const MATERIALS_SCHEMA_SQL = String.raw`
   CREATE TABLE IF NOT EXISTS campaign_materials (
     id UUID PRIMARY KEY,
