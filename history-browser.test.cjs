@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { validateConfig, classifyRequest } = require("./history-browser.cjs");
+const { validateConfig, classifyRequest, verifyDownloadRequests } = require("./history-browser.cjs");
 const run = "/mnt/dev/.peticao-r0004-local-history-http-qa-20261111/runs/012345abcdef";
 const group = "/user.slice/user-1000.slice/user@1000.service/app.slice/peticao-r0004-local-history-http-qa-20261111.service";
 const good = () => ({ run, origin: "http://127.0.0.1:31385", sourceCommit: "f55595cd348c23ffe559dba2de9150259db9f1e7", cgroup: group, cookie: "adm=" + "a".repeat(48), syntheticSession: true, stepupSeeded: true, batchId: 1, fixtures: [1, 2].map(n => ({ ordinal: n, id: `${String(n).repeat(8)}-${String(n).repeat(4)}-4${String(n).repeat(3)}-8${String(n).repeat(3)}-${String(n).repeat(12)}`, sha256: "b".repeat(64), filename: `version-${n}.pdf`, bytes: 640 })) });
@@ -26,4 +26,12 @@ test("browser policy rejects non-loopback origins, credentials and every mutatio
   assert.equal(classifyRequest("http://127.0.0.1:31385/_next/static/app.js", "HEAD"), "allowed");
   for (const method of ["POST", "PUT", "PATCH", "DELETE", "OPTIONS"]) assert.equal(classifyRequest("http://127.0.0.1:31385/api/admin/lotes/1/aprovar", method), "mutation");
   for (const url of ["https://sancionaintegral.org/", "http://127.0.0.1:31386/", "http://127.0.0.1:31385@outside.invalid/", "http://user:pass@127.0.0.1:31385/", "https://127.0.0.1:31385/", "http://localhost:31385/"]) assert.equal(classifyRequest(url, "GET"), "external");
+});
+
+test("download receipt rejects automatic, repeated, missing and out-of-order PDF requests", () => {
+  const f = good().fixtures;
+  const a = { method: "GET", path: `/api/admin/lotes/1/versoes/${f[1].id}` };
+  const b = { method: "GET", path: `/api/admin/lotes/1/versoes/${f[0].id}` };
+  verifyDownloadRequests([{ method: "GET", path: "/api/admin/lotes/1/versoes" }, a, b], f);
+  for (const requests of [[b, a], [a], [a, b, a], [{ ...a, method: "HEAD" }, b]]) assert.throws(() => verifyDownloadRequests(requests, f));
 });

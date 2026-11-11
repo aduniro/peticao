@@ -41,6 +41,11 @@ function classifyRequest(rawUrl, method) {
   return "allowed";
 }
 
+function verifyDownloadRequests(requests, fixtures) {
+  const observed = requests.filter(r => /^\/api\/admin\/lotes\/1\/versoes\//.test(r.path));
+  assert.deepEqual(observed, [...fixtures].reverse().map(f => ({ method: "GET", path: `/api/admin/lotes/1/versoes/${f.id}` })));
+}
+
 async function execute(filename) {
   const stat = fs.lstatSync(filename);
   assert.ok(stat.isFile() && !stat.isSymbolicLink() && stat.uid === process.getuid() && (stat.mode & 0o077) === 0);
@@ -83,6 +88,7 @@ async function execute(filename) {
     const rows = dialog.locator("tbody tr");
     check("two historical PDF versions render", await rows.count() === 2);
     check("newest version is first", await rows.nth(0).locator("td").nth(0).innerText() === "2" && await rows.nth(1).locator("td").nth(0).innerText() === "1");
+    check("opening metadata does not fetch history PDFs", !result.requests.some(r => /^\/api\/admin\/lotes\/1\/versoes\//.test(r.path)));
     for (const item of [...cfg.fixtures].reverse()) {
       const row = rows.nth(2 - item.ordinal);
       check(`version ${item.ordinal} displays exact PDF hash`, (await row.innerText()).includes(item.sha256));
@@ -95,12 +101,15 @@ async function execute(filename) {
       const bytes = fs.readFileSync(dest);
       check(`version ${item.ordinal} downloaded bytes match fixture`, bytes.length === item.bytes && sha(bytes) === item.sha256 && bytes.equals(fs.readFileSync(path.join(run, "pdf-fixtures", item.filename))));
     }
+    verifyDownloadRequests(result.requests, cfg.fixtures);
+    check("only the two explicit PDF downloads occurred in order", true);
     await page.screenshot({ path: path.join(run, "history-desktop.png"), fullPage: true });
     await page.keyboard.press("Escape");
     await page.waitForFunction(() => document.activeElement?.textContent === "Histórico");
     check("escape closes history", !(await dialog.evaluate(el => el.open)));
     check("focus returns to history trigger", await page.getByRole("button", { name: "Histórico", exact: true }).evaluate(el => el === document.activeElement));
     check("no page JavaScript exception", result.pageErrors.length === 0);
+    check("no browser console error", result.consoleErrors.length === 0);
     check("no external application requests", result.externalRequestsBlocked.length === 0);
     check("no application mutation attempted", result.mutationsBlocked.length === 0);
     await context.close(); result.exit = 0;
@@ -112,5 +121,5 @@ async function execute(filename) {
   return result.exit;
 }
 
-module.exports = { validateConfig, classifyRequest };
+module.exports = { validateConfig, classifyRequest, verifyDownloadRequests };
 if (require.main === module) execute(process.argv[2]).then(code => { process.exitCode = code; }).catch(err => { console.error(err.message); process.exitCode = 1; });

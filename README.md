@@ -11,4 +11,4 @@ Chromium binary is SHA-pinned, sandbox enabled, fresh context, service workers b
 
 Checks selected batch page, closed dialog, explicit metadata fetch, newest-first versions, exact hashes/URLs/download bytes and attachment names, Escape/focus, no JS exceptions or application mutation. Screenshot and sanitized history-browser-result.json go to same fixture run. Root collection must additionally prove all process groups/cgroup drain and retained systemd ExecMainStatus/Result; driver result alone insufficient.
 
-Three policy tests passed with local Node20.19.2. No browser/Docker/app/PG executed while preparing. These policy tests do not prove integration. No installation, upload, signature, approval, sending or deployment.
+Four policy tests passed with local Node20.19.2. No browser/Docker/app/PG executed while preparing. These policy tests do not prove integration. No installation, upload, signature, approval, sending or deployment.
