@@ -1,0 +1,35 @@
+[Unit]
+Description=Peticao private per-job claims and technical artifacts
+After=network-online.target admin-v2-coordinator.service peticao-k3s-guard.service
+Requires=admin-v2-coordinator.service peticao-k3s-guard.service
+
+[Service]
+Type=simple
+User=vigia-coord
+Group=admin-v2-exec
+WorkingDirectory=/opt/admin-v2-cluster
+EnvironmentFile=/etc/admin-v2-cluster.env
+EnvironmentFile=/etc/admin-v2-kubernetes.env
+ExecStart=/usr/bin/python3 /opt/admin-v2-cluster/claim_gateway.py
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=20
+UMask=0007
+CPUQuota=50%
+MemoryMax=512M
+TasksMax=32
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ReadWritePaths=/srv/admin-v2-coordinator /srv/admin-v2-worker
+RestrictAddressFamilies=AF_INET AF_UNIX
+IPAddressDeny=any
+IPAddressAllow=127.0.0.0/8 100.80.18.81/32 100.105.193.63/32 100.109.6.122/32 10.240.0.0/16
+
+[Install]
+WantedBy=multi-user.target

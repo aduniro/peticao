@@ -432,3 +432,18 @@ class Backend:
                                                   exit_code, technical_result, artifacts)
         self.claims.finish(job_id, pod_uid, digest)
         return {'id': job_id, 'result_sha256': digest, 'artifacts': receipt['artifacts']}
+
+    def execution_receipt(self, job_id, pod_uid, token):
+        # Read-only reconciliation remains possible after the Pod was collected.
+        self.core.validate_id(job_id)
+        with self.claims.db() as db:
+            claim = db.execute('SELECT * FROM kubernetes_execution_claims WHERE job_id=?', (job_id,)).fetchone()
+            row = db.execute('SELECT state FROM jobs WHERE id=?', (job_id,)).fetchone()
+        if not claim or not row or not isinstance(token, str) or not hmac.compare_digest(claim['token_sha256'], hashlib.sha256(token.encode()).hexdigest()) or (claim['pod_uid'] and claim['pod_uid'] != pod_uid):
+            raise PermissionError('receipt_identity_denied')
+        result = None
+        if claim['result_sha256']:
+            result = kubernetes_results.verify(self.core.WORKER / 'jobs' / job_id, claim['result_sha256'])
+        return {'id': job_id, 'state': row['state'], 'started': bool(claim['started_at']),
+                'finished': bool(claim['finished_at']), 'result_sha256': claim['result_sha256'],
+                'result': result, 'execution_authorized': False}

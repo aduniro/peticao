@@ -68,8 +68,10 @@ conhece o novo tipo. Toda mudança de autoridade requer reconciliação explíci
 ## Trabalho ainda necessário antes de ativar
 
 - ACKs reais, instalação K3s e prova de isolamento/RBAC/MTU/DNS nos três nós.
-- Gateway HTTPS de claims/artefatos com autenticação por job, limites e PKI;
-  runner e imagens completos, com guards e comandos dirigidos revisados.
+- Instalar e qualificar o gateway HTTPS de claims/artefatos e sua PKI.
+  O gateway está preparado e passou em quatro testes locais com TLS real,
+  fila SQLite e API Kubernetes simulada; não foi instalado.
+  Runner e imagens completos continuam pendentes, com guards e comandos dirigidos revisados.
 - Coleta autenticada de folga/produção, renovação da credencial restrita da API,
   interrupção de testes sob pressão e reconciliação de cancelamentos desconectados.
 - Pacote de instalação dos módulos, catálogo root-owned e credencial do
@@ -83,3 +85,9 @@ comprovam execução em cluster, desempenho distribuído ou prontidão de deploy
 
 Referência para condição terminal e coleta de Jobs:
 [documentação oficial Kubernetes](https://kubernetes.io/docs/concepts/workloads/controllers/job/#terminal-job-conditions).
+
+`claim_gateway.py` só expõe POSTs fixos de start/finish/receipt em HTTPS,
+com capability por job e dois atendimentos concorrentes. O serviço preparado
+limita CPU/RAM e rede. Consultar recibo não concede uma nova execução e
+funciona mesmo após coletar o Pod. A PKI de teste é temporária; nenhuma chave
+de produção foi gerada ou versionada.
