@@ -40,7 +40,9 @@ def main():
         if not active or not active.issubset(acks):
             raise PermissionError('actual_peer_ack_missing')
         manifest = json.loads(event['data']).get('provision', {})
-    if manifest.get('node') != args.node or manifest.get('destination') != str(ROOT) or not manifest.get('owner_reference'):
+    cluster = json.loads((ROOT / 'cluster.json').read_text())
+    destination = cluster['nodes'][args.node]['ip'] + ':/etc/rancher/peticao-k3s'
+    if manifest.get('node') != args.node or manifest.get('destination') != destination or manifest.get('source_root') != str(ROOT) or not manifest.get('owner_reference'):
         raise ValueError('provision_manifest_destination_mismatch')
     head = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
     dirty = subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain'], text=True).strip()
