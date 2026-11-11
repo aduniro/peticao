@@ -1,0 +1,24 @@
+{
+  "source": "/mnt/apps/peticao-final/_ops/drafts/materials-layout-20261111",
+  "commit": "3f96a06a8e3557099c94df19e1b95a3496496bfe",
+  "compilerVersion": "5.9.3",
+  "compilerSha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675",
+  "files": {
+    "site/src/lib/materials-contract.ts": {
+      "sourceSha256": "bc2e2907cf43362daba09ce18eb84213dbdeeb2d7f0cf8f658c85d2bfc6aaf5b",
+      "compiledSha256": "fe7ecadd4f9a6a7a2ff167592eb5dbdba1edac16f9d207e101e50a9b73cb000a"
+    },
+    "site/src/lib/materials-render.ts": {
+      "sourceSha256": "1c5578729a2bd3af48070e1220e64eb2afbb54149caecb29cf5a3ce0ad6f167a",
+      "compiledSha256": "eaaf3ab6b7dab7f632aec35ca057a5adb4bcf04dd20c5f25f8ea088455c8fa03"
+    },
+    "site/src/lib/materials-layout.ts": {
+      "sourceSha256": "c14059b7a16aa88a5eefe8572c6b34bfd7dde9a8e14cc53204a6d183587787f8",
+      "compiledSha256": "00dca3ae3ecf22e2655c9a317ae7bc23cd690c0d078956fd96e6774ab309fb82"
+    },
+    "site/src/lib/materials-dom-collector.ts": {
+      "sourceSha256": "040096477f564eaa466cd37807571a90d17a252ae7f3bb3f9b71f2c65ca48795",
+      "compiledSha256": "92f49557e2a23b573c278d1a1e3926bb402a2d3c4fd1d844fbbf31f2485f2685"
+    }
+  }
+}
