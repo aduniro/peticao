@@ -42,7 +42,7 @@ try{
  try{evidence.installation=await ownership.installBatchRuntimeOwnership(client,roles);}finally{client.release();}
  assert.deepEqual(await oldRows(),before);evidence.checks.push("installation-preserves-all-original-batch-fields");
  assert.equal((await legacy.query("SELECT runtime_owner FROM batches WHERE id=1")).rows[0].runtime_owner,"legacy");
- await migration.query("GRANT USAGE ON SCHEMA public TO fixture_runtime; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO fixture_runtime; GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO fixture_runtime; REVOKE INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER ON mail_outbox,application_runtime_roles FROM fixture_runtime");
+ await migration.query("GRANT USAGE ON SCHEMA public TO fixture_runtime; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO fixture_runtime; GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO fixture_runtime; REVOKE INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER ON mail_outbox,application_runtime_roles,batch_runtime_control FROM fixture_runtime");
  const frozen=await readiness.schemaFingerprint(legacy);await readiness.verifyRuntimeSchema(modern,frozen);
  bootstrap(fixture.legacy,"legacy-restart-after-ownership");
  assert.equal(await readiness.schemaFingerprint(legacy),frozen);assert.deepEqual(await oldRows(),before);
@@ -79,6 +79,29 @@ try{
  assert.equal((await legacy.query("SELECT count(*)::int n FROM batches")).rows[0].n,3);
  assert.equal((await modern.query("SELECT count(*)::int n FROM batches")).rows[0].n,3);evidence.checks.push("both-runtimes-retain-read-access-to-shared-history");
  assert.equal(await readiness.schemaFingerprint(legacy),frozen);evidence.schemaFingerprint=frozen;
+ const snapshot=(await legacy.query("SELECT to_jsonb(b) value FROM batches b ORDER BY id")).rows;
+ const activate=await migration.connect();try{await ownership.installBatchRuntimeOwnership(activate,roles,{controller:"v2"});}finally{activate.release();}
+ assert.deepEqual((await legacy.query("SELECT to_jsonb(b) value FROM batches b ORDER BY id")).rows,snapshot);
+ evidence.checks.push("central-control-activation-preserves-every-batch-field-and-provenance");
+ await modern.query("UPDATE batches SET approved_by='Fixture adopted actor' WHERE id=1");
+ evidence.checks.push("v2-manages-existing-legacy-batch-after-explicit-activation");
+ await denied("legacy-cannot-alter-adopted-batch",()=>legacy.query("UPDATE batches SET approved_by='denied' WHERE id=1"));
+ await denied("legacy-cannot-create-batch-after-handoff",()=>legacy.query("INSERT INTO batches(seq,kind,status,n_servidor,n_apoiador,list_hash) VALUES(4,'partial','prepared',0,1,'denied')"));
+ await denied("v2-cannot-reassign-controller",()=>modern.query("UPDATE batch_runtime_control SET controller='split'"));
+ await denied("legacy-cannot-reassign-controller",()=>legacy.query("UPDATE batch_runtime_control SET controller='split'"));
+ await migration.query("GRANT UPDATE ON batch_runtime_control TO fixture_runtime");
+ await denied("controller-trigger-denies-accidental-web-dml-grant",()=>modern.query("UPDATE batch_runtime_control SET controller='split'"));
+ await assert.rejects(readiness.verifyRuntimeSchema(modern,frozen,{batchController:"v2"}),/runtime_role_has_ddl_authority/);
+ await migration.query("REVOKE UPDATE ON batch_runtime_control FROM fixture_runtime");
+ await readiness.verifyRuntimeSchema(modern,frozen,{batchController:"v2"});
+ await assert.rejects(readiness.verifyRuntimeSchema(modern,frozen,{batchController:"split"}),/runtime_batch_controller_configuration_mismatch/);
+ await legacy.query("UPDATE signatures SET name='Public remains writable after handoff' WHERE id=1");
+ evidence.checks.push("public-signature-update-and-history-read-survive-central-handoff");
+ const revert=await migration.connect();try{await ownership.installBatchRuntimeOwnership(revert,roles,{controller:"split"});}finally{revert.release();}
+ await legacy.query("UPDATE batches SET approved_by='Fixture reverted actor' WHERE id=1");
+ await denied("rollback-restores-exclusive-split-control",()=>modern.query("UPDATE batches SET approved_by='denied' WHERE id=1"));
+ await readiness.verifyRuntimeSchema(modern,frozen,{batchController:"split"});
+ evidence.checks.push("explicit-controller-rollback-preserves-data-and-restores-original-authority");
  assert.deepEqual(inputs(fixture.legacy),evidence.inputs.legacy);assert.deepEqual(inputs(fixture.current),evidence.inputs.current);evidence.checks.push("all-source-inputs-unchanged");
  evidence.exit=0;
 }catch(error){evidence.errors.push(String(error.stack??error));evidence.exit=1;process.exitCode=1;}

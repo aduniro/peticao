@@ -32,6 +32,7 @@ async function main() {
       new Set(Object.values(plan.roles)).size !== 3) refuse("invalid_plan");
   if (mode !== "inspect" && (!hash(plan.expectedBefore) || plan.replaySeeds !== false)) refuse("reviewed_before_hash_and_no_seed_replay_required");
   if (mode === "apply" && !hash(plan.expectedAfter)) refuse("qualified_after_hash_required");
+  if (plan.batchController !== undefined && !["split", "v2"].includes(plan.batchController)) refuse("invalid_batch_controller");
   if (!process.env.MIGRATION_DATABASE_URL) refuse("migration_database_url_required");
   const pool = new Pool({ connectionString: process.env.MIGRATION_DATABASE_URL, max: 1, connectionTimeoutMillis: 5000 });
   const client = await pool.connect();
@@ -54,7 +55,7 @@ async function main() {
       if (hash(plan.expectedAfter)) {
         if (before !== plan.expectedAfter) refuse("inspect_expected_after_mismatch");
         await client.query(`SET SESSION AUTHORIZATION ${ident(plan.roles.v2)}`);
-        await verifyRuntimeSchema(wrappedPool, plan.expectedAfter);
+        await verifyRuntimeSchema(wrappedPool, plan.expectedAfter, { batchController: plan.batchController });
         if ((await client.query("SELECT has_table_privilege(current_user,'public.audit_log','UPDATE,DELETE') allowed")).rows[0].allowed) refuse("audit_history_mutation_authority");
         await client.query("RESET SESSION AUTHORIZATION");
         runtimePermissionsVerified = true;
@@ -68,19 +69,19 @@ async function main() {
     // Canonical DDL/defaults only: do not replay the separate catalogue seed
     // routines or signature backfills against a live database.
     for (const sql of schemaStatements) await client.query(sql);
-    const ownership = await installBatchRuntimeOwnership(client, plan.roles, { transaction: "caller" });
+    const ownership = await installBatchRuntimeOwnership(client, plan.roles, { transaction: "caller", controller: plan.batchController });
       const role = ident(plan.roles.v2);
       await client.query(`GRANT USAGE ON SCHEMA public TO ${role};
         GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO ${role};
         GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO ${role};
-        REVOKE INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER ON mail_outbox,application_runtime_roles FROM ${role};
+        REVOKE INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER ON mail_outbox,application_runtime_roles,batch_runtime_control FROM ${role};
         REVOKE UPDATE,DELETE ON audit_log FROM ${role};
         REVOKE CREATE ON SCHEMA public FROM ${role}; REVOKE CREATE ON DATABASE ${ident(c.db)} FROM ${role}`);
     const after = await schemaFingerprint(client);
     // This is a permission check through a trusted operator connection. Actual
     // application password/TCP authentication is a separate readiness gate.
     await client.query(`SET SESSION AUTHORIZATION ${ident(plan.roles.v2)}`);
-    await verifyRuntimeSchema(wrappedPool, after, { transaction: "caller" });
+    await verifyRuntimeSchema(wrappedPool, after, { transaction: "caller", batchController: plan.batchController });
     if ((await client.query("SELECT has_table_privilege(current_user,'public.audit_log','UPDATE,DELETE') allowed")).rows[0].allowed) refuse("audit_history_mutation_authority");
     await client.query("RESET SESSION AUTHORIZATION");
     const matchesExpected = mode === "qualify" || after === plan.expectedAfter;

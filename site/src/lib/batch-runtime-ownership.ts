@@ -4,7 +4,7 @@ export type RuntimeRoles = { legacy: string; v2: string; migration: string };
 const ident = (value: string) => '"' + value.replace(/"/g, '""') + '"';
 
 /** Explicit migration step, never called by a request/bootstrap verifier. */
-export async function installBatchRuntimeOwnership(client: PoolClient, roles: RuntimeRoles, options: { transaction?: "own" | "caller" } = {}) {
+export async function installBatchRuntimeOwnership(client: PoolClient, roles: RuntimeRoles, options: { transaction?: "own" | "caller"; controller?: "split" | "v2" } = {}) {
   const ownTransaction = options.transaction !== "caller";
   if (!ownTransaction && !(await client.query("SELECT pg_current_xact_id_if_assigned() IS NOT NULL active")).rows[0].active) {
     throw new Error("caller_transaction_with_assigned_xid_required");
@@ -20,7 +20,7 @@ export async function installBatchRuntimeOwnership(client: PoolClient, roles: Ru
   }
   const context = (await client.query<{ actor: string; schema: string }>("SELECT session_user actor,current_schema() schema")).rows[0];
   if (context.actor !== roles.migration) throw new Error("dedicated_migration_identity_required");
-  const schema = ident(context.schema), batches = `${schema}.batches`, bindings = `${schema}.application_runtime_roles`;
+  const schema = ident(context.schema), batches = `${schema}.batches`, bindings = `${schema}.application_runtime_roles`, control = `${schema}.batch_runtime_control`;
   if (ownTransaction) await client.query("BEGIN");
   try {
     await client.query("SET LOCAL lock_timeout='3000ms'; SET LOCAL statement_timeout='30000ms'");
@@ -66,7 +66,15 @@ export async function installBatchRuntimeOwnership(client: PoolClient, roles: Ru
     const ownerColumn = (await client.query("SELECT udt_name,is_nullable,column_default FROM information_schema.columns WHERE table_schema=$1 AND table_name='batches' AND column_name='runtime_owner'", [context.schema])).rows[0];
     if (!ownerColumn || ownerColumn.udt_name !== "text" || ownerColumn.is_nullable !== "NO" || ownerColumn.column_default !== "'legacy'::text") throw new Error("batch_runtime_owner_shape_drift");
     if ((await client.query(`SELECT 1 FROM ${batches} WHERE runtime_owner NOT IN ('legacy','v2') LIMIT 1`)).rowCount) throw new Error("unknown_existing_batch_owner");
+    await client.query(`CREATE TABLE IF NOT EXISTS ${control} (
+      singleton boolean PRIMARY KEY CHECK(singleton),
+      controller text NOT NULL CHECK(controller IN ('split','v2'))
+    ); INSERT INTO ${control}(singleton,controller) VALUES(true,'split') ON CONFLICT DO NOTHING`);
     await client.query(`
+      CREATE OR REPLACE FUNCTION ${schema}.batch_runtime_controller() RETURNS text
+      LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog
+      AS $body$ SELECT controller FROM ${control} WHERE singleton $body$;
+
       CREATE OR REPLACE FUNCTION ${schema}.batch_runtime_actor() RETURNS text
       LANGUAGE sql STABLE SECURITY DEFINER SET search_path=pg_catalog
       AS $body$ SELECT runtime_role FROM ${bindings} WHERE role_name=session_user::name $body$;
@@ -80,6 +88,7 @@ export async function installBatchRuntimeOwnership(client: PoolClient, roles: Ru
         IF actor IS NULL THEN RAISE EXCEPTION 'unmapped batch runtime' USING ERRCODE='42501'; END IF;
         SELECT runtime_owner INTO owner FROM ${batches} WHERE id=p_id;
         IF NOT FOUND THEN RAISE EXCEPTION 'batch not found' USING ERRCODE='23503'; END IF;
+        IF ${schema}.batch_runtime_controller()='v2' THEN owner:='v2'; END IF;
         IF actor<>owner THEN RAISE EXCEPTION 'batch belongs to another runtime' USING ERRCODE='42501'; END IF;
       END $body$;
 
@@ -90,6 +99,9 @@ export async function installBatchRuntimeOwnership(client: PoolClient, roles: Ru
         actor:=${schema}.batch_runtime_actor();
         IF actor IS NULL THEN RAISE EXCEPTION 'unmapped batch runtime' USING ERRCODE='42501'; END IF;
         IF TG_OP='INSERT' THEN
+          IF actor='legacy' AND ${schema}.batch_runtime_controller()='v2' THEN
+            RAISE EXCEPTION 'batch management moved to admin-v2' USING ERRCODE='42501';
+          END IF;
           IF actor<>'migration' THEN NEW.runtime_owner:=actor; END IF;
           IF NEW.runtime_owner NOT IN ('legacy','v2') THEN RAISE EXCEPTION 'invalid batch owner' USING ERRCODE='23514'; END IF;
           RETURN NEW;
@@ -139,6 +151,20 @@ export async function installBatchRuntimeOwnership(client: PoolClient, roles: Ru
         END IF;
         RETURN NULL;
       END $body$;
+      CREATE OR REPLACE FUNCTION ${schema}.guard_batch_runtime_control() RETURNS trigger
+      LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog AS $body$
+      BEGIN
+        IF ${schema}.batch_runtime_actor() IS DISTINCT FROM 'migration' OR TG_OP IN ('DELETE','TRUNCATE') THEN
+          RAISE EXCEPTION 'batch controller is operator-only' USING ERRCODE='42501';
+        END IF;
+        RETURN NEW;
+      END $body$;
+      DROP TRIGGER IF EXISTS batch_runtime_control_guard ON ${control};
+      CREATE TRIGGER batch_runtime_control_guard BEFORE INSERT OR UPDATE OR DELETE ON ${control}
+      FOR EACH ROW EXECUTE FUNCTION ${schema}.guard_batch_runtime_control();
+      DROP TRIGGER IF EXISTS batch_runtime_control_no_truncate ON ${control};
+      CREATE TRIGGER batch_runtime_control_no_truncate BEFORE TRUNCATE ON ${control}
+      FOR EACH STATEMENT EXECUTE FUNCTION ${schema}.guard_batch_runtime_control();
       DROP TRIGGER IF EXISTS batch_runtime_owner_guard ON ${batches};
       CREATE TRIGGER batch_runtime_owner_guard BEFORE INSERT OR UPDATE OR DELETE ON ${batches}
       FOR EACH ROW EXECUTE FUNCTION ${schema}.guard_batch_runtime();
@@ -171,6 +197,12 @@ export async function installBatchRuntimeOwnership(client: PoolClient, roles: Ru
     await client.query(`REVOKE ALL ON ${bindings} FROM PUBLIC,${ident(roles.legacy)},${ident(roles.v2)};
       GRANT SELECT ON ${bindings} TO ${ident(roles.legacy)},${ident(roles.v2)};
       REVOKE TRUNCATE ON ${batches} FROM ${ident(roles.legacy)},${ident(roles.v2)}`);
+    await client.query(`REVOKE ALL ON ${control} FROM PUBLIC,${ident(roles.legacy)},${ident(roles.v2)};
+      GRANT SELECT ON ${control} TO ${ident(roles.legacy)},${ident(roles.v2)}`);
+    if (options.controller !== undefined) {
+      if (!["split", "v2"].includes(options.controller)) throw new Error("invalid_batch_controller");
+      await client.query(`UPDATE ${control} SET controller=$1 WHERE singleton`, [options.controller]);
+    }
     if (ownTransaction) await client.query("COMMIT");
     return { schema: context.schema, roles, guardedReferences: references.map(row => ({ table: row.relation, column: row.column_name })), transferredExistingBatches: false };
   } catch (error) {

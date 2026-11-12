@@ -37,7 +37,7 @@ export type Batch = {
 const COLS = "id,seq,kind,status,n_servidor,n_apoiador,n_estrangeiro,list_hash,pdf_sha256,signature_kind,signed_note,approved_at,sent_at,created_at" + (process.env.PETICAO_RUNTIME === "admin-v2" ? ",runtime_owner" : "");
 export const LEGACY_BATCH_NOTICE = "Lote legado: faça alterações pelo painel antigo.";
 /** UI/admission hint; database role guards remain authoritative. */
-export const batchWritableHere = (batch: Pick<Batch, "runtime_owner">) => process.env.PETICAO_RUNTIME !== "admin-v2" || batch.runtime_owner === "v2";
+export const batchWritableHere = (batch: Pick<Batch, "runtime_owner">) => process.env.PETICAO_RUNTIME !== "admin-v2" || batch.runtime_owner === "v2" || process.env.BATCH_LEGACY_CONTROL === "admin-v2";
 export const LIST_SQL = `SELECT id,seq,verify_code,confirmed_at,region_validated,campus_ibge,name,category,role,institution,city,uf,country,university,campus,email_domain_kind,cpf_name_check FROM signatures`;
 
 /** Contagens dos selos informativos (não são filtros: ninguém é excluído da lista por não ter selo). */
