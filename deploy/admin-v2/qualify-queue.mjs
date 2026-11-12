@@ -177,7 +177,11 @@ if (process.argv[3]) {
     writeFileSync(configFile, JSON.stringify(fixture, null, 2));
     const modern = launch("v2"); const ready = await modern.ready;
     assert.equal(ready.queueId, 1); // Deliberate ID collision across the two tables.
-    assert.deepEqual((await pool.query("SELECT * FROM mail_outbox ORDER BY id")).rows, legacyBefore);
+    const legacyAfterMigration = (await pool.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
+    // Additive DDL may introduce nullable columns (e.g. message_id). Preserve every
+    // original value and row; catalog compatibility is checked independently above.
+    const originalColumns = Object.keys(legacyBefore[0]);
+    assert.deepEqual(legacyAfterMigration.map(row => Object.fromEntries(originalColumns.map(key => [key, row[key]]))), legacyBefore);
     evidence.checks.push("same-ID-v2-enqueue-does-not-touch-legacy-queue");
     assert.ok(ready.unknownBlocked); evidence.checks.push("v2-unknown-result-refuses-automatic-replay");
     assert.ok(ready.rejectionAccepted); evidence.checks.push("v2-proven-rejection-still-allows-failover");
