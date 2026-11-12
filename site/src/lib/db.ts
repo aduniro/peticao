@@ -1,3 +1,4 @@
+import { MATERIALS_SCHEMA_SQL } from "./materials-schema";
 import { PRESIDENT_OWN_A1_SCHEMA_SQL } from "./president-own-a1-schema";
 import { PRESIDENT_OWN_DOCUMENT_SCHEMA_SQL } from "./president-own-document-schema";
 import { BATCH_PACKAGE_SCHEMA_SQL } from "./batch-package-schema";
@@ -762,6 +763,7 @@ function init(): Promise<void> {
       .then(() => getPool().query(BATCH_PACKAGE_SCHEMA_SQL))
       .then(() => getPool().query(PRESIDENT_OWN_DOCUMENT_SCHEMA_SQL))
       .then(() => getPool().query(PRESIDENT_OWN_A1_SCHEMA_SQL))
+      .then(() => getPool().query(MATERIALS_SCHEMA_SQL))
       .then(() => seedEbserhUnits())
       .then(() => seedIfesDomains())
       .then(() => seedInstitutionRegistry())
