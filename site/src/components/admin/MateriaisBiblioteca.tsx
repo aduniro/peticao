@@ -9,7 +9,7 @@ import MateriaisFormulario from "./MateriaisFormulario";
 import MateriaisHistorico from "./MateriaisHistorico";
 import MateriaisPrevia from "./MateriaisPrevia";
 export type MateriaisBibliotecaProps = { actorId: number; actorScope: string; nivel: Nivel };
-/** Isolated draft component, deliberately not mounted in the menu or an application route. */
+/** Session-scoped library; the server page controls availability and each API rechecks authority. */
 export default function MateriaisBiblioteca(p: MateriaisBibliotecaProps) {
   return <Biblioteca key={`${p.actorId}:${p.actorScope}:${p.nivel}`} {...p} />;
 }

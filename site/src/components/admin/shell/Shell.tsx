@@ -15,13 +15,13 @@ const SAIR = (cls: string, rotulo = "Sair") => <form method="post" action="/api/
  * Moldura do painel v2. Computador: topo fixo, trilho lateral com submenus (flyout) ao passar o mouse. Celular/tablet (≤992px): barra inferior PRINCIPAL com os atalhos,
  * botão sanduíche (menu completo, em gaveta) no canto inferior ESQUERDO e botão de filtros da página no canto inferior DIREITO.
  */
-export default function Shell({ children, quem, ehTotal = false, publicUrl = "/" }: { children: React.ReactNode; quem?: Quem; ehTotal?: boolean; publicUrl?: string }) {
+export default function Shell({ children, quem, ehTotal = false, publicUrl = "/", materialsEnabled = false }: { children: React.ReactNode; quem?: Quem; ehTotal?: boolean; publicUrl?: string; materialsEnabled?: boolean }) {
   const path = usePathname() ?? "/admin";
   if (path.startsWith("/admin/mapa/tela")) return <div className="adm v2 adm-solo">{children}</div>;
-  return <Moldura path={path} quem={quem} ehTotal={ehTotal} publicUrl={publicUrl}>{children}</Moldura>;
+  return <Moldura path={path} quem={quem} ehTotal={ehTotal} publicUrl={publicUrl} materialsEnabled={materialsEnabled}>{children}</Moldura>;
 }
 
-function Moldura({ path, children, quem, ehTotal, publicUrl }: { path: string; children: React.ReactNode; quem?: Quem; ehTotal: boolean; publicUrl: string }) {
+function Moldura({ path, children, quem, ehTotal, publicUrl, materialsEnabled }: { path: string; children: React.ReactNode; quem?: Quem; ehTotal: boolean; publicUrl: string; materialsEnabled: boolean }) {
   const [al, setAl] = useState<Alertas>({ emails: 0, lotes: 0, contato: 0 });
   const [gaveta, setGaveta] = useState(false);
   const [aberto, setAberto] = useState<string | null>(null); // grupo com flyout aberto
@@ -33,7 +33,7 @@ function Moldura({ path, children, quem, ehTotal, publicUrl }: { path: string; c
   const [folha, setFolha] = useState(false);
   const registrar = useCallback((d: number) => setTem((n) => n + d), []);
   const ctx = useMemo(() => ({ slot, registrar }), [slot, registrar]);
-  const grupos = gruposVisiveis(quem?.nivel ?? (ehTotal ? "total" : "leitura"));
+  const grupos = gruposVisiveis(quem?.nivel ?? (ehTotal ? "total" : "leitura"), materialsEnabled);
 
   useEffect(() => {
     let vivo = true;

@@ -1,4 +1,4 @@
-/** ADDITIVE draft migration; not registered in db.init and not applied anywhere. */
+/** Additive Materials migration, registered only in the explicit apply bootstrap. */
 export const MATERIALS_SCHEMA_SQL = String.raw`
   CREATE TABLE IF NOT EXISTS campaign_materials (
     id UUID PRIMARY KEY,

@@ -14,5 +14,5 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const s = await sessaoAdmin();
   if (!s) return <>{children}</>;
-  return <Shell quem={{ nome: s.nome, nivel: s.nivel, rotuloNivel: ROTULO_NIVEL[s.nivel] }} ehTotal={nivelOk(s.nivel, "total")} publicUrl={config.appUrl()}>{children}</Shell>;
+  return <Shell quem={{ nome: s.nome, nivel: s.nivel, rotuloNivel: ROTULO_NIVEL[s.nivel] }} ehTotal={nivelOk(s.nivel, "total")} publicUrl={config.appUrl()} materialsEnabled={process.env.MATERIALS_LIBRARY_ENABLED === "1" && s.userId > 0 && !!s.sessaoId && !s.trocarSenha}>{children}</Shell>;
 }
