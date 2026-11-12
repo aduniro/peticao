@@ -1,25 +1,22 @@
-# TEMPLATE ONLY: not installed or enabled by development.
-# Provision a dedicated account peticao-signing, application group peticao-web,
-# protected config and a pinned venv/code under /opt/peticao-signing first.
-# PFX/password directories remain 0700; files 0600 owned by peticao-signing.
+# Dedicated broker; credentials are registered through the protected panel.
 [Unit]
 Description=Peticao private A1 signing broker
-After=local-fs.target
+After=local-fs.target peticao-a1-credentials.service
+Requires=peticao-a1-credentials.service
 ConditionPathExists=/etc/peticao-signing/service.json
-ConditionPathExists=/etc/peticao-signing/worker.json
+ConditionPathExists=/var/lib/peticao-signing/worker.json
 
 [Service]
 Type=simple
 User=peticao-signing
-Group=peticao-web
-RuntimeDirectory=peticao-signing
-RuntimeDirectoryMode=0750
+Group=peticao-a1-web
 UMask=0077
 Environment=A1_SERVICE_CONFIG=/etc/peticao-signing/service.json
 Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStart=/opt/peticao-signing/venv/bin/python /opt/peticao-signing/service.py
-WorkingDirectory=/
+ExecStartPre=/opt/peticao-signing/venv/bin/python -c "from credential_service import cleanup_stale_socket; cleanup_stale_socket('/run/peticao-signing/worker.sock')"
+WorkingDirectory=/opt/peticao-signing
 Restart=on-failure
 RestartSec=5
 KillMode=control-group
@@ -30,7 +27,7 @@ PrivateDevices=yes
 ProtectSystem=strict
 ProtectHome=yes
 ReadWritePaths=/run/peticao-signing
-ReadOnlyPaths=/etc/peticao-signing /opt/peticao-signing
+ReadOnlyPaths=/etc/peticao-signing /opt/peticao-signing /var/lib/peticao-signing
 RestrictAddressFamilies=AF_UNIX
 IPAddressDeny=any
 ProtectKernelTunables=yes

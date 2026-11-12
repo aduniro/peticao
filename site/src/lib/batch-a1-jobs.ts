@@ -75,6 +75,15 @@ async function policy(c: PoolClient): Promise<A1ServerPolicy | null> {
 async function currentDocument(c: PoolClient, batchId: number) {
   const b=(await c.query<ApprovalRow & {batch_revision:string}>("SELECT *,xmin::text batch_revision FROM batches WHERE id=$1 FOR UPDATE",[batchId])).rows[0];
   if (!b || !['prepared','failed'].includes(b.status) || b.approved_at || b.sent_at || !b.pdf || !sha(b.pdf_sha256) || b.pdf.length>A1_MAX_PDF_BYTES || digest(b.pdf)!==b.pdf_sha256 || b.pdf.subarray(0,5).toString()!=="%PDF-") return null;
+  if (await legacyEligible(c,b)) {
+    const original=(await c.query<{id:string;bytes:Buffer;sha256:string}>("SELECT id,bytes,sha256 FROM batch_document_versions WHERE batch_id=$1 AND variant='original' AND source='legacy-observed' AND sha256=$2 AND list_hash=$3 ORDER BY ordinal DESC LIMIT 1 FOR SHARE",[batchId,b.pdf_sha256,b.list_hash])).rows[0];
+    if(!original || !original.bytes.equals(b.pdf) || digest(original.bytes)!==original.sha256)return null;
+    const proof=(await c.query<{data:string}>("SELECT data FROM audit_log WHERE event='batch_legacy_a1_adopted' AND data::jsonb->>'batchId'=$1 AND data::jsonb->>'documentVersion'=$2 ORDER BY id LIMIT 2",[String(batchId),documentVersion(b)])).rows;
+    if(proof.length!==1)return null;
+    const p=JSON.parse(proof[0].data);
+    if(p.originalVersionId!==original.id || p.pdfSha256!==b.pdf_sha256 || p.listHash!==b.list_hash || !integer(p.userId) || !integer(p.sessionId))return null;
+    return {batch:b,original,version:documentVersion(b)};
+  }
   const original=(await c.query<{id:string;bytes:Buffer;sha256:string}>("SELECT id,bytes,sha256 FROM batch_document_versions WHERE batch_id=$1 AND variant='original' AND source='prepared' AND sha256=$2 AND list_hash=$3 ORDER BY ordinal DESC LIMIT 1 FOR SHARE",[batchId,b.pdf_sha256,b.list_hash])).rows[0];
   if (!original || !original.bytes.equals(b.pdf) || digest(original.bytes)!==original.sha256) return null;
   const preparation=(await c.query<{snapshot:string;snapshot_sha256:string}>("SELECT snapshot,snapshot_sha256 FROM batch_preparations WHERE batch_id=$1 FOR SHARE",[batchId])).rows[0];
@@ -83,6 +92,26 @@ async function currentDocument(c: PoolClient, batchId: number) {
   const created=(await c.query<{data:string}>("SELECT data FROM audit_log WHERE event='batch_created' AND data::jsonb->>'batchId'=$1 ORDER BY id LIMIT 2",[String(batchId)])).rows;
   if(created.length!==1 || JSON.parse(created[0].data).snapshotSha256!==preparation.snapshot_sha256) return null;
   return { batch:b, original, version:documentVersion(b) };
+}
+/** Legacy adoption never reconstructs a signature list or claims a preparation snapshot. */
+async function legacyEligible(c:PoolClient,b:ApprovalRow){
+  if(process.env.PETICAO_RUNTIME!=="admin-v2" || process.env.BATCH_LEGACY_CONTROL!=="admin-v2" || b.runtime_owner!=="legacy")return false;
+  if(!['prepared','failed'].includes(b.status) || b.approved_at || b.sent_at || !b.pdf || !sha(b.pdf_sha256) || b.pdf.length>A1_MAX_PDF_BYTES || digest(b.pdf)!==b.pdf_sha256 || b.pdf.subarray(0,5).toString()!=="%PDF-" || !sha(b.list_hash))return false;
+  const controller=(await c.query<{controller:string}>("SELECT controller FROM batch_runtime_control WHERE singleton FOR SHARE")).rows[0];
+  if(controller?.controller!=="v2")return false;
+  return !(await c.query("SELECT 1 FROM batch_preparations WHERE batch_id=$1",[b.id])).rowCount;
+}
+async function legacyCandidate(c:PoolClient,batchId:number){
+  const b=(await c.query<ApprovalRow & {batch_revision:string}>("SELECT *,xmin::text batch_revision FROM batches WHERE id=$1 FOR UPDATE",[batchId])).rows[0];
+  return b&&await legacyEligible(c,b)?{batch:b,version:documentVersion(b)}:null;
+}
+async function adoptLegacy(c:PoolClient,candidate:NonNullable<Awaited<ReturnType<typeof legacyCandidate>>>,actor:Actor){
+  const b=candidate.batch;
+  await preserveObservedDocument(c,{batchId:b.id,variant:"original",bytes:b.pdf!,sha256:b.pdf_sha256!,listHash:b.list_hash,signatureKind:b.signature_kind,note:b.signed_note??null,recordedBy:actor.userId});
+  const original=(await c.query<{id:string;bytes:Buffer;sha256:string}>("SELECT id,bytes,sha256 FROM batch_document_versions WHERE batch_id=$1 AND variant='original' AND source='legacy-observed' AND sha256=$2 AND list_hash=$3 ORDER BY ordinal DESC LIMIT 1 FOR SHARE",[b.id,b.pdf_sha256,b.list_hash])).rows[0];
+  if(!original || !original.bytes.equals(b.pdf!) || digest(original.bytes)!==original.sha256)throw new Error("legacy_a1_observation_conflict");
+  await audit("batch_legacy_a1_adopted",null,{batchId:b.id,originalVersionId:original.id,pdfSha256:b.pdf_sha256,listHash:b.list_hash,documentVersion:candidate.version,userId:actor.userId,sessionId:actor.sessaoId},c);
+  return currentDocument(c,b.id);
 }
 async function stale(c: PoolClient,j: JobRow,code: "authorization_changed"|"policy_changed"|"document_changed"|"attempt_limit") {
   await c.query("UPDATE batch_a1_jobs SET state='stale',revision=revision+1,lease_token=NULL,lease_until=NULL,error_code=$2,updated_at=clock_timestamp() WHERE id=$1",[j.id,code]);
@@ -101,13 +130,17 @@ export async function admitA1Job(input: AdmitA1Job, actor: Actor | null) {
     const existing=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE actor_id=$1 AND request_id=$2 FOR UPDATE",[actor!.userId,input.requestId])).rows[0];
     if(existing)return existing.request_fingerprint===fingerprint?{ok:true as const,job:await metadata(c,existing),replayed:true}:error("request_conflict");
     if(p.revision!==input.expectedPolicyRevision)return error("policy_conflict");
-    const doc=await currentDocument(c,input.batchId);if(!doc || doc.version!==input.expectedDocumentVersion)return error("document_conflict");
+    let doc=await currentDocument(c,input.batchId);
+    const legacy=!doc&&!input.expectedOwnArtifactId?await legacyCandidate(c,input.batchId):null;
+    if((doc?.version??legacy?.version)!==input.expectedDocumentVersion)return error("document_conflict");
     const active=(await c.query<JobRow>("SELECT * FROM batch_a1_jobs WHERE batch_id=$1 AND state IN ('queued','running','validating') FOR UPDATE",[input.batchId])).rows[0];
     if(active){
       const now=Number((await c.query("SELECT extract(epoch FROM clock_timestamp())*1000 ms")).rows[0].ms);
       if(active.authorization_expires_at.getTime()>now)return error("active_job");
       await stale(c,active,"authorization_changed");
     }
+    if(!doc&&legacy)doc=await adoptLegacy(c,legacy,actor!);
+    if(!doc)return error("document_conflict");
     const selected=input.expectedOwnArtifactId ? await freezeOwnA1InputTx(c,doc,input.expectedOwnArtifactId,actor!.userId) : doc.original;
     if(!selected)return error("document_conflict");
     const id=randomUUID();
@@ -248,15 +281,16 @@ export async function getA1Availability(batchId:number,actor:Actor|null,expected
     const mode=expectedOwnArtifactId===undefined?{}:{ownArtifactId:expectedOwnArtifactId};
     if(!p)return {ok:true as const,available:false as const,error:"disabled",latestJob,...mode};
     const doc=await currentDocument(c,batchId);
-    if(!doc)return {ok:true as const,available:false as const,error:"document_unavailable",latestJob,...mode};
+    const legacy=!doc&&expectedOwnArtifactId===undefined?await legacyCandidate(c,batchId):null;
+    if(!doc&&!legacy)return {ok:true as const,available:false as const,error:"document_unavailable",latestJob,...mode};
     if(expectedOwnArtifactId!==undefined){
-      const ready=await ownA1InputAvailableTx(c,doc,expectedOwnArtifactId);
+      const ready=!!doc&&await ownA1InputAvailableTx(c,doc,expectedOwnArtifactId);
       await audit("batch_a1_own_availability_read",null,{batchId,ownArtifactId:expectedOwnArtifactId,available:ready,userId:actor!.userId},c);
-      if(!ready)return {ok:true as const,available:false as const,error:"own_document_unavailable",documentVersion:doc.version,policyRevision:p.revision,latestJob,...mode};
+      if(!ready)return {ok:true as const,available:false as const,error:"own_document_unavailable",documentVersion:doc?.version,policyRevision:p.revision,latestJob,...mode};
     }
     const now=Number((await c.query("SELECT extract(epoch FROM clock_timestamp())*1000 ms")).rows[0].ms);
     const active=latest&&['queued','running','validating'].includes(latest.state)&&latest.authorization_expires_at.getTime()>now;
-    return {ok:true as const,available:!active,documentVersion:doc.version,policyRevision:p.revision,...(active?{error:"active_job"}:{}),latestJob,...mode};
+    return {ok:true as const,available:!active,documentVersion:(doc??legacy)!.version,policyRevision:p.revision,...(active?{error:"active_job"}:{}),latestJob,...mode};
   });
 }
 

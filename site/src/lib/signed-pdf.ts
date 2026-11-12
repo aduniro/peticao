@@ -41,7 +41,7 @@ function normalizedCnpj(value: unknown): string | null {
 
 /** Valida a cadeia ICP-Brasil num serviço externo. POST application/pdf → { valid, signer?, cnpj? }. */
 export async function verifyIcpBrasil(pdf: Buffer, fetchImpl: typeof fetch = fetch): Promise<IcpResult> {
-  const url = process.env.ICP_VALIDATOR_URL;
+  const url = process.env.ICP_MANUAL_VALIDATOR_URL || process.env.ICP_VALIDATOR_URL;
   if (!url) return { valid: false, reason: "Validador ICP-Brasil não configurado (ICP_VALIDATOR_URL): a assinatura não foi verificada criptograficamente." };
   try {
     const r = await fetchImpl(url, { method: "POST", headers: { "content-type": "application/pdf", ...(process.env.ICP_VALIDATOR_TOKEN ? { authorization: `Bearer ${process.env.ICP_VALIDATOR_TOKEN}` } : {}) }, body: new Uint8Array(pdf), signal: AbortSignal.timeout(30_000) });

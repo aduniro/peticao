@@ -102,7 +102,7 @@ def load_config(path):
         cfg = json.loads(read_protected(path, 16384))
         required = {"version", "credentialVersionId", "pfxPath", "passwordPath", "trustRootsPath", "trustStoreVersion", "profile", "environment"}
         if isinstance(cfg, dict) and cfg.get("profile") == DECLARED_PROFILE: required.add("policyPath")
-        if not isinstance(cfg, dict) or not required <= set(cfg) or set(cfg) - required - {"crlPaths"}:
+        if not isinstance(cfg, dict) or not required <= set(cfg) or set(cfg) - required - {"crlPaths", "passwordEncrypted", "passwordKeyPath"}:
             reject("configuration_unavailable")
         if type(cfg["version"]) is not int or cfg["version"] != 1 or not UUID.fullmatch(cfg["credentialVersionId"]):
             reject("configuration_unavailable")
@@ -110,7 +110,14 @@ def load_config(path):
             reject("configuration_unavailable")
         if not HASH.fullmatch(cfg["trustStoreVersion"]):
             reject("configuration_unavailable")
+        if "passwordEncrypted" in cfg and cfg["passwordEncrypted"] is not True:
+            reject("configuration_unavailable")
+        if cfg.get("passwordEncrypted") is True and "passwordKeyPath" not in cfg:
+            reject("configuration_unavailable")
+        if "passwordKeyPath" in cfg and cfg.get("passwordEncrypted") is not True:
+            reject("configuration_unavailable")
         paths = [cfg["pfxPath"], cfg["passwordPath"], cfg["trustRootsPath"]]
+        if cfg.get("passwordEncrypted") is True: paths.append(cfg["passwordKeyPath"])
         if cfg["profile"] == DECLARED_PROFILE: paths.append(cfg["policyPath"])
         if len(set(paths)) != len(paths) or Path(cfg["pfxPath"]).parent == Path(cfg["passwordPath"]).parent:
             reject("configuration_unavailable")
@@ -174,7 +181,14 @@ def execute(req, original, cfg):
     cades_spec = CAdESSignedAttrSpec(signature_policy_identifier=declared_policy.identifier()) if declared_policy else None
     # Read all credential material through protected descriptors; pyHanko receives bytes.
     pfx = read_protected(cfg["pfxPath"], 4 * 1024 * 1024)
-    password = read_protected(cfg["passwordPath"], 4096)
+    password = read_protected(cfg["passwordPath"], 8192 if cfg.get("passwordEncrypted") else 4096)
+    if cfg.get("passwordEncrypted") is True:
+        try:
+            from cryptography.fernet import Fernet
+            password = Fernet(read_protected(cfg["passwordKeyPath"], 128)).decrypt(password)
+            if not 1 <= len(password) <= 4096: reject("credential_unavailable")
+        except Exception:
+            reject("credential_unavailable")
     roots_data = read_protected(cfg["trustRootsPath"], 4 * 1024 * 1024)
     if digest(roots_data) != cfg["trustStoreVersion"]:
         reject("trust_store_hash_mismatch")

@@ -63,6 +63,19 @@ class WorkerTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls): cls.tmp.cleanup()
 
+    def test_encrypted_password_storage_signs_and_rejects_wrong_master_key(self):
+        from cryptography.fernet import Fernet
+        key_path=self.root/"credentials"/"fernet.key"
+        encrypted=self.root/"credentials"/"password.fernet"
+        key=Fernet.generate_key();key_path.write_bytes(key);key_path.chmod(0o600)
+        encrypted.write_bytes(Fernet(key).encrypt(b"synthetic-password"));encrypted.chmod(0o600)
+        cfg={**self.cfg,"passwordPath":str(encrypted),"passwordEncrypted":True,"passwordKeyPath":str(key_path)}
+        result=worker.execute(self.req,self.pdf,cfg)
+        self.assertTrue(result["ok"])
+        key_path.write_bytes(Fernet.generate_key())
+        with self.assertRaisesRegex(worker.Refused,"credential_unavailable"):
+            worker.execute(self.req,self.pdf,cfg)
+
     def test_real_synthetic_signature_and_byte_tampering(self):
         result=worker.execute(self.req,self.pdf,self.cfg)
         self.assertTrue(result["ok"])

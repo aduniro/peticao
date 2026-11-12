@@ -9,6 +9,7 @@ import PeticaoBaseGovBr from "@/components/admin/PeticaoBaseGovBr";
 import { TEXT_VERSION } from "@/content/peticao";
 import { getBatchPackageReview } from "@/lib/batch-package-store";
 import A1Assinatura from "@/components/admin/A1Assinatura";
+import A1Credencial from "@/components/admin/A1Credencial";
 import HistoricoDocumento from "@/components/admin/HistoricoDocumento";
 import { sessaoAdmin } from "@/lib/admin";
 import { nivelOk, stepupValido } from "@/lib/admin-users";
@@ -70,6 +71,7 @@ export default async function Presidente({ searchParams }: { searchParams: { lot
     <p><a className="v2-btn v2-btn-sec" href="/admin/lotes">Lotes e envios</a></p>
     {searchParams.msg && <p className="box" role="status">{searchParams.msg}</p>}
     <p>Aprovador: {config.approverEmail() || <em>não configurado</em>}</p>
+    <A1Credencial key={`${actor.userId}:${actor.sessaoId}`} actorScope={`${actor.userId}:${actor.sessaoId}`} />
     <form method="post" action="/api/admin/lotes/criar?portal=presidente"><button disabled={result.finalId !== null}>Fechar lote final agora</button></form>
     {document && actions ? <>
       <h2>Lote {document.seq} · {document.kind === "final" ? "final" : "parcial"}</h2>
