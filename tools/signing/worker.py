@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """One-job, offline signing subprocess. Never a network listener or an ICP verdict."""
 import base64
+from datetime import datetime, timezone
 import hashlib
 import io
 import json
@@ -28,6 +29,17 @@ class Refused(Exception):
 
 def reject(code):
     raise Refused(code)
+
+def require_certificate_current(cert, now=None):
+    """Check the signing leaf independently of trust-anchor validation semantics."""
+    now = datetime.now(timezone.utc) if now is None else now
+    before, after = cert.not_valid_before_utc, cert.not_valid_after_utc
+    if any(value.tzinfo is None or value.utcoffset() is None for value in (now, before, after)) or before > after:
+        reject("certificate_time_invalid")
+    if now < before:
+        reject("certificate_not_yet_valid")
+    if now > after:
+        reject("certificate_expired")
 
 def digest(data):
     return hashlib.sha256(data).hexdigest()
@@ -175,6 +187,7 @@ def execute(req, original, cfg):
     key, cert, chain = pkcs12.load_key_and_certificates(pfx, password)
     if not key or not cert:
         reject("credential_unavailable")
+    require_certificate_current(cert)
     store = SimpleCertificateStore()
     for item in chain or []:
         store.register(asn1_x509.Certificate.load(item.public_bytes(Encoding.DER)))
@@ -229,6 +242,7 @@ def execute(req, original, cfg):
         if len(attributes) != 1 or len(attributes[0]["values"]) != 1 or attributes[0]["values"][0].dump() != declared_policy.identifier().dump():
             reject("signature_policy_declaration_mismatch")
         result["report"]["signaturePolicy"] = {"oid": declared_policy.oid,"hashSha256": declared_policy.policy_hash.hex(),"artifactSha256": declared_policy.file_sha256}
+    require_certificate_current(cert)
     return result
 
 def main():
