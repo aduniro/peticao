@@ -45,6 +45,22 @@ class CredentialTests(unittest.TestCase):
         cert=x509.CertificateBuilder().subject_name(self.name).issuer_name(self.name).public_key(self.key.public_key()).serial_number(x509.random_serial_number()).not_valid_before(self.now-timedelta(days=2)).not_valid_after(end).add_extension(x509.SubjectAlternativeName([x509.OtherName(ObjectIdentifier('2.16.76.1.3.3'),core.UTF8String(cnpj).dump())]),critical=False).sign(self.key,hashes.SHA256())
         return pkcs12.serialize_key_and_certificates(b'PRIVATE QA',self.key,cert,None,serialization.BestAvailableEncryption(b'qa-only-password'))
     def request(self,**kwargs):return {'version':1,'operation':'put','requestId':str(uuid.uuid4()),'pfxBase64':base64.b64encode(self.pfx(**kwargs)).decode(),'password':'qa-only-password'}
+    def test_refresh_preserves_credential_and_policy_metadata_and_failure_keeps_config(self):
+        request=self.request();initial=self.c.handle(request);before=(self.store/'active.json').read_bytes()
+        refresh={'version':1,'operation':'refresh','credentialVersionId':request['requestId']}
+        result=self.c.handle(refresh);self.assertTrue(result['ok']);self.assertEqual(result['credentialVersionId'],request['requestId']);self.assertEqual(before,(self.store/'active.json').read_bytes())
+        config=Path(self.cfg['workerConfigPath']);current=config.read_bytes()
+        def unavailable(*args):raise ValueError('CRL expired or revoked')
+        self.c.trust_preparer=unavailable
+        with self.assertRaisesRegex(broker.CredentialError,'chain_or_revocation_unavailable'):self.c.handle(refresh)
+        self.assertEqual(config.read_bytes(),current);self.assertEqual(before,(self.store/'active.json').read_bytes())
+        with self.assertRaisesRegex(broker.CredentialError,'credential_superseded'):self.c.handle({**refresh,'credentialVersionId':str(uuid.uuid4())})
+
+    def test_global_deadline_bounds_operation_and_cancels_alarm(self):
+        with self.assertRaisesRegex(broker.CredentialError,'credential_operation_timeout'):
+            with broker.operation_deadline(.05):time.sleep(1)
+        self.assertEqual(__import__('signal').getitimer(__import__('signal').ITIMER_REAL),(0.0,0.0))
+
     def test_stale_socket_recovered_active_socket_and_unknown_file_preserved(self):
         path=self.root/'probe.sock'
         with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)as active:

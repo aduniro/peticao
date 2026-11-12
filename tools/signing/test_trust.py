@@ -1,6 +1,9 @@
 from pathlib import Path
 import tempfile
 import unittest
+from datetime import timedelta
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
 from unittest.mock import patch
 from asn1crypto import x509 as asn1_x509
 from cryptography.hazmat.primitives import serialization
@@ -49,6 +52,32 @@ class TrustTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(Exception):
                 prepare_certificate_trust(cert, [], self.fixture.roots, Path(tmp), fetcher=lambda _: self.fixture.revocations(certificate)[0])
+
+    def test_failed_refresh_never_overwrites_active_crl_snapshot(self):
+        _, certificate = self.fixture.certificate(crl_url="https://public.example.test/issuer.crl")
+        cert = asn1_x509.Certificate.load(certificate.public_bytes(serialization.Encoding.DER))
+        with tempfile.TemporaryDirectory() as tmp:
+            prepare_certificate_trust(cert, [], self.fixture.roots, Path(tmp), fetcher=lambda _: self.fixture.revocations()[0])
+            before = {p.name: p.read_bytes() for p in Path(tmp).iterdir()}
+            with self.assertRaises(Exception):
+                prepare_certificate_trust(cert, [], self.fixture.roots, Path(tmp), fetcher=lambda _: self.fixture.revocations(certificate)[0], force_refresh=True)
+            self.assertEqual(before, {p.name: p.read_bytes() for p in Path(tmp).iterdir()})
+
+    def test_fresh_cache_and_near_expiry_refresh_keep_old_content_address(self):
+        _, certificate = self.fixture.certificate(crl_url="https://public.example.test/issuer.crl")
+        cert = asn1_x509.Certificate.load(certificate.public_bytes(serialization.Encoding.DER))
+        near = (x509.CertificateRevocationListBuilder().issuer_name(self.fixture.root_name)
+                .last_update(self.fixture.now-timedelta(minutes=2)).next_update(self.fixture.now+timedelta(minutes=1))
+                .sign(self.fixture.root_key, hashes.SHA256()).public_bytes(serialization.Encoding.DER))
+        with tempfile.TemporaryDirectory() as tmp:
+            first = prepare_certificate_trust(cert, [], self.fixture.roots, Path(tmp), fetcher=lambda _: near)
+            old = Path(first['crlPaths'][0]).read_bytes()
+            second = prepare_certificate_trust(cert, [], self.fixture.roots, Path(tmp), fetcher=lambda _: self.fixture.revocations()[0])
+            self.assertNotEqual(first['crlPaths'], second['crlPaths'])
+            self.assertEqual(Path(first['crlPaths'][0]).read_bytes(), old)
+            def no_fetch(_): raise AssertionError('fresh CRL must be reused')
+            third = prepare_certificate_trust(cert, [], self.fixture.roots, Path(tmp), fetcher=no_fetch)
+            self.assertEqual(second['crlPaths'], third['crlPaths'])
 
 
 if __name__ == "__main__": unittest.main()

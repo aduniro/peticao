@@ -13,6 +13,9 @@ from pathlib import Path
 import socket
 import ssl
 import tempfile
+import json
+import re
+from datetime import datetime, timezone, timedelta
 from urllib.parse import urlsplit
 
 from asn1crypto import crl
@@ -89,7 +92,7 @@ def _urls(cert):
     return list(dict.fromkeys(result))[:4]
 
 
-def prepare_certificate_trust(cert, intermediates, roots_bytes, cache_directory, *, fetcher=fetch_crl):
+def prepare_certificate_trust(cert, intermediates, roots_bytes, cache_directory, *, fetcher=fetch_crl, force_refresh=False):
     roots = list(load_certs_from_pemder_data(roots_bytes))
     if not roots or any(cert.dump() == r.dump() for r in roots):
         raise TrustUnavailable("untrusted_certificate")
@@ -104,21 +107,40 @@ def prepare_certificate_trust(cert, intermediates, roots_bytes, cache_directory,
     cache_directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     if cache_directory.is_symlink() or cache_directory.stat().st_mode & 0o077:
         raise TrustUnavailable("unsafe_revocation_cache")
-    evidence = []; paths = []
+    evidence = []; paths = []; pending = []; used_cache = False
     for item in chain:
         urls = _urls(item)
         if not urls:
             raise TrustUnavailable("revocation_distribution_missing")
         obtained = False
         for url in urls:
-            destination = cache_directory / (hashlib.sha256(url.encode()).hexdigest() + ".crl")
+            index = cache_directory / ("url-" + hashlib.sha256(url.encode()).hexdigest() + ".json")
             try:
-                data = fetcher(url)
+                data = None
+                if not force_refresh and index.is_file() and not index.is_symlink() and index.stat().st_size < 1024:
+                    try:
+                        pointer = json.loads(index.read_text())["sha256"]
+                        if not isinstance(pointer, str) or not re.fullmatch("[a-f0-9]{64}", pointer):
+                            raise ValueError("invalid_cache")
+                        cached = cache_directory / (pointer + ".crl")
+                        if cached.is_symlink() or cached.stat().st_size > MAX_CRL:
+                            raise ValueError("invalid_cache")
+                        candidate = cached.read_bytes()
+                        parsed = crl.CertificateList.load(candidate, strict=True)
+                        expiry = parsed["tbs_cert_list"]["next_update"].native
+                        if hashlib.sha256(candidate).hexdigest() == pointer and expiry and expiry > datetime.now(timezone.utc) + timedelta(minutes=5):
+                            data = candidate; used_cache = True
+                    except Exception:
+                        pass
+                if data is None:
+                    data = fetcher(url)
                 parsed = crl.CertificateList.load(data, strict=True)
+                content_sha = hashlib.sha256(data).hexdigest()
+                destination = cache_directory / (content_sha + ".crl")
                 # The final path validation checks issuer, signature, freshness,
                 # revoked serials and critical CRL extensions for every cert.
                 evidence.append(parsed); paths.append(str(destination))
-                _write(destination, data)
+                pending.append((destination, data, index, content_sha))
                 obtained = True
                 break
             except Exception:
@@ -128,5 +150,19 @@ def prepare_certificate_trust(cert, intermediates, roots_bytes, cache_directory,
     strict = ValidationContext(trust_roots=roots, allow_fetching=False, crls=evidence,
         revocation_mode="hard-fail", revinfo_policy=CertRevTrustPolicy(RevocationCheckingPolicy(
             RevocationCheckingRule.CRL_REQUIRED, RevocationCheckingRule.CRL_REQUIRED)))
-    asyncio.run(CertificateValidator(cert, intermediate_certs=intermediates, validation_context=strict).async_validate_usage(set()))
+    try:
+        asyncio.run(CertificateValidator(cert, intermediate_certs=intermediates, validation_context=strict).async_validate_usage(set()))
+    except Exception:
+        if used_cache and not force_refresh:
+            return prepare_certificate_trust(cert, intermediates, roots_bytes, cache_directory, fetcher=fetcher, force_refresh=True)
+        raise
+    # Publish only an entirely validated snapshot. Failed enrollments never
+    # replace any CRL referenced by the currently active worker configuration.
+    for destination, data, index, content_sha in pending:
+        if destination.exists():
+            if destination.is_symlink() or destination.read_bytes() != data:
+                raise TrustUnavailable("revocation_cache_conflict")
+        else:
+            _write(destination, data)
+        _write(index, json.dumps({"sha256": content_sha}).encode())
     return {"trustStoreVersion": hashlib.sha256(roots_bytes).hexdigest(), "crlPaths": list(dict.fromkeys(paths))}

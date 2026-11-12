@@ -47,12 +47,16 @@ def checked_code(path):
 def load_service_config(path):
     cfg = json.loads(read_protected(path, 16384))
     required = {"version", "socketPath", "pythonPath", "workerPath", "workerConfigPath", "maxConcurrent", "workerTimeoutSeconds"}
-    if not isinstance(cfg, dict) or set(cfg) != required or type(cfg["version"]) is not int or cfg["version"] != 1:
+    if not isinstance(cfg, dict) or (not required <= set(cfg) or set(cfg) - required - {"credentialSocketPath"}) or type(cfg["version"]) is not int or cfg["version"] != 1:
         raise ValueError("invalid_service_configuration")
     if type(cfg["maxConcurrent"]) is not int or not 1 <= cfg["maxConcurrent"] <= 4:
         raise ValueError("invalid_service_configuration")
     if type(cfg["workerTimeoutSeconds"]) is not int or not 1 <= cfg["workerTimeoutSeconds"] <= 60:
         raise ValueError("invalid_service_configuration")
+    if "credentialSocketPath" in cfg:
+        credential_socket=cfg["credentialSocketPath"]
+        if not isinstance(credential_socket,str)or not credential_socket.startswith("/")or len(credential_socket.encode())>100 or any(ord(c)<32 for c in credential_socket):
+            raise ValueError("invalid_service_configuration")
     socket_path = Path(cfg["socketPath"])
     if not socket_path.is_absolute() or len(str(socket_path).encode()) > 100:
         raise ValueError("invalid_service_configuration")
@@ -70,8 +74,22 @@ def load_service_config(path):
     return cfg
 
 
+def refresh_credential(raw, cfg):
+    if "credentialSocketPath"not in cfg:return True
+    try:
+        request=json.loads(raw)
+        body=json.dumps({"version":1,"operation":"refresh","credentialVersionId":request["credentialVersionId"]},separators=(",",":")).encode()
+        with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)as client:
+            client.settimeout(25);client.connect(cfg["credentialSocketPath"]);client.sendall(struct.pack("!I",len(body))+body)
+            size=struct.unpack("!I",read_exact(client,4))[0]
+            if not 1<=size<=16384:return False
+            result=json.loads(read_exact(client,size))
+        return result.get("ok")is True and all(result.get(key)==request.get(key)for key in ["credentialVersionId","trustStoreVersion","certificateFingerprintSha256"])
+    except Exception:return False
+
 def execute_worker(raw, cfg):
     """Drain stdout with a hard cap; never collect or publish child stderr."""
+    if not refresh_credential(raw,cfg):return UNAVAILABLE
     process = subprocess.Popen([cfg["pythonPath"], cfg["workerPath"]],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
         env={"A1_WORKER_CONFIG": cfg["workerConfigPath"], "PYTHONNOUSERSITE": "1", "PYTHONDONTWRITEBYTECODE": "1", "LANG": "C.UTF-8"},

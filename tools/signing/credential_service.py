@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Protected A1 credential broker. Unix-only framed JSON; no secret logging."""
 import base64
+from contextlib import contextmanager
 import errno
 import signal
 import socket
@@ -35,6 +36,21 @@ class CredentialError(Exception):
 
 def fail(code):
     raise CredentialError(code)
+
+@contextmanager
+def operation_deadline(seconds=25):
+    # The production broker is deliberately single-threaded. Its alarm bounds
+    # DNS, crypto, filesystem and all CRL URLs together, not each read alone.
+    if threading.current_thread()is not threading.main_thread():
+        yield
+        return
+    def timeout(*args):fail('credential_operation_timeout')
+    previous=signal.signal(signal.SIGALRM,timeout)
+    signal.setitimer(signal.ITIMER_REAL,seconds)
+    try:yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL,0)
+        signal.signal(signal.SIGALRM,previous)
 
 def stamp():
     return datetime.now(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00','Z')
@@ -167,6 +183,32 @@ class Credentials:
         atomic(self.cfg['workerConfigPath'],existing['worker']);atomic(self.root/'active.json',existing)
         return {**self.get(rid),'replayed':replayed}
 
+    def refresh(self,request):
+        if set(request)!={'version','operation','credentialVersionId'}or not isinstance(request.get('credentialVersionId'),str)or not UUID.fullmatch(request['credentialVersionId']):fail('invalid_request')
+        current=self.active()
+        if not current or current['credential']['credentialVersionId']!=request['credentialVersionId']:fail('credential_superseded')
+        metadata=current['credential'];worker=current['worker']
+        roots=read_protected(self.cfg['trustRootsPath'],4*1024*1024)
+        if hashlib.sha256(roots).hexdigest()!=metadata['trustStoreVersion']:fail('trust_store_changed')
+        try:
+            password=self.fernet.decrypt(read_protected(worker['passwordPath'],8192))
+            _,cert,chain=pkcs12.load_key_and_certificates(read_protected(worker['pfxPath'],MAX_PFX),password)
+            require_certificate_current(cert)
+            cert_asn=asn1_x509.Certificate.load(cert.public_bytes(Encoding.DER))
+        except Exception:fail('credential_unavailable')
+        if hashlib.sha256(cert.public_bytes(Encoding.DER)).hexdigest()!=metadata['certificateFingerprintSha256']or certificate_cnpj(cert_asn)!=EXPECTED_CNPJ:fail('credential_unavailable')
+        if self.trust_preparer is None:
+            from trust import prepare_certificate_trust
+            preparer=prepare_certificate_trust
+        else:preparer=self.trust_preparer
+        try:trust=preparer(cert_asn,[asn1_x509.Certificate.load(c.public_bytes(Encoding.DER))for c in chain or []],roots,self.root/'crls')
+        except Exception:fail('chain_or_revocation_unavailable')
+        if trust.get('trustStoreVersion')!=metadata['trustStoreVersion']or not isinstance(trust.get('crlPaths'),list)or not trust['crlPaths']:fail('chain_or_revocation_unavailable')
+        # No policy, credential generation, fingerprint or activation is changed.
+        # Failed verification reaches no write to the active worker config.
+        atomic(self.cfg['workerConfigPath'],{**worker,'crlPaths':trust['crlPaths']})
+        return {'ok':True,'credentialVersionId':metadata['credentialVersionId'],'trustStoreVersion':metadata['trustStoreVersion'],'certificateFingerprintSha256':metadata['certificateFingerprintSha256']}
+
     def handle(self,request):
         if not isinstance(request,dict)or request.get('version')!=1:fail('invalid_request')
         if request.get('operation')=='get':
@@ -175,6 +217,7 @@ class Credentials:
             if rid is not None and(not isinstance(rid,str)or not UUID.fullmatch(rid)):fail('invalid_request')
             return self.get(rid)
         if request.get('operation')=='put':return self.put(request)
+        if request.get('operation')=='refresh':return self.refresh(request)
         fail('invalid_request')
 
 def read_frame(connection):
@@ -200,10 +243,11 @@ class Handler(socketserver.BaseRequestHandler):
     def handle(self):
         self.request.settimeout(55)
         try:
-            request=read_frame(self.request)
-            with (self.server.credentials.root/'credential.lock').open('a')as lock:
-                os.chmod(lock.name,0o600);fcntl.flock(lock,fcntl.LOCK_EX)
-                response=self.server.credentials.handle(request)
+            with operation_deadline():
+                request=read_frame(self.request)
+                with (self.server.credentials.root/'credential.lock').open('a')as lock:
+                    os.chmod(lock.name,0o600);fcntl.flock(lock,fcntl.LOCK_EX)
+                    response=self.server.credentials.handle(request)
         except CredentialError as e:response={'ok':False,'error':str(e)}
         except Exception:response={'ok':False,'error':'credential_service_unavailable'}
         raw=json.dumps(response,separators=(',',':')).encode()

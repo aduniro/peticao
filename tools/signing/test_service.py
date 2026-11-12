@@ -51,6 +51,26 @@ class ServiceTests(unittest.TestCase):
             self.assertLessEqual(size,service.MAX_RESPONSE)
             return json.loads(service.read_exact(client,size))
 
+    def test_refresh_failure_refuses_before_starting_signer(self):
+        cfg={**self.cfg,'credentialSocketPath':str(self.root/'absent-credentials.sock')}
+        with patch('service.subprocess.Popen')as process:
+            self.assertFalse(json.loads(service.execute_worker(self.raw,cfg))['ok']);process.assert_not_called()
+
+    def test_refresh_binding_mismatch_refuses_before_starting_signer(self):
+        path=str(self.root/'refresh.sock');listener=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);listener.bind(path);listener.listen(1)
+        calls=[]
+        def broker():
+            connection,_=listener.accept()
+            with connection:
+                size=struct.unpack('!I',service.read_exact(connection,4))[0];request=json.loads(service.read_exact(connection,size));calls.append(request)
+                raw=json.dumps({'ok':True,'credentialVersionId':self.req['credentialVersionId'],'trustStoreVersion':'WRONG','certificateFingerprintSha256':self.req['certificateFingerprintSha256']}).encode();connection.sendall(struct.pack('!I',len(raw))+raw)
+        thread=threading.Thread(target=broker);thread.start()
+        try:
+            with patch('service.subprocess.Popen')as process:
+                self.assertFalse(json.loads(service.execute_worker(self.raw,{**self.cfg,'credentialSocketPath':path}))['ok']);process.assert_not_called()
+            self.assertEqual(calls,[{'version':1,'operation':'refresh','credentialVersionId':self.req['credentialVersionId']}])
+        finally:listener.close();thread.join(timeout=2)
+
     def test_unix_permissions_and_valid_single_job(self):
         with self.server():
             info=os.stat(self.cfg["socketPath"])
