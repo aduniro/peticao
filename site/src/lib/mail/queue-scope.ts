@@ -14,6 +14,15 @@ export function mailQueueTable(): "mail_outbox" | "mail_outbox_v2" {
   return mailQueueScope() === "v2" ? "mail_outbox_v2" : "mail_outbox";
 }
 
+/** Read-only pending evidence, so the v2 dashboard does not hide legacy work.
+ * Deliberately omits payload/IDs and MUST NOT be used by a queue consumer.
+ */
+export function mailQueueEvidenceTable(): string {
+  return mailQueueScope() === "v2"
+    ? "(SELECT to_addr,kind,status FROM mail_outbox UNION ALL SELECT to_addr,kind,status FROM mail_outbox_v2)"
+    : "mail_outbox";
+}
+
 /** Keep existing legacy identities stable; equal IDs in the new queue are distinct. */
 export function queuedMessageKey(id: number): string {
   if (!Number.isSafeInteger(id) || id < 1) throw new Error("invalid_queue_id");

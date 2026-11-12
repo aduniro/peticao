@@ -30,8 +30,22 @@ O perfil `PETICAO_RUNTIME=admin-v2` exige `MAIL_QUEUE_SCOPE=v2`: retries ficam e
 Consultas, recuperação e limpeza do v2 usam essa fila; não há cópia ou consumo
 automático da fila legada. Resultado de transporte desconhecido bloqueia replay
 automático no v2; rejeição comprovada ainda admite a política normal de failover.
+Os diagnósticos de pendências consultam metadados de ambas as filas em leitura,
+sem expor IDs/payloads misturados; o consumidor continua exclusivo da fila v2.
+O papel de runtime precisa ter SELECT na fila antiga e não pode ter privilégios
+de inserção, alteração, remoção, truncate ou criação de triggers nela.
 O proxy novo recusa `/api/cron` e seus descendentes. A propriedade dos lotes e
 o bootstrap de implantação continuam gates separados, não resolvidos pela fila.
+
+O v2 exige `DB_BOOTSTRAP_MODE=verify`, papel dedicado sem propriedade/DDL e
+`DB_SCHEMA_SHA256` congelado após a migração revisada. A inicialização compara
+catálogo, constraints, índices, triggers, funções, políticas e definições de
+sequências sem ler dados de negócio nem incluir valores atuais de sequência.
+Não calcula uma configuração esperada automaticamente ao subir o container.
+O migrador é um processo separado (`PETICAO_RUNTIME=migration`, modo `apply`),
+com os privilégios temporários aprovados. O modo legado padrão é preservado.
+`/api/internal/ready` verifica o banco e responde apenas ok/503; fica bloqueado
+no proxy público e é consultado por loopback pelo healthcheck.
 
 `ADMIN_IMAGE` deve identificar uma imagem local imutável por digest SHA256;
 `app.env` fica privado, no host, fora do repositório. Validar a configuração

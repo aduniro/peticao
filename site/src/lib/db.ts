@@ -11,6 +11,7 @@ import { Pool, PoolClient, QueryResult, QueryResultRow } from "pg";
 import { createHash } from "node:crypto";
 import { config } from "./config";
 import { newVerifyCode } from "./verify-code";
+import { verifyRuntimeSchema } from "./db-schema-readiness";
 
 /** Pool compartilhado (sobrevive ao hot reload do Next em desenvolvimento). */
 const g = globalThis as unknown as { __pool?: Pool | null; __ready?: Promise<void> | null };
@@ -741,6 +742,18 @@ async function backfillSignatureIds(): Promise<void> {
 
 function init(): Promise<void> {
   if (!g.__ready) {
+    const mode = process.env.DB_BOOTSTRAP_MODE ?? "apply";
+    if (mode !== "apply" && mode !== "verify") return Promise.reject(new Error("invalid_db_bootstrap_mode"));
+    if (process.env.PETICAO_RUNTIME === "admin-v2" && mode !== "verify") {
+      return Promise.reject(new Error("admin_v2_requires_prepared_database"));
+    }
+    if (mode === "verify") {
+      g.__ready = verifyRuntimeSchema(getPool(), process.env.DB_SCHEMA_SHA256).catch(error => {
+        g.__ready = null;
+        throw error;
+      });
+      return g.__ready;
+    }
     g.__ready = getPool()
       .query(SCHEMA_SQL)
       .then(() => getPool().query(BATCH_A1_SCHEMA_SQL))

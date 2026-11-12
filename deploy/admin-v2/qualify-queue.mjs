@@ -4,7 +4,8 @@ import { readFileSync, writeFileSync, realpathSync, createWriteStream } from "no
 import { createRequire } from "node:module";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { fork } from "node:child_process";
+import { fork, execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 
 const configFile = process.argv[2];
 const fixture = JSON.parse(readFileSync(configFile, "utf8"));
@@ -21,11 +22,17 @@ const moduleAt = async (source, name) => {
 };
 
 async function worker(scope) {
-  assert.ok(scope === "legacy" || scope === "v2");
-  const source = scope === "v2" ? fixture.current : fixture.legacy;
+  assert.ok(["legacy", "v2", "migration"].includes(scope));
+  const source = scope === "legacy" ? fixture.legacy : fixture.current;
   const db = await moduleAt(source, "db");
   try {
     await db.query("SELECT 1");
+    if (scope === "migration") {
+      process.send({ type: "ready", scope });
+      await new Promise(resolve => process.once("message", resolve));
+      process.send({ type: "done", scope });
+      return;
+    }
     const outbox = await moduleAt(source, "mail/outbox");
     let recorded, queueId, unknownBlocked = false, rejectionAccepted = false;
     if (scope === "v2") {
@@ -90,16 +97,24 @@ if (process.argv[3]) {
     password: fixture.password, max: 1, connectionTimeoutMillis: 5000 });
   const children = [];
   const evidence = { scope: "physical queue separation and v2 journal replay rules", checks: [], productionTouched: false, errors: [] };
+  function sourceManifest(source) {
+    const names = execFileSync("git", ["-C", source, "ls-files", "--cached", "--others", "--exclude-standard", "-z"], { encoding: "utf8" }).split("\0").filter(Boolean).sort();
+    return { commit: execFileSync("git", ["-C", source, "rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+      files: Object.fromEntries(names.map(name => [name, createHash("sha256").update(readFileSync(resolve(source, name))).digest("hex")])) };
+  }
   function launch(scope) {
-    const env = { PATH: "/usr/bin:/bin", HOME: fixture.empty, NODE_ENV: "test", DATABASE_URL: connection,
+    const runtimeConnection = `postgresql://${fixture.runtimeUser}:${fixture.runtimePassword}@localhost/${fixture.database}?host=${encodeURIComponent(fixture.socket)}`;
+    const env = { PATH: "/usr/bin:/bin", HOME: fixture.empty, NODE_ENV: "test", DATABASE_URL: scope === "v2" ? runtimeConnection : connection,
       HASH_PEPPER: "FICTIONAL_BOOTSTRAP_PEPPER_NOT_PRODUCTION_00000000", ADMIN_PASSWORD: "Fixture-Only-123",
       APP_URL: "https://public.fixture.invalid", ADMIN_URL: "https://admin.fixture.invalid",
       MAIL_PROVIDER: "dev", MAIL_PROVIDERS: "dev", MAIL_FROM: "qa@fixture.invalid", WHATSAPP_ENABLED: "0",
       SECRETS_DIR: fixture.empty, PETICAO_CONFIG_DIR: fixture.empty, CREDENTIALS_DIRECTORY: fixture.empty,
-      MAIL_QUEUE_SCOPE: scope, ...(scope === "v2" ? { PETICAO_RUNTIME: "admin-v2" } : {}),
+      MAIL_QUEUE_SCOPE: scope === "legacy" ? "legacy" : "v2",
+      ...(scope === "v2" ? { PETICAO_RUNTIME: "admin-v2", DB_BOOTSTRAP_MODE: "verify", DB_SCHEMA_SHA256: fixture.expectedSchemaHash }
+        : scope === "migration" ? { PETICAO_RUNTIME: "migration", DB_BOOTSTRAP_MODE: "apply" } : {}),
       NODE_OPTIONS: "--max-old-space-size=384", PGOPTIONS: "-c statement_timeout=30000 -c lock_timeout=3000" };
     const child = fork(fileURLToPath(import.meta.url), [configFile, scope], {
-      cwd: resolve(scope === "v2" ? fixture.current : fixture.legacy, "site"), env,
+      cwd: resolve(scope === "legacy" ? fixture.legacy : fixture.current, "site"), env,
       execArgv: ["--import", fixture.loader], stdio: ["ignore", "pipe", "pipe", "ipc"] });
     const log = createWriteStream(resolve(fixture.output, scope + "-queue-worker.log"));
     child.stdout.pipe(log, { end: false }); child.stderr.pipe(log, { end: false });
@@ -121,12 +136,35 @@ if (process.argv[3]) {
     return { child, ready, done, exited };
   }
   try {
+    evidence.inputs = { legacy: sourceManifest(fixture.legacy), current: sourceManifest(fixture.current) };
+    evidence.node = process.version;
     evidence.postgres = (await pool.query("SHOW server_version_num")).rows[0].server_version_num;
     assert.ok(Number(evidence.postgres) >= 170000 && Number(evidence.postgres) < 180000);
     const legacyBefore = (await pool.query("SELECT * FROM mail_outbox ORDER BY id")).rows;
     assert.equal(legacyBefore.length, 1); assert.equal(legacyBefore[0].id, 1); assert.equal(legacyBefore[0].status, "pending");
+    const migrator = launch("migration"); await migrator.ready; migrator.child.send("complete"); await migrator.done; await migrator.exited;
     await pool.query("CREATE TABLE fixture_queue_effects(scope text NOT NULL,identity text NOT NULL,queue_id integer,PRIMARY KEY(scope,identity))");
+    const readiness = await moduleAt(fixture.current, "db-schema-readiness");
+    const catalogBeforeRestart = await readiness.schemaFingerprint(pool);
     const old = launch("legacy"); await old.ready;
+    assert.equal(await readiness.schemaFingerprint(pool), catalogBeforeRestart, "legacy restart changed the prepared schema contract");
+    evidence.checks.push("legacy-restart-preserves-prepared-schema-contract");
+    assert.equal(fixture.runtimeUser, "fixture_runtime");
+    await pool.query("GRANT USAGE ON SCHEMA public TO fixture_runtime; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO fixture_runtime; GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO fixture_runtime");
+    await pool.query("REVOKE INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER ON mail_outbox FROM fixture_runtime");
+    const runtime = new Pool({ host: fixture.socket, database: fixture.database, user: fixture.runtimeUser, password: fixture.runtimePassword, max: 1 });
+    try {
+      fixture.expectedSchemaHash = await readiness.schemaFingerprint(pool);
+      await assert.rejects(readiness.verifyRuntimeSchema(pool, fixture.expectedSchemaHash), /runtime_role_has_ddl_authority/);
+      await assert.rejects(readiness.verifyRuntimeSchema(runtime, undefined), /runtime_schema_hash_required/);
+      await readiness.verifyRuntimeSchema(runtime, fixture.expectedSchemaHash);
+      await pool.query("ALTER TABLE fixture_queue_effects ADD COLUMN drift_probe integer");
+      await assert.rejects(readiness.verifyRuntimeSchema(runtime, fixture.expectedSchemaHash), /runtime_schema_fingerprint_mismatch/);
+      await pool.query("ALTER TABLE fixture_queue_effects DROP COLUMN drift_probe");
+      await readiness.verifyRuntimeSchema(runtime, fixture.expectedSchemaHash);
+    } finally { await runtime.end(); }
+    evidence.checks.push("runtime-owner-role-refused", "runtime-without-reviewed-hash-refused", "catalog-drift-refused-and-reviewed-shape-restored");
+    writeFileSync(configFile, JSON.stringify(fixture, null, 2));
     const modern = launch("v2"); const ready = await modern.ready;
     assert.equal(ready.queueId, 1); // Deliberate ID collision across the two tables.
     assert.deepEqual((await pool.query("SELECT * FROM mail_outbox ORDER BY id")).rows, legacyBefore);
@@ -142,6 +180,28 @@ if (process.argv[3]) {
     assert.equal(effects.find(row => row.scope === "legacy").identity, "nobody@fixture.invalid");
     assert.equal(effects.find(row => row.scope === "v2").identity, "v2@fixture.invalid");
     evidence.checks.push("two-real-runtimes-drain-only-their-own-rows", "accepted-journal-recovers-lost-queue-ack-without-repeat");
+    assert.equal(await readiness.schemaFingerprint(pool), fixture.expectedSchemaHash, "runtime changed schema");
+    evidence.checks.push("v2-executes-with-prepared-schema-and-no-ddl-authority");
+    // Diagnostics must see legacy pending work without being able to consume it.
+    await pool.query("INSERT INTO mail_outbox(kind,to_addr,payload) VALUES('confirmacao','legacy-pending@fixture.invalid','{}')");
+    await pool.query("INSERT INTO mail_outbox_v2(kind,to_addr,payload) VALUES('confirmacao','v2-pending@fixture.invalid','{}')");
+    const beforeDiagnostic = (await pool.query("SELECT id,status,payload FROM mail_outbox ORDER BY id")).rows;
+    const scopeModule = await moduleAt(fixture.current, "mail/queue-scope");
+    const priorScope = process.env.MAIL_QUEUE_SCOPE; process.env.MAIL_QUEUE_SCOPE = "v2";
+    const diagnosticPool = new Pool({ host: fixture.socket, database: fixture.database, user: fixture.runtimeUser, password: fixture.runtimePassword, max: 1 });
+    try {
+      const pending = (await diagnosticPool.query(`SELECT to_addr FROM ${scopeModule.mailQueueEvidenceTable()} q WHERE status='pending' ORDER BY to_addr`)).rows;
+      assert.deepEqual(pending.map(row => row.to_addr), ["legacy-pending@fixture.invalid", "v2-pending@fixture.invalid"]);
+      await assert.rejects(diagnosticPool.query("UPDATE mail_outbox SET status='sent' WHERE status='pending'"), /permission denied/);
+    } finally {
+      await diagnosticPool.end();
+      if (priorScope === undefined) delete process.env.MAIL_QUEUE_SCOPE; else process.env.MAIL_QUEUE_SCOPE = priorScope;
+    }
+    assert.deepEqual((await pool.query("SELECT id,status,payload FROM mail_outbox ORDER BY id")).rows, beforeDiagnostic);
+    evidence.checks.push("diagnostics-see-both-queues-without-mutating-legacy", "runtime-cannot-update-legacy-queue");
+    assert.deepEqual(sourceManifest(fixture.legacy), evidence.inputs.legacy);
+    assert.deepEqual(sourceManifest(fixture.current), evidence.inputs.current);
+    evidence.checks.push("all-source-inputs-hashed-and-unchanged-during-test");
     evidence.effects = effects; evidence.workerResults = [oldDone, newDone]; evidence.exit = 0;
   } catch (error) {
     evidence.errors.push(String(error.stack ?? error)); evidence.exit = 1; process.exitCode = 1;
