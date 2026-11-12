@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 
-// Metadata only: excludes rows, sequence current values, OIDs, owners and ACLs.
+// Metadata only: excludes business rows, sequence current values, OIDs, owners and ACLs.
 // The expected hash is frozen by the reviewed migration, never learned on startup.
 const CONTRACT_SQL = `
 WITH relations AS (
@@ -34,9 +34,15 @@ SELECT jsonb_build_object(
   FROM pg_sequences WHERE schemaname=current_schema()),'[]'::jsonb)
 ) AS contract`;
 
-export async function schemaFingerprint(client: Pick<PoolClient, "query">): Promise<string> {
+export async function schemaContract(client: Pick<PoolClient, "query">): Promise<{ catalog: unknown; runtimeRoles: { runtime_role: string; role_name: string }[] | null }> {
   const result = await client.query<{ contract: unknown }>(CONTRACT_SQL);
-  return createHash("sha256").update(JSON.stringify(result.rows[0].contract)).digest("hex");
+  const present = (await client.query<{ present: boolean }>("SELECT to_regclass(format('%I.application_runtime_roles',current_schema())) IS NOT NULL present")).rows[0].present;
+  const bindings = present ? (await client.query<{ runtime_role: string; role_name: string }>("SELECT runtime_role,role_name FROM application_runtime_roles ORDER BY runtime_role")).rows : null;
+  return { catalog: result.rows[0].contract, runtimeRoles: bindings };
+}
+
+export async function schemaFingerprint(client: Pick<PoolClient, "query">): Promise<string> {
+  return createHash("sha256").update(JSON.stringify(await schemaContract(client))).digest("hex");
 }
 
 /** Only SELECTs inside READ ONLY; an application process cannot perform migration. */
@@ -48,18 +54,22 @@ export async function verifyRuntimeSchema(pool: Pool, expected: string | undefin
     await client.query("SET LOCAL statement_timeout='5000ms'; SET LOCAL lock_timeout='1000ms'");
     const role = (await client.query<{
       rolsuper: boolean; rolcreatedb: boolean; rolcreaterole: boolean; rolreplication: boolean;
-      rolbypassrls: boolean; schema_create: boolean; database_create: boolean; owns_objects: boolean; legacy_queue_mutation: boolean;
+      rolbypassrls: boolean; schema_create: boolean; database_create: boolean; owns_objects: boolean; legacy_queue_mutation: boolean; role_binding_mutation: boolean;
     }>(`SELECT r.rolsuper,r.rolcreatedb,r.rolcreaterole,r.rolreplication,r.rolbypassrls,
       has_schema_privilege(current_user,current_schema(),'CREATE') schema_create,
       has_database_privilege(current_user,current_database(),'CREATE') database_create,
       has_table_privilege(current_user,format('%I.mail_outbox',current_schema()),'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') legacy_queue_mutation,
+      has_table_privilege(current_user,to_regclass(format('%I.application_runtime_roles',current_schema())),'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') role_binding_mutation,
       (EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
         WHERE n.nspname=current_schema() AND pg_has_role(current_user,c.relowner,'MEMBER'))
        OR EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
         WHERE n.nspname=current_schema() AND pg_has_role(current_user,p.proowner,'MEMBER'))) owns_objects
       FROM pg_roles r WHERE r.rolname=current_user`)).rows[0];
     if (!role || Object.values(role).some(Boolean)) throw new Error("runtime_role_has_ddl_authority");
-    const actual = await schemaFingerprint(client);
+    const contract = await schemaContract(client);
+    const actor = (await client.query<{ actor: string }>("SELECT session_user actor")).rows[0].actor;
+    if (!contract.runtimeRoles || contract.runtimeRoles.length !== 3 || contract.runtimeRoles.find(row => row.runtime_role === "v2")?.role_name !== actor) throw new Error("runtime_v2_role_binding_required");
+    const actual = createHash("sha256").update(JSON.stringify(contract)).digest("hex");
     if (actual !== expected) throw new Error("runtime_schema_fingerprint_mismatch");
     await client.query("COMMIT");
   } catch (error) {

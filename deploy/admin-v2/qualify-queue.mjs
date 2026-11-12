@@ -144,14 +144,24 @@ if (process.argv[3]) {
     assert.equal(legacyBefore.length, 1); assert.equal(legacyBefore[0].id, 1); assert.equal(legacyBefore[0].status, "pending");
     const migrator = launch("migration"); await migrator.ready; migrator.child.send("complete"); await migrator.done; await migrator.exited;
     await pool.query("CREATE TABLE fixture_queue_effects(scope text NOT NULL,identity text NOT NULL,queue_id integer,PRIMARY KEY(scope,identity))");
+    assert.equal(fixture.migrationUser, "fixture");
+    const ownership = await moduleAt(fixture.current, "batch-runtime-ownership");
+    const migrationPool = new Pool({ host: fixture.socket, database: fixture.database, user: fixture.migrationUser, password: fixture.migrationPassword, max: 1 });
+    const migrationClient = await migrationPool.connect();
+    try { await ownership.installBatchRuntimeOwnership(migrationClient, { legacy: fixture.user, v2: fixture.runtimeUser, migration: fixture.migrationUser }); }
+    finally { migrationClient.release(); await migrationPool.end(); }
+    evidence.checks.push("batch-runtime-role-bindings-installed-before-application-start");
     const readiness = await moduleAt(fixture.current, "db-schema-readiness");
     const catalogBeforeRestart = await readiness.schemaFingerprint(pool);
     const old = launch("legacy"); await old.ready;
     assert.equal(await readiness.schemaFingerprint(pool), catalogBeforeRestart, "legacy restart changed the prepared schema contract");
     evidence.checks.push("legacy-restart-preserves-prepared-schema-contract");
     assert.equal(fixture.runtimeUser, "fixture_runtime");
-    await pool.query("GRANT USAGE ON SCHEMA public TO fixture_runtime; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO fixture_runtime; GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO fixture_runtime");
-    await pool.query("REVOKE INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER ON mail_outbox FROM fixture_runtime");
+    // The dedicated migration identity owns the binding table and grants both
+    // application tables and the explicit read-only exceptions atomically.
+    const grants = new Pool({ host: fixture.socket, database: fixture.database, user: fixture.migrationUser, password: fixture.migrationPassword, max: 1 });
+    try { await grants.query("GRANT USAGE ON SCHEMA public TO fixture_runtime; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO fixture_runtime; GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO fixture_runtime; REVOKE INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER ON mail_outbox,application_runtime_roles FROM fixture_runtime"); }
+    finally { await grants.end(); }
     const runtime = new Pool({ host: fixture.socket, database: fixture.database, user: fixture.runtimeUser, password: fixture.runtimePassword, max: 1 });
     try {
       fixture.expectedSchemaHash = await readiness.schemaFingerprint(pool);

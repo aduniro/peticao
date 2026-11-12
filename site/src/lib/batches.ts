@@ -29,11 +29,15 @@ export async function authorizeBatchActor(client: PoolClient, actor: BatchActor)
 }
 
 export type Batch = {
+  runtime_owner?: "legacy" | "v2";
   id: number; seq: number; kind: "partial" | "final"; status: string; n_servidor: number; n_apoiador: number; n_estrangeiro: number;
   list_hash: string; pdf_sha256: string | null; signature_kind: string | null; signed_note?: string | null; approved_at: string | null; sent_at: string | null; created_at: string;
 };
 
-const COLS = "id,seq,kind,status,n_servidor,n_apoiador,n_estrangeiro,list_hash,pdf_sha256,signature_kind,signed_note,approved_at,sent_at,created_at";
+const COLS = "id,seq,kind,status,n_servidor,n_apoiador,n_estrangeiro,list_hash,pdf_sha256,signature_kind,signed_note,approved_at,sent_at,created_at" + (process.env.PETICAO_RUNTIME === "admin-v2" ? ",runtime_owner" : "");
+export const LEGACY_BATCH_NOTICE = "Lote legado: faça alterações pelo painel antigo.";
+/** UI/admission hint; database role guards remain authoritative. */
+export const batchWritableHere = (batch: Pick<Batch, "runtime_owner">) => process.env.PETICAO_RUNTIME !== "admin-v2" || batch.runtime_owner === "v2";
 export const LIST_SQL = `SELECT id,seq,verify_code,confirmed_at,region_validated,campus_ibge,name,category,role,institution,city,uf,country,university,campus,email_domain_kind,cpf_name_check FROM signatures`;
 
 /** Contagens dos selos informativos (não são filtros: ninguém é excluído da lista por não ter selo). */
@@ -258,6 +262,7 @@ export async function requestApprovalCode(id: number, actor: BatchActor, input?:
     await client.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'");
     if (!(await authorizeBatchActor(client, actor))) throw new Error("Lote não está pronto para aprovação.");
     const row = (await client.query<ApprovalRow>("SELECT * FROM batches WHERE id=$1 FOR UPDATE", [id])).rows[0];
+    if (row && !batchWritableHere(row)) throw new Error(LEGACY_BATCH_NOTICE);
     if (!row?.pdf) throw new Error("Lote não está pronto para aprovação.");
     const retry = row.approved_at ? await rejectedBatchRecipients(client, row) : null;
     if (row.approved_at ? !retry : row.status !== "prepared") throw new Error("Lote não está pronto para aprovação.");
@@ -296,6 +301,7 @@ export async function approveAndSend(id: number, code: string, approvedBy: strin
     if (!(await authorizeBatchActor(client, actor))) return { ok: false, reason: "Lote não está disponível para envio." };
     if (((await client.query<{ value: string }>("SELECT value FROM settings WHERE key='sending_enabled'")).rows[0]?.value ?? "true") !== "true") return { ok: false as const, reason: "Envios estão pausados." };
     const row = (await client.query<ApprovalRow>("SELECT * FROM batches WHERE id=$1 FOR UPDATE", [id])).rows[0];
+    if (row && !batchWritableHere(row)) return { ok: false as const, reason: LEGACY_BATCH_NOTICE };
     if (!row?.pdf || (row.status !== "prepared" && row.status !== "failed")) return { ok: false as const, reason: "Lote não está disponível para envio." };
     const retry = row.approved_at ? await rejectedBatchRecipients(client, row) : null;
     if (row.approved_at && !retry) return { ok: false, reason: "Lote não está disponível para envio." };
@@ -366,6 +372,7 @@ export async function attachSignedPdf(id: number, bytes: Buffer, by: string, act
   const unavailable = { ok: false, kind: "none", notes: ["Lote não está disponível para receber assinatura."] };
   // Do not hold a transaction while calling the validator. Recheck this revision after it.
   const row = (await query<ApprovalRow & { revision: string }>("SELECT *,xmin::text revision FROM batches WHERE id=$1", [id])).rows[0];
+  if (row && !batchWritableHere(row)) return { ok: false, kind: "none", notes: [LEGACY_BATCH_NOTICE] };
   if (!row?.pdf || row.approved_at || (row.status !== "prepared" && row.status !== "failed")) return unavailable;
   if (bytes.length > 25 * 1024 * 1024) return { ok: false, kind: "none", notes: ["Arquivo grande demais (máx. 25 MB)."] };
   const st = checkSignedPdf(row.pdf, bytes);
@@ -396,6 +403,8 @@ export async function attachSignedPdf(id: number, bytes: Buffer, by: string, act
 export async function cancelBatch(id: number, actor: BatchActor): Promise<boolean> {
   return tx(async client => {
     if (!(await authorizeBatchActor(client, actor))) return false;
+    const row = (await client.query<Batch>("SELECT * FROM batches WHERE id=$1 FOR UPDATE", [id])).rows[0];
+    if (!row || !batchWritableHere(row)) return false;
     const r = await client.query("UPDATE batches SET status='cancelled', approval_code_hash=NULL WHERE id=$1 AND status IN ('prepared','failed') AND approved_at IS NULL", [id]);
     if (r.rowCount) await audit("batch_cancelled", null, { batchId: id, ...actorData(actor) }, client);
     return !!r.rowCount;
