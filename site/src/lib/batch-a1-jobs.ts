@@ -97,7 +97,7 @@ async function currentDocument(c: PoolClient, batchId: number) {
 async function legacyEligible(c:PoolClient,b:ApprovalRow){
   if(process.env.PETICAO_RUNTIME!=="admin-v2" || process.env.BATCH_LEGACY_CONTROL!=="admin-v2" || b.runtime_owner!=="legacy")return false;
   if(!['prepared','failed'].includes(b.status) || b.approved_at || b.sent_at || !b.pdf || !sha(b.pdf_sha256) || b.pdf.length>A1_MAX_PDF_BYTES || digest(b.pdf)!==b.pdf_sha256 || b.pdf.subarray(0,5).toString()!=="%PDF-" || !sha(b.list_hash))return false;
-  const controller=(await c.query<{controller:string}>("SELECT controller FROM batch_runtime_control WHERE singleton FOR SHARE")).rows[0];
+  const controller=(await c.query<{controller:string}>("SELECT controller FROM batch_runtime_control WHERE singleton")).rows[0];
   if(controller?.controller!=="v2")return false;
   return !(await c.query("SELECT 1 FROM batch_preparations WHERE batch_id=$1",[b.id])).rowCount;
 }
