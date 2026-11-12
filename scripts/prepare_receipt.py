@@ -25,11 +25,15 @@ def main():
     actor = 'admin-recuperacao'
     target = 'coord:k3s/' + args.node
     lease = json.loads(args.lease_file.read_text())
-    checked = ledger.check(actor, lease['lease'], lease['token'], lease['fence'])
-    if checked['expires'] < time.time() + 300 or target not in lease['resources']:
-        raise PermissionError('current_node_lease_with_five_minutes_required')
+    # Persist expiry first, then verify identity/scope from one authoritative read.
+    ledger.check(actor, lease['lease'], lease['token'], lease['fence'])
     with ledger.db() as db:
-        ledger.actor(db, actor)
+        db.execute('BEGIN')
+        record = ledger.verify(db, actor, lease['lease'], lease['token'], lease['fence'])
+        resources = json.loads(record['resources'])
+        expires, fence = record['expires'], record['fence']
+        if expires < time.time() + 300 or target not in resources:
+            raise PermissionError('current_node_lease_with_five_minutes_required')
         if not db.execute('SELECT 1 FROM actor_handoffs WHERE prior=? AND replacement=?', ('admin', actor)).fetchone():
             raise PermissionError('coordinator_succession_not_acknowledged')
         event = db.execute('SELECT * FROM events WHERE seq=?', (args.manifest_event,)).fetchone()
@@ -56,7 +60,8 @@ def main():
     if args.node == 'sp':
         raise PermissionError('sp_receipt_not_enabled_until_post_deploy_baseline_review')
     result = {'node': args.node, 'peer_ack_verified': True, 'peer_actors': sorted(active),
-              'lease_valid': True, 'lease_expires_at': checked['expires'], 'lease_fence': lease['fence'],
+              'lease_valid': True, 'lease_expires_at': expires, 'lease_fence': fence,
+              'lease_id': record['id'], 'lease_actor': record['actor'], 'lease_resources': resources,
               'manifest_event': args.manifest_event, 'manifest_sha256': hashes,
               'source_commit': head, 'issued_at': time.time()}
     out = ROOT / 'private' / (args.node + '-install-receipt.json')

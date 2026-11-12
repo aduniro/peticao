@@ -28,7 +28,9 @@ Não há failover automático do control plane único.
 1. Regularizar a identidade `admin-recuperacao` sem assumir `admin`. A proposta
    de sucessão no ledger é o evento **1598**, com implementação no commit
    `7712a3a` do repositório de coordenação. Exige revisão e ACK real de `apoio`.
-   Ainda não foi aplicada. Leases incertos permanecem intocados.
+   A sucessão foi aplicada no evento1616 após ACK real de apoio. Os leases
+   antigos dos drafts permanecem intocados. A própria reserva de preparação
+   vencida foi reconciliada em1618; uma nova reserva foi adquirida.
 2. Inventariar rotas, serviços, firewall, reservas e estado da fila; salvar
    backups protegidos antes de mutações. Aprovar manifesto e reservar os
    recursos reais no ledger existente antes de provisionar.
@@ -96,6 +98,14 @@ atestado real de Job/Pod; os testes unitários não provam essa integração.
 curto para `install_node.py`. Recusa sucessão pendente, arquivo alterado,
 checkout sujo e lease sem margem. A emissão para SP permanece fechada até
 implementar a verificação do recibo de deploy e baseline posterior.
+
+A revisão independente identificou que o escopo do lease era lido do JSON
+privado em vez do registro autoritativo. A correção consulta o próprio registro
+SQLite, sob a mesma leitura que valida ator/token/fence/estado, e usa seus
+recursos e vencimento no recibo. Quatro regressões com Git e SQLite temporários
+conferem escopo adulterado, metadados locais incorretos, prazo forjado e token
+inválido. Os eventos1600/1601 anteriores não receberam ACK de instalação e
+serão substituídos por novos manifestos desse commit corrigido.
 
 Referências técnicas: [requisitos K3s](https://docs.k3s.io/installation/requirements),
 [opções do servidor](https://docs.k3s.io/cli/server) e
