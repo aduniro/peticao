@@ -4,7 +4,11 @@ export type RuntimeRoles = { legacy: string; v2: string; migration: string };
 const ident = (value: string) => '"' + value.replace(/"/g, '""') + '"';
 
 /** Explicit migration step, never called by a request/bootstrap verifier. */
-export async function installBatchRuntimeOwnership(client: PoolClient, roles: RuntimeRoles) {
+export async function installBatchRuntimeOwnership(client: PoolClient, roles: RuntimeRoles, options: { transaction?: "own" | "caller" } = {}) {
+  const ownTransaction = options.transaction !== "caller";
+  if (!ownTransaction && !(await client.query("SELECT pg_current_xact_id_if_assigned() IS NOT NULL active")).rows[0].active) {
+    throw new Error("caller_transaction_with_assigned_xid_required");
+  }
   const names = Object.values(roles);
   if (new Set(names).size !== 3 || names.some(name => typeof name !== "string" || !name || Buffer.byteLength(name) > 63)) {
     throw new Error("three_distinct_runtime_roles_required");
@@ -17,7 +21,7 @@ export async function installBatchRuntimeOwnership(client: PoolClient, roles: Ru
   const context = (await client.query<{ actor: string; schema: string }>("SELECT session_user actor,current_schema() schema")).rows[0];
   if (context.actor !== roles.migration) throw new Error("dedicated_migration_identity_required");
   const schema = ident(context.schema), batches = `${schema}.batches`, bindings = `${schema}.application_runtime_roles`;
-  await client.query("BEGIN");
+  if (ownTransaction) await client.query("BEGIN");
   try {
     await client.query("SET LOCAL lock_timeout='3000ms'; SET LOCAL statement_timeout='30000ms'");
     await client.query("SELECT pg_advisory_xact_lock(7002)");
@@ -167,10 +171,10 @@ export async function installBatchRuntimeOwnership(client: PoolClient, roles: Ru
     await client.query(`REVOKE ALL ON ${bindings} FROM PUBLIC,${ident(roles.legacy)},${ident(roles.v2)};
       GRANT SELECT ON ${bindings} TO ${ident(roles.legacy)},${ident(roles.v2)};
       REVOKE TRUNCATE ON ${batches} FROM ${ident(roles.legacy)},${ident(roles.v2)}`);
-    await client.query("COMMIT");
+    if (ownTransaction) await client.query("COMMIT");
     return { schema: context.schema, roles, guardedReferences: references.map(row => ({ table: row.relation, column: row.column_name })), transferredExistingBatches: false };
   } catch (error) {
-    await client.query("ROLLBACK").catch(() => {});
+    if (ownTransaction) await client.query("ROLLBACK").catch(() => {});
     throw error;
   }
 }

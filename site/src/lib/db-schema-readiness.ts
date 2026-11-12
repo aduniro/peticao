@@ -45,12 +45,16 @@ export async function schemaFingerprint(client: Pick<PoolClient, "query">): Prom
   return createHash("sha256").update(JSON.stringify(await schemaContract(client))).digest("hex");
 }
 
-/** Only SELECTs inside READ ONLY; an application process cannot perform migration. */
-export async function verifyRuntimeSchema(pool: Pool, expected: string | undefined): Promise<void> {
+/** Web default: SELECTs inside READ ONLY. Only the offline operator owns a caller transaction. */
+export async function verifyRuntimeSchema(pool: Pool, expected: string | undefined, options: { transaction?: "own" | "caller" } = {}): Promise<void> {
   if (!expected || !/^[a-f0-9]{64}$/.test(expected)) throw new Error("runtime_schema_hash_required");
   const client = await pool.connect();
+  const ownTransaction = options.transaction !== "caller";
   try {
-    await client.query("BEGIN READ ONLY");
+    if (ownTransaction) await client.query("BEGIN READ ONLY");
+    else if (!(await client.query("SELECT pg_current_xact_id_if_assigned() IS NOT NULL active")).rows[0].active) {
+      throw new Error("caller_transaction_with_assigned_xid_required");
+    }
     await client.query("SET LOCAL statement_timeout='5000ms'; SET LOCAL lock_timeout='1000ms'");
     const role = (await client.query<{
       rolsuper: boolean; rolcreatedb: boolean; rolcreaterole: boolean; rolreplication: boolean;
@@ -71,9 +75,9 @@ export async function verifyRuntimeSchema(pool: Pool, expected: string | undefin
     if (!contract.runtimeRoles || contract.runtimeRoles.length !== 3 || contract.runtimeRoles.find(row => row.runtime_role === "v2")?.role_name !== actor) throw new Error("runtime_v2_role_binding_required");
     const actual = createHash("sha256").update(JSON.stringify(contract)).digest("hex");
     if (actual !== expected) throw new Error("runtime_schema_fingerprint_mismatch");
-    await client.query("COMMIT");
+    if (ownTransaction) await client.query("COMMIT");
   } catch (error) {
-    await client.query("ROLLBACK").catch(() => {});
+    if (ownTransaction) await client.query("ROLLBACK").catch(() => {});
     throw error;
   } finally {
     client.release();
