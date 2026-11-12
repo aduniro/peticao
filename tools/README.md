@@ -4,6 +4,33 @@ Ferramenta local: `/mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/coord.py
 Banco operacional privado: `/mnt/apps/peticao-final/_ops/coordenacao-dupla/state/coord.sqlite`.
 Testes: `/mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/test_coord.py`.
 
+## Disposição de avisos históricos
+
+Um aviso rejeitado, substituído ou retirado não deve receber ACK de aprovação
+apenas para limpar a fila. `notice-digest` identifica o conteúdo imutável do
+aviso; `propose-notice-disposition` registra motivo/evidência e, quando aplicável,
+um aviso substituto posterior. `confirm-notice-disposition` exige confirmação
+real dos demais coordenadores ativos e o mesmo digest. Não há autoaprovação.
+
+As disposições são eventos append-only: não alteram o aviso, seus ACKs ou leases.
+Enquanto pendente, o aviso continua exigindo seus ACKs. Após confirmação, deixa
+de bloquear novas operações, mas é recusado como `--manifest-event`, inclusive
+se receber ACK posterior. O substituto mantém seus próprios requisitos de
+manifesto e ACK. Uma operação crítica associada ainda ativa ou incerta impede
+a disposição; precisa de encerramento/reconciliação própria antes.
+
+Comandos locais, usando os números/digests efetivamente revisados:
+
+```bash
+/usr/bin/python3 /mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/coord.py notice-digest --event EVENTO
+/usr/bin/python3 /mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/coord.py propose-notice-disposition --actor admin-recuperacao --event EVENTO --digest SHA256 --disposition rejected --reason 'Motivo concreto da retirada' --evidence '/caminho/absoluto/da/evidencia'
+/usr/bin/python3 /mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/coord.py confirm-notice-disposition --actor apoio --proposal-event PROPOSTA --digest SHA256
+```
+
+Esse fluxo não aprova execução antiga nem publicação nova. O checkout
+`/mnt/apps/peticao-final/peticao-release` integra o inventário canônico `code:`;
+edições nele e nos checkouts administrativos anteriores reservam o mesmo código.
+
 Esta ferramenta não edita o app, não faz merge/deploy, não envia e-mail e não inicia um agente. O subagente que a implementou recebeu o contexto desta conversa por herança de sessão; não copiou arquivos de chat, senhas, chaves ou conteúdo de cadastros. O pai é responsável por integrar o watcher persistente e o relatório horário solicitado pelo responsável. Um pulso do watcher não comprova desenvolvimento ou compatibilidade.
 
 ## Participantes e fontes físicas

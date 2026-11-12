@@ -11,7 +11,7 @@ def app_path(name):
  if any(x in ('secrets','preview-state','.git','node_modules','.next') or x.startswith('.env') for x in parts):return False
  if pathlib.PurePosixPath(name).suffix.lower() in PRIVATE_EXTENSIONS:return False
  return any(name==x or name.startswith(x+'/') for x in APP_PATHS)
-ROOTS=[pathlib.Path(x) for x in ['/mnt/dev/peticao','/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109','/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109','/mnt/apps/peticao-final/peticao-integrado']]
+ROOTS=[pathlib.Path(x) for x in ['/mnt/dev/peticao','/mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109','/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109','/mnt/apps/peticao-final/peticao-integrado','/mnt/apps/peticao-final/peticao-release']]
 def stamp():return dt.datetime.now(dt.timezone.utc).isoformat()
 def encode(x):return json.dumps(x,ensure_ascii=False,sort_keys=True,separators=(',',':'))
 def resource(value):
@@ -115,6 +115,86 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
    if not d.execute('SELECT 1 FROM events WHERE seq=?',(seq,)).fetchone():raise ValueError('Evento inexistente')
    d.execute('INSERT OR IGNORE INTO acks VALUES(?,?,?)',(actor,seq,stamp()));n=self.event(d,actor,'ack','Evento reconhecido',{'event_seq':seq})
    return {'acknowledged':seq,'seq':n}
+ def _notice_fingerprint(self,d,seq):
+  row=d.execute('SELECT * FROM events WHERE seq=?',(seq,)).fetchone()
+  if not row or row['kind']!='notice' or not row['requires_ack']:raise ValueError('ack_notice_required')
+  return row,hashlib.sha256(encode(dict(row)).encode()).hexdigest()
+ def notice_fingerprint(self,seq):
+  with self.db() as d:
+   row,digest=self._notice_fingerprint(d,seq)
+   return {'event':seq,'sha256':digest,'actor':row['actor'],'summary':row['summary']}
+ def _notice_dispositions(self,d):
+  """Projection from immutable events; never rewrite original notices or ACKs."""
+  proposals={};votes={};disposed={}
+  for event in d.execute("SELECT * FROM events WHERE kind IN ('notice_disposition_proposed','notice_disposition_confirmed') ORDER BY seq").fetchall():
+   data=json.loads(event['data'])
+   if event['kind']=='notice_disposition_proposed':
+    row,digest=self._notice_fingerprint(d,data['target_event'])
+    if digest!=data['target_sha256']:raise RuntimeError('notice_disposition_stale_digest')
+    proposals[event['seq']]=(event,data);votes[event['seq']]={event['actor']}
+   else:
+    proposal=data.get('proposal_event')
+    if proposal not in proposals:raise RuntimeError('notice_disposition_unknown_proposal')
+    original,body=proposals[proposal];required=data.get('required_actors',[])
+    if event['actor']==original['actor'] or data.get('target_sha256')!=body['target_sha256'] or not isinstance(required,list) or len(set(required))<2 or original['actor'] not in required or event['actor'] not in required:raise RuntimeError('notice_disposition_invalid_confirmation')
+    votes[proposal].add(event['actor'])
+    complete=set(required).issubset(votes[proposal])
+    if data.get('confirmed') is not complete:raise RuntimeError('notice_disposition_invalid_quorum')
+    if complete:
+     target=body['target_event']
+     if target in disposed:raise RuntimeError('notice_disposition_duplicate_finalization')
+     disposed[target]={**body,'proposal_event':proposal,'confirmation_event':event['seq'],'confirmed_by':sorted(votes[proposal])}
+  return disposed
+ def _notice_without_live_lease(self,d,seq):
+  for event in d.execute("SELECT data FROM events WHERE kind='lease_acquired'").fetchall():
+   data=json.loads(event['data'])
+   if data.get('manifest_event')==seq:
+    lease=d.execute('SELECT state FROM leases WHERE id=?',(data['lease'],)).fetchone()
+    if lease and lease['state'] in ('active','uncertain'):raise RuntimeError('notice_has_live_or_uncertain_lease')
+ def propose_notice_disposition(self,actor,seq,digest,disposition,reason,evidence,replacement=None):
+  if disposition not in ('superseded','withdrawn','rejected','archived-completed'):raise ValueError('invalid_notice_disposition')
+  if not isinstance(reason,str) or not 10<=len(reason)<=1000 or not isinstance(evidence,str) or not 10<=len(evidence)<=4000:raise ValueError('notice_disposition_reason_and_evidence_required')
+  with self.db(True) as d:self.expire(d)
+  with self.db(True) as d:
+   self.actor(d,actor)
+   if len(self.active_actors(d))<2:raise RuntimeError('independent_coordinator_required')
+   row,actual=self._notice_fingerprint(d,seq)
+   if actual!=digest:raise ValueError('notice_digest_mismatch')
+   disposed=self._notice_dispositions(d)
+   if seq in disposed:raise RuntimeError('notice_already_disposed')
+   self._notice_without_live_lease(d,seq)
+   if disposition=='superseded':
+    if not isinstance(replacement,int) or replacement<=seq:raise ValueError('newer_replacement_notice_required')
+    self._notice_fingerprint(d,replacement)
+    if replacement in disposed:raise ValueError('replacement_notice_inactive')
+   elif replacement is not None:raise ValueError('replacement_only_for_superseded')
+   data={'target_event':seq,'target_sha256':digest,'disposition':disposition,'reason':reason,'evidence':evidence,'replacement_event':replacement,'execution_authorized':False}
+   proposal=self.event(d,actor,'notice_disposition_proposed','Disposicao proposta; falta confirmacao independente',data,json.loads(row['resources']))
+   return {'proposal_event':proposal,'target_event':seq,'target_sha256':digest,'confirmed':False}
+ def confirm_notice_disposition(self,actor,proposal,digest):
+  with self.db(True) as d:self.expire(d)
+  with self.db(True) as d:
+   self.actor(d,actor);event=d.execute('SELECT * FROM events WHERE seq=?',(proposal,)).fetchone()
+   if not event or event['kind']!='notice_disposition_proposed':raise ValueError('disposition_proposal_required')
+   if actor==event['actor']:raise PermissionError('independent_confirmation_required')
+   body=json.loads(event['data']);target=body['target_event'];row,actual=self._notice_fingerprint(d,target)
+   if actual!=digest or body['target_sha256']!=digest:raise ValueError('notice_digest_mismatch')
+   active=set(self.active_actors(d))
+   if event['actor'] not in active:raise RuntimeError('proposal_actor_retired_requires_new_proposal')
+   disposed=self._notice_dispositions(d)
+   if target in disposed:raise RuntimeError('notice_already_disposed')
+   self._notice_without_live_lease(d,target)
+   replacement=body.get('replacement_event')
+   if replacement is not None:
+    self._notice_fingerprint(d,replacement)
+    if replacement in disposed:raise RuntimeError('replacement_notice_inactive')
+   votes={event['actor']}
+   for vote in d.execute("SELECT actor,data FROM events WHERE kind='notice_disposition_confirmed'"):
+    if json.loads(vote['data']).get('proposal_event')==proposal:votes.add(vote['actor'])
+   already=actor in votes;votes.add(actor);complete=len(active)>=2 and active.issubset(votes)
+   if already and not complete:return {'proposal_event':proposal,'confirmed':False,'already_recorded':True}
+   confirmation=self.event(d,actor,'notice_disposition_confirmed','Disposicao confirmada; nao autoriza executar manifesto' if complete else 'Confirmacao parcial de disposicao',{'proposal_event':proposal,'target_sha256':digest,'required_actors':sorted(active),'confirmed':complete},json.loads(row['resources']))
+   return {'proposal_event':proposal,'target_event':target,'confirmation_event':confirmation,'confirmed':complete,'execution_authorized':False}
  def expire(self,d):
   rows=list(d.execute("SELECT * FROM leases WHERE state='active' AND expires<=?",(time.time(),)))
   for r in rows:
@@ -127,11 +207,13 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
   with self.db(True) as d:self.expire(d)
   with self.db(True) as d:
    self.actor(d,actor)
+   disposed=self._notice_dispositions(d)
    if operation in ('deploy','migration') and not any(r.startswith(('deploy:','db:')) for r in resources):raise ValueError('Deploy/migration exige recurso global deploy: ou db:')
    for r in d.execute("SELECT * FROM leases WHERE state IN ('active','uncertain')"):
     old=json.loads(r['resources'])
     if any(overlaps(a,b) for a in resources for b in old):raise RuntimeError('resource_busy:'+encode({'owner':r['actor'],'lease':r['id'],'state':r['state'],'fence':r['fence']}))
    if operation in ('deploy','migration','merge'):
+    if manifest_event in disposed:raise RuntimeError('critical_manifest_notice_inactive')
     event=d.execute('SELECT * FROM events WHERE seq=?',(manifest_event,)).fetchone() if manifest_event else None
     if not event or event['kind']!='notice' or not event['requires_ack']:raise RuntimeError('explicit_manifest_notice_required')
     manifest=json.loads(event['data']).get('manifest')
@@ -145,6 +227,7 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
    if operation in ('deploy','migration','merge') and len(actors)<2:raise RuntimeError('two_coordinators_required')
    pending=[]
    for e in d.execute('SELECT * FROM events WHERE requires_ack=1'):
+    if e['seq'] in disposed:continue
     relevant=operation in ('deploy','migration','merge') or any(overlaps(a,b) for a in resources for b in json.loads(e['resources']))
     if not relevant:continue
     needed=[a for a in actors if a!=e['actor']] if operation in ('deploy','migration','merge') else ([actor] if actor!=e['actor'] else [])
@@ -235,10 +318,12 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
    leases=[{k:r[k] for k in r.keys() if k!='token'} for r in d.execute("SELECT * FROM leases WHERE state IN ('active','uncertain')")]
    for r in leases:r['resources']=json.loads(r['resources'])
    pending=[]
+   disposed=self._notice_dispositions(d)
    for e in d.execute('SELECT seq,actor,summary,resources FROM events WHERE requires_ack=1'):
+    if e['seq'] in disposed:continue
     missing=[a['id'] for a in actors if a['active'] and a['id']!=e['actor'] and not d.execute('SELECT 1 FROM acks WHERE actor=? AND seq=?',(a['id'],e['seq'])).fetchone()]
     if missing:pending.append({'event':e['seq'],'author':e['actor'],'summary':e['summary'],'resources':json.loads(e['resources']),'missing_ack':missing})
-   return {'at':stamp(),'actors':actors,'leases':leases,'pending_ack':pending,'last_seq':d.execute('SELECT COALESCE(MAX(seq),0) FROM events').fetchone()[0]}
+   return {'at':stamp(),'actors':actors,'leases':leases,'pending_ack':pending,'notice_dispositions':list(disposed.values()),'last_seq':d.execute('SELECT COALESCE(MAX(seq),0) FROM events').fetchone()[0]}
 def parser():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--db',type=pathlib.Path,default=DEFAULT_DB);sp=p.add_subparsers(dest='command',required=True)
  def cmd(name,actor=True):
@@ -248,6 +333,9 @@ def parser():
  c=cmd('register');c.add_argument('--session',required=True);c.add_argument('--repo',action='append',required=True)
  c=cmd('announce');c.add_argument('--summary',required=True);c.add_argument('--resource',action='append',required=True);c.add_argument('--data-json',default='{}');c.add_argument('--no-require-ack',action='store_true')
  c=cmd('ack');c.add_argument('--event',type=int,required=True)
+ c=cmd('notice-digest',False);c.add_argument('--event',type=int,required=True)
+ c=cmd('propose-notice-disposition');c.add_argument('--event',type=int,required=True);c.add_argument('--digest',required=True);c.add_argument('--disposition',choices=['superseded','withdrawn','rejected','archived-completed'],required=True);c.add_argument('--reason',required=True);c.add_argument('--evidence',required=True);c.add_argument('--replacement-event',type=int)
+ c=cmd('confirm-notice-disposition');c.add_argument('--proposal-event',type=int,required=True);c.add_argument('--digest',required=True)
  c=cmd('handoff');c.add_argument('--prior',required=True);c.add_argument('--notice-event',type=int,required=True)
  c=cmd('acquire');c.add_argument('--resource',action='append',required=True);c.add_argument('--operation',choices=['edit','deploy','merge','migration','test','inspect'],default='edit');c.add_argument('--ttl',type=int,default=600);c.add_argument('--manifest-event',type=int)
  for name in ('check','renew','release'):
@@ -265,6 +353,9 @@ def main():
  if c=='register':r=l.register(a.actor,a.session,a.repo)
  elif c=='announce':r=l.announce(a.actor,a.summary,a.resource,json.loads(a.data_json),not a.no_require_ack)
  elif c=='ack':r=l.ack(a.actor,a.event)
+ elif c=='notice-digest':r=l.notice_fingerprint(a.event)
+ elif c=='propose-notice-disposition':r=l.propose_notice_disposition(a.actor,a.event,a.digest,a.disposition,a.reason,a.evidence,a.replacement_event)
+ elif c=='confirm-notice-disposition':r=l.confirm_notice_disposition(a.actor,a.proposal_event,a.digest)
  elif c=='handoff':r=l.handoff(a.actor,a.prior,a.notice_event)
  elif c=='acquire':r=l.acquire(a.actor,a.resource,a.operation,a.ttl,a.manifest_event)
  elif c in ('check','renew','release'):
