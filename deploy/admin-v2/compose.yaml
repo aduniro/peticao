@@ -1,0 +1,42 @@
+name: peticao-admin-v2
+services:
+  admin:
+    image: ${ADMIN_IMAGE:?Use a qualified image pinned by sha256 digest}
+    pull_policy: never
+    network_mode: host
+    user: "1000:1000"
+    read_only: true
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    cpus: "1.0"
+    mem_limit: 1536m
+    pids_limit: 128
+    restart: unless-stopped
+    stop_grace_period: 45s
+    env_file: /etc/peticao-admin-v2/app.env
+    environment:
+      NODE_ENV: production
+      APP_URL: https://sancionaintegral.org
+      ADMIN_URL: https://admin.sancionaintegral.org
+      ALLOWED_HOSTS: admin.sancionaintegral.org
+      NEXT_TELEMETRY_DISABLED: "1"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m,uid=1000,gid=1000,mode=1770
+      - /app/.next/cache:rw,nosuid,size=128m,uid=1000,gid=1000,mode=0700
+    volumes:
+      - admin_data:/app/data
+    # Socket health only; HTTP/auth/database acceptance is a separate release gate.
+    healthcheck:
+      test: [CMD, node, -e, "const s=require('net').connect(3001,'127.0.0.1');s.setTimeout(3000);s.on('connect',()=>{s.end();process.exit(0)});s.on('timeout',()=>process.exit(1));s.on('error',()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+volumes:
+  admin_data:

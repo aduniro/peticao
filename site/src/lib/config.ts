@@ -14,6 +14,7 @@ function required(name: string, devDefault: string): string {
 
 export const config = {
   appUrl: () => process.env.APP_URL ?? "http://localhost:3000",
+  adminUrl: () => (process.env.ADMIN_URL ?? process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, ""),
   databaseUrl: () => required("DATABASE_URL", "postgres://peticao:peticao@localhost:54329/peticao"),
   pepper: () => {
     const v = required("HASH_PEPPER", "dev-pepper-nao-usar-em-producao-0123456789");

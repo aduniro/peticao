@@ -177,7 +177,7 @@ async function notifyApprover(id: number) {
     text:
       `O lote ${b.seq} (${b.kind === "final" ? "FINAL" : "parcial"}) está pronto: ${b.n_servidor} servidores, ${b.n_apoiador} apoiadores e ${b.n_estrangeiro} estrangeiros.\n` +
       `Assinatura: ${b.signature_kind === "icp-brasil" ? "ICP-Brasil" : "NÃO ASSINADO (teste)"}\nsha256 do PDF: ${b.pdf_sha256}\n\n` +
-      `Para revisar e aprovar o envio, acesse: ${config.appUrl()}/admin/lotes\n(o envio exige senha do painel e um código enviado a este e-mail)`,
+      `Para revisar e aprovar o envio, acesse: ${config.adminUrl()}/admin/lotes\n(o envio exige senha do painel e um código enviado a este e-mail)`,
   }, "aprovacao");
 }
 
