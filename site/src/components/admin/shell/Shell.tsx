@@ -15,13 +15,13 @@ const SAIR = (cls: string, rotulo = "Sair") => <form method="post" action="/api/
  * Moldura do painel v2. Computador: topo fixo, trilho lateral com submenus (flyout) ao passar o mouse. Celular/tablet (≤992px): barra inferior PRINCIPAL com os atalhos,
  * botão sanduíche (menu completo, em gaveta) no canto inferior ESQUERDO e botão de filtros da página no canto inferior DIREITO.
  */
-export default function Shell({ children, quem, ehTotal = false }: { children: React.ReactNode; quem?: Quem; ehTotal?: boolean }) {
+export default function Shell({ children, quem, ehTotal = false, publicUrl = "/" }: { children: React.ReactNode; quem?: Quem; ehTotal?: boolean; publicUrl?: string }) {
   const path = usePathname() ?? "/admin";
   if (path.startsWith("/admin/mapa/tela")) return <div className="adm v2 adm-solo">{children}</div>;
-  return <Moldura path={path} quem={quem} ehTotal={ehTotal}>{children}</Moldura>;
+  return <Moldura path={path} quem={quem} ehTotal={ehTotal} publicUrl={publicUrl}>{children}</Moldura>;
 }
 
-function Moldura({ path, children, quem, ehTotal }: { path: string; children: React.ReactNode; quem?: Quem; ehTotal: boolean }) {
+function Moldura({ path, children, quem, ehTotal, publicUrl }: { path: string; children: React.ReactNode; quem?: Quem; ehTotal: boolean; publicUrl: string }) {
   const [al, setAl] = useState<Alertas>({ emails: 0, lotes: 0, contato: 0 });
   const [gaveta, setGaveta] = useState(false);
   const [aberto, setAberto] = useState<string | null>(null); // grupo com flyout aberto
@@ -74,7 +74,7 @@ function Moldura({ path, children, quem, ehTotal }: { path: string; children: Re
         <button type="button" className="v2-sanduiche" aria-label="Abrir o menu" aria-expanded={gaveta} onClick={abrirGaveta}><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button>
         <a className="v2-marca" href="/admin"><b>PLV 12/2026</b><small>Painel da campanha</small></a>
         <nav className="v2-migalha" aria-label="Você está em"><span>{GRUPOS.find((g) => g.id === gAtivo)?.rotulo}</span><i aria-hidden="true">›</i><strong>{tituloDe(path)}</strong></nav>
-        <div className="v2-topo-dir">{quem ? <span className="v2-quem-topo" data-testid="quem-topo" title={`Nível: ${quem.rotuloNivel}`}>{quem.nome.split(" ")[0]} · {quem.rotuloNivel}</span> : null}<a className="v2-link-site" href="/" target="_blank" rel="noopener">Ver o site ↗</a>{SAIR("v2-btn v2-btn-fantasma")}</div>
+        <div className="v2-topo-dir">{quem ? <span className="v2-quem-topo" data-testid="quem-topo" title={`Nível: ${quem.rotuloNivel}`}>{quem.nome.split(" ")[0]} · {quem.rotuloNivel}</span> : null}<a className="v2-link-site" href={publicUrl} target="_blank" rel="noopener">Ver o site ↗</a>{SAIR("v2-btn v2-btn-fantasma")}</div>
       </header>
 
       <aside className="v2-trilho" aria-label="Menu do painel" onMouseLeave={sair}>
@@ -96,7 +96,7 @@ function Moldura({ path, children, quem, ehTotal }: { path: string; children: Re
       <aside className={`v2-gaveta${gaveta ? " aberta" : ""}`} aria-hidden={!gaveta} aria-label="Menu" {...(!gaveta ? { inert: "" as unknown as undefined } : {})}>
         <div className="v2-gaveta-topo"><a className="v2-marca" href="/admin"><b>PLV 12/2026</b><small>Painel da campanha</small></a><button type="button" className="v2-sanduiche" aria-label="Fechar o menu" onClick={fecharGaveta}>✕</button></div>
         {grupos.map((g) => (<section key={g.id}><h4>{g.rotulo}</h4>{g.itens.map((i) => link(i, "v2-gaveta-item"))}</section>))}
-        <div className="v2-gaveta-pe">{quem ? <p className="v2-quem" data-testid="quem">{quem.nome}<br />Nível: {quem.rotuloNivel}</p> : null}<a className="v2-gaveta-item" href="/" target="_blank" rel="noopener"><span>Ver o site ↗</span></a>{SAIR("v2-btn v2-btn-perigo v2-largo", "Sair do painel")}</div>
+        <div className="v2-gaveta-pe">{quem ? <p className="v2-quem" data-testid="quem">{quem.nome}<br />Nível: {quem.rotuloNivel}</p> : null}<a className="v2-gaveta-item" href={publicUrl} target="_blank" rel="noopener"><span>Ver o site ↗</span></a>{SAIR("v2-btn v2-btn-perigo v2-largo", "Sair do painel")}</div>
       </aside>
 
       <div className={`adm-content v2-main${escuro ? " v2-escuro" : ""}`} {...(gaveta ? { inert: "" as unknown as undefined } : {})}>{children}</div>

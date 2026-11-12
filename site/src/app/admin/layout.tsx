@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { sessaoAdmin } from "@/lib/admin";
 import { ROTULO_NIVEL, nivelOk } from "@/lib/admin-users";
 import Shell from "@/components/admin/shell/Shell";
+import { config } from "@/lib/config";
 import "./admin.css";
 import "./v2.css";
 
@@ -13,5 +14,5 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const s = await sessaoAdmin();
   if (!s) return <>{children}</>;
-  return <Shell quem={{ nome: s.nome, nivel: s.nivel, rotuloNivel: ROTULO_NIVEL[s.nivel] }} ehTotal={nivelOk(s.nivel, "total")}>{children}</Shell>;
+  return <Shell quem={{ nome: s.nome, nivel: s.nivel, rotuloNivel: ROTULO_NIVEL[s.nivel] }} ehTotal={nivelOk(s.nivel, "total")} publicUrl={config.appUrl()}>{children}</Shell>;
 }
