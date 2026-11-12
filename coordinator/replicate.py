@@ -56,6 +56,9 @@ def fingerprint():
                 artifacts = job / 'artifacts'
                 if artifacts.exists():
                     paths.extend(p for p in artifacts.rglob('*') if p.is_file() and not p.is_symlink())
+                uploads = job / '.runtime-upload'
+                if uploads.exists():
+                    paths.extend(p for p in uploads.rglob('*') if p.is_file() and not p.is_symlink() and p.name != '.lock')
     h = hashlib.sha256()
     for path in sorted(set(paths)):
         if path.is_symlink():

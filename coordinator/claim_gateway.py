@@ -76,7 +76,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.reply(405, {'error': 'use_fixed_authenticated_POST_endpoint'})
 
     def do_POST(self):
-        if self.path not in ('/v1/start', '/v1/finish', '/v1/receipt'):
+        if self.path not in ('/v1/start', '/v1/finish', '/v1/receipt', '/v1/runtime-chunk'):
             self.reply(404, {'error': 'unknown_endpoint'})
             return
         authorization = self.headers.get_all('Authorization', [])
@@ -88,7 +88,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.reply(400, {'error': 'fixed_content_length_required'})
             return
         length = int(lengths[0])
-        if length > (MAX_BODY if self.path == '/v1/finish' else 4096):
+        limit = MAX_BODY if self.path == '/v1/finish' else 12 * 1024 * 1024 if self.path == '/v1/runtime-chunk' else 4096
+        if length > limit:
             self.reply(413, {'error': 'request_size_limit'})
             return
         if self.headers.get('Content-Type', '').split(';')[0].strip().lower() != 'application/json':
@@ -101,7 +102,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 raise ValueError('incomplete_body')
             body = json.loads(raw)
             common = {'id', 'pod_name', 'pod_uid'}
-            allowed = common | ({'exit_code', 'technical_result', 'artifacts'} if self.path == '/v1/finish' else set())
+            allowed = common | ({'exit_code', 'technical_result', 'artifacts'} if self.path == '/v1/finish' else {'chunk'} if self.path == '/v1/runtime-chunk' else set())
             if not isinstance(body, dict) or set(body) != allowed:
                 raise ValueError('fixed_request_contract_required')
             if not re.fullmatch('[a-f0-9]{32}', str(body['id'])) or not re.fullmatch('[a-z0-9][a-z0-9.-]{0,252}', str(body['pod_name'])) or not isinstance(body['pod_uid'], str) or not 1 <= len(body['pod_uid']) <= 128:
@@ -114,6 +115,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 receipt = backend.complete_execution(body['id'], body['pod_name'], body['pod_uid'], token,
                                                      body['exit_code'], body['technical_result'], body['artifacts'])
                 self.reply(200, receipt)
+            elif self.path == '/v1/runtime-chunk':
+                self.reply(200, backend.upload_runtime_chunk(body['id'], body['pod_name'], body['pod_uid'], token, body['chunk']))
             else:
                 self.reply(200, backend.execution_receipt(body['id'], body['pod_uid'], token))
         except PermissionError:

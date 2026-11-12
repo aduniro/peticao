@@ -49,7 +49,7 @@
       "memory_mib": 5120,
       "ephemeral_mib": 8192,
       "heavy": true,
-      "timeout_seconds": 1200,
+      "timeout_seconds": 1800,
       "priority": 40,
       "approval_reference": null
     },

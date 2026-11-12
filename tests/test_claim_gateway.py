@@ -136,3 +136,48 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(executions, ['once'])
         self.assertTrue(self.fixture.backend.execution_receipt(self.job, 'pod-uid', self.token)['finished'])
         self.assertEqual(self.fixture.api.creates, 1)
+
+    def test_large_runtime_crosses_real_tls_and_is_collected_before_job_cleanup(self):
+        import hashlib
+        build = self.fixture.submit(2, 'build')
+        self.assertEqual(fixtures.core.dispatch_once(), build)
+        token = self.fixture.start_pod(build)
+        pod = self.fixture.api.pods.pop('test-pod')
+        pod['metadata'].update(name='build-pod', uid='build-pod-uid')
+        self.fixture.api.pods['build-pod'] = pod
+        body = {'id': build, 'pod_name': 'build-pod', 'pod_uid': 'build-pod-uid'}
+        work = Path(self.fixture.tmp.name) / 'large-runner-work'
+        work.mkdir()
+        data = b'0' * (17 * 1024 * 1024 + 1)
+        executions = []
+
+        def execute(plan, run, output):
+            executions.append('once')
+            output.write_bytes(b'synthetic portable-runtime transport fixture\n')
+            (output.parent / 'runtime.tar').write_bytes(data)
+            return 0
+
+        plan = {'source_commit': self.fixture.catalog['build']['source_commit'], 'manifest_sha256': 'd' * 64}
+        code = runner.run_once('build', body, plan, runner.Gateway(token, self.cert, self.url), work, execute)
+        self.assertEqual(code, 0)
+        self.assertEqual(executions, ['once'])
+        folder = fixtures.core.WORKER / 'jobs' / build
+        self.assertEqual(hashlib.sha256((folder / 'artifacts/runtime.tar').read_bytes()).digest(), hashlib.sha256(data).digest())
+        self.fixture.api.jobs[build]['status'] = {'conditions': [{'type': 'Complete', 'status': 'True'}]}
+        fixtures.core.reconcile()
+        self.assertNotIn(build, self.fixture.api.jobs)
+        self.assertEqual(self.fixture.row(build)['state'], 'completed')
+        receipt = self.fixture.backend.execution_receipt(build, 'build-pod-uid', token)
+        runtime = next(item for item in receipt['result']['artifacts'] if item['path'] == 'artifacts/runtime.tar')
+        self.assertEqual(runtime['bytes'], len(data))
+
+    def test_runtime_upload_is_denied_to_non_build_profile(self):
+        import hashlib
+        import base64
+        self.assertEqual(self.request('/v1/start')[0], 200)
+        data = b'fixture'
+        chunk = {'path': 'artifacts/runtime.tar', 'total_sha256': hashlib.sha256(data).hexdigest(),
+                 'total_bytes': len(data), 'index': 0, 'chunk_sha256': hashlib.sha256(data).hexdigest(),
+                 'base64': base64.b64encode(data).decode()}
+        self.assertEqual(self.request('/v1/runtime-chunk', {**self.body, 'chunk': chunk})[0], 403)
+        self.assertFalse((fixtures.core.WORKER / 'jobs' / self.job / '.runtime-upload').exists())

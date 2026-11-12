@@ -17,6 +17,7 @@ import time
 
 from execution_claims import Claims
 import kubernetes_results
+import runtime_upload
 
 KIND = 'kubernetes-profile-v1'
 BACKEND = 'kubernetes-v1'
@@ -218,6 +219,13 @@ class Backend:
         current = self.core.primary()
         # The existing single daemon's lock remains authoritative for both backends.
         with self.claims.db(True) as db:
+            retained_objects = 0
+            for claim in db.execute('SELECT job_id FROM kubernetes_execution_claims'):
+                marker = self.core.WORKER / 'jobs' / claim['job_id'] / 'kubernetes-collected.json'
+                if not marker.is_file() or not json.loads(marker.read_text()).get('cleanup_confirmed'):
+                    retained_objects += 1
+            if retained_objects >= 4:
+                return None  # Uncollected/uncertain Jobs retain the namespace's object slots.
             active, queued = [], []
             for row in db.execute("SELECT * FROM jobs WHERE state IN ('queued','starting','running') ORDER BY created_at,id"):
                 payload = json.loads(row['payload'])
@@ -264,7 +272,11 @@ class Backend:
             folder = self.core.WORKER / 'jobs' / chosen['id']
             # Files are staged before DB reservation; a crash leaves no executable job.
             # An unexplained existing folder is preserved and requires reconciliation.
-            folder.mkdir(mode=0o2770)
+            try:
+                folder.mkdir(mode=0o2770)
+            except FileExistsError:
+                self.terminal(db, chosen['id'], 'interrupted', 'staged_files_require_reconciliation')
+                return None
             folder.chmod(0o2770)
             self.core.atomic(folder / 'kubernetes.json', {'node': node, 'manifest_sha256': digest,
                                                         'manifest': manifest, 'generation': chosen['generation']})
@@ -360,6 +372,8 @@ class Backend:
             claim = self.claims.status(row['id'])
             if not claim or not (folder / 'output.log').is_file():
                 continue
+            if not claim['result_sha256']:
+                continue  # Preserve failed/uncertain pod storage until complete collection/reconciliation.
             marker = folder / 'kubernetes-collected.json'
             if marker.is_file() and json.loads(marker.read_text()).get('cleanup_confirmed'):
                 continue
@@ -431,10 +445,23 @@ class Backend:
                     'source_commit': payload['source_commit'], 'image': payload['image'],
                     'source_manifest_sha256': payload['source_manifest_sha256'],
                     'generation': row['generation'], 'pod_uid': pod_uid}
-        receipt, digest = kubernetes_results.store(self.core.WORKER / 'jobs' / job_id, identity,
-                                                  exit_code, technical_result, artifacts)
+        folder = self.core.WORKER / 'jobs' / job_id
+
+        def resolve_upload(upload_id, path, digest):
+            if payload['profile'] != 'build':
+                raise PermissionError('runtime_artifact_only_for_build_profile')
+            return runtime_upload.resolve(folder, job_id, pod_uid, upload_id, path, digest)
+
+        receipt, digest = kubernetes_results.store(folder, identity, exit_code, technical_result, artifacts,
+                                                  staged_resolver=resolve_upload)
         self.claims.finish(job_id, pod_uid, digest)
         return {'id': job_id, 'result_sha256': digest, 'artifacts': receipt['artifacts']}
+
+    def upload_runtime_chunk(self, job_id, pod_name, pod_uid, token, data):
+        row, claim = self.attest_execution(job_id, pod_name, pod_uid, token)
+        if json.loads(row['payload'])['profile'] != 'build' or not claim['started_at'] or claim['pod_uid'] != pod_uid:
+            raise PermissionError('started_build_pod_required')
+        return runtime_upload.chunk(self.core.WORKER / 'jobs' / job_id, job_id, pod_uid, data)
 
     def execution_receipt(self, job_id, pod_uid, token):
         # Read-only reconciliation remains possible after the Pod was collected.

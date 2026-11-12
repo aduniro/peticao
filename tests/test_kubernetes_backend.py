@@ -244,6 +244,7 @@ class BackendTests(unittest.TestCase):
         core.reconcile()
         self.assertEqual(self.row(job)['state'], 'interrupted')
         self.assertEqual(self.row(job)['error'], 'missing_execution_receipt')
+        self.assertIn(job, self.api.jobs)
 
     def test_failed_runner_preserves_reported_exit_code_and_receipt(self):
         job = self.submit()
@@ -306,10 +307,16 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(self.row(job)['state'], 'completed')
 
     def test_snapshot_restore_preserves_claims_and_job_identity_without_restarting(self):
-        job = self.submit()
+        job = self.submit(profile='build')
         core.dispatch_once()
         token = self.start_pod(job)
         self.assertTrue(self.backend.authorize_start(job, 'test-pod', 'pod-uid', token))
+        import runtime_upload
+        data = b'opaque-runtime-fixture'
+        chunk = {'path': runtime_upload.ARTIFACT, 'total_sha256': hashlib.sha256(data).hexdigest(),
+                 'total_bytes': len(data), 'index': 0, 'chunk_sha256': hashlib.sha256(data).hexdigest(),
+                 'base64': base64.b64encode(data).decode()}
+        self.backend.upload_runtime_chunk(job, 'test-pod', 'pod-uid', token, chunk)
         output = Path(self.tmp.name) / 'snapshots'
         archive = recovery.snapshot(core.ROOT, output, core.WORKER)['snapshot']
         target = Path(self.tmp.name) / 'restored'
@@ -322,4 +329,5 @@ class BackendTests(unittest.TestCase):
             self.assertEqual(restored[2], self.api.jobs[job]['metadata']['uid'])
             self.assertEqual(db.execute('SELECT state FROM jobs WHERE id=?', (job,)).fetchone()[0], 'interrupted')
         self.assertTrue((target / 'recovered-worker/jobs' / job / 'kubernetes.json').is_file())
+        self.assertEqual((target / 'recovered-worker/jobs' / job / '.runtime-upload/runtime.blob').read_bytes(), data)
         self.assertEqual(self.api.creates, 1)

@@ -18,6 +18,8 @@ PROFILES = {'typecheck', 'unit', 'postgres17', 'build', 'browser', 'pdf-png'}
 IMAGE_ROOT = Path('/opt/peticao-runner')
 MAX_LOG = 10 * 1024 * 1024
 MAX_ARTIFACTS = 32 * 1024 * 1024
+CHUNK_BYTES = 8 * 1024 * 1024
+MAX_RUNTIME = 512 * 1024 * 1024
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -38,7 +40,8 @@ class Gateway:
                                                   'Authorization': 'Bearer ' + self.token})
         # No retries. The caller can query the same identifier after uncertainty.
         try:
-            with self.opener.open(request, timeout=15) as response:
+            timeout = 120 if endpoint == 'runtime-chunk' or (endpoint == 'finish' and any('upload_id' in item for item in body.get('artifacts', []))) else 15
+            with self.opener.open(request, timeout=timeout) as response:
                 if response.status != 200:
                     raise RuntimeError('gateway_response_denied')
                 return json.load(response)
@@ -155,14 +158,52 @@ def execute(plan, run, output):
                 process.wait(timeout=5)
 
 
-def artifact_payload(directory):
+def upload_runtime(gateway, identity, path):
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or not 1 <= info.st_size <= MAX_RUNTIME:
+            raise ValueError('bounded_regular_runtime_required')
+        with os.fdopen(fd, 'rb', closefd=False) as stream:
+            total_digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+            stream.seek(0)
+            receipt = None
+            for index, block in enumerate(iter(lambda: stream.read(CHUNK_BYTES), b'')):
+                chunk = {'path': 'artifacts/runtime.tar', 'total_sha256': total_digest, 'total_bytes': info.st_size,
+                         'index': index, 'chunk_sha256': hashlib.sha256(block).hexdigest(),
+                         'base64': base64.b64encode(block).decode()}
+                body = {**identity, 'chunk': chunk}
+                try:
+                    receipt = gateway.request('runtime-chunk', body)
+                except Exception:
+                    # Retrying an immutable chunk is not retrying job execution.
+                    receipt = gateway.request('runtime-chunk', body)
+                if receipt.get('sha256') != total_digest or receipt.get('bytes') != info.st_size or receipt.get('received_index') != index or not re.fullmatch('[a-f0-9]{64}', str(receipt.get('upload_id'))):
+                    raise ValueError('runtime_chunk_receipt_mismatch')
+                if receipt.get('complete') is True:
+                    break
+            if not receipt or receipt.get('complete') is not True:
+                raise ValueError('runtime_upload_incomplete')
+            return {'path': 'artifacts/runtime.tar', 'sha256': total_digest, 'upload_id': receipt['upload_id']}, info.st_size
+    finally:
+        os.close(fd)
+
+
+def artifact_payload(directory, runtime_reference=None):
     payload, total = [], 0
     for path in sorted(directory.rglob('*')):
         if path.is_symlink():
             raise ValueError('artifact_link_forbidden')
         if path.is_dir():
             continue
+        if len(payload) >= 64:
+            raise ValueError('artifact_budget_exceeded')
         info = path.stat()
+        if runtime_reference is not None and path == directory / 'runtime.tar':
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size > MAX_RUNTIME:
+                raise ValueError('bounded_regular_runtime_required')
+            payload.append(runtime_reference)
+            continue
         if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_size > 16 * 1024 * 1024:
             raise ValueError('bounded_regular_artifact_required')
         if path.suffix.lower() not in {'.json', '.png', '.pdf', '.txt', '.log', '.xml'}:
@@ -199,7 +240,12 @@ def run_once(name, identity, plan, gateway, work=Path('/work'), executor=execute
     code = executor(plan, run, artifacts / 'runner.log')
     technical = {'profile': name, 'elapsed_seconds': round(time.monotonic() - start, 3),
                  'source_commit': plan['source_commit'], 'runner_manifest_sha256': plan['manifest_sha256']}
-    files = artifact_payload(artifacts)
+    runtime_reference, runtime_size = None, None
+    if (artifacts / 'runtime.tar').exists() or (artifacts / 'runtime.tar').is_symlink():
+        if name != 'build':
+            raise ValueError('runtime_artifact_only_for_build_profile')
+        runtime_reference, runtime_size = upload_runtime(gateway, identity, artifacts / 'runtime.tar')
+    files = artifact_payload(artifacts, runtime_reference)
     body = {**identity, 'exit_code': code, 'technical_result': technical, 'artifacts': files}
     try:
         gateway.request('finish', body)
@@ -208,7 +254,7 @@ def run_once(name, identity, plan, gateway, work=Path('/work'), executor=execute
             observed = gateway.request('receipt', identity)
             result = observed.get('result') or {}
             expected = [{'path': item['path'], 'sha256': item['sha256'],
-                         'bytes': len(base64.b64decode(item['base64']))} for item in files]
+                         'bytes': len(base64.b64decode(item['base64'])) if 'base64' in item else runtime_size} for item in files]
             if not observed.get('finished') or result.get('exit_code') != code or result.get('technical_result') != technical or result.get('artifacts') != expected:
                 return 79
         except Exception:

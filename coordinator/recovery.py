@@ -129,6 +129,7 @@ def snapshot(source, output, worker_root=None, database=None):
                         if (job / name).exists():
                             checked_copy(job / name, stage / "worker" / "jobs" / job.name / name)
                     copy_tree(job / "artifacts", stage / "worker" / "jobs" / job.name / "artifacts")
+                    copy_tree(job / ".runtime-upload", stage / "worker" / "jobs" / job.name / ".runtime-upload")
         # A role/generation change while copying invalidates this capture.
         if read_json(source / "authority.json") != authority:
             raise ValueError("Authority changed during capture")
