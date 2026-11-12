@@ -210,6 +210,16 @@ const SCHEMA_SQL = `
   CREATE INDEX IF NOT EXISTS mail_message_event_history ON mail_message_events(message_id,occurred_at DESC,id DESC) WHERE association_state='linked';
   ALTER TABLE mail_log ADD COLUMN IF NOT EXISTS message_id UUID REFERENCES mail_messages(id);
   ALTER TABLE mail_outbox ADD COLUMN IF NOT EXISTS message_id UUID REFERENCES mail_messages(id);
+  -- Separate retry storage: the unmodified legacy consumer must never see v2 rows.
+  CREATE TABLE IF NOT EXISTS mail_outbox_v2 (
+    id SERIAL PRIMARY KEY, kind TEXT NOT NULL, to_addr TEXT NOT NULL, payload JSONB NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','sent','failed')),
+    attempts INTEGER NOT NULL DEFAULT 0, next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_error TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), sent_at TIMESTAMPTZ,
+    message_id UUID REFERENCES mail_messages(id)
+  );
+  CREATE INDEX IF NOT EXISTS mail_outbox_v2_due ON mail_outbox_v2(status,next_attempt_at);
+  CREATE INDEX IF NOT EXISTS mail_outbox_v2_message ON mail_outbox_v2(message_id);
   CREATE SEQUENCE IF NOT EXISTS signature_seq;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS seq INTEGER;
   ALTER TABLE signatures ADD COLUMN IF NOT EXISTS verify_code TEXT;

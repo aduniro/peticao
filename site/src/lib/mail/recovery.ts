@@ -1,3 +1,4 @@
+import { mailQueueScope, mailQueueTable } from "./queue-scope";
 import type { PoolClient } from "pg";
 import { audit, tx } from "../db";
 import { contentFingerprint } from "./archive-codec";
@@ -5,12 +6,12 @@ import { fromStored, frozenReplyTo } from "./payload";
 const validId = (id: unknown): id is number => Number.isSafeInteger(id) && Number(id)>0 && Number(id)<=2147483647;
 type Actor = {userId:number;email:string};
 async function inspect(c:PoolClient, id:number, lock=false) {
-  const base=(await c.query<{message_id:string|null}>("SELECT message_id FROM mail_outbox WHERE id=$1",[id])).rows[0];
+  const base=(await c.query<{message_id:string|null}>(`SELECT message_id FROM ${mailQueueTable()} WHERE id=$1`,[id])).rows[0];
   if(!base)return{ok:false as const,error:"not_found"};
   if(!base.message_id)return{ok:true as const,eligible:false as const,reason:"legacy_unlinked"};
   // Same order as linkOutbox/queueMessage/finalization: message, then queue. Workers hold neither during transport.
   const m=(await c.query(`SELECT id,status,kind,channel,to_addr,content_fingerprint,reply_to FROM mail_messages WHERE id=$1${lock?" FOR UPDATE":""}`,[base.message_id])).rows[0];
-  const q=(await c.query(`SELECT id,status,message_id,kind,to_addr,payload,sent_at FROM mail_outbox WHERE id=$1${lock?" FOR UPDATE":""}`,[id])).rows[0];
+  const q=(await c.query(`SELECT id,status,message_id,kind,to_addr,payload,sent_at FROM ${mailQueueTable()} WHERE id=$1${lock?" FOR UPDATE":""}`,[id])).rows[0];
   if(!m||!q||q.message_id!==base.message_id||m.channel!=="transactional"||m.kind!==q.kind||m.to_addr!==q.to_addr.toLowerCase())return{ok:true as const,eligible:false as const,reason:"identity_conflict"};
   // Settled is an existing queue state, not a new acceptance/content verdict.
   // Retention may already have erased its payload; never require or restore it for a replay.
@@ -43,9 +44,9 @@ export async function settleAcceptedQueue(id:unknown,actor:Actor) {
     const result=await inspect(c,id,true);
     if(!result.ok)return result;
     if(!result.eligible)return result.reason==="already_settled"?{ok:true as const,existing:true,queueId:id}:{ok:false as const,error:result.reason};
-    const changed=await c.query("UPDATE mail_outbox SET status='sent',last_error=NULL,sent_at=COALESCE(sent_at,$2::timestamptz) WHERE id=$1 AND status IN ('pending','failed')",[id,result.acceptedAt]);
+    const changed=await c.query(`UPDATE ${mailQueueTable()} SET status='sent',last_error=NULL,sent_at=COALESCE(sent_at,$2::timestamptz) WHERE id=$1 AND status IN ('pending','failed')`,[id,result.acceptedAt]);
     if(!changed.rowCount)return{ok:false as const,error:"queue_conflict"};
-    await audit("mail_queue_acceptance_recovered",null,{queueId:id,messageId:result.messageId,attemptId:result.attemptId,acceptedAt:result.acceptedAt,userId:actor.userId,por:actor.email.toLowerCase()},c);
+    await audit("mail_queue_acceptance_recovered",null,{queueId:id,queueScope:mailQueueScope(),messageId:result.messageId,attemptId:result.attemptId,acceptedAt:result.acceptedAt,userId:actor.userId,por:actor.email.toLowerCase()},c);
     return{ok:true as const,existing:false,queueId:id};
   });
 }
@@ -57,7 +58,7 @@ export async function listMailRecovery(options:{before?:number;limit?:number}={}
   if(!Number.isInteger(limit)||limit<1||limit>20||options.before!==undefined&&!validId(options.before))return{ok:false as const,error:"parameters"};
   return tx(async c=>{
     await c.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY");await c.query("SET LOCAL statement_timeout='2000ms'");
-    const candidates=(await c.query<{id:number;kind:string;to_addr:string}>(`SELECT q.id,q.kind,q.to_addr FROM mail_outbox q JOIN mail_messages m ON m.id=q.message_id
+    const candidates=(await c.query<{id:number;kind:string;to_addr:string}>(`SELECT q.id,q.kind,q.to_addr FROM ${mailQueueTable()} q JOIN mail_messages m ON m.id=q.message_id
       WHERE q.status IN ('pending','failed') AND m.status='accepted' AND m.channel='transactional'
       AND m.kind=q.kind AND m.to_addr=lower(q.to_addr) AND ($1::int IS NULL OR q.id<$1)
       AND EXISTS(SELECT 1 FROM mail_message_attempts a WHERE a.message_id=m.id AND a.state='accepted' AND a.finished_at IS NOT NULL)

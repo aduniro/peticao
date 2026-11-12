@@ -4,6 +4,9 @@ admin.sancionaintegral.org {
     header X-Robots-Tag "noindex, nofollow"
     @root path /
     redir @root /admin 302
+    # Existing production timers keep using the original host/instance.
+    @cron path /api/cron /api/cron/*
+    respond @cron 404
     reverse_proxy 127.0.0.1:3001 {
         header_up Host admin.sancionaintegral.org
         header_up X-Forwarded-Host admin.sancionaintegral.org

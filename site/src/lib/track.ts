@@ -1,3 +1,4 @@
+import { mailQueueTable } from "./mail/queue-scope";
 import { query } from "./db";
 import { lookupIp } from "./geo";
 import { ipVersion, normalizeIp } from "./net";
@@ -34,6 +35,6 @@ export async function purgeOldEvents(days = Number(process.env.EVENT_RETENTION_D
   await query("DELETE FROM request_log WHERE ts < $1", [cutoff]);
   await query("DELETE FROM invalid_attempts WHERE ts < now() - interval '30 days'");
   await query("DELETE FROM ip_blacklist WHERE expires_at IS NOT NULL AND expires_at < now()");
-  await query("DELETE FROM mail_outbox WHERE status IN ('sent','failed') AND created_at < now() - interval '30 days'");
+  await query(`DELETE FROM ${mailQueueTable()} WHERE status IN ('sent','failed') AND created_at < now() - interval '30 days'`);
   return r.rowCount ?? 0;
 }

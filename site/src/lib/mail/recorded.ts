@@ -1,3 +1,4 @@
+import { mailQueueScope, queuedMessageKey } from "./queue-scope";
 import { prepareMessage,beginAttempt,finishAttempt,messageMetadata,linkOutbox } from "./archive";
 import { contentFingerprint } from "./archive-codec";
 import { frozenReplyTo,withReplyTo } from "./payload";
@@ -18,9 +19,12 @@ export async function prepareRecorded(mail:Mail,kind:string,channel:"transaction
   return prepareMessage(mail,kind,channel,{requestKey,archive:archivePolicy()});
 }
 export function journalFor(messageId:string,retryUncertain:boolean):DeliveryJournal {
+  // The isolated v2 runtime never treats a timeout/unknown outcome as permission
+  // to repeat transport. Proven rejections may still use the normal failover.
+  const permitUncertain = retryUncertain && mailQueueScope() === "legacy";
   return {
     async begin(provider,from){
-      const result=await beginAttempt(messageId,provider,from,{retryUncertain});
+      const result=await beginAttempt(messageId,provider,from,{retryUncertain:permitUncertain});
       if(result.ok)return {id:result.id};
       if(result.error==="already_accepted")return {alreadyAccepted:true};
       throw new MailJournalError("mail_record_"+result.error);
@@ -41,7 +45,7 @@ export async function recordedQueueMail(raw:Mail,kind:string,context:{id:number;
     if(contentFingerprint(mail)!==row.content_fingerprint)throw new MailJournalError("queue_conflict");
   }else{
     mail=withReplyTo(raw);
-    id=(await prepareRecorded(mail,kind,"transactional",`outbox:${context.id}`)).id;
+    id=(await prepareRecorded(mail,kind,"transactional",queuedMessageKey(context.id))).id;
     const linked=await linkOutbox(context.id,id,{frozenDefault:true});
     if(!linked.ok)throw new MailJournalError("queue_conflict");
   }

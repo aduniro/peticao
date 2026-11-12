@@ -1,3 +1,4 @@
+import { mailQueueTable } from "./queue-scope";
 import { query } from "../db";
 
 /** Consultas do painel de e-mails (somente leitura). */
@@ -53,7 +54,7 @@ export async function semEmailEntregue(limit = 500): Promise<SemEmail[]> {
       (SELECT e.type || ' (' || e.provider || '): ' || COALESCE(e.reason,'') FROM mail_events e WHERE lower(e.email)=lower(s.email) AND e.type IN ('hard_bounce','soft_bounce','blocked','complaint') ORDER BY e.ts DESC LIMIT 1) AS evento,
       (SELECT e.provider FROM mail_events e WHERE lower(e.email)=lower(s.email) AND e.type IN ('hard_bounce','soft_bounce','blocked','complaint') ORDER BY e.ts DESC LIMIT 1) AS provedor,
       (SELECT x.reason FROM email_suppressions x WHERE lower(x.email)=lower(s.email) LIMIT 1) AS supressao,
-      EXISTS(SELECT 1 FROM mail_outbox o WHERE lower(o.to_addr)=lower(s.email) AND o.status='pending') AS na_fila,
+      EXISTS(SELECT 1 FROM ${mailQueueTable()} o WHERE lower(o.to_addr)=lower(s.email) AND o.status='pending') AS na_fila,
       EXISTS(SELECT 1 FROM mail_log l WHERE lower(l.to_addr)=lower(s.email) AND l.status='sent' AND l.kind='confirmacao') AS enviado,
       s.created_at::timestamptz >= COALESCE((SELECT MIN(ts) FROM mail_log), now()) AS depois_do_registro
     FROM signatures s WHERE s.status='pending' ORDER BY s.created_at DESC`)).rows;

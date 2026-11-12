@@ -17,6 +17,8 @@ services:
     env_file: /etc/peticao-admin-v2/app.env
     environment:
       NODE_ENV: production
+      PETICAO_RUNTIME: admin-v2
+      MAIL_QUEUE_SCOPE: v2
       APP_URL: https://sancionaintegral.org
       ADMIN_URL: https://admin.sancionaintegral.org
       ALLOWED_HOSTS: admin.sancionaintegral.org

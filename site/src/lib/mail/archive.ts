@@ -1,3 +1,4 @@
+import { mailQueueScope, mailQueueTable } from "./queue-scope";
 import { randomUUID } from "node:crypto";
 import { audit, query, tx } from "../db";
 import { hmac } from "../security";
@@ -207,7 +208,7 @@ export async function linkOutbox(outboxId: number, messageId: string, options: {
   if (!Number.isSafeInteger(outboxId) || outboxId<1 || outboxId>2147483647 || !validMessageId(messageId)) throw new Error("archive_parameters");
   return tx(async c => {
     const message = (await c.query<{kind:string;to_addr:string;content_fingerprint:string;reply_to:string|null}>("SELECT kind,to_addr,content_fingerprint,reply_to FROM mail_messages WHERE id=$1 FOR UPDATE",[messageId])).rows[0];
-    const row = (await c.query<{kind:string;to_addr:string;message_id:string|null;payload:any}>("SELECT kind,to_addr,message_id,payload FROM mail_outbox WHERE id=$1 FOR UPDATE",[outboxId])).rows[0];
+    const row = (await c.query<{kind:string;to_addr:string;message_id:string|null;payload:any}>(`SELECT kind,to_addr,message_id,payload FROM ${mailQueueTable()} WHERE id=$1 FOR UPDATE`,[outboxId])).rows[0];
     if (!message || !row || message.kind!==row.kind || message.to_addr!==row.to_addr.toLowerCase() || row.message_id && row.message_id!==messageId) return {ok:false as const,error:"queue_conflict"};
     let matches = false;
     try {
@@ -217,8 +218,8 @@ export async function linkOutbox(outboxId: number, messageId: string, options: {
     } catch { /* A legacy/invalid payload cannot establish content identity. */ }
     if (!matches) return {ok:false as const,error:"queue_conflict"};
     if (row.message_id===messageId) return {ok:true as const,existing:true};
-    await c.query("UPDATE mail_outbox SET message_id=$2 WHERE id=$1",[outboxId,messageId]);
-    await audit("mail_message_queue_linked",null,{messageId,outboxId},c);
+    await c.query(`UPDATE ${mailQueueTable()} SET message_id=$2 WHERE id=$1`,[outboxId,messageId]);
+    await audit("mail_message_queue_linked",null,{messageId,outboxId,queueScope:mailQueueScope()},c);
     return {ok:true as const,existing:false};
   });
 }
@@ -259,11 +260,11 @@ export async function queueMessage(mail: Mail,kind: string,error: string,message
   return tx(async c=>{
     const message=(await c.query<{kind:string;channel:string;to_addr:string;status:State;content_fingerprint:string}>("SELECT kind,channel,to_addr,status,content_fingerprint FROM mail_messages WHERE id=$1 FOR UPDATE",[messageId])).rows[0];
     if (!message || message.kind!==kind || message.channel!=="transactional" || message.to_addr!==mail.to.toLowerCase() || message.content_fingerprint!==contentFingerprint(mail) || message.status==="accepted") throw new Error("queue_conflict");
-    const existing=(await c.query<{id:number}>("SELECT id FROM mail_outbox WHERE message_id=$1 AND status='pending' ORDER BY id LIMIT 1",[messageId])).rows[0];
+    const existing=(await c.query<{id:number}>(`SELECT id FROM ${mailQueueTable()} WHERE message_id=$1 AND status='pending' ORDER BY id LIMIT 1`,[messageId])).rows[0];
     if (existing) return existing.id;
-    const row=(await c.query<{id:number}>("INSERT INTO mail_outbox(kind,to_addr,payload,last_error,attempts,next_attempt_at,message_id) VALUES($1,$2,$3,$4,0,now()+interval '1 minute',$5) RETURNING id",[kind,mail.to,JSON.stringify(toStored(mail)),error.slice(0,300),messageId])).rows[0];
+    const row=(await c.query<{id:number}>(`INSERT INTO ${mailQueueTable()}(kind,to_addr,payload,last_error,attempts,next_attempt_at,message_id) VALUES($1,$2,$3,$4,0,now()+interval '1 minute',$5) RETURNING id`,[kind,mail.to,JSON.stringify(toStored(mail)),error.slice(0,300),messageId])).rows[0];
     if (["prepared","rejected"].includes(message.status)) await c.query("UPDATE mail_messages SET status='queued' WHERE id=$1",[messageId]);
-    await audit("mail_message_queued",null,{messageId,outboxId:row.id},c);
+    await audit("mail_message_queued",null,{messageId,outboxId:row.id,queueScope:mailQueueScope()},c);
     return row.id;
   });
 }

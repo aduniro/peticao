@@ -1,3 +1,4 @@
+import { mailQueueScope, mailQueueTable } from "./mail/queue-scope";
 import { audit, tx } from "./db";
 import { purgeArchivedContent } from "./mail/archive";
 import { ADMIN_CONTENT_RETENTION_DAYS } from "./admin-retention-policy";
@@ -10,9 +11,9 @@ export async function purgeAdminContent(limit = 100) {
     await purgeInboundContent(limit, c);
     const messages = await purgeArchivedContent(limit, c);
     const outbox = (await c.query<{ id: number }>(`WITH expired AS (
-      SELECT id FROM mail_outbox WHERE created_at<=clock_timestamp()-make_interval(days=>$2)
+      SELECT id FROM ${mailQueueTable()} WHERE created_at<=clock_timestamp()-make_interval(days=>$2)
         AND (payload<>'{}'::jsonb OR status='pending') ORDER BY created_at,id LIMIT $1 FOR UPDATE SKIP LOCKED
-    ) UPDATE mail_outbox o SET payload='{}'::jsonb,
+    ) UPDATE ${mailQueueTable()} o SET payload='{}'::jsonb,
       last_error=CASE WHEN o.status='pending' THEN 'content_expired' ELSE o.last_error END,
       status=CASE WHEN o.status='pending' THEN 'failed' ELSE o.status END
       FROM expired WHERE o.id=expired.id RETURNING o.id`, [limit, ADMIN_CONTENT_RETENTION_DAYS])).rows;
@@ -31,7 +32,7 @@ export async function purgeAdminContent(limit = 100) {
     ) UPDATE contact_drafts d SET content_cipher=NULL,state='expired',updated_at=clock_timestamp(),
       revision=CASE WHEN d.revision<2147483647 THEN d.revision+1 ELSE d.revision END
       FROM expired WHERE d.contact_id=expired.contact_id RETURNING d.contact_id,d.revision`, [limit])).rows;
-    if (outbox.length || replies.length || drafts.length) await audit("admin_content_expired", null, { outbox: outbox.map(r => r.id), replies: replies.map(r => r.id), drafts, days: ADMIN_CONTENT_RETENTION_DAYS }, c);
+    if (outbox.length || replies.length || drafts.length) await audit("admin_content_expired", null, { outbox: outbox.map(r => r.id), queueScope: mailQueueScope(), replies: replies.map(r => r.id), drafts, days: ADMIN_CONTENT_RETENTION_DAYS }, c);
     return { messages, outbox: outbox.length, replies: replies.length, drafts: drafts.length };
   });
 }

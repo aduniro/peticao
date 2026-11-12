@@ -1,3 +1,4 @@
+import { mailQueueTable } from "./mail/queue-scope";
 import type { PoolClient } from "pg";
 import { audit, tx } from "./db";
 import { brasilia } from "./time";
@@ -46,7 +47,7 @@ const READ_SQL = `WITH pending AS (
 ), provider_rows AS (
  SELECT address,provider FROM signals UNION SELECT lower(trim(l.to_addr)),l.provider FROM mail_log l JOIN addresses e ON e.address=lower(trim(l.to_addr)) WHERE l.kind='confirmacao'
 ), providers AS (SELECT address,array_agg(DISTINCT provider ORDER BY provider) providers FROM provider_rows GROUP BY address), queue_rows AS (
- SELECT lower(trim(q.to_addr)) address,'outbox' source FROM mail_outbox q JOIN addresses e ON e.address=lower(trim(q.to_addr)) WHERE q.kind='confirmacao' AND q.status='pending'
+ SELECT lower(trim(q.to_addr)) address,'outbox' source FROM ${mailQueueTable()} q JOIN addresses e ON e.address=lower(trim(q.to_addr)) WHERE q.kind='confirmacao' AND q.status='pending'
  UNION SELECT lower(trim(m.to_addr)),'journal' FROM mail_messages m JOIN addresses e ON e.address=lower(trim(m.to_addr)) WHERE m.kind='confirmacao' AND m.status='queued'
 ), queued AS (SELECT address,array_agg(DISTINCT source ORDER BY source) sources FROM queue_rows GROUP BY address), latest_message AS (
  SELECT DISTINCT ON(lower(trim(m.to_addr))) lower(trim(m.to_addr)) address,m.id::text,${iso("m.created_at")} created_at,m.status FROM mail_messages m JOIN addresses e ON e.address=lower(trim(m.to_addr)) WHERE m.kind='confirmacao' ORDER BY lower(trim(m.to_addr)),m.created_at DESC,m.id DESC

@@ -25,6 +25,14 @@ Não basta omitir um cron: os runtimes atuais drenam outbox oportunisticamente.
 Não ativar v2 contra o banco real antes de qualificar DDL/bootstrap, coexistência
 com o legado e propriedade das linhas da fila.
 
+O perfil `PETICAO_RUNTIME=admin-v2` exige `MAIL_QUEUE_SCOPE=v2`: retries ficam em
+`mail_outbox_v2`, com o mesmo journal durável e identidade de fila distinta.
+Consultas, recuperação e limpeza do v2 usam essa fila; não há cópia ou consumo
+automático da fila legada. Resultado de transporte desconhecido bloqueia replay
+automático no v2; rejeição comprovada ainda admite a política normal de failover.
+O proxy novo recusa `/api/cron` e seus descendentes. A propriedade dos lotes e
+o bootstrap de implantação continuam gates separados, não resolvidos pela fila.
+
 `ADMIN_IMAGE` deve identificar uma imagem local imutável por digest SHA256;
 `app.env` fica privado, no host, fora do repositório. Validar a configuração
 Compose e o fragmento Caddy antes de aplicá-los. Copiar o fragmento não autoriza
