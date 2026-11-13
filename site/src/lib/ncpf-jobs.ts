@@ -12,8 +12,8 @@ export async function seedConsolidation(limit = 25) {
   for (const r of rows) {
     const cpf=decryptCpfCache(r.payload,`ncpf-candidate:${r.signature_id}`);
     if(cpf){
-      // A previously validated signature may project its pinned content after
-      // the lookup TTL; this does not authorize a new identity validation.
+      // A confirmed identity may recover its latest observed TRT3 name after
+      // the lookup TTL, as consolidation does. This never validates a new signup.
       const cached=await findEvidence(cpf,undefined,undefined,!!r.name_evidence_id);
       if(cached){
         await consolidateEvidence(cached);

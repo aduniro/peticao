@@ -209,3 +209,22 @@ test('confirmed transaction remains successful when post-commit name reread fail
   assert.deepEqual(await confirmFull(token),{result:'ok'});
  }finally{pool.query=original;await db._closeDbForTests();rmSync(process.env.MAIL_OUTBOX_DIR!,{recursive:true,force:true});}
 });
+
+test('recovery projects latest historical TRT3 name while expired observations cannot validate a new signup',async()=>{
+ await db._openForTests('t_ncpf_latest_projection');
+ const previous=process.env.NCPF_QUERY_ENABLED;
+ try{
+  const first=await saveTrtEvidence(evidenceData({fetchedAt:new Date(Date.now()-29*86400000).toISOString()}));
+  const second=await saveTrtEvidence(evidenceData({name:'CLARA PEREIRA',pdf:Buffer.from('%PDF-1.7\nfictional-newer-document'),fetchedAt:new Date(Date.now()-28*86400000).toISOString()}));
+  const id=(await db.query("INSERT INTO signatures(name,email,email_hash,cpf_hash,category,text_version,consent_at,status,name_evidence_id) VALUES('Clara Silva','latest@example.invalid','latest',$1,'apoiador','fixture',now()::text,'confirmed',$2) RETURNING id",[hmac(cpf),first.id])).rows[0].id;
+  await db.query('INSERT INTO ncpf_candidates(signature_id,cpf_hash,payload) VALUES($1,$2,$3)',[id,hmac(cpf),encryptCpfCache(cpf,`ncpf-candidate:${id}`)]);
+  await db.query("UPDATE ncpf_evidence SET fetched_at=fetched_at-interval '10 days',last_verified_at=last_verified_at-interval '10 days',expires_at=expires_at-interval '10 days'");
+  process.env.NCPF_QUERY_ENABLED='0';await seedConsolidation();
+  const projected=(await db.query('SELECT name,name_evidence_id FROM signatures WHERE id=$1',[id])).rows[0];
+  assert.equal(projected.name,'CLARA PEREIRA');assert.equal(projected.name_evidence_id,second.id);
+  assert.equal(await findEvidence(cpf),null);
+  const input=validate(body());assert(input.ok);if(!input.ok)return;
+  const extra=extraValidator(provider,{input:input.value,securityPassed:()=>false});
+  await assert.rejects(()=>extra.provider.lookup(cpf));
+ }finally{process.env.NCPF_QUERY_ENABLED=previous;await db._closeDbForTests();}
+});
