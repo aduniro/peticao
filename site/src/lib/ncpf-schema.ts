@@ -4,14 +4,21 @@ ALTER TABLE signatures ADD COLUMN IF NOT EXISTS declared_name TEXT;
 ALTER TABLE signatures ADD COLUMN IF NOT EXISTS name_source TEXT;
 ALTER TABLE signatures ADD COLUMN IF NOT EXISTS name_evidence_id UUID;
 ALTER TABLE signatures ADD COLUMN IF NOT EXISTS api_name_snapshot TEXT;
+ALTER TABLE signatures ADD COLUMN IF NOT EXISTS name_projected_at TIMESTAMPTZ;
 CREATE TABLE IF NOT EXISTS ncpf_evidence (
   id UUID PRIMARY KEY, cpf_hash TEXT NOT NULL, payload TEXT NOT NULL,
   document_sha256 TEXT NOT NULL CHECK(document_sha256 ~ '^[a-f0-9]{64}$'),
   document_bytes BYTEA NOT NULL, fetched_at TIMESTAMPTZ NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at TIMESTAMPTZ NOT NULL, last_verified_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE(cpf_hash,document_sha256), CHECK(expires_at>fetched_at)
 );
 CREATE INDEX IF NOT EXISTS ncpf_evidence_lookup ON ncpf_evidence(cpf_hash,fetched_at DESC);
+CREATE TABLE IF NOT EXISTS ncpf_evidence_observations (
+  evidence_id UUID NOT NULL REFERENCES ncpf_evidence(id), verified_at TIMESTAMPTZ NOT NULL,
+  origin_digest TEXT NOT NULL, recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY(evidence_id,verified_at)
+);
 CREATE TABLE IF NOT EXISTS ncpf_jobs (
   id UUID PRIMARY KEY, cpf_hash TEXT NOT NULL, payload TEXT NOT NULL,
   purpose TEXT NOT NULL CHECK(purpose IN ('interactive','consolidation')),
@@ -42,7 +49,7 @@ CREATE TABLE IF NOT EXISTS signature_name_history (
   id BIGSERIAL PRIMARY KEY, signature_id INTEGER NOT NULL REFERENCES signatures(id),
   previous_name TEXT NOT NULL, selected_name TEXT NOT NULL,
   evidence_id UUID NOT NULL REFERENCES ncpf_evidence(id),
-  changed_at TIMESTAMPTZ NOT NULL DEFAULT now(), UNIQUE(signature_id,evidence_id)
+  changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE TABLE IF NOT EXISTS signup_receipts (
   request_hash TEXT PRIMARY KEY, binding_hash TEXT NOT NULL,

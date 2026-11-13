@@ -13,17 +13,24 @@ test('NCPF offline upgrade is additive/idempotent and runtime can use it without
  await db._openForTests(schema);
  let runtime:Pool|undefined;
  try{
-  await db.query('DROP TABLE confirmation_receipts,signup_receipts,signature_name_history,ncpf_candidates,ncpf_intents,ncpf_jobs,ncpf_evidence CASCADE');
-  await db.query('ALTER TABLE signatures DROP COLUMN declared_name,DROP COLUMN name_source,DROP COLUMN name_evidence_id,DROP COLUMN api_name_snapshot');
+  await db.query('DROP TABLE confirmation_receipts,signup_receipts,signature_name_history,ncpf_candidates,ncpf_intents,ncpf_jobs,ncpf_evidence_observations,ncpf_evidence CASCADE');
+  await db.query('ALTER TABLE signatures DROP COLUMN declared_name,DROP COLUMN name_source,DROP COLUMN name_evidence_id,DROP COLUMN api_name_snapshot,DROP COLUMN name_projected_at');
   await db.query(`CREATE ROLE ${role} LOGIN PASSWORD '${password}'`);
   await db.query(`CREATE TABLE application_runtime_roles(runtime_role text PRIMARY KEY,role_name text);INSERT INTO application_runtime_roles VALUES('v2','${role}'),('legacy','peticao'),('outbox','peticao')`);
   await db.query(`GRANT USAGE ON SCHEMA ${schema} TO ${role};GRANT SELECT ON ALL TABLES IN SCHEMA ${schema} TO ${role}`);
-  const execute=async()=>{
-   const r=await run(process.execPath,['node_modules/tsx/dist/cli.mjs','scripts/prepare-ncpf.ts','--apply'],{cwd:process.cwd(),env:{...process.env,DATABASE_SCHEMA:schema}});
-   return JSON.parse(r.stdout.trim()) as {schemaSha256:string;applied:boolean};
+  const execute=async(args:string[])=>{
+   const r=await run(process.execPath,['node_modules/tsx/dist/cli.mjs','scripts/prepare-ncpf.ts',...args],{cwd:process.cwd(),env:{...process.env,DATABASE_SCHEMA:schema}});
+   return JSON.parse(r.stdout.trim());
   };
-  const first=await execute();assert(first.applied);assert.match(first.schemaSha256,/^[a-f0-9]{64}$/);
-  const again=await execute();assert.equal(again.schemaSha256,first.schemaSha256);
+  const plan=await execute(['--plan']);assert.equal(plan.applied,false);
+  assert.equal((await db.query("SELECT to_regclass('ncpf_evidence') table_name")).rows[0].table_name,null);
+  const args=['--apply',`--expected-before=${plan.beforeSha256}`,`--expected-after=${plan.schemaSha256}`,`--expected-database=${plan.identity.database}`,`--expected-role=${plan.identity.role}`,`--expected-schema=${schema}`,'--fence=400','--manifest-sha256='+ 'a'.repeat(64)];
+  await assert.rejects(()=>execute(args.map(a=>a.startsWith('--expected-after=')?'--expected-after='+ '0'.repeat(64):a)),/schema_after_mismatch/);
+  assert.equal((await db.query("SELECT to_regclass('ncpf_evidence') table_name")).rows[0].table_name,null);
+  await assert.rejects(()=>execute(args.map(a=>a.startsWith('--expected-database=')?'--expected-database=wrong_database':a)),/database_identity_mismatch/);
+  const first=await execute(args);assert(first.applied);assert.match(first.schemaSha256,/^[a-f0-9]{64}$/);
+  const again=await execute(args);assert.equal(again.schemaSha256,first.schemaSha256);assert(again.alreadyApplied);
+  await assert.rejects(()=>execute(args.map(a=>a==='--fence=400'?'--fence=399':a)),/migration_replay_mismatch/);
   base.username=role;base.password=password;
   runtime=new Pool({connectionString:base.toString(),options:`-c search_path=${schema}`,max:1});
   await verifyRuntimeSchema(runtime,first.schemaSha256);

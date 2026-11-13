@@ -758,7 +758,9 @@ function init(): Promise<void> {
     }
     g.__ready = getPool()
       .query(SCHEMA_SQL)
-      .then(() => getPool().query(NCPF_SCHEMA_SQL))
+      .then(() => process.env.NODE_ENV === "production"
+        ? getPool().query("SELECT s.name_projected_at,e.last_verified_at FROM signatures s CROSS JOIN ncpf_evidence e LIMIT 0")
+        : getPool().query(NCPF_SCHEMA_SQL))
       .then(() => getPool().query(BATCH_A1_SCHEMA_SQL))
       .then(() => getPool().query(DOCUMENT_REFERENCE_SCHEMA_SQL))
       .then(() => getPool().query(PETITION_BASE_SCHEMA_SQL))

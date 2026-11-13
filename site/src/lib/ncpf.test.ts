@@ -13,7 +13,7 @@ import { extraValidator } from "./ncpf-validator";
 import { hmac } from "./security";
 import { encryptCpfCache } from "./cpf-cache-crypto";
 import { handleSign } from "./sign-flow";
-import { validate,confirmFull } from "./signatures";
+import { validate,confirmFull,submit } from "./signatures";
 import * as db from "./db";
 
 (process.env as Record<string,string>).NODE_ENV="test";
@@ -159,10 +159,53 @@ test('cache-only reconciliation recovers a committed confirmation whose post-com
  try{
   const id=(await db.query("INSERT INTO signatures(name,declared_name,email,email_hash,cpf_hash,category,text_version,consent_at,status) VALUES('Clara Silva','Clara Silva','recover@example.invalid','recover',$1,'apoiador','fixture',now()::text,'confirmed') RETURNING id",[hmac(cpf)])).rows[0].id;
   await db.query('INSERT INTO ncpf_candidates(signature_id,cpf_hash,payload) VALUES($1,$2,$3)',[id,hmac(cpf),encryptCpfCache(cpf,`ncpf-candidate:${id}`)]);
-  await enqueueCpf(cpf,'consolidation');await saveTrtEvidence(evidenceData());
+  await enqueueCpf(cpf,'consolidation');const proof=await saveTrtEvidence(evidenceData());
+  // Real submit pins the evidence before email confirmation; its projection may crash.
+  await db.query('UPDATE signatures SET name_evidence_id=$2 WHERE id=$1',[id,proof.id]);
+  await db.query("UPDATE ncpf_evidence SET fetched_at=now()-interval '31 days',last_verified_at=now()-interval '31 days',expires_at=now()-interval '1 day' WHERE id=$1",[proof.id]);
+  assert.equal(await findEvidence(cpf),null);
   process.env.NCPF_QUERY_ENABLED='0';await seedConsolidation();
   assert.equal((await db.query('SELECT name,name_source FROM signatures WHERE id=$1',[id])).rows[0].name,'CLARA SILVA');
   assert.equal((await db.query('SELECT state FROM ncpf_jobs')).rows[0].state,'done');
   assert.equal(await count('signature_name_history'),1);
  }finally{process.env.NCPF_QUERY_ENABLED=previous;await db._closeDbForTests();}
+});
+
+test('same PDF fresh observation renews reuse TTL without replacing immutable document or losing transitions',async()=>{
+ await db._openForTests('t_ncpf_refresh');
+ try{
+  const first=await saveTrtEvidence(evidenceData({fetchedAt:new Date(Date.now()-29*86400000).toISOString()}));
+  await db.query("UPDATE ncpf_evidence SET fetched_at=now()-interval '31 days',expires_at=now()-interval '1 day' WHERE id=$1",[first.id]);
+  assert.equal(await findEvidence(cpf),null);
+  const second=await saveTrtEvidence(evidenceData());assert.equal(second.id,first.id);
+  assert((await findEvidence(cpf))!.expiresAt>new Date().toISOString());
+  assert.equal(await count('ncpf_evidence'),1);assert.equal(await count('ncpf_evidence_observations'),2);
+  const id=(await db.query("INSERT INTO signatures(name,email,email_hash,cpf_hash,category,text_version,consent_at,status) VALUES('Clara Souza','history@example.invalid','history',$1,'apoiador','fixture',now()::text,'confirmed') RETURNING id",[hmac(cpf)])).rows[0].id;
+  await consolidateEvidence(second);await consolidateEvidence(second);assert.equal(await count('signature_name_history'),1);
+  await db.query("UPDATE signatures SET name='Clara Another' WHERE id=$1",[id]);
+  await consolidateEvidence(second);assert.equal(await count('signature_name_history'),2);
+  assert.equal((await db.query('SELECT previous_name FROM signature_name_history ORDER BY id DESC LIMIT 1')).rows[0].previous_name,'Clara Another');
+ }finally{await db._closeDbForTests();}
+});
+
+test('confirmed transaction remains successful when post-commit name reread fails, replay exposes no privileges',async()=>{
+ await db._openForTests('t_ncpf_postcommit');
+ const pool=db.getPool(),original=pool.query;
+ try{
+  rmSync(process.env.MAIL_OUTBOX_DIR!,{recursive:true,force:true});
+  const input=validate(body());assert(input.ok);if(!input.ok)return;
+  await submit(input.value,{});
+  const file=readdirSync(process.env.MAIL_OUTBOX_DIR!)[0];
+  const mail=JSON.parse(readFileSync(join(process.env.MAIL_OUTBOX_DIR!,file),'utf8'));
+  const token=new URL(/https?:\/\/\S+/.exec(mail.text)![0]).searchParams.get('token')!;
+  let faulted=false;
+  pool.query=function(text:any,...args:any[]){
+   if(text==='SELECT name FROM signatures WHERE id=$1'){faulted=true;return Promise.reject(new Error('fixture_postcommit_read_failure'));}
+   return (original as any).call(pool,text,...args);
+  } as typeof pool.query;
+  const confirmed=await confirmFull(token);assert.equal(confirmed.result,'ok');assert(confirmed.signatureId);assert(faulted);
+  pool.query=original;
+  assert.equal((await db.query('SELECT status FROM signatures')).rows[0].status,'confirmed');
+  assert.deepEqual(await confirmFull(token),{result:'ok'});
+ }finally{pool.query=original;await db._closeDbForTests();rmSync(process.env.MAIL_OUTBOX_DIR!,{recursive:true,force:true});}
 });

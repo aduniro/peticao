@@ -5,14 +5,16 @@ import { consolidateEvidence, enqueueCpf, findEvidence, ncpfEnabled, ncpfQueries
 
 export async function seedConsolidation(limit = 25) {
   if (!ncpfEnabled()) return;
-  const rows = (await query<{signature_id:number;payload:string}>(`SELECT c.signature_id,c.payload FROM ncpf_candidates c JOIN signatures s ON s.id=c.signature_id
-    WHERE s.status='confirmed' AND s.name_evidence_id IS NULL
-    AND (EXISTS(SELECT 1 FROM ncpf_evidence e WHERE e.cpf_hash=c.cpf_hash AND e.expires_at>now()) OR
+  const rows = (await query<{signature_id:number;payload:string;name_evidence_id:string|null}>(`SELECT c.signature_id,c.payload,s.name_evidence_id FROM ncpf_candidates c JOIN signatures s ON s.id=c.signature_id
+    WHERE s.status='confirmed' AND s.name_projected_at IS NULL
+    AND (s.name_evidence_id IS NOT NULL OR EXISTS(SELECT 1 FROM ncpf_evidence e WHERE e.cpf_hash=c.cpf_hash AND e.expires_at>now()) OR
       NOT EXISTS(SELECT 1 FROM ncpf_jobs j WHERE j.cpf_hash=c.cpf_hash AND (j.state IN ('queued','running','retry') OR (j.state='not_found' AND j.next_run_at>now())))) LIMIT $1`,[limit])).rows;
   for (const r of rows) {
     const cpf=decryptCpfCache(r.payload,`ncpf-candidate:${r.signature_id}`);
     if(cpf){
-      const cached=await findEvidence(cpf);
+      // A previously validated signature may project its pinned content after
+      // the lookup TTL; this does not authorize a new identity validation.
+      const cached=await findEvidence(cpf,undefined,undefined,!!r.name_evidence_id);
       if(cached){
         await consolidateEvidence(cached);
         const {hmac}=await import('./security');
@@ -24,10 +26,10 @@ export async function seedConsolidation(limit = 25) {
 }
 export async function afterSignatureConfirmed(id:number) {
   if (!ncpfEnabled()) return;
-  const r=(await query<{payload:string}>("SELECT payload FROM ncpf_candidates WHERE signature_id=$1",[id])).rows[0];
+  const r=(await query<{payload:string;name_evidence_id:string|null}>("SELECT c.payload,s.name_evidence_id FROM ncpf_candidates c JOIN signatures s ON s.id=c.signature_id WHERE c.signature_id=$1",[id])).rows[0];
   if (!r) return;
   const cpf=decryptCpfCache(r.payload,`ncpf-candidate:${id}`); if (!cpf) return;
-  const evidence=await findEvidence(cpf);
+  const evidence=await findEvidence(cpf,undefined,undefined,!!r.name_evidence_id);
   if (evidence) await consolidateEvidence(evidence);
   else if (ncpfQueriesEnabled()) await enqueueCpf(cpf,"consolidation");
 }

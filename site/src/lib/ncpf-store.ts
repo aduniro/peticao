@@ -14,15 +14,15 @@ export const ncpfEnabled = () => process.env.NCPF_ENABLED === "1";
 export const ncpfQueriesEnabled = () => ncpfEnabled() && process.env.NCPF_QUERY_ENABLED === "1";
 const context = (hash: string, id: string) => `ncpf:v1:${hash}:${id}`;
 export type Evidence = { id: string; name: string; cpf: string; fetchedAt: string; expiresAt: string };
-type EvidenceRow = { id: string; cpf_hash: string; payload: string; fetched_at: Date; expires_at: Date };
+type EvidenceRow = { id: string; cpf_hash: string; payload: string; fetched_at: Date; last_verified_at: Date; expires_at: Date };
 function decoded(row: EvidenceRow): Evidence | null {
   const plain = decryptCpfCache(row.payload, context(row.cpf_hash, row.id));
   if (!plain) return null;
-  try { const r = JSON.parse(plain); if(typeof r.name!=="string" || !r.name.trim() || typeof r.cpf!=="string" || !isValidCpf(r.cpf))return null;return { id: row.id, name: r.name, cpf: r.cpf, fetchedAt: new Date(row.fetched_at).toISOString(), expiresAt: new Date(row.expires_at).toISOString() }; } catch { return null; }
+  try { const r = JSON.parse(plain); if(typeof r.name!=="string" || !r.name.trim() || typeof r.cpf!=="string" || !isValidCpf(r.cpf))return null;return { id: row.id, name: r.name, cpf: r.cpf, fetchedAt: new Date(row.last_verified_at).toISOString(), expiresAt: new Date(row.expires_at).toISOString() }; } catch { return null; }
 }
-export async function findEvidence(cpf: string, id?: string, client?:PoolClient): Promise<Evidence | null> {
-  const row = (await query<EvidenceRow>(`SELECT id,cpf_hash,payload,fetched_at,expires_at FROM ncpf_evidence
-    WHERE cpf_hash=$1 AND ${id ? "id=$2" : "expires_at>now()"} ORDER BY fetched_at DESC,created_at DESC LIMIT 1`, id ? [hmac(cpf), id] : [hmac(cpf)],client)).rows[0];
+export async function findEvidence(cpf: string, id?: string, client?:PoolClient, allowExpiredProjection=false): Promise<Evidence | null> {
+  const row = (await query<EvidenceRow>(`SELECT id,cpf_hash,payload,fetched_at,last_verified_at,expires_at FROM ncpf_evidence
+    WHERE cpf_hash=$1 AND ${id ? "id=$2" : allowExpiredProjection ? "true" : "expires_at>now()"} ORDER BY last_verified_at DESC,created_at DESC LIMIT 1`, id ? [hmac(cpf), id] : [hmac(cpf)],client)).rows[0];
   const value = row && decoded(row);
   return value && value.cpf === cpf ? value : null;
 }
@@ -36,11 +36,15 @@ export async function saveTrtEvidence(a: { cpf: string; documentCpf: string; nam
   if (url.protocol !== "https:" || url.username || url.password || !(url.hostname === "trt3.jus.br" || url.hostname.endsWith(".trt3.jus.br"))) throw new Error("invalid_trt_origin");
   const id = randomUUID(), hash = hmac(cpf), digest = createHash("sha256").update(a.pdf).digest("hex"), expires = new Date(fetched.getTime() + NCPF_DAYS * 86400_000);
   const payload = encryptCpfCache(JSON.stringify({ cpf, name: a.name.trim(), origin: a.origin }), context(hash, id));
-  const r = (await query<EvidenceRow>(`INSERT INTO ncpf_evidence(id,cpf_hash,payload,document_sha256,document_bytes,fetched_at,expires_at)
-    VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(cpf_hash,document_sha256) DO UPDATE SET document_sha256=EXCLUDED.document_sha256
-    RETURNING id,cpf_hash,payload,fetched_at,expires_at`, [id,hash,payload,digest,a.pdf,fetched,expires],client)).rows[0];
-  const value = decoded(r); if (!value) throw new Error("evidence_decryption_failed");
-  return value;
+  const save=async(c:PoolClient)=>{
+    const r = (await query<EvidenceRow>(`INSERT INTO ncpf_evidence(id,cpf_hash,payload,document_sha256,document_bytes,fetched_at,expires_at,last_verified_at)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$6) ON CONFLICT(cpf_hash,document_sha256) DO UPDATE
+      SET last_verified_at=greatest(ncpf_evidence.last_verified_at,EXCLUDED.last_verified_at),expires_at=greatest(ncpf_evidence.expires_at,EXCLUDED.expires_at)
+      RETURNING id,cpf_hash,payload,fetched_at,last_verified_at,expires_at`, [id,hash,payload,digest,a.pdf,fetched,expires],c)).rows[0];
+    await c.query('INSERT INTO ncpf_evidence_observations(evidence_id,verified_at,origin_digest) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',[r.id,fetched,hmac(a.origin)]);
+    const value = decoded(r); if (!value) throw new Error("evidence_decryption_failed");return value;
+  };
+  return client?save(client):tx(save);
 }
 
 export function inputBinding(input: SignInput, whatsapp: string | null = null): string {
@@ -89,7 +93,7 @@ export async function intentStatus(token: string, visitor = "") {
   const r = (await query<Intent>(`SELECT id,cpf_hash,binding_hash,security_passed,evidence_id,declared_name,job_id FROM ncpf_intents
     WHERE token_hash=$1 AND visitor_hash=$2 AND expires_at>now()`,[sha256(token),hmac(`visitor:${visitor}`)])).rows[0];
   if (!r) return { state: "expired" } as const;
-  const row = (await query<EvidenceRow>(`SELECT id,cpf_hash,payload,fetched_at,expires_at FROM ncpf_evidence WHERE cpf_hash=$1 AND ${r.evidence_id?'id=$2':'expires_at>now()'} ORDER BY fetched_at DESC LIMIT 1`,r.evidence_id?[r.cpf_hash,r.evidence_id]:[r.cpf_hash])).rows[0];
+  const row = (await query<EvidenceRow>(`SELECT id,cpf_hash,payload,fetched_at,last_verified_at,expires_at FROM ncpf_evidence WHERE cpf_hash=$1 AND ${r.evidence_id?'id=$2':'expires_at>now()'} ORDER BY last_verified_at DESC LIMIT 1`,r.evidence_id?[r.cpf_hash,r.evidence_id]:[r.cpf_hash])).rows[0];
   const evidence = row && decoded(row);
   if (evidence) {
     const match = classifyCpfName(evidence.name,r.declared_name);
@@ -110,14 +114,14 @@ export async function intentStatus(token: string, visitor = "") {
 export async function consolidateEvidence(evidence: Evidence, client?:PoolClient): Promise<number> {
   const apply=async (c:PoolClient) => {
     await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))",[`ncpf-projection:${hmac(evidence.cpf)}`]);
-    const latest=(await c.query<{id:string}>("SELECT id FROM ncpf_evidence WHERE cpf_hash=$1 ORDER BY fetched_at DESC,created_at DESC LIMIT 1",[hmac(evidence.cpf)])).rows[0];
+    const latest=(await c.query<{id:string}>("SELECT id FROM ncpf_evidence WHERE cpf_hash=$1 ORDER BY last_verified_at DESC,created_at DESC LIMIT 1",[hmac(evidence.cpf)])).rows[0];
     if(latest?.id!==evidence.id)return 0;
     const rows = (await c.query<{id:number;name:string}>("SELECT id,name FROM signatures WHERE cpf_hash=$1 AND status='confirmed' AND name<>$2 FOR UPDATE",[hmac(evidence.cpf),evidence.name])).rows;
     for (const r of rows) {
-      await c.query("INSERT INTO signature_name_history(signature_id,previous_name,selected_name,evidence_id) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING",[r.id,r.name,evidence.name,evidence.id]);
+      await c.query("INSERT INTO signature_name_history(signature_id,previous_name,selected_name,evidence_id) VALUES($1,$2,$3,$4)",[r.id,r.name,evidence.name,evidence.id]);
       await c.query("UPDATE signatures SET name=$2,name_source='trt3',name_evidence_id=$3 WHERE id=$1",[r.id,evidence.name,evidence.id]);
     }
-    await c.query("UPDATE signatures SET name_source='trt3',name_evidence_id=$2 WHERE cpf_hash=$1 AND status='confirmed'",[hmac(evidence.cpf),evidence.id]);
+    await c.query("UPDATE signatures SET name_source='trt3',name_evidence_id=$2,name_projected_at=now() WHERE cpf_hash=$1 AND status='confirmed'",[hmac(evidence.cpf),evidence.id]);
     return rows.length;
   };
   return client?apply(client):tx(apply);

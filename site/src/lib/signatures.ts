@@ -356,9 +356,11 @@ export async function confirmFull(token: string, ctx: { visitorId?: string; ip?:
     return { result: "ok" as const, manageToken: ref?.manageToken, code: ref?.code, email: row.email, name: row.name, visitorId: row.visitor_id, signatureId: row.id };
   });
   if (result.signatureId && ncpfEnabled()) {
-    await afterSignatureConfirmed(result.signatureId).catch(()=>console.error('[ncpf] consolidation_pending'));
-    const current=(await query<{name:string}>("SELECT name FROM signatures WHERE id=$1",[result.signatureId])).rows[0];
-    if (current) result.name=current.name;
+    try {
+      await afterSignatureConfirmed(result.signatureId);
+      const current=(await query<{name:string}>("SELECT name FROM signatures WHERE id=$1",[result.signatureId])).rows[0];
+      if (current) result.name=current.name;
+    } catch { console.error('[ncpf] projection_recovery_pending'); }
   }
   return result;
 }

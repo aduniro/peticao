@@ -8,7 +8,7 @@ test('housekeeping removes only old expired intentions/receipts and preserves ev
  try{
   const id=randomUUID();
   const sig=(await db.query("INSERT INTO signatures(name,email,email_hash,category,text_version,consent_at) VALUES('Fixture Person','fixture@example.invalid','fixture','apoiador','fixture',now()::text) RETURNING id")).rows[0].id;
-  await db.query("INSERT INTO ncpf_evidence(id,cpf_hash,payload,document_sha256,document_bytes,fetched_at,expires_at) VALUES($1,'fixture','encrypted-fixture',$2,$3,now()-interval '60 days',now()-interval '30 days')",[id,'a'.repeat(64),Buffer.from('%PDF-fixture')]);
+  await db.query("INSERT INTO ncpf_evidence(id,cpf_hash,payload,document_sha256,document_bytes,fetched_at,expires_at,last_verified_at) VALUES($1,'fixture','encrypted-fixture',$2,$3,now()-interval '60 days',now()-interval '30 days',now()-interval '60 days')",[id,'a'.repeat(64),Buffer.from('%PDF-fixture')]);
   await db.query("INSERT INTO signature_name_history(signature_id,previous_name,selected_name,evidence_id) VALUES($1,'Fixture Old','Fixture Person',$2)",[sig,id]);
   await db.query("INSERT INTO ncpf_candidates(signature_id,cpf_hash,payload) VALUES($1,'fixture','encrypted-fixture')",[sig]);
   for(const [label,age]of [['old',"now()-interval '3 days'"],['recent',"now()-interval '1 minute'"],['live',"now()+interval '1 hour'"]]){

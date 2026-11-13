@@ -12,6 +12,6 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const r = await confirmFull(typeof body?.token === "string" ? body.token : "", { visitorId: req.cookies.get("vid")?.value, ip });
   if (r.result !== "ok") return NextResponse.json({ result: r.result });
-  if (r.signatureId) await posConfirmacao(r, { ip, headers: req.headers, canal: "email" });
+  if (r.signatureId) await posConfirmacao(r, { ip, headers: req.headers, canal: "email" }).catch(()=>console.error('[confirmation] post_actions_pending'));
   return NextResponse.json({ result: "ok", panel: r.manageToken ? `/meu/${r.manageToken}` : null });
 }
