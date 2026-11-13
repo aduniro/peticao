@@ -58,6 +58,48 @@ const copy: Record<Locale,Record<Status,string>> = {
   }
 };
 export function signupStatusCopy(lang:string,key:Status):string { return (copy[lang as Locale]??copy.en)[key]; }
-export function signupOutcomeCopy(lang:string,data:{submission?:unknown;mail?:unknown}):string {
-  return signupStatusCopy(lang,data.submission==="already_received"?"duplicate":data.mail==="queued"?"queued":data.mail==="sent"?"accepted":"received");
+export type SignupOutcome = { submission?: unknown; mail?: unknown };
+type OutcomeStatus = "duplicate" | "queued" | "accepted" | "received";
+export function signupOutcomeStatus(data: SignupOutcome): OutcomeStatus {
+  return data.submission === "already_received" ? "duplicate" : data.mail === "queued" ? "queued" : data.mail === "sent" ? "accepted" : "received";
+}
+// MUDAR AQUI: título e corpo são derivados do mesmo resultado real do backend.
+const outcomeTitles: Record<Locale, Record<OutcomeStatus, string>> = {
+  "pt": {
+    "queued": "Confirmação na fila de envio",
+    "accepted": "Mensagem aceita pelo serviço de e-mail",
+    "duplicate": "Solicitação já recebida",
+    "received": "Solicitação recebida"
+  },
+  "en": {
+    "queued": "Confirmation email queued",
+    "accepted": "Message accepted by the email service",
+    "duplicate": "Request already received",
+    "received": "Request received"
+  },
+  "es": {
+    "queued": "Confirmación en la cola de envío",
+    "accepted": "Mensaje aceptado por el servicio de correo",
+    "duplicate": "Solicitud ya recibida",
+    "received": "Solicitud recibida"
+  },
+  "fr": {
+    "queued": "Confirmation en attente d’envoi",
+    "accepted": "Message accepté par le service de messagerie",
+    "duplicate": "Demande déjà reçue",
+    "received": "Demande reçue"
+  },
+  "de": {
+    "queued": "Bestätigung wartet auf Versand",
+    "accepted": "Nachricht vom E-Mail-Dienst angenommen",
+    "duplicate": "Anfrage bereits erhalten",
+    "received": "Anfrage erhalten"
+  }
+};
+export function signupOutcomePresentation(lang: string, data: SignupOutcome): { title: string; text: string } {
+  const status = signupOutcomeStatus(data);
+  return { title: (outcomeTitles[lang as Locale] ?? outcomeTitles.en)[status], text: signupStatusCopy(lang, status) };
+}
+export function signupOutcomeCopy(lang: string, data: SignupOutcome): string {
+  return signupOutcomePresentation(lang, data).text;
 }

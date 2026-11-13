@@ -20,7 +20,8 @@ import { supporterEmailSuggestion } from "@/lib/supporter-email-suggestion";
 import { isKnownSupporterEmail } from "@/lib/supporter-known-domains";
 import { formValidationNotice } from "@/lib/form-validation-notice";
 import { signRequest } from "@/lib/sign-request";
-import { signupStatusCopy,signupOutcomeCopy } from "@/lib/signup-status-copy";
+import { signupStatusCopy, signupOutcomePresentation, type SignupOutcome } from "@/lib/signup-status-copy";
+import { preservesCommonSignupFields } from "@/lib/signup-ui-state";
 import { matchesInstitutionSelection } from "@/lib/datasets-client";
 import { resolveServerInstitutionForEmail as resolveInstitutionForEmail } from "@/lib/institution-domain-policy";
 import { institutionMatchesDomain, type InstitutionDomainMatch } from "@/lib/institution-form-state";
@@ -46,6 +47,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [msg, setMsg] = useState("");
+  const [progress, setProgress] = useState<"processing" | "checking" | null>(null);
   const [cpf, setCpf] = useState("");
   const [cpfTouched, setCpfTouched] = useState(false);
   const [nameV, setNameV] = useState("");
@@ -54,9 +56,9 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   const generation = useRef(0);
   const formRef = useRef<HTMLFormElement>(null);
   const [notice, setNotice] = useState<null | "sent" | "bad" | "inst" | "field">(null);
-  const [fieldNotice, setFieldNotice] = useState<{ title: string; text: string; buttonKey: string } | null>(null);
-  const [sentTo, setSentTo] = useState("");
-  const [submissionMessage,setSubmissionMessage]=useState("");
+  const [fieldNotice, setFieldNotice] = useState<{ title: string; text: string; buttonKey: string; tone?: "info" | "error" } | null>(null);
+  const [submissionOutcome, setSubmissionOutcome] = useState<SignupOutcome>({});
+  const submissionCopy = signupOutcomePresentation(lang, submissionOutcome);
   useEffect(()=>()=>{generation.current+=1;},[]);
   const [sugg, setSugg] = useState(""); // "Você quis dizer …?" (do navegador ao sair do campo, ou do servidor)
   const [fix, setFix] = useState<Diagnostico | null>(null); // O QUE está errado no e-mail e como digitar (política central: lib/email-diagnostico.ts)
@@ -175,23 +177,53 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
 
   function closeFieldNotice() {
     setNotice(null);
-    setTimeout(focusFirstInvalidField, 80);
+    if (fieldNotice?.tone !== "info") setTimeout(focusFirstInvalidField, 80);
   }
 
   async function post(body: Body) {
     const current=generation.current;
-    return signRequest(body,fetch,{onPending:()=>setMsg(signupStatusCopy(lang,'pending')),isCurrent:()=>generation.current===current});
+    return signRequest(body, fetch, {
+      onPending: () => {
+        if (generation.current !== current) return;
+        setProgress("checking"); setMsg(signupStatusCopy(lang, "pending"));
+      },
+      isCurrent: () => generation.current === current,
+    });
+  }
+
+  function statusNotice(kind: "pending" | "unavailable" | "unknown") {
+    setState("idle"); setProgress(null); setMsg(""); setIdOpen(false); pending.current = null; resetTs();
+    const key = kind === "pending" ? "ui.pendingTitle" : kind === "unavailable" ? "ui.unavailableTitle" : "ui.unknownTitle";
+    setFieldNotice({ title: t(key), text: signupStatusCopy(lang, kind), buttonKey: "ui.understood", tone: "info" });
+    setNotice("field");
+  }
+
+  function acceptOutcome(data: SignupOutcome) {
+    setSubmissionOutcome({ submission: data.submission, mail: data.mail });
+    setMsg(""); setProgress(null); setIdOpen(false); pending.current = null; resetTs();
+    setNotice("sent"); setState("sent");
+  }
+
+  function closeIdentity() {
+    setIdOpen(false);
+    if (idBusy) {
+      // MUDAR AQUI: fechar a janela não cancela um POST já recebido pelo servidor.
+      setMsg(t("ui.continues")); setProgress("checking");
+      return;
+    }
+    pending.current = null; setIdError(""); resetTs();
   }
 
   function securityRetryNotice() {
     pending.current = null;
-    setIdOpen(false); setState("idle"); resetTs();
-    setFieldNotice({ title: t("field.validationTitle"), text: t("err.security_retry"), buttonKey: "field.correct" });
+    setIdOpen(false); setState("idle"); setProgress(null); setMsg(""); resetTs();
+    setFieldNotice({ title: t("ui.unavailableTitle"), text: t("err.security_retry"), buttonKey: "ui.understood", tone: "info" });
     setNotice("field");
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (state === "sending" || idBusy) return;
     const f = new FormData(e.currentTarget);
     const eb = emailBad(emailV);
     if (eb || !emailV.trim()) { const error = eb || t("f.emailInvalid"); setErrors({ email: error }); showFieldNotice({ email: error }); setMsg(""); return; }
@@ -200,7 +232,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     if (category === "servidor" && !matchesInstitutionSelection(srv.institution, srv.ifes)) { const error = t("err.ifes_required"); setErrors({ institution: error }); showFieldNotice({ institution: error }); setMsg(""); return; }
     if (category === "servidor" && srv.ifes?.id === "org:ebserh" && !findEbserhUnit(srv.ebserhUnitId ?? "")) { const error = t("err.campus_required"); setErrors({ ebserhUnitId: error }); showFieldNotice({ ebserhUnitId: "campus_required" }); setMsg(""); return; }
     if (category === "servidor" && srv.region && !srv.campus.trim() && !srv.campusIbge) { const error = t("err.campus_required"); setErrors({ campus: error }); showFieldNotice({ campus: "campus_required" }); setMsg(""); return; }
-    setState("sending"); setErrors({}); setMsg("");
+    setState("sending"); setProgress("processing"); setErrors({}); setMsg("");
     if (category === "servidor") {
       const requestGeneration = generation.current, submittedEmail = emailMask(emailV, true);
       const cached = emailVerdict.current;
@@ -229,14 +261,10 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
     const { status, data } = await post(body);
     if (requestGeneration !== generation.current) return;
     if (data.securityRetry) { securityRetryNotice(); return; }
-    if (data.validationPending) {setState('idle');resetTs();setFieldNotice({title:t('field.validationTitle'),text:signupStatusCopy(lang,'pending'),buttonKey:'field.correct'});setNotice('field');setMsg('');return;}
-    if (data.verificationUnavailable) {setState('idle');resetTs();setFieldNotice({title:t('field.validationTitle'),text:signupStatusCopy(lang,'unavailable'),buttonKey:'field.correct'});setNotice('field');setMsg('');return;}
-    if (data.transportError || data.resultUnknown) {
-      setState("idle"); resetTs();
-      setFieldNotice({ title: t("field.validationTitle"), text: signupStatusCopy(lang,'unknown'), buttonKey: "field.correct" });
-      setNotice("field");
-      return;
-    }
+    setProgress(null); setMsg("");
+    if (data.validationPending) { statusNotice("pending"); return; }
+    if (data.verificationUnavailable) { statusNotice("unavailable"); return; }
+    if (data.transportError || data.resultUnknown) { statusNotice("unknown"); return; }
     if (data.identityRequired) {
       pending.current = { body: { ...body, ...(typeof data.ncpfToken==='string'?{ncpfToken:data.ncpfToken}:{}), ...(typeof data.securityProof === "string" ? { securityProof: data.securityProof } : {}) }, ticket: data.ticket };
       setIdError(""); setIdLeft(null); setIdLocked(false); setState("idle"); setIdOpen(true);
@@ -244,7 +272,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       return;
     }
     resetTs();
-    if (data.ok) { setSubmissionMessage(signupOutcomeCopy(lang,data));setMsg('');setSentTo(emailMask(emailV, true)); setNotice("sent"); return setState("sent"); }
+    if (data.ok) { acceptOutcome(data); return; }
     setState("idle");
     if (data.ncpfRejected) {setErrors(trAll(data.errors));setFieldNotice({title:t('field.validationTitle'),text:signupStatusCopy(lang,'rejected'),buttonKey:'field.correct'});setNotice('field');setMsg('');return;}
     setSugg(typeof data.suggest === "string" && !ISSUE.has(data.errors?.email) ? data.suggest : "");
@@ -258,24 +286,24 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       else if (singleField && data.errors.email === "apoiador_institutional_email") setNotice("inst");
       else showFieldNotice(data.errors);
     }
-    setMsg(data.errors ? "" : tr(data.errorCode, status === 429 ? t("err.rate_limited") : data.error ?? t("err.generic")));
+    setMsg(data.errors ? "" : tr(data.errorCode, status === 429 ? t("err.rate_limited") : data.error ?? t("ui.requestError")));
     if (data.errors?.email === "university_country_mismatch") setErrors((x) => ({ ...x, email: t("err.university_country_mismatch", { c: String(data.detail ?? "").split(",").filter(Boolean).map((c: string) => countryName(c, lang)).join(", ") }) }));
   }
 
   async function onIdentity(method: IdentityMethod, value: string) {
-    if (!pending.current) return;
-    setIdBusy(true); setIdError("");
+    if (!pending.current || idBusy) return;
+    setIdBusy(true); setState("sending"); setProgress("checking"); setMsg(""); setIdError("");
     const requestGeneration = generation.current;
     const { status, data } = await post({ ...pending.current.body, ticket: pending.current.ticket, identity: { method, value } });
     if (requestGeneration !== generation.current) return;
-    setIdBusy(false);
+    setIdBusy(false); setState("idle"); setProgress(null); setMsg("");
     if (data.securityRetry) { securityRetryNotice(); return; }
-    if (data.validationPending) {setIdError(signupStatusCopy(lang,'pending'));return;}
-    if (data.verificationUnavailable) {setIdError(signupStatusCopy(lang,'unavailable'));return;}
-    if (data.transportError || data.resultUnknown) { setIdError(signupStatusCopy(lang,'unknown')); return; }
-    if (data.ok) {setSubmissionMessage(signupOutcomeCopy(lang,data));setMsg(''); setIdOpen(false); resetTs(); setSentTo(emailMask(emailV, true)); setNotice("sent"); return setState("sent"); }
-    if (data.restart) { setIdOpen(false); setMsg(tr(data.errorCode, data.error)); return; }
-    if (status === 503 || data.error) { setIdError(tr(data.errorCode, data.error ?? t("err.identity_unavailable"))); return; }
+    if (data.validationPending) { statusNotice("pending"); return; }
+    if (data.verificationUnavailable) { statusNotice("unavailable"); return; }
+    if (data.transportError || data.resultUnknown) { statusNotice("unknown"); return; }
+    if (data.ok) { acceptOutcome(data); return; }
+    if (data.restart) { pending.current = null; setIdOpen(false); setMsg(tr(data.errorCode, data.error)); return; }
+    if (status === 503 || data.error) { setIdOpen(true); setIdError(tr(data.errorCode, data.error ?? t("err.identity_unavailable"))); return; }
     if (data.errors) {
       setIdOpen(false); setErrors(trAll(data.errors)); setSugg(typeof data.suggest === "string" ? data.suggest : ""); setFix(data.fix ?? null);
       const singleField = Object.keys(data.errors).length === 1;
@@ -284,42 +312,45 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
       else showFieldNotice(data.errors);
       return;
     }
+    setIdOpen(true);
     setIdLocked(!!data.locked);
     setIdLeft(typeof data.attemptsLeft === "number" ? data.attemptsLeft : null);
     const k = `id.err.${data.identityCode}` as MessageKey;
     setIdError(t(k) !== k ? t(k) : data.identityError ?? t("id.err.mismatch"));
   }
 
-  function changeCategory(next: Category) {
+  function changeCategory(next: Category, preserveCommon = false) {
     if (next === category) return;
+    const keep = preservesCommonSignupFields(category, next, preserveCommon);
     generation.current += 1;
     clearTimeout(issueTimer.current);
     formRef.current?.reset();
-    setCategory(next); setNameV(""); setEmailV(""); emailRef.current = "";
-    setCpf(""); setCpfTouched(false); setSrv({ ...EMPTY_SERVER });
+    setCategory(next);
+    if (!keep) { setNameV(""); setEmailV(""); emailRef.current = ""; setCpf(""); }
+    setCpfTouched(false); setSrv({ ...EMPTY_SERVER });
     setUf(""); setCity(""); setCountry(""); setUniversity("");
     setWa({ iso: "BR", ddi: "55", numero: "" }); setWaConsent(false);
     setEmailInstitution(null); emailVerdict.current = null;
     setErrors({}); setIssue(null); setSugg(""); setFix(null); setMsg(""); setDetail("");
-    setNotice(null); setFieldNotice(null); setSentTo(""); setState("idle");
+    setNotice(null); setFieldNotice(null); setSubmissionOutcome({}); setState("idle"); setProgress(null);
     setIdOpen(false); setIdBusy(false); setIdError(""); setIdLeft(null); setIdLocked(false);
     pending.current = null; resetTs();
   }
 
   const modals = (
     <>
-      <NoticeModal open={notice === "sent"} title={t("sent.title")} text={submissionMessage || t("sent.text", { email: sentTo })} ok={t("sent.ok")} onClose={() => setNotice(null)} />
-      <NoticeModal open={notice === "inst"} tone="error" title={t("inst.title")} text={t("inst.text")} ok={t("inst.ok")} onClose={() => { changeCategory("servidor"); setTimeout(() => document.getElementById("assinar")?.scrollIntoView({ behavior: "smooth" }), 80); }} />
+      <NoticeModal open={notice === "sent"} title={submissionCopy.title} text={submissionCopy.text} ok={t("sent.ok")} onClose={() => setNotice(null)} />
+      <NoticeModal open={notice === "inst"} tone="error" title={t("inst.title")} text={t("inst.text")} ok={t("inst.ok")} onClose={() => { changeCategory("servidor", true); setTimeout(() => document.getElementById("assinar")?.scrollIntoView({ behavior: "smooth" }), 80); }} />
       <NoticeModal open={notice === "bad"} tone="error" title={t("bad.title")} text={t("bad.text", { email: emailMask(emailV, true) }) + (emailFix ? " " + explainFix(emailFix) : "")} ok={t("bad.ok")} onClose={() => { setNotice(null); setTimeout(() => document.querySelector<HTMLInputElement>('input[name="email"]')?.focus(), 60); }} />
-      <NoticeModal open={notice === "field"} tone="error" title={fieldNotice?.title ?? t("field.validationTitle")} text={fieldNotice?.text ?? t("err.generic")} ok={t((fieldNotice?.buttonKey ?? "field.correct") as MessageKey)} onClose={closeFieldNotice} />
+      <NoticeModal open={notice === "field"} tone={fieldNotice?.tone ?? "error"} title={fieldNotice?.title ?? t("field.validationTitle")} text={fieldNotice?.text ?? t("err.generic")} ok={t((fieldNotice?.buttonKey ?? "field.correct") as MessageKey)} onClose={closeFieldNotice} />
     </>
   );
   if (state === "sent")
     return (
       <>
         <div className="box ok" role="status">
-          <h3>{t("ok.title")}</h3>
-          <p><Spammy text={t("ok.text")} /></p>
+          <h3>{submissionCopy.title}</h3>
+          <p><Spammy text={submissionCopy.text} /></p>
         </div>
         {modals}
       </>
@@ -336,7 +367,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
   );
   return (
     <>
-      <form ref={formRef} onSubmit={onSubmit} className="form" noValidate>
+      <form ref={formRef} onSubmit={onSubmit} className="form" noValidate aria-busy={state === "sending" || idBusy}>
         <fieldset disabled={state==='sending' || idBusy} style={{display:'contents'}}>
         <FormDiagnostics formRef={formRef} category={category} errorFields={[...Object.keys(effectiveErrors).filter(k => !!effectiveErrors[k]), ...(issue ? ["email"] : []), ...(cpfBad ? ["cpf"] : [])]} />
         <div className="form-head"><h2 className="form-title">{t("form.title")}</h2><HowTo onYes={() => startTour(category, true)} /></div>
@@ -346,7 +377,7 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
         {err("category")}
         <label>{t("f.name")}<MaskedInput name="name" autoComplete="name" autoCapitalize="words" spellCheck={false} required aria-invalid={!!errors.name} aria-describedby={errors.name ? "error-name" : undefined} value={nameV} onFocus={() => setErrors((x) => ({ ...x, name: "" }))} onChange={setNameV} mask={nameMask} />{err("name")}</label>
         <label data-tour="email">{t("f.email")}{category === "servidor" && <Help text={t("help.email.servidor")} />}<MaskedInput name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} required aria-invalid={!!effectiveErrors.email || !!issue} aria-describedby={effectiveErrors.email ? "error-email" : issue ? "error-email-issue" : undefined} value={emailV} onChange={(v) => { setEmailV(v); emailRef.current = v; setSugg(""); setFix(null); if (errors.email) setErrors((x) => ({ ...x, email: "" })); if (issue) { clearTimeout(issueTimer.current); issueTimer.current = setTimeout(() => checkRemote(emailMask(v, true)), 700); } }} onBlur={() => { const v = emailMask(emailV, true); const m = emailBad(v); if (m) { setErrors((x) => ({ ...x, email: m })); setIssue(null); const dg = diagnosticar(v); setFix(dg); setSugg(dg?.sugestao ?? ""); } else { const dg = diagnosticar(v); setFix(dg); setSugg(dg?.sugestao ?? suggestEmail(v) ?? ""); checkRemote(v); } }} mask={emailMask} />{err("email")}{issue && <span id="error-email-issue" className="err" role="alert">{t(`err.${issue.code}` as MessageKey)}{issue.code === "email_provider_invalid" && <><br /><span style={{ fontWeight: 400 }}>{t("f.emailProviders")}</span></>}</span>}{emailFix && <span className={issue || emailFix.bloqueia ? "err" : "hint"} role={issue || emailFix.bloqueia ? "alert" : "status"} style={{ fontWeight: 400 }}>{explainFix(emailFix)}</span>}{emailSuggestion && ( <span className="err" role="status" style={{ color: "inherit" }}>{t("f.emailSuggest", { email: emailSuggestion })} <button type="button" className="linklike" onClick={() => { const e = emailSuggestion; setEmailV(e); emailRef.current = e; setSugg(""); setFix(null); setIssue(null); setErrors((x) => ({ ...x, email: "" })); checkRemote(e); }}>{t("f.emailUse")}</button></span>)}
-          <span className="hint">{foreign ? t("f.emailHintForeign") : category === "servidor" ? t("f.emailHintServer") : t("f.emailHint")}</span></label>
+          <span className="hint">{foreign ? t("f.emailHintForeign") : category === "servidor" ? t("f.emailHintServer") : t("f.emailHintSupport")}</span></label>
         {whatsappAtivo && (
           <div className="wa-field" data-tour="whatsapp">
             <div className="wa-box"><span className="wa-label" id="wa-label">{t("f.whatsapp")}</span><PhoneField value={wa} onChange={setWa} error={errors.whatsapp} /></div>
@@ -356,22 +387,22 @@ export default function SignForm({ consentBr, consentForeign, turnstileSiteKey, 
           </div>
         )}
         {!foreign && (
-          <label data-tour="cpf">{t("f.cpf")}<Help text={t("help.cpf")} /><input name="cpf" inputMode="numeric" autoComplete="off" placeholder="999.999.999-99" maxLength={14} value={cpf} onFocus={() => { setCpfTouched(false); if (onlyDigits(cpf).length < 11) setErrors((x) => ({ ...x, cpf: "" })); }} onBlur={() => setCpfTouched(true)} onChange={(e) => { setCpf(maskCpf(e.target.value)); if (errors.cpf) setErrors((x) => ({ ...x, cpf: "" })); }} aria-invalid={!!errors.cpf || cpfBad} aria-describedby={cpfBad ? "cpf-erro" : undefined} required />{cpfBad ? <span id="cpf-erro" className="err" role="alert">{t("err.cpf_invalid")}</span> : err("cpf")}</label>
+          <label data-tour="cpf">{t("f.cpf")}<Help text={t("help.cpf")} /><input name="cpf" inputMode="numeric" autoComplete="off" placeholder="999.999.999-99" maxLength={14} value={cpf} onFocus={() => { setCpfTouched(false); if (onlyDigits(cpf).length < 11) setErrors((x) => ({ ...x, cpf: "" })); }} onBlur={() => setCpfTouched(true)} onChange={(e) => { setCpf(maskCpf(e.target.value)); if (errors.cpf) setErrors((x) => ({ ...x, cpf: "" })); }} aria-invalid={!!errors.cpf || cpfBad} aria-describedby={cpfBad ? "cpf-erro" : errors.cpf ? "error-cpf" : undefined} required />{cpfBad ? <span id="cpf-erro" className="err" role="alert">{t("err.cpf_invalid")}</span> : err("cpf")}</label>
         )}
         {category === "servidor" && <IfesCampusFields s={srv} set={updateServer} errors={effectiveErrors} email={emailV} emailInstitution={verifiedEmailInstitution} />}
         {category === "apoiador" && <UfCityFields uf={uf} city={city} setUf={setUf} setCity={setCity} errors={errors} />}
         {foreign && <CountryUniversityFields country={country} setCountry={setCountry} university={university} setUniversity={setUniversity} errors={errors} />}
         <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hp" />
         {turnstileSiteKey && <div ref={tsEl} className="turnstile" />}
-        <label className="consent" data-tour="consent"><input type="checkbox" name="consent" aria-invalid={!!errors.consent} /> <span>{foreign ? consentForeign : consentBr}</span></label>
+        <label className="consent" data-tour="consent"><input type="checkbox" name="consent" aria-invalid={!!errors.consent} aria-describedby={errors.consent ? "error-consent" : undefined} /> <span>{foreign ? consentForeign : consentBr}</span></label>
         {err("consent")}
-        {msg && <p className="err" role="alert">{msg}</p>}
-        <button className="primary" disabled={state === "sending"} data-tour="submit" data-track="assinar">{state === "sending" ? t("f.sending") : t("f.submit")}</button>
+        {msg && <p className={state === "sending" || idBusy ? "info" : "err"} role={state === "sending" || idBusy ? "status" : "alert"}>{msg}</p>}
+        <button className="primary" disabled={state === "sending"} data-tour="submit" data-track="assinar">{state === "sending" ? t(progress === "checking" ? "ui.checking" : "ui.processing") : t("f.submit")}</button>
         <p className="small">{foreign ? t("f.privacyForeign") : t("f.privacy")} <a href="/privacidade">{t("f.privacyLink")}</a>.</p>
         </fieldset>
       </form>
       {modals}
-      <IdentityModal open={idOpen} busy={idBusy} error={idError} attemptsLeft={idLeft} locked={idLocked} onClose={() => setIdOpen(false)} onConfirm={onIdentity} />
+      <IdentityModal key={pending.current?.ticket ?? category} open={idOpen} busy={idBusy} error={idError} attemptsLeft={idLeft} locked={idLocked} institutional={category === "servidor"} onClose={closeIdentity} onConfirm={onIdentity} />
     </>
   );
 }

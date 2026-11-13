@@ -26,7 +26,8 @@ export const pt = {
   "f.region.no": "Só vale para campus em município da Amazônia Legal ou da faixa de fronteira (listas oficiais do IBGE).", "f.region.pickCampus": "Informe abaixo onde você está lotado.", "f.region.note": "A relação definitiva de municípios será definida pelo MGI.",
   "f.uf": "UF", "f.ufPlaceholder": "UF", "f.city": "Cidade", "f.cityPlaceholder": "Selecione a cidade", "f.cityNone": "Nenhuma cidade encontrada", "f.cityPickUf": "Escolha a UF ou digite a cidade",
   "f.country": "País da sua instituição", "f.countrySelect": "Selecione o país", "f.university": "Universidade", "f.universityPlaceholder": "Digite ou escolha sua universidade", "f.universityHint": "Não está na lista? Digite o nome.", "f.universityPickCountry": "Escolha antes o país",
-  "f.submit": "Assinar", "f.sending": "Enviando…", "f.privacy": "Seu CPF é usado só para evitar assinaturas duplicadas e não aparece na lista enviada às autoridades.", "f.privacyForeign": "Seu e-mail não aparece na lista enviada às autoridades.", "f.privacyLink": "Privacidade (em português)",
+  // MUDAR AQUI: texto de finalidade do CPF aprovado para o rodapé do formulário.
+  "f.submit": "Assinar", "f.sending": "Enviando…", "f.privacy": "Seu CPF é usado para conferir seu nome e evitar assinaturas duplicadas. Quando necessário, também é utilizado na confirmação adicional de identidade.", "f.privacyForeign": "Seu e-mail não aparece na lista enviada às autoridades.", "f.privacyLink": "Privacidade (em português)",
   "ok.title": "Quase lá! Confirme pelo e-mail.", "ok.text": "Enviamos um link de confirmação. Sua assinatura só conta depois que você clicar nele. Veja também a caixa de spam.",
   "err.name_required": "Informe seu nome completo.", "err.email_invalid": "Informe um e-mail válido.", "err.email_disposable": "Use seu e-mail pessoal ou institucional (não aceitamos e-mails temporários).",
   // MUDAR AQUI: aviso de divergência entre o e-mail e a instituição selecionada.
@@ -43,7 +44,7 @@ export const pt = {
   "err.domain_unavailable": "Não foi possível verificar o domínio agora. Tente novamente em alguns minutos.", "err.identity_unavailable": "O serviço de verificação de identidade está indisponível no momento. Tente novamente em alguns minutos.", "err.mail_blocked": "Este endereço de e-mail não pode ser usado em ambiente de teste.", "err.ticket_expired": "Sua sessão de confirmação expirou. Preencha e envie o formulário novamente.",
   "id.title": "Confirme sua identidade", "id.intro": "Como você não usou um e-mail institucional, precisamos confirmar que é você mesmo(a) o(a) titular deste CPF. Escolha uma das opções:", "id.method": "Método de confirmação",
   "id.birth": "Data de nascimento", "id.mother": "Nome da mãe", "id.motherLabel": "Nome completo da mãe", "id.motherHint": "Pode digitar sem acento e em maiúsculas ou minúsculas. O nome deve estar completo, com os espaços nos lugares certos.", "id.motherPlaceholder": "Ex.: Maria José da Silva",
-  "id.why": "Por que pedimos isso?", "id.whyText": "Esta confirmação serve apenas para validar a identidade e conferir maior força jurídica à petição. Os dados trafegam criptografados (HTTPS) e nenhum desses dados pessoais é armazenado em nossa base de dados: o que você digita é comparado com o cadastro do CPF e descartado em seguida. Para essa conferência, o número do CPF é consultado no serviço cpf-brasil.org.",
+  "id.why": "Por que pedimos isso?", "id.whyText": "Seu CPF é usado para conferir seu nome e evitar assinaturas duplicadas. Quando necessário, também é utilizado na confirmação adicional de identidade.",
   "id.cancel": "Cancelar", "id.confirm": "Confirmar e receber o e-mail", "id.checking": "Conferindo…", "id.tries": "Você ainda tem {n} tentativa(s).",
   "id.err.mismatch": "Os dados não conferem.", "id.err.bad_input": "Confira o dado informado: digite o nome completo da mãe ou uma data de nascimento válida.", "id.err.method_unavailable": "Não conseguimos conferir por este método para este CPF. Tente pelo outro método.", "id.err.locked": "Muitas tentativas incorretas para este CPF. Tente novamente em 24 horas.", "id.err.mock_unknown": "Pré-visualização com dados de TESTE: use o CPF de teste informado pela equipe.",
   "date.placeholder": "dd/mm/aaaa", "date.open": "Abrir calendário", "date.month": "Mês", "date.year": "Ano", "date.choose": "Escolher data",
@@ -72,7 +73,7 @@ export const pt = {
   "help.cat.servidor": "Servidor(a): docente ou técnico-administrativo de uma universidade ou instituto federal. Exige e-mail institucional de órgão público.",
   "help.cat.apoiador": "Apoiador(a): qualquer pessoa da sociedade civil no Brasil que apoia a causa. Informe CPF, UF e cidade.",
   "help.cat.estrangeiro": "Estrangeiro(a): professor, técnico ou acadêmico de uma universidade fora do Brasil. Exige o e-mail institucional da universidade; não pede CPF.",
-  "help.cpf": "O CPF evita assinaturas duplicadas. É guardado só como código irreversível e não aparece na lista enviada às autoridades.",
+  "help.cpf": "Seu CPF é usado para conferir seu nome e evitar assinaturas duplicadas. Quando necessário, também é utilizado na confirmação adicional de identidade.",
   "help.campus": "O campus onde você trabalha. A lista mostra os campi da instituição escolhida; se o seu não aparecer, digite o nome.",
   "help.region": "Marque se o seu campus fica em município da Amazônia Legal ou da Faixa de Fronteira (listas oficiais do IBGE). Serve para as estatísticas da campanha.",
   "help.university": "Sua universidade. Escolha na lista do país ou digite o nome. O e-mail precisa ser de uma universidade real.",
@@ -218,6 +219,20 @@ export const pt = {
   "wac.cpfMismatch": "O CPF não confere com o cadastro desta assinatura.",
   "wac.invalid": "Link inválido ou expirado. Use o link do e-mail ou assine novamente.",
   "wac.foreignText": "Clique no botão para confirmar sua assinatura.",
+  // MUDAR AQUI: mensagens dos estados de assinatura e confirmação (UI-SIGN-001–012).
+  "ui.processing": "Processando…",
+  "ui.checking": "Conferindo…",
+  "ui.pendingTitle": "Conferência em andamento",
+  "ui.unavailableTitle": "Conferência temporariamente indisponível",
+  "ui.unknownTitle": "Resultado a conferir",
+  "ui.requestError": "Não foi possível concluir a solicitação. Tente novamente em alguns minutos.",
+  "ui.understood": "Entendi",
+  "ui.continues": "A conferência continua. Aguarde o resultado nesta página.",
+  "id.introInstitutional": "Precisamos de uma confirmação adicional de identidade para este CPF, mesmo com o e-mail institucional. Escolha uma das opções:",
+  "id.closeWhileBusy": "Ocultar janela",
+  "id.busyCloseHint": "Ocultar esta janela não cancela a conferência nem desfaz uma solicitação já recebida. O resultado será mostrado nesta página.",
+  "confirm.okNoPanel": "Sua assinatura já está confirmada. Você pode voltar à petição.",
+  "f.emailHintSupport": "Para assinar como servidor com e-mail institucional, use o formulário Servidor. Como apoiador, use seu e-mail pessoal.",
 } as const;
 export type MessageKey = keyof typeof pt;
 export type Messages = Record<MessageKey, string>;

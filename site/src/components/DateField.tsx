@@ -6,7 +6,7 @@ import { useI18n } from "@/i18n/client";
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** Data com máscara (dd/mm/aaaa), digitável, e calendário em dropdown com seleção de mês e ano. */
-export default function DateField({ value, onChange, label, invalid = false }: { value: string; onChange: (v: string) => void; label: string; invalid?: boolean }) {
+export default function DateField({ value, onChange, label, invalid = false, describedBy }: { value: string; onChange: (v: string) => void; label: string; invalid?: boolean; describedBy?: string }) {
   const { t } = useI18n();
   const MONTHS = t("date.months").split(","), WEEK = t("date.weekdays").split(",");
   const id = useId();
@@ -35,7 +35,7 @@ export default function DateField({ value, onChange, label, invalid = false }: {
     <div className="datefield" ref={box} onKeyDown={(e) => { if (e.key === "Escape" && open) { e.stopPropagation(); setOpen(false); } }}>
       <label htmlFor={id}>{label}</label>
       <div className="date-input">
-        <input id={id} inputMode="numeric" autoComplete="bday" placeholder={t("date.placeholder")} maxLength={10} value={value} aria-invalid={invalid}
+        <input id={id} inputMode="numeric" autoComplete="bday" placeholder={t("date.placeholder")} maxLength={10} value={value} aria-invalid={invalid} aria-describedby={describedBy}
           onChange={(e) => onChange(maskBirth(e.target.value))} />
         <button type="button" className="icon-btn" aria-label={t("date.open")} aria-expanded={open} onClick={() => { if (parsed) setView({ y: parsed.y, m: parsed.m - 1 }); setOpen((o) => !o); }}>
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M7 2v2H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 8v9H5v-9h14zM7 12v2h2v-2H7zm4 0v2h2v-2h-2z" /></svg>
