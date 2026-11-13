@@ -228,3 +228,24 @@ test('recovery projects latest historical TRT3 name while expired observations c
   await assert.rejects(()=>extra.provider.lookup(cpf));
  }finally{process.env.NCPF_QUERY_ENABLED=previous;await db._closeDbForTests();}
 });
+
+test('draining refuses new fallback admissions but preserves existing proof and legacy ticket without extending it',async()=>{
+ await db._openForTests('t_ncpf_drain');
+ const previous=process.env.NCPF_ACCEPT_NEW;
+ try{
+  await saveTrtEvidence(evidenceData());
+  const first=await handleSign(body(),ctx,provider);assert.equal(first.json.identityRequired,true);
+  assert.equal(await count('ncpf_intents'),1);
+  process.env.NCPF_ACCEPT_NEW='0';
+  const blocked=await handleSign(body(),ctx,provider);assert.equal(blocked.status,503);assert.equal(blocked.json.errorCode,'cpf_check_unavailable');
+  assert.equal(await count('ncpf_intents'),1);
+  const resumed=await handleSign(body({ticket:first.json.ticket,identity:{method:'nascimento',value:'01/02/1990'}}),ctx,provider);
+  assert.equal(resumed.json.ok,true);assert.equal(await count('ncpf_intents'),1);
+  const main=mockProvider({[cpf2]:{nome:'CLARA SILVA',mae:'MARIA ALVES',nasc:'01/02/1990'}});
+  const primary=await handleSign(body({cpf:cpf2,email:'drain-main@hotmail.com'}),ctx,main);assert.equal(primary.json.identityRequired,true);
+  assert.equal(await count('ncpf_intents'),1);
+ }finally{
+  if(previous===undefined)delete process.env.NCPF_ACCEPT_NEW;else process.env.NCPF_ACCEPT_NEW=previous;
+  await db._closeDbForTests();rmSync(process.env.MAIL_OUTBOX_DIR!,{recursive:true,force:true});
+ }
+});
