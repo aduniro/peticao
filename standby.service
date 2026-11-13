@@ -1,0 +1,39 @@
+[Unit]
+Description=Peticao development queue — passive standby only
+After=network.target
+ConditionPathExists=/srv/admin-v2-coordinator/authority.json
+ConditionPathExists=/srv/admin-v2-coordinator/queue.sqlite
+
+[Service]
+Type=simple
+User=vigia-coord
+Group=vigia-coord
+WorkingDirectory=/opt/admin-v2-cluster
+Environment=ADMIN_CLUSTER_ROOT=/srv/admin-v2-coordinator
+Environment=ADMIN_WORKER_ROOT=/srv/admin-v2-worker
+Environment=ADMIN_CLUSTER_DISPATCH=0
+Environment=ADMIN_CLUSTER_KUBERNETES=0
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStartPre=/usr/bin/python3 /opt/admin-v2-cluster/standby_guard.py --root /srv/admin-v2-coordinator
+ExecStart=/usr/bin/python3 /opt/admin-v2-cluster/coordinator.py daemon
+Restart=no
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_UNIX
+ReadWritePaths=/srv/admin-v2-coordinator
+CPUQuota=50%
+MemoryMax=256M
+TasksMax=64
+StandardOutput=journal
+StandardError=journal
+
+# No [Install] section: staging does not enable a persistent service automatically.
