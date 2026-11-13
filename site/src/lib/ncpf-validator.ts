@@ -17,11 +17,13 @@ export function extraValidator(original: CpfProvider, a: { input: SignInput; vis
         return record;
       }
       if (!ncpfEnabled() || !intent?.evidence_id && classifyCpfName(record.nome,a.input.name) !== "mismatch") return record;
+      // Maintenance stops new fallback admissions while existing 15-minute proofs drain.
+      if (!intent && process.env.NCPF_ACCEPT_NEW === '0') {state.unavailable=true;throw new ProviderUnavailable('NCPF_SOURCE_UNAVAILABLE');}
       const evidence = await findEvidence(cpf,intent?.evidence_id ?? undefined);
       if (evidence) {
         if (classifyCpfName(evidence.name,a.input.name) === "mismatch") {state.rejected=true;return record;}
         state.source="trt3"; state.evidenceId=evidence.id;
-        state.token = typeof a.token === "string" && intent ? a.token : await makeIntent({ input:a.input,visitor:a.visitor,whatsapp:a.whatsapp,securityPassed:a.securityPassed(),evidenceId:evidence.id,apiName:record.nome });
+        state.token = intent ? (typeof a.token === "string" ? a.token : undefined) : state.token ?? await makeIntent({ input:a.input,visitor:a.visitor,whatsapp:a.whatsapp,securityPassed:a.securityPassed(),evidenceId:evidence.id,apiName:record.nome });
         return { ...record, nome:evidence.name };
       }
       if(intent?.evidence_id){state.unavailable=true;throw new ProviderUnavailable('NCPF_SOURCE_UNAVAILABLE');}
