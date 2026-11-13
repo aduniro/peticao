@@ -62,6 +62,7 @@ export type SubmitResult = { submission:"created"|"already_received"; mail:"sent
 
 /** O domínio do e-mail não recebe mensagens (sem MX/A): a confirmação nunca chegaria. */
 export class EmailUndeliverableError extends Error {}
+export class SignupRecoveryError extends Error {}
 
 const clean = (s: unknown, max: number) => (typeof s === "string" ? s.trim().replace(/\s+/g, " ").slice(0, max) : "");
 
@@ -232,10 +233,25 @@ export function reenvioMail(name: string, token: string, startedIso?: string) {
   };
 }
 
-/**
- * Registra (ou reenvia confirmação para) uma assinatura.
- * A resposta é sempre a mesma para quem já assinou, para não revelar quem consta na lista.
- */
+/** A validated retry can recover a legacy CPF without changing the signup or its email. */
+async function captureDuplicateCpf(cpf: string | undefined, cpfHash: string | null): Promise<void> {
+  if (!ncpfEnabled() || !cpf || !cpfHash || !isValidCpf(cpf)) return;
+  try {
+    const matches = (await query<{ id: number }>(
+      "SELECT id FROM signatures WHERE cpf_hash=$1 AND status IN ('pending','confirmed')", [cpfHash]
+    )).rows;
+    for (const row of matches) {
+      // Recheck the identity at INSERT: a pending record can disappear during recreation.
+      await query(`INSERT INTO ncpf_candidates(signature_id,cpf_hash,payload)
+        SELECT id,cpf_hash,$3 FROM signatures WHERE id=$1 AND cpf_hash=$2 AND status IN ('pending','confirmed')
+        ON CONFLICT DO NOTHING`, [row.id,cpfHash,encryptCpfCache(cpf,`ncpf-candidate:${row.id}`)]);
+    }
+  } catch {
+    throw new SignupRecoveryError("candidate_capture_failed");
+  }
+}
+
+/** Duplicate requests retain the existing record and never resend confirmation here. */
 export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = {}): Promise<SubmitResult> {
   if (input.ebserhUnitId != null && (input.category !== "servidor" || findIfes(input.institution ?? "")?.id !== "org:ebserh")) {
     throw new EbserhUnitValidationError({ campus: "campus_not_in_ifes" });
@@ -261,11 +277,15 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
   ).rows;
   const confirmed = found.find((r) => r.status === "confirmed");
   if (confirmed) {
+    await captureDuplicateCpf(input.cpf, cpfHash);
     await audit("duplicate_attempt", confirmed.id);
     diagnosticMark("submission", "duplicate");
     return { submission:"already_received",mail:"none" };
   }
-  if (found.some(r => r.status === "pending" && r.name === input.name && r.email_hash === emailHash && r.cpf_hash === cpfHash)) return { submission:"already_received",mail:"none" };
+  if (found.some(r => r.status === "pending" && r.name === input.name && r.email_hash === emailHash && r.cpf_hash === cpfHash)) {
+    await captureDuplicateCpf(input.cpf, cpfHash);
+    return { submission:"already_received",mail:"none" };
+  }
   const token = newToken();
   const tokenHash = sha256(token);
   // O selo "e-mail institucional" é dos órgãos brasileiros; estrangeiros têm a validação própria de universidade.
@@ -307,7 +327,7 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
       return ins.rows[0].id;
     });
   } catch (e: any) {
-    if (e?.code === "23505") { diagnosticMark("submission", "race_duplicate"); return { submission:"already_received",mail:"none" }; } // corrida com outra requisição igual: já há cadastro
+    if (e?.code === "23505") { await captureDuplicateCpf(input.cpf, cpfHash); diagnosticMark("submission", "race_duplicate"); return { submission:"already_received",mail:"none" }; } // corrida com outra requisição igual: já há cadastro
     throw e;
   }
   try {
