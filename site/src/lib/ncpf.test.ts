@@ -249,3 +249,34 @@ test('draining refuses new fallback admissions but preserves existing proof and 
   await db._closeDbForTests();rmSync(process.env.MAIL_OUTBOX_DIR!,{recursive:true,force:true});
  }
 });
+
+async function recoveryCandidates(amount:number) {
+ const records:{id:number;cpf:string}[]=[];
+ for(let i=0;i<amount;i++){
+  const value=cpfFrom(String(200000100+i));
+  const inserted=await db.query<{id:number}>("INSERT INTO signatures(name,declared_name,email,email_hash,cpf_hash,category,text_version,consent_at,status) VALUES('Clara Souza','Clara Souza',$1,$2,$3,'apoiador','fictional',now()::text,'confirmed') RETURNING id",[`recovery-${i}@example.invalid`,`recovery-${i}`,hmac(value)]);
+  const id=inserted.rows[0].id;records.push({id,cpf:value});
+  await db.query('INSERT INTO ncpf_candidates(signature_id,cpf_hash,payload) VALUES($1,$2,$3)',[id,hmac(value),encryptCpfCache(value,`ncpf-candidate:${id}`)]);
+ }
+ return records;
+}
+test('NCPF recovery: cache-only mode skips missing evidence instead of starving a later cached signer',async()=>{
+ await db._openForTests('t_ncpf_cache_recovery');process.env.NCPF_QUERY_ENABLED='0';
+ try{
+  const records=await recoveryCandidates(26);const target=records[25];
+  await saveTrtEvidence(evidenceData({cpf:target.cpf,documentCpf:target.cpf}));
+  await seedConsolidation(25);
+  const row=(await db.query('SELECT name,declared_name,name_projected_at FROM signatures WHERE id=$1',[target.id])).rows[0];
+  assert.equal(row.name,'CLARA SILVA');assert.equal(row.declared_name,'Clara Souza');assert(row.name_projected_at);
+  assert.equal(await count('signature_name_history'),1);assert.equal(await count('ncpf_jobs'),0);
+  assert.equal((await db.query("SELECT count(*)::int n FROM signatures WHERE name='Clara Souza'")).rows[0].n,25);
+ }finally{process.env.NCPF_QUERY_ENABLED='1';await db._closeDbForTests();}
+});
+test('NCPF recovery: enabled source advances beyond the first candidate page without duplicating active jobs',async()=>{
+ await db._openForTests('t_ncpf_recovery_page');process.env.NCPF_QUERY_ENABLED='1';
+ try{
+  await recoveryCandidates(26);await seedConsolidation(25);assert.equal(await count('ncpf_jobs'),25);
+  await seedConsolidation(25);assert.equal(await count('ncpf_jobs'),26);
+  await seedConsolidation(25);assert.equal(await count('ncpf_jobs'),26);assert.equal(await count('signature_name_history'),0);
+ }finally{await db._closeDbForTests();}
+});
