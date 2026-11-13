@@ -134,7 +134,7 @@ test("cache: assinatura pendente pode ser refeita e permanece pendente sem nova 
   assert.equal(first.status, "pending");
   assert.equal((await handleSign(body, ctx, provider)).status, 200);
   const second = (await query("SELECT id,status,cpf_hash FROM signatures WHERE email=$1", [form.email])).rows[0];
-  assert.notEqual(first.id, second.id);
+  assert.equal(first.id, second.id); // identical retry preserves the pending request, no new message
   assert.equal(second.status, "pending"); assert.equal(second.cpf_hash, first.cpf_hash);
   assert.equal(calls, 1);
 });

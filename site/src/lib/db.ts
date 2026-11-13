@@ -1,3 +1,4 @@
+import { NCPF_SCHEMA_SQL } from "./ncpf-schema";
 import { MATERIALS_SCHEMA_SQL } from "./materials-schema";
 import { PRESIDENT_OWN_A1_SCHEMA_SQL } from "./president-own-a1-schema";
 import { PRESIDENT_OWN_DOCUMENT_SCHEMA_SQL } from "./president-own-document-schema";
@@ -757,6 +758,7 @@ function init(): Promise<void> {
     }
     g.__ready = getPool()
       .query(SCHEMA_SQL)
+      .then(() => getPool().query(NCPF_SCHEMA_SQL))
       .then(() => getPool().query(BATCH_A1_SCHEMA_SQL))
       .then(() => getPool().query(DOCUMENT_REFERENCE_SCHEMA_SQL))
       .then(() => getPool().query(PETITION_BASE_SCHEMA_SQL))

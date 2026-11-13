@@ -1,4 +1,7 @@
 import { diagnosticMark } from "./signup-diagnostics";
+import { encryptCpfCache } from "./cpf-cache-crypto";
+import { ncpfEnabled } from "./ncpf-store";
+import { afterSignatureConfirmed } from "./ncpf-jobs";
 import { query, tx, audit } from "./db";
 import { config } from "./config";
 import { isValidCpf, onlyDigits } from "./cpf";
@@ -54,7 +57,8 @@ export type SignInput = {
 };
 
 export type Meta = { ip?: string; userAgent?: string; visitorId?: string; refCode?: string };
-export type SubmitExtra = { whatsapp?: string | null; identityMethod?: string | null; nameCheck?: CpfNameCheck; universityDomain?: string | null; domainCheck?: string | null };
+export type SubmitExtra = { whatsapp?: string | null; identityMethod?: string | null; nameCheck?: CpfNameCheck; universityDomain?: string | null; domainCheck?: string | null; nameEvidenceId?: string; apiName?:string };
+export type SubmitResult = { submission:"created"|"already_received"; mail:"sent"|"queued"|"none" };
 
 /** O domínio do e-mail não recebe mensagens (sem MX/A): a confirmação nunca chegaria. */
 export class EmailUndeliverableError extends Error {}
@@ -232,7 +236,7 @@ export function reenvioMail(name: string, token: string, startedIso?: string) {
  * Registra (ou reenvia confirmação para) uma assinatura.
  * A resposta é sempre a mesma para quem já assinou, para não revelar quem consta na lista.
  */
-export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = {}): Promise<void> {
+export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = {}): Promise<SubmitResult> {
   if (input.ebserhUnitId != null && (input.category !== "servidor" || findIfes(input.institution ?? "")?.id !== "org:ebserh")) {
     throw new EbserhUnitValidationError({ campus: "campus_not_in_ifes" });
   }
@@ -253,14 +257,15 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
   if ((await checkMx(input.email)) === "none") throw new EmailUndeliverableError("domínio sem servidor de e-mail");
   if (await isSuppressed(input.email)) throw new EmailUndeliverableError("endereço na lista de supressão (bounce/reclamação)");
   const found = (
-    await query<{ id: number; status: string }>("SELECT id,status FROM signatures WHERE email_hash = $1 OR ($2::text IS NOT NULL AND cpf_hash = $2)", [emailHash, cpfHash])
+    await query<{ id: number; status: string; name:string; email_hash:string; cpf_hash:string|null }>("SELECT id,status,name,email_hash,cpf_hash FROM signatures WHERE email_hash = $1 OR ($2::text IS NOT NULL AND cpf_hash = $2)", [emailHash, cpfHash])
   ).rows;
   const confirmed = found.find((r) => r.status === "confirmed");
   if (confirmed) {
     await audit("duplicate_attempt", confirmed.id);
     diagnosticMark("submission", "duplicate");
-    return;
+    return { submission:"already_received",mail:"none" };
   }
+  if (found.some(r => r.status === "pending" && r.name === input.name && r.email_hash === emailHash && r.cpf_hash === cpfHash)) return { submission:"already_received",mail:"none" };
   const token = newToken();
   const tokenHash = sha256(token);
   // O selo "e-mail institucional" é dos órgãos brasileiros; estrangeiros têm a validação própria de universidade.
@@ -273,7 +278,7 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
   const identityMethod = foreign ? extra.identityMethod ?? "universidade_estrangeira" : domainKind && domainKind !== "discente" ? "email_institucional" : extra.identityMethod ?? null;
   const refCode = meta.refCode && (await query("SELECT 1 FROM referrers WHERE code=$1", [meta.refCode])).rowCount ? meta.refCode : null;
   const cols: Record<string, unknown> = {
-    name: input.name, email: normalizeEmail(input.email), email_hash: emailHash, cpf_hash: cpfHash, category: input.category,
+    name: input.name, declared_name:input.name, name_source:extra.nameEvidenceId ? "trt3" : extra.nameCheck==='match'?'api':'declared', name_evidence_id:extra.nameEvidenceId ?? null, api_name_snapshot:extra.apiName?encryptCpfCache(extra.apiName,`ncpf-api-snapshot:${emailHash}:${cpfHash}`):null, email: normalizeEmail(input.email), email_hash: emailHash, cpf_hash: cpfHash, category: input.category,
     institution: input.institution ?? null, role: input.role ?? null, city: input.city ?? null, uf: input.uf ?? null,
     text_version: TEXT_VERSION, consent_at: new Date().toISOString(), ip: meta.ip ?? null, user_agent: (meta.userAgent ?? "").slice(0, 300) || null,
     token_hash: tokenHash, token_expires_at: addHours(config.tokenTtlHours), email_domain_kind: domainKind, identity_method: identityMethod,
@@ -298,10 +303,11 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
         keys.map((k) => cols[k])
       );
       await audit(found.length ? "signature_recreated" : "signature_created", ins.rows[0].id, { category: input.category, textVersion: TEXT_VERSION }, c);
+      if (input.cpf && ncpfEnabled()) await c.query("INSERT INTO ncpf_candidates(signature_id,cpf_hash,payload) VALUES($1,$2,$3)",[ins.rows[0].id,cpfHash,encryptCpfCache(input.cpf,`ncpf-candidate:${ins.rows[0].id}`)]);
       return ins.rows[0].id;
     });
   } catch (e: any) {
-    if (e?.code === "23505") { diagnosticMark("submission", "race_duplicate"); return; } // corrida com outra requisição igual: já há cadastro
+    if (e?.code === "23505") { diagnosticMark("submission", "race_duplicate"); return { submission:"already_received",mail:"none" }; } // corrida com outra requisição igual: já há cadastro
     throw e;
   }
   try {
@@ -311,6 +317,7 @@ export async function submit(input: SignInput, meta: Meta, extra: SubmitExtra = 
     if (outcome === "queued") await logRequest("mail_queued", meta.ip ?? "local", { signatureId: id, email: input.email, detail: "e-mail na fila de reenvio" });
     // WhatsApp (opcional, só quando o recurso está ligado): nunca atrapalha a assinatura; falha aqui é só registrada.
     if (extra.whatsapp) await pedirWhatsapp(id, input.name, extra.whatsapp).catch((e) => console.error("whatsapp: pedido falhou", e instanceof Error ? e.message : e));
+    return { submission:"created",mail:outcome };
   } catch (e) {
     // Sem e-mail entregue não há como confirmar: desfaz o cadastro pendente.
     await query("DELETE FROM signatures WHERE id = $1 AND status = 'pending'", [id]);
@@ -326,7 +333,7 @@ export type ConfirmFull = { result: ConfirmResult; manageToken?: string; code?: 
 /** Confirma a assinatura e cria o código/painel de indicação da pessoa (o token do painel só é devolvido aqui, uma vez). */
 export async function confirmFull(token: string, ctx: { visitorId?: string; ip?: string } = {}, canal: "email" | "whatsapp" = "email"): Promise<ConfirmFull> {
   if (!token || token.length > 200) return { result: "invalid" };
-  return tx(async (c) => {
+  const result = await tx(async (c) => {
     const { rows } = await c.query<{ id: number; status: string; token_expires_at: string; name: string; email: string; visitor_id: string | null }>(
       canal === "whatsapp"
         ? "SELECT id,status,wa_token_expires_at AS token_expires_at,name,email,visitor_id FROM signatures WHERE wa_token_hash = $1 FOR UPDATE"
@@ -334,16 +341,26 @@ export async function confirmFull(token: string, ctx: { visitorId?: string; ip?:
       [sha256(token)]
     );
     const row = rows[0];
-    if (!row || row.status !== "pending") return { result: "invalid" as const };
+    if (!row || row.status !== "pending") {
+      const previous = await c.query("SELECT 1 FROM confirmation_receipts WHERE token_hash=$1 AND expires_at>now()",[sha256(token)]);
+      return { result: previous.rowCount ? "ok" as const : "invalid" as const };
+    }
     if (new Date(row.token_expires_at).getTime() < Date.now()) return { result: "expired" as const };
     // "Mesmo aparelho": o navegador que confirmou é o mesmo que assinou? (null = não dá para saber). É só um indício de repasse do e-mail.
     const same = row.visitor_id && ctx.visitorId ? row.visitor_id === ctx.visitorId : null;
     await c.query("UPDATE signatures SET status='confirmed', confirmed_at=$1, token_hash=NULL, token_expires_at=NULL, wa_token_hash=NULL, wa_token_expires_at=NULL, wa_confirmed_at=CASE WHEN $7 THEN $8::timestamptz ELSE wa_confirmed_at END, confirm_visitor_id=$3, confirm_ip=$4, confirm_same_visitor=$5, seq=nextval('signature_seq'), verify_code=$6 WHERE id=$2",
       [new Date().toISOString(), row.id, ctx.visitorId ?? null, ctx.ip ?? null, same, newVerifyCode(), canal === "whatsapp", new Date().toISOString()]);
     await audit("signature_confirmed", row.id, {}, c);
+    await c.query("INSERT INTO confirmation_receipts(token_hash,signature_id,expires_at) VALUES($1,$2,now()+interval '48 hours') ON CONFLICT DO NOTHING",[sha256(token),row.id]);
     const ref = await createReferrerForSignature(row.id, row.name.split(" ")[0], c);
     return { result: "ok" as const, manageToken: ref?.manageToken, code: ref?.code, email: row.email, name: row.name, visitorId: row.visitor_id, signatureId: row.id };
   });
+  if (result.signatureId && ncpfEnabled()) {
+    await afterSignatureConfirmed(result.signatureId).catch(()=>console.error('[ncpf] consolidation_pending'));
+    const current=(await query<{name:string}>("SELECT name FROM signatures WHERE id=$1",[result.signatureId])).rows[0];
+    if (current) result.name=current.name;
+  }
+  return result;
 }
 
 export async function confirm(token: string): Promise<ConfirmResult> {

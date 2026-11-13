@@ -67,6 +67,7 @@ async function verifyIdentityImpl(a: { cpf: string; method: IdentityMethod; valu
     rec = await provider.lookup(a.cpf);
   } catch (e) {
     const code = e instanceof ProviderUnavailable ? e.code : "UNKNOWN";
+    if (code === "NCPF_PENDING" || code === "NCPF_SOURCE_UNAVAILABLE") return { ok:false,reason:"unavailable" };
     console.error(`[cpf] serviço de verificação indisponível: ${code}`); // só o código, nunca dados pessoais
     await setSetting("cpf_provider_last_error", `${code} em ${new Date().toISOString()}`).catch(() => {});
     return { ok: false, reason: "unavailable" };
@@ -107,6 +108,7 @@ async function verifyCpfNameImpl(a: { cpf: string; declaredName: string; provide
     rec = await a.provider.lookup(a.cpf);
   } catch (e) {
     const code = e instanceof ProviderUnavailable ? e.code : "UNKNOWN";
+    if (code === "NCPF_PENDING" || code === "NCPF_SOURCE_UNAVAILABLE") return { ok:false,reason:"unavailable" };
     console.error(`[cpf] serviço de verificação indisponível: ${code}`); // só o código, nunca dados pessoais
     await setSetting("cpf_provider_last_error", `${code} em ${new Date().toISOString()}`).catch(() => {});
     return { ok: false, reason: "unavailable" };

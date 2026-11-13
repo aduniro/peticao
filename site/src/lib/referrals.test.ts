@@ -38,7 +38,10 @@ test("indicações: código pessoal após confirmar, atribuição de assinaturas
   assert.equal(conf.result, "ok");
   assert.match(conf.code!, ref.CODE_RE);
   assert.ok(conf.manageToken && conf.manageToken.length > 20);
-  assert.equal((await sig.confirmFull(tokenOf())).result, "invalid"); // token de uso único
+  const replay=await sig.confirmFull(tokenOf());
+  assert.equal(replay.result,"ok"); // acknowledges committed confirmation, no new privileged token
+  assert.equal(replay.manageToken,undefined);
+  assert.equal(replay.signatureId,undefined); // route cannot repeat post-confirmation side effects
   const byTok = await ref.referrerByToken(conf.manageToken!);
   assert.equal(byTok?.code, conf.code);
   assert.equal(byTok?.display_name, "Maria"); // só o primeiro nome vai ao cartaz
