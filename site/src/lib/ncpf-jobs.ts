@@ -7,8 +7,9 @@ export async function seedConsolidation(limit = 25) {
   if (!ncpfEnabled()) return;
   const rows = (await query<{signature_id:number;payload:string;name_evidence_id:string|null}>(`SELECT c.signature_id,c.payload,s.name_evidence_id FROM ncpf_candidates c JOIN signatures s ON s.id=c.signature_id
     WHERE s.status='confirmed' AND s.name_projected_at IS NULL
-    AND (s.name_evidence_id IS NOT NULL OR EXISTS(SELECT 1 FROM ncpf_evidence e WHERE e.cpf_hash=c.cpf_hash AND e.expires_at>now()) OR
-      NOT EXISTS(SELECT 1 FROM ncpf_jobs j WHERE j.cpf_hash=c.cpf_hash AND (j.state IN ('queued','running','retry') OR (j.state='not_found' AND j.next_run_at>now())))) LIMIT $1`,[limit])).rows;
+    AND ((s.name_evidence_id IS NOT NULL AND EXISTS(SELECT 1 FROM ncpf_evidence e WHERE e.cpf_hash=c.cpf_hash)) OR EXISTS(SELECT 1 FROM ncpf_evidence e WHERE e.cpf_hash=c.cpf_hash AND e.expires_at>now()) OR
+      ($1::boolean AND NOT EXISTS(SELECT 1 FROM ncpf_jobs j WHERE j.cpf_hash=c.cpf_hash AND (j.state IN ('queued','running','retry') OR (j.state='not_found' AND j.next_run_at>now())))))
+    ORDER BY s.id LIMIT $2`,[ncpfQueriesEnabled(),limit])).rows;
   for (const r of rows) {
     const cpf=decryptCpfCache(r.payload,`ncpf-candidate:${r.signature_id}`);
     if(cpf){
