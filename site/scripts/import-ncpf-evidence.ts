@@ -16,7 +16,8 @@ try{
    const r=JSON.parse(line),pdf=Buffer.from(r.pdfBase64,'base64');
    const evidence=await saveTrtEvidence({cpf:r.cpf,documentCpf:r.documentCpf,name:r.name,pdf,fetchedAt:r.fetchedAt,origin:r.origin});
    counts.changed+=await consolidateEvidence(evidence);counts.imported++;
-   const rows=(await query<{id:number}>('SELECT id FROM signatures WHERE cpf_hash=$1 AND status=\'confirmed\'',[hmac(evidence.cpf)])).rows;
+   // Also seed pending legacy signups: they must consolidate when email confirmation arrives.
+   const rows=(await query<{id:number}>('SELECT id FROM signatures WHERE cpf_hash=$1',[hmac(evidence.cpf)])).rows;
    for(const s of rows) {
     const ins=await query('INSERT INTO ncpf_candidates(signature_id,cpf_hash,payload) VALUES($1,$2,$3) ON CONFLICT DO NOTHING',[s.id,hmac(evidence.cpf),encryptCpfCache(evidence.cpf,`ncpf-candidate:${s.id}`)]);
     counts.candidates+=ins.rowCount??0;
