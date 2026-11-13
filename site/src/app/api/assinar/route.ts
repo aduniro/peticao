@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { handleSign } from "@/lib/sign-flow";
 import { rateLimit } from "@/lib/ratelimit";
 import { clientIp } from "@/lib/net";
+import { withSignupReceipt } from "@/lib/signup-idempotency";
+import { legacySignupResponse } from "@/lib/signup-response";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +22,13 @@ export async function POST(req: NextRequest) {
     await recordSignupGate(req.headers.get("x-sign-attempt"), "invalid_json", 400);
     return NextResponse.json({ error: "Requisição inválida." }, { status: 400 });
   }
-  const r = await withSignupDiagnostics(req.headers.get("x-sign-attempt"), body, provider => handleSign(body, {
+  const run = () => withSignupDiagnostics(req.headers.get("x-sign-attempt"), body, provider => handleSign(body, {
     ip,
     userAgent: req.headers.get("user-agent") ?? undefined,
     visitorId: req.cookies.get("vid")?.value,
     refCode: req.cookies.get("ref")?.value,
   }, provider), defaultProvider());
-  return NextResponse.json(r.json, { status: r.status });
+  const key=req.headers.get('idempotency-key');
+  const r=key ? await withSignupReceipt(key,req.cookies.get('vid')?.value ?? '',body,run) : await run();
+  return NextResponse.json(legacySignupResponse(r.json,!!key), { status: r.status,headers:{'Cache-Control':'no-store'} });
 }

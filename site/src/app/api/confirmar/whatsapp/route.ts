@@ -40,7 +40,9 @@ export async function POST(req: NextRequest) {
   }
   const r = await confirmFull(token, { visitorId: req.cookies.get("vid")?.value, ip }, "whatsapp");
   if (r.result !== "ok") return NextResponse.json({ result: r.result });
-  await audit("whatsapp_confirmed", r.signatureId ?? null, {}).catch(() => {});
-  await posConfirmacao(r, { ip, headers: req.headers, canal: "whatsapp" });
+  if(r.signatureId){
+    await audit("whatsapp_confirmed", r.signatureId, {}).catch(() => {});
+    await posConfirmacao(r, { ip, headers: req.headers, canal: "whatsapp" }).catch(()=>console.error('[confirmation] post_actions_pending'));
+  }
   return NextResponse.json({ result: "ok", panel: r.manageToken ? `/meu/${r.manageToken}` : null });
 }

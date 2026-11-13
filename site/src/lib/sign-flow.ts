@@ -1,4 +1,6 @@
 import { diagnosticMark } from "./signup-diagnostics";
+import { extraValidator } from "./ncpf-validator";
+import { ncpfEnabled, readIntent, readIntentFromTicket,bindIntentTicket, type Intent } from "./ncpf-store";
 import { validate, submit, EmailUndeliverableError, InstitutionEmailMismatchError, EbserhUnitValidationError, type Meta } from "./signatures";
 import { resolveInstitutionForEmail } from "./institution-registry";
 import { findIfes } from "./ifes-data";
@@ -91,6 +93,7 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     return ASK({ errors: v.errors });
   }
   const input = v.value;
+  let ncpfIntent: Intent | null = null;
   // A challenge is consumed at most once per HTTP request. Identity continuation
   // uses a separate proof bound to its ticket/input, never a reused Turnstile token.
   let challengeChecked = false, challengePassed = false;
@@ -98,6 +101,7 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     if (!challengeChecked) {
       challengeChecked = true;
       challengePassed = turnstileEnabled() && (
+        ncpfIntent?.security_passed === true ||
         !!body?.identity && checkTicket(body?.ticket, input.cpf ?? "", input.email) &&
           checkSignupSecurityProof(body?.securityProof ?? signupSecurityProofFromTicket(body?.ticket), input, body?.ticket) ||
         await verifyTurnstile(body?.turnstileToken, ctx.ip)
@@ -112,6 +116,14 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     if (!tel.ok) return ASK({ errors: { whatsapp: tel.code } });
     if (body?.whatsappConsent !== true) return ASK({ errors: { whatsappConsent: "wa_consent_required" } });
     wa = tel.e164;
+  }
+  if (ncpfEnabled() && body?.ncpfToken != null) {
+    ncpfIntent = await readIntent(body.ncpfToken,input,ctx.visitorId,wa);
+    if (!ncpfIntent) return ASK({ restart:true,error:"A verificação expirou ou os dados foram alterados. Confira o formulário e envie novamente.",errorCode:"validation_expired" },400);
+  }
+  if(ncpfEnabled() && !body?.ncpfToken && body?.identity && checkTicket(body?.ticket,input.cpf??'',input.email)) {
+    try{ncpfIntent=await readIntentFromTicket(body.ticket,input,ctx.visitorId,wa);}
+    catch{return ASK({restart:true,error:'Os dados foram alterados. Confira o formulário e envie novamente.',errorCode:'validation_expired'},400);}
   }
   // E-mail já na lista negra (inexistente, bounce ou reclamação): recusa sem gastar consulta e conta como tentativa inválida do IP.
   if (await isEmailBlacklisted(input.email)) { await logRequest("email_blocked", ctx.ip, { email: input.email, detail: "tentativa com e-mail da lista negra" }); return invalidEmail(input.email, ctx, "email_not_found", input.category === "estrangeiro"); }
@@ -170,16 +182,21 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
       return ASK({ errors: { email: u.code }, detail: u.detail });
     }
     try {
-      await submit(input, ctx, { identityMethod: "universidade_estrangeira", universityDomain: u.domain, domainCheck: u.check, whatsapp: wa });
+      const outcome = await submit(input, ctx, { identityMethod: "universidade_estrangeira", universityDomain: u.domain, domainCheck: u.check, whatsapp: wa });
+      return { status:200,json:{ ok:true,submission:outcome.submission,mail:outcome.mail } };
     } catch (e) {
       if (e instanceof EmailUndeliverableError) return invalidEmail(input.email, ctx, "email_undeliverable", input.category === "estrangeiro");
       if (e instanceof MailBlockedError) return ASK({ error: "Este endereço de e-mail não pode ser usado em ambiente de teste.", errorCode: "mail_blocked" });
       console.error("assinar falhou", e);
       return ASK({ error: "Não foi possível enviar o e-mail de confirmação. Tente novamente.", errorCode: "send_failed" }, 500);
     }
-    return { status: 200, json: { ok: true } };
   }
 
+  const nominal = provider && ncpfEnabled() ? extraValidator(provider, { input,visitor:ctx.visitorId,whatsapp:wa,token:body?.ncpfToken,intent:ncpfIntent,securityPassed:() => challengePassed }) : null;
+  if (nominal) provider = nominal.provider;
+  const nominalWait = (): FlowResult | null => nominal?.state.pendingToken
+    ? { status:202,json:{ validationPending:true,ncpfToken:nominal.state.pendingToken,retryAfterMs:3000,errorCode:'validation_pending',error:"Estamos conferindo os dados. A assinatura ainda não foi cadastrada e nenhum e-mail foi enviado.",message:"Estamos conferindo os dados. A assinatura ainda não foi cadastrada e nenhum e-mail foi enviado." } }
+    : nominal?.state.unavailable ? ASK({ error:"Não foi possível concluir a conferência do nome agora. Tente novamente em alguns minutos.",errorCode:"cpf_check_unavailable" },503) : null;
   const identity = body?.identity as { method?: IdentityMethod; value?: string } | undefined;
   let needs = await needsIdentity(input.email, provider);
   // Apoiadores sempre passam pela consulta completa antes de ver o desafio de
@@ -200,11 +217,12 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     {
       if (!rateLimit(`cpfname:${ctx.ip}`, 30, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
       const g = await verifyCpfName({ cpf: input.cpf!, declaredName: input.name, provider });
+      const wait = nominalWait(); if (wait) return wait;
       if (!g.ok && g.reason === "identity_required") {
         needs = true;
       } else if (!g.ok) {
         switch (g.reason) {
-          case "mismatch": return ASK({ errors: { name: "name_cpf_mismatch" } });
+          case "mismatch": return ASK({ errors: { name: "name_cpf_mismatch" },...(nominal?.state.rejected?{ncpfRejected:true}:{}) });
           case "not_found": return ASK({ errors: { cpf: "cpf_not_found" } });
           case "mock_unknown": return ASK({ error: "Este CPF não está disponível nos dados desta pré-visualização.", errorCode: "cpf_mock_unknown" }, 503);
           case "locked": return ASK({ errors: { cpf: "cpf_locked" } }, 429);
@@ -225,11 +243,13 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
       if (!preflightDone) { const gN = await emailExistsGate(input, ctx); if (gN) return gN; } // antes de a pessoa gastar a janela de identidade (e a CPF Brasil)
       const ticket = makeTicket(input.cpf!, input.email);
       const securityProof = challengePassed ? makeSignupSecurityProof(input, ticket) : null;
-      return { status: 200, json: { identityRequired: true, ticket: securityProof ? `${ticket}.${securityProof}` : ticket, ...(securityProof ? { securityProof } : {}), methods: ["mae", "nascimento"] } };
+      if(nominal?.state.token)await bindIntentTicket(nominal.state.token,securityProof?`${ticket}.${securityProof}`:ticket);
+      return { status: 200, json: { identityRequired: true, ticket: securityProof ? `${ticket}.${securityProof}` : ticket, ...(securityProof ? { securityProof } : {}), ...(nominal?.state.token ? { ncpfToken:nominal.state.token } : {}), methods: ["mae", "nascimento"] } };
     }
     if (!rateLimit(`ident:${ctx.ip}`, 15, 60 * 60_000)) return ASK({ error: "Muitas tentativas. Tente novamente mais tarde.", errorCode: "rate_limited" }, 429);
 
     const r = await verifyIdentity({ cpf: input.cpf!, method: identity.method as IdentityMethod, value: String(identity.value ?? ""), declaredName: input.name, provider });
+    const wait = nominalWait(); if (wait) return wait;
     if (!r.ok) {
       switch (r.reason) {
         case "name_mismatch": return ASK({ errors: { name: "name_cpf_mismatch" } });
@@ -245,7 +265,8 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
   }
 
   try {
-    await submit(input, ctx, { ...extra, whatsapp: wa });
+    const outcome = await submit(input, ctx, { ...extra, whatsapp: wa, ...(nominal?.state.apiName ? {apiName:nominal.state.apiName}:{}), ...(nominal?.state.evidenceId ? { nameEvidenceId:nominal.state.evidenceId } : {}) });
+    return { status:200,json:{ ok:true,submission:outcome.submission,mail:outcome.mail } };
   } catch (e) {
     if (e instanceof InstitutionEmailMismatchError) return ASK({ errors: { email: "institution_email_mismatch", institution: "institution_email_mismatch" } });
     if (e instanceof EbserhUnitValidationError) return ASK({ errors: e.errors });
@@ -254,5 +275,4 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     console.error("assinar falhou", e);
     return ASK({ error: "Não foi possível enviar o e-mail de confirmação. Tente novamente.", errorCode: "send_failed" }, 500);
   }
-  return { status: 200, json: { ok: true } };
 }

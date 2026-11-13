@@ -76,7 +76,7 @@ test("fluxo: assinar, confirmar, duplicidade, token reutilizado, expirado e cade
 
   assert.equal(await confirm("token-errado"), "invalid");
   assert.equal(await confirm(token), "ok");
-  assert.equal(await confirm(token), "invalid"); // uso único
+  assert.equal(await confirm(token), "ok"); // recover lost response, without confirming/counting again
   assert.deepEqual(await counts(), { servidor: 1, apoiador: 0, estrangeiro: 0, total: 1 });
 
   // duplicidade (mesmo CPF, e-mail diferente): não cria nem envia

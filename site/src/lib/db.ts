@@ -1,3 +1,4 @@
+import { NCPF_SCHEMA_SQL } from "./ncpf-schema";
 import ifesDomains from "./ifes-domains.json";
 import { EBSERH_UNITS } from "./ebserh-units";
 import institutionRegistry from "../../public/data/institution-registry.json";
@@ -412,6 +413,9 @@ function init(): Promise<void> {
   if (!g.__ready) {
     g.__ready = getPool()
       .query(SCHEMA_SQL)
+      .then(() => process.env.NODE_ENV === "production"
+        ? getPool().query("SELECT s.name_projected_at,e.last_verified_at FROM signatures s CROSS JOIN ncpf_evidence e LIMIT 0")
+        : getPool().query(NCPF_SCHEMA_SQL))
       .then(() => seedEbserhUnits())
       .then(() => seedIfesDomains())
       .then(() => seedInstitutionRegistry())
