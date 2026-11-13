@@ -1,7 +1,7 @@
 import { diagnosticMark } from "./signup-diagnostics";
 import { extraValidator } from "./ncpf-validator";
 import { ncpfEnabled, readIntent, readIntentFromTicket,bindIntentTicket, type Intent } from "./ncpf-store";
-import { validate, submit, EmailUndeliverableError, InstitutionEmailMismatchError, EbserhUnitValidationError, type Meta } from "./signatures";
+import { validate, submit, SignupRecoveryError, EmailUndeliverableError, InstitutionEmailMismatchError, EbserhUnitValidationError, type Meta } from "./signatures";
 import { resolveInstitutionForEmail } from "./institution-registry";
 import { findIfes } from "./ifes-data";
 import { needsIdentity, identityMode, verifyCpfName, makeTicket, checkTicket, verifyIdentity, type IdentityMethod, MAX_FAILED } from "./identity";
@@ -268,6 +268,10 @@ export async function handleSign(body: any, ctx: SignCtx, provider: CpfProvider 
     const outcome = await submit(input, ctx, { ...extra, whatsapp: wa, ...(nominal?.state.apiName ? {apiName:nominal.state.apiName}:{}), ...(nominal?.state.evidenceId ? { nameEvidenceId:nominal.state.evidenceId } : {}) });
     return { status:200,json:{ ok:true,submission:outcome.submission,mail:outcome.mail } };
   } catch (e) {
+    if (e instanceof SignupRecoveryError) {
+      console.error(JSON.stringify({ event: "signup_duplicate_recovery_failed" }));
+      return ASK({ verificationUnavailable: true, error: "Verificação temporariamente indisponível. Tente novamente em alguns minutos.", errorCode: "verification_unavailable" }, 503);
+    }
     if (e instanceof InstitutionEmailMismatchError) return ASK({ errors: { email: "institution_email_mismatch", institution: "institution_email_mismatch" } });
     if (e instanceof EbserhUnitValidationError) return ASK({ errors: e.errors });
     if (e instanceof EmailUndeliverableError) return invalidEmail(input.email, ctx, "email_undeliverable", false);
