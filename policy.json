@@ -1,0 +1,54 @@
+{
+  "source_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
+  "target": "peticao-civo",
+  "remote_root": "/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt1",
+  "lock_sha256": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
+  "node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+  "inputs": {
+    "dependencies.tar.gz": {
+      "path": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-qualification-20261114/dependencies-node20-pdfjs.public.tar.gz",
+      "sha256": "3009712141b019777b6395e36a628f4e1c0b8720fb617e4ffe5c814d91670698",
+      "bytes": 207013889
+    },
+    "source.tar.gz": {
+      "path": "/mnt/apps/peticao-final/_ops/admin-v2-query-r1-20261114/retry-1/source-r1.tar.gz",
+      "sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5",
+      "bytes": 11959902
+    },
+    "guard.mjs": {
+      "path": "/mnt/apps/peticao-final/_ops/admin-v2-query-r1-20261114/retry-1/guard-r1.mjs",
+      "sha256": "e02cc353d9f1ee19ea39afce679e5a5242bf061e3b30b04acec19074bc665b03",
+      "bytes": 3238
+    },
+    "qualified-build.mjs": {
+      "path": "/mnt/apps/peticao-final/_ops/admin-v2-query-r1-20261114/retry-1/qualified-build.mjs",
+      "sha256": "4be66f93f7856f03a5637f1744b86243f86a80d7397cfe7686c356c6be8bab82",
+      "bytes": 367
+    },
+    "export.py": {
+      "path": "/mnt/apps/peticao-final/_ops/admin-v2-query-r1-20261114/retry-1/export-r1.py",
+      "sha256": "fcf22e972d9058950f19f4e0608ca75b853d406d529c80d58425233b888ff591",
+      "bytes": 8511
+    }
+  },
+  "budget": {
+    "cpu_max": 4,
+    "memory_gib_max": 8,
+    "new_disk_gib_budget": 30,
+    "disk_budget_mechanism": "preflight32GiBfree; inputunpacked643MB; postruninventory; no aggregatefilesystemquota claimed"
+  },
+  "scope": [
+    "public-only staged input verification",
+    "new owned sandbox prepare",
+    "isolated offline TSC Next build and portable runtime export",
+    "observe own unit"
+  ],
+  "excluded": [
+    "production app/DB access or changes",
+    "worker general jobs release",
+    "queue/cutover",
+    "real credentials/OAuth/home/keyfile mounts",
+    "firewall/hostauth/daemons changes",
+    "QA HTTP/browser: separate reviewed next phase"
+  ]
+}
