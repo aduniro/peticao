@@ -114,7 +114,15 @@ def check_lease(path, manifest_event):
     command = ['python3', COORD, 'check', '--actor', 'admin-recuperacao',
                '--lease', lease['lease'], '--token', lease['token'],
                '--fence', str(lease['fence'])]
-    answer = json.loads(subprocess.check_output(command))
+    # CalledProcessError/TimeoutExpired include argv, which contains the private
+    # lease capability. Do not let those exceptions reach a public traceback.
+    try:
+        checked = subprocess.run(command, capture_output=True, text=True, timeout=30)
+    except Exception:
+        raise RuntimeError('Lease check failed without exposing private command arguments') from None
+    if checked.returncode:
+        raise RuntimeError('Lease rejected; inspect public ledger status, not private command arguments')
+    answer = json.loads(checked.stdout)
     if not answer.get('ok'):
         raise RuntimeError('Lease rejected')
     status = json.loads(subprocess.check_output(['python3', COORD, 'status']))['result']

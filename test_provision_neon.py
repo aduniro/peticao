@@ -2,6 +2,7 @@ import json
 import hashlib
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 import provision_neon as n
@@ -169,6 +170,18 @@ class NeonProvisionTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):n.verify_source_pin(notice,'b'*40)
         (n.BASE/'WORKER-PROFILES.json').write_text('drift')
         with self.assertRaises(RuntimeError):n.verify_source_pin(notice,'a'*40)
+
+    def test_failed_lease_check_does_not_expose_capability_in_traceback(self):
+        capability='SENTINEL-TEST-CAPABILITY-ONLY'
+        p=n.BASE/'lease.json';p.write_text(json.dumps({'lease':'test','token':capability,'fence':1}))
+        failures=[subprocess.CompletedProcess(['private'],1,stdout='{}',stderr='denied'),
+                  subprocess.TimeoutExpired(['private',capability],30)]
+        for failure in failures:
+            options={'side_effect':failure} if isinstance(failure,Exception) else {'return_value':failure}
+            with self.subTest(failure=type(failure).__name__), patch.object(n.subprocess,'run',**options):
+                with self.assertRaises(RuntimeError) as raised:n.check_lease(p,1)
+            self.assertNotIn(capability,str(raised.exception))
+            self.assertIsNone(raised.exception.__cause__)
 
 
 if __name__ == '__main__': unittest.main()
