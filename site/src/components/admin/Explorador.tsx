@@ -25,7 +25,8 @@ const COLUNAS: [string, string][] = [["nome", "Nome"], ["categoria", "Categoria"
 const ORDENAVEIS = new Set(["nome", "categoria", "instituicao", "cargo", "campus", "status", "criada"]);
 
 // MUDAR AQUI: avisos administrativos de consulta; classes/fontes/layout permanecem os existentes.
-const COPY = { failed: "Não foi possível consultar os dados. A consulta anterior foi preservada.", forbidden: "Sua sessão não permite consultar estes dados. Entre novamente com uma conta autorizada.", invalid: "A consulta retornou dados incompatíveis. Atualize os filtros e tente novamente.", previous: "Exibindo a consulta anterior; os filtros atuais ainda não foram confirmados. O CSV corresponde à consulta exibida.", contacts: "Dados de contato não estão disponíveis para este nível de acesso.", retry: "Tentar consulta novamente" };
+const COPY = { failed: "Não foi possível consultar os dados. Tente novamente.", forbidden: "Sua sessão não permite consultar estes dados. Entre novamente com uma conta autorizada.", invalid: "A consulta retornou dados incompatíveis. Atualize os filtros e tente novamente.", previous: "Exibindo a consulta anterior; os filtros atuais ainda não foram confirmados. O CSV usa os filtros da consulta exibida.", failedPrevious: "Exibindo o último resultado obtido para esta consulta. O CSV usa os filtros da consulta exibida.", contacts: "Dados de contato não estão disponíveis para este nível de acesso.", retry: "Tentar consulta novamente" };
+const STATUS_LABELS: Record<string, string> = { confirmed: "Confirmada", pending: "Aguardando confirmação" };
 type Props = { inicial: string; actorScope: string; tela?: boolean; cheio?: boolean };
 /** Mapa + tabela com um só conjunto de filtros (sincronizado com a URL). `tela` = modo janela cheia, só o mapa. */
 export default function Explorador(props: Props) { return <ExplorerContext key={props.actorScope} {...props} />; }
@@ -38,7 +39,7 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
   const [lastGoodQuery, setLastGoodQuery] = useState("");
   const [readAttempt,setReadAttempt] = useState(0);
   const [foco, setFoco] = useState<string | null>(null);
-  const [buscando, setBuscando] = useState(false);
+  const [buscando, setBuscando] = useState(true);
   const [aberto, setAberto] = useState(!(cheio || tela));
   const mobile = useEhMobile(); // no celular os filtros vão para a folha do botão "Filtros" da barra inferior
   const [camada, setCamada] = useState<"assinaturas" | "visitas" | "acessos">("assinaturas");
@@ -65,7 +66,7 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
   const requestParams = new URLSearchParams(qs);requestParams.set("pagina",String(pagina));requestParams.set("ordem",ordem.k);requestParams.set("dir",ordem.dir);
   const requestKey = requestParams.toString();
   useEffect(() => {
-    const id = ++seq.current, controller = new AbortController();setBuscando(true);
+    const id = ++seq.current, controller = new AbortController();setBuscando(true);setErro("");
     const t = setTimeout(async () => {
       const result = await readSignatureExplorer(new URLSearchParams(requestKey),controller.signal);
       if (id !== seq.current) return;
@@ -81,6 +82,15 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
   const previousData = !!r && lastGoodQuery !== requestKey;
   const csvParams = new URLSearchParams(lastGoodQuery);csvParams.delete("pagina");csvParams.delete("limite");csvParams.set("formato","csv");
   const csvHref = `/api/admin/assinaturas/explorar?${csvParams}`;
+  const displayedFilters = parseFiltros(new URLSearchParams(lastGoodQuery));
+  const displayedFilterSummary = [
+    displayedFilters.q && `Nome: ${displayedFilters.q}`,
+    ...CHAVES.flatMap(k => displayedFilters[k].length ? [`${ROTULOS[k]}: ${displayedFilters[k].map(value => FIXAS[k]?.find(option => option.v === value)?.rotulo || value).join(", ")}`] : []),
+    displayedFilters.de && `De: ${displayedFilters.de}`,
+    displayedFilters.ate && `Até: ${displayedFilters.ate}`,
+  ].filter(Boolean).join(" · ") || "Sem filtros";
+  const previousMessage = previousData ? COPY.previous : r && erro ? COPY.failedPrevious : "";
+  const resultNotice = previousMessage ? <div className="adm-sub" role="status" style={{ overflowWrap: "anywhere" }}><p>{previousMessage}</p><p><b>Filtros da consulta exibida:</b> {displayedFilterSummary}</p></div> : null;
 
   useEffect(() => { if (tela) return; const e = new URLSearchParams(qs); if (camada !== "assinaturas") { e.set("camada", camada); e.set("janela", janela); } const t = e.toString(); history.replaceState(null, "", t ? `?${t}` : location.pathname); }, [qs, tela, camada, janela]);
 
@@ -114,11 +124,12 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
             {!tela && <button type="button" className="v2-btn v2-btn-sec" onClick={abrirJanela}>Tela cheia ↗</button>}
           </div>
       <p className="adm-sub v2-mapa-resumo" aria-live="polite">
-        <span>{r ? <><b>{r.total}</b> assinatura(s) · {r.totais.confirmadas} confirmadas · {r.totais.pendentes} aguardando{r.semLocal ? ` · ${r.semLocal} sem local no mapa` : ""}</> : "Carregando…"}{buscando ? " …" : ""}</span>
+        <span>{r ? <><b>{r.total}</b> assinatura(s) · {r.totais.confirmadas} confirmadas · {r.totais.pendentes} aguardando{r.semLocal ? ` · ${r.semLocal} sem local no mapa` : ""}</> : buscando ? "Carregando…" : "Consulta indisponível."}{buscando && r ? " …" : ""}</span>
 
       </p>
       {erro ? <p className="err" role="alert">{erro} <button type="button" className="adm-btn" disabled={buscando} onClick={() => setReadAttempt(n => n + 1)}>{COPY.retry}</button></p> : null}
-      {previousData && <p className="adm-sub" role="status">{COPY.previous}</p>}
+      {resultNotice}
+      {r && r.total === 0 && <p className="adm-sub" role="status">Nenhuma assinatura encontrada na consulta exibida.</p>}
       {r && <p className="adm-sub">Consulta: {brasilia(r.asOf,true)}. Cada página possui seu próprio horário.</p>}
       {r && !r.capabilities.contacts && <p className="adm-sub">{COPY.contacts}</p>}
 
@@ -145,7 +156,7 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
                 {r.linhas.map((l) => (
                   <tr key={l.id}>
                     <td data-l="Nome">{l.nome}</td><td data-l="Categoria">{l.categoria}</td><td data-l="Instituição">{l.instituicao}</td><td data-l="Cargo">{l.cargo}</td><td data-l="AL/Fronteira">{l.regiao}</td>
-                    <td data-l="Campus">{l.campus}</td><td data-l="Cidade/UF">{l.cidadeUf}</td><td data-l="País">{l.pais}</td><td data-l="Status">{l.status}</td><td data-l="WhatsApp">{l.whatsapp ? `${l.whatsapp}${l.waConfirmado ? " ✓" : ""}` : ""}</td><td data-l="Criada em">{l.criada}</td>
+                    <td data-l="Campus">{l.campus}</td><td data-l="Cidade/UF">{l.cidadeUf}</td><td data-l="País">{l.pais}</td><td data-l="Status">{STATUS_LABELS[l.status] || l.status}</td><td data-l="WhatsApp">{l.whatsapp ? `${l.whatsapp}${l.waConfirmado ? " ✓" : ""}` : ""}</td><td data-l="Criada em">{l.criada}</td>
                   </tr>))}
                 {r.linhas.length === 0 ? <tr><td colSpan={COLUNAS.length}>Nenhuma assinatura com esses filtros.</td></tr> : null}
               </tbody>
@@ -155,7 +166,7 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
             <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina <= 1} onClick={() => setPagina(r.pagina - 1)}>‹ Anterior</button>
             <span>Página {r.pagina} de {paginas}</span>
             <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina >= paginas} onClick={() => setPagina(r.pagina + 1)}>Próxima ›</button>
-            <a className="adm-btn" href={csvHref}>Baixar CSV do filtro</a>
+            <a className="adm-btn" href={csvHref}>Baixar CSV da consulta exibida</a>
           </div>
         </>
       ) : null}
@@ -176,11 +187,12 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
         {ativos ? <button type="button" className="adm-btn" onClick={() => { setF(filtrosVazios()); setPagina(1); }}>Limpar filtros ({ativos})</button> : null}
       </div></FiltrosShell>
       <p className="adm-sub" aria-live="polite">
-        <span>{r ? <><b>{r.total}</b> assinatura(s) · {r.totais.confirmadas} confirmadas · {r.totais.pendentes} aguardando{r.semLocal ? ` · ${r.semLocal} sem local no mapa` : ""}</> : "Carregando…"}{buscando ? " …" : ""}</span>
+        <span>{r ? <><b>{r.total}</b> assinatura(s) · {r.totais.confirmadas} confirmadas · {r.totais.pendentes} aguardando{r.semLocal ? ` · ${r.semLocal} sem local no mapa` : ""}</> : buscando ? "Carregando…" : "Consulta indisponível."}{buscando && r ? " …" : ""}</span>
 
       </p>
       {erro ? <p className="err" role="alert">{erro} <button type="button" className="adm-btn" disabled={buscando} onClick={() => setReadAttempt(n => n + 1)}>{COPY.retry}</button></p> : null}
-      {previousData && <p className="adm-sub" role="status">{COPY.previous}</p>}
+      {resultNotice}
+      {r && r.total === 0 && <p className="adm-sub" role="status">Nenhuma assinatura encontrada na consulta exibida.</p>}
       {r && <p className="adm-sub">Consulta: {brasilia(r.asOf,true)}. Cada página possui seu próprio horário.</p>}
       {r && !r.capabilities.contacts && <p className="adm-sub">{COPY.contacts}</p>}
       <p><a className="v2-btn v2-btn-sec" href={`/admin/mapa${qs ? `?${qs}` : ""}`}>Ver estes filtros no mapa →</a></p>
@@ -196,7 +208,7 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
                 {r.linhas.map((l) => (
                   <tr key={l.id}>
                     <td data-l="Nome">{l.nome}</td><td data-l="Categoria">{l.categoria}</td><td data-l="Instituição">{l.instituicao}</td><td data-l="Cargo">{l.cargo}</td><td data-l="AL/Fronteira">{l.regiao}</td>
-                    <td data-l="Campus">{l.campus}</td><td data-l="Cidade/UF">{l.cidadeUf}</td><td data-l="País">{l.pais}</td><td data-l="Status">{l.status}</td><td data-l="WhatsApp">{l.whatsapp ? `${l.whatsapp}${l.waConfirmado ? " ✓" : ""}` : ""}</td><td data-l="Criada em">{l.criada}</td>
+                    <td data-l="Campus">{l.campus}</td><td data-l="Cidade/UF">{l.cidadeUf}</td><td data-l="País">{l.pais}</td><td data-l="Status">{STATUS_LABELS[l.status] || l.status}</td><td data-l="WhatsApp">{l.whatsapp ? `${l.whatsapp}${l.waConfirmado ? " ✓" : ""}` : ""}</td><td data-l="Criada em">{l.criada}</td>
                   </tr>))}
                 {r.linhas.length === 0 ? <tr><td colSpan={COLUNAS.length}>Nenhuma assinatura com esses filtros.</td></tr> : null}
               </tbody>
@@ -206,7 +218,7 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
             <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina <= 1} onClick={() => setPagina(r.pagina - 1)}>‹ Anterior</button>
             <span>Página {r.pagina} de {paginas}</span>
             <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina >= paginas} onClick={() => setPagina(r.pagina + 1)}>Próxima ›</button>
-            <a className="adm-btn" href={csvHref}>Baixar CSV do filtro</a>
+            <a className="adm-btn" href={csvHref}>Baixar CSV da consulta exibida</a>
           </div>
         </>
       ) : null}
