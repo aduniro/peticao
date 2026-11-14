@@ -1,0 +1,50 @@
+{
+  "plan": "INFRA-US-CPU-20261114-v2",
+  "gpu_allowed": false,
+  "new_regions_country": "US",
+  "credit_reserve_fraction": "0.20",
+  "credit_observation_max_age_seconds": 3600,
+  "worker_idle_seconds": 600,
+  "cleanup_budget_seconds": 3600,
+  "leaseweb_allowed": false,
+  "workers": {
+    "civo-nyc": {
+      "region": "NYC1",
+      "size": "g4c.medium",
+      "cpu": 16,
+      "ram_mib": 32768,
+      "root_gb": 80,
+      "volume_gb": 200,
+      "billing_policy": "allocated_until_destroyed",
+      "allow_creation_without_verified_credit": false
+    },
+    "azure-eastus": {
+      "region": "eastus",
+      "sizes_in_order": ["Standard_D16as_v5", "Standard_D8as_v5", "Standard_D4as_v5"],
+      "billing_policy": "deallocate_saves_compute",
+      "disk_sku": "StandardSSD_LRS",
+      "os_disk_gb": 128,
+      "public_ip_sku": "Standard",
+      "inbound_public_ssh": false,
+      "allow_creation_without_verified_credit": false,
+      "request_capacity_before_fallback": true
+    }
+  },
+  "neon": {
+    "project_name": "peticao-infra",
+    "org_id": "org-fragrant-dawn-99551288",
+    "region": "aws-us-east-1",
+    "pg_version": 17,
+    "compute_cu": "0.25",
+    "suspend_timeout_seconds": 300,
+    "bucket": "infra-artefatos",
+    "bucket_public": false,
+    "auth": false,
+    "functions": false,
+    "realtime": false,
+    "ai_gateway": false,
+    "data_api": false
+  },
+  "cutover_requires_root_admin_stage_receipt": true,
+  "original_primary_queue_unchanged_until_cutover": true
+}

@@ -1,0 +1,6 @@
+*
+!.gitignore
+!budget_policy.py
+!test_budget_policy.py
+!WORKER-PROFILES.json
+!PLANO-APROVADO.md
