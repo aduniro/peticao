@@ -1,0 +1,28 @@
+{
+  "target": "peticao-civo",
+  "tailnet_ipv4": "100.122.224.82",
+  "remote_root": "/mnt/apps/peticao-final/.runtime/civo-export-c472-20261114-attempt1",
+  "retained_root": "/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt2",
+  "unit": "peticao-civo-export-c472-20261114-attempt1.service",
+  "app_source": "c472837fb5a4584d81f34c420f4de30989084f85",
+  "inputs": {
+    "runner.py": {
+      "sha256": "e0b42c8f8624b99432581e857577bc6b6b60331c9a8e6118931ae20f2faddcda",
+      "bytes": 11470
+    },
+    "exporter.py": {
+      "sha256": "1517a256705fab6b9d2ad37184ed3ff99a5c93b5f87647c53ffa4b02dffe4d93",
+      "bytes": 8635
+    }
+  },
+  "expected_custody": {
+    "files": 700,
+    "bytes": 269498993,
+    "build_id": "fsa238mHOAm9so9xiR0pL",
+    "sha256": "49c9931eb49840c9f797410b7eeaeba26a84e53ab8febbf09cc4b8812bcb6627"
+  },
+  "scope": "Export-only retained compiled build; no rebuild, no compiled modifications, no real credentials/DB/endpoints/jobs/cutover.",
+  "exporter_original_path": "/mnt/apps/peticao-final/_ops/admin-v2-query-r1-20261114/retry-1/export-r1.py",
+  "exporter_original_sha256": "fcf22e972d9058950f19f4e0608ca75b853d406d529c80d58425233b888ff591",
+  "custody_algorithm": "sortedrglobregularfiles;rows[path,size,sha256];SHA256(json.dumps(rows,separators=(comma,colon)).encode());ensure_asciiTrue;no newline"
+}
