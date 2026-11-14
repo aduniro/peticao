@@ -1,0 +1,6 @@
+{
+  "operator_session": "01a1d130-2948-7140-bcfb-34696b20ab8d",
+  "owner_directive_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-central-adendo-20261114/ROOT-OWNER-DIRECTIVES.json",
+  "owner_directive_sha256": "cd6b6b379dd810c5b6d94a1b6804e2373f93513094aa9c5ad91750ff0a27617a",
+  "scope": "Stage inert development coordinator Civo only; current owner-approved Civo central topology. No queue/production/Codex migration, no active service/credential/SSH change."
+}
