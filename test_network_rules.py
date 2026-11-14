@@ -1,4 +1,7 @@
 import unittest
+import subprocess
+import tempfile
+from pathlib import Path
 from network_rules import authorization,listener_config,client_config,known_hosts,guard_commands
 
 KEY='ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
@@ -31,6 +34,14 @@ class NetworkRules(unittest.TestCase):
         node=dict(name='civo',hostname='peticao-civo',user='civo',port=22,ipv4='100.122.224.82',ipv6='fd7a:115c:a1e0::322f:e053',dns='peticao-civo.tail1a6d71.ts.net',host_key=KEY)
         text=client_config([node],'/root/.ssh/node');self.assertIn('cluster-civo-root-ipv6',text)
         self.assertIn('StrictHostKeyChecking yes',text);self.assertIn(node['dns'],known_hosts([node]))
+    def test_generated_alias_overrides_legacy_host_key_alias(self):
+        node=dict(name='sp',hostname='peticao-sp',user='adunir',port=2224,ipv4='100.109.6.122',ipv6='fd7a:115c:a1e0::8e2f:67b',dns='peticao-sp.tail1a6d71.ts.net',host_key=KEY)
+        with tempfile.TemporaryDirectory() as directory:
+            p=Path(directory)/'config'
+            p.write_text(client_config([node],'/tmp/test-client')+'\nHost cluster-sp-ipv6\n  HostKeyAlias admin-mesh-sp\n')
+            out=subprocess.run(['ssh','-G','-F',str(p),'cluster-sp-ipv6'],capture_output=True,text=True,check=True).stdout
+            self.assertIn('hostkeyalias '+node['dns']+'\n',out)
+            self.assertIn('hostname '+node['ipv6']+'\n',out)
 
 
 if __name__=='__main__':unittest.main()
