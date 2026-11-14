@@ -1,0 +1,13 @@
+[Unit]
+Description=Persistent check of owned Civo worker budget and cleanup
+
+[Timer]
+OnBootSec=30s
+OnCalendar=*-*-* *:0/5:00
+Persistent=true
+AccuracySec=5s
+RandomizedDelaySec=10s
+Unit=peticao-civo-finance.service
+
+[Install]
+WantedBy=timers.target

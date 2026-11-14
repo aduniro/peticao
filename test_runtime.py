@@ -4,6 +4,8 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import tempfile
 import unittest
+import os
+from unittest.mock import patch
 
 from durable_api import Journal, Api, atomic, LifecycleLock
 from financial_guard import deadlines
@@ -56,14 +58,17 @@ class FakeApi:
 
 
 class FakeAdapter:
-    def __init__(self, now):self.now=now;self.jobs=0;self.export_ok=True;self.drains=0
+    def __init__(self, now, root):self.now=now;self.root=root;self.jobs=0;self.export_ok=True;self.drains=0
     def drain(self,ident):self.drains+=1
     def snapshot(self,ident):
         return dict(instance_id=ident,at=self.now.isoformat(),authority_verified=True,
                     admission_closed=True,running=self.jobs,finalizing=0,exports_pending=0)
     def export_verified(self,resources):
+        directory=self.root/'exports';directory.mkdir(mode=0o700,exist_ok=True)
+        path=directory/('worker-'+resources[0]['id']+'.tar.gz');path.write_bytes(b'test-only-complete-backup');path.chmod(0o600)
         return dict(instance_id=resources[0]['id'],worker_frozen=True,sha256_verified=self.export_ok,
-                    resource_ids=[x['id'] for x in resources],verified_at=self.now.isoformat())
+                    resource_ids=[x['id'] for x in resources],verified_at=self.now.isoformat(),
+                    backup_path=str(path),sha256=hashlib.sha256(path.read_bytes()).hexdigest())
     def assert_frozen(self,*args):pass
 
 
@@ -71,6 +76,7 @@ class RuntimeSafety(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name);(self.root/'journal').mkdir()
+        patcher=patch('financial_runtime.ROOT_BACKUP_UID',os.getuid());patcher.start();self.addCleanup(patcher.stop)
         self.now=datetime(2026,12,5,tzinfo=timezone.utc)
         grant=dict(provenance='authenticated_owner',account_scope_id='a',grant_evidence_id='g',
                    currency='USD',initial_usd='250',baseline_spent_usd='0',expires_at='2026-12-31T00:00:00Z')
@@ -83,7 +89,7 @@ class RuntimeSafety(unittest.TestCase):
             atomic(self.root/'journal'/(r['creation_key']+'.json'),dict(state='completed',request=request,
                    request_sha256=hashlib.sha256(json.dumps(request,sort_keys=True).encode()).hexdigest(),response={'id':r['id']}))
         self.receipt=dict(account_scope_id='a',schedule=schedule,resources=self.resources)
-        self.api=FakeApi(self.resources);self.adapter=FakeAdapter(self.now)
+        self.api=FakeApi(self.resources);self.adapter=FakeAdapter(self.now,self.root)
         charges=dict(observed_at=self.now.isoformat(),account_total_usd='0',grant_initial_usd='250',
                      complete_account_scope=True,currency='USD',account_scope_id='a',grant_evidence_id='g')
         self.controller=Controller(self.root,{'account_scope_id':'a'},self.receipt,self.api,
@@ -121,6 +127,38 @@ class RuntimeSafety(unittest.TestCase):
         self.assertEqual(len(self.api.deletes),1)
         self.assertEqual(self.controller.tick(self.now)['state'],'owned_resources_absent')
         self.assertEqual(len(self.api.deletes),2)
+
+    def crash_after_instance(self):
+        self.api.crash_after_delete=True
+        with self.assertRaises(TimeoutError):self.controller.tick(self.now)
+        return next((self.root/'exports').glob('*.tar.gz'))
+
+    def test_missing_backup_after_crash_preserves_owned_volume(self):
+        self.crash_after_instance().unlink()
+        self.assertEqual(self.controller.tick(self.now)['state'],'backup_unavailable_preserving_resources')
+        self.assertEqual(len(self.api.deletes),1)
+        self.assertEqual(len(self.api.live),1)
+
+    def test_corrupt_backup_after_crash_preserves_owned_volume(self):
+        self.crash_after_instance().write_bytes(b'corrupt')
+        self.assertEqual(self.controller.tick(self.now)['state'],'backup_unavailable_preserving_resources')
+        self.assertEqual(len(self.api.deletes),1)
+
+    def test_symlink_backup_after_crash_is_not_trusted(self):
+        path=self.crash_after_instance();path.unlink();path.symlink_to(self.root/'export-proof.json')
+        self.assertEqual(self.controller.tick(self.now)['state'],'backup_unavailable_preserving_resources')
+        self.assertEqual(len(self.api.deletes),1)
+
+    def test_backup_removal_between_instance_and_volume_delete_stops_cleanup(self):
+        original=self.api.request
+        def request(method,path,**kwargs):
+            response=original(method,path,**kwargs)
+            if method=='DELETE' and '/instances/' in path:
+                next((self.root/'exports').glob('*.tar.gz')).unlink()
+            return response
+        self.api.request=request
+        self.assertEqual(self.controller.tick(self.now)['state'],'backup_unavailable_preserving_resources')
+        self.assertEqual(len(self.api.deletes),1)
 
 
 class Usage(unittest.TestCase):

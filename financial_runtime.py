@@ -8,11 +8,15 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import stat
 
 from durable_api import atomic, LifecycleLock
 from financial_guard import amount, instant, admit
+
+ROOT_BACKUP_UID=0
 
 
 def owned_resources(receipt, journal_directory, account_id):
@@ -75,6 +79,32 @@ class Controller:
         return (entry.get('request_sha256') == digest
                 and request == {'method':'DELETE','path':'/v2/instances/'+ident,'region':'NYC1'}
                 and entry.get('state') in {'pending','completed'})
+
+    def verify_backup(self, proof, instance_id):
+        expected=self.root/'exports'/('worker-'+instance_id+'.tar.gz')
+        if proof.get('backup_path')!=str(expected):raise ValueError('Backup path differs from pinned export path')
+        for directory in [self.root,self.root/'exports']:
+            info=directory.lstat()
+            if (not stat.S_ISDIR(info.st_mode) or info.st_uid!=ROOT_BACKUP_UID
+                    or info.st_mode & 0o077):raise ValueError('Backup directory ownership/permissions changed')
+        sha=proof.get('sha256')
+        if not isinstance(sha,str) or not re.fullmatch('[0-9a-f]{64}',sha):
+            raise ValueError('Backup digest missing')
+        fd=os.open(expected,os.O_RDONLY | os.O_NOFOLLOW)
+        with os.fdopen(fd,'rb') as handle:
+            before=os.fstat(handle.fileno())
+            if (not stat.S_ISREG(before.st_mode) or before.st_uid!=ROOT_BACKUP_UID
+                    or before.st_mode & 0o077 or before.st_nlink!=1):
+                raise ValueError('Backup must be a private owned regular file')
+            actual=hashlib.file_digest(handle,'sha256').hexdigest()
+            after=os.fstat(handle.fileno());current=expected.lstat()
+            identity=lambda s:(s.st_dev,s.st_ino,s.st_size,s.st_mtime_ns,s.st_ctime_ns)
+            if identity(before)!=identity(after) or identity(current)!=identity(after) or actual!=sha:
+                raise ValueError('Backup changed, was replaced or failed checksum')
+
+    def backup_failure(self, now, error):
+        return self.status('backup_unavailable_preserving_resources',at=now.isoformat(),
+                           cleanup_complete=False,residual_billing_possible=True,error_class=type(error).__name__)
 
     def status(self, state, **fields):
         value = dict(state=state, admission_open=False, **fields)
@@ -143,6 +173,8 @@ class Controller:
             return self.cleanup(resources,instance,proof,now)
 
     def cleanup(self, resources, instance, proof, now):
+            try:self.verify_backup(proof,instance['id'])
+            except (OSError,ValueError) as error:return self.backup_failure(now,error)
             # Validate every live identity before the first destructive operation.
             for resource in resources:
                 current = self.api.request('GET','/v2/'+resource['kind']+'/'+resource['id'],query={'region':'NYC1'})
@@ -153,6 +185,8 @@ class Controller:
                 current = self.api.request('GET',path,query={'region':'NYC1'})
                 matches(current,resource,self.policy['account_scope_id'])
                 if current.get('_not_found'): continue
+                try:self.verify_backup(proof,instance['id'])
+                except (OSError,ValueError) as error:return self.backup_failure(now,error)
                 current_instance = self.api.request('GET','/v2/instances/'+instance['id'],query={'region':'NYC1'})
                 if not current_instance.get('_not_found'):
                     self.adapter.assert_frozen(instance['id'],proof)
@@ -160,6 +194,7 @@ class Controller:
                     return self.status('missing_owned_instance_delete_attempt',at=now.isoformat())
                 request = {'method':'DELETE','path':path,'region':'NYC1'}
                 def deletion(resource=resource,path=path):
+                    self.verify_backup(proof,instance['id'])
                     response = self.api.request('DELETE',path,query={'region':'NYC1'})
                     # An accepted asynchronous DELETE is not proof billing stopped.
                     return response

@@ -1,0 +1,23 @@
+[Unit]
+Description=Bounded financial lifecycle of owned Civo worker
+Wants=network-online.target
+After=network-online.target tailscaled.service
+RequiresMountsFor=/var/lib/peticao-civo
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/peticao-civo
+ExecStart=/usr/bin/python3 -B /opt/peticao-civo/runtime_main.py --policy-sha256 @POLICY_SHA256@ --execute-cleanup
+TimeoutStartSec=45min
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/peticao-civo
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+MemoryMax=512M
+TasksMax=32
+
