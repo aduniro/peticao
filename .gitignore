@@ -1,0 +1,11 @@
+*
+!bootstrap.sh
+!smoke.sh
+!test_bootstrap.py
+!toolchain_operator.py
+!test_operator.py
+!pins.json
+!known_hosts
+!policy.json
+!README.md
+!.gitignore

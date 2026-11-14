@@ -1,0 +1,17 @@
+{
+  "subscription": "57298c3f-7cf2-4dbe-9884-c7bafdff4478",
+  "resource_group": "peticao-dev-eastus",
+  "vm_name": "peticao-azure-dev-01",
+  "vm_id": "/subscriptions/57298c3f-7cf2-4dbe-9884-c7bafdff4478/resourceGroups/peticao-dev-eastus/providers/Microsoft.Compute/virtualMachines/peticao-azure-dev-01",
+  "public_ipv4": "20.85.215.204",
+  "tailnet_ipv4": "100.76.178.21",
+  "actions": [
+    "install",
+    "smoke"
+  ],
+  "coordinator_decision": "Infra20261114DEVtoolchainDockerComposeNode20app22CLIPlaywrightChromium;Runningduringactualsetup;Infraownsidle",
+  "docker_group_builder_root_equivalent": true,
+  "chromium_library_updates": "Playwright official install-deps chromium may update required Debian libraries; no full system upgrade",
+  "no_jobs_or_mesh_changes": true,
+  "no_credentials_or_temp_nvme_changes": true
+}
