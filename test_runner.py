@@ -1,5 +1,6 @@
 """Offline runner tests; only local public fixtures and mocked host calls."""
 from contextlib import redirect_stdout
+import copy
 import io
 import json
 import os
@@ -26,6 +27,8 @@ class RunnerTests(unittest.TestCase):
         (self.next / 'server.js').write_bytes(b'public fixture compiled bytes')
         self.expected = runner.custody(self.next)
         self.account = SimpleNamespace(pw_uid=12345, pw_gid=12345)
+        self.baseline = {p: {'exists': True, 'device': 25, 'inode': 1, 'mode': '0700', 'symlink': False, 'markers': {m: True for m in runner.HOME_MARKERS}} for p in runner.HOME_PATHS}
+        self.home_proof = {'homes': {p: {'exists': True, 'device': 50 + i, 'inode': 1, 'mode': '1777', 'symlink': False, 'markers': {m: False for m in runner.HOME_MARKERS}, 'filesystem': 'tmpfs', 'mount_read_only': True, 'filesystem_read_only': True, 'child_count': 0, 'readable': True} for i, p in enumerate(runner.HOME_PATHS)}, 'civo_home_exists': False}
         self.patches = [patch.object(runner, 'ROOT', self.root), patch.object(runner, 'RETAINED', self.retained), patch.object(runner, 'EXPECTED', self.expected)]
         for p in self.patches:
             p.start()
@@ -51,7 +54,7 @@ class RunnerTests(unittest.TestCase):
             return runner.validate_inputs()
 
     def prepare(self):
-        with patch.object(runner, 'validate_inputs'), patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'chown') as chown, patch.object(runner, 'host_preflight'), redirect_stdout(io.StringIO()):
+        with patch.object(runner, 'validate_inputs'), patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'chown') as chown, patch.object(runner, 'host_preflight'), patch.object(runner, 'host_home_baseline', return_value=self.baseline), redirect_stdout(io.StringIO()):
             runner.prepare()
         return chown
 
@@ -100,7 +103,7 @@ class RunnerTests(unittest.TestCase):
 
     def test_unit_exact_resources_only_new_work_outputs_writable(self):
         args = runner.unit_args()
-        for item in ['User=civo', 'Group=civo', 'MemoryMax=8G', 'CPUQuota=400%', 'TasksMax=256', 'TimeoutStartSec=1800', 'ProtectHome=tmpfs', 'PrivateNetwork=yes', 'ProtectSystem=strict', 'NoNewPrivileges=yes', 'PrivateDevices=yes', 'CapabilityBoundingSet=', 'RestrictSUIDSGID=yes', 'TemporaryFileSystem=/tmp:ro /var/tmp:ro']:
+        for item in ['User=civo', 'Group=civo', 'MemoryMax=8G', 'CPUQuota=400%', 'TasksMax=256', 'TimeoutStartSec=1800', 'ProtectHome=tmpfs', 'PrivateNetwork=yes', 'ProtectSystem=strict', 'NoNewPrivileges=yes', 'PrivateDevices=yes', 'CapabilityBoundingSet=', 'RestrictSUIDSGID=yes', 'TemporaryFileSystem=/tmp:ro /var/tmp:ro /home:ro /root:ro /run/user:ro']:
             self.assertIn('--property=' + item, args)
         self.assertIn('--property=ReadWritePaths=' + str(self.root / 'work') + ' ' + str(self.root / 'outputs'), args)
         self.assertIn('--property=ReadOnlyPaths=' + str(self.retained) + ' ' + str(self.root / 'tools') + ' ' + str(self.root / 'inputs'), args)
@@ -228,7 +231,8 @@ class RunnerTests(unittest.TestCase):
     def test_namespace_checks_ro_and_canaries_before_export(self):
         for name in ['work', 'outputs']:
             (self.root / name).mkdir()
-        with patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'geteuid', return_value=12345), patch.object(runner.os, 'getegid', return_value=12345), patch.object(runner, 'run') as run, patch.object(runner.os, 'statvfs', return_value=SimpleNamespace(f_flag=os.ST_RDONLY)), patch.object(runner.os, 'access', return_value=False), patch.object(runner, 'deny_socket') as socket_check:
+        (self.root / 'host-home-baseline.json').write_text(json.dumps(self.baseline))
+        with patch.object(runner, 'masked_home_metadata', return_value=self.home_proof), patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'geteuid', return_value=12345), patch.object(runner.os, 'getegid', return_value=12345), patch.object(runner, 'run') as run, patch.object(runner.os, 'statvfs', return_value=SimpleNamespace(f_flag=os.ST_RDONLY)), patch.object(runner.os, 'access', return_value=False), patch.object(runner, 'deny_socket') as socket_check:
             runner.namespace_preflight()
         self.assertEqual(run.call_count, 1)
         socket_check.assert_called_once_with()
@@ -236,9 +240,46 @@ class RunnerTests(unittest.TestCase):
         self.assertFalse((self.root / 'work/.namespace-write-canary').exists())
         self.assertFalse((self.root / 'outputs/.namespace-write-canary').exists())
         (self.root / 'work/namespace-preflight.json').unlink()
-        with patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'geteuid', return_value=12345), patch.object(runner.os, 'getegid', return_value=12345), patch.object(runner, 'run'), patch.object(runner.os, 'statvfs', return_value=SimpleNamespace(f_flag=0)), patch.object(runner.os, 'access', return_value=False), patch.object(runner, 'deny_socket'), self.assertRaisesRegex(ValueError, 'filesystem is writable'):
+        with patch.object(runner, 'masked_home_metadata', return_value=self.home_proof), patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'geteuid', return_value=12345), patch.object(runner.os, 'getegid', return_value=12345), patch.object(runner, 'run'), patch.object(runner.os, 'statvfs', return_value=SimpleNamespace(f_flag=0)), patch.object(runner.os, 'access', return_value=False), patch.object(runner, 'deny_socket'), self.assertRaisesRegex(ValueError, 'filesystem is writable'):
             runner.namespace_preflight()
         self.assertFalse((self.root / 'work/namespace-preflight.json').exists())
+
+    def test_readable_empty_readonly_tmpfs_homes_pass(self):
+        self.assertTrue(runner.verify_masked_homes(self.baseline, self.home_proof))
+        # Readability and mode 1777 describe the replacement, not host credentials.
+        self.assertTrue(self.home_proof['homes']['/root']['readable'])
+        incomplete = copy.deepcopy(self.baseline)
+        incomplete['/root']['device'] = None
+        with self.assertRaises(ValueError):
+            runner.verify_masked_homes(incomplete, self.home_proof)
+
+    def test_masked_homes_reject_same_device_markers_rw_and_nonempty(self):
+        mutations = [
+            lambda p: p['homes']['/root'].update(device=25),
+            lambda p: p['homes']['/root']['markers'].update({'.ssh': True}),
+            lambda p: p['homes']['/root'].update(filesystem_read_only=False),
+            lambda p: p['homes']['/root'].update(mount_read_only=False),
+            lambda p: p['homes']['/home'].update(filesystem='ext4'),
+            lambda p: p['homes']['/run/user'].update(child_count=1),
+            lambda p: p.update(civo_home_exists=True),
+            lambda p: p['homes']['/root'].update(symlink=True),
+            lambda p: p['homes']['/root'].update(markers={}),
+        ]
+        for mutate in mutations:
+            proof = copy.deepcopy(self.home_proof)
+            mutate(proof)
+            with self.subTest(proof=proof), self.assertRaises(ValueError):
+                runner.verify_masked_homes(self.baseline, proof)
+
+    def test_baseline_file_permissions_owner_and_access_config(self):
+        self.fixtures()
+        chown = self.prepare()
+        path = self.root / 'host-home-baseline.json'
+        self.assertEqual(path.stat().st_mode & 0o777, 0o640)
+        self.assertEqual(json.loads(path.read_text()), self.baseline)
+        self.assertIn(unittest.mock.call(path, 0, 12345), chown.call_args_list)
+        with patch.object(runner.pwd, 'getpwnam', return_value=self.account):
+            self.assertIn(str(path), runner.access_config()['files'])
 
     def test_host_preflight_keeps_complete_aggregate_diagnostic(self):
         diagnostic = '{"preflight_errors":["traverse:first","traverse:second"]}'

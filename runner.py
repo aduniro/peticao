@@ -11,9 +11,9 @@ import socket
 import stat
 import subprocess
 
-ROOT = Path('/mnt/apps/peticao-final/.runtime/civo-export-c472-20261114-attempt2')
+ROOT = Path('/mnt/apps/peticao-final/.runtime/civo-export-c472-20261114-attempt3')
 RETAINED = Path('/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt2')
-UNIT = 'peticao-civo-export-c472-20261114-attempt2.service'
+UNIT = 'peticao-civo-export-c472-20261114-attempt3.service'
 OLD_UNIT = 'peticao-civo-qualified-build-20261114-attempt2.service'
 EXPECTED = {'files': 700, 'bytes': 269498993, 'build_id': 'fsa238mHOAm9so9xiR0pL', 'sha256': '49c9931eb49840c9f797410b7eeaeba26a84e53ab8febbf09cc4b8812bcb6627'}
 
@@ -133,6 +133,8 @@ def prepare():
         path = ROOT / 'work' / name
         path.mkdir(mode=0o700)
         os.chown(path, account.pw_uid, account.pw_gid)
+    write_json(ROOT / 'host-home-baseline.json', host_home_baseline(), 0o640, exclusive=True)
+    os.chown(ROOT / 'host-home-baseline.json', 0, account.pw_gid)
     write_json(ROOT / 'custody-before.json', before, 0o640, exclusive=True)
     os.chown(ROOT / 'custody-before.json', 0, account.pw_gid)
     write_json(ROOT / 'STATE.json', {'phase': 'prepared', 'unit': UNIT}, 0o640)
@@ -152,7 +154,7 @@ def unit_args():
             '--property=ProtectProc=invisible', '--property=ReadWritePaths=' + writable,
             '--property=ReadOnlyPaths=' + str(RETAINED) + ' ' + str(ROOT / 'tools') + ' ' + str(ROOT / 'inputs'),
             '--property=InaccessiblePaths=-/run/docker.sock -/run/containerd -/var/lib/tailscale -/run/tailscale',
-            '--property=TemporaryFileSystem=/tmp:ro /var/tmp:ro',
+            '--property=TemporaryFileSystem=/tmp:ro /var/tmp:ro /home:ro /root:ro /run/user:ro',
             '--property=StandardOutput=append:' + str(ROOT / 'work/export.log'),
             '--property=StandardError=append:' + str(ROOT / 'work/export.log'),
             '--working-directory=' + str(ROOT / 'work'),
@@ -207,7 +209,7 @@ print(json.dumps({'readability_preflight': 'PASS', 'files': len(files), 'directo
 
 def access_config():
     account = pwd.getpwnam('civo')
-    files = [ROOT / x for x in ['STATE.json', 'custody-before.json', 'runner.py', 'tools/runner.py', 'tools/exporter.py', 'inputs/policy.json', 'inputs/exporter.py']]
+    files = [ROOT / x for x in ['STATE.json', 'custody-before.json', 'host-home-baseline.json', 'runner.py', 'tools/runner.py', 'tools/exporter.py', 'inputs/policy.json', 'inputs/exporter.py']]
     files += [RETAINED / x for x in ['inputs/source.tar.gz', 'deps/site/package-lock.json', 'profile/runs/build-1/source-before.sha256', 'profile/runs/build-1/source-after.sha256', 'profile/runs/build-1/guard.jsonl']]
     return {'uid': account.pw_uid, 'gid': account.pw_gid, 'files': [str(p) for p in files], 'directories': [str(ROOT / p) for p in ['tools', 'inputs', 'work', 'outputs']], 'trees': [str(RETAINED / p) for p in ['snapshot/site', 'deps/site']]}
 
@@ -224,6 +226,76 @@ def host_preflight():
     return result
 
 
+HOME_PATHS = ('/home', '/root', '/run/user')
+HOME_MARKERS = ('.ssh', '.config', '.codex')
+
+
+def home_stat(value):
+    path = Path(value)
+    row = {'exists': False, 'device': None, 'inode': None, 'mode': None, 'symlink': path.is_symlink(), 'markers': {}}
+    try:
+        info = path.stat()
+        row.update(exists=True, device=info.st_dev, inode=info.st_ino, mode=format(stat.S_IMODE(info.st_mode), '04o'))
+    except OSError:
+        pass
+    for marker in HOME_MARKERS:
+        candidate = path / marker
+        row['markers'][marker] = candidate.exists() or candidate.is_symlink()
+    return row
+
+
+def host_home_baseline():
+    # Root collects only stat identity and existence booleans, never names or contents.
+    return {value: home_stat(value) for value in (*HOME_PATHS, '/home/civo')}
+
+
+def masked_home_metadata():
+    mounts = {}
+    with open('/proc/self/mountinfo', 'r', encoding='utf-8') as stream:
+        for line in stream:
+            before, separator, after = line.partition(' - ')
+            fields, filesystem = before.split(), after.split()
+            if separator and len(fields) >= 6 and filesystem and fields[4] in HOME_PATHS:
+                mounts[fields[4]] = {'filesystem': filesystem[0], 'mount_read_only': 'ro' in fields[5].split(',')}
+    homes = {}
+    for value in HOME_PATHS:
+        row = home_stat(value)
+        row.update(mounts.get(value, {'filesystem': None, 'mount_read_only': False}))
+        try:
+            row['filesystem_read_only'] = bool(os.statvfs(value).f_flag & os.ST_RDONLY)
+            # One entry is enough to disprove emptiness; filenames are never accessed.
+            with os.scandir(value) as entries:
+                row['child_count'] = 1 if next(entries, None) is not None else 0
+        except OSError:
+            row['filesystem_read_only'] = False
+            row['child_count'] = None
+        homes[value] = row
+    civo = Path('/home/civo')
+    return {'homes': homes, 'civo_home_exists': civo.exists() or civo.is_symlink()}
+
+
+def verify_masked_homes(baseline, proof):
+    """Pure fail-closed verification; a readable empty replacement tmpfs is allowed."""
+    errors = []
+    if proof.get('civo_home_exists', True):
+        errors.append('civo home visible')
+    for value in HOME_PATHS:
+        old, current = baseline.get(value, {}), proof.get('homes', {}).get(value, {})
+        if not current.get('exists') or current.get('symlink', True):
+            errors.append('missing or linked home mask:' + value)
+        if current.get('filesystem') != 'tmpfs' or not current.get('mount_read_only') or not current.get('filesystem_read_only'):
+            errors.append('home mask must be read-only tmpfs:' + value)
+        if current.get('child_count') != 0:
+            errors.append('home mask is not proven empty:' + value)
+        if set(current.get('markers', {})) != set(HOME_MARKERS) or any(current.get('markers', {}).values()):
+            errors.append('home credential marker visible:' + value)
+        if not old.get('exists') or old.get('device') is None or current.get('device') is None or current.get('device') == old.get('device'):
+            errors.append('home mask device unchanged or unproven:' + value)
+    if errors:
+        raise ValueError('; '.join(errors))
+    return True
+
+
 def namespace_preflight():
     account = pwd.getpwnam('civo')
     if os.geteuid() != account.pw_uid or os.getegid() != account.pw_gid or account.pw_uid == 0:
@@ -235,8 +307,12 @@ def namespace_preflight():
     for path in [RETAINED, RETAINED / 'snapshot/site/.next', ROOT, ROOT / 'inputs', ROOT / 'tools', ROOT / 'STATE.json', ROOT / 'runner.py', Path('/tmp'), Path('/var/tmp')]:
         if os.access(path, os.W_OK):
             errors.append('writable protected path:' + str(path))
-    if Path('/home/civo').exists() or os.access('/root', os.R_OK):
-        errors.append('host home visible')
+    baseline = json.loads((ROOT / 'host-home-baseline.json').read_text())
+    home_proof = masked_home_metadata()
+    try:
+        verify_masked_homes(baseline, home_proof)
+    except ValueError as error:
+        errors.append(str(error))
     deny_socket()
     for directory in [ROOT / 'work', ROOT / 'outputs']:
         canary = directory / '.namespace-write-canary'
@@ -248,7 +324,7 @@ def namespace_preflight():
             errors.append('write canary failed:' + str(directory))
     if errors:
         raise ValueError('; '.join(errors))
-    write_json(ROOT / 'work/namespace-preflight.json', {'phase': 'namespace-preflight-pass', 'uid': account.pw_uid, 'gid': account.pw_gid, 'retained_read_only': True, 'host_home_hidden': True, 'docker_connect_denied': True}, exclusive=True)
+    write_json(ROOT / 'work/namespace-preflight.json', {'phase': 'namespace-preflight-pass', 'uid': account.pw_uid, 'gid': account.pw_gid, 'retained_read_only': True, 'host_home_hidden': True, 'home_isolation': home_proof, 'docker_connect_denied': True}, exclusive=True)
 
 
 def deny_socket(path='/run/docker.sock'):
