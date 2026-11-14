@@ -37,6 +37,15 @@ def issue(capability_file,manifest_event,source,request,policy_sha):
     notice=cli(['history','--after-seq',str(manifest_event-1),'--limit','1'])[0]
     if notice.get('seq')!=manifest_event or notice.get('kind')!='notice' or DESTINATION not in notice['resources']:
         raise ValueError('Immutable Civo deployment notice missing')
+    binding=notice['data'].get('civo_deployment',{})
+    if binding.get('policy_sha256')!=policy_sha:
+        raise ValueError('Configuration differs from immutable reviewed policy digest')
+    allowed=binding.get('allowed_requests')
+    if not isinstance(allowed,list) or not allowed or not all(isinstance(x,dict) for x in allowed):
+        raise ValueError('Immutable exact request set is missing')
+    encoded=json.dumps(request,sort_keys=True)
+    if encoded not in {json.dumps(x,sort_keys=True) for x in allowed}:
+        raise ValueError('Request is outside the immutable reviewed request set')
     manifest=notice['data'].get('manifest',{});hashes=notice['data'].get('file_sha256',{})
     source=Path(source)
     result=subprocess.run(['git','-C',str(source),'rev-parse','HEAD'],capture_output=True,text=True,timeout=10)
@@ -44,7 +53,8 @@ def issue(capability_file,manifest_event,source,request,policy_sha):
         raise ValueError('Working source differs from reviewed commit')
     required={'provision_steps.py','deploy_permit.py','operator_gate.py','durable_api.py',
               'financial_guard.py','financial_runtime.py','runtime_main.py','exclusive_inventory.py',
-              'usage_observer.py','ssh_adapter.py','worker_lifecycle.py','queue_finance.py'}
+              'usage_observer.py','ssh_adapter.py','worker_lifecycle.py','queue_finance.py',
+              'cloud_step.py','cloud_receipt.py','operator_driver.py'}
     files=manifest.get('files',[])
     if not required.issubset(files):raise ValueError('Reviewed source closure incomplete')
     for name in files:

@@ -22,3 +22,10 @@
 !RUNTIME-AUTHORITY.json
 !peticao-civo-finance.service.in
 !peticao-civo-finance.timer
+!cloud_receipt.py
+!cloud_step.py
+!operator_driver.py
+!test_cloud_receipt.py
+!test_operator_gate.py
+!manual_handoff.py
+!test_manual_handoff.py

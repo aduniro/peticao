@@ -72,10 +72,19 @@ def run(args):
     if (not isinstance(firewalls,list) or not firewalls
             or any(x.get('account_id')!=policy['account_scope_id'] for x in firewalls)):
         raise ValueError('Live API account identity not proven')
+    def history():
+        history_file=private_file('/etc/peticao-civo/history-liability.json')
+        history_raw=history_file.read_bytes()
+        if hashlib.sha256(history_raw).hexdigest()!=policy.get('history_liability_sha256'):
+            raise ValueError('Historical liability differs from reviewed source')
+        return json.loads(history_raw)
     receipt_path=ROOT/'allocation.json'
     if not receipt_path.exists():
         inventory=collect(api,policy['account_scope_id'],None,
-                          datetime.fromisoformat(policy['grant']['expires_at']))
+                          datetime.fromisoformat(policy['grant']['expires_at']),
+                          historical_liability=history(),grant_starts_at=policy['grant']['starts_at'])
+        if inventory.get('complete_billable_scope') is not True:
+            raise ValueError('Historical billing unknown; controller cannot arm creation')
         atomic(ROOT/'inventory.json',inventory)
         value={'state':'armed_without_allocation','at':now.isoformat(),
                'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
@@ -89,7 +98,8 @@ def run(args):
         read_policy(args.policy,args.policy_sha256)
     def observation(clock):
         inventory=collect(api,policy['account_scope_id'],receipt,
-                          datetime.fromisoformat(receipt['schedule']['delete_by']))
+                          datetime.fromisoformat(receipt['schedule']['delete_by']),
+                          historical_liability=history(),grant_starts_at=policy['grant']['starts_at'])
         atomic(ROOT/'inventory.json',inventory)
         return observe(api,policy['grant'],policy['rates'],clock,inventory=inventory,
                        horizon_until=datetime.fromisoformat(receipt['schedule']['delete_by']))

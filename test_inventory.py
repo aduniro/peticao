@@ -25,10 +25,17 @@ class InventoryApi:
 
 class Coverage(unittest.TestCase):
     def setUp(self):self.api=InventoryApi();self.now=datetime(2026,11,14,tzinfo=timezone.utc)
-    def run_collect(self):return collect(self.api,'a',None,self.now+timedelta(days=10),now=lambda:self.now)
+    def history(self):
+        return dict(kind='verified_account_liability_bound',account_scope_id='a',currency='USD',
+                    source_ref='test-only-provider-evidence',verified_at=self.now.isoformat(),
+                    covered_from=(self.now-timedelta(days=1)).isoformat(),covered_through=self.now.isoformat(),
+                    unposted_upper_bound_usd='7.50')
+    def run_collect(self):return collect(self.api,'a',None,self.now+timedelta(days=10),now=lambda:self.now,
+                               historical_liability=self.history(),grant_starts_at=(self.now-timedelta(days=1)).isoformat())
     def test_empty_account_reconciles_listings_and_quota(self):
         self.assertTrue(self.run_collect()['complete_billable_scope'])
         self.assertEqual(self.api.quota_calls,2)
+        self.assertEqual(self.run_collect()['other_unposted_upper_bound_usd'],'7.50')
     def test_other_resource_refuses_exclusive_liability_claim(self):
         self.api.extra=True
         with self.assertRaises(ValueError):self.run_collect()
@@ -39,6 +46,20 @@ class Coverage(unittest.TestCase):
     def test_concurrent_account_change_refuses_scope_attestation(self):
         self.api.changed=True
         with self.assertRaises(ValueError):self.run_collect()
+
+    def test_deleted_past_resource_unknown_cost_is_not_inferred_zero(self):
+        result=collect(self.api,'a',None,self.now+timedelta(days=10),now=lambda:self.now)
+        self.assertFalse(result['complete_billable_scope'])
+        self.assertEqual(result['historical_liability_status'],'unknown')
+        self.assertNotIn('other_unposted_upper_bound_usd',result)
+
+    def test_history_must_cover_credit_start_and_observation_time(self):
+        for field,value in [('covered_from',self.now.isoformat()),
+                            ('covered_through',(self.now-timedelta(seconds=1)).isoformat())]:
+            proof=self.history();proof[field]=value
+            with self.subTest(field=field),self.assertRaises(ValueError):
+                collect(self.api,'a',None,self.now+timedelta(days=10),now=lambda:self.now,
+                        historical_liability=proof,grant_starts_at=(self.now-timedelta(days=1)).isoformat())
 
 
 if __name__=='__main__':unittest.main()

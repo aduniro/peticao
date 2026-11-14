@@ -5,6 +5,8 @@ nonzero unsupported billable quotas close admission rather than guessing costs.
 Zero quota counters are reported as counters, not fabricated resource records.
 """
 from datetime import datetime, timezone
+from datetime import timedelta
+from financial_guard import amount,instant
 
 
 CATEGORIES={
@@ -47,7 +49,8 @@ def listing(api,path,region):
     raise ValueError('Inventory pagination limit reached')
 
 
-def collect(api, account_id, receipt, horizon_until, *, now=None):
+def collect(api, account_id, receipt, horizon_until, *, now=None,
+            historical_liability=None, grant_starts_at=None):
     clock=now or (lambda:datetime.now(timezone.utc))
     before=api.request('GET','/v2/quota')
     regions=api.request('GET','/v2/regions')
@@ -104,9 +107,28 @@ def collect(api, account_id, receipt, horizon_until, *, now=None):
                         public_ip_address_usage=1)
     if any(after.get(k)!=v for k,v in expected.items()):
         raise ValueError('Quota/resource reconciliation incomplete')
-    return dict(observed_at=clock().isoformat(),account_scope_id=account_id,currency='USD',
-                complete_billable_scope=True,liability_horizon_until=horizon_until.isoformat(),
-                other_unposted_upper_bound_usd='0',other_future_liability_usd='0',
+    observed=clock()
+    value=dict(observed_at=observed.isoformat(),account_scope_id=account_id,currency='USD',
+                complete_billable_scope=False,liability_horizon_until=horizon_until.isoformat(),
+                historical_liability_status='unknown',other_future_liability_usd='0',
                 basis='exclusive owned allocation; enumerated supported regional resources plus zero unsupported billable quota counters',
                 coverage=coverage,zero_quota_counters={k:after[k] for k in ZERO_QUOTAS},
                 provider_credit_balance_verified=False)
+    # Current inventory cannot show a resource created and removed between past
+    # observations. A separately verified historical bound is required even when
+    # /charges is empty; that endpoint may lag and is not a credit balance.
+    if historical_liability is None or grant_starts_at is None:return value
+    proof=historical_liability
+    if (proof.get('kind')!='verified_account_liability_bound'
+            or proof.get('account_scope_id')!=account_id or proof.get('currency')!='USD'
+            or not isinstance(proof.get('source_ref'),str) or not proof['source_ref'].strip()):
+        raise ValueError('Historical liability provenance/scope missing')
+    verified=instant(proof['verified_at'])
+    if (verified>observed or observed-verified>timedelta(hours=1)
+            or instant(proof['covered_from'])>instant(grant_starts_at)
+            or instant(proof['covered_through'])<observed):
+        raise ValueError('Historical liability coverage incomplete or stale')
+    bound=amount(proof['unposted_upper_bound_usd'])
+    value.update(complete_billable_scope=True,historical_liability_status='verified_bound',
+                 other_unposted_upper_bound_usd=str(bound),historical_source_ref=proof['source_ref'])
+    return value

@@ -106,6 +106,13 @@ class RuntimeSafety(unittest.TestCase):
         self.assertEqual(self.controller.tick(self.now)['state'],'draining_work')
         self.assertEqual(self.api.deletes,[])
 
+    def test_unknown_finance_closes_admission_but_does_not_block_due_owned_cleanup(self):
+        def unavailable(now):raise ValueError('Historical billing unknown')
+        self.controller.observe=unavailable
+        result=self.controller.tick(self.now)
+        self.assertEqual(result['state'],'owned_resources_absent')
+        self.assertEqual(len(self.api.deletes),2)
+
     def test_unverified_export_preserves_resources(self):
         self.adapter.export_ok=False
         self.assertEqual(self.controller.tick(self.now)['state'],'export_unverified')
