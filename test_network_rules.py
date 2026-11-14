@@ -40,8 +40,12 @@ class NetworkRules(unittest.TestCase):
             p=Path(directory)/'config'
             p.write_text(client_config([node],'/tmp/test-client')+'\nHost cluster-sp-ipv6\n  HostKeyAlias admin-mesh-sp\n')
             out=subprocess.run(['ssh','-G','-F',str(p),'cluster-sp-ipv6'],capture_output=True,text=True,check=True).stdout
-            self.assertIn('hostkeyalias '+node['dns']+'\n',out)
+            alias='['+node['dns']+']:2224'
+            self.assertIn('hostkeyalias '+alias+'\n',out)
             self.assertIn('hostname '+node['ipv6']+'\n',out)
+            keys=Path(directory)/'known_hosts';keys.write_text(known_hosts([node]))
+            found=subprocess.run(['ssh-keygen','-F',alias,'-f',str(keys)],capture_output=True,text=True,check=True).stdout
+            self.assertIn(KEY,found)
 
 
 if __name__=='__main__':unittest.main()

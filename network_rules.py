@@ -73,7 +73,7 @@ def client_config(nodes,identity):
                 result.extend(['Host '+' '.join(aliases),'  HostName '+host,
                                '  User '+('root' if root else n['user']),'  Port '+str(n['port']),
                                '  IdentityFile '+identity,'  IdentitiesOnly yes',
-                               '  HostKeyAlias '+n['dns'],
+                               '  HostKeyAlias '+(n['dns'] if n['port']==22 else '['+n['dns']+']:'+str(n['port'])),
                                '  StrictHostKeyChecking yes',
                                '  UserKnownHostsFile ~/.ssh/known_hosts_peticao_mesh_v3',''])
     return '\n'.join(result)
