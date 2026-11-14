@@ -71,7 +71,10 @@ def admit(schedule, now, timeout_seconds, *, charges, other_reservations_usd='0'
 
     Fresh complete account-wide observations are required. Missing observations
     reject new work; existing jobs must still drain/export under the executor.
-    Provider charges may lag, so elapsed allocation is also charged conservatively.
+    Provider charges may lag. Without per-resource coverage evidence, never
+    assume account totals already include our elapsed allocation: add both.
+    This can double-count posted own costs, but cannot silently erase unrelated
+    account spending. A future attributed observer needs a separate review.
     """
     if type(timeout_seconds) is not int or timeout_seconds <= 0:
         return dict(allowed=False, reason='invalid_task_timeout')
@@ -90,7 +93,7 @@ def admit(schedule, now, timeout_seconds, *, charges, other_reservations_usd='0'
         return dict(allowed=False, reason='task_exceeds_funded_execution_window')
     rate = amount(schedule['conservative_hourly_usd'])
     elapsed = Decimal(str((now - start).total_seconds())) / 3600 * rate
-    used = max(amount(charges['account_total_usd']), amount(schedule['baseline_spent_usd']) + elapsed)
+    used = max(amount(charges['account_total_usd']), amount(schedule['baseline_spent_usd'])) + elapsed
     usable = (amount(schedule['grant_initial_usd']) - amount(schedule['reserved_usd'])
               - used - amount(other_reservations_usd))
     required = rate * (Decimal(timeout_seconds) / 3600 + 48)

@@ -64,5 +64,12 @@ class FinancialCoverage(unittest.TestCase):
         del self.grant['account_scope_id']
         with self.assertRaises(ValueError): deadlines(self.grant, self.quote, self.start.isoformat())
 
+    def test_other_posted_costs_cannot_hide_unposted_own_allocation(self):
+        now = self.start + timedelta(hours=120)
+        self.charges.update(account_total_usd='170', observed_at=now.isoformat())
+        result = admit(self.schedule, now, 3600, charges=self.charges)
+        self.assertFalse(result['allowed'])
+        self.assertEqual(result['reason'], 'cleanup_coverage_insufficient')
+
 
 if __name__ == '__main__': unittest.main()
