@@ -56,7 +56,9 @@ class ScopedAcquisitionTests(unittest.TestCase):
         for actor in gate.REVIEWERS:
             review_path = self.base / (actor + '-review.json')
             review_path.write_text(json.dumps({'actor': actor, 'decision': 'pass',
-                'purpose': 'r1-scoped-acquire', 'binding': binding}))
+                'purpose': 'r1-scoped-acquire', 'binding': binding,
+                'caller': {'path': str(gate.CALLER_PATH),
+                           'sha256': gate.sha(gate.CALLER_PATH.read_bytes())}}))
             reviews[actor] = {'path': str(review_path), 'sha256': gate.sha(review_path.read_bytes())}
         self.final = self.ledger.announce(gate.ACTOR, 'FICTITIOUS exact R1 final review', gate.RESOURCES,
             {'manifest': {'commit': gate.SOURCE, 'api_contracts': 'unchanged',

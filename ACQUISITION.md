@@ -38,7 +38,9 @@ Categorias e provas:
 
 Root e Apoio devem revisar os bytes finais desta rota, manifesto e recibos. Cada
 review JSON deve conter actor, decision=pass, purpose=r1-scoped-acquire e binding
-igual ao bloco operation_scoped abaixo. Reviews antigas não qualificam esta rota.
+igual ao bloco operation_scoped abaixo, mais caller igual ao caller do notice.
+Assim uma review de um caller anterior não cobre bytes novos. Reviews antigas
+não qualificam esta rota.
 Um NOVO notice Root requer manifesto normalizado com commit/files/tests,
 api_contracts/database/destination, mais:
 

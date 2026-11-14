@@ -118,7 +118,8 @@ def validate(d, ledger, binding, receipt, manifest, notice_event, helper_sha):
         review = json.loads(read_exact(reference['path'], reference['sha256']))
         need(review['actor'] == reviewer and review['decision'] == 'pass' and
              review['purpose'] == 'r1-scoped-acquire' and
-             review['binding'] == expected, 'current_technical_review_mismatch')
+             review['binding'] == expected and review['caller'] == payload['caller'],
+             'current_technical_review_mismatch')
     normalized = payload.get('manifest', {})
     need(normalized.get('commit') == SOURCE, 'normalized_commit_mismatch')
     for key in ('api_contracts', 'database', 'destination'):
