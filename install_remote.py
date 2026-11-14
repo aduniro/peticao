@@ -81,7 +81,7 @@ print('stage_verified')
         remote(code,(BASE/'unlock.key').read_bytes())
         print(result.decode().strip())
     elif args.step=='start':
-        command=['sudo','-n','systemd-run','--unit=peticao-bootstrap-owner-20261114',
+        command=['sudo','-n','systemd-run','--no-block','--unit=peticao-bootstrap-owner-20261114',
                  '--property=Type=oneshot','--property=RemainAfterExit=yes','--property=TimeoutStartSec=2700',
                  '--property=StandardOutput=append:'+STAGE+'/operator.log',
                  '--property=StandardError=append:'+STAGE+'/operator.log',
