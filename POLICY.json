@@ -168,18 +168,18 @@
           "home": "/home/barre",
           "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINt+h3nKCP/IuiGbMppI4MdG34YBmUgm7DKPfUhnAY2O peticao-tailnet-v2:local:barre",
           "client_identity": "/home/barre/.ssh/id_ed25519_peticao_tailnet_v2",
-          "auth_file": "/home/barre/.ssh/authorized_keys",
-          "auth_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "auth_new_sha256": "5800468b914fc808c439642d8bb24beb3f897852d8143492eae8e5faa26ad3a1"
+          "auth_file": "/home/barre/.ssh/authorized_keys_peticao_tailnet_v2",
+          "auth_sha256": "70d9143ed650f50b62a287b6ff85fb8dbda853561dd9f88e47416f41c9c3aed3",
+          "auth_new_sha256": "7dcf0baa8c5add751daeec164a794f337106674c3c6d743e8820e1c3c038f2d2"
         },
         {
           "user": "root",
           "home": "/root",
           "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGYLpPKANy0HVy8TCC1DiTJD/dHNM5Yxtnfm8v3JYsh7 peticao-tailnet-v2:local:root",
           "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
-          "auth_file": "/root/.ssh/authorized_keys",
-          "auth_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "auth_new_sha256": "5800468b914fc808c439642d8bb24beb3f897852d8143492eae8e5faa26ad3a1"
+          "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2",
+          "auth_sha256": "70d9143ed650f50b62a287b6ff85fb8dbda853561dd9f88e47416f41c9c3aed3",
+          "auth_new_sha256": "7dcf0baa8c5add751daeec164a794f337106674c3c6d743e8820e1c3c038f2d2"
         }
       ],
       "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIABxB+nPTPMdOXYCHIgZSQRf9Qs74s6K/eo5ApRr6Yw root@dell3576-zorin",
@@ -192,9 +192,12 @@
       "ipv6": "fd7a:115c:a1e0::e33b:c13f",
       "hostname": "dell3576-zorin",
       "dns": "dell3576-zorin.tail1a6d71.ts.net",
-      "port": 22,
-      "service": null,
-      "config": null
+      "port": 2224,
+      "service": "peticao-tailnet-ssh.service",
+      "config": "/etc/ssh/peticao-tailnet-v2/sshd_config",
+      "start_existing_mesh_service": true,
+      "config_sha256": "df7514af0336658f4f1b015b8b4bc1dd8fc040f06bb7defef4933ff7eedcaaf0",
+      "config_new_sha256": "3f2cb6c880a936716a92f9af0214164e56ef64a7b1d21ab2bfc6555e29d63985"
     },
     {
       "name": "civo",

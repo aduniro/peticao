@@ -75,7 +75,8 @@ def apply(envelope):
         cfg=Path(node['config'])
         if cfg.is_symlink() or hashlib.sha256(cfg.read_bytes()).hexdigest() not in {node['config_sha256'],node.get('config_new_sha256')}:
             raise ValueError('Dedicated SSH configuration changed')
-        if run(['systemctl','is-active',node['service']]).strip()!='active':
+        state=subprocess.run(['systemctl','is-active',node['service']],capture_output=True,text=True).stdout.strip()
+        if state!='active' and not (name=='local' and node.get('start_existing_mesh_service') is True):
             raise ValueError('Dedicated mesh service is not active')
     changes=[]
     for account in node['accounts']:
@@ -101,6 +102,11 @@ def apply(envelope):
         if include not in old:atomic(main,(include+'\n'+old).encode(),entry.pw_uid,entry.pw_gid,backup)
     reloaded=False
     if node.get('config'):
+        if name=='local' and node.get('start_existing_mesh_service') is True:
+            # Existing dedicated service22xx, not the desktop's SSH22 socket or TS SSH.
+            privsep=Path('/run/sshd')
+            if privsep.is_symlink():raise ValueError('Unexpected privilege separation path')
+            privsep.mkdir(mode=0o755,exist_ok=True);os.chown(privsep,0,0);privsep.chmod(0o755)
         cfg=Path(node['config']);old=cfg.read_bytes();new=listener_config(old.decode(),node['ipv6'],node['port']).encode()
         if new!=old:
             atomic(cfg,new,0,0,backup)
@@ -108,7 +114,13 @@ def apply(envelope):
             except Exception:
                 atomic(cfg,old,0,0,backup);raise
             # HUP only the dedicated mesh master; accepted sessions and public SSH remain.
-            run(['systemctl','kill','--kill-whom=main','--signal=HUP',node['service']]);reloaded=True
+            state=subprocess.run(['systemctl','is-active',node['service']],capture_output=True,text=True).stdout.strip()
+            if state=='active':run(['systemctl','kill','--kill-whom=main','--signal=HUP',node['service']])
+            else:run(['systemctl','start',node['service']])
+            reloaded=True
+        elif name=='local' and node.get('start_existing_mesh_service') is True:
+            run(['/usr/sbin/sshd','-t','-f',str(cfg)])
+            run(['systemctl','start',node['service']]);reloaded=True
     prefs=json.loads(run(['tailscale','debug','prefs']))
     if prefs.get('CorpDNS') is False:
         try:
@@ -116,9 +128,6 @@ def apply(envelope):
             magic_works=bool(resolved & {civo['ipv4'],civo['ipv6']})
         except socket.gaierror:magic_works=False
         if not magic_works:run(['tailscale','set','--accept-dns=true'])
-    # Existing desktop OpenSSH22 is the intended server; no browser-check bypass.
-    # The owner authorized configuring normal key-based SSH on this managed host.
-    if name=='local' and prefs.get('RunSSH') is True:run(['tailscale','set','--ssh=false'])
     receipt=dict(node=name,operation=operation,authorization_files_changed=changes,
                  dedicated_listener_hup=reloaded,private_values_logged=False,
                  passwords_changed=False,host_keys_changed=False,production_database_changed=False)
