@@ -5,14 +5,16 @@ import json
 import os
 from pathlib import Path
 import pwd
+import shlex
 import shutil
 import subprocess
 import tarfile
 
-ROOT = Path('/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt1')
-UNIT = 'peticao-civo-qualified-build-20261114-attempt1.service'
+ROOT = Path('/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt2')
+UNIT = 'peticao-civo-qualified-build-20261114-attempt2.service'
 OLD = '/opt/peticao-qa/admin-query-r1-20261114-retry1'
 OLD_CACHE = '/srv/peticao/ncpf-build-20261113/snapshot-a/site'
+SOCKET_CHECK_JS = "const s=require('net').createConnection(process.argv[1]);s.on('connect',()=>{s.destroy();process.exitCode=1;console.error('DOCKER_SOCKET_UNEXPECTED_ACCESS')});s.on('error',e=>{if(!['EACCES','EPERM','ENOENT'].includes(e.code)){process.exitCode=1;console.error('DOCKER_SOCKET_UNEXPECTED_ERROR:'+e.code)}});s.setTimeout(2000,()=>{process.exitCode=1;s.destroy();console.error('DOCKER_SOCKET_CHECK_TIMEOUT')})"
 
 
 def digest(path):
@@ -151,7 +153,8 @@ run="$base/profile/runs/build-1"
 cd "$base/snapshot/site"
 test "$(/usr/local/bin/node --version)" = v20.19.2
 test ! -e /home/civo/.ssh/id_ed25519_peticao_civo_node
-test ! -S /run/docker.sock
+test ! -w /run/docker.sock
+/usr/local/bin/node -e SOCKET_CHECK_JS_VALUE /run/docker.sock
 /usr/bin/env -i PATH=/usr/local/bin:/usr/bin:/bin TMPDIR="$run/tmp" /usr/local/bin/node scripts/prepare-pdfjs-assets.mjs --offline --cache-dir "$run/empty/.cache/peticao/pdfjs-dist/6.5.438"
 find src public assets -type f -print0 | sort -z | xargs -0 sha256sum > "$run/source-before.sha256"
 /usr/bin/env -i PATH=/usr/local/bin:/usr/bin:/bin NODE_ENV=production MAIL_PROVIDER=dev MAIL_PROVIDERS=dev DATABASE_URL=postgres://build_only:build_only@127.0.0.1:1/build_only APP_URL=https://fixture.invalid ADMIN_URL=https://admin.fixture.invalid HASH_PEPPER=BUILD_ONLY_PEPPER_NOT_PRODUCTION_0123456789 ADMIN_PASSWORD=BuildOnly-NotAProductionPassword WHATSAPP_ENABLED=0 CRON_SECRET= SECRETS_DIR="$run/empty" PETICAO_CONFIG_DIR="$run/empty" CREDENTIALS_DIRECTORY="$run/empty" GEO_DIR="$run/empty" ADMIN_PASSWORD_FILE="$run/empty/admin-password-never-present.hash" TMPDIR="$run/tmp" TMP="$run/tmp" TEMP="$run/tmp" PRODUCTION_PROFILE_ROOT="$base/profile" PRODUCTION_PROFILE_RUN="$run" NODE_OPTIONS="--import=$base/tools/guard.mjs --max-old-space-size=3072" NEXT_BUILD_CPUS=2 NEXT_TELEMETRY_DISABLED=1 DB_BOOTSTRAP_MODE=verify DB_SCHEMA_SHA256=0000000000000000000000000000000000000000000000000000000000000000 npm_config_update_notifier=false /usr/local/bin/node "$base/tools/qualified-build.mjs"
@@ -159,7 +162,7 @@ find src public assets -type f -print0 | sort -z | xargs -0 sha256sum > "$run/so
 cmp "$run/source-before.sha256" "$run/source-after.sha256"
 /usr/bin/env -i PATH=/usr/local/bin:/usr/bin:/bin TMPDIR="$run/tmp" /usr/bin/python3 "$base/tools/export.py" export --out "$base/export" > "$base/export/export-result.json"
 echo CIVO_CANONICAL_BUILD_AND_EXPORT_PASS
-'''.replace('ROOT_VALUE', str(ROOT))
+'''.replace('ROOT_VALUE', str(ROOT)).replace('SOCKET_CHECK_JS_VALUE', shlex.quote(SOCKET_CHECK_JS))
 
 
 def start_build(policy):

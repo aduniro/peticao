@@ -9,7 +9,7 @@ import time
 
 BASE = Path(__file__).resolve().parent
 COORD = '/mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/coord.py'
-REMOTE = '/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt1'
+REMOTE = '/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt2'
 TARGET = 'cluster-civo-root-ipv4'
 
 
@@ -60,7 +60,7 @@ def main(args):
     gate(args)
     policy = json.loads((BASE / 'policy.json').read_text())
     if args.phase == 'stage':
-        journal = BASE / 'STAGE-ATTEMPT.json'
+        journal = BASE / ('STAGE-' + Path(REMOTE).name + '.json')
         if journal.exists():
             raise ValueError('Stage already attempted; inspect remote state before any reviewed retry')
         for item in policy['inputs'].values():
@@ -77,13 +77,28 @@ def main(args):
         p = ssh(command)
         if p.returncode: raise RuntimeError('Remote attempt already exists or mkdir failed')
         files = [(BASE / 'runner.py', REMOTE + '/runner.py'), (BASE / 'policy.json', REMOTE + '/inputs/policy.json')]
-        files += [(Path(item['path']), REMOTE + '/inputs/' + name) for name, item in policy['inputs'].items()]
+        reuse = policy.get('reuse_remote_public_inputs')
+        if reuse != '/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt1/inputs':
+            raise ValueError('Only verified public inputs from retained attempt1 may be reused')
         for path, destination in files:
             gate(args)
             p = subprocess.run(['scp', '-o', 'BatchMode=yes', '-o', 'ControlPath=none', str(path), TARGET + ':' + destination], capture_output=True, timeout=600)
             if p.returncode: raise RuntimeError('Stage transfer failed; preserve partial attempt')
+        gate(args)
+        expected = {name: item['sha256'] for name, item in policy['inputs'].items()}
+        code = '''import pathlib,hashlib,shutil
+old=pathlib.Path(OLD);dest=pathlib.Path(DEST);expected=EXPECTED
+for name,sha in expected.items():
+ p=old/name
+ assert pathlib.Path(name).name==name and p.is_file() and not p.is_symlink()
+ assert hashlib.sha256(p.read_bytes()).hexdigest()==sha
+ q=dest/name;assert not q.exists();shutil.copyfile(p,q);q.chmod(0o600)
+ assert hashlib.sha256(q.read_bytes()).hexdigest()==sha
+'''.replace('OLD',repr(reuse)).replace('DEST',repr(REMOTE+'/inputs')).replace('EXPECTED',repr(expected))
+        p = ssh('python3 -c ' + shlex.quote(code))
+        if p.returncode: raise RuntimeError('Verified public input reuse failed; preserve new attempt')
         journal.write_text(json.dumps(dict(at=time.time(), state='staged', manifest=args.manifest_event)) + '\n')
-        print(json.dumps(dict(staged=True, files=len(files), credential_files=0)))
+        print(json.dumps(dict(staged=True, transferred_files=len(files), reused_public_inputs=len(expected), credential_files=0)))
         return
     gate(args)
     expected = {REMOTE + '/runner.py': hashlib.sha256((BASE / 'runner.py').read_bytes()).hexdigest(),

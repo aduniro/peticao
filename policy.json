@@ -1,7 +1,7 @@
 {
   "source_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
   "target": "peticao-civo",
-  "remote_root": "/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt1",
+  "remote_root": "/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt2",
   "lock_sha256": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
   "node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
   "inputs": {
@@ -50,5 +50,8 @@
     "real credentials/OAuth/home/keyfile mounts",
     "firewall/hostauth/daemons changes",
     "QA HTTP/browser: separate reviewed next phase"
-  ]
+  ],
+  "reuse_remote_public_inputs": "/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt1/inputs",
+  "retry_of_manifest": 2896,
+  "retry_reason": "socket type preserved by systemd inaccessible-socket000; actualconnectEACCES; test access not type"
 }

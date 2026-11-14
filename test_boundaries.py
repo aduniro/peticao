@@ -6,6 +6,9 @@ from pathlib import Path
 import tarfile
 import tempfile
 import time
+import os
+import socket
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -98,6 +101,30 @@ class Boundaries(unittest.TestCase):
             return [] if argv[0] == 'history' and argv[2] == '10' else fake(argv)
         with patch.object(caller, 'BASE', self.root), patch.object(caller, 'cli', side_effect=no_ack), patch.object(caller.subprocess, 'check_output', return_value='a' * 40):
             with self.assertRaises(ValueError): caller.gate(args)
+
+    def test_inaccessible_socket_type_is_accepted_only_when_connect_denied(self):
+        original = Path.cwd()
+        server = socket.socket(socket.AF_UNIX)
+        try:
+            os.chdir(self.root)
+            server.bind('s');server.listen(1);Path('s').chmod(0)
+            self.assertTrue(Path('s').is_socket())
+            result = subprocess.run(['node', '-e', runner.SOCKET_CHECK_JS, 's'], capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+        finally:
+            os.chdir(original);server.close()
+
+    def test_accessible_docker_like_socket_fails_preflight(self):
+        original = Path.cwd()
+        server = socket.socket(socket.AF_UNIX)
+        try:
+            os.chdir(self.root)
+            server.bind('s');server.listen(1)
+            result = subprocess.run(['node', '-e', runner.SOCKET_CHECK_JS, 's'], capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('DOCKER_SOCKET_UNEXPECTED_ACCESS', result.stderr)
+        finally:
+            os.chdir(original);server.close()
 
 
 if __name__ == '__main__': unittest.main()
