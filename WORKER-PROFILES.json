@@ -9,7 +9,7 @@
   "leaseweb_allowed": false,
   "workers": {
     "civo-nyc": {
-      "region": "NYC1",
+      "region": "nyc1",
       "size": "g4c.medium",
       "cpu": 16,
       "ram_mib": 32768,
