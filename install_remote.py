@@ -10,6 +10,7 @@ BASE=Path(__file__).resolve().parent
 COORD='/mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/coord.py'
 STAGE='/mnt/apps/peticao-final/_ops/civo-bootstrap-owner-20261114'
 HOST='212.2.241.70'
+ACTIVE_ARGS=None
 SSH=['ssh','-o','BatchMode=yes','-o','ConnectTimeout=15','-o','IdentitiesOnly=yes',
      '-o','StrictHostKeyChecking=yes','-o','UserKnownHostsFile='+str(BASE/'known_hosts'),
      '-i','/home/barre/.ssh/id_ed25519_peticao-civo20261114','civo@'+HOST]
@@ -49,6 +50,7 @@ def gate(args):
 
 
 def remote(code,data=b'',timeout=60):
+    gate(ACTIVE_ARGS)  # Fresh fence/manifest check before EVERY SSH operation.
     r=subprocess.run(SSH+['python3 -c '+shlex.quote(code)],input=data,capture_output=True,timeout=timeout)
     # Even error output is private: never print raw remote messages/argv.
     with (BASE/'remote.private.log').open('ab') as log:log.write(r.stderr)
@@ -57,6 +59,8 @@ def remote(code,data=b'',timeout=60):
 
 
 def main(args):
+    global ACTIVE_ARGS
+    ACTIVE_ARGS=args
     binding=gate(args)
     if args.step=='stage':
         remote("import subprocess; subprocess.run(['sudo','-n','install','-d','-o','civo','-g','civo','-m','0700',"+repr(STAGE)+"],check=True)")
@@ -82,15 +86,32 @@ print('stage_verified')
                  '--property=StandardOutput=append:'+STAGE+'/operator.log',
                  '--property=StandardError=append:'+STAGE+'/operator.log',
                  '/usr/bin/bash',STAGE+'/bootstrap.sh','--apply','--new-vm','--user','civo']
-        remote('import subprocess;subprocess.run('+repr(command)+',check=True);print("bootstrap_started")')
+        hashes=binding['remote_sha256']
+        code='''import pathlib,hashlib,os,subprocess
+p=pathlib.Path(STAGE)
+if p.is_symlink():raise ValueError('Stage symlink')
+for name,sha in HASHES.items():
+ f=p/name
+ if f.is_symlink() or not f.is_file() or hashlib.sha256(f.read_bytes()).hexdigest()!=sha:raise ValueError('Remote artifact changed')
+for f in p.iterdir():
+ if f.is_symlink() or not f.is_file():raise ValueError('Unexpected stage member')
+ os.chown(f,0,0);os.chmod(f,0o600)
+os.chown(p,0,0);os.chmod(p,0o700)
+subprocess.run(COMMAND,check=True)
+print('bootstrap_started')
+'''.replace('pathlib.Path(STAGE)','pathlib.Path('+repr(STAGE)+')').replace('HASHES',repr(hashes)).replace('COMMAND',repr(command))
+        remote('import subprocess;subprocess.run(["sudo","-n","python3","-c",'+repr(code)+'],check=True)')
         print('bootstrap_started')
     elif args.step=='status':
         command=['systemctl','show','peticao-bootstrap-owner-20261114.service',
                  '-p','ActiveState','-p','SubState','-p','ExecMainStatus','-p','Result']
         print(remote('import subprocess;subprocess.run('+repr(command)+',check=True)').decode().strip())
     elif args.step=='finish':
-        code='''import subprocess,json,pathlib
+        code='''import subprocess,json,pathlib,hashlib
 p=pathlib.Path(STAGE)
+for name,sha in HASHES.items():
+ f=p/name
+ if f.is_symlink() or not f.is_file() or hashlib.sha256(f.read_bytes()).hexdigest()!=sha:raise ValueError('Remote artifact changed before restore')
 x=subprocess.run(['systemctl','show','peticao-bootstrap-owner-20261114.service','-p','Result','--value'],capture_output=True,text=True,check=True)
 y=subprocess.run(['systemctl','show','peticao-bootstrap-owner-20261114.service','-p','ActiveState','--value'],capture_output=True,text=True,check=True)
 if x.stdout.strip()!='success' or y.stdout.strip()!='inactive':raise ValueError('Bootstrap not complete')
@@ -104,8 +125,8 @@ if not running:
  with (p/'tailscale-join.private.log').open('wb') as f:
   subprocess.run(['sudo','-n','tailscale','up','--auth-key=file:/home/civo/.config/peticao/credentials/sanciona-integral','--hostname=peticao-civo','--accept-dns=true'],stdout=f,stderr=f,check=True,timeout=120)
 print('credentials_restored_and_tailnet_join_requested')
-'''.replace('pathlib.Path(STAGE)','pathlib.Path('+repr(STAGE)+')')
-        print(remote(code,timeout=180).decode().strip())
+'''.replace('pathlib.Path(STAGE)','pathlib.Path('+repr(STAGE)+')').replace('HASHES',repr(binding['remote_sha256']))
+        print(remote('import subprocess;subprocess.run(["sudo","-n","python3","-c",'+repr(code)+'],check=True)',timeout=180).decode().strip())
 
 
 if __name__=='__main__':
