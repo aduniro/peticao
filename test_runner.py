@@ -51,7 +51,7 @@ class RunnerTests(unittest.TestCase):
             return runner.validate_inputs()
 
     def prepare(self):
-        with patch.object(runner, 'validate_inputs'), patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'chown') as chown, redirect_stdout(io.StringIO()):
+        with patch.object(runner, 'validate_inputs'), patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'chown') as chown, patch.object(runner, 'host_preflight'), redirect_stdout(io.StringIO()):
             runner.prepare()
         return chown
 
@@ -91,6 +91,7 @@ class RunnerTests(unittest.TestCase):
         self.assertTrue((self.root / 'outputs').is_dir())
         self.assertEqual((self.root / 'outputs').stat().st_mode & 0o777, 0o700)
         self.assertFalse((self.root / 'outputs/export-1').exists())
+        self.assertEqual((self.root / 'tools').stat().st_mode & 0o777, 0o750)
         self.assertEqual((self.root / 'tools/exporter.py').read_bytes(), (self.root / 'inputs/exporter.py').read_bytes())
         self.assertIn(unittest.mock.call(self.root / 'tools/exporter.py', 0, 12345), chown.call_args_list)
         self.assertIn(unittest.mock.call(self.root / 'outputs', 12345, 12345), chown.call_args_list)
@@ -112,7 +113,7 @@ class RunnerTests(unittest.TestCase):
     def test_start_single_use_even_after_submission_failure(self):
         self.state('prepared')
         (self.root / 'outputs').mkdir()
-        with patch.object(runner, 'validate_inputs'), patch.object(runner, 'run', side_effect=RuntimeError('denied')) as run:
+        with patch.object(runner, 'validate_inputs'), patch.object(runner, 'host_preflight'), patch.object(runner, 'run', side_effect=RuntimeError('denied')) as run:
             with self.assertRaises(RuntimeError):
                 runner.start()
             self.assertEqual(json.loads((self.root / 'STATE.json').read_text())['phase'], 'export-submitting')
@@ -135,7 +136,7 @@ class RunnerTests(unittest.TestCase):
         module.write_text('from pathlib import Path\nBUILD = Path(' + repr(str(self.retained / ('wrong' if wrong_binding else 'snapshot'))) + ')\ndef export(build, out):\n    assert not out.exists()\n    out.mkdir()\n' + ('    (build / "site/.next/server.js").write_text("MUTATION")\n' if mutate else '') + '    (out / "export-report.json").write_text("{}")\n    return {"compiledBytesRewritten": False}\ndef verify(out):\n    assert (out / "export-report.json").is_file()\n    return {"verifiedFiles": 1}\n')
 
     def do_export(self):
-        with patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'geteuid', return_value=12345), patch.object(runner.os, 'getegid', return_value=12345), patch.object(runner, 'deny_socket'), redirect_stdout(io.StringIO()):
+        with patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'geteuid', return_value=12345), patch.object(runner.os, 'getegid', return_value=12345), patch.object(runner, 'deny_socket'), patch.object(runner, 'namespace_preflight'), redirect_stdout(io.StringIO()):
             runner.export_only()
 
     def test_export_new_child_verifies_and_receipts_unchanged_custody(self):
@@ -167,6 +168,85 @@ class RunnerTests(unittest.TestCase):
             self.do_export()
         self.assertFalse((self.root / 'outputs/export-1').exists())
 
+    def test_prepare_explicit_tools_mode_survives_umask077(self):
+        self.fixtures()
+        previous = os.umask(0o077)
+        try:
+            self.prepare()
+        finally:
+            os.umask(previous)
+        self.assertEqual((self.root / 'tools').stat().st_mode & 0o777, 0o750)
+
+    def test_actual_nonroot_readability_checks_all_paths(self):
+        self.root.chmod(0o755)
+        folders = [self.root / 'first', self.root / 'second']
+        for folder in folders:
+            folder.mkdir(mode=0o750)
+            (folder / 'public').write_text('public fixture')
+            (folder / 'public').chmod(0o640)
+        uid = (Path(__file__).stat().st_uid or 65534) if os.geteuid() == 0 else os.geteuid()
+        gid = (Path(__file__).stat().st_gid or 65534) if os.geteuid() == 0 else os.getegid()
+        if os.geteuid() == 0:
+            os.chown(self.root, 0, gid)
+            for folder in folders:
+                os.chown(folder, 0, gid)
+                os.chown(folder / 'public', 0, gid)
+        config = {'uid': uid, 'gid': gid, 'files': [str(p / 'public') for p in folders], 'directories': [str(p) for p in folders]}
+        def drop_root():
+            os.setgroups([])
+            os.setgid(gid)
+            os.setuid(uid)
+        def invoke():
+            return subprocess.run([sys.executable, '-B', '-c', runner.ACCESS_CHECK_CODE, json.dumps(config)], capture_output=True, text=True, timeout=5, preexec_fn=drop_root if os.geteuid() == 0 else None)
+        result = invoke()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for folder in folders:
+            folder.chmod(0o700 if os.geteuid() == 0 else 0o000)
+        try:
+            denied = invoke()
+            self.assertNotEqual(denied.returncode, 0)
+            self.assertIn(str(folders[0]), denied.stderr)
+            self.assertIn(str(folders[1]), denied.stderr)
+        finally:
+            for folder in folders:
+                folder.chmod(0o750)
+        result = invoke()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_preflight_before_start_and_namespace_before_export(self):
+        import inspect
+        body = inspect.getsource(runner.export_only)
+        self.assertLess(body.index('namespace_preflight()'), body.index('write_json('))
+        self.assertLess(body.index('namespace_preflight()'), body.index('module.export('))
+        self.state('prepared')
+        (self.root / 'outputs').mkdir()
+        with patch.object(runner, 'validate_inputs'), patch.object(runner, 'host_preflight', side_effect=ValueError('nonroot read denied')), patch.object(runner, 'run') as run, self.assertRaises(ValueError):
+            runner.start()
+        run.assert_not_called()
+        self.assertEqual(json.loads((self.root / 'STATE.json').read_text())['phase'], 'prepared')
+
+    def test_namespace_checks_ro_and_canaries_before_export(self):
+        for name in ['work', 'outputs']:
+            (self.root / name).mkdir()
+        with patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'geteuid', return_value=12345), patch.object(runner.os, 'getegid', return_value=12345), patch.object(runner, 'run') as run, patch.object(runner.os, 'statvfs', return_value=SimpleNamespace(f_flag=os.ST_RDONLY)), patch.object(runner.os, 'access', return_value=False), patch.object(runner, 'deny_socket') as socket_check:
+            runner.namespace_preflight()
+        self.assertEqual(run.call_count, 1)
+        socket_check.assert_called_once_with()
+        self.assertTrue((self.root / 'work/namespace-preflight.json').is_file())
+        self.assertFalse((self.root / 'work/.namespace-write-canary').exists())
+        self.assertFalse((self.root / 'outputs/.namespace-write-canary').exists())
+        (self.root / 'work/namespace-preflight.json').unlink()
+        with patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner.os, 'geteuid', return_value=12345), patch.object(runner.os, 'getegid', return_value=12345), patch.object(runner, 'run'), patch.object(runner.os, 'statvfs', return_value=SimpleNamespace(f_flag=0)), patch.object(runner.os, 'access', return_value=False), patch.object(runner, 'deny_socket'), self.assertRaisesRegex(ValueError, 'filesystem is writable'):
+            runner.namespace_preflight()
+        self.assertFalse((self.root / 'work/namespace-preflight.json').exists())
+
+    def test_host_preflight_keeps_complete_aggregate_diagnostic(self):
+        diagnostic = '{"preflight_errors":["traverse:first","traverse:second"]}'
+        failure = subprocess.CalledProcessError(1, ['runuser'], stderr=diagnostic)
+        with patch.object(runner.pwd, 'getpwnam', return_value=self.account), patch.object(runner, 'run', side_effect=failure), self.assertRaisesRegex(ValueError, 'host-preflight.json'):
+            runner.host_preflight()
+        self.assertEqual(json.loads((self.root / 'host-preflight.json').read_text())['diagnostic'], diagnostic)
+
     def test_mode000_denied_and_accessible_socket(self):
         old = Path.cwd()
         server = socket.socket(socket.AF_UNIX)
@@ -178,8 +258,8 @@ class RunnerTests(unittest.TestCase):
             script = 'import sys;sys.path.insert(0,' + repr(str(Path(__file__).parent.resolve())) + ');import runner;runner.deny_socket("s")'
             def drop_root():
                 os.setgroups([])
-                os.setgid(65534)
-                os.setuid(65534)
+                os.setgid(Path(__file__).stat().st_gid or 65534)
+                os.setuid(Path(__file__).stat().st_uid or 65534)
             for mode, expected in [(0, 0), (0o666, 1)]:
                 Path('s').chmod(mode)
                 result = subprocess.run([sys.executable, '-B', '-c', script], cwd=self.root, capture_output=True, text=True, timeout=5, preexec_fn=drop_root if os.geteuid() == 0 else None)

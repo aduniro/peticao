@@ -11,9 +11,9 @@ import socket
 import stat
 import subprocess
 
-ROOT = Path('/mnt/apps/peticao-final/.runtime/civo-export-c472-20261114-attempt1')
+ROOT = Path('/mnt/apps/peticao-final/.runtime/civo-export-c472-20261114-attempt2')
 RETAINED = Path('/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt2')
-UNIT = 'peticao-civo-export-c472-20261114-attempt1.service'
+UNIT = 'peticao-civo-export-c472-20261114-attempt2.service'
 OLD_UNIT = 'peticao-civo-qualified-build-20261114-attempt2.service'
 EXPECTED = {'files': 700, 'bytes': 269498993, 'build_id': 'fsa238mHOAm9so9xiR0pL', 'sha256': '49c9931eb49840c9f797410b7eeaeba26a84e53ab8febbf09cc4b8812bcb6627'}
 
@@ -118,6 +118,7 @@ def prepare():
         path.chmod(0o750 if path.is_dir() else 0o640)
     tools = ROOT / 'tools'
     tools.mkdir(mode=0o750)
+    tools.chmod(0o750)
     os.chown(tools, 0, account.pw_gid)
     for source, name in [(ROOT / 'runner.py', 'runner.py'), (ROOT / 'inputs/exporter.py', 'exporter.py')]:
         target = tools / name
@@ -135,6 +136,7 @@ def prepare():
     write_json(ROOT / 'custody-before.json', before, 0o640, exclusive=True)
     os.chown(ROOT / 'custody-before.json', 0, account.pw_gid)
     write_json(ROOT / 'STATE.json', {'phase': 'prepared', 'unit': UNIT}, 0o640)
+    host_preflight()
     print(json.dumps({'prepared': True, 'export_started': False}))
 
 
@@ -168,10 +170,85 @@ def start():
     if (ROOT / 'outputs/export-1').exists():
         raise ValueError('Output already exists')
     check_custody()
+    host_preflight()
     write_json(ROOT / 'STATE.json', {'phase': 'export-submitting', 'unit': UNIT}, 0o640)
     run(unit_args())
     write_json(ROOT / 'STATE.json', {'phase': 'export-submitted', 'unit': UNIT}, 0o640)
     print(json.dumps({'submitted': True, 'unit': UNIT, 'compile': False}))
+
+
+# Executed as civo with inline Python so broken tools permissions cannot hide diagnostics.
+ACCESS_CHECK_CODE = r"""
+import json, os, pathlib, sys
+config = json.loads(sys.argv[1]); errors = []; files = set(config['files']); directories = set(config['directories'])
+if os.geteuid() != config['uid'] or os.getegid() != config['gid'] or os.geteuid() == 0:
+    errors.append('identity')
+for tree in config.get('trees', []):
+    def walk_error(error): errors.append('walk:' + str(error.filename))
+    for current, dirs, names in os.walk(tree, followlinks=False, onerror=walk_error):
+        directories.add(current)
+        for name in dirs: directories.add(str(pathlib.Path(current) / name))
+        for name in names: files.add(str(pathlib.Path(current) / name))
+for value in sorted(files | directories):
+    path = pathlib.Path(value)
+    for ancestor in [path if value in directories else path.parent, *path.parents]:
+        if not os.access(ancestor, os.X_OK): errors.append('traverse:' + str(ancestor))
+    if value in directories:
+        if not path.is_dir() or not os.access(path, os.R_OK | os.X_OK): errors.append('directory:' + value)
+    else:
+        try:
+            with path.open('rb') as stream: stream.read(1)
+        except OSError: errors.append('read:' + value)
+if not os.access('/usr/bin/python3', os.X_OK): errors.append('python-executable')
+if errors: raise SystemExit(json.dumps({'preflight_errors': sorted(set(errors))}))
+print(json.dumps({'readability_preflight': 'PASS', 'files': len(files), 'directories': len(directories)}))
+"""
+
+
+def access_config():
+    account = pwd.getpwnam('civo')
+    files = [ROOT / x for x in ['STATE.json', 'custody-before.json', 'runner.py', 'tools/runner.py', 'tools/exporter.py', 'inputs/policy.json', 'inputs/exporter.py']]
+    files += [RETAINED / x for x in ['inputs/source.tar.gz', 'deps/site/package-lock.json', 'profile/runs/build-1/source-before.sha256', 'profile/runs/build-1/source-after.sha256', 'profile/runs/build-1/guard.jsonl']]
+    return {'uid': account.pw_uid, 'gid': account.pw_gid, 'files': [str(p) for p in files], 'directories': [str(ROOT / p) for p in ['tools', 'inputs', 'work', 'outputs']], 'trees': [str(RETAINED / p) for p in ['snapshot/site', 'deps/site']]}
+
+
+def host_preflight():
+    # No permission changes to retained data: fail with the entire inaccessible inventory.
+    command = ['/usr/sbin/runuser', '-u', 'civo', '-g', 'civo', '--', '/usr/bin/env', '-i', 'PATH=/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE=1', '/usr/bin/python3', '-B', '-c', ACCESS_CHECK_CODE, json.dumps(access_config())]
+    try:
+        result = run(command)
+    except subprocess.CalledProcessError as error:
+        write_json(ROOT / 'host-preflight.json', {'passed': False, 'diagnostic': error.stderr.strip()}, 0o640)
+        raise ValueError('Host preflight failed; see host-preflight.json') from error
+    write_json(ROOT / 'host-preflight.json', {'passed': True, 'diagnostic': json.loads(result)}, 0o640)
+    return result
+
+
+def namespace_preflight():
+    account = pwd.getpwnam('civo')
+    if os.geteuid() != account.pw_uid or os.getegid() != account.pw_gid or account.pw_uid == 0:
+        raise ValueError('Wrong namespace execution identity')
+    run(['/usr/bin/python3', '-B', '-c', ACCESS_CHECK_CODE, json.dumps(access_config())])
+    errors = []
+    if not os.statvfs(RETAINED).f_flag & os.ST_RDONLY:
+        errors.append('retained filesystem is writable')
+    for path in [RETAINED, RETAINED / 'snapshot/site/.next', ROOT, ROOT / 'inputs', ROOT / 'tools', ROOT / 'STATE.json', ROOT / 'runner.py', Path('/tmp'), Path('/var/tmp')]:
+        if os.access(path, os.W_OK):
+            errors.append('writable protected path:' + str(path))
+    if Path('/home/civo').exists() or os.access('/root', os.R_OK):
+        errors.append('host home visible')
+    deny_socket()
+    for directory in [ROOT / 'work', ROOT / 'outputs']:
+        canary = directory / '.namespace-write-canary'
+        try:
+            with canary.open('x') as stream:
+                stream.write('public-preflight')
+            canary.unlink()
+        except OSError:
+            errors.append('write canary failed:' + str(directory))
+    if errors:
+        raise ValueError('; '.join(errors))
+    write_json(ROOT / 'work/namespace-preflight.json', {'phase': 'namespace-preflight-pass', 'uid': account.pw_uid, 'gid': account.pw_gid, 'retained_read_only': True, 'host_home_hidden': True, 'docker_connect_denied': True}, exclusive=True)
 
 
 def deny_socket(path='/run/docker.sock'):
@@ -190,6 +267,7 @@ def export_only():
     account = pwd.getpwnam('civo')
     if os.geteuid() != account.pw_uid or os.getegid() != account.pw_gid or account.pw_uid == 0:
         raise ValueError('Wrong export execution identity')
+    namespace_preflight()
     if json.loads((ROOT / 'STATE.json').read_text())['phase'] not in {'export-submitting', 'export-submitted'}:
         raise ValueError('Export was not submitted')
     output = ROOT / 'outputs/export-1'

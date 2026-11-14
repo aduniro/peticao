@@ -13,7 +13,7 @@ import tarfile
 import subprocess
 
 SOURCE = Path(__file__).resolve().parent
-STATE = SOURCE.parent / "state"
+STATE = SOURCE.parent / "state-attempt2"
 COORD = "/mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/coord.py"
 DEST = "coord:civo-c472-export-recovery"
 KEY = "/home/barre/.ssh/id_ed25519_peticao_tailnet_v2"
@@ -75,14 +75,14 @@ def gate(args):
     policy = json.loads((SOURCE / "policy.json").read_text())
     expected = body["qualification"]
     need(expected["policy_sha256"] == sha(SOURCE / "policy.json"), "config_drift")
-    need(policy["target"] == "peticao-civo" and policy["tailnet_ipv4"] == "100.122.224.82" and policy["remote_root"] == "/mnt/apps/peticao-final/.runtime/civo-export-c472-20261114-attempt1", "wrong_target")
+    need(policy["target"] == "peticao-civo" and policy["tailnet_ipv4"] == "100.122.224.82" and policy["remote_root"] == "/mnt/apps/peticao-final/.runtime/civo-export-c472-20261114-attempt2", "wrong_target")
     need(not any(x["target_event"] == args.manifest_event for x in cli(["status"]).get("notice_dispositions", [])), "notice_disposed")
     events=cli(["history", "--after-seq", str(args.manifest_event), "--limit", "1000"])
     need(any(x["kind"] == "ack" and x["actor"] == "admin-recuperacao" and x["data"].get("event_seq") == args.manifest_event for x in events), "Root_ACK_required")
     return policy, dict(cap, live_expires=live["expires"]), expected
 
 
-REMOTE = "/mnt/apps/peticao-final/.runtime/civo-export-c472-20261114-attempt1"
+REMOTE = "/mnt/apps/peticao-final/.runtime/civo-export-c472-20261114-attempt2"
 
 def ssh_args():
     return ["/usr/bin/ssh", "-F", "/dev/null", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "-o", "IdentitiesOnly=yes", "-o", "StrictHostKeyChecking=yes", "-o", "HostKeyAlias=peticao-civo.tail1a6d71.ts.net", "-o", "UserKnownHostsFile="+str(SOURCE/"known_hosts"), "-i", KEY, "root@100.122.224.82"]
@@ -121,7 +121,7 @@ def phase(args):
     expected={REMOTE+'/runner.py':sha(SOURCE/'runner.py'),REMOTE+'/inputs/policy.json':sha(SOURCE/'policy.json')}
     code='import pathlib,hashlib,json,subprocess; expected='+repr(expected)+'; assert all(hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()==s for p,s in expected.items()); '
     if args.phase=='evidence':
-        code+='root=pathlib.Path('+repr(REMOTE)+'); out={}; paths='+repr(['STATE.json','custody-before.json','work/receipt.json','outputs/export-1/export-report.json','work/export.log'])+'; '
+        code+='root=pathlib.Path('+repr(REMOTE)+'); out={}; paths='+repr(['STATE.json','host-preflight.json','custody-before.json','work/receipt.json','work/namespace-preflight.json','outputs/export-1/export-report.json','work/export.log'])+'; '
         code+="exec(\"for name in paths:\\n p=root/name\\n if p.is_file() and not p.is_symlink():\\n  size=p.stat().st_size\\n  out[name]={'bytes':size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'content':p.read_text() if size<=500000 else None}\"); print(json.dumps(out))"
     else:code+='raise SystemExit(subprocess.call(["/usr/bin/python3",'+repr(REMOTE+'/runner.py')+','+repr(args.phase)+']))'
     journal=STATE/(args.phase+'.intent.json') if args.phase in ['prepare','start'] else None
