@@ -145,6 +145,13 @@ class CheckpointTests(unittest.TestCase):
         tree=self.source/'sources'/('b'*40)/'tree';(tree/'linked').symlink_to('/etc/passwd')
         with self.assertRaises(ValueError):self.capture()
 
+    def test_linked_source_or_worker_root_refused_before_capture(self):
+        linked=self.root/'linked-source';linked.symlink_to(self.source,target_is_directory=True)
+        with self.assertRaises(ValueError):cp.capture(linked,self.worker,self.root/'capture',self.recovery)
+        linked=self.root/'linked-worker';linked.symlink_to(self.worker,target_is_directory=True)
+        with self.assertRaises(ValueError):cp.capture(self.source,linked,self.root/'capture',self.recovery)
+        self.assertFalse((self.root/'capture').exists())
+
     def test_restored_file_tampering_is_detected(self):
         meta=self.capture();target,_=self.restore(meta);(target/'config.json').write_text('{"tampered":true}')
         with self.assertRaises(ValueError):cp.verify_restored(meta['snapshot'],target,meta['facts'],self.recovery)

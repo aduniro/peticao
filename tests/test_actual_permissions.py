@@ -20,7 +20,8 @@ class ActualPermissions(unittest.TestCase):
             self.assertTrue(data['fictional_script_executable'])
             self.assertFalse(data['real_accounts_changed'])
             self.assertTrue(data['real_root_decrypt_integrity_pass'])
-            self.assertTrue(data['temporary_unlock_deleted_success_and_failure'])
+            self.assertTrue(data['unlock_stdin_only_no_file_success_or_failure'])
+            self.assertTrue(data['altered_probe_import_hash_refused'])
 
 
 if __name__=='__main__':unittest.main()

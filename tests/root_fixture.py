@@ -1,10 +1,12 @@
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
 import sys
+import types
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -22,8 +24,12 @@ def main():
     source,worker=make_fixture(fixture);recovery=cp.load_recovery(ROOT/'legacy/recovery.py',RECOVERY_SHA)
     meta=cp.capture(source,worker,fixture/'capture',recovery)
     target=fixture/'restored';cp.restore(meta['snapshot'],target,meta['sha256'],meta['facts'],recovery,uid,gid)
+    installed=fixture/'code';installed.mkdir(mode=0o755);installed.chmod(0o755)
+    pins={}
+    for source_file in (ROOT/'legacy').glob('*.py'):
+        dest=installed/source_file.name;dest.write_bytes(source_file.read_bytes());dest.chmod(0o644);pins[dest.name]=cp.digest(dest)
     child_code=(ROOT/'probe.py').read_text()+'\nprint(json.dumps(inspect(sys.argv[1],sys.argv[2])))\n'
-    result=subprocess.run(['/usr/bin/python3','-I','-B','-c',child_code,str(target),str(ROOT/'legacy')],user=uid,group=gid,extra_groups=[],capture_output=True,text=True,timeout=30)
+    result=subprocess.run(['/usr/bin/python3','-I','-B','-c',child_code,str(target),str(installed)],user=uid,group=gid,extra_groups=[],capture_output=True,text=True,timeout=30)
     if result.returncode:raise RuntimeError('actual nonroot passive inspection failed: '+result.stderr[-1200:])
     script=target/'sources'/('b'*40)/'tree/run.sh'
     executable=subprocess.run([str(script)],user=uid,group=gid,extra_groups=[],env={'PATH':'/usr/bin:/bin'},capture_output=True,text=True,timeout=10)
@@ -31,28 +37,43 @@ def main():
     assert cp.database_facts(target/'queue.sqlite')==meta['facts']
     spec=importlib.util.spec_from_file_location('crypto_fixture_operator',ROOT/'operator.py')
     op=importlib.util.module_from_spec(spec);spec.loader.exec_module(op)
+    op.CODE=installed
+    # Test fixture ancestors belong to the invoking user; production performs
+    # its independent root-parent gate before these real file-owner/hash gates.
+    op.assert_parents=lambda path:None
+    payload={'role':'target','helper':(ROOT/'checkpoint.py').read_text(),'policy':{'helper_sha256':cp.digest(ROOT/'checkpoint.py'),'recovery_sha256':RECOVERY_SHA,'installed_probe_sha256':pins}}
+    op.load_helper(payload)
+    (installed/'coordinator.py').write_text('# unexpected change, never execute\n')
+    try:op.load_helper(payload)
+    except ValueError:pass
+    else:raise AssertionError('altered installed probe module accepted')
     stage=short/'crypto';stage.mkdir(mode=0o700)
-    key=stage/'unlock.key';key.write_text('fictional fixture encryption passphrase');key.chmod(0o600)
+    unlock=b'fictional fixture encryption passphrase\n'
     gpg=short/'encrypt-gpg';gpg.mkdir(mode=0o700)
     cipher=stage/'checkpoint.tar.gpg'
     try:
-        encrypted=subprocess.run(['gpg','--homedir',str(gpg),'--batch','--no-symkey-cache','--pinentry-mode','loopback','--passphrase-file',str(key),'--symmetric','--cipher-algo','AES256','--output',str(cipher),meta['snapshot']],capture_output=True,env={'PATH':'/usr/bin:/bin','TMPDIR':str(short)},timeout=60)
+        encrypted=subprocess.run(['gpg','--homedir',str(gpg),'--batch','--no-symkey-cache','--pinentry-mode','loopback','--passphrase-fd','0','--symmetric','--cipher-algo','AES256','--output',str(cipher),meta['snapshot']],input=unlock,capture_output=True,env={'PATH':'/usr/bin:/bin','TMPDIR':str(short)},timeout=60)
         if encrypted.returncode:raise RuntimeError('fixture encryption failed: '+encrypted.stderr.decode(errors='replace')[-1600:])
     finally:
         subprocess.run(['gpgconf','--homedir',str(gpg),'--kill','gpg-agent'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=15)
     op.TARGET_STAGE=stage
-    crypto=op.decrypt({'cipher_sha256':cp.digest(cipher),'capture':meta})
-    assert crypto['decrypted_and_hash_verified'] and not key.exists()
+    stdin=sys.stdin
+    try:
+        sys.stdin=types.SimpleNamespace(buffer=io.BytesIO(unlock))
+        crypto=op.decrypt({'cipher_sha256':cp.digest(cipher),'capture':meta})
+    finally:sys.stdin=stdin
+    assert crypto['decrypted_and_hash_verified'] and crypto['unlock_file_created'] is False
+    assert not (stage/'unlock.key').exists()
+    assert all(unlock.strip() not in p.read_bytes() for p in stage.rglob('*') if p.is_file())
     assert cp.digest(stage/'checkpoint.tar.gz')==meta['sha256']
     bad=short/'crypto-bad';bad.mkdir(mode=0o700)
-    key=bad/'unlock.key';key.write_text('fictional fixture passphrase');key.chmod(0o600)
     (bad/'checkpoint.tar.gpg').write_bytes(b'corrupt ciphertext');(bad/'checkpoint.tar.gpg').chmod(0o600)
     op.TARGET_STAGE=bad
     try:op.decrypt({'cipher_sha256':'0'*64,'capture':meta})
     except ValueError:pass
     else:raise AssertionError('invalid cipher accepted')
-    assert not key.exists()
-    print(json.dumps({'actual_nonroot_probe':json.loads(result.stdout),'fictional_script_executable':True,'schema_rows_preserved':True,'real_accounts_changed':False,'real_root_decrypt_integrity_pass':True,'temporary_unlock_deleted_success_and_failure':True}))
+    assert not (bad/'unlock.key').exists()
+    print(json.dumps({'actual_nonroot_probe':json.loads(result.stdout),'fictional_script_executable':True,'schema_rows_preserved':True,'real_accounts_changed':False,'real_root_decrypt_integrity_pass':True,'unlock_stdin_only_no_file_success_or_failure':True,'altered_probe_import_hash_refused':True}))
 
 
 if __name__=='__main__':
@@ -61,7 +82,7 @@ if __name__=='__main__':
         if len(sys.argv)>1:
             fixture=Path(sys.argv[1])
             if not fixture.is_symlink() and fixture.parent.resolve()==(ROOT/'test-work').resolve():
-                for name in ['source','worker','capture','restored']:
+                for name in ['source','worker','capture','restored','code']:
                     p=fixture/name
                     if p.is_dir() and not p.is_symlink():shutil.rmtree(p)
         if len(sys.argv)>4:

@@ -140,6 +140,8 @@ def consistent_snapshot(source, worker, output, recovery):
 def capture(source, worker, output, recovery):
     """Keep native checkpoint; derive a verified one with original executable bits."""
     source, worker, output = map(Path, (source, worker, output))
+    if source.is_symlink() or worker.is_symlink() or not source.is_dir() or not worker.is_dir():
+        raise ValueError('existing nonlinked development roots required')
     before = database_facts(source/'queue.sqlite')
     if before['nonterminal_jobs']:
         raise ValueError('queued or active work requires separate drain; no automatic change')

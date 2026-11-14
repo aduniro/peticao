@@ -50,6 +50,15 @@ def load_helper(request):
     assert_parents(CODE/'recovery.py')
     if (CODE/'recovery.py').stat().st_uid!=0 or (CODE/'recovery.py').stat().st_mode&0o022:
         raise PermissionError('installed recovery must remain root-owned and unwritable')
+    if request['role']=='target':
+        for name,expected in policy['installed_probe_sha256'].items():
+            if name not in {'coordinator.py','runtime_profile.py','standby_guard.py','recovery.py'}:
+                raise ValueError('fixed probe imports only')
+            p=CODE/name
+            if p.is_symlink() or not p.is_file() or p.stat().st_uid!=0 or p.stat().st_mode&0o022 or sha(p)!=expected:
+                raise ValueError('installed probe import changed since qualification')
+        if set(policy['installed_probe_sha256'])!={'coordinator.py','runtime_profile.py','standby_guard.py','recovery.py'}:
+            raise ValueError('all imported probe modules must be pinned')
     recovery=module.load_recovery(CODE/'recovery.py',policy['recovery_sha256'])
     return module,recovery
 
@@ -113,7 +122,7 @@ def write_json(path,value):
 def receive(request):
     if TARGET_STAGE.is_symlink() or not TARGET_STAGE.is_dir():raise ValueError('prepared private target stage required')
     kind=request['kind']
-    name,limit={'cipher':('checkpoint.tar.gpg',MAX_CIPHER),'unlock':('unlock.key',4096)}[kind]
+    name,limit={'cipher':('checkpoint.tar.gpg',MAX_CIPHER)}[kind]
     path=TARGET_STAGE/name;total=0;h=hashlib.sha256()
     with path.open('xb') as stream:
         path.chmod(0o600)
@@ -126,29 +135,34 @@ def receive(request):
     if not total:raise ValueError('empty transport input')
     if kind=='cipher' and h.hexdigest()!=request['cipher_sha256']:
         raise ValueError('cipher transport checksum differs')
-    return {'uploaded':kind,'bytes':total if kind=='cipher' else None}
+    return {'uploaded':kind,'bytes':total}
 
 
 def decrypt(request):
-    cipher=TARGET_STAGE/'checkpoint.tar.gpg';key=TARGET_STAGE/'unlock.key';plain=TARGET_STAGE/'checkpoint.tar.gz'
+    cipher=TARGET_STAGE/'checkpoint.tar.gpg';plain=TARGET_STAGE/'checkpoint.tar.gz'
+    if (TARGET_STAGE/'unlock.key').exists() or (TARGET_STAGE/'unlock.key').is_symlink():
+        raise ValueError('unexpected persisted unlock material; reconcile without overwriting')
     gpg=TARGET_STAGE/'gpg';tmp=TARGET_STAGE/'tmp'
     try:
-        for p in [cipher,key]:
+        for p in [cipher]:
             if p.is_symlink() or not p.is_file() or p.stat().st_uid!=0 or p.stat().st_mode&0o077:
                 raise PermissionError('private root-owned encrypted inputs required')
         if sha(cipher)!=request['cipher_sha256'] or plain.exists():raise ValueError('cipher differs or plaintext already exists')
+        unlock=sys.stdin.buffer.read(4097)
+        if not unlock or len(unlock)>4096:raise ValueError('bounded stdin-only unlock required')
         gpg.mkdir(mode=0o700);tmp.mkdir(mode=0o700)
-        result=subprocess.run(['gpg','--homedir',str(gpg),'--batch','--no-symkey-cache','--pinentry-mode','loopback','--passphrase-file',str(key),'--output',str(plain),'--decrypt',str(cipher)],capture_output=True,env={'PATH':'/usr/bin:/bin','TMPDIR':str(tmp)},timeout=120)
+        result=subprocess.run(['gpg','--homedir',str(gpg),'--batch','--no-symkey-cache','--pinentry-mode','loopback','--passphrase-fd','0','--output',str(plain),'--decrypt',str(cipher)],input=unlock,capture_output=True,env={'PATH':'/usr/bin:/bin','TMPDIR':str(tmp)},timeout=120)
         (TARGET_STAGE/'gpg.private.log').write_bytes(result.stderr)
         if result.returncode or sha(plain)!=request['capture']['sha256']:
             raise ValueError('authenticated checkpoint decryption failed')
         plain.chmod(0o600)
     finally:
-        try:
-            if gpg.exists():
-                subprocess.run(['gpgconf','--homedir',str(gpg),'--kill','gpg-agent'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=15)
-        finally:key.unlink(missing_ok=True)
-    return {'decrypted_and_hash_verified':True,'temporary_unlock_deleted':not key.exists()}
+        if gpg.exists():
+            subprocess.run(['gpgconf','--homedir',str(gpg),'--kill','gpg-agent'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=15)
+    if (TARGET_STAGE/'unlock.key').exists():raise AssertionError('unlock must never persist')
+    result={'decrypted_and_hash_verified':True,'unlock_delivery':'stdin-only','unlock_file_created':False,'plaintext_sha256':sha(plain)}
+    write_json(TARGET_STAGE/'DECRYPT-RECEIPT.json',result)
+    return result
 
 
 def main(request):
@@ -182,10 +196,15 @@ def main(request):
         return {'target_stage_created':True,'queue_created':False}
     if action=='receive':return receive(request)
     if action=='decrypt':return decrypt(request)
-    if action=='remove-unlock':
-        (TARGET_STAGE/'unlock.key').unlink(missing_ok=True);return {'temporary_unlock_deleted':True}
     plain=TARGET_STAGE/'checkpoint.tar.gz'
     capture=request['capture']
+    if (TARGET_STAGE/'unlock.key').exists() or (TARGET_STAGE/'unlock.key').is_symlink():
+        raise ValueError('persisted unlock unexpectedly present; cannot qualify')
+    if action=='decrypt-status':
+        receipt=json.loads((TARGET_STAGE/'DECRYPT-RECEIPT.json').read_text())
+        if sha(plain)!=capture['sha256'] or receipt.get('plaintext_sha256')!=capture['sha256'] or receipt.get('unlock_file_created') is not False:
+            raise ValueError('decryption custody not proved')
+        return receipt
     if action=='restore':
         target_preflight();who=identity()
         result=helper.restore(plain,TARGET,capture['sha256'],capture['facts'],recovery,who.pw_uid,who.pw_gid)
@@ -201,7 +220,7 @@ def main(request):
     if child.returncode:raise RuntimeError('nonroot standby probe failed')
     verified['nonroot_probe']=json.loads(child.stdout)
     guard(role)
-    verified['temporary_unlock_deleted']=not (TARGET_STAGE/'unlock.key').exists()
+    verified['unlock_file_created']=False
     return verified
 
 

@@ -50,7 +50,8 @@ class OperatorTests(unittest.TestCase):
     def test_unknown_upload_kind_cannot_choose_path(self):
         with tempfile.TemporaryDirectory(dir=ROOT/'test-work') as tmp:
             with patch.object(op,'TARGET_STAGE',Path(tmp)):
-                with self.assertRaises(KeyError):op.receive({'kind':'../../foreign'})
+                for kind in ['../../foreign','unlock']:
+                    with self.assertRaises(KeyError):op.receive({'kind':kind})
             self.assertEqual(list(Path(tmp).iterdir()),[])
 
     def test_existing_target_stage_permissions_required(self):

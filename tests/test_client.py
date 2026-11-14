@@ -32,10 +32,27 @@ class ClientTests(unittest.TestCase):
     def test_lost_ssh_response_is_recorded_uncertain_not_replayed(self):
         with tempfile.TemporaryDirectory(dir=ROOT/'test-work') as tmp:
             with patch.object(client,'STATE',Path(tmp)),patch.object(client,'ssh_argv',return_value=['ssh','fixture']),patch.object(client.subprocess,'run',side_effect=subprocess.TimeoutExpired(['ssh'],1)) as run:
-                with self.assertRaises(subprocess.TimeoutExpired):client.remote({'role':'target','action':'restore'},'fixture')
+                with self.assertRaises(subprocess.TimeoutExpired):client.remote({'role':'target','action':'decrypt'},'fixture',body=b'fictional secret stdin only')
                 result=json.loads((Path(tmp)/'fixture.result.json').read_text());self.assertTrue(result['transport_uncertain'])
+                self.assertFalse(any(b'fictional secret stdin only' in p.read_bytes() for p in Path(tmp).iterdir()))
                 with self.assertRaises(FileExistsError):client.remote({'role':'target','action':'restore'},'fixture')
                 self.assertEqual(run.call_count,1)
+
+    def test_capture_response_lost_requires_positive_custody_observation(self):
+        with tempfile.TemporaryDirectory(dir=ROOT/'test-work') as tmp:
+            p=Path(tmp);(p/'capture.result.json').write_text(json.dumps({'ok':False,'transport_uncertain':True}))
+            with patch.object(client,'STATE',p):
+                with self.assertRaises(ValueError):client.capture_receipt()
+                (p/'capture-status.observation-1.result.json').write_text(json.dumps({'ok':True,'result':{'bytes':4,'sha256':'a'*64}}))
+                self.assertEqual(client.capture_receipt()['sha256'],'a'*64)
+
+    def test_restore_never_infers_decryption_complete_from_timeout_or_key_absence(self):
+        with tempfile.TemporaryDirectory(dir=ROOT/'test-work') as tmp:
+            p=Path(tmp);(p/'capture.result.json').write_text(json.dumps({'ok':True,'result':{'bytes':4,'sha256':'a'*64}}));(p/'target-decrypt.result.json').write_text(json.dumps({'ok':False,'transport_uncertain':True}))
+            with patch.object(client,'STATE',p):
+                with self.assertRaises(PermissionError):client.require_decrypted()
+                (p/'decrypt-status.observation-1.result.json').write_text(json.dumps({'ok':True,'result':{'decrypted_and_hash_verified':True,'unlock_file_created':False,'plaintext_sha256':'a'*64}}))
+                client.require_decrypted()
 
     def test_cipher_roundtrip_is_real_and_plaintext_is_not_saved_locally(self):
         raw=b'fictional checkpoint transport, no production data\n'

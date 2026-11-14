@@ -36,7 +36,7 @@
     "free_bytes": 149032501248
   },
   "recovery_sha256": "9c2b54de92a175822fc973912e25cd4450186d89a66e23ff61a94f150fadaa18",
-  "helper_sha256": "ca4f281e6452dc54c484b27cd86e6ad0b0e143b83e7e769816cd543458633704",
+  "helper_sha256": "6539df9c56677917ea2092a8eae0aad8351f2a6707a8cd962570b56fb6e49682",
   "probe_sha256": "427e90bd4a976f37b4b6f94aea60c30c27ff2ec2bcd620638710c93816332253",
   "service_uid": 999,
   "service_gid": 987,
@@ -50,5 +50,11 @@
     "SSH/bootstrap tokens (separate design)",
     "Kubernetes state migration"
   ],
-  "max_cipher_bytes": 537919488
+  "max_cipher_bytes": 537919488,
+  "installed_probe_sha256": {
+    "runtime_profile.py": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8",
+    "standby_guard.py": "731e2ccec8e05e45f5287d66017b4aacdfecf630cd6ca366d93717d855c6a997",
+    "coordinator.py": "a8e93ff093555241d2eeead49d418dc4d5bb4dacecf4aa460c329e8e7cd7adef",
+    "recovery.py": "9c2b54de92a175822fc973912e25cd4450186d89a66e23ff61a94f150fadaa18"
+  }
 }

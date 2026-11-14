@@ -114,6 +114,8 @@ def save_new(path,value):
 def remote(payload,label,body=None,timeout=180):
     # Reserve an intent before any network action; never replay a mutation after
     # a timeout merely because its response was lost.
+    if payload['action'] in {'preflight','capture-status','decrypt-status','verify'}:
+        label += '.observation-'+str(time.time_ns())
     save_new(STATE/(label+'.intent.json'),{'role':payload['role'],'action':payload['action'],'at':time.time()})
     try:
         result=subprocess.run(ssh_argv(payload),input=body,capture_output=True,timeout=timeout)
@@ -131,11 +133,24 @@ def remote(payload,label,body=None,timeout=180):
 
 
 def capture_receipt():
-    value=json.loads((STATE/'capture.result.json').read_text())
-    data=value['result']
-    if not value.get('ok') or data['bytes']>512*1024**2:
-        raise ValueError('successful bounded capture receipt required')
-    return data
+    candidates=[STATE/'capture.result.json',*sorted(STATE.glob('capture-status*.result.json'),reverse=True)]
+    for path in candidates:
+        if not path.exists():continue
+        value=json.loads(path.read_text());data=value.get('result',{})
+        if value.get('ok') and 0<data.get('bytes',0)<=512*1024**2:
+            return data
+    raise ValueError('successful bounded capture receipt or observation required')
+
+
+def require_decrypted():
+    expected=capture_receipt()['sha256']
+    candidates=[STATE/'target-decrypt.result.json',*sorted(STATE.glob('decrypt-status*.result.json'),reverse=True)]
+    for path in candidates:
+        if not path.exists():continue
+        value=json.loads(path.read_text());result=value.get('result',{})
+        if value.get('ok') and result.get('decrypted_and_hash_verified') is True and result.get('unlock_file_created') is False and result.get('plaintext_sha256')==expected:
+            return
+    raise PermissionError('observe successful decryption before restore; timeout is not completion')
 
 
 def hash_stdout(proc,timeout):
@@ -206,6 +221,7 @@ def gate(args,budget=180):
 
 def execute(args):
     gate(args,600 if args.phase in {'capture','encrypt','transfer'} else 180)
+    if args.phase=='restore':require_decrypted()
     if args.phase in MUTATING:
         save_new(STATE/(args.phase+'.phase-intent.json'),{'at':time.time(),'manifest':args.manifest_event,'phase':args.phase})
     if args.phase.startswith('preflight-'):
@@ -221,19 +237,17 @@ def execute(args):
         if sha(cipher.read_bytes())!=encryption['cipher_sha256']:raise ValueError('local ciphertext changed')
         remote(payload,'target-cipher',body=cipher.read_bytes(),timeout=300)
         gate(args,180)
-        payload=request('target','receive');payload.update(kind='unlock')
-        try:
-            remote(payload,'target-unlock',body=KEY.read_bytes(),timeout=60)
-            payload=request('target','decrypt');payload.update(capture=meta,cipher_sha256=encryption['cipher_sha256'])
-            value=remote(payload,'target-decrypt',timeout=180)
-        finally:
-            # Only our temporary unlock copy, inside the private attempt path.
-            cleanup=request('target','remove-unlock')
-            remote(cleanup,'target-unlock-cleanup',timeout=60)
+        payload=request('target','decrypt');payload.update(capture=meta,cipher_sha256=encryption['cipher_sha256'])
+        # No remote unlock file: timeout cannot strand a persisted secret and
+        # no cleanup depends on a second successful SSH session.
+        value=remote(payload,'target-decrypt',body=KEY.read_bytes(),timeout=180)
     elif args.phase in {'restore','verify'}:
         payload=request('target',args.phase);payload['capture']=capture_receipt()
         value=remote(payload,args.phase,timeout=180)
     elif args.phase=='capture-status':value=remote(request('source','capture-status'),'capture-status',timeout=60)
+    elif args.phase=='decrypt-status':
+        payload=request('target','decrypt-status');payload['capture']=capture_receipt()
+        value=remote(payload,'decrypt-status',timeout=60)
     else:raise ValueError('unsupported bounded phase')
     return {'phase':args.phase,'ok':True,'result':value}
 
@@ -241,7 +255,7 @@ def execute(args):
 if __name__=='__main__':
     os.umask(0o077)
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase',choices=['preflight-source','preflight-target','capture','capture-status','encrypt','transfer','restore','verify'])
+    parser.add_argument('phase',choices=['preflight-source','preflight-target','capture','capture-status','encrypt','transfer','decrypt-status','restore','verify'])
     parser.add_argument('--manifest-event',type=int,required=True)
     parser.add_argument('--lease-file',type=Path)
     args=parser.parse_args()

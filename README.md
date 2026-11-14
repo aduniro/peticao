@@ -19,7 +19,9 @@ Fecha explicitamente as conexões SQLite e normaliza somente a cópia para DELET
 antes de calcular os hashes. Isso evita incluir WAL/SHM mutáveis do backup.
 Acrescenta original_mode ao manifesto para preservar scripts executáveis.
 O código recovery instalado permanece intacto e é importado somente após
-verificação de hash e propriedade root. A restauração recusa target existente.
+verificação de hash e propriedade root. Os quatro módulos importados pelo
+probe também são verificados por hash/propriedade antes de executar. Raízes
+source/worker em symlink e target existente são recusados.
 
 ## Transporte e permissões
 
@@ -28,10 +30,11 @@ de plaintext salvo no Dell. O GPG usa a chave de transporte já existente do
 bundle Civo, sem criar ou girar uma credencial. A descriptografia local em fluxo
 deve reproduzir exatamente o hash e tamanho da origem antes da transferência.
 
-O ciphertext segue por SSH para uma tentativa privada e exclusiva na Civo; a
-chave temporária é transferida separadamente, em arquivo root 0600, removido
-após sucesso ou falha da descriptografia. Nenhum valor entra em argv, logs ou
-Git. GPG, tmp e testes ficam em diretórios do projeto. O socket GPG da tentativa
+O ciphertext segue por SSH para uma tentativa privada e exclusiva na Civo. Em
+outra sessão SSH, o GPG recebe a chave somente por stdin/passphrase-fd, sem
+arquivo de unlock no destino. Timeout não depende de uma segunda conexão para
+apagar segredo persistido. Arquivo de unlock inesperado impede qualificação.
+Nenhum valor entra em argv, logs ou Git. GPG, tmp e testes ficam em diretórios do projeto. O socket GPG da tentativa
 real tem caminho curto; os testes root usam o diretório reservado .gpt1/ na
 raiz do projeto para respeitar o limite de sockets Unix.
 
@@ -47,7 +50,8 @@ O cliente exige fonte limpa, manifesto imutável, ACK independente de apoio e
 uma lease **migration** própria de Infra para o recurso exato. Cada fase grava
 uma intenção exclusiva antes do efeito externo. Timeout significa resultado
 incerto, não permissão para repetir. capture-status/verify permitem observar
-estado já gravado; não disparam outra captura ou restauração.
+estado já gravado; não disparam outra captura ou restauração. decrypt-status
+permite observar o recibo e hash após uma resposta perdida na descriptografia.
 
 Não há start, stop, enable, reload, listener, timer, nova chave SSH ou promoção.
 Não se adapta o gateway/replicação legados nem a configuração de topologia
@@ -59,7 +63,7 @@ dos dados não será apresentada como infraestrutura distribuída pronta.
 
 Os testes usam somente fixtures. Incluem WAL da origem aberto, corrupção e
 symlinks, script executável, schema/linhas/sequence, target ocupado, recusa de
-ações de ativação, transporte incerto sem replay, GPG real e remoção da chave
-temporária tanto no sucesso quanto no erro. O helper sudo cria e remove apenas
+ações de ativação, transporte incerto sem replay e GPG real com chave somente
+em stdin, sem keyfile no destino tanto no sucesso quanto no erro. O helper sudo cria e remove apenas
 fixtures próprias do projeto, sem criar contas ou alterar serviços do host.
 Antes de testes compartilhados, reservar também /mnt/apps/peticao-final/.gpt1.
