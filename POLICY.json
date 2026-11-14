@@ -1,0 +1,247 @@
+{
+  "instance_id": "3d6e5117-e1db-4e7f-b97e-967a3ab91f0f",
+  "nodes": [
+    {
+      "config_sha256": "ecb8328df93c0a1c71604a25679446682eb10092af79bb92c5d3d34f2f101bf0",
+      "config": "/etc/ssh/peticao-tailnet-v2/sshd_config",
+      "service": "peticao-tailnet-ssh.service",
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ5x6CmHtVIkb4KfiE/9oTG9/vOnFnyXesXCeE/Sd5Dz root@localhost",
+      "corp_dns": false,
+      "run_ssh": false,
+      "ipv6_kernel_disabled": "0",
+      "name": "akamai",
+      "operator_alias": "peticao-akamai-root-tailnet",
+      "user": "builder",
+      "ipv4": "100.74.19.123",
+      "ipv6": "fd7a:115c:a1e0::4c2f:137c",
+      "hostname": "peticao-build-a1",
+      "dns": "peticao-build-a1.tail1a6d71.ts.net",
+      "port": 2224,
+      "accounts": [
+        {
+          "user": "builder",
+          "home": "/home/builder",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMeQZ/saxVFwThpl+aZt0LB9W9MmWGXZGAVw64kvs9oO peticao-tailnet-v2:akamai:builder",
+          "client_fingerprint": "SHA256:J1X0/kzFZWO6Q85/Vv5CG3eyTkuSvRCpKzG46732ylk",
+          "auth_file": "/home/builder/.ssh/authorized_keys_peticao_tailnet_v2",
+          "auth_sha256": "70d9143ed650f50b62a287b6ff85fb8dbda853561dd9f88e47416f41c9c3aed3",
+          "client_identity": "/home/builder/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_new_sha256": "7dcf0baa8c5add751daeec164a794f337106674c3c6d743e8820e1c3c038f2d2"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII4M3/awBcTAS12WZ3brzrFmjbASR12YBnZarr0/jYqc peticao-tailnet-v2:akamai:root",
+          "client_fingerprint": "SHA256:aDHJ7C7vXDv4OD6Gt72e2hnipe38G+MT2BvgFnwa8aw",
+          "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2",
+          "auth_sha256": "70d9143ed650f50b62a287b6ff85fb8dbda853561dd9f88e47416f41c9c3aed3",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_new_sha256": "7dcf0baa8c5add751daeec164a794f337106674c3c6d743e8820e1c3c038f2d2"
+        }
+      ],
+      "config_new_sha256": "4fe2bcf16ed4c99078e61a6a659285218a5505f70fe5a84cea6febd19550a235"
+    },
+    {
+      "config_sha256": "3a13cd48467395bfff1c25145aa13337f0c22e9c9d0a12c023fdb542f942c74d",
+      "config": "/etc/ssh/peticao-tailnet-v2/sshd_config",
+      "service": "peticao-tailnet-ssh.service",
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILbP+WkEx8pJBhlvnoaGVIKQzFOPZYlNsnLfWhvuq0aI root@peticao-sp",
+      "corp_dns": true,
+      "run_ssh": true,
+      "ipv6_kernel_disabled": "0",
+      "name": "sp",
+      "operator_alias": "cluster-sp-root",
+      "user": "adunir",
+      "ipv4": "100.109.6.122",
+      "ipv6": "fd7a:115c:a1e0::8e2f:67b",
+      "hostname": "peticao-sp",
+      "dns": "peticao-sp.tail1a6d71.ts.net",
+      "port": 2224,
+      "accounts": [
+        {
+          "user": "adunir",
+          "home": "/home/adunir",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINb3uJEatZpztkdN27acuwhxaoSwMd0lg7/m1pdcVHcP peticao-tailnet-v2:sp:adunir",
+          "client_fingerprint": "SHA256:zKDEbM7kJfcgEwk5Oaty9c5UW7dGhRulMNx7p68zzy8",
+          "auth_file": "/home/adunir/.ssh/authorized_keys_peticao_tailnet_v2",
+          "auth_sha256": "70d9143ed650f50b62a287b6ff85fb8dbda853561dd9f88e47416f41c9c3aed3",
+          "client_identity": "/home/adunir/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_new_sha256": "7dcf0baa8c5add751daeec164a794f337106674c3c6d743e8820e1c3c038f2d2"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF/NdoU0DMcQLRWOwkQnTGCxd/3g5nExWpaxwcva2YNB peticao-tailnet-v2:sp:root",
+          "client_fingerprint": "SHA256:dpD72yDt0sA33DrmeWU7q0s7M6fK0Y6P5lPlAUIkNjk",
+          "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2",
+          "auth_sha256": "70d9143ed650f50b62a287b6ff85fb8dbda853561dd9f88e47416f41c9c3aed3",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_new_sha256": "7dcf0baa8c5add751daeec164a794f337106674c3c6d743e8820e1c3c038f2d2"
+        }
+      ],
+      "config_new_sha256": "c9556942aab9898a7c9ba17d03a89ee501b04d5fb4edec10a029440bd7c59607"
+    },
+    {
+      "config_sha256": "c8f4c477b253f5e947a333d2f509dc8b3869faa9cc7f63a6d6d1a3b61cd7694a",
+      "config": "/etc/ssh/peticao-tailnet-v2/sshd_config",
+      "service": "peticao-tailnet-ssh.service",
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJecEkOdtMPMB/kSqL68QPsV2VI/gA4h/A5bot8I8J4o root@sonda-verifica3",
+      "corp_dns": true,
+      "run_ssh": true,
+      "ipv6_kernel_disabled": "0",
+      "name": "santiago",
+      "operator_alias": "cluster-santiago-root",
+      "user": "sonda",
+      "ipv4": "100.80.18.81",
+      "ipv6": "fd7a:115c:a1e0::3e2f:1252",
+      "hostname": "sonda-verifica3",
+      "dns": "sonda-verifica3.tail1a6d71.ts.net",
+      "port": 2224,
+      "accounts": [
+        {
+          "user": "sonda",
+          "home": "/home/sonda",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM9d1O0MsPf38QtpnJb5Ls84HorqMt2egK8CmL1tvaNH peticao-tailnet-v2:santiago:sonda",
+          "client_fingerprint": "SHA256:NhwpyLWCfR+hxfv98xBlqXeom+b4wCrFgNVKSGnhvvE",
+          "auth_file": "/home/sonda/.ssh/authorized_keys_peticao_tailnet_v2",
+          "auth_sha256": "70d9143ed650f50b62a287b6ff85fb8dbda853561dd9f88e47416f41c9c3aed3",
+          "client_identity": "/home/sonda/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_new_sha256": "7dcf0baa8c5add751daeec164a794f337106674c3c6d743e8820e1c3c038f2d2"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILauQ0HeIq6Vdj1ZH9bXsDc+6TOyjroAjRFIL/dUPUQF peticao-tailnet-v2:santiago:root",
+          "client_fingerprint": "SHA256:zPsjXV7IJxDGNS1EUtLsqPyeu7r/pBJys0XLRfk7/BU",
+          "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2",
+          "auth_sha256": "70d9143ed650f50b62a287b6ff85fb8dbda853561dd9f88e47416f41c9c3aed3",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_new_sha256": "7dcf0baa8c5add751daeec164a794f337106674c3c6d743e8820e1c3c038f2d2"
+        }
+      ],
+      "config_new_sha256": "56da8503e30d792fb5d6a965513fca8b45e22771421b164777ecb0e53559c6f8"
+    },
+    {
+      "config_sha256": "4e0138df33e1e68199eb67f409dc56eb8c6c1d5a8903d16a5808d8bfe65b66de",
+      "config": "/etc/ssh/peticao-tailnet-v2/sshd_config",
+      "service": "peticao-tailnet-ssh.service",
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPiFPUbmzxy2WR3DKySgN9wLhPHTpJ05FMw0ok2TOSff root@sanciona-integral",
+      "corp_dns": true,
+      "run_ssh": false,
+      "ipv6_kernel_disabled": "0",
+      "name": "waha",
+      "operator_alias": "cluster-waha-root",
+      "user": "wa",
+      "ipv4": "100.115.154.25",
+      "ipv6": "fd7a:115c:a1e0::972f:9a1a",
+      "hostname": "sanciona-integral",
+      "dns": "sanciona-integral.tail1a6d71.ts.net",
+      "port": 2224,
+      "accounts": [
+        {
+          "user": "wa",
+          "home": "/home/wa",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDz8izBX5KoAxbTi6N7POJfWNUWAlivktDZnGpBJjfET peticao-tailnet-v2:waha:wa",
+          "client_fingerprint": "SHA256:Gj73De2vvvlkoCyoX1zh+mOmi9imULSlQ+HnZTLYKmE",
+          "auth_file": "/home/wa/.ssh/authorized_keys_peticao_tailnet_v2",
+          "auth_sha256": "70d9143ed650f50b62a287b6ff85fb8dbda853561dd9f88e47416f41c9c3aed3",
+          "client_identity": "/home/wa/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_new_sha256": "7dcf0baa8c5add751daeec164a794f337106674c3c6d743e8820e1c3c038f2d2"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINLaAP2wdj52wgZ3HtsAEc1NLhet7uDCkZ+F7G6gYKAL peticao-tailnet-v2:waha:root",
+          "client_fingerprint": "SHA256:J38lSO+8nDFUAz118yQljyS8GT1gn2t3ctcEyfBDckc",
+          "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2",
+          "auth_sha256": "70d9143ed650f50b62a287b6ff85fb8dbda853561dd9f88e47416f41c9c3aed3",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_new_sha256": "7dcf0baa8c5add751daeec164a794f337106674c3c6d743e8820e1c3c038f2d2"
+        }
+      ],
+      "config_new_sha256": "eaac6c5e329ae9f5304cf62700ab30ad706b8d44c1a98a884de1ef8611e79d87"
+    },
+    {
+      "accounts": [
+        {
+          "user": "barre",
+          "home": "/home/barre",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINt+h3nKCP/IuiGbMppI4MdG34YBmUgm7DKPfUhnAY2O peticao-tailnet-v2:local:barre",
+          "client_identity": "/home/barre/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/home/barre/.ssh/authorized_keys",
+          "auth_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "auth_new_sha256": "5800468b914fc808c439642d8bb24beb3f897852d8143492eae8e5faa26ad3a1"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGYLpPKANy0HVy8TCC1DiTJD/dHNM5Yxtnfm8v3JYsh7 peticao-tailnet-v2:local:root",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/root/.ssh/authorized_keys",
+          "auth_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "auth_new_sha256": "5800468b914fc808c439642d8bb24beb3f897852d8143492eae8e5faa26ad3a1"
+        }
+      ],
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIABxB+nPTPMdOXYCHIgZSQRf9Qs74s6K/eo5ApRr6Yw root@dell3576-zorin",
+      "run_ssh": true,
+      "corp_dns": true,
+      "name": "local",
+      "operator_alias": null,
+      "user": "barre",
+      "ipv4": "100.105.193.63",
+      "ipv6": "fd7a:115c:a1e0::e33b:c13f",
+      "hostname": "dell3576-zorin",
+      "dns": "dell3576-zorin.tail1a6d71.ts.net",
+      "port": 22,
+      "service": null,
+      "config": null
+    },
+    {
+      "name": "civo",
+      "operator_alias": "civo@212.2.241.70",
+      "user": "civo",
+      "ipv4": "100.122.224.82",
+      "ipv6": "fd7a:115c:a1e0::322f:e053",
+      "hostname": "peticao-civo",
+      "dns": "peticao-civo.tail1a6d71.ts.net",
+      "port": 22,
+      "service": null,
+      "config": null,
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEh2JQ+Zietnaw0eqyUpc7P4WO+nWf0X6gqQg8XXRg7G",
+      "accounts": [
+        {
+          "user": "civo",
+          "home": "/home/civo",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIdwm7cuTLhS7TVVabfs1Z6zdu7/JgnJJusaGKGfnxgv peticao-civo-user",
+          "client_identity": "/home/civo/.ssh/id_ed25519_peticao_civo_node",
+          "auth_file": "/home/civo/.ssh/authorized_keys",
+          "auth_sha256": "72289c3b8bfb3c932cb208b67ae801b1f6d4e3c80097134c83dc4bc877fbdc04",
+          "private_sha256": "ac2725320747383818ee01b34363b31d7b884dd82fa805e9e8bc1d9287777ed1",
+          "private_source": "user",
+          "auth_new_sha256": "e3833a5cea9496d6eb47a3bd281d034a844557f069b9958b96db198b9f58632a"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJe+WYbYwDCiA7uW7AY2PwfkXyaVLsKFx3OfEfDZd5iu peticao-civo-root",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_civo_node",
+          "auth_file": "/root/.ssh/authorized_keys",
+          "auth_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "private_sha256": "578ea8a3698d6ce71f92296fc0d0248ca8303c6e830093c805181264f4c3e01c",
+          "private_source": "root",
+          "auth_new_sha256": "df293f462f61b548b028eb08c5fa81e48ec139518eac7afeae5b0683109c0c56"
+        }
+      ]
+    }
+  ],
+  "owner_public_addresses": [
+    "181.220.194.57",
+    "2804:14d:cc84:8308::1666",
+    "2804:14d:cc84:8308:a98:37ba:3bd2:7cc2",
+    "2804:14d:cc84:8308:c716:e13c:b12:c6e8"
+  ],
+  "owner_civo_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA+ldgXyN57m5zK5RPcpzMvg6mqSPgmLdGmthE//VWSC peticao-civo20261114",
+  "pve_pending_reason": "TailscaleSSH requires legitimate browser check; normal2224 unavailable; no bypass attempted",
+  "relogin_existing_nodes": false,
+  "production_database_changes": false
+}
