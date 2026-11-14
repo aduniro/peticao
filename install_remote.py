@@ -82,7 +82,7 @@ print('stage_verified')
         print(result.decode().strip())
     elif args.step=='start':
         command=['sudo','-n','systemd-run','--unit=peticao-bootstrap-owner-20261114',
-                 '--property=Type=oneshot','--property=TimeoutStartSec=2700',
+                 '--property=Type=oneshot','--property=RemainAfterExit=yes','--property=TimeoutStartSec=2700',
                  '--property=StandardOutput=append:'+STAGE+'/operator.log',
                  '--property=StandardError=append:'+STAGE+'/operator.log',
                  '/usr/bin/bash',STAGE+'/bootstrap.sh','--apply','--new-vm','--user','civo']
@@ -114,7 +114,8 @@ for name,sha in HASHES.items():
  if f.is_symlink() or not f.is_file() or hashlib.sha256(f.read_bytes()).hexdigest()!=sha:raise ValueError('Remote artifact changed before restore')
 x=subprocess.run(['systemctl','show','peticao-bootstrap-owner-20261114.service','-p','Result','--value'],capture_output=True,text=True,check=True)
 y=subprocess.run(['systemctl','show','peticao-bootstrap-owner-20261114.service','-p','ActiveState','--value'],capture_output=True,text=True,check=True)
-if x.stdout.strip()!='success' or y.stdout.strip()!='inactive':raise ValueError('Bootstrap not complete')
+z=subprocess.run(['systemctl','show','peticao-bootstrap-owner-20261114.service','-p','SubState','--value'],capture_output=True,text=True,check=True)
+if x.stdout.strip()!='success' or y.stdout.strip()!='active' or z.stdout.strip()!='exited':raise ValueError('Bootstrap not complete')
 command=['sudo','-n','python3',str(p/'restore_credentials.py'),'--folder',str(p),'--key-file',str(p/'unlock.key'),'--user','civo']
 subprocess.run(command,check=True)
 key=p/'unlock.key';key.unlink()
@@ -125,6 +126,7 @@ if not running:
  with (p/'tailscale-join.private.log').open('wb') as f:
   subprocess.run(['sudo','-n','tailscale','up','--auth-key=file:/home/civo/.config/peticao/credentials/sanciona-integral','--hostname=peticao-civo','--accept-dns=true'],stdout=f,stderr=f,check=True,timeout=120)
 print('credentials_restored_and_tailnet_join_requested')
+subprocess.run(['systemctl','stop','peticao-bootstrap-owner-20261114.service'],check=True)
 '''.replace('pathlib.Path(STAGE)','pathlib.Path('+repr(STAGE)+')').replace('HASHES',repr(binding['remote_sha256']))
         print(remote('import subprocess;subprocess.run(["sudo","-n","python3","-c",'+repr(code)+'],check=True)',timeout=180).decode().strip())
 
