@@ -1,0 +1,6 @@
+*
+!.gitignore
+!build_bundle.py
+!restore_credentials.py
+!install_remote.py
+!bootstrap.sh
