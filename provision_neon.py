@@ -127,6 +127,32 @@ def check_lease(path, manifest_event):
                        '--after-seq', str(lease['seq'] - 1), '--limit', '1']))['result'][0]
     if event['data'].get('manifest_event') != manifest_event:
         raise RuntimeError('Critical lease references another manifest')
+    notice = json.loads(subprocess.check_output(['python3', COORD, 'history',
+                        '--after-seq', str(manifest_event - 1), '--limit', '1']))['result'][0]
+    if notice.get('seq') != manifest_event or notice.get('kind') != 'notice':
+        raise RuntimeError('Reviewed immutable manifest notice not found')
+    head = subprocess.check_output(['git', '-C', str(BASE), 'rev-parse', 'HEAD'], text=True).strip()
+    verify_source_pin(notice, head)
+
+
+def verify_source_pin(notice, head):
+    data = notice.get('data', {})
+    manifest = data.get('manifest', {})
+    hashes = data.get('file_sha256', {})
+    files = manifest.get('files', [])
+    required = {'provision_neon.py', 'test_provision_neon.py', 'NEON-PROCEDURE.md',
+                'budget_policy.py', 'test_budget_policy.py', 'WORKER-PROFILES.json'}
+    if manifest.get('commit') != head or not required.issubset(files):
+        raise RuntimeError('Working source or procedure differs from reviewed manifest')
+    for name in files:
+        path = Path(name)
+        if path.is_absolute() or '..' in path.parts:
+            raise RuntimeError('Unsafe manifest source path')
+        target = BASE / path
+        if target.is_symlink() or not target.is_file():
+            raise RuntimeError('Reviewed source file is missing or a symlink')
+        if hashlib.sha256(target.read_bytes()).hexdigest() != hashes.get(name):
+            raise RuntimeError('Reviewed file hash drift: ' + name)
 
 
 def verify_ownership(project):
@@ -159,7 +185,14 @@ def verify_compute_ownership(compute):
 
 
 def verify_auxiliary_services(pid, branch_id):
-    view = run(['status', '--project-id', pid, '--branch', branch_id, '--config-json'])
+    # CLI9.5.0 config_format.js30/31 and53: absent toggles/functions in a
+    # successfully inspected live config mean off. Empty/foreign envelopes do not.
+    status = run(['status', '--project-id', pid, '--branch', branch_id])
+    if (status.get('project', {}).get('id') != pid or
+            status.get('branch', {}).get('id') != branch_id or
+            not isinstance(status.get('config'), dict)):
+        raise RuntimeError('Missing or wrong live status identity/config envelope')
+    view = status['config']
     if view.get('auth') not in [None, False] or view.get('dataApi') not in [None, False]:
         raise RuntimeError('Auth/Data API unexpectedly enabled; preserve and stop')
     if view.get('preview', {}).get('functions'):

@@ -1,4 +1,5 @@
 import json
+import hashlib
 from pathlib import Path
 import tempfile
 import unittest
@@ -38,7 +39,7 @@ class NeonProvisionTests(unittest.TestCase):
         if args[:2] == ['projects', 'create']:
             return {'project': self.project}
         if args and args[0]=='status':
-            return {}
+            return {'project':{'id':'test-project'}, 'branch':{'id':'test-branch'}, 'config':{}}
         if args and args[-1].endswith('/realtime'):
             return {'enabled':False}
         return {}
@@ -147,8 +148,27 @@ class NeonProvisionTests(unittest.TestCase):
 
     def test_unexpected_auxiliary_service_is_not_silently_accepted(self):
         for view in [{'auth':True}, {'dataApi':True}, {'preview':{'functions':{'f':{}}}}]:
-            with self.subTest(view=view), patch.object(n, 'run', return_value=view):
+            envelope={'project':{'id':'test-project'},'branch':{'id':'test-branch'},'config':view}
+            with self.subTest(view=view), patch.object(n, 'run', return_value=envelope):
                 with self.assertRaises(RuntimeError): n.verify_auxiliary_services('test-project','test-branch')
+
+    def test_empty_or_foreign_status_frame_does_not_prove_disabled(self):
+        for result in [{}, {'project':{'id':'foreign'},'branch':{'id':'test-branch'},'config':{}},
+                       {'project':{'id':'test-project'},'branch':{'id':'foreign'},'config':{}},
+                       {'project':{'id':'test-project'},'branch':{'id':'test-branch'}}]:
+            with self.subTest(result=result), patch.object(n,'run',return_value=result):
+                with self.assertRaises(RuntimeError): n.verify_auxiliary_services('test-project','test-branch')
+
+    def test_manifest_binds_commit_and_every_reviewed_file(self):
+        files=['provision_neon.py','test_provision_neon.py','NEON-PROCEDURE.md',
+               'budget_policy.py','test_budget_policy.py','WORKER-PROFILES.json']
+        for name in files:(n.BASE/name).write_text(name)
+        notice={'data':{'manifest':{'commit':'a'*40,'files':files},
+                         'file_sha256':{f:hashlib.sha256((n.BASE/f).read_bytes()).hexdigest() for f in files}}}
+        n.verify_source_pin(notice,'a'*40)
+        with self.assertRaises(RuntimeError):n.verify_source_pin(notice,'b'*40)
+        (n.BASE/'WORKER-PROFILES.json').write_text('drift')
+        with self.assertRaises(RuntimeError):n.verify_source_pin(notice,'a'*40)
 
 
 if __name__ == '__main__': unittest.main()

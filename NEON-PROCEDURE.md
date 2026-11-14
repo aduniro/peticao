@@ -21,7 +21,8 @@ Organização verificada ao vivo: org-fragrant-dawn-99551288, planoFree.
    houver fonte Admin reservada ou Executor61 sem ACK real, NÃO aplicar.
 4. Executar `provision_neon.py --apply --critical-lease-file ARQUIVO_PRIVADO
    --manifest-event EVENTO_REVISADO`. O código valida lease ativo, operação,
-   destino e evento imediatamente antes das mutações. Uma execução por lockflock.
+   destino e evento imediatamente antes das mutações, e confere commitHEAD e
+   SHA256 de todos os arquivos contra o anúncio imutável. Uma execução por lockflock.
 5. Revalidar Free; enumerar todas as páginas e rejeitar listagem parcial. O
    alvo único é peticao-infra/aws-us-east-1/PG17; não adotar homônimo sem recibo
    vinculado ao ID da resposta de create. Intenção exclusiva/durável (O_EXCL,
@@ -30,7 +31,12 @@ Organização verificada ao vivo: org-fragrant-dawn-99551288, planoFree.
    Reconciliar ID pela API, validar endpointquarter/timeout0ou300. No Free,0
    significa padrão do plano300segundos, e não é ajustável: não forçarPATCHpago.
 7. Criar infra-artefatos explicitamenteprivate; listar novamente e verificar
-   access_level. Conferir Auth/DataAPI/Functions pelo configlive, Realtime
+   access_level. Conferir Auth/DataAPI/Functions pelo statuslive com envelope
+   project.id/branch.id exatamente iguais ao alvo e configobjeto. Na CLI9.5.0,
+   `dist/config_format.js`30/31 omite auth/dataApi somente se resolvedfalse;
+   funções em preview aparecem somente quando listagemlive não vazia (linha53).
+   Esse é o contrato de ausência=off após inspeção válida; `{}` sem envelope,
+   IDs divergentes e configuração ausente são recusados. Conferir Realtime
    enabledfalse e disponibilidade do gateway por GET; nenhuma credencial de IA
    é criada e nenhuma invocação é feita. URL disponível não significa uso pago.
    Se API/campo não provar estado desativado, parar e reconciliar, nunca presumir.
