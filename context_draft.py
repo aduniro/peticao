@@ -96,12 +96,21 @@ def assess(bundle, pins, evidence):
             require(receipt["operation_id"] == pins["operation_id"] and
                     receipt["target_fingerprint"] == notice["fingerprint"], "receipt scope drift")
             require(receipt["author"] == notice["author"] and
-                    receipt["decision"] in {"withdrawn", "superseded"} and
-                    receipt["execution_state"] == "not-executed" and
                     receipt["preserve_original"] is True and
                     receipt["applied_globally"] is False, "historical state not reconciled")
             verify_evidence(receipt["author_evidence"], evidence)
             verify_evidence(receipt["independent_evidence"], evidence)
+            if receipt["decision"] == "archived-completed":
+                require(receipt["execution_state"] == "completed-verified" and
+                        notice["missing_ack"] == ["executor61"] and
+                        receipt["technical_ack_actors"] == ["admin-recuperacao", "apoio"],
+                        "completed notice lacks exact completion/channel-only proof")
+                verify_evidence(receipt["completion_evidence"], evidence)
+                verify_evidence(receipt["technical_reviews_evidence"], evidence)
+            else:
+                require(receipt["decision"] in {"withdrawn", "superseded"} and
+                        receipt["execution_state"] == "not-executed",
+                        "historical state not reconciled")
             if notice["nack"]:
                 require(receipt["nack_preserved"] is True, "NACK must remain visible")
                 verify_evidence(receipt["correction_evidence"], evidence)

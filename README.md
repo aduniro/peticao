@@ -19,6 +19,13 @@ ledger global nem remove o bloqueio da CLI. O helper recusa afirmar sucesso do
 gate canônico. Histórico/NACK é preservado; uma substituição Neon não comprova
 workers, cutover ou publicação R1. Não há whitelist por número de aviso.
 
+Histórico concluído usa categoria distinta `archived-completed` com estado
+`completed-verified`: exige comprovante exato de execução e revisões técnicas
+Root/Apoio, além de falta exclusivamente do canal Executor61. Não é retirado,
+reclassificado como não executado nem confirmado no ledger. Propostas retiradas
+ou substituídas continuam exigindo estado não executado demonstrado. Estado
+desconhecido/timeout e NACK sem prova de correção bloqueiam ambas as categorias.
+
 Próxima etapa, sob responsabilidade Root: conferir origens, congelar manifesto e
 recibos, obter revisão independente desta rota, resolver reservas conflitantes e
 estabelecer uma aquisição legítima que preserve transação atômica/fencing. Qualquer

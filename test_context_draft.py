@@ -127,6 +127,37 @@ class DraftTests(unittest.TestCase):
         for b in [{}, {"schema": "r1-context-draft-v1"}, None]:
             self.assertEqual(assess(b, {}, {})["status"], "blocked")
 
+    def test_completed_history_requires_channel_only_and_exact_proof(self):
+        b, p, e = fixture()
+        receipt = b["receipts"][0]
+        receipt.update(decision="archived-completed", execution_state="completed-verified",
+                       completion_evidence=receipt["author_evidence"],
+                       technical_reviews_evidence=receipt["independent_evidence"],
+                       technical_ack_actors=["admin-recuperacao", "apoio"])
+        b["snapshot"]["pending_notices"][0]["missing_ack"] = ["executor61"]
+        def repin(bundle, pins):
+            pins["snapshot_sha256"] = fingerprint(bundle["snapshot"])
+            for review in bundle["reviews"]:
+                review["receipts_sha256"] = fingerprint(bundle["receipts"])
+        repin(b, p)
+        self.assertEqual(assess(b, p, e)["status"], "context-consistent-draft")
+        self.assertFalse(assess(b, p, e)["execution_allowed"])
+        for field in ["completion_evidence", "technical_reviews_evidence"]:
+            bad, pins = copy.deepcopy(b), copy.deepcopy(p)
+            del bad["receipts"][0][field]
+            repin(bad, pins)
+            self.assertEqual(assess(bad, pins, e)["status"], "blocked")
+        for missing in [[], ["apoio"], ["executor61", "apoio"]]:
+            bad, pins = copy.deepcopy(b), copy.deepcopy(p)
+            bad["snapshot"]["pending_notices"][0]["missing_ack"] = missing
+            repin(bad, pins)
+            self.assertEqual(assess(bad, pins, e)["status"], "blocked")
+        for state in ["not-executed", "unknown", "timeout"]:
+            bad, pins = copy.deepcopy(b), copy.deepcopy(p)
+            bad["receipts"][0]["execution_state"] = state
+            repin(bad, pins)
+            self.assertEqual(assess(bad, pins, e)["status"], "blocked")
+
 
 if __name__ == "__main__":
     unittest.main()
