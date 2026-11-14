@@ -5,6 +5,7 @@ umask 022
 export DEBIAN_FRONTEND=noninteractive
 export NEEDRESTART_MODE=l
 readonly BASE=/opt/peticao-toolchain
+readonly RUNTIME=/mnt/apps/peticao-final/.runtime/azure-dev-toolchain
 readonly PINS=/opt/peticao-toolchain/pins.json
 
 validate_pins() {
@@ -50,7 +51,23 @@ source /etc/os-release
 readonly PIN_VALUES="$(validate_pins "$PINS")"
 eval "$PIN_VALUES"
 
-WORK=$(/usr/bin/mktemp -d /tmp/peticao-toolchain-bootstrap.XXXXXXXX)
+# All task temporary/cache files stay under the project root.
+/usr/bin/python3 - <<'RUNTIMEPY'
+from pathlib import Path
+import os,pwd
+root=Path('/mnt/apps/peticao-final/.runtime/azure-dev-toolchain')
+for p in [Path('/mnt/apps'),Path('/mnt/apps/peticao-final'),root.parent,root]:
+ if p.is_symlink():raise SystemExit('Runtime parent symlink refused')
+ p.mkdir(mode=0o755,exist_ok=True)
+ if not p.is_dir():raise SystemExit('Runtime parent must be directory')
+user=pwd.getpwnam('builder')
+for name,mode,uid,gid in [('root-work',0o700,0,0),('npm-cache',0o700,0,0),('builder-work',0o700,user.pw_uid,user.pw_gid),('ms-playwright',0o755,0,0)]:
+ p=root/name
+ if p.is_symlink():raise SystemExit('Runtime symlink refused')
+ p.mkdir(mode=mode,exist_ok=True);os.chown(p,uid,gid);os.chmod(p,mode)
+RUNTIMEPY
+export TMPDIR="$RUNTIME/root-work"
+WORK=$(/usr/bin/mktemp -d "$TMPDIR/bootstrap.XXXXXXXX")
 trap '/bin/rm -rf -- "$WORK"' EXIT
 /usr/bin/install -d -m 0755 "$BASE" /etc/apt/keyrings
 /usr/bin/apt-get update
@@ -97,16 +114,16 @@ export PATH=/opt/peticao-toolchain/node22/bin:/usr/local/sbin:/usr/local/bin:/us
 exec /opt/peticao-toolchain/node22/bin/node /opt/peticao-toolchain/node22/lib/node_modules/npm/bin/npm-cli.js "$@"
 SH
 /bin/chmod 0755 /usr/local/bin/node22 /usr/local/bin/npm22
-/usr/bin/install -d -m 0755 "$BASE/playwright" "$BASE/ms-playwright" "$BASE/npm-cache"
+/usr/bin/install -d -m 0755 "$BASE/playwright" "$RUNTIME/ms-playwright" "$RUNTIME/npm-cache"
 printf '%s\n' '{"name":"peticao-dev-browser-tools","private":true,"version":"1.0.0"}' > "$BASE/playwright/package.json"
-export npm_config_userconfig=/dev/null npm_config_cache="$BASE/npm-cache"
-export PLAYWRIGHT_BROWSERS_PATH="$BASE/ms-playwright"
+export npm_config_userconfig=/dev/null npm_config_cache="$RUNTIME/npm-cache"
+export PLAYWRIGHT_BROWSERS_PATH="$RUNTIME/ms-playwright"
 /usr/local/bin/npm22 --prefix "$BASE/playwright" install --save-exact --ignore-scripts --no-audit --no-fund "playwright@$PLAYWRIGHT_VERSION"
 # Playwright-managed OS dependencies may install/upgrade individual libraries.
 # This is deliberately not an apt full-upgrade or distribution upgrade.
 /usr/local/bin/node22 "$BASE/playwright/node_modules/playwright/cli.js" install-deps chromium
 /usr/local/bin/node22 "$BASE/playwright/node_modules/playwright/cli.js" install chromium
-/bin/chmod -R a+rX "$BASE/ms-playwright" "$BASE/playwright"
+/bin/chmod -R a+rX "$RUNTIME/ms-playwright" "$BASE/playwright"
 /usr/bin/systemctl enable --now docker
 /usr/sbin/usermod -aG docker builder
 printf '%s\n' 'Installed. Docker group grants root-equivalent host access; builder needs a new login.' 'Smoke tests were not run. Run /opt/peticao-toolchain/source/smoke.sh --run as builder after a new login.'

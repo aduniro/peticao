@@ -13,3 +13,5 @@ Offline checks: /usr/bin/python3 -B -m unittest -q test_bootstrap test_operator 
 API credentials, leases and runtime logs remain outside Git source. This local Git has no remote or hooks. KeepRunningduring actual Infra qualification; Infra explicitly owns idle coordination and approved10minidle deallocation afterward.
 
 Sources: https://docs.docker.com/engine/install/debian/ ; https://nodejs.org/dist/index.json ; https://playwright.dev/docs/browsers .
+
+All task temp, npmcache, browsercache and Chromium TMPDIR stay under /mnt/apps/peticao-final/.runtime/azure-dev-toolchain on Azure. Private root-work0700 and builder-work0700 are separate; shared browser binaries0755 contain no secrets. No task-specific /tmp directory is used.

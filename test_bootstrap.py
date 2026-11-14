@@ -104,7 +104,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertIn('"$BASE/node20/bin/npm" /usr/local/bin/npm', self.bootstrap)
         self.assertIn("exec /opt/peticao-toolchain/node22/bin/node", self.bootstrap)
         self.assertIn('install --save-exact --ignore-scripts --no-audit --no-fund "playwright@$PLAYWRIGHT_VERSION"', self.bootstrap)
-        self.assertIn('PLAYWRIGHT_BROWSERS_PATH="$BASE/ms-playwright"', self.bootstrap)
+        self.assertIn('PLAYWRIGHT_BROWSERS_PATH="$RUNTIME/ms-playwright"', self.bootstrap)
         self.assertIn("install-deps chromium", self.bootstrap)
         self.assertIn("root-equivalent", self.bootstrap)
         self.assertIn("usermod -aG docker builder", self.bootstrap)
@@ -122,6 +122,18 @@ class BootstrapTests(unittest.TestCase):
             self.assertIn(required, self.smoke)
         self.assertNotIn("--no-sandbox", self.smoke)
         self.assertNotIn("page.goto(", self.smoke)
+
+    def test_all_task_temporary_and_cache_paths_are_project_bound(self):
+        caller = (pathlib.Path(__file__).parent / "toolchain_operator.py").read_text()
+        for source in [self.bootstrap, self.smoke, caller]:
+            self.assertNotIn("/tmp/", source)
+        for source in [self.bootstrap,self.smoke]:
+            self.assertIn("/mnt/apps/peticao-final/.runtime/azure-dev-toolchain",source)
+            self.assertIn('export TMPDIR=',source)
+            self.assertIn('PLAYWRIGHT_BROWSERS_PATH="$RUNTIME/ms-playwright"',source)
+        self.assertIn('npm_config_cache="$RUNTIME/npm-cache"',self.bootstrap)
+        self.assertIn("('builder-work',0o700,user.pw_uid,user.pw_gid)",self.bootstrap)
+        self.assertIn('mktemp -d "$TMPDIR/smoke.',self.smoke)
 
 
 if __name__ == "__main__":

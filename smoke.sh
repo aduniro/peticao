@@ -8,12 +8,15 @@ umask 077
 source /etc/os-release
 [[ "$ID" == debian && "$VERSION_ID" == 13 && "$(/usr/bin/dpkg --print-architecture)" == amd64 ]] || exit 78
 readonly BASE=/opt/peticao-toolchain
+readonly RUNTIME=/mnt/apps/peticao-final/.runtime/azure-dev-toolchain
+export TMPDIR="$RUNTIME/builder-work"
+[[ -d "$TMPDIR" && ! -L "$TMPDIR" && -O "$TMPDIR" ]] || exit 78
 /bin/bash "$BASE/source/bootstrap.sh" --validate-pins "$BASE/pins.json" >/dev/null
 SMOKE_IMAGE=$(/usr/bin/python3 -c 'import json; print(json.load(open("/opt/peticao-toolchain/pins.json"))["smoke_image"])')
 /usr/bin/docker pull "$SMOKE_IMAGE"
 /usr/bin/docker run --rm --pull=never --network=none --read-only --cap-drop=ALL --security-opt=no-new-privileges --user=65534:65534 --pids-limit=64 --memory=128m "$SMOKE_IMAGE" /bin/sh -c 'printf "isolated Docker smoke OK\n"'
-OUTPUT=$(/usr/bin/mktemp -d /tmp/peticao-dev-smoke.XXXXXXXX)
-export PLAYWRIGHT_BROWSERS_PATH="$BASE/ms-playwright" SMOKE_OUTPUT="$OUTPUT"
+OUTPUT=$(/usr/bin/mktemp -d "$TMPDIR/smoke.XXXXXXXX")
+export PLAYWRIGHT_BROWSERS_PATH="$RUNTIME/ms-playwright" SMOKE_OUTPUT="$OUTPUT"
 /usr/local/bin/node22 <<'JS'
 const fs = require('node:fs');
 const path = require('node:path');
