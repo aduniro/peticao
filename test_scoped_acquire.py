@@ -25,6 +25,11 @@ class ScopedAcquisitionTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.base = Path(self.temp.name)
         self.base.chmod(0o700)
+        fake_caller = self.base / 'fictitious-caller.py'
+        fake_caller.write_text('# FICTITIOUS, never executed\n')
+        caller_patch = patch.object(gate, 'CALLER_PATH', fake_caller)
+        caller_patch.start()
+        self.addCleanup(caller_patch.stop)
         self.ledger = coord.Ledger(self.base / 'ledger.sqlite')
         for actor, session in [(gate.ACTOR, gate.ROOT_THREAD), ('apoio', 'fictitious-apoio'),
                                ('executor61', 'fictitious-channel')]:
@@ -57,7 +62,9 @@ class ScopedAcquisitionTests(unittest.TestCase):
             {'manifest': {'commit': gate.SOURCE, 'api_contracts': 'unchanged',
                           'database': 'unchanged', 'destination': 'admin-v2 Sao Paulo',
                           'files': ['fictitious'], 'tests': ['fictitious isolated PASS']},
-             'operation_scoped': binding, 'technical_reviews': reviews})['seq']
+             'operation_scoped': binding, 'technical_reviews': reviews,
+             'caller': {'path': str(gate.CALLER_PATH),
+                        'sha256': gate.sha(gate.CALLER_PATH.read_bytes())}})['seq']
         self.ledger.ack(gate.ACTOR, self.final)
         self.ledger.ack('apoio', self.final)
 
@@ -246,6 +253,11 @@ class ScopedAcquisitionTests(unittest.TestCase):
 
     def test_review_file_cannot_be_changed_after_final_notice(self):
         (self.base / 'apoio-review.json').write_text('{"decision":"nack"}')
+        with self.assertRaisesRegex(RuntimeError, 'digest_mismatch'):
+            self.run_gate()
+
+    def test_caller_drift_aborts_before_acquisition(self):
+        gate.CALLER_PATH.write_text('# FICTITIOUS altered caller\n')
         with self.assertRaisesRegex(RuntimeError, 'digest_mismatch'):
             self.run_gate()
 

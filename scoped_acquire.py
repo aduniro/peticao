@@ -21,9 +21,12 @@ ACTORS = REVIEWERS | {"executor61"}
 PACKAGE = Path('/mnt/apps/peticao-final/_ops/admin-query-r1-publication-20261114')
 HELPER_DIR = Path(__file__).resolve().parent
 COORD = Path('/mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/coord.py')
+CALLER_DIR = Path('/mnt/apps/peticao-final/_ops/admin-query-r1-root-20261114')
+CALLER_PATH = CALLER_DIR / 'run-publication-step.py'
 COORD_SHA = 'd4ba306556cd25ae291f8aab2c184632372e09a0ada387542e40f73cbd7e4ac7'
 RESOURCES = sorted(['code:', 'deploy:admin-query-r1', 'path:' + str(PACKAGE),
                     'path:' + str(HELPER_DIR),
+                    'path:' + str(CALLER_DIR),
                     'path:/srv/peticao/admin-query-r1-20261114/publication'])
 IMAGE = 'sha256:5a582c5c71a860964d6a33c9f431a901fb85671d4b0afdf22481de610cb4aa21'
 SOURCE = 'c472837fb5a4584d81f34c420f4de30989084f85'
@@ -107,6 +110,8 @@ def validate(d, ledger, binding, receipt, manifest, notice_event, helper_sha):
                 'receiptSha256': binding['receiptSha256'], 'helperSha256': helper_sha}
     need(payload.get('operation_scoped') == expected, 'final_notice_binding_mismatch')
     need(sha(Path(__file__).read_bytes()) == helper_sha, 'helper_bytes_changed')
+    need(payload['caller']['path'] == str(CALLER_PATH), 'caller_path_mismatch')
+    read_exact(CALLER_PATH, payload['caller']['sha256'])
     reviews = payload['technical_reviews']
     need(set(reviews) == REVIEWERS, 'distinct_bound_technical_reviews_required')
     for reviewer, reference in reviews.items():
@@ -281,7 +286,7 @@ def main():
         ledger = object.__new__(module.Ledger)
         ledger.path = module.DEFAULT_DB
         result = obtain(ledger, binding, receipt, manifest, args.manifest_event, helper_sha,
-                        PACKAGE, os.getenv('CODEX_THREAD_ID'), dry_run=not args.acquire)
+                        CALLER_DIR, os.getenv('CODEX_THREAD_ID'), dry_run=not args.acquire)
         print(encode(result))
     except BaseException as error:
         # Never format arbitrary exception contents or capability/token objects.

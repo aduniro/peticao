@@ -45,6 +45,8 @@ api_contracts/database/destination, mais:
 - operation_scoped: operationId, manifestSha256, receiptSha256, helperSha256.
 - technical_reviews: mapa admin-recuperacao e apoio para path/sha256 de cada
   review atual vinculada exatamente ao bloco operation_scoped.
+- caller: path/sha256 do run-publication-step.py congelado por Root, conferido
+  pelo helper antes da aquisição e pelo próprio caller antes de cada SSH.
 - resources: lista ordenada de RESOURCES, definida no helper.
 
 Depois de conferirem esse notice, ambos registram ACKs reais novos, inclusive o
@@ -58,6 +60,9 @@ Entrada padrão é check, sem aquisição, intent ou escrita no ledger. A opçã
 e freeze completos. Root libera sua preparação479 que colide com o pacote.
 Antes da aquisição, preservar diretório privado0700 e ausência dos dois arquivos
 operacionais (não apagá-los se já existirem).
+Intent e capability são gravados diretamente em admin-query-r1-root-20261114,
+onde o caller Root os lê. RESOURCES também reserva esse diretório e o do helper;
+editores desses caminhos devem liberar suas leases antes da aquisição crítica.
 
 O helper valida todas as provas e ACKs; grava intent exclusivo e durável antes
 de qualquer mutação; revalida dentro de BEGIN IMMEDIATE, verifica todos os
