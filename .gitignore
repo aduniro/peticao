@@ -4,3 +4,6 @@
 !test_budget_policy.py
 !WORKER-PROFILES.json
 !PLANO-APROVADO.md
+!provision_neon.py
+!test_provision_neon.py
+!NEON-PROCEDURE.md
