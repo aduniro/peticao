@@ -260,8 +260,9 @@ with sync_playwright() as pw:
         for width in [320, 390, 768, 1024, 1280, 1440]:
             def success(route, query): route.fulfill(json=fixture(query, name="QA responsivo"))
             context, page, region = open_case(success, width=width)
-            expect(region.get_by_role("cell", name="QA responsivo", exact=True)).to_be_visible()
-            expect(region.get_by_role("cell", name="Confirmada", exact=True)).to_be_visible()
+            # Mobile CSS makes the existing column labels visible in each cell.
+            expect(region.get_by_role("cell", name=re.compile(r"^(?:Nome\s+)?QA responsivo$"))).to_be_visible()
+            expect(region.get_by_role("cell", name=re.compile(r"^(?:Status\s+)?Confirmada$"))).to_be_visible()
             if args.mode == "compiled-next":
                 assert not page.evaluate("document.documentElement.scrollWidth > innerWidth + 2")
             page.screenshot(path=str(args.output_dir / f"consulta-{width}.png"))
