@@ -1,0 +1,8 @@
+*
+!.gitignore
+!README.md
+!ACQUISITION.md
+!context_draft.py
+!test_context_draft.py
+!scoped_acquire.py
+!test_scoped_acquire.py

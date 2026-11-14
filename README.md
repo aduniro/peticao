@@ -1,5 +1,9 @@
 # R1: rascunho de conferência de contexto
 
+Este documento descreve exclusivamente `context_draft.py`, preservado como
+protótipo histórico. A proposta concreta posterior está em ACQUISITION.md e
+scoped_acquire.py; sua revisão e seus recibos são independentes deste protótipo.
+
 Somente análise offline e testes. Não é gate de publicação aprovado, substituto do
 ledger, recibo real ou autorização de execução. Não inclui comandos SSH, API,
 leitura/escrita do ledger, aquisição de lease, alteração de atores/ACKs/dispositions,
