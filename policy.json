@@ -1,0 +1,42 @@
+{
+  "operation": "APOIO-AZURE-20261114",
+  "subscription": "57298c3f-7cf2-4dbe-9884-c7bafdff4478",
+  "resource_group": "peticao-dev-eastus",
+  "vm_name": "peticao-azure-dev-01",
+  "location": "eastus",
+  "sku": "Standard_E8ads_v7",
+  "vcpus": 8,
+  "memory_gib": 64,
+  "image_version": "0.20261111.2659",
+  "image_urn": "Debian:debian-13:13-gen2:0.20261111.2659",
+  "disk_controller": "NVMe",
+  "os_disk_gib": 128,
+  "os_disk_type": "StandardSSD_LRS",
+  "admin_user": "builder",
+  "initial_ssh_cidr": "181.220.194.57/32",
+  "public_key_source": "/home/barre/.ssh/id_ed25519_peticao_tailnet_v2.pub",
+  "public_key_file_sha256": "16eaea6910a35e1e9c42a98aab06c4750c8ade45a2e6d3c33567d29247dac109",
+  "compute_linux_hourly_usd": "0.581",
+  "other_costs": "OSdisk/IPoperations/egress billedseparately; quote evidence in preflightdirectory",
+  "credit_snapshot": {
+    "balance_USD": 200,
+    "balance_BRL_api": 1075.1699999999992,
+    "expiration_utc": "2026-12-14T00:13:41Z"
+  },
+  "credit_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/evidence/cloud-remodel-20261114/DECISIONS-AND-FACTS.json",
+  "credit_source_sha256": "c457274c96a9cb25dda4f72845c7c884f7abb8abe6ffc47c73358a12059caa78",
+  "coordinator_decision": "Infra prefersE8ads overE8as forperformancetempNVMe; extra0.104USD/haccepted. E8asfallbackrequiresrecordednewchoice ifunavailable, noquota-requestdelay",
+  "temporary_storage": "Regenerablecache/scratchonly; uniquefiles/results stayonpersistentdisk",
+  "power_decision": "KeepRunningduringsetup/Infraqualification; 10minidledeallocate aftereligibleworkends perapprovedplan. NoV3controllercreated",
+  "scope_excludes": [
+    "GPU",
+    "Civochanges",
+    "K3s",
+    "app/productionDB",
+    "realjobqueueintegration",
+    "dataDiskcreation/format",
+    "newSSHprivatekeys",
+    "provideruserdataTailscaleauth",
+    "GitHubrepositorycreation/push/Actions"
+  ]
+}

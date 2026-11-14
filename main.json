@@ -1,0 +1,208 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "targetSubscriptionId": "57298c3f-7cf2-4dbe-9884-c7bafdff4478",
+    "targetResourceGroup": "peticao-dev-eastus",
+    "deploymentScope": "resourceGroup",
+    "description": "Local candidate only. Caller must verify subscription and resource group before deployment."
+  },
+  "parameters": {
+    "adminSshPublicKey": {
+      "type": "secureString",
+      "minLength": 40,
+      "metadata": { "description": "Public SSH key supplied at runtime; never supply a private key." }
+    }
+  },
+  "variables": {
+    "location": "eastus",
+    "vmName": "peticao-azure-dev-01",
+    "nsgName": "peticao-azure-dev-01-nsg",
+    "vnetName": "peticao-azure-dev-01-vnet",
+    "subnetName": "builder",
+    "publicIpName": "peticao-azure-dev-01-ip",
+    "nicName": "peticao-azure-dev-01-nic",
+    "tags": {
+      "Project": "peticao",
+      "Operation": "APOIO-AZURE-20261114",
+      "Coordinator": "infra",
+      "ManagedBy": "apoio"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2024-05-01",
+      "name": "[variables('nsgName')]",
+      "location": "[variables('location')]",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "AllowApprovedSsh",
+            "properties": {
+              "priority": 100,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "181.220.194.57/32",
+              "destinationAddressPrefix": "*"
+            }
+          },
+          {
+            "name": "DenyOtherSsh",
+            "properties": {
+              "priority": 200,
+              "direction": "Inbound",
+              "access": "Deny",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2024-05-01",
+      "name": "[variables('vnetName')]",
+      "location": "[variables('location')]",
+      "tags": "[variables('tags')]",
+      "properties": {
+        "addressSpace": { "addressPrefixes": ["10.96.80.0/24"] },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": { "addressPrefix": "10.96.80.0/26" }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2024-05-01",
+      "name": "[variables('publicIpName')]",
+      "location": "[variables('location')]",
+      "tags": "[variables('tags')]",
+      "sku": { "name": "Standard" },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "publicIPAddressVersion": "IPv4"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2024-05-01",
+      "name": "[variables('nicName')]",
+      "location": "[variables('location')]",
+      "tags": "[variables('tags')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))]"
+      ],
+      "properties": {
+        "enableAcceleratedNetworking": true,
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('nsgName'))]"
+        },
+        "ipConfigurations": [
+          {
+            "name": "primary",
+            "properties": {
+              "primary": true,
+              "privateIPAllocationMethod": "Dynamic",
+              "privateIPAddressVersion": "IPv4",
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnetName'))]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2024-07-01",
+      "name": "[variables('vmName')]",
+      "location": "[variables('location')]",
+      "tags": "[variables('tags')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+      ],
+      "properties": {
+        "hardwareProfile": { "vmSize": "Standard_E8ads_v7" },
+        "storageProfile": {
+          "diskControllerType": "NVMe",
+          "imageReference": {
+            "publisher": "Debian",
+            "offer": "debian-13",
+            "sku": "13-gen2",
+            "version": "0.20261111.2659"
+          },
+          "osDisk": {
+            "name": "peticao-azure-dev-01-os",
+            "osType": "Linux",
+            "createOption": "FromImage",
+            "diskSizeGB": 128,
+            "caching": "ReadWrite",
+            "deleteOption": "Detach",
+            "managedDisk": { "storageAccountType": "StandardSSD_LRS" }
+          },
+          "dataDisks": []
+        },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "builder",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "provisionVMAgent": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "/home/builder/.ssh/authorized_keys",
+                  "keyData": "[parameters('adminSshPublicKey')]"
+                }
+              ]
+            }
+          }
+        },
+        "securityProfile": {
+          "securityType": "TrustedLaunch",
+          "uefiSettings": { "secureBootEnabled": true, "vTpmEnabled": true }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]",
+              "properties": { "primary": true, "deleteOption": "Detach" }
+            }
+          ]
+        },
+        "diagnosticsProfile": { "bootDiagnostics": { "enabled": true } }
+      }
+    }
+  ],
+  "outputs": {
+    "vmId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+    },
+    "publicIP": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpName')), '2024-05-01').ipAddress]"
+    },
+    "privateIP": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/networkInterfaces', variables('nicName')), '2024-05-01').ipConfigurations[0].properties.privateIPAddress]"
+    }
+  }
+}

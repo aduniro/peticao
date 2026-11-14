@@ -1,0 +1,9 @@
+*
+!.gitignore
+!README.md
+!main.json
+!bootstrap.sh
+!azure_operator.py
+!policy.json
+!test_template.py
+!test_operator.py
