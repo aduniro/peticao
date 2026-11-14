@@ -132,6 +132,7 @@ def apply(packet, execution):
     receipt.update(account_created=True, identity=who)
     receipt_write(receipt)
     CODE.mkdir(mode=0o755, exist_ok=False)
+    CODE.chmod(0o755)
     os.chown(CODE, 0, 0)
     for name in sorted(MODULES):
         p = CODE/name
@@ -147,8 +148,12 @@ def apply(packet, execution):
     os.chown(UNIT, 0, 0)
     receipt['files'][str(UNIT)] = hashlib.sha256(data['standby.service']).hexdigest()
     receipt_write(receipt)
-    code = 'import sys;sys.path.insert(0,sys.argv[1]);import coordinator,recovery,replicate,standby_guard;print("imports_ok")'
-    smoke = run(['runuser', '-u', ACCOUNT, '--', '/usr/bin/python3', '-I', '-B', '-c', code, str(CODE)])
+    code = ('import sys,pathlib;sys.path.insert(0,sys.argv[1]);'
+            'root=pathlib.Path(sys.argv[1]);'
+            'assert all((root/name).read_bytes() for name in sys.argv[2:]);'
+            'import coordinator,runtime_profile,recovery,replicate,gateway,dashboard,fence_primary,standby_guard;'
+            'print("imports_ok")')
+    smoke = run(['runuser', '-u', ACCOUNT, '--', '/usr/bin/python3', '-I', '-B', '-c', code, str(CODE), *sorted(MODULES)])
     if smoke.returncode or smoke.stdout.strip() != 'imports_ok':
         raise RuntimeError('nonroot isolated import probe failed; no service started')
     receipt.update(phase='code_staged_inactive', nonroot_imports_verified=True,
