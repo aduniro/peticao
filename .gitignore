@@ -2,3 +2,13 @@
 !.gitignore
 !financial_guard.py
 !test_financial_guard.py
+!durable_api.py
+!usage_observer.py
+!financial_runtime.py
+!ssh_adapter.py
+!worker_lifecycle.py
+!queue_finance.py
+!test_runtime.py
+!test_queue_finance.py
+!test_worker_lifecycle.py
+!RUNTIME-AUTHORITY.json

@@ -1,0 +1,36 @@
+{
+  "stage": "proposed runtime contract; not activated",
+  "coordinator_thread": "01a1cad7-4a65-7d43-b8c2-f0b50a90a580",
+  "owner_authorization": "Approved automatic US CPU infrastructure within verified existing credits; no new paid overage",
+  "root_interpretation_received": "Deployment under normal lease and genuine Root/Apoio review. Subsequently unattended lifecycle restricted to owned Civo IDs; never depends on an expired lease or a live Dell/LLM session. No new actor or ledger.",
+  "account_scope_id": "dbe38aec-d8fa-4f41-b745-0471257e0594",
+  "allowed_runtime_actions": [
+    "observe charges and inventory",
+    "close admissions",
+    "drain setup-only worker",
+    "verify frozen export to Akamai",
+    "delete only owned instance and volume after cutoff/insufficient cleanup coverage with ID-bound creation proof"
+  ],
+  "forbidden": [
+    "new VM creation by timer",
+    "adopting preexisting resources",
+    "changing production/app database",
+    "queue cutover",
+    "renewing old leases",
+    "using tokens of another identity",
+    "claiming development worker quiescence with setup-only adapter"
+  ],
+  "required_before_activation": [
+    "normal deploy lease and immutable reviewed manifest",
+    "real collector of complete account liabilities",
+    "CLI caller pins authority/code/config and account identity",
+    "persistent systemd timer/reboot qualification",
+    "real SSH adapter/export validation",
+    "provisioner checks live quota/price and refuses uncertain create",
+    "actual queue integration reviewed separately before any development jobs"
+  ],
+  "initial_grant_usd": "250",
+  "reserve_usd": "50",
+  "expiry_conservative_utc": "2026-12-31T00:00:00Z",
+  "no_resources_created": true
+}
