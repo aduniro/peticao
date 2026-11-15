@@ -1,0 +1,16 @@
+{
+  "state": "SOURCE_REVIEW_PASS",
+  "tests_independent": 19,
+  "seconds": 0.286,
+  "ResourceWarning": "error",
+  "plan_v1_preserved_sha256": "9880a9f09a17eb9e9b59b47504e5835a22a33476b5cf89dff9eb002c62518468",
+  "plan_v2_sha256": "83a03a9ba1d31c2fd1d8647d5cf8e80db51dc5b0afe61f4618706d6b19fb0300",
+  "exact_changes": 625,
+  "other_old_plan_fields_identical": true,
+  "plan_new_field_only": "prefix_correction_provenance",
+  "future_prefix": "/opt/peticao-dev-profile-tools-v1/python312",
+  "selection_regulars": 625,
+  "bytes": 22143399,
+  "actual_copy_or_candidate_execution": false,
+  "qualified": false
+}

@@ -1,0 +1,32 @@
+{
+  "classification": "SOURCE_AND_FIXTURES_ONLY_BEFORE_REAL_COPY",
+  "command": "TMPDIR=/mnt/apps/peticao-final/infra-public-inputs-20261115/python-copy-source/test-state/tmp /usr/bin/python3 -B -m unittest -q test_python_copy",
+  "cwd": "/mnt/apps/peticao-final/infra-public-inputs-20261115/python-copy-source",
+  "tests": 19,
+  "passed": 19,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration_seconds": 0.257,
+  "active_plan": "/mnt/apps/peticao-final/infra-public-inputs-20261115/metadata/python/STDLIB-PLAN-v2.json",
+  "active_plan_sha256": "83a03a9ba1d31c2fd1d8647d5cf8e80db51dc5b0afe61f4618706d6b19fb0300",
+  "canonical_future_target_prefix": "/opt/peticao-dev-profile-tools-v1/python312",
+  "preserved_original_plan_sha256": "9880a9f09a17eb9e9b59b47504e5835a22a33476b5cf89dff9eb002c62518468",
+  "target_fields_corrected_only": 625,
+  "selected_output_regular_files": 625,
+  "selected_output_bytes": 22143399,
+  "selection_sources_hashes_packages_unchanged": true,
+  "metadata_plan_read_only": true,
+  "real_usr_sources_opened_or_copied": false,
+  "candidate_executed_or_imported": false,
+  "network_ssh_sudo_ldd_or_install": false,
+  "qualified": false,
+  "RootFullClosure": false,
+  "root_runtime_guards_modified": false,
+  "earlier_fixture_run": {
+    "tests": 14,
+    "errors": 1,
+    "reason": "literal_test_directory_guard_conflicted_with_58_stdlib_owned_plan_members",
+    "disposition": "Infra_Apoio_confirmed_pinned_58_members_whitelisted_by_paths_and_selection_digest_no_generic_test_permission"
+  }
+}
