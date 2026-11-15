@@ -1,0 +1,8 @@
+{
+  "question": "How to satisfy Backend.dispatch private durable envelope prerequisite without another scheduler?",
+  "decision": "Separate root/service-private TokenStore; exclusive durable intent, exact manifest binding; unchanged canonical Claims controls dispatch. Partial intent never regenerates.",
+  "parallel_work": "Runtime3116 and Apoio harness untouched; source-only independent path under own659",
+  "production_tokens_generated": 0,
+  "platform_credentials_read": 0,
+  "scope_is_full_goal": "Token custody is a prerequisite only; not equivalent to complete distributed development environment"
+}

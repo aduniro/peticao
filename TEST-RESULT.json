@@ -1,0 +1,26 @@
+{
+  "source_only": true,
+  "local_child_real": true,
+  "systemd_cgroup_ssh_simulated": true,
+  "live_platform_credentials_read": 0,
+  "remote_effects": false,
+  "ast_modules": 14,
+  "canonical_daemon_integrated": false,
+  "snapshot_promotion_custody_integrated": false,
+  "status": "PASS_LOCAL_SOURCE_ONLY",
+  "parent_tests_only": {
+    "distinct": 21,
+    "seconds": 1.043,
+    "result": "PASS",
+    "custody_cases": 18,
+    "backend_cross_fixtures": 3
+  },
+  "reason": "V2 recovery fsync and failure regressions tested after peer IO window released; actual runtime/UID/backup gates remain false",
+  "tests": {
+    "distinct": 23,
+    "seconds": 1.204,
+    "result": "PASS",
+    "custody_cases": 20,
+    "backend_cross_fixtures": 3
+  }
+}

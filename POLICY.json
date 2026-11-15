@@ -1,0 +1,25 @@
+{
+  "status": "SOURCE_ONLY_NOT_DEPLOYABLE",
+  "canonical_queue_replaced": false,
+  "new_scheduler_or_daemon": false,
+  "live_credentials": false,
+  "remote_effects": false,
+  "production_access": false,
+  "queue_cutover": false,
+  "root": "/mnt/apps/peticao-final/.runtime",
+  "integration_dependencies": [
+    3116
+  ],
+  "runtime_review_pending_at_preparation": true,
+  "gates": {
+    "independent_review": false,
+    "uid999_service_access": false,
+    "canonical_scheduler_integration": false,
+    "backup_promotion_custody": false,
+    "actual_civo_runtime": false
+  },
+  "source_revision": "V2",
+  "parent_notice": 3121,
+  "parent_commit": "d9267315b961138dbe392bc832f07f7861bfbe95",
+  "recovery_file_and_directory_fsync_required": true
+}
