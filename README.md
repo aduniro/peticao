@@ -1,0 +1,11 @@
+# Offline Civo public bundle generator - SOURCE only
+
+Builds fixed R1 qualification candidates as public DATA. No SSH, installer invocation, candidate program, package manager, network, Root helper bypass, host change, database or queue action. Root3435 plus real apoio ACK is required before outputs. Existing build intent/output is never reused. Future publication still requires integrated SOURCE/EXEC reviews and a fresh Root publication window with own DEPLOY lease.
+
+Pinned driver3307 pure render/validation modules are copied into in-memory modules after clean frozen Git and all module bytes verify; no incoming archive module is imported. This deliberately does NOT call Root-only verify_closure/produce, change its Root UID, or infer native qualification. Pure validator requires complete seven-root inventory, exact plans, six binary pins, original and normalized provenance and four original wheels plus305 projected site files. PDFJS stays pdfjs/package.tgz as required by runtime_steps, not an expanded vendor tree.
+
+Sources are public files in the private project ancestor (0700 actual UID); group-writable descendants are allowed only behind such an anchor. World-writable directories/files, foreign ownership, aliases, hardlinks or changed descriptor/identity/hash are refused. Trusted same-UID writers/Root are TCB. Source roots are not chmodded. All generated files remain private600. Root modes are tar metadata only (0644/0755).
+
+BUILD-SPEC pins every source reference, exact family inventory and helpers/QA sources. qa/python-runtime.json is the verified DATA projection, not the source template. Node/PDF are streamed from same-FD pinned official/container archives into private regular DATA. Eight local tests cover input replacement/hash/identity/links, exclusive writes, exact vendor member and duplicate rejection, actual fixed policy/pure render and wheel/site omissions, real ACK schema. Candidate code never runs. This is not Root/native proof.
+
+Invocation after source review: python3 -s -E -B bundle_builder.py --spec-sha256 SHA_OF_BUILD_SPEC. Output fixed bundle-data-1/payload.tar.gz and RESULT.json. Partial/failed output preserved; do not retry. Intent/directory/file fsyncs included. Header/EXEC are separate later bindings. Tests: python3 -s -E -B -W error::ResourceWarning -m unittest test_bundle_builder.

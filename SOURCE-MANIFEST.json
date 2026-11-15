@@ -1,0 +1,35 @@
+{
+  "candidate_execution": false,
+  "classification": "OFFLINE_PUBLIC_DATA_GENERATOR_SOURCE_ONLY",
+  "files": {
+    ".gitignore": {
+      "bytes": 58,
+      "sha256": "dd82bd8ee12d310c5ee0d242d570c94eaf39e35a6d05537c006b530289bab7e7"
+    },
+    "BUILD-SPEC.json": {
+      "bytes": 12244,
+      "sha256": "356941e12344a3d187e647356f1cd4049914b449f331fda7e97d0feff57aafb7"
+    },
+    "README.md": {
+      "bytes": 2345,
+      "sha256": "a27e9add4a73bb94e560d5e10e27d47d54955180bc23d3812a3fd485d185adc9"
+    },
+    "RELEASE-EXPECTED.json": {
+      "bytes": 773,
+      "sha256": "4707fa9c8f4b778951a84589943eb2d160fe8d202e05bf1ad7827d13d9b2d438"
+    },
+    "bundle_builder.py": {
+      "bytes": 13457,
+      "sha256": "1d48578dae85004d752433eb7672bf840489186e04f6af3ce5ec695196e9f513"
+    },
+    "test_bundle_builder.py": {
+      "bytes": 5959,
+      "sha256": "5fb182ac7d5e66c26fcbbfb92631ba0f7022dc3c758ec7576ba3b2d26f39d49a"
+    }
+  },
+  "operationalReady": false,
+  "qualified": false,
+  "root_install_performed": false,
+  "tests": "8localPASS; builder-final-tests.private.log; no real bundle output yet",
+  "version": 1
+}

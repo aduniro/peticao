@@ -1,0 +1,16 @@
+{
+  "app_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
+  "driver_source_notice": 3307,
+  "full_integrity_event": 3429,
+  "full_integrity_proof_sha256": "49128ee64078b800019646faff38252d28af1fbd7b6708e6055a0e68221d14a7",
+  "host_execution_authorized": false,
+  "issuer_thread": "01a1cad7-4a65-7d43-b8c2-f0b50a90a580",
+  "normalized_sha256": "4b2c828ffdd182a8eef3e7fab1dcc8e3a6784318cc2f0c727efd8f978933605f",
+  "operator_session": "01a1d130-2948-7140-bcfb-34696b20ab8d",
+  "production_access": false,
+  "queue_cutover": false,
+  "runtime_source_notice": 3416,
+  "scope": "prepare-frozen-r1-sealed-qualification-candidates",
+  "source_sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5",
+  "tools_prefix": "/opt/peticao-dev-profile-tools-v1"
+}

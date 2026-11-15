@@ -1,0 +1,228 @@
+{
+  "build_requirements": [
+    "Recheck exact frozen Git+allsourcebytes; use only reviewed pure render, never fixture UID or Root trust bypass",
+    "Verify every source sameFD/stat/SHA and expected family identity before and after use; all DATA stays private600",
+    "Derive exact seven-root toolchain inventory, qa closure, dependency pins and three fixed plans; render 3 candidates exclusively new output",
+    "Create bounded deterministic regular-only Root-mode outer tar without executing candidate programs or importing unreviewed archive members",
+    "Freeze complete payload/header file plan in new manifest; independent review required before any SSH",
+    "qualified=false, operationalReady=false, RootFullClosure=false always until later actual native proof"
+  ],
+  "candidate_programs_executed": false,
+  "classification": "FIXED_PUBLIC_DATA_BUILD_SPEC_NOT_GENERATED_NOT_INSTALLED",
+  "full_integrity_adoption": {
+    "bytes": 1373,
+    "path": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/evidence/full-integrity-adoption-20261115/RESULT.json",
+    "sha256": "cb75df5df717fb6ba046f75f3fb5e4dcbf9b3555f398d3eda51c56ee3727c271"
+  },
+  "full_integrity_event": 3429,
+  "generated_inputs": {
+    "inputs/full-integrity-inventory.json": "canonical normalized_inventory from pinned full proof, SHA8867e216d381aecd0d848af3d59ca38b3e48d8c51c53ec6d394fa0528c32575e"
+  },
+  "helpers": {
+    "artifact_policy.py": {
+      "bytes": 18232,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/artifact_policy.py",
+      "sha256": "d6cc8eadd3e49150eca9f435888cc293f27725ca00acb9fb424eaaef8599bb5b"
+    },
+    "driver_contract.py": {
+      "bytes": 10230,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/driver_contract.py",
+      "sha256": "789e2d6c54593eac06a22843c3adc8c84b84372a1debaadb0d0c68c438245265"
+    },
+    "input_provider.py": {
+      "bytes": 18047,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/input_provider.py",
+      "sha256": "6e92cc0585365fc45e04344934bb2088a7d92dea57733601b7903453c36b17d4"
+    },
+    "process_runner.py": {
+      "bytes": 20073,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/process_runner.py",
+      "sha256": "1f4cf7bdad73b214cca0f65c11cff52fc380e3f26ff5ac89d8e0d589a02ebe8b"
+    },
+    "qa_adapter.py": {
+      "bytes": 14382,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa_adapter.py",
+      "sha256": "385af22e263c1aaa89579e5eff130f5ed6da60e9340be75cfcdfa5f237b7019b"
+    },
+    "resource_plan.py": {
+      "bytes": 6399,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/resource_plan.py",
+      "sha256": "aae44fc783bf6a7d07da171e241c8d1aa3ab8c214aec695ed3c0bd18f88cc71c"
+    },
+    "runtime_steps.py": {
+      "bytes": 23223,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/runtime_steps.py",
+      "sha256": "b7ba071ecfbe8925ab910199fc1daf290d53bf3a28944b708300dfe8104d372b"
+    },
+    "sealed_policy.py": {
+      "bytes": 26724,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/sealed_policy.py",
+      "sha256": "2756e71fb0cb0cc9ee6e640e56210ade1ab94cbe9febf8cd0329242a6ac0db5e"
+    }
+  },
+  "inputs": {
+    "inputs/dependencies.normalized.tar.gz": {
+      "bytes": 211388662,
+      "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/staging-1/dependencies.normalized.tar.gz",
+      "sha256": "4b2c828ffdd182a8eef3e7fab1dcc8e3a6784318cc2f0c727efd8f978933605f"
+    },
+    "inputs/full-integrity-proof.json": {
+      "bytes": 10789822,
+      "path": "/mnt/apps/peticao-final/infra-sri-proof-20261115/proof-data-1/SRI-PROOF.json",
+      "sha256": "49128ee64078b800019646faff38252d28af1fbd7b6708e6055a0e68221d14a7"
+    },
+    "inputs/normalization-receipt.json": {
+      "bytes": 4697851,
+      "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/staging-1/NORMALIZATION-RECEIPT.json",
+      "sha256": "37b9cc44ecf3a5d822a1d498ceb953b9abc2e51ea0a64714690d8b3c2ebff14b"
+    },
+    "inputs/source.tar.gz": {
+      "bytes": 11959902,
+      "path": "/mnt/apps/peticao-final/_ops/admin-v2-query-r1-20261114/retry-1/source-r1.tar.gz",
+      "sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5"
+    }
+  },
+  "node": {
+    "archive_bytes": 25979376,
+    "archive_path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/node-vendor-input/node-v20.19.2-linux-x64.tar.xz",
+    "archive_sha256": "cbe59620b21732313774df4428586f7222a84af29e556f848abf624ba41caf90",
+    "bytes": 99836400,
+    "destination": "node20",
+    "member": "node-v20.19.2-linux-x64/bin/node",
+    "mode": 493,
+    "sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac"
+  },
+  "operationalReady": false,
+  "pdfjs": {
+    "container_member": "package.tgz",
+    "container_path": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-qualification-20261114/dependencies-node20-pdfjs.public.tar.gz",
+    "container_sha256": "3009712141b019777b6395e36a628f4e1c0b8720fb617e4ffe5c814d91670698",
+    "destination": "pdfjs/package.tgz",
+    "members": 570,
+    "projection": "Keep official archive regular DATA as required by runtime_steps.prepare-offline-assets; do not extract vendor tree into Root prefix",
+    "tar_bytes": 9144013,
+    "tar_sha256": "7461aefcd27c4ef0dd76f9ca5760f09466eb6b3f934432670c12132e7b3d6faa",
+    "unpacked_bytes": 37616588,
+    "vendor_prefix": "package/"
+  },
+  "prefix": "/opt/peticao-dev-profile-tools-v1",
+  "preparation_release_event": 3435,
+  "preparation_requires_real_apoio_ACK": true,
+  "qa": {
+    "qa/backend-smoke.mjs": {
+      "bytes": 3035,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/backend-smoke.mjs",
+      "sha256": "4e31a6e4b8e8e7286a91146318e1ea1bbc177567e43084f3e8574b2cb2814ce3"
+    },
+    "qa/browser-bootstrap.py": {
+      "bytes": 4700,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/browser-bootstrap.py",
+      "sha256": "1dcf0903809786b58d997a0e35900704d339d4171a3ca96a2316c4302cd77672"
+    },
+    "qa/browser40.py": {
+      "bytes": 17534,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/browser40.py",
+      "sha256": "d812b7d90bf5e27de64f1b42726d1bf78243ff272810442eeb164edaa73dbc5d"
+    },
+    "qa/build-guard.mjs": {
+      "bytes": 3004,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/build-guard.mjs",
+      "sha256": "8df35d6aab602037cd2e53e6141b1a8cce4b29730a75b174de527bc79f14e00c"
+    },
+    "qa/common.mjs": {
+      "bytes": 3077,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/common.mjs",
+      "sha256": "cfcdf13607a1a5dce0254b634a2111ca19ee1ac1654f24448f7aefeb0fc333eb"
+    },
+    "qa/fixture.ts": {
+      "bytes": 4408,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/fixture.ts",
+      "sha256": "66d9b22c5c1a2ce23fa4138d97fb8464076411087e56b103ad7e783894ab73dc"
+    },
+    "qa/http-regression.mjs": {
+      "bytes": 3963,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/http-regression.mjs",
+      "sha256": "0691dcb5f1b2623bd1e66e035a61f6602dec7d7490a0830739b193994692c435"
+    },
+    "qa/maps2.py": {
+      "bytes": 3806,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/maps2.py",
+      "sha256": "52bc4d65b1e0a35d6dea15bef6757fff233b0bf98a04815fe6b9621f64250b74"
+    },
+    "qa/network-guard.cjs": {
+      "bytes": 2733,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/network-guard.cjs",
+      "sha256": "c6b80797e33e4e9ee018759c4d75aa4813c351f211a644ba2ea21cbfa876a1b0"
+    },
+    "qa/node-owned.mjs": {
+      "bytes": 2154,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/node-owned.mjs",
+      "sha256": "83091bae465846ef19e09e0082d4bf196effd01c0aa7666b35e513ddc5e80342"
+    },
+    "qa/qa-driver.mjs": {
+      "bytes": 5395,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/qa-driver.mjs",
+      "sha256": "e252c5cc39bd55b5924d7abb6ef35726bff3c183bf631784fc49600fb66db442"
+    },
+    "qa/qa-runtime.mjs": {
+      "bytes": 4575,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/qa-runtime.mjs",
+      "sha256": "3f7d4a21e681a3508686ed4035115a961afb90a27834bdb09e4b29505ef9707c"
+    },
+    "qa/refresh-fixture-session.mjs": {
+      "bytes": 1395,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/refresh-fixture-session.mjs",
+      "sha256": "659c8ac97b1b6edad69ef1da38333cbf2391836e781f19337b04397711bbde4e"
+    }
+  },
+  "qa_runtime_override": {
+    "bytes": 42526,
+    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-data-v2/python-wheel-site-1/python-runtime.json",
+    "sha256": "97f81dd1ed0b1170725983336a181942d85fccae360ebb25f3f0128971686c8e"
+  },
+  "qualified": false,
+  "reviewed_render_source": {
+    "driver.py": {
+      "bytes": 15902,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/driver.py",
+      "sha256": "0d4d7e07e008494209aa1fc874a380006c841021768e60dc18fb3058aaa51944"
+    },
+    "freeze_driver.py": {
+      "bytes": 5439,
+      "path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/freeze_driver.py",
+      "sha256": "ded68969c2ddee3d8f39197602b646ed4ecdaf4abc6f305afebf45b430463cc2"
+    }
+  },
+  "root_install_performed": false,
+  "runtime_source_notice": 3416,
+  "source_driver_commit": "bcff9fcb34df060666670bad5482769b630bcef8",
+  "source_driver_notice": 3307,
+  "source_wheels": {
+    "python-wheels/greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl": {
+      "bytes": 621404,
+      "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/public-wheels/greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+      "sha256": "975736b002ed080d124cf81a79cb7e05cb26d6b3f5c7a7b651c0fcce70353aa1"
+    },
+    "python-wheels/playwright-1.62.0-py3-none-manylinux1_x86_64.whl": {
+      "bytes": 47748926,
+      "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/public-wheels/playwright-1.62.0-py3-none-manylinux1_x86_64.whl",
+      "sha256": "ba33bae6a13b3d9d354c751cb618af357d20fe1d57767cbcce52079bbef17ad3"
+    },
+    "python-wheels/pyee-13.0.1-py3-none-any.whl": {
+      "bytes": 15659,
+      "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/public-wheels/pyee-13.0.1-py3-none-any.whl",
+      "sha256": "af2f8fede4171ef667dfded53f96e2ed0d6e6bd7ee3bb46437f77e3b57689228"
+    },
+    "python-wheels/typing_extensions-4.16.0-py3-none-any.whl": {
+      "bytes": 45571,
+      "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/public-wheels/typing_extensions-4.16.0-py3-none-any.whl",
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+    }
+  },
+  "verified_family_inventory": {
+    "bytes": 1408212,
+    "path": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-profile-toolchain-install-prep-20261115/VERIFIED-DATA-FAMILIES.json",
+    "sha256": "a2833a245a42691a6e64afd8f006540b118ed9dafd24bb80ab4926070d9be59d"
+  },
+  "version": 1
+}
