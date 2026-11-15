@@ -1,4 +1,4 @@
-#!/usr/bin/python3 -I
+#!/usr/bin/python3 -IB
 """Future root-only READ-ONLY fencing verifier; no stop/promote/start operations."""
 from pathlib import Path
 import datetime as dt,hashlib,importlib.util,json,os,shlex,socket,stat,subprocess,sys,time
@@ -6,6 +6,7 @@ LIB=Path('/opt/peticao-dev-fence')
 POLICY=Path('/etc/peticao-dev-fence/operation.json')
 KNOWN=Path('/etc/peticao-dev-fence/known_hosts')
 IDENTITY=Path('/root/.ssh/id_ed25519_peticao_civo_node')
+sys.dont_write_bytecode=True
 TARGET=Path('/srv/admin-v2-coordinator')
 EXPECTED_CONTRACT_SHA='706a81a70c2539ff8f417ac245d36eae60e8e747d20c5a28437dad4ab9874c57'
 EXPECTED_PROBE_SHA='73f9df3c67bd2490ae7b0828f5e60b86e0abe656cab7778487558486de4bd3d7'

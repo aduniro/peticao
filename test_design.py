@@ -87,6 +87,28 @@ class Design(unittest.TestCase):
    with self.assertRaises(ValueError):self.validate(p,o)
  def test_installed_module_and_host_pins_are_frozen(self):
   for name,expected in [('contract.py',lv.EXPECTED_CONTRACT_SHA),('source_probe.py',lv.EXPECTED_PROBE_SHA),('known_hosts',lv.EXPECTED_KNOWN_SHA)]:self.assertEqual(hashlib.sha256((ROOT/name).read_bytes()).hexdigest(),expected)
+ def test_real_worker_inventory_and_contract_positive(self):
+  name='admin-v2-job-'+'a'*32+'.service'
+  with patch.object(sp,'command',return_value=name+' loaded inactive dead fictitious\n'):
+   self.assertEqual(sp.worker_inventory(),[name])
+  p=ready();o=observation(p);o['units'].append({'unit':name,'load_state':'loaded','active_state':'inactive','main_pid':0,'cgroup_processes':0});self.assertTrue(self.validate(p,o)['confirmed'])
+ def test_all_three_actual_worker_patterns_accept_dot_service(self):
+  import re
+  name='admin-v2-job-'+'a'*32+'.service';found=[]
+  for filename in ['source_probe.py','contract.py']:
+   for node in ast.walk(ast.parse((ROOT/filename).read_text())):
+    if isinstance(node,ast.Call) and isinstance(node.func,ast.Attribute) and node.func.attr=='fullmatch' and node.args and isinstance(node.args[0],ast.Constant) and isinstance(node.args[0].value,str) and 'admin-v2-job-' in node.args[0].value:
+     pattern=node.args[0].value;found.append(pattern);self.assertEqual(pattern.count(chr(92)),1);self.assertIsNotNone(re.fullmatch(pattern,name));self.assertIsNone(re.fullmatch(pattern,name+'.foreign'))
+  self.assertEqual(len(found),3)
+ def test_dynamic_public_module_load_does_not_write_bytecode(self):
+  import sys
+  self.assertTrue(sys.dont_write_bytecode)
+  work=ROOT.parent/'test-work';work.mkdir(exist_ok=True)
+  with tempfile.TemporaryDirectory(dir=work) as d:
+   p=Path(d)/'fictitious.py';p.write_text('VALUE=7\n');sha=hashlib.sha256(p.read_bytes()).hexdigest()
+   with patch.object(lv,'LIB',Path(d)),patch.object(lv,'trusted_metadata',side_effect=lambda path,mode=None:Path(path)):
+    self.assertEqual(lv.module('fictitious',sha).VALUE,7)
+   self.assertFalse((Path(d)/'__pycache__').exists())
  def test_probe_cannot_stop_systemd(self):
   with patch.object(sp.subprocess,'run') as run:
    with self.assertRaises(PermissionError):sp.command(['stop','admin-v2-coordinator.service'])

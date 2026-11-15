@@ -20,7 +20,7 @@ São Paulo, K3s, Nome–CPF, aplicação e banco de assinaturas estão fora do e
   list-units, leitura de metadados/arquivos/SQLite em modoRO. Nunca executa stop,
   start, promoção, importação de código do coordenador ou comando recebido livre.
 - live_verifier.py: adaptador futuro Root em Civo, diretamente executável com
-  shebang isolado. Implementa o contrato de nonce da recovery real usando SSH
+  shebang isolado -IB, sem escrita de bytecode. Implementa o contrato de nonce da recovery real usando SSH
   pinado. O template entregue impede sua execução operacional. Não há instalador
   nem wrapper que execute fencing/promoção neste repositório.
 - OPERATION.template.json e OWNER-CONTROL.template.json: rascunhos incompletos;
@@ -182,10 +182,16 @@ operação com geração monotônica e prova própria.
 
 ## Validação deste preparo
 
-24 testes locais passaram: nonce/frescor/clock, host/geração/boot, cgroup vazio
+27 testes locais passaram: nonce/frescor/clock, host/geração/boot, cgroup vazio
 ou ocupado em fixtures, origem viva desconhecida recusada, queue/checkpoint,
 sete gates obrigatórios, guard canônico compatível, rearm/reboot/opID recusados,
 três gravações parciais sem replay e contrato real analisado por AST. Não
 executam fence_primary.main(), recovery.promote(), serviços ou SSH de rede.
 Não afirmam prova viva real, distribuição do guard, recuperação operacional,
 consenso ou cutover. Nenhuma mudança emSP/K3s/NomeCPF/Azure foi realizada.
+
+Revisão adicional: a hipótese estática de regex sobre-escapada foi refutada por
+AST/countbackslash e execução positiva com worker fictício; os três padrões
+já estavam corretos e foram preservados. Cobertura de worker e importação sem
+__pycache__ foi acrescentada. A correção real é -IB/dont_write_bytecode no
+verificador futuro; a versão anterior nunca foi executada operacionalmente.
