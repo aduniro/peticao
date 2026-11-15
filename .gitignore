@@ -1,0 +1,11 @@
+.lease.private.json
+*.log
+__pycache__/
+**/__pycache__/
+artifact-*/
+runtime-*/
+transport-*/
+contract-*/
+state/
+NORMAL-MANIFEST.json
+NOTICE-RECEIPT.json

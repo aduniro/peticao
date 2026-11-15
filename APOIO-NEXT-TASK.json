@@ -1,0 +1,37 @@
+{
+  "status": "delegated_source_only_after_3051_review",
+  "authority": "Owner existing autonomous distributed infrastructure scope; Infra operational coordination. No new services, costs or runtime operations.",
+  "task": "Prepare controller RPC facade + legacy remote-job routing exclusion; source/tests only, separate new Apoio workspace.",
+  "reference_sources": {
+    "authority_overlay": "distributed/civo-authority-guard-overlay-20261114 notice3051/commit87c11977f5eb46312d121a08dd037fb486fbb7bf",
+    "claims": "distributed/civo-remote-worker-contract-20261114 notice3046/9d332668dec47d2b2d9b852778b4ea16515a07dc",
+    "runtime_in_progress": "distributed/civo-worker-runtime-20261114: may inspect interfaces, NEVER modify; interface details below are stable for facade preparation"
+  },
+  "interfaces": {
+    "Backend": "Backend(claims, transport, finalizer).dispatch(manifest, token), observe(manifest), finish(manifest, cancel=False). No secret in argv/logs. Caller must persist token privately BEFORE dispatch. On lost response query SAMEID; never redispatch.",
+    "Claims": "same queue.sqlite jobs/events; reserve transitions queued→starting. Explicit install_schema; no second queue. New runtime read connections use ro/query_only; no immutable=1 on live DB.",
+    "Manifest": "exact remote_contract.MANIFEST_KEYS; payload_sha256 computed from stored job payload. Bind generation/host/kernelboot/opID/epoch digest from root-controlled authority, not request. Do not embed full manifest including payload hash recursively in payload.",
+    "Catalog": "Root-owned fixed profile descriptors; prepare only fixture-pass/fail now; real build/QA profile qualification remains blocked. No generic command/argv/env/archive/path fields from client.",
+    "Nodes": "civo,akamai,azure fixed IDs; catalog/node readiness false until actually qualified. Azure cannot wake/control now: AADSTS530035. Do not infer availability from API credential presence."
+  },
+  "implementation": [
+    "Public RPC keeps health/jobs/status/logs compatible for existing legacy terminal jobs, readonly without creating DB or reconciling remote jobs as local. No raw logs/secrets in returned tool context.",
+    "New submit accepts exact fixed fields action,id,kind,worker_id; derive trusted payload/profile digests and manifest from catalog/authority; atomic duplicate same ID same payload semantics, reject changed identity. No public completion/fake artifact submission endpoint.",
+    "Preparation of profile/node readiness and launch envelope must remain NOT_DEPLOYABLE/cutoverfalse. No daemon start/install or actual secret generation. Fixture random perjob secrets permitted only inside private temporary tests.",
+    "Patch pinned candidate coordinator.reconcile and dispatch_once to EXCLUDE payload.backend ssh-systemd-v1; never launch or mark remote jobs interrupted due missing local files. Preserve all original terminal jobs/events meanings and SQLite sequence.",
+    "One canonical scheduler/queue only; do not add second SQLite for scheduling. Worker receipt journal is not scheduler. Fencing future must enumerate admin-dev-<32hex>-gN.service as well as admin-v2-job units.",
+    "No changes to Infra642 files, current app/production/A1/NomeCPF/K3s/hosts/auth/firewall/processes. Own exact source/test reservations and normal manifest for final review."
+  ],
+  "report_to": [
+    "Infra",
+    "Root"
+  ],
+  "acceptance": [
+    "Legacy terminal rows/events preserved",
+    "Remote queued jobs never handed to legacy local launcher",
+    "Remote starting/running jobs not reconciled against local runtime paths",
+    "Submission identities/duplicates/unknown fields/floor changes tested",
+    "Malformed/missing catalog or qualifications fail closed; no free shell",
+    "All output source-only, independent review requested; no installation authorization inferred"
+  ]
+}
