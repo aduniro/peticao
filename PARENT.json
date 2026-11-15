@@ -1,0 +1,10 @@
+{
+  "sourceA_commit": "f192211991f058d95f98d765cce69a1bec8f4db3",
+  "actual_A_result_event": 3276,
+  "alias_contract_notice": 3316,
+  "alias_contract_ack": 3322,
+  "native_alias_qualified": false,
+  "production_or_queue_access": false,
+  "base_runtime_commit": "4e15b7e5d069272a82aaf15bdb192e400e891f95",
+  "derived_runtime_file": "runtime/systemd_adapter.py"
+}

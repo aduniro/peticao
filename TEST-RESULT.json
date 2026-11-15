@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "at": "2026-11-15T09:48:15.475212+00:00",
+  "tests": 103,
+  "seconds": 0.478,
+  "result": "LOCAL_PASS_NOT_NATIVE",
+  "resource_warning_as_error": true,
+  "ast": 32,
+  "real_local_unix_socket": true,
+  "actual_native_systemd": false,
+  "ssh_calls": 0,
+  "public_source_files": 23,
+  "unchanged_runtime_parent_files": 9,
+  "changed_runtime": [
+    "systemd_adapter.py"
+  ],
+  "log": "git-freeze-run.private.log",
+  "all_temp_data_in_project": true,
+  "global_qualified": false,
+  "profiles_qualified": false
+}
