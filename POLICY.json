@@ -20,5 +20,14 @@
     "start",
     "cleanup"
   ],
-  "private_credentials_packaged": false
+  "private_credentials_packaged": false,
+  "parent_notice_blocked": 3244,
+  "lease_fence": 704,
+  "install_intent_path": "/opt/.peticao-dev-worker-broker-qual-20261115-attempt1.install-intent.json",
+  "remote_layout": {
+    "runtime": 10,
+    "broker": 5,
+    "root_files": 8
+  },
+  "host_pin": "tracked frozen OPERATION.template.json systemd major+hash"
 }

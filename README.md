@@ -1,4 +1,4 @@
-# SourceA operator client - preparation component
+# SourceA operator client V2 - preparation component
 
 No SSH, Civo mutation, service start or credential reading occurred while
 preparing/testing this component. It must be composed into Apoio's complete
@@ -52,3 +52,33 @@ ACKs, exact scope, session/lease/manifest/fence/budget, denied default, no dupli
 mutation call, host/scope changes, package hashes, reply limits/negative flags.
 AST3+fixed-installer AST passed. These tests are not actual SSH/Gate qualification;
 complete SourceA composition and independent review remain mandatory.
+
+## V2 interoperability correction
+
+Parent3244/810a35 is preserved, unACKed and never executed remotely. Review found
+the installer wrote a flat remote tree while core.load expects public/runtime
+and public/broker subdirectories. V2 keeps the23-member flat wire package but
+maps the10 known runtime members and5 known broker members into exactly those
+two freshly created root755 directories; harness6 and request/marker stay at root.
+It fsyncs both subdirectories, public and /opt after writing/fsyncing each file.
+The durable install intent is persisted before the first public mkdir.
+
+The installer refuses occupied PUBLIC, PRIVATE or SOCKET_PARENT before any
+public write. The exact additional OS metadata path
+/opt/.peticao-dev-worker-broker-qual-20261115-attempt1.install-intent.json
+must be declared in execution notice install_intent_path; Gate checks it. This
+is reviewed installer bookkeeping, not a job temporary directory. The logical
+TEST resource remains exact deploy:civo-worker-broker-qualification.
+
+Gate also requires the host systemd major/hash to equal the tracked, hashed,
+execute=false OPERATION.template.json in SourceA. An ignored/untracked template
+cannot establish the version pin. Changed OS pin requires new frozen source.
+
+29 tests PASS0.133s. Five execute the ACTUAL installer code against real private
+project filesystem fixtures (mkdir/O_EXCL/write/modes/file+directory fsync and
+partial-crash preservation). Only absolute destination roots, root UID/hostname
+and ancestor root metadata are mocked; nothing is written under actual /opt,
+/run or project operational .runtime. Assertions verify exact23-file layout,
+first intent+parent fsync and final runtime/broker/public/opt fsync order, no
+reinstall after partial write, occupied private/socket refusal and bad digest
+before intent. Ledger/SSH tests remain simulated. No host execution is claimed.

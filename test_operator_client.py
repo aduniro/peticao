@@ -5,6 +5,8 @@ helper worktree. This client is not deployable until composed into SourceA.
 """
 import ast
 import hashlib
+import io
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -133,6 +135,88 @@ class ClientTests(unittest.TestCase):
         with self.assertRaises(PermissionError):client.aggregate_reply({**cases[0],'scope':'global-B'})
         with self.assertRaises(ValueError):client.aggregate_reply({**cases[0],'raw_log':'not allowed'})
 
+    def payload(self):
+        value={}
+        for name in q.RUNTIME|q.BROKER|q.HARNESS|{'RUN-REQUEST.json','readonly-marker'}:
+            text='synthetic public content '+name+'\n'
+            value[name]={'text':text,'sha256':hashlib.sha256(text.encode()).hexdigest()}
+        return value
+
+    def run_installer(self, payload=None, fail_runtime=False):
+        """Execute the actual installer with real I/O under a project fixture.
+
+        Only absolute roots, UID/host and ancestor ownership are modeled. mkdir,
+        O_EXCL, writes, file/directory fsync, modes and partial state are REAL.
+        """
+        opt=self.root/'opt'
+        if not opt.exists():opt.mkdir(mode=0o755)
+        private=self.root/'private-attempt';socket_parent=self.root/'socket-attempt'
+        concrete=type(self.root);original_lstat=concrete.lstat;original_open=os.open;original_sync=os.fsync
+        self.sync_paths=[]
+        def path_factory(*args):
+            replacements={'/opt':opt,str(client.PRIVATE):private,str(q.SOCKET_PARENT):socket_parent}
+            if len(args)==1 and str(args[0])in replacements:return replacements[str(args[0])]
+            return concrete(*args)
+        def root_metadata(path,*a,**kw):
+            i=original_lstat(path,*a,**kw)
+            return types.SimpleNamespace(st_uid=0,st_mode=i.st_mode&~0o022)
+        def open_file(path,*a,**kw):
+            p=concrete(path)
+            if fail_runtime and p.parent.name=='runtime' and p.name=='worker.py':
+                raise OSError('synthetic power loss before public code complete')
+            return original_open(path,*a,**kw)
+        def sync_file(fd):
+            self.sync_paths.append(os.readlink('/proc/self/fd/'+str(fd)))
+            return original_sync(fd)
+        stdin=types.SimpleNamespace(buffer=io.BytesIO(q.canonical(self.payload() if payload is None else payload).encode()))
+        output=io.StringIO()
+        with mock.patch('pathlib.Path',side_effect=path_factory),mock.patch.object(concrete,'lstat',root_metadata),mock.patch.object(os,'geteuid',return_value=0),mock.patch('socket.gethostname',return_value='peticao-civo'),mock.patch.object(sys,'stdin',stdin),mock.patch.object(os,'open',side_effect=open_file),mock.patch.object(os,'fsync',side_effect=sync_file),contextlib.redirect_stdout(output):
+            exec(compile(client.INSTALLER,'fixed-installer','exec'),{'__name__':'fixed_installer_test'})
+        return json.loads(output.getvalue())
+
+    def test_actual_installer_writes_expected23_file_tree_and_modes(self):
+        value=self.payload();self.assertEqual(self.run_installer(value),{'state':'PUBLIC_PACKAGE_INSTALLED','file_count':23})
+        public=self.root/'opt'/client.PUBLIC.name
+        self.assertEqual({p.name for p in (public/'runtime').iterdir()},q.RUNTIME)
+        self.assertEqual({p.name for p in (public/'broker').iterdir()},q.BROKER)
+        self.assertEqual({p.name for p in public.iterdir()},q.HARNESS|{'runtime','broker','RUN-REQUEST.json','readonly-marker'})
+        for name,item in value.items():
+            prefix='runtime' if name in q.RUNTIME else 'broker' if name in q.BROKER else ''
+            path=public/prefix/name
+            self.assertEqual(path.read_text(),item['text']);self.assertEqual(path.stat().st_mode&0o777,0o644)
+        for directory in [public,public/'runtime',public/'broker']:
+            self.assertEqual(directory.stat().st_mode&0o777,0o755)
+        intent=self.root/'opt'/client.INSTALL_INTENT.name
+        self.assertTrue(intent.exists());self.assertEqual(intent.stat().st_mode&0o777,0o600)
+        self.assertEqual(self.sync_paths[:2],[str(intent),str(self.root/'opt')])
+        self.assertEqual(self.sync_paths[-4:],[str(public/'runtime'),str(public/'broker'),str(public),str(self.root/'opt')])
+        with self.assertRaises(PermissionError):self.run_installer(value)
+
+    def test_actual_installer_partial_files_burn_remote_intent_no_reinstall(self):
+        with self.assertRaises(OSError):self.run_installer(fail_runtime=True)
+        intent=self.root/'opt'/client.INSTALL_INTENT.name
+        saved=intent.read_bytes();self.assertTrue((self.root/'opt'/client.PUBLIC.name).exists())
+        with self.assertRaises(PermissionError):self.run_installer()
+        self.assertEqual(intent.read_bytes(),saved)
+
+    def test_actual_installer_refuses_private_attempt_before_any_public_write(self):
+        (self.root/'private-attempt').mkdir(mode=0o700)
+        with self.assertRaises(PermissionError):self.run_installer()
+        self.assertFalse((self.root/'opt'/client.PUBLIC.name).exists())
+        self.assertFalse((self.root/'opt'/client.INSTALL_INTENT.name).exists())
+
+    def test_actual_installer_refuses_socket_attempt_before_any_public_write(self):
+        (self.root/'socket-attempt').mkdir(mode=0o700)
+        with self.assertRaises(PermissionError):self.run_installer()
+        self.assertFalse((self.root/'opt'/client.PUBLIC.name).exists())
+        self.assertFalse((self.root/'opt'/client.INSTALL_INTENT.name).exists())
+
+    def test_actual_installer_digest_failure_precedes_intent_creation(self):
+        data=self.payload();data['worker.py']['sha256']='0'*64
+        with self.assertRaises(ValueError):self.run_installer(data)
+        self.assertFalse((self.root/'opt'/client.PUBLIC.name).exists())
+        self.assertFalse((self.root/'opt'/client.INSTALL_INTENT.name).exists())
+
 
 class GateTests(unittest.TestCase):
     def setUp(self):
@@ -141,12 +225,14 @@ class GateTests(unittest.TestCase):
         self.hashes={}
         for field,prefix in [('runtime_sha256','runtime/'),('broker_sha256','broker/'),('harness_sha256','')]:
             self.hashes.update({prefix+k:v for k,v in self.request[field].items()})
+        self.template_raw=q.canonical({**self.request,'execute':False})
+        self.hashes['OPERATION.template.json']=hashlib.sha256(self.template_raw.encode()).hexdigest()
         self.source=6000;self.event=6002;self.acquired=6004
         def notice(seq,actor,data,resources=[]):return {'seq':seq,'kind':'notice','actor':actor,'data':data,'resources':resources}
         self.data={'manifest':{'commit':self.head},'file_sha256':dict(self.hashes),'operation':'test',
                    'preparation_only':False,'production_access':False,'queue_cutover':False,'operator_session':gate.SESSION,
                    'source_notice':self.source,'runtime_notice':gate.RUNTIME_NOTICE,'broker_notice':gate.BROKER_NOTICE,
-                   'qualification_operation':self.request}
+                   'qualification_operation':self.request,'install_intent_path':gate.INSTALL_INTENT}
         self.events=[
             notice(gate.RUNTIME_NOTICE,'admin-recuperacao',{'manifest':{'commit':gate.RUNTIME_COMMIT},'file_sha256':dict(self.request['runtime_sha256'])}),
             {'seq':3183,'kind':'ack','actor':'apoio','data':{'event_seq':gate.RUNTIME_NOTICE}},
@@ -162,7 +248,8 @@ class GateTests(unittest.TestCase):
         self.dispositions=[];self.valid=True
         self.cap=self.root/'own.private.json'
         self.cap.write_text(json.dumps({'operator_session':gate.SESSION,'result':{'lease':'fixture-own-lease','token':'synthetic-test-capability','fence':100,'seq':self.acquired}}));self.cap.chmod(0o600)
-        self.patches=[mock.patch.object(gate,'central',side_effect=self.central),mock.patch.object(gate,'git',side_effect=lambda *a:'' if a[0]=='status' else self.head),mock.patch.object(gate,'source_hashes',return_value=self.hashes)]
+        (self.root/'OPERATION.template.json').write_text(self.template_raw)
+        self.patches=[mock.patch.object(gate,'central',side_effect=self.central),mock.patch.object(gate,'git',side_effect=lambda *a:'' if a[0]=='status' else self.head),mock.patch.object(gate,'source_hashes',return_value=self.hashes),mock.patch.object(gate,'ROOT',self.root)]
         for p in self.patches:p.start()
     def tearDown(self):
         for p in reversed(self.patches):p.stop()
@@ -215,6 +302,22 @@ class GateTests(unittest.TestCase):
         with self.assertRaises(PermissionError):self.call()
     def test_sourceA_author_and_freeze_required(self):
         next(e for e in self.events if e['seq']==self.source)['actor']='admin-recuperacao'
+        with self.assertRaises(PermissionError):self.call()
+
+    def test_install_intent_path_must_be_explicit_in_execution_scope(self):
+        self.data.pop('install_intent_path')
+        with self.assertRaises(PermissionError):self.call()
+        self.data['install_intent_path']='/opt/not-this-intent'
+        with self.assertRaises(PermissionError):self.call()
+
+    def test_host_version_pin_cannot_drift_from_frozen_source_template(self):
+        self.request['systemd_version_sha256']='f'*64
+        with self.assertRaises(PermissionError):self.call()
+
+    def test_untracked_or_changed_template_is_not_a_frozen_host_pin(self):
+        self.hashes.pop('OPERATION.template.json')
+        self.data['file_sha256']=dict(self.hashes)
+        next(e for e in self.events if e['seq']==self.source)['data']['file_sha256']=dict(self.hashes)
         with self.assertRaises(PermissionError):self.call()
 
 

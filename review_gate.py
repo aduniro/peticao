@@ -17,6 +17,7 @@ RUNTIME_NOTICE = 3178
 RUNTIME_COMMIT = '4e15b7e5d069272a82aaf15bdb192e400e891f95'
 BROKER_NOTICE = 3237
 BROKER_COMMIT = '0676c096561a51266fd2ece7ff538afadddc6d7e'
+INSTALL_INTENT = '/opt/.peticao-dev-worker-broker-qual-20261115-attempt1.install-intent.json'
 
 
 def central(args):
@@ -90,7 +91,8 @@ def reviewed(event):
     d = n['data']
     if (n['resources'] != [RESOURCE] or d.get('operation') != 'test'
             or d.get('preparation_only') is not False or d.get('production_access') is not False
-            or d.get('queue_cutover') is not False or d.get('operator_session') != SESSION):
+            or d.get('queue_cutover') is not False or d.get('operator_session') != SESSION
+            or d.get('install_intent_path') != INSTALL_INTENT):
         raise PermissionError('isolated_session_bound_test_notice_required')
     hashes = source_hashes()
     if d['manifest']['commit'] != git('rev-parse', 'HEAD') or d['file_sha256'] != hashes:
@@ -105,6 +107,13 @@ def reviewed(event):
         raise PermissionError('required_runtime_and_broker_version_required')
     runtime, broker = notice(RUNTIME_NOTICE, 'admin-recuperacao'), notice(BROKER_NOTICE, 'admin-recuperacao')
     request = q.operation(d['qualification_operation'], execution=True)
+    raw_template = (ROOT/'OPERATION.template.json').read_bytes()
+    if hashes.get('OPERATION.template.json') != hashlib.sha256(raw_template).hexdigest():
+        raise PermissionError('tracked_reviewed_operation_template_required')
+    template = q.operation(json.loads(raw_template), execution=False)
+    if (template['execute'] is not False or request['systemd_major'] != template['systemd_major']
+            or request['systemd_version_sha256'] != template['systemd_version_sha256']):
+        raise PermissionError('frozen_host_version_template_pin_required')
     if (request['runtime_commit'] != RUNTIME_COMMIT or request['broker_commit'] != BROKER_COMMIT
             or runtime['data']['manifest']['commit'] != RUNTIME_COMMIT
             or broker['data']['manifest']['commit'] != BROKER_COMMIT):

@@ -20,6 +20,7 @@ KNOWN_HOSTS = '/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distribut
 KNOWN_HOSTS_SHA256 = '011704a32b8bb573f75b6d67e8ce46421350584988394303a3e7fe365e6f013f'
 PUBLIC = Path('/opt/peticao-dev-worker-broker-qual-20261115-attempt1')
 PRIVATE = Path('/mnt/apps/peticao-final/.runtime/civo-worker-broker-qual-20261115-attempt1')
+INSTALL_INTENT = PUBLIC.parent/('.'+PUBLIC.name+'.install-intent.json')
 PHASES = {'preflight', 'bootstrap', 'start', 'observe', 'cleanup'}
 MUTATIONS = {'install', 'bootstrap', 'start', 'cleanup'}
 
@@ -45,6 +46,8 @@ INSTALLER = r'''
 import hashlib,json,os,pathlib,socket,stat,sys
 if os.geteuid()!=0 or socket.gethostname().split('.')[0]!='peticao-civo':raise PermissionError('exact_civo_root_required')
 base=pathlib.Path('/opt');public=base/'peticao-dev-worker-broker-qual-20261115-attempt1'
+private=pathlib.Path('/mnt/apps/peticao-final/.runtime/civo-worker-broker-qual-20261115-attempt1')
+socket_parent=pathlib.Path('/run/peticao-dev-worker-broker-qual-20261115-attempt1')
 for parent in [*reversed(base.parents),base]:
  i=parent.lstat()
  if stat.S_ISLNK(i.st_mode) or i.st_uid!=0 or i.st_mode&0o022 or not stat.S_ISDIR(i.st_mode):raise PermissionError('trusted_opt_required')
@@ -55,16 +58,22 @@ names={'remote_contract.py','admission.py','artifacts.py','worker.py','controlle
 if type(data)is not dict or set(data)!=names:raise ValueError('exact_public_package_required')
 for name,item in data.items():
  if type(item)is not dict or set(item)!={'text','sha256'} or type(item['text'])is not str or hashlib.sha256(item['text'].encode()).hexdigest()!=item['sha256']:raise ValueError('public_member_digest_required')
-if os.path.lexists(public):raise PermissionError('occupied_public_attempt_refused')
+if any(os.path.lexists(p)for p in (public,private,socket_parent)):raise PermissionError('occupied_public_private_or_socket_attempt_refused')
 intent=base/'.peticao-dev-worker-broker-qual-20261115-attempt1.install-intent.json'
 fd=os.open(intent,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
 with os.fdopen(fd,'wb')as f:f.write(json.dumps({'package_sha256':hashlib.sha256(raw).hexdigest()}).encode());f.flush();os.fsync(f.fileno())
 fd=os.open(base,os.O_RDONLY|os.O_DIRECTORY);os.fsync(fd);os.close(fd)
 os.mkdir(public,0o755);os.chmod(public,0o755)
+runtime={'remote_contract.py','admission.py','artifacts.py','worker.py','controller.py','systemd_adapter.py','log_redaction.py','cgroups.py','project_storage.py','unit_refs.py'}
+broker={'broker_entry.py','broker_lifecycle.py','broker_server.py','broker_wire.py','broker_proxy.py'}
+for name in ('runtime','broker'):
+ os.mkdir(public/name,0o755);os.chmod(public/name,0o755)
 for name,item in data.items():
- fd=os.open(public/name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o644)
+ target=public/('runtime'if name in runtime else 'broker')/name if name in runtime|broker else public/name
+ fd=os.open(target,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o644)
  with os.fdopen(fd,'wb')as f:f.write(item['text'].encode());f.flush();os.fchmod(f.fileno(),0o644);os.fsync(f.fileno())
-fd=os.open(public,os.O_RDONLY|os.O_DIRECTORY);os.fsync(fd);os.close(fd)
+for directory in (public/'runtime',public/'broker',public,base):
+ fd=os.open(directory,os.O_RDONLY|os.O_DIRECTORY);os.fsync(fd);os.close(fd)
 print(json.dumps({'state':'PUBLIC_PACKAGE_INSTALLED','file_count':len(data)}))
 '''
 
