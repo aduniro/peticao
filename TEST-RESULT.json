@@ -1,13 +1,11 @@
 {
-  "state": "LOCAL_CLIENT_V2_INSTALLER_LAYOUT_AND_GATES_PASS",
-  "tests": 29,
-  "seconds": 0.133,
+  "state": "LOCAL_CLIENT_V3_ERROR_REDACTION_PASS",
+  "tests": 30,
+  "seconds": 0.136,
   "python_ast": 3,
-  "embedded_installer_ast": true,
-  "actual_installer_code_filesystem_tests": 5,
-  "real_effects_in_tests": "private project fixtures only: mkdir/write/O_EXCL/modes/fsync/partial preservation",
-  "mocked_in_installer_tests": "absolute destination roots, UID, hostname, root ancestor metadata only",
+  "installer_unchanged_from_v2": true,
+  "actual_installer_filesystem_tests": 5,
   "ledger_ssh": "simulated",
-  "actual_host_operation": false,
-  "log_sha256": "adfd5eddb8b6cce90e95dccfe79e09767634b230ad79d70d5d2b5eaae76c7ae9"
+  "host_operations": false,
+  "log_sha256": "89ef05366459de5e2a2b66e7f2ecb10713046f720a030cfea40e6a107acdaf36"
 }

@@ -1,20 +1,8 @@
 {
-  "parent_notice": 3244,
-  "parent_commit": "810a3555c7c08bab3491f88a283c9a08a93e8407",
-  "parent_preserved": true,
-  "parent_ack_withheld": true,
-  "findings": [
-    "flat remote file tree incompatible with actual SourceAcore.load runtime/broker folders",
-    "OS installer intent sibling needed exact explicit execution scope",
-    "host systemd pin should match frozen tracked template, not any nonzero hash"
-  ],
-  "resolution": [
-    "mapped fixed known names to fresh runtime/broker directories plus root harness/request/marker, fsync each directory",
-    "reject all3Aroots occupied before public write; retain explicit exclusive durable OS metadata intent",
-    "Gate checks exact install_intent_path and tracked+hash verified template host pin"
-  ],
-  "current_tests": 29,
-  "current_seconds": 0.133,
-  "actual_installer_filesystem_tests": 5,
-  "host_operation": false
+  "parent_notice": 3248,
+  "parent_commit": "bc53f83a2ff02b777c49e97f93b7a708c92588b8",
+  "finding": "Canonical ledger check carries private capability argv; TimeoutExpired/OSError representation must not escape",
+  "correction": "Catch and fixed PermissionError from None in central;1regression method/30tests total",
+  "qualification_client_unchanged": true,
+  "host_effects": false
 }

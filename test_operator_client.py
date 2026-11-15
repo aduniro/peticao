@@ -217,6 +217,14 @@ class ClientTests(unittest.TestCase):
         self.assertFalse((self.root/'opt'/client.PUBLIC.name).exists())
         self.assertFalse((self.root/'opt'/client.INSTALL_INTENT.name).exists())
 
+    def test_ledger_timeout_or_os_failure_cannot_print_private_capability(self):
+        args=['check','--token','SYNTHETIC-PRIVATE-CAPABILITY']
+        for error in (subprocess.TimeoutExpired(['python',*args],30),OSError('SYNTHETIC-PRIVATE-CAPABILITY')):
+            with self.subTest(error=type(error).__name__),mock.patch.object(gate.subprocess,'run',side_effect=error):
+                with self.assertRaises(PermissionError) as result:gate.central(args)
+                self.assertEqual(str(result.exception),'canonical_ledger_unavailable_no_authority')
+                self.assertTrue(result.exception.__suppress_context__)
+
 
 class GateTests(unittest.TestCase):
     def setUp(self):

@@ -1,4 +1,4 @@
-# SourceA operator client V2 - preparation component
+# SourceA operator client V3 - preparation component
 
 No SSH, Civo mutation, service start or credential reading occurred while
 preparing/testing this component. It must be composed into Apoio's complete
@@ -82,3 +82,13 @@ and ancestor root metadata are mocked; nothing is written under actual /opt,
 first intent+parent fsync and final runtime/broker/public/opt fsync order, no
 reinstall after partial write, occupied private/socket refusal and bad digest
 before intent. Ledger/SSH tests remain simulated. No host execution is claimed.
+
+## V3 private capability error redaction
+
+V2 installer/layout/fsync/host-template/intent scope are byte-identical. Only
+review_gate.central catches OSError and TimeoutExpired and raises a fixed
+PermissionError with suppressed exception chaining. A ledger check puts its
+private capability in argv; the raw TimeoutExpired command representation must
+never reach a traceback. The added test forces both errors with a synthetic
+capability and checks the fixed message and suppressed context.30 local tests
+PASS0.136s, no SSH/host effect; previous29 cases remain unchanged.
