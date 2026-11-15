@@ -1,0 +1,32 @@
+{
+  "status": "SOURCE_COMPONENT_REVIEW_PASS_NOT_DEPLOYED",
+  "independent_tests": 59,
+  "gate_tests": 28,
+  "client_tests": 31,
+  "seconds": 0.428859,
+  "ResourceWarning": "error",
+  "FD_before_after": [
+    4,
+    4
+  ],
+  "unexpected_attempts": 0,
+  "source_files_unchanged": 7,
+  "reviewed": [
+    "Only DEPLOY with exact code:+deploy resource, no TEST workaround",
+    "Source/EXEC/window/release/SRI actual ACK and disposition checks; whole clean Git/source hashes",
+    "Two deterministic header bindings only; concrete header saved before exclusive durable install intent",
+    "Observe original exact bytes and still-current original window/cap; no implicit retry or recovery",
+    "SameFD bounded payload/header frames, bounded stdout during concurrent stream, stderr discarded",
+    "Only two pinned public modules in remote bootstrap, explicit dispatch and one safe JSONline, never __main__ or incoming tar execution"
+  ],
+  "release3435_ACK": 3441,
+  "host_SSH_or_deploy_executed": false,
+  "root_core_imported_or_executed": false,
+  "private_key_or_real_capability_read_by_tests": false,
+  "default_Client_CLI_PinnedSSH_closed": true,
+  "notes": [
+    "Local install result may carry explicit uncertain state; do not infer publication success from a receipt filename. Always inspect state and remote observe evidence.",
+    "Gate requires future integrated packet containing materializer.py/root_entry.py and current Source/EXEC/window/ownDEPLOY; standalone source gives no host authority."
+  ],
+  "Owner_integration_required": true
+}

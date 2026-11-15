@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "classification": "SOURCE_ONLY_OPERATOR_COMPONENT_REQUEST_NO_HOST_AUTHORITY",
+  "resource": "deploy:civo-profile-toolchain",
+  "operation": "deploy",
+  "required_lease_resources": [
+    "code:",
+    "deploy:civo-profile-toolchain"
+  ],
+  "operator_session": "01a1d130-2948-7140-bcfb-34696b20ab8d",
+  "host": "100.122.224.82",
+  "port": 22,
+  "host_key_alias": "212.2.241.70",
+  "identity_path": "/home/barre/.ssh/id_ed25519_peticao_tailnet_v2",
+  "known_hosts": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-owner-bundle-20261114/known_hosts",
+  "known_hosts_sha256": "011704a32b8bb573f75b6d67e8ce46421350584988394303a3e7fe365e6f013f",
+  "actions": [
+    "install",
+    "observe"
+  ],
+  "default": "deny_before_any_effect",
+  "pre_ssh_requirements": [
+    "full frozen clean Git/allcodeSHA/source PREP+independent ACK",
+    "exact deployment manifest/payloadSHA/size/header+independent ACK",
+    "Root window source/opid/session/resource/scope=new-civo-toolchain-publication, production/queuefalse, current numeric opens/closes and independent ACK/notdisposed",
+    "fullIntegrity source3429/proof49128e... with real adminrecACK; statusderivative-only/RootFullClosurefalse",
+    "own live deploy code:+resource capability bound to execution manifest, private600 regular no links/sessioncorrect, margin>=payloaddeadline+120",
+    "recheck all before each SSH; ledger unavailable failsclosed/redacts errors; never borrow cap"
+  ],
+  "wire": "8-byte unsigned big-endian JSON header length <=2MiB +canonical header bytes +exact compressed outer tar payload for install; observe header only, no free stdin. Header schema in root_entry.KEYS. Public remote-code construction from ONLY pinned materializer.py/root_entry.py, stdlib. root_entry.dispatch(action,stream) will be provided; no imports/exec incoming payload.",
+  "local_state": "inside exact own package/execution-state,700 dirs600 receipts; exclusive durable install intent before transport; failed/unknown install never retries",
+  "error_safety": "no secrets/capabilities in output/argv exceptions/remote; fixed public error classes; no token copying",
+  "source_work": "new own reserved source path, reviewed component and tests only; no existing packet edit; no SSH/installer invocation; do not acquire deploy now",
+  "target_root_prefix": "/opt/peticao-dev-profile-tools-v1",
+  "remote_status": "observe returns safe fixed status/writer identity, receipt/tree verification, never replays install"
+}
