@@ -44,3 +44,9 @@ Intents são exclusivos e fsynced antes de subprocessos e mutações. Intent sem
 `NATIVE_BROKER_A_PASS`, se obtido de verdade, terá `scope=isolated-A`, `global_qualified=false` e `live_held_reference_io_recovery_qualified=false`. Não cobre os caminhos globais, socket activation FD3, broker_entry global, serviço/socket global ou transporte operacional. B exigirá lease DEPLOY distinto, baseline, floor/admission reais autorizados, testes nos caminhos globais e qualificação própria. Não fabricar primary, reutilizar PASS A nem publicar metadados globais qualified por causa desta tentativa.
 
 Os testes locais exercitam contratos, guardas, intents, traces e interfaces com fixtures/mocks. Eles não comprovam comportamento nativo de systemd/bus/socket da VPS. Os resultados nativos só existirão após a execução separada pela Infra.
+
+## Fechamento da fonte
+
+O cliente/Gate V2 foi adotado byte a byte do commit `bc53f83a2ff02b777c49e97f93b7a708c92588b8`, aviso3248/ACK3251. A versão3244 anterior não foi adotada: seu instalador escrevia os arquivos na raiz sem os dois subdiretórios. O sucessor corrige o layout e vincula o pin de systemd ao template rastreado, além de exigir o install-intent exato na execução.
+
+Validação local: 53 casos do harness PASS em0,197s, 29 casos independentes de cliente/Gate PASS em0,172s e composição adicional do pacote REAL desta fonte através do instalador exato em filesystem temporário do projeto (23 arquivos/21 pins/modos e fsync reais; somente UID/hostname/metadata dos ancestrais modelados). Não foi executada uma suíte única82 nem qualquer teste nativo na VPS. Os testes do componente cliente permanecem em sua cópia de revisão, não no pacote A.

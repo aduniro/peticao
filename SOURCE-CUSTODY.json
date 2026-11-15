@@ -8,6 +8,20 @@
   "contract_checkpoint": "ef8e0784830283d3595c9c2caa25f1e151eefc9d",
   "contract_sha256": "eb7879867b122e5a439b77fed4eab94c54788a50dac34607e322132b739b5ff0",
   "native_host_executed": false,
+  "operator_client_component": {
+    "ack": 3251,
+    "adopted_exact_files": {
+      "qualification_client.py": "1d976ddf2cf35bd17b5cb808c46c5a629eda0560ed8a019a66d1ca85f6e1f216",
+      "review_gate.py": "028c131dc6a79edcca607378a2ff7e8acd9f6b6a5ea9efa510db594bd06fe4df"
+    },
+    "commit": "bc53f83a2ff02b777c49e97f93b7a708c92588b8",
+    "notice": 3248,
+    "parent3244_not_adopted": true,
+    "review_path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-broker-a-client-v2-review/REVIEW.json",
+    "seconds": 0.172,
+    "source_path": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-broker-A-client-v2-20261115",
+    "tests": 29
+  },
   "qualification_job_derivative_changes": "Only fixed PUBLIC/PRIVATE attempt A paths; storage_probe byte-identical",
   "runtime_commit": "4e15b7e5d069272a82aaf15bdb192e400e891f95",
   "runtime_notice": 3178,
