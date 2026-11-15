@@ -1,0 +1,32 @@
+{
+  "status": "NOT_TESTED",
+  "host": "peticao-civo",
+  "boot_id": null,
+  "broker_code_sha256": {
+    "broker_entry.py": "34835bb12f507d53ecd1421e6680e6867c4800608fa66a5d155691d4ddb4b2d9",
+    "broker_lifecycle.py": "0f86442e46f196d2257f34c11b16d267d2f9d487076eea20411b30369152f19d",
+    "broker_server.py": "4ca4beacb503ea06b7230bf5bffd766274ea7fd21f33f913b4505f6db119f810",
+    "broker_wire.py": "9d647440a4d45f44d44c6520830a4565b7bfccb8939e6b61a1f2895b42ff2e47",
+    "broker_proxy.py": "526ab0eb2687e6046109211ffc7a8249544d635c68d13cb4c752aee0b628b767"
+  },
+  "runtime_code_sha256": {
+    "entry_bootstrap.py": "995a9fb23b2fd35fa804599d5995d3ab804ab0a6a771a637a0f9290274e139a0",
+    "remote_contract.py": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+    "worker.py": "a16bef2e64fe514caa3065f1d18faee26c2263a6e18d95d543e237d667b5618c",
+    "artifacts.py": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+    "admission.py": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+    "systemd_adapter.py": "1e85587ed1b41a877eb0e5383b68de3e4e12e9f66b4c3bae5dd66aad3a423346",
+    "cgroups.py": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce",
+    "log_redaction.py": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+    "rpc.py": "293583bf62b5f8864e51aadd702e22dbb69e1a707da46066037eaf20134178e2",
+    "fixture_job.py": "1fd2318496e53dc2ada4a4ebcba13ec1d110f4c529e05a11e4623180c0740078",
+    "transport.py": "2785878bbe1a499cc74d8a24dd4109195e04f5d170925b16e8915986f15dd337",
+    "client_entry.py": "3e2faaf2b4703e2c2e4e02a1fcc17dcb6116d26415473379bb081b2f70375b46",
+    "controller.py": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+    "node_catalog.py": "b3c1c849d189876c7592edda166de05dee56bbc5b1ec90b394467e6a434a53c7",
+    "project_storage.py": "c8d9f98a4d62cf8d0567be318c11c8e3c7952abcc1ab9ed9da452b0c4f82e769",
+    "unit_refs.py": "ee4a9145f0443a56ab769b709facc6a7fcc3e029bf9c778a92a7e1cb1ab02b1f"
+  },
+  "qualification_manifest_event": null,
+  "real_broker_socket_ref_lifetime_test": false
+}

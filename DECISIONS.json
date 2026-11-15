@@ -1,0 +1,29 @@
+{
+  "owner_scope": "Autonomous implementation with logged decisions and agent coordination; Civo central/Akamai worker per latest owner topology",
+  "questions": [
+    {
+      "question": "How to retain a manager Ref across separate SSH calls?",
+      "decision": "One root socket-activated broker process and one UnitReferences+WorkerRPC; singleton kernel lock, no one-request keeper."
+    },
+    {
+      "question": "Does completed release node capacity?",
+      "decision": "No. Canonical custody must first be verified and fsynced. Then authenticated retire; release capacity only on exact retained acknowledgement."
+    },
+    {
+      "question": "Can lost reply retry retire?",
+      "decision": "No automatic retry. Read action retirement verifies durable receipt/storage, or reports uncertainty without creation or cleanup."
+    },
+    {
+      "question": "What if storage/fsync or reference session becomes uncertain?",
+      "decision": "Quarantine preserves existing process/connection where possible, only bounded reads, no new mutations/keeper/replay. Operator reconciliation for incomplete state."
+    },
+    {
+      "question": "Can a new process adopt previous active work?",
+      "decision": "No rearm. Startup validates all receipts/bindings/retained proofs on current boot/epoch; old live/uncertain/unretired work blocks listener pending exact reconciliation."
+    },
+    {
+      "question": "How to avoid conflict with Apoio consumer/perfil work?",
+      "decision": "691 covers broker packet only. Apoio692 owns profile/CatalogV2/consumer/pairedguard in distinct source; current source is contract only until reviewed."
+    }
+  ]
+}

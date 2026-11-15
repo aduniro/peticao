@@ -1,0 +1,21 @@
+[Unit]
+Description=Peticao persistent development worker reference broker
+Requires=peticao-dev-worker-broker.socket
+After=peticao-dev-worker-broker.socket dbus.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/python3 -I -B /opt/peticao-dev-worker-broker/broker_entry.py
+Environment=PATH=/usr/sbin:/usr/bin:/sbin:/bin
+UMask=0077
+Restart=no
+KillMode=control-group
+TimeoutStopSec=300
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_UNIX
+MemoryMax=3G
+TasksMax=64
+StandardOutput=journal
+StandardError=journal

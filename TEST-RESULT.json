@@ -1,0 +1,29 @@
+{
+  "state": "LOCAL_BROKER_SOURCE_TESTS_PASS",
+  "local_tests_covered": 58,
+  "baseline_full_suite": {
+    "log": "state/final-tests.log",
+    "tests": 58,
+    "seconds": 1.457
+  },
+  "latest_socket_cloexec_guard_change": {
+    "log": "state/activation-cloexec-tests.log",
+    "tests": 16,
+    "seconds": 0.058
+  },
+  "python_ast": 26,
+  "copied_runtime_blobs_unchanged": 16,
+  "systemd_unit_syntax_local": "PASS (not installed or executed)",
+  "actual_local_child_and_queue_custody_tests": 3,
+  "systembus_unit_mount_reference_adapters": "synthetic in these new tests; real3195 separately validated underlying V4 lifecycle only",
+  "real_broker_qualification": false,
+  "log_sha256": {
+    "final-tests.log": "548df93cc2f1487c9b433f80bd90efd09c28db1389b8e3673e8bd6699ac771b3",
+    "activation-cloexec-tests.log": "68d27de6744f32099f1d6b964740c031beaf187ff872e1d434e00c89dac45e79",
+    "unit-verify.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "preserved_failures": [
+    "entry-tests.log: AF_UNIX absolute project path exceeded108bytes; fixture now binds relative name in same physical project directory",
+    "entry-tests-fixed.log: developer group-writable ancestor correctly refused; fixture ambient ancestors modeled protected, actual socket inode/permissions/symlink tests kept; production guard unchanged"
+  ]
+}
