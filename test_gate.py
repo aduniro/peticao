@@ -32,7 +32,7 @@ class FakeLedger:
                 'operation_id':execution['operation_id'],'operator_session':gate.SESSION,'resource':gate.RESOURCE,
                 'scope':gate.SCOPE,'production_access':False,'queue_cutover':False,'opens_at':NOW-10,'closes_at':NOW+1800}),
             gate.SRI_SOURCE:notice(gate.SRI_SOURCE,gate.REVIEWER,{'proof_sha256':SHA,'fullVendorIntegrity':True,'cacheOriginalIntegral':False,'RootFullClosure':False,'qualified':False,'scope':'derived-content-only'}),
-            gate.QUALIFICATION_RELEASE_EVENT:notice(gate.QUALIFICATION_RELEASE_EVENT,gate.ACTOR,copy.deepcopy(gate.QUALIFICATION_RELEASE_DATA),['path:'+str(root)]),
+            gate.QUALIFICATION_RELEASE_EVENT:notice(gate.QUALIFICATION_RELEASE_EVENT,gate.ACTOR,copy.deepcopy(gate.QUALIFICATION_RELEASE_DATA),[gate.QUALIFICATION_RELEASE_RESOURCE]),
             EVENT:notice(EVENT,gate.ACTOR,{'version':1,'operation':'deploy','preparation_only':False,'production_access':False,'queue_cutover':False,
                 'operator_session':gate.SESSION,'scope':gate.SCOPE,'source_notice':4001,'root_window_event':4003,'qualification_release_event':gate.QUALIFICATION_RELEASE_EVENT,
                 'full_integrity_event':gate.SRI_SOURCE,'manifest':manifest,'file_sha256':hashes,'execution':execution})}
@@ -149,7 +149,7 @@ class GateTests(unittest.TestCase):
     def test_confirmed_source_release_resources_actor_and_no_extra_envelope(self):
         source=self.ledger.rows[4001];source['actor']=gate.REVIEWER;self.deny();source['actor']=gate.ACTOR
         source['resources']=[gate.RESOURCE];self.deny();source['resources']=['path:'+str(self.root)]
-        release=self.ledger.rows[gate.QUALIFICATION_RELEASE_EVENT];release['resources']=[gate.RESOURCE];self.deny();release['resources']=['path:'+str(self.root)]
+        release=self.ledger.rows[gate.QUALIFICATION_RELEASE_EVENT];release['resources']=[gate.RESOURCE];self.deny();release['resources']=[gate.QUALIFICATION_RELEASE_RESOURCE]
         self.ledger.rows[EVENT]['data']['root_source_notice']=4002;self.deny()
     def test_root_window_exact_owner_schema_no_aliases_or_wrong_commit_thread(self):
         original=copy.deepcopy(self.ledger.rows[4003]['data'])
@@ -197,7 +197,7 @@ class PrimitiveTests(unittest.TestCase):
             changed=copy.deepcopy(header);changed['files']={path:next(iter(header['files'].values()))}
             with self.assertRaises(gate.GateDenied):gate.validate_header_template(changed,gate.RUNTIME_BINDINGS)
     def test_qualification_release_exact_data_actor_ack_and_disposition(self):
-        row={'seq':gate.QUALIFICATION_RELEASE_EVENT,'kind':'notice','actor':gate.ACTOR,'resources':['path:'+str(gate.ROOT)],'requires_ack':1,'data':copy.deepcopy(gate.QUALIFICATION_RELEASE_DATA)}
+        row={'seq':gate.QUALIFICATION_RELEASE_EVENT,'kind':'notice','actor':gate.ACTOR,'resources':[gate.QUALIFICATION_RELEASE_RESOURCE],'requires_ack':1,'data':copy.deepcopy(gate.QUALIFICATION_RELEASE_DATA)}
         ack={'seq':6007,'kind':'ack','actor':gate.REVIEWER,'data':{'event_seq':gate.QUALIFICATION_RELEASE_EVENT}}
         def ledger(args):
             if args[0]=='status':return {'notice_dispositions':[]}

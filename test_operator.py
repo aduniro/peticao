@@ -30,6 +30,19 @@ class CompositionTests(unittest.TestCase):
         guard=mock.Mock(return_value=self.grant('observe'))
         with mock.patch.object(o.gate,'Gate',return_value=guard),mock.patch.object(o.client,'OwnerContract'),mock.patch.object(o.client,'PinnedSSH'),mock.patch.object(o.client,'Client')as ctor:
             o.run('observe',9);ctor.return_value.observe.assert_called_once_with();ctor.return_value.install.assert_not_called()
+    def test_actual_canonical_release_reference_preserves_original_resource(self):
+        row=json.loads((HERE/'QUALIFICATION-RELEASE3435.reference.json').read_bytes())
+        self.assertEqual(row['seq'],3435)
+        self.assertEqual(row['resources'],[o.gate.QUALIFICATION_RELEASE_RESOURCE])
+        ack={'seq':3441,'kind':'ack','actor':'apoio','data':{'event_seq':3435}}
+        def ledger(args):
+            if args[0]=='status':return {'notice_dispositions':[]}
+            return [row] if args[-1]=='1' else [ack]
+        with mock.patch.object(o.gate,'central',side_effect=ledger):
+            self.assertEqual(o.gate.qualification_release(3435),3435)
+            for other in ('path:'+str(HERE),o.gate.RESOURCE,o.gate.QUALIFICATION_RELEASE_RESOURCE+'/alias'):
+                row['resources']=[other]
+                with self.assertRaises(o.gate.GateDenied):o.gate.qualification_release(3435)
     @unittest.skipIf(os.geteuid()==0,'Actual nonroot guard denial test requires normal UID')
     def test_real_two_module_bootstrap_rejects_nonroot_before_stream_or_effects(self):
         refs={n:{'path':str(HERE/n),'sha256':hashlib.sha256((HERE/n).read_bytes()).hexdigest(),'bytes':(HERE/n).stat().st_size}for n in ('materializer.py','root_entry.py')}

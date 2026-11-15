@@ -26,6 +26,7 @@ SRI_SOURCE=3429
 SRI_PROOF_SHA256='49128ee64078b800019646faff38252d28af1fbd7b6708e6055a0e68221d14a7'
 SRI_NOTICE_DATA_SHA256='60aba8575b9bb6769306855d388a22c79aa0bc3a66aa962ec8798235e912e652'
 QUALIFICATION_RELEASE_EVENT=3435
+QUALIFICATION_RELEASE_RESOURCE='path:/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-toolchain-installer-v1-20261115'
 HEADER_KEYS=frozenset({'version','operation_id','operator_session','scope','source_notice','execution_notice','root_window_event',
     'qualification_release_event','full_integrity_event','expected_boot_id','payload_sha256','payload_bytes','unpacked_bytes','files','deadline_unix'})
 RUNTIME_BINDINGS={'execution_notice':'canonical_self_event','deadline_unix':'min(now+900,leaseexpires-120,windowcloses-120)'}
@@ -206,7 +207,7 @@ def validate_header_template(header,bindings):
 
 def qualification_release(event):
     row=notice(event,ACTOR)
-    require(event==QUALIFICATION_RELEASE_EVENT and row['resources']==['path:'+str(ROOT)] and type(row['data']) is dict and canonical(row['data'])==canonical(QUALIFICATION_RELEASE_DATA))
+    require(event==QUALIFICATION_RELEASE_EVENT and row['resources']==[QUALIFICATION_RELEASE_RESOURCE] and type(row['data']) is dict and canonical(row['data'])==canonical(QUALIFICATION_RELEASE_DATA))
     ack(event,REVIEWER);active_notices({event})
     return event
 
