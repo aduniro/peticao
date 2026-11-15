@@ -12,7 +12,7 @@
   "automatic_retry": false,
   "platform_credentials_used": false,
   "new_worker_or_service_installed": false,
-  "lease_fence": 697,
+  "lease_fence": 701,
   "required_before_host_effects": [
     "Frozen source review and independent ACK",
     "New exact manifest operation with Root window and own valid capability",
@@ -20,9 +20,16 @@
     "Stop/retire/quarantine/restart/lost reply and baseline proofs",
     "Canonical pairedguard and qualified profile integration before rollout"
   ],
-  "parent_notice_blocked": 3213,
+  "parent_notice_blocked": 3222,
   "required_real_broker_evidence": {
     "qualification_manifest_event": "exact int > 0; bool rejected",
     "real_broker_socket_ref_lifetime_test": "must be singleton True"
+  },
+  "persistent_epoch_gate": {
+    "floor": "actual EpochGuard root-controlled file",
+    "sealed_against": "admission.json epoch_sha256 under SH lock",
+    "generation": "WorkerJournal.generation plus actual SQLite identity",
+    "read_only_while_admission_disabled": "allowed only on same sealed current floor",
+    "normal_B_bootstrap": "requires genuine authorized global floor; do not create fake primary to pass qualification"
   }
 }

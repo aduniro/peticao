@@ -16,6 +16,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).parent/'runtime'))
 import artifacts
 import remote_contract as c
+from admission import Admission
 from broker_lifecycle import Lifecycle, RetirementUncertain
 
 
@@ -31,6 +32,11 @@ class Retirement(unittest.TestCase):
                          'artifact_policy_sha256': 'e'*64, 'payload_sha256': 'f'*64,
                          'coordinator_host': 'civo', 'coordinator_boot_id': 'controller-boot',
                          'authority_operation_id': '1'*32, 'epoch_sha256': '2'*64}
+        self.floor = {'generation':1, 'primary_host':'civo', 'coordinator_boot_id':'controller-boot', 'operation_id':'1'*32}
+        self.manifest['epoch_sha256'] = c.digest(self.floor)
+        self.epoch_path = self.root/'journal/epoch.json'
+        self.epoch_path.write_text(c.canonical(self.floor)); self.epoch_path.chmod(0o600)
+        self.guard = c.EpochGuard(self.epoch_path, c.private_file)
         self.receipt = {'unit': 'admin-dev-'+'a'*32+'-g1.service', 'boot_id': 'worker-boot',
                         'job_id': 'a'*32, 'generation': 1, 'worker_id': 'civo',
                         'manifest_sha256': c.digest(self.manifest), 'prepared_at': '2026-11-15T04:00:00+00:00'}
@@ -55,6 +61,8 @@ class Retirement(unittest.TestCase):
         self.path = self.root/'journal/receipts.sqlite'
         self.path.touch(mode=0o600)
         with sqlite3.connect(self.path) as db:
+            db.execute('CREATE TABLE metadata(key TEXT PRIMARY KEY,value TEXT NOT NULL)')
+            db.executemany('INSERT INTO metadata VALUES(?,?)',[('worker_id','civo'),('generation','1')])
             db.execute('CREATE TABLE receipts(job_id TEXT,manifest_json TEXT,receipt_json TEXT,receipt_sha256 TEXT,token_sha256 TEXT,state TEXT,invocation_id TEXT)')
             db.execute('INSERT INTO receipts VALUES(?,?,?,?,?,?,?)', tuple(self.row.values()))
             db.execute('CREATE TABLE unit_bindings(job_id TEXT,stop_proof TEXT,finalized_result TEXT,bundle_sha256 TEXT,invocation_id TEXT,receipt_sha256 TEXT)')
@@ -65,13 +73,13 @@ class Retirement(unittest.TestCase):
         self.refs.snapshot.return_value = {'state': 'released', 'connection_uncertain': False,
                                            'invocation_id': self.invocation}
         self.service = mock.Mock()
-        self.service.journal.path = self.path
-        self.service.journal.profiles = self.profiles
-        self.service.journal.boot_id.return_value = 'worker-boot'
+        self.service.journal = c.WorkerJournal(self.path, 'civo', 1, lambda:'worker-boot', self.profiles, self.guard)
         self.service.stored.side_effect = lambda job: (dict(self.row), dict(self.binding))
         self.service.exports = self.root/'exports'
         self.service.adapter.references = self.refs
-        self.service.admission.mutation.side_effect = lambda m: contextlib.nullcontext()
+        lock=self.root/'journal/admission.lock';lock.touch(mode=0o600)
+        meta=self.root/'journal/admission.json';meta.write_text(c.canonical({'enabled':True,'epoch_sha256':c.digest(self.floor)}));meta.chmod(0o600)
+        self.service.admission = Admission(self.root/'journal', c.private_file)
         self.service.job_lock.side_effect = lambda job: contextlib.nullcontext()
         self.service.adapter.properties.return_value = {'MainPID': '0', 'ActiveState': 'inactive',
                                                        'LoadState': 'not-found', 'ControlGroup': '', 'InvocationID': ''}
@@ -196,9 +204,9 @@ class Retirement(unittest.TestCase):
 
     def test_startup_reboot_or_recreated_unit_refused(self):
         self.life(self.request)
-        self.service.journal.boot_id.return_value = 'new-boot'
+        self.service.journal.boot_id = lambda:'new-boot'
         with self.assertRaises(RetirementUncertain): self.life.startup()
-        self.service.journal.boot_id.return_value = 'worker-boot'
+        self.service.journal.boot_id = lambda:'worker-boot'
         self.service.adapter.properties.return_value.update(LoadState='loaded', InvocationID='7'*32)
         with self.assertRaises(RetirementUncertain): self.life.startup()
 
@@ -218,10 +226,10 @@ class Retirement(unittest.TestCase):
         with self.assertRaises(ValueError): self.life(self.request)
 
     def test_epoch_change_or_lost_ref_session_blocks_request(self):
-        self.service.journal._epoch.side_effect = PermissionError('epoch changed')
+        self.epoch_path.write_text(c.canonical({**self.floor,'operation_id':'7'*32}))
         with self.assertRaises(PermissionError): self.life({'action': 'observe', 'id': 'a'*32})
         self.service.rpc.assert_not_called()
-        self.service.journal._epoch.side_effect = None
+        self.epoch_path.write_text(c.canonical(self.floor))
         self.refs.check.side_effect = ConnectionError('session lost')
         with self.assertRaises(ConnectionError): self.life({'action': 'start'})
         self.service.rpc.assert_not_called()
@@ -268,6 +276,50 @@ class Retirement(unittest.TestCase):
         self.life(self.request)
         with sqlite3.connect(self.path) as db:db.execute("UPDATE unit_bindings SET finalized_result='{}'")
         with self.assertRaises(PermissionError):self.life.startup()
+
+    def test_real_floor_change_blocks_reads_while_sqlite_metadata_unchanged(self):
+        with c.transaction(self.path) as db:
+            before = dict(db.execute('SELECT key,value FROM metadata'))
+            self.service.journal._epoch(db)  # Demonstrates this is metadata only.
+        for key,value in [('operation_id','7'*32), ('primary_host','akamai'),
+                          ('coordinator_boot_id','different-controller-boot'), ('generation',2)]:
+            self.epoch_path.write_text(c.canonical({**self.floor,key:value}))
+            with self.subTest(key=key),self.assertRaises(PermissionError):
+                self.life({'action':'observe','id':'a'*32})
+            with c.transaction(self.path) as db:
+                self.assertEqual(dict(db.execute('SELECT key,value FROM metadata')),before)
+                self.service.journal._epoch(db)  # Still passes despite new floor.
+        self.service.rpc.assert_not_called()
+
+    def test_empty_journal_startup_requires_actual_persistent_floor(self):
+        with sqlite3.connect(self.path) as db:
+            db.execute('DELETE FROM unit_bindings');db.execute('DELETE FROM receipts')
+        self.assertEqual(self.life.startup()['receipt_count'],0)
+        self.epoch_path.unlink()
+        with self.assertRaises(FileNotFoundError):self.life.startup()
+
+    def test_retirement_readonly_quarantine_cannot_bypass_changed_floor(self):
+        self.life(self.request);self.life.uncertain=True
+        self.epoch_path.write_text(c.canonical({**self.floor,'operation_id':'8'*32}))
+        with self.assertRaises(PermissionError):self.life({**self.request,'action':'retirement'})
+        self.service.adapter.cleanup_storage.assert_called_once()
+
+    def test_closed_admission_same_floor_allows_readonly_observation(self):
+        meta=self.root/'journal/admission.json'
+        meta.write_text(c.canonical({'enabled':False,'epoch_sha256':c.digest(self.floor)}))
+        self.service.rpc.return_value={'state':'completed'}
+        self.assertEqual(self.life({'action':'observe','id':'a'*32}),{'state':'completed'})
+        with self.assertRaises(PermissionError):self.life(self.request)
+        self.service.adapter.cleanup_storage.assert_not_called()
+
+    def test_malformed_floor_or_admission_never_calls_worker(self):
+        for field,value in [('generation',True),('primary_host','unrecognized'),('coordinator_boot_id',None)]:
+            self.epoch_path.write_text(c.canonical({**self.floor,field:value}))
+            with self.subTest(field=field),self.assertRaises(PermissionError):self.life({'action':'logs'})
+        self.epoch_path.write_text(c.canonical(self.floor))
+        meta=self.root/'journal/admission.json';meta.write_text(c.canonical({'enabled':'true','epoch_sha256':c.digest(self.floor)}))
+        with self.assertRaises(PermissionError):self.life({'action':'bundle'})
+        self.service.rpc.assert_not_called()
 
 
 if __name__ == '__main__': unittest.main()

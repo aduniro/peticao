@@ -1,4 +1,4 @@
-# Persistent worker broker V2 - source candidate
+# Persistent worker broker V3 - source candidate
 
 No host installation, socket activation, unit, mount or cloud action was
 performed for this packet. Both policy/evidence templates reject execution.
@@ -113,3 +113,33 @@ identity verification; with18 current guards the distinct coverage is60. No full
 proxy/server/units are unchanged. Candidate code policy pins were regenerated.
 The previous test logs and wrong-cwd recovery remain in the parent's private
 state, not copied or overwritten. New tests created no host/SystemBus/service.
+
+## V3 actual persistent epoch check
+
+Parent3222 was reviewed/ACKed as source, not deployed, and remains preserved.
+A new static inspection found Lifecycle.epoch_check called WorkerJournal._epoch,
+which only validates SQLite worker/generation metadata. Later mutation manifest
+checks still validated EpochGuard, but read-only calls and empty startup lacked
+the promised persistent-floor check. V3 fixes that before host qualification.
+
+Under the node admission shared lock, every call validates typed admission and
+actual root-controlled floor, candidate controller=civo, current journal generation
+and expected admission epoch digest through EpochGuard.require; then validates
+SQLite metadata. A disabled admission on the SAME floor permits read-only status,
+while mutation guards still deny work. Quarantine/retirement reads cannot bypass
+a changed floor. Missing floor also refuses an otherwise empty journal startup.
+
+Unit fixtures now instantiate ACTUAL WorkerJournal, Admission, private SQLite
+and floor/admission files. Tests change operation/host/boot/generation while the
+SQLite metadata and the old _epoch check remain unchanged/passing: new calls fail
+before WorkerRPC.35 affected lifecycle/integration tests pass, including3 real
+local child/samequeue/ArtifactStore socket integration cases. Bus/unit/cgroup/
+unmount adapters remain synthetic.30 unchanged entry/wire tests are adopted from
+previous independent coverage by byte identity;65 distinct coverage is not a
+claim of a full65-test rerun. AST26 and runtime16 hashes remain valid.
+
+PhaseA may use an explicitly isolated fixture floor. PhaseB's normal entry now
+requires the genuine authorized global floor/admission, not a fabricated future
+primary just to pass qualification. Thus normal B startup must be coordinated
+with real fencing/authority deployment; until then B can remain inactive or test
+negative gates only. Actual migration/recovery/Dell-off acceptance stays pending.

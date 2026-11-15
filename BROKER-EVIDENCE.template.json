@@ -4,7 +4,7 @@
   "boot_id": null,
   "broker_code_sha256": {
     "broker_entry.py": "c6394ac6b4f5f7d07a6bd5bdbf9c375c5ed09df6e1a037cb584860b898763ebd",
-    "broker_lifecycle.py": "0f86442e46f196d2257f34c11b16d267d2f9d487076eea20411b30369152f19d",
+    "broker_lifecycle.py": "f98f5f8a84d2f3f2ca849f8ea86f838a82e0776e539e528225651612f80d8b4f",
     "broker_server.py": "86c9cd940b6e186f53e55cfd54067786df61d85d98d7d35cc5b0800b56d12e0a",
     "broker_wire.py": "9d647440a4d45f44d44c6520830a4565b7bfccb8939e6b61a1f2895b42ff2e47",
     "broker_proxy.py": "526ab0eb2687e6046109211ffc7a8249544d635c68d13cb4c752aee0b628b767"

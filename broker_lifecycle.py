@@ -8,6 +8,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 from pathlib import Path
 import stat
 
@@ -37,8 +38,28 @@ class Lifecycle:
     def epoch_check(self):
         if self.pid != os.getpid():
             raise RetirementUncertain('original_broker_process_required')
-        with c.transaction(self.service.journal.path) as db:
-            self.service.journal._epoch(db)
+        journal, admission = self.service.journal, self.service.admission
+        # WorkerJournal._epoch only checks SQLite metadata. It is NOT an
+        # EpochGuard check. Bind every call (including reads/empty startup) to
+        # the persistent floor sealed into this node's admission metadata.
+        with admission.lock():
+            data = json.loads(admission.validator(admission.root/'admission.json').read_text())
+            if (not isinstance(data, dict) or set(data) != {'enabled', 'epoch_sha256'}
+                    or type(data['enabled']) is not bool):
+                raise PermissionError('typed_worker_admission_epoch_required')
+            c.hex_value(data['epoch_sha256'], 64)
+            guard = journal.epoch_guard
+            floor = json.loads(guard.control_validator(guard.path).read_text())
+            if (not isinstance(floor, dict) or set(floor) != c.EpochGuard.KEYS
+                    or type(floor['generation']) is not int
+                    or floor['primary_host'] != 'civo'
+                    or not isinstance(floor['coordinator_boot_id'], str)
+                    or not re.fullmatch('[a-zA-Z0-9-]{1,80}', floor['coordinator_boot_id'])):
+                raise PermissionError('typed_persistent_worker_epoch_required')
+            guard.require(journal.generation, floor['primary_host'], floor['coordinator_boot_id'],
+                          floor['operation_id'], data['epoch_sha256'])
+            with c.transaction(journal.path) as db:
+                journal._epoch(db)
 
     def identity(self, request):
         if set(request) != {'action', 'manifest', 'token', 'receipt_sha256',

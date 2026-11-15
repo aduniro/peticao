@@ -28,6 +28,10 @@
     {
       "question": "Independent review found PASS evidence lacking explicit real-broker qualification requirements",
       "decision": "Preserve3213, create V2/own697; enforce positive integer event and explicit True host-ref/socket flag before imports. No ACK or host effect under oldsource."
+    },
+    {
+      "question": "Does WorkerJournal._epoch verify persistent primary floor?",
+      "decision": "No, it is SQLite metadata only. V3 validates actual floor/admission sealed digest/current generation for every call, including read-only/quarantine/empty startup. Tests use real Journal/Admission/files, not a Mock that invents this behavior."
     }
   ]
 }

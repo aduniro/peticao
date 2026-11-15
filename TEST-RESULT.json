@@ -1,24 +1,24 @@
 {
-  "state": "LOCAL_ENTRY_CORRECTION_PASS_WITH_ADOPTED_UNCHANGED_COVERAGE",
+  "state": "PERSISTENT_EPOCH_FILESYSTEM_REGRESSIONS_PASS",
   "current_run": {
-    "tests": 18,
-    "seconds": 0.075,
-    "log": "state/entry-tests-v2.log",
-    "sha256": "aff99eb1a9776d04acdc6d722f8eb991f22416548ed0a426767b5e7e28656430"
+    "tests": 35,
+    "seconds": 1.85,
+    "log": "state/epoch-candidate-tests.log",
+    "sha256": "56da962e59c9ac434644cb0d0f55448881f16aaf5469810fa4a943ff852f1932"
   },
   "unchanged_coverage_adopted": {
-    "parent_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-broker-v1-20261115",
-    "parent_notice": 3213,
-    "independent_review": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-broker-v1-review",
-    "parent_tests": 58,
-    "parent_seconds": 1.485,
-    "overlap_entry_tests": 16,
-    "other_unchanged_tests": 42,
-    "copied_runtime_blobs_unchanged": 16
+    "entry_guards": 18,
+    "wire": 12,
+    "source_notice": 3222,
+    "source_ack": 3228,
+    "entry_peer_seconds": 0.074,
+    "wire_from_parent_independent58_notice": 3213,
+    "byte_identity_checked": true
   },
-  "total_distinct_tests_covered": 60,
+  "total_distinct_tests_covered": 65,
   "python_ast": 26,
-  "unit_files": "Unchanged, adopt prior local syntaxPASS; no install/start",
-  "broker_host_qualification": false,
-  "full60_suite_not_rerun": true
+  "runtime_blobs_unchanged": 16,
+  "new_filesystem_regression_methods": 5,
+  "real_broker_qualified": false,
+  "full65_suite_not_rerun": true
 }
