@@ -1,0 +1,84 @@
+{
+  "host": "peticao-civo",
+  "kernel": "6.8.0-149-generic",
+  "paths": {
+    "/mnt": {
+      "device": 64769,
+      "directory": true,
+      "exists": true,
+      "gid": 0,
+      "inode": 1689,
+      "mode": "0o755",
+      "symlink": false,
+      "uid": 0
+    },
+    "/mnt/apps": {
+      "device": 64769,
+      "directory": true,
+      "exists": true,
+      "gid": 0,
+      "inode": 262188,
+      "mode": "0o755",
+      "symlink": false,
+      "uid": 0
+    },
+    "/mnt/apps/peticao-final": {
+      "device": 64769,
+      "directory": true,
+      "exists": true,
+      "gid": 0,
+      "inode": 262194,
+      "mode": "0o755",
+      "symlink": false,
+      "uid": 0
+    },
+    "/mnt/apps/peticao-final/.runtime": {
+      "device": 64769,
+      "directory": true,
+      "exists": true,
+      "gid": 0,
+      "inode": 1573000,
+      "mode": "0o755",
+      "symlink": false,
+      "uid": 0
+    },
+    "/var": {
+      "device": 64769,
+      "directory": true,
+      "exists": true,
+      "gid": 0,
+      "inode": 81159,
+      "mode": "0o755",
+      "symlink": false,
+      "uid": 0
+    },
+    "/var/lib": {
+      "device": 64769,
+      "directory": true,
+      "exists": true,
+      "gid": 0,
+      "inode": 81160,
+      "mode": "0o755",
+      "symlink": false,
+      "uid": 0
+    },
+    "/var/lib/private": {
+      "device": 64769,
+      "directory": true,
+      "exists": true,
+      "gid": 0,
+      "inode": 84359,
+      "mode": "0o700",
+      "symlink": false,
+      "uid": 0
+    }
+  },
+  "systemd_version": "systemd 255 (255.4-1ubuntu8.18)\n+PAM +AUDIT +SELINUX +APPARMOR +IMA +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +IPTC +KMOD +LIBCRYPTSETUP +LIBFDISK +PCRE2 -PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD -BPF_FRAMEWORK -XKBCOMMON +UTMP +SYSVINIT default-hierarchy=unified\n",
+  "systemd_version_sha256": "cf7dc29fdb4b56cfd2f816bef4e11c0ac1834630ce29aa4b75b00ae9ac1b1a76",
+  "scope": "Read-only metadata only; no unit/mount/permission/auth mutations",
+  "lease_fence": 657,
+  "release_seq": 3115,
+  "host_pin_alias": "212.2.241.70",
+  "ssh_destination": "100.122.224.82",
+  "ssh_config_ignored": true
+}

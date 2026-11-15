@@ -1,0 +1,120 @@
+{
+  "target": "peticao-civo",
+  "tailnet_ipv4": "100.122.224.82",
+  "root": "/mnt/apps/peticao-final/.qt1",
+  "remote_root": "/mnt/apps/peticao-final/.qt1",
+  "unit": "peticao-civo-c472-complete-qa-20261114.service",
+  "export_root": "/mnt/apps/peticao-final/.runtime/civo-export-c472-20261114-attempt3/outputs/export-1",
+  "artifact_sha256": "3f2cbe26026cee736f146bf64548a9c4cc81153e585d1c0da457b9c35936930f",
+  "manifest_sha256": "aa06d5c4e4a7a118399f665d1b3464589f5c08f1cdd862f218a676d675e08f88",
+  "source_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
+  "source_tar": "/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt2/inputs/source.tar.gz",
+  "source_sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5",
+  "deps_root": "/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt2/deps/site",
+  "node_path": "/mnt/apps/peticao-final/.runtime/civo-qualification-c472-20261114-attempt2/tools/node20",
+  "node_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+  "lock_sha256": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
+  "chromium": "/mnt/apps/peticao-final/.tools/host-civo/playwright/chromium-1234/chrome-linux64/chrome",
+  "chromium_version": "151.0.7922.34",
+  "playwright_python_version": "1.62.0",
+  "inputs": {
+    "runner.py": {
+      "sha256": "6d5b393e60aa8bfcaad4d89ecb6dc55caa1f4b361ecffeddc0a313a31a7288e6",
+      "bytes": 22038
+    },
+    "qa-driver.mjs": {
+      "sha256": "68f5483ae08e7f8ef811fc5d1a8155650bed512db1249b8bfbb8f4fd1bf94f6d",
+      "bytes": 8827
+    },
+    "qa-runtime.mjs": {
+      "sha256": "8c6e5b53ddda7524fd178c506eb97b172976e77210da077d4cd3104cfda6dd72",
+      "bytes": 4138
+    },
+    "network-guard.cjs": {
+      "sha256": "f3ba91a83d63fb7e4425da0a177134ae0ce57724a76549fbdc5b7007411e4ad3",
+      "bytes": 1171
+    },
+    "fixture.ts": {
+      "sha256": "b546639c72549b6f06e99a7ac1a5ecd687e2c47f3581734b0e0e26e6c78f2e39",
+      "bytes": 4186
+    },
+    "backend-smoke.mjs": {
+      "sha256": "ffd16f401d2bbb17d115fcd64df16079248833aca289cef2b679d8bf3721b437",
+      "bytes": 2774
+    },
+    "http-regression.mjs": {
+      "sha256": "63caec3ded4215070d0c0cc155811be9643cce4217cda25e485342ee5f4083b4",
+      "bytes": 3581
+    },
+    "refresh-fixture-session.mjs": {
+      "sha256": "7147d5c659e62ce921a952f0ba8866ffd6a9eaebe68fb464e836fa00b774ad17",
+      "bytes": 1069
+    },
+    "real-map-browser.py": {
+      "sha256": "790fb17ac9403abb9d5a6a2de2651abb941e24fd78496de24800aa652641114e",
+      "bytes": 3528
+    },
+    "signature-explorer-r1-browser.py": {
+      "sha256": "a457b830c3de2841122f2a58122fbd32de26aef47b9103bcdc90fdb296f04e80",
+      "bytes": 16659
+    },
+    "requirements.lock": {
+      "sha256": "77131b0576f84f61ecec600d899633ed1f721989791e76fdd824e4240b1575e0",
+      "bytes": 390
+    },
+    "PYTHON-WHEELS.json": {
+      "sha256": "d16166f5e0ad61340aa79b48f9346b3c1214d04f511deb817f47f1749e26711e",
+      "bytes": 2250
+    }
+  },
+  "wheels": {
+    "greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl": {
+      "sha256": "975736b002ed080d124cf81a79cb7e05cb26d6b3f5c7a7b651c0fcce70353aa1",
+      "bytes": 621404,
+      "name": "greenlet",
+      "version": "3.5.6"
+    },
+    "playwright-1.62.0-py3-none-manylinux1_x86_64.whl": {
+      "sha256": "ba33bae6a13b3d9d354c751cb618af357d20fe1d57767cbcce52079bbef17ad3",
+      "bytes": 47748926,
+      "name": "playwright",
+      "version": "1.62.0"
+    },
+    "pyee-13.0.1-py3-none-any.whl": {
+      "sha256": "af2f8fede4171ef667dfded53f96e2ed0d6e6bd7ee3bb46437f77e3b57689228",
+      "bytes": 15659,
+      "name": "pyee",
+      "version": "13.0.1"
+    },
+    "typing_extensions-4.16.0-py3-none-any.whl": {
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "bytes": 45571,
+      "name": "typing_extensions",
+      "version": "4.16.0"
+    }
+  },
+  "budget": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "timeout_seconds": 2700,
+    "disk_gib_budget": 30
+  },
+  "qa_counts": {
+    "backend": 43,
+    "http_smoke": 7,
+    "browser": 40,
+    "maps": 2,
+    "http_reset": 8
+  },
+  "no_production_or_jobs": true,
+  "chromium_path": "/mnt/apps/peticao-final/.tools/host-civo/playwright/chromium-1234/chrome-linux64/chrome",
+  "ports": {
+    "app": 3184,
+    "pg": 54524
+  },
+  "temporary_paths_short": {
+    "root": "/mnt/apps/peticao-final/.qt1",
+    "tmp": "/mnt/apps/peticao-final/.qt1/t",
+    "profile_home": "/mnt/apps/peticao-final/.qt1/e"
+  }
+}

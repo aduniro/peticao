@@ -1,0 +1,65 @@
+{
+  "at": "2026-11-15T04:16:52.720783+00:00",
+  "sender": "01a1d97c-5d7f-7a92-8cc5-798070a3d6e0",
+  "scope": "READ_ONLY_METADATA_ONLY; no tests/newappdelivery/currentprod verification",
+  "repo_common": "/mnt/apps/peticao-final/peticao/.git",
+  "worktree": "/mnt/apps/peticao-final/_ops/drafts/admin-query-r1-20261114",
+  "worktree_clean": true,
+  "head": "09d1d66d0e821e92d96bd83de70afdb832a31bc6",
+  "last_authorized_app_delivery_by_sender": "c472837fb5a4584d81f34c420f4de30989084f85",
+  "site_tree": "14409ebfce08daa337f6b2dfc392fe38b54ee86d",
+  "latest_global_or_production_not_verified": true,
+  "generic_repo_head_not_app_checkpoint": "6935056",
+  "package_lock_sha256": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
+  "pdfjs_assets_lock_sha256": "da3a1d711714a7684e702312087c02b080acdb2bfdc1212d8543b3f455343922",
+  "cache": "/home/barre/.cache/peticao-admin-deps-preview-v1/node_modules",
+  "cache_full_integrity_verified": false,
+  "six_reported_versions": {
+    "next": "14.2.35",
+    "typescript": "5.9.3",
+    "tsx": "4.23.15",
+    "esbuild": "0.28.2",
+    "embedded_postgres": "18.4.0-beta.17",
+    "pg": "8.23.1"
+  },
+  "source_archive": {
+    "path": "/mnt/apps/peticao-final/_ops/admin-v2-query-r1-20261114/retry-1/source-r1.tar.gz",
+    "bytes": 11959902,
+    "sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5"
+  },
+  "build_recipe": {
+    "path": "/mnt/apps/peticao-final/_ops/admin-v2-query-r1-20261114/retry-1/WORKLOAD-BUILD.json",
+    "sha256": "f0306df0fde38bbf467f4c5e2bec7070be4b9089525d1928a0d5c3e07e9e7af3"
+  },
+  "qa_recipe": {
+    "path": "/mnt/apps/peticao-final/_ops/admin-v2-query-r1-20261114/phase2/WORKLOAD-QA.json",
+    "sha256": "8edf5166eaabacb3eae4e5945bb96638d6076d6d344f842422e0d7cfe47ceb49"
+  },
+  "browser_harness": {
+    "path": "/mnt/apps/peticao-final/_ops/drafts/admin-query-r1-20261114/tools/admin-qa/signature-explorer-r1-browser.py",
+    "sha256": "6ab3f61322d29346e530be7491fe7b352a92fda0511fab842a4744e051895665"
+  },
+  "baseline_test_counts": {
+    "backend": 43,
+    "http": 7,
+    "browser": 40,
+    "reset_after_browser": 8,
+    "real_map_helper": 2
+  },
+  "qa_limits": "Browser success/error API mock; Leaflet/API22missinglocation notactualtiles/geocoding. PG18 export only matching18 client; SP17 seedisolated native-sp, neverproduction.",
+  "build_commands_metadata": [
+    "prepare-pdfjs-assets.mjs --offline --cache-dir ABS",
+    "node node_modules/typescript/bin/tsc --noEmit --incremental false",
+    "node node_modules/next/dist/bin/next build"
+  ],
+  "node": "20.19/20.20",
+  "pdfjs": "6.5.438",
+  "prior_resource_profile_not_measured_minimum": {
+    "cpu": 4,
+    "ram_gib": 8,
+    "disk_gib": 30,
+    "node_heap_mib": 3072,
+    "workers": 2
+  },
+  "requirements": "Freeze new paths/root/tmp/units/matrix/hash under new manifest. Source includes tools/preview forTSC. Cache full integrity revalidate. No credentials/dotfiles. env-i,noHOME/emptyconfigs,maildev,WA0,emptycron,PGloopback. No reuse shellR1/630/3151 forrealprofiles."
+}

@@ -1,0 +1,20 @@
+{
+  "actual_finding": "3151 transient unit collected between stop proof and storage cleanup; safe guard refused",
+  "decision": "Keep missing-unit refusal; retain private live IPC reference prospectively, release only after own retained storage verified",
+  "old_attempt": "Separate reviewed operator-only reconciliation; never retry3151 or adopt absence alone",
+  "rpc_architecture": "One-request entry default blocked; persistent worker broker still required. No readiness inferred from fixture or ABI shim.",
+  "tests": {
+    "total": 163,
+    "seconds": 10.472,
+    "result": "PASS",
+    "inherited": 144,
+    "new_ipc_lifetime_and_abi": 19,
+    "actual_systembus_calls": 0
+  },
+  "unfixed_gates": [
+    "Actual V4 host retention/isolation/cancel/cleanup",
+    "Persistent worker broker, transport/canonical dispatcher/token custody wiring",
+    "Real profiles/capacity/parallelism, all-worker fencing/promotion/recovery/Dell-off"
+  ],
+  "remote_effects_in_v4_preparation": false
+}

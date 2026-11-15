@@ -1,0 +1,35 @@
+[
+  {
+    "question": "Who implements retirement and broker?",
+    "decided_by": "Infra coordinator",
+    "decision": "Infra owns worker/broker/retire. Apoio prepares profiles, candidateCatalogV2 and one-slot consumer in isolated source; no modifying the other branch."
+  },
+  {
+    "question": "When may the next job use capacity?",
+    "decided_by": "Infra coordinator",
+    "decision": "Only after exact retained retirement ACK. Completed or uncertain/pending retirement retains the single slot."
+  },
+  {
+    "question": "Can actual profile commands use physical .runtime paths?",
+    "decision": "No: V4 masks that root. Plan logical managedStateDirectory relative paths and proposed immutable public toolchain, preserve physical project backing and namespace guards. Mapper/driver/tool installation still pending."
+  },
+  {
+    "question": "Does ArtifactStore attestation prove worker storage retained?",
+    "decision": "No. It attests local verified/fsynced artifact custody; storage_retained is asserted only in the separate bound worker retirement ACK."
+  },
+  {
+    "question": "Which source checkpoint is authorized?",
+    "decided_by": "Root",
+    "decision": "Reuse confirmed appc472/site14409/harness09d1 handoff, do not ask same confirmation or infer HEAD6935056/latestproduction. New packet needs own full-integrity/executable/profile proofs."
+  },
+  {
+    "question": "Is one slot global across all workers?",
+    "decided_by": "Infra coordinator",
+    "decision": "One slot per node. Mandatory paired guard in same DB/transaction across legacy dispatcher and remote consumer. Missing schema/review/guard blocks rollout. Independent Akamai and Civo may each have one."
+  },
+  {
+    "question": "How recover a lost retirement mutation reply?",
+    "decided_by": "Infra coordinator",
+    "decision": "Separate authenticated retirement observation with same bindings may read retained receipt or return uncertain/no_replay, never repeat mutation or cleanup. Interface still pending freeze."
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "tests": 163,
+  "seconds": 10.472,
+  "result": "PASS_LOCAL_ONLY",
+  "inherited": 144,
+  "new_unit_reference_lifetime_and_native_abi_shim": 19,
+  "targeted_first_mock_failure": "Mock.assert_held prefix protected; corrected explicit mock spec, first errorlog preserved",
+  "native_abi": "Compiled local socketpair shim, NOT SystemBus; Root current user is not elevated by Python mock",
+  "compiler_containment": "Final -pipe and TMPDIR set to private project fixture",
+  "actual_systembus_qualification": false,
+  "persistent_worker_broker_qualified": false,
+  "normal_collected_cleanup_allowed": false,
+  "old3151": "Failed; operator reconciliation3169 succeeded separately, no retrospective pass"
+}
