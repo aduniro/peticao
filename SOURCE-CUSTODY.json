@@ -1,0 +1,54 @@
+{
+  "upstream_notices": [
+    3051,
+    3097
+  ],
+  "files": [
+    {
+      "file": "runtime/coordinator.py",
+      "upstream": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-authority-guard-overlay-20261114/runtime/coordinator.py",
+      "sha256": "c44a6ff2a03f6a8700ba29b91a4fcdc30f3acc01c7ab517aea048a5e8659b28f"
+    },
+    {
+      "file": "runtime/dashboard.py",
+      "upstream": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-authority-guard-overlay-20261114/runtime/dashboard.py",
+      "sha256": "dd5141f36988e5d9ad85fc9edbcb44b2b79e3004671366a7b997e5e65243897c"
+    },
+    {
+      "file": "runtime/standby_guard.py",
+      "upstream": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-authority-guard-overlay-20261114/runtime/standby_guard.py",
+      "sha256": "731e2ccec8e05e45f5287d66017b4aacdfecf630cd6ca366d93717d855c6a997"
+    },
+    {
+      "file": "runtime/runtime_profile.py",
+      "upstream": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-authority-guard-overlay-20261114/runtime/runtime_profile.py",
+      "sha256": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8"
+    },
+    {
+      "file": "runtime/fence_primary.py",
+      "upstream": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-authority-guard-overlay-20261114/runtime/fence_primary.py",
+      "sha256": "d4407bce9a4a69ce3e1a25fcae4c460feb088b4ba58f3d92cbb796b99a1bad55"
+    },
+    {
+      "file": "runtime/remote_contract.py",
+      "upstream": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/authority-owner-preservation/source/remote_contract.py",
+      "sha256": "e2c9a865a7a39a64fd6c68f607ba5e999e4dd7f526ed078aa1feb2cf2a0ec87c"
+    },
+    {
+      "file": "runtime/authority_guard.py",
+      "upstream": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/authority-owner-preservation/source/authority_guard.py",
+      "sha256": "d6170f6ad3e6ce100d1cd263f541e313f8261b5378d7be2329c7eecbe21162e1"
+    },
+    {
+      "file": "runtime/recovery.py",
+      "upstream": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/authority-owner-preservation/source/recovery.py",
+      "sha256": "a6c37ad08956e814468c3a11076bdbdde8d4adeab0ac6205c7d5176ddae77d16"
+    },
+    {
+      "file": "runtime/atomic_metadata.py",
+      "upstream": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/authority-owner-preservation/source/atomic_metadata.py",
+      "sha256": "7db1ffb1a42124c7bea6bdecebacbf015737fb017510c42ca66daf5e670d3cd2"
+    }
+  ],
+  "live_changes": false
+}

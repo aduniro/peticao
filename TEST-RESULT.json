@@ -1,0 +1,24 @@
+{
+  "local_tests": 27,
+  "passed": true,
+  "seconds": 0.008,
+  "ast_files": [
+    "headroom.py",
+    "test_topology.py",
+    "test_gateway_routing.py",
+    "runtime/atomic_metadata.py",
+    "runtime/runtime_profile.py",
+    "runtime/fence_primary.py",
+    "runtime/gateway.py",
+    "runtime/standby_guard.py",
+    "runtime/topology.py",
+    "runtime/coordinator.py",
+    "runtime/recovery.py",
+    "runtime/authority_guard.py",
+    "runtime/dashboard.py",
+    "runtime/replication_route.py",
+    "runtime/remote_contract.py"
+  ],
+  "native_services_tested": false,
+  "native_capacity_probe_only": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/evidence/civo-capacity-current-topology-ro-20261115/RESULT.json"
+}

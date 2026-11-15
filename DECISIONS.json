@@ -1,0 +1,21 @@
+{
+  "decisions": [
+    {
+      "question": "Does nominal32GiB permit24GiB job plus8GiB control?",
+      "answer": "No. Actual MemTotal32083320832; propose14CPU20GiB leaving9.88GiB total, still unqualified."
+    },
+    {
+      "question": "Where should development checkpoints go?",
+      "answer": "Santiago passive recovery. Do not reuse SP production target."
+    },
+    {
+      "question": "Should old gateway fence-info/replica-ingest be copied unchanged?",
+      "answer": "No. Deny until native epoch-bound provider qualifies."
+    },
+    {
+      "question": "Is this the full migration package?",
+      "answer": "No. Intermediate successor foundation. POLICY lists remaining work."
+    }
+  ],
+  "owner_question_required": false
+}

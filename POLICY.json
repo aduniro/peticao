@@ -1,0 +1,28 @@
+{
+  "status": "INTERMEDIATE_SOURCE_ONLY_NOT_DEPLOYABLE",
+  "parent_notices": [
+    3051,
+    3097
+  ],
+  "topology": "Civo development coordinator; Santiago passive recovery; Civo/Akamai workers",
+  "real_authority_changed": false,
+  "queue_cutover": false,
+  "global_b_qualified": false,
+  "native_recovery_provider_qualified": false,
+  "gateway_entry_enabled": false,
+  "replication_entry_enabled": false,
+  "prohibitions": [
+    "No production SP replica traffic",
+    "No new queue/voter",
+    "No floor rollback or fabricated primary",
+    "No activation from hostname/config alone"
+  ],
+  "remaining": [
+    "Integrate same-queue facade3233 and paired legacy guard",
+    "Add bounded RPC process output capture before enabling gateway",
+    "Implement native recovery/replica-ingest provider with epoch/custody/quota and no destructive retention",
+    "Freeze full B/successor runtime and real profile code closure",
+    "Reviewed root bootstrap/all-node fencing/transaction and fresh globalcode/deploy window",
+    "Real migration/recovery/failback/Dell-off qualification"
+  ]
+}

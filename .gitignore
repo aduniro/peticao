@@ -1,0 +1,7 @@
+.git/
+*.private.*
+*.private.json
+NORMAL-MANIFEST.json
+NOTICE-RECEIPT.json
+RELEASE.json
+__pycache__/
