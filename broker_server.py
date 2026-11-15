@@ -84,4 +84,3 @@ class Server:
                     # Root caller must observe the same durable job identity.
                     pass
         self.lifecycle.references.close()
-
