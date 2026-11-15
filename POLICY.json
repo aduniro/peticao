@@ -1,0 +1,35 @@
+{
+  "state": "SOURCE_ONLY_PERSISTENT_SUCCESSOR_NOT_INSTALLED",
+  "parent_notice": 3326,
+  "parent_review": "WITHHELD",
+  "parent_preserved": true,
+  "blockers_addressed": [
+    "B1 one-shot owning process exits on known uncertainty",
+    "B2 journal not anchored/reachable before unref"
+  ],
+  "persistent_owner": true,
+  "quarantine_readonly": true,
+  "one_shot_native_reference_acquisition_refused": true,
+  "journal_dirfd_and_lineage_anchored": true,
+  "held_receipt_reconfirmed_before_each_unref": true,
+  "native_fencing_qualified": false,
+  "global_fencing_complete": false,
+  "canonical_controller_wrapper_implemented": false,
+  "epoch_written": false,
+  "queue_promoted": false,
+  "host_writes": false,
+  "candidate_paths": {
+    "code": "/opt/peticao-dev-bootstrap-v2",
+    "policy": "/etc/peticao-dev-authority/source-fence-v2.json",
+    "runtime_metadata": "/run/peticao-dev-source-fence",
+    "private_project_state": "/mnt/apps/peticao-final/.runtime/peticao-dev-migration/<opid>"
+  },
+  "remaining": [
+    "Independent review of V2 changes and normal supersession of unexecuted3326",
+    "Canonical operator wrapper fresh own lease/manifest/window bound before every SSH",
+    "Review/install transaction and precreated private operation root",
+    "Actual native persistent-owner/fencing qualification; local fake references are not host proof",
+    "All-node launcher/admission guard/current topology/snapshot/epoch/target promotion",
+    "Real queue/runtime/profile/recovery/failback/Dell-off qualification"
+  ]
+}

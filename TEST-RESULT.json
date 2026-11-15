@@ -1,0 +1,25 @@
+{
+  "state": "LOCAL_ONLY_PASS",
+  "tests": 44,
+  "seconds": 0.325,
+  "ast_files": [
+    "unit_refs.py",
+    "test_bootstrap_fencing.py",
+    "test_persistent_owner.py",
+    "fence_proxy.py",
+    "service_metadata.py",
+    "legacy_preflight_ro.py",
+    "legacy_cgroups.py",
+    "legacy_fence.py",
+    "fence_wire.py",
+    "operator_journal.py",
+    "cgroups.py",
+    "fence_server.py"
+  ],
+  "ResourceWarning": "error",
+  "real_local_process_socket_files": true,
+  "references_services_cgroups": "EXPLICITLY_FAKE_NOT_HOST_PROOF",
+  "native_qualified": false,
+  "core_sha256": "588c8aaed6a0c1e4a6cd7ffbb1f836ea0d5d62f14075457aa11fc37963c82cdc",
+  "log_sha256": "7e7b79b5b83398e967513901b4bf0060d2e286ae22391032562fcbbd7251e268"
+}

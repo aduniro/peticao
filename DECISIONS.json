@@ -1,0 +1,22 @@
+{
+  "decisions": [
+    {
+      "question": "Uma CLI que falha pode continuar sendo dona segura de RefUnit?",
+      "answer": "Não. A CLI não adquire; um processo persistente Root conserva bus e serve observações em quarentena."
+    },
+    {
+      "question": "Reiniciar dono após intenção interrompida readquire as referências?",
+      "answer": "Não. Startup com intenção existente é somente leitura, sem rearm/replay."
+    },
+    {
+      "question": "FD sozinho garante que o recibo fica disponível no caminho canônico?",
+      "answer": "Não. Ancorar linhagem e confirmar caminho/SHA do held antes de cadaUnref."
+    },
+    {
+      "question": "Uma falha de metadados permite stop/Unref repetidos?",
+      "answer": "Não. Preservar contexto, referências e incerteza para reconciliação."
+    }
+  ],
+  "questions_for_owner": [],
+  "parent3326_executed": false
+}

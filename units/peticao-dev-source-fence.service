@@ -1,0 +1,31 @@
+[Unit]
+Description=Peticao development source fencing reference owner
+After=dbus.service
+Requires=dbus.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/python3 -I -B /opt/peticao-dev-bootstrap-v2/fence_server.py
+Restart=no
+RuntimeDirectory=peticao-dev-source-fence
+RuntimeDirectoryMode=0700
+UMask=0077
+StandardInput=null
+StandardOutput=journal
+StandardError=journal
+Environment=PATH=/usr/bin:/bin LANG=C.UTF-8
+UnsetEnvironment=LD_PRELOAD LD_LIBRARY_PATH PYTHONPATH PYTHONHOME
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_UNIX
+MemoryMax=256M
+TasksMax=32
+KillMode=process
+TimeoutStopSec=infinity
+SendSIGKILL=no
+
+# Keep PID1's mount/filesystem view: this is a root management service, never a
+# workload sandbox. Do not enable PrivateTmp/ProtectSystem mount namespaces.
+# SIGTERM is refused while references are held/uncertain; never force-kill or
+# restart this owner to clear an operation. Reconcile under a new reviewed gate.

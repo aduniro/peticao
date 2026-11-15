@@ -1,0 +1,10 @@
+{
+  "notice": 3326,
+  "commit": "237da392456928a11a64a21252cc50e31b60cb5c",
+  "state": "WITHHELD_NOT_EXECUTED",
+  "blockers": [
+    "one-shot process exit loses held/uncertain references",
+    "journal path/identity not pinned through unref"
+  ],
+  "parent_preserved": true
+}
