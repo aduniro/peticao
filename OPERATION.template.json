@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "operation_id": "854055fbc9174e158329914a16584cc1",
+  "jobs": {
+    "success": "28800cb6b07f42319a628f62ac60efb3",
+    "failure": "877c55da8c154150a01b24c677c965f6",
+    "cancellation": "460f40bd92f24c95b81d9c4a1e4be5e3"
+  },
+  "runtime_commit": "7f5144749bd423b89649d77c6307b40774a125c1",
+  "runtime_sha256": {
+    "remote_contract.py": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+    "admission.py": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+    "artifacts.py": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+    "worker.py": "a16bef2e64fe514caa3065f1d18faee26c2263a6e18d95d543e237d667b5618c",
+    "controller.py": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+    "systemd_adapter.py": "a1df3a27875668311b34ead3a1c0245ba824d7b57150cd7007bc03f9547043b8",
+    "log_redaction.py": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+    "cgroups.py": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce",
+    "project_storage.py": "c8d9f98a4d62cf8d0567be318c11c8e3c7952abcc1ab9ed9da452b0c4f82e769"
+  },
+  "harness_sha256": {
+    "qualification_contract.py": "84d451f17d6350876422a2c720acfc2631537cada1e9ac7261ec255df02d6d24",
+    "qualification_job.py": "039fa2ac263fe3376656e8aba0079753e87712e891479a7f83815d6dd9d84993",
+    "qualification_helper.py": "c4255f94994b00aeab2007282bc06a6e1335d49067eabac29bd6fa58ab10e175",
+    "storage_probe.py": "b4b158bd57ab6d171037346b1926d5409ae4d2f04546ad56eeff17cb8c81117d"
+  },
+  "execute": false,
+  "systemd_major": 255,
+  "systemd_version_sha256": "cf7dc29fdb4b56cfd2f816bef4e11c0ac1834630ce29aa4b75b00ae9ac1b1a76"
+}

@@ -1,0 +1,25 @@
+[
+  {
+    "question": "Where can private job state and temporary data be stored?",
+    "decided_by": "Infra coordinator and Root review",
+    "decision": "Only beneath project .runtime in a new private attempt2, with reviewed ProjectStorage lifecycle. Existing shared parent permissions are preserved; code remains public under exact /opt attempt2."
+  },
+  {
+    "question": "How demonstrate no host temporary directory creation by the three units?",
+    "decision": "Exact reviewed systemd255 version pin, host namespace and root/tmp view dev/inode equality to PID1, read-only inotify before start through final scan and second drain; any uncertainty fails."
+  },
+  {
+    "question": "Who controls execution?",
+    "decided_by": "Infra coordinator",
+    "decision": "Canonical PREPARO to Root review, then separate NEW Infra TEST notice to independent Apoio review and own Infra execution capability. No new coordinator or Owner question."
+  },
+  {
+    "question": "How handle lost responses or uncertain cleanup?",
+    "decision": "Persist exclusive intents, observe identical IDs; never replay start/mount/unmount or infer success from absence. Retain evidence and reconcile uncertain state."
+  },
+  {
+    "question": "Which IDs will the actual operation use?",
+    "decided_by": "Infra coordinator",
+    "decision": "Only fresh IDs from Infra operation packet after source freeze and review; template remains execute=false."
+  }
+]

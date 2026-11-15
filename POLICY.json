@@ -1,0 +1,31 @@
+{
+  "status": "PREPARATION_ONLY_NOT_EXECUTED",
+  "runtime_freeze": {
+    "notice": 3116,
+    "commit": "7f5144749bd423b89649d77c6307b40774a125c1",
+    "independent_tests": 144,
+    "independent_ack": 3126,
+    "modules": 9
+  },
+  "remote_calls": 0,
+  "real_units_started": 0,
+  "code_destination": "/opt/peticao-dev-worker-qual-20261114-attempt2",
+  "private_destination": "/mnt/apps/peticao-final/.runtime/civo-worker-runtime-qual-20261114-attempt2",
+  "shared_parent_permissions_changed": false,
+  "queue_cutover": false,
+  "production_access": false,
+  "future_execution_resource": "deploy:civo-worker-runtime-qualification",
+  "future_operation": "test",
+  "future_manifest_author": "admin-recuperacao / Infra session",
+  "future_independent_ack": "apoio",
+  "own_capability_session": "01a1d130-2948-7140-bcfb-34696b20ab8d",
+  "template_ids_for_execution": false,
+  "future_execution_requires": [
+    "Root source preparation ACK",
+    "NEW Infra execution notice and independent Apoio ACK",
+    "own active Infra session lease bound to exact notice/resource/budget",
+    "exact255 stdout pin plus manager namespace/root view and host inotify proof",
+    "physical project backing evidence and explicit retained cleanup receipt",
+    "Root informed; only three synthetic jobs; no cutover or production changes"
+  ]
+}
