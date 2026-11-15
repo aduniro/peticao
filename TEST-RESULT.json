@@ -1,0 +1,19 @@
+{
+  "global_qualified": false,
+  "host_executed": false,
+  "independent_review_blockers": 0,
+  "independent_review_seconds": 0.205,
+  "independent_review_tests": 51,
+  "log_path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-broker-qualification-a-20261115/test-state/harness-tests.log",
+  "log_sha256": "df23128869e3291556f5ef0ccd7e78d1a772454fb16a4ee317a929b1c029540c",
+  "native_bus_executed": false,
+  "resource_warnings_as_errors": true,
+  "seconds": 0.196,
+  "state": "LOCAL_HARNESS_REGRESSIONS_PASS",
+  "tests": 51,
+  "upstream_broker_v3_independent_log_path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-broker-v3-review/LIFECYCLE-INTEGRATION-TESTS.log",
+  "upstream_broker_v3_review_notice": 3237,
+  "upstream_broker_v3_review_seconds": 2.629,
+  "upstream_broker_v3_review_tests": 35,
+  "upstream_broker_v3_unchanged30_not_rerun": true
+}

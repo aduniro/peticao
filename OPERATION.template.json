@@ -1,0 +1,42 @@
+{
+  "broker_commit": "0676c096561a51266fd2ece7ff538afadddc6d7e",
+  "broker_sha256": {
+    "broker_entry.py": "c6394ac6b4f5f7d07a6bd5bdbf9c375c5ed09df6e1a037cb584860b898763ebd",
+    "broker_lifecycle.py": "f98f5f8a84d2f3f2ca849f8ea86f838a82e0776e539e528225651612f80d8b4f",
+    "broker_proxy.py": "526ab0eb2687e6046109211ffc7a8249544d635c68d13cb4c752aee0b628b767",
+    "broker_server.py": "86c9cd940b6e186f53e55cfd54067786df61d85d98d7d35cc5b0800b56d12e0a",
+    "broker_wire.py": "9d647440a4d45f44d44c6520830a4565b7bfccb8939e6b61a1f2895b42ff2e47"
+  },
+  "execute": false,
+  "harness_sha256": {
+    "broker_a_server.py": "7ee4b1288ffe91ee45736b124caeeacf0508d981919600f46f8a911adb6d295e",
+    "fixture_core.py": "b533ba02843df99ba2543c06575ffde33ca42670c1f7127b2647d8971aabd79e",
+    "qualification_contract.py": "eb7879867b122e5a439b77fed4eab94c54788a50dac34607e322132b739b5ff0",
+    "qualification_helper.py": "7604980996952f13122fce749d607c37bb1c31b8636bc5815a873fd956e0cb44",
+    "qualification_job.py": "981aa6c3a73ec3840699649df456146a3f98be70bfda5cefeb9e2edc8e47a41f",
+    "storage_probe.py": "b4b158bd57ab6d171037346b1926d5409ae4d2f04546ad56eeff17cb8c81117d"
+  },
+  "jobs": {
+    "cancellation": "0874bbe381c74f0f9fd33aab981ab11e",
+    "failure": "3ff911771b46465689d115a71b173150",
+    "success": "7b1e819fcf4e47a7a038d1ce5fc00171"
+  },
+  "operation_id": "7927fa8ab9224e73b90b640aaa16f3ab",
+  "prestart_job_id": "e6b0a0699cb24dcfaf216b4c1a30bfcc",
+  "runtime_commit": "4e15b7e5d069272a82aaf15bdb192e400e891f95",
+  "runtime_sha256": {
+    "admission.py": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+    "artifacts.py": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+    "cgroups.py": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce",
+    "controller.py": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+    "log_redaction.py": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+    "project_storage.py": "c8d9f98a4d62cf8d0567be318c11c8e3c7952abcc1ab9ed9da452b0c4f82e769",
+    "remote_contract.py": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+    "systemd_adapter.py": "1e85587ed1b41a877eb0e5383b68de3e4e12e9f66b4c3bae5dd66aad3a423346",
+    "unit_refs.py": "ee4a9145f0443a56ab769b709facc6a7fcc3e029bf9c778a92a7e1cb1ab02b1f",
+    "worker.py": "a16bef2e64fe514caa3065f1d18faee26c2263a6e18d95d543e237d667b5618c"
+  },
+  "systemd_major": 255,
+  "systemd_version_sha256": "cf7dc29fdb4b56cfd2f816bef4e11c0ac1834630ce29aa4b75b00ae9ac1b1a76",
+  "version": 1
+}

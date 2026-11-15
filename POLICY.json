@@ -1,0 +1,17 @@
+{
+  "global_qualified": false,
+  "held_reference_io_failure_qualified": false,
+  "host_qualified": false,
+  "infra_own_lease_required": true,
+  "new_test_notice_required": true,
+  "phase": "isolated-A",
+  "phase_b_requires_separate_real_floor_and_global_qualification": true,
+  "private_runtime_path": "/mnt/apps/peticao-final/.runtime/civo-worker-broker-qual-20261115-attempt1",
+  "production_access": false,
+  "public_code_path": "/opt/peticao-dev-worker-broker-qual-20261115-attempt1",
+  "real_profiles_qualified": false,
+  "root_window_required": true,
+  "schema_scope": "private synthetic fixture only",
+  "socket_path": "/run/peticao-dev-worker-broker-qual-20261115-attempt1/worker.sock",
+  "source_only": true
+}

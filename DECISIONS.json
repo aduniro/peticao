@@ -1,0 +1,16 @@
+{
+  "coordinator": "infra-admin-recuperacao",
+  "support_actor": "apoio",
+  "decisions": [
+    {"question":"A pode instalar entry global usando primary ou qualificação sintética?","decision":"Não. A usa caminhos isolados e classes congeladas diretamente. B é separada e exige floor real autorizado."},
+    {"question":"Quarentena exige fechar bus com refs held?","decision":"Não nesta fase. Fechar somente após retained e zero refs da segunda encarnação; declarar explicitamente que não qualifica I/O com refs held."},
+    {"question":"Como tratar resposta de retire perdida?","decision":"Enviar uma única vez; depois somente retirement de leitura, com binding/boot/receipt/bundle/custody exatos."},
+    {"question":"Como testar startup negativo?","decision":"Cópia exclusiva do journal sintético, sem modificar floor e sem listener ou rearmar Ref."},
+    {"question":"Qual fronteira entre as frentes?","decision":"Infra cliente/Gate/instalador; Apoio contrato/core/helper/server. Contrato congelado primeiro; nenhum host no preparo."},
+    {"question":"Ausência de receipt permite cleanup?","decision":"Não se há intent de processo. Preservar como incerto e exigir reconciliação separada."}
+  ],
+  "owner_questions_required": false,
+  "preparation_only": true,
+  "host_execution_authorized_by_this_file": false,
+  "global_phase_b_authorized": false
+}
