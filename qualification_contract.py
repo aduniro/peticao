@@ -72,15 +72,24 @@ def accept_results(values):
         raise ValueError("complete_three_path_results_required")
     for name, expected in (("success", "completed"), ("failure", "failed"), ("cancellation", "canceled")):
         value = values[name]
+        required = {"state", "exit_code", "invocation_id", "unit_stopped", "cgroup_empty", "isolation", "artifact_verified",
+                    "receipt_sha256", "state_directory_persisted", "cgroup_pids_before_stop"}
+        if type(value) is not dict or set(value) != required:
+            raise ValueError("exact_verified_path_result_required")
         if value.get("state") != expected or value.get("unit_stopped") is not True or value.get("cgroup_empty") is not True:
             raise PermissionError("fixture_outcome_or_quiescence_not_verified")
         hex_value(value.get("invocation_id"), 32)
+        hex_value(value.get("receipt_sha256"), 64)
+        if value["artifact_verified"] is not True:
+            raise PermissionError("verified_artifact_custody_required")
         if name == "success" and (type(value.get("exit_code")) is not int or value.get("exit_code") != 0):
             raise PermissionError("success_exit0_required")
         if name == "failure" and (type(value.get("exit_code")) is not int or value.get("exit_code") != 7):
             raise PermissionError("failure_exit7_required")
         if name == "cancellation" and value.get("exit_code") is not None and type(value.get("exit_code")) is not int:
             raise PermissionError("cancel_requires_bound_stop_not_fabricated_exit")
+        if value["exit_code"] is not None and not 0 <= value["exit_code"] <= 255:
+            raise PermissionError("bounded_actual_exit_status_required")
         if name == "cancellation" and (type(value.get("cgroup_pids_before_stop")) is not int or value["cgroup_pids_before_stop"] < 2):
             raise PermissionError("cancel_must_prove_child_in_same_cgroup")
         if value.get("state_directory_persisted") is not True:

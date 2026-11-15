@@ -17,7 +17,7 @@
     "worker.py": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   "harness_sha256": {
-    "qualification_contract.py": "d4a8790844bd3661aa6260def1182c01c567a052ad1aea1a4dbecc9161f3d81b",
+    "qualification_contract.py": "4382c9f904ba0d1ca02c3322aa1de31f0eb8a5e64e72e2dcea22a07c382995f7",
     "qualification_helper.py": "cbc14bf3cd0396985705176d821336af443ff7a822b6e6cacf6e76078372112d",
     "qualification_job.py": "732e918544fe3f2ab2499909b214d6f22888f335096468cace351c2c9e15adbd"
   },

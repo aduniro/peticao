@@ -24,6 +24,7 @@ def operation(execute=False):
 def outcomes():
     return {name:{"state":state,"exit_code":code,"invocation_id":str(i)*32,"unit_stopped":True,"cgroup_empty":True,
                   "cgroup_pids_before_stop":2 if name=="cancellation" else 0,"state_directory_persisted":True,
+                  "artifact_verified":True,"receipt_sha256":"a"*64,
                   "isolation":{key:True for key in q.CHECKS}}
             for i,(name,state,code) in enumerate((("success","completed",0),("failure","failed",7),("cancellation","canceled",None)),1)}
 
