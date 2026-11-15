@@ -1,21 +1,21 @@
 """SOURCE ONLY: single-queue admission/read facade; no transport or launcher.
 
 Public RPC cannot dispatch, complete jobs, accept artifacts or read envelopes.
-Legacy log redaction is best effort, NOT a secrecy boundary: arbitrary byte
-offsets can omit a credential prefix. Log exposure needs qualification before
+Known credential spans are masked in the bounded full log before byte slicing.
+This does not detect arbitrary secrets. Log exposure needs qualification before
 deployment; never put log contents into tool context or review reports.
 Installation, catalog qualification and executor fencing remain separate gates.
 """
 import contextlib
 import json
-import os
 from pathlib import Path
 import re
 import sqlite3
-import stat
 
 import authority_guard
 import coordinator as legacy
+import log_redaction
+import log_access
 import remote_contract as contract
 
 
@@ -184,7 +184,7 @@ class Facade:
         if set(request) - {"action", "id", "offset", "metadata_only"} or "id" not in request:
             raise ValueError("exact_log_fields_required")
         job = contract.hex_value(request["id"], 32)
-        offset = self.number(request.get("offset"), 0, 2**63-1)
+        offset = self.number(request.get("offset"), 0, log_redaction.MAX_LOG)
         if type(request.get("metadata_only", False)) is not bool:
             raise ValueError("boolean_metadata_only_required")
         with self.connect() as db:
@@ -206,30 +206,7 @@ class Facade:
             return {"id": job, "offset": answer["offset"], "output": legacy.sanitize(answer["output"]), "available": True}
         if self.worker_root is None:
             return empty
-        path = self.worker_root.absolute() / "jobs" / job / "output.log"
-        # Walk with dirfds and O_NOFOLLOW; do not follow replaced parent links.
-        directory = os.open("/", os.O_RDONLY | os.O_DIRECTORY)
-        try:
-            for part in path.parts[1:-1]:
-                following = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory)
-                os.close(directory)
-                directory = following
-                info = os.fstat(directory)
-                if info.st_uid not in {0, os.geteuid()} or info.st_mode & 0o002:
-                    raise PermissionError("trusted_log_parent_required")
-            fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
-            try:
-                info = os.fstat(fd)
-                if not stat.S_ISREG(info.st_mode) or info.st_uid not in {0, os.geteuid()} or info.st_nlink != 1 or info.st_mode & 0o007:
-                    raise PermissionError("private_regular_log_required")
-                content = os.pread(fd, 32768, offset)
-            finally:
-                os.close(fd)
-        except FileNotFoundError:
-            return empty
-        finally:
-            os.close(directory)
-        return {"id": job, "offset": offset + len(content), "output": legacy.sanitize(content.decode(errors="replace")), "available": True}
+        return log_access.read_log(self.worker_root, job, offset)
 
     def rpc(self, request):
         if type(request) is not dict or type(request.get("action")) is not str:

@@ -27,6 +27,8 @@ import time
 import uuid
 import runtime_profile
 import authority_guard
+import log_redaction
+import log_access
 
 ROOT = Path(os.environ.get("ADMIN_CLUSTER_ROOT", "/srv/admin-v2-coordinator"))
 WORKER = Path(os.environ.get("ADMIN_WORKER_ROOT", "/srv/admin-v2-worker"))
@@ -598,13 +600,7 @@ def rpc(data):
             if remote_job(row):
                 raise PermissionError("remote_logs_require_remote_backend")
         offset = max(0, int(data.get("offset", 0)))
-        path = WORKER / "jobs" / job / "output.log"
-        content = b""
-        if path.is_file():
-            with path.open("rb") as stream:
-                stream.seek(offset)
-                content = stream.read(32768)
-        return {"id": job, "offset": offset + len(content), "output": sanitize(content.decode(errors="replace"))}
+        return log_access.read_log(WORKER, job, offset)
     if action == "cancel":
         return cancel(data.get("id"))
     if action == "snapshot":

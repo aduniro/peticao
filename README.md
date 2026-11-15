@@ -61,14 +61,21 @@ offset=0); no adapter means unavailable. Invalid response fails closed. Historic
 remote logs after changed authority/catalog are unavailable pending a distinct
 reviewed historical-observation contract.
 
-IMPORTANT: redaction is BEST EFFORT, not a secrecy boundary. An arbitrary offset
-or block boundary can omit the credential prefix. A negative fictitious test
-records this limitation without printing the value. No live log contents belong
-in reports or tool context. Deployment must qualify the log exposure policy and
-ensure operational secrets/envelopes are never logged. The inherited prefix regex
+Known credential spans are now masked in BYTES across the complete private log
+(max10MiB) BEFORE slicing at an arbitrary offset into a max32768byte reply.
+The shared log_redaction.py is copied byte-for-byte from Infra642, source/hash
+recorded in SOURCE-CUSTODY.json. Both legacy RPC and Facade use the same private
+log_access.py dirfd reader. Known credentials crossing offsets/chunks stay masked;
+mask length preserves raw byte offsets. Remote Backend.logs must do this same
+whole-log masking on the worker; facade cannot reconstruct unseen remote prefixes.
+
+Pattern redaction still cannot detect arbitrary secrets. No live log contents
+belong in reports/tool context. Before deployment qualify access policy and ensure
+operational secrets/envelopes are never logged. The inherited text prefix regex
 also had quadratic work on long identifier lines; a negative identifier-boundary
 lookbehind fixes repeated restart while retaining credential families. The stalled
-fixture run and correction are preserved outside this source repository.
+fixture run, earlier offset weakness and correction remain recorded outside this
+source repo. Tests use fictitious credentials only, never printed as test output.
 
 ## Still required
 

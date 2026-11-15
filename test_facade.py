@@ -12,6 +12,7 @@ from unittest import mock
 
 import authority_guard as guard
 import coordinator as legacy
+import log_redaction
 import remote_contract as contract
 import rpc_facade as rpc
 
@@ -83,6 +84,27 @@ class FacadeTests(unittest.TestCase):
         self.assertNotIn("payload_sha256", json.loads(payload))
         self.assertEqual(manifest["payload_sha256"], sha)
         self.assertEqual(contract.digest(json.loads(payload)), sha)
+
+    def test_actual_claims_contract_reserves_same_existing_queue(self):
+        with sqlite3.connect(self.queue) as db:db.execute("DROP TABLE remote_execution_claims")
+        authority=contract.Authority(self.queue_root/"authority.json",lambda:self.boot,
+                                     contract.EpochGuard(self.floor,contract.private_file),"civo","a"*32)
+        claims=contract.Claims(self.queue,authority,{k:p["profile_sha256"] for k,p in self.catalog_value["profiles"].items()})
+        claims.install_schema(2)
+        self.facade.submit(self.request)
+        manifest=self.facade.manifest_for(self.request["id"])
+        # Fictitious fixed test token; no operational secret or backend launch.
+        self.assertTrue(claims.reserve(manifest,"b"*64))
+        self.assertFalse(claims.reserve(manifest,"b"*64))
+        with sqlite3.connect(self.queue) as db:
+            self.assertEqual(db.execute("SELECT state FROM jobs").fetchone()[0],"starting")
+            self.assertEqual(db.execute("SELECT count(*) FROM remote_execution_claims").fetchone()[0],1)
+            self.assertEqual(db.execute("SELECT count(*) FROM events").fetchone()[0],2)
+
+    def test_delivered_template_is_closed_for_every_node_profile(self):
+        value=rpc.Catalog(HERE/"catalog.template.json",lambda p:p).load()
+        self.assertTrue(all(n["qualified"] is False for n in value["nodes"].values()))
+        self.assertTrue(all(n["qualified"] is False for n in value["profiles"].values()))
 
     def test_duplicate_same_id_keeps_one_job_event(self):
         self.facade.submit(self.request)
@@ -219,7 +241,7 @@ class FacadeTests(unittest.TestCase):
         answer=self.facade.rpc({"action":"logs","id":job})
         self.assertEqual(answer["offset"],32768)
         self.assertNotIn("private-fixture",answer["output"])
-        self.assertIn("[REDACTED]",answer["output"])
+        self.assertIn("*",answer["output"])
         rest=self.facade.rpc({"action":"logs","id":job,"offset":32768})
         self.assertEqual(rest["offset"],len(b"API_KEY=private-fixture\n"+b"x"*40000))
         self.assertLessEqual(len(rest["output"].encode()),32768)
@@ -286,13 +308,29 @@ class FacadeTests(unittest.TestCase):
         with mock.patch.object(Path,"open",side_effect=AssertionError("no local log read")):
             with self.assertRaises(PermissionError):legacy.rpc({"action":"logs","id":job})
 
-    def test_log_redaction_is_not_a_secret_boundary_for_arbitrary_offsets(self):
-        # Negative evidence: preserve compatibility without claiming impossible
-        # secrecy from a prefix regex applied to a separately requested suffix.
+    def test_whole_log_masks_known_secret_before_arbitrary_offset(self):
         job=self.local();self.logfile(job,b"TOKEN=secret-fixture")
         answer=self.facade.rpc({"action":"logs","id":job,"offset":6})
-        self.assertEqual(answer["output"],"secret-fixture")
-        # The value stays within this fictitious test; never printed/exported.
+        self.assertEqual(answer["output"],"*"*14)
+        self.assertEqual(answer["offset"],20)
+
+    def test_whole_log_masks_prefix_before_chunk_boundary(self):
+        job=self.local();self.logfile(job,b"x"*32762+b" TOKEN="+b"private-fixture"*20)
+        answer=self.facade.rpc({"action":"logs","id":job,"offset":32768})
+        self.assertNotIn("private",answer["output"])
+        self.assertEqual(answer["output"][1:],"*"*(len(b"private-fixture"*20)))
+
+    def test_full_log_limit_and_slice_validation(self):
+        job=self.local();path=self.logfile(job,b"x")
+        with path.open("r+b") as stream:stream.truncate(log_redaction.MAX_LOG+1)
+        with self.assertRaises(ValueError):self.facade.rpc({"action":"logs","id":job})
+        for offset in (-1,True,log_redaction.MAX_LOG+1):
+            with self.assertRaises(ValueError):log_redaction.slice_log(b"",offset)
+
+    def test_legacy_direct_log_rpc_also_masks_before_byte_offset(self):
+        job=self.local();self.logfile(job,b"TOKEN=secret-fixture")
+        answer=legacy.rpc({"action":"logs","id":job,"offset":6})
+        self.assertEqual(answer["output"],"*"*14)
 
     def test_read_field_bounds_unknown_action_and_unknown_job(self):
         for request in ({"action":"finish"},{"action":"dispatch"},{"action":"cancel","id":"1"*32},{"action":"jobs","limit":True},{"action":"jobs","after_seq":-1},{"action":"jobs","payload":{}},{"action":"status","id":"1"*32},{"action":"logs","id":"1"*32}):

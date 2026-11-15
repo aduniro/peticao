@@ -15,7 +15,7 @@
     "authenticated transport and node/profile qualification",
     "real cancellation/artifact finalization and reconciliation",
     "shared admission lock: mutating RPC SH, fencing EX drain and persistent closed bound to epoch on ALL workers before inventory/stop/epoch switch; facade admission integration still unqualified",
-    "log exposure qualification: prefix redaction after arbitrary byte offset or block cut cannot guarantee no secrets; never include live logs in tool context or review reports"
+    "log exposure qualification: whole-log known-pattern byte masking now fixes arbitrary-offset/chunk prefix weakness; arbitrary secrets still not detectable, never include live logs in tool context/reports"
   ],
   "remote_historical_logs": "fail closed after authority epoch or catalog identity changes; separate historical observation protocol not implemented"
 }

@@ -16,5 +16,10 @@
   {
     "question": "How avoid old sanitizer quadratic matching on long identifier?",
     "decision": "Candidate negative identifier-boundary lookbehind avoids restarting greedy prefix at every character; same credential families. Local performance/regression tests only."
+  },
+  {
+    "question": "Credential prefix outside requested byte range?",
+    "decision_by": "Infra coordinator",
+    "decision": "Read private whole file bounded10MiB, mask known-pattern spans per byte using shared Infra642 log_redaction.py BEFORE max32KiB slicing; same byte offsets. Do not claim arbitrary secret detection."
   }
 ]
