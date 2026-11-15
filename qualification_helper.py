@@ -6,6 +6,7 @@ child, bounded by the same pins, exclusive start intent and execution lock.
 No mutation is retried after uncertain transport, process or storage outcomes.
 """
 import hashlib
+import base64
 import json
 import os
 from pathlib import Path
@@ -235,6 +236,29 @@ def all_retained(context,modules,core,request):
     return rows
 
 
+def log_probe(context, manifest):
+    answer=context['backend'].logs(manifest,0)
+    expected='synthetic namespace qualification; no credential values\n'
+    if (type(answer) is not dict or set(answer)!={'id','offset','output','available'} or answer['id']!=manifest['job_id']
+            or answer['available'] is not True or type(answer['offset']) is not int or answer['offset']!=len(expected.encode())
+            or answer['output']!=expected):raise PermissionError('actual_bounded_synthetic_log_required')
+    return {'available':True,'bytes':len(expected.encode()),'verified':True}
+
+
+def quarantine_proof(proof, identity, request):
+    if (type(proof) is not dict or q.canonical(proof.get('identity'))!=q.canonical(identity)
+            or proof.get('error_type')!='ReferenceUncertain' or proof.get('refsLostTrue') is not True
+            or type(proof.get('recordsCount')) is not int or proof['recordsCount']!=0
+            or proof.get('scope')!='closed_connection_after_release_no_held_reference_io_claim'):
+        raise PermissionError('actual_empty_reference_quarantine_required')
+    rows=proof.get('retained')
+    if type(rows) is not list or len(rows)!=3 or {r.get('job_id') for r in rows if type(r) is dict}!=set(request['jobs'].values()):
+        raise PermissionError('three_quarantine_retained_jobs_required')
+    if any(type(r) is not dict or set(r)!={'job_id','retained','mount_absent'} or r['retained']!='retained' or r['mount_absent'] is not True for r in rows):
+        raise PermissionError('actual_quarantine_retained_proofs_required')
+    return True
+
+
 def negative_startup(request,modules,core,context):
     """Mutate only a fresh COPY of this fixture journal, never the real floor."""
     path=q.PRIVATE/'negative-startup.sqlite'
@@ -293,9 +317,10 @@ def run(request,modules,core):
             before=core.wait_for(context,m,cancellation=name=='cancellation')
             pids=core.cgroup_pids(before['cgroup_path'],context['cgroups']) if name=='cancellation' else 0
             receipt,binding=core.assert_unit(modules,context,m)
+            logs=log_probe(context,m)
             exclusive(q.PRIVATE/(name+'-finish-intent.json'),{'cancel':name=='cancellation'})
             context['backend'].finish(m,cancel=name=='cancellation')
-            value=core.outcome(modules,context,m,expected);value['cgroup_pids_before_stop']=pids
+            value=core.outcome(modules,context,m,expected);value['cgroup_pids_before_stop']=pids;value['logs']=logs
             r=retirement_request(context,modules,m,token)
             exclusive(q.PRIVATE/(name+'-retire-intent.json'),{k:v for k,v in r.items() if k!='token'})
             if name=='success':
@@ -322,9 +347,17 @@ def run(request,modules,core):
             if saved['state']!='retained':raise PermissionError('restart_retirement_readback_failed')
         exclusive(q.PRIVATE/'quarantine-2.json',{'identity':identity2})
         proof=deadline(lambda:core.read_json(q.PRIVATE/'quarantine-proof-2.json') if (q.PRIVATE/'quarantine-proof-2.json').exists() else None)
-        if proof.get('identity')!=identity2:raise PermissionError('quarantine_identity_mismatch')
+        quarantine_proof(proof,identity2,request)
         for r in retirements.values():
             if readback(context,modules,r)['state']!='retained':raise PermissionError('quarantine_readback_failed')
+        # The sealed bundle remains available read-only after retention/quarantine.
+        for r in retirements.values():
+            reply=context['transport'].call('civo',{'action':'bundle','id':r['manifest']['job_id']})
+            if type(reply) is not dict or set(reply)!={'bundle_sha256','bundle_base64'} or reply['bundle_sha256']!=r['bundle_sha256']:
+                raise PermissionError('quarantine_bundle_identity_required')
+            encoded=reply['bundle_base64']
+            if type(encoded) is not str or len(encoded)>((modules['artifacts'].MAX_BYTES+2)//3)*4:raise PermissionError('bounded_quarantine_bundle_required')
+            if modules['artifacts'].sha(base64.b64decode(encoded,validate=True))!=r['bundle_sha256']:raise PermissionError('quarantine_sealed_bundle_changed')
         denied=0
         for action in ('prepare','start'):
             m=retirements['success']['manifest']
@@ -337,7 +370,7 @@ def run(request,modules,core):
         all_retained(context,modules,core,request)
         # Lost bus cannot drain normally. Only the verified own child with no
         # held refs is killed; no systemd unit/mount/retirement action is repeated.
-        if proof.get('refsLostTrue') is not True or proof.get('recordsCount')!=0 or not core.alive(identity2):
+        if not core.alive(identity2):
             raise PermissionError('quarantine_safe_stop_proof_required')
         os.kill(proc2.pid,signal.SIGKILL);proc2.wait(timeout=10)
         socket_info=q.SOCKET.lstat()
@@ -392,9 +425,7 @@ def validate_saved(request,modules,core,result):
     try:context['storage'].status(pre_manifest,pre_receipt)
     except FileNotFoundError:pass
     else:raise PermissionError('saved_prestart_storage_exists')
-    quarantine=result.get('quarantine',{})
-    if quarantine.get('refsLostTrue') is not True or type(quarantine.get('recordsCount')) is not int or quarantine['recordsCount']!=0:
-        raise PermissionError('native_quarantine_without_rearm_required')
+    quarantine_proof(result.get('quarantine'),core.read_json(q.PRIVATE/'ready-2.json')['identity'],request)
     tmp=result.get('tmp',{})
     if (tmp.get('matching_events')!=0 or tmp.get('matching_existing')!=0 or tmp.get('overflow') is not False
             or tmp.get('watch_lost') is not False or tmp.get('manager_namespace_verified') is not True):

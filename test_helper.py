@@ -108,6 +108,24 @@ class HelperTests(unittest.TestCase):
         with sqlite3.connect(original) as db:self.assertEqual(db.execute('SELECT state FROM receipts').fetchone()[0],'completed')
         self.assertNotEqual(journal.path,original)
 
+    def test_quarantine_proof_is_precise_and_scope_bound(self):
+        request={'jobs':{'success':'1'*32,'failure':'2'*32,'cancellation':'3'*32}};identity={'pid':42}
+        proof={'identity':identity,'error_type':'ReferenceUncertain','refsLostTrue':True,'recordsCount':0,'scope':'closed_connection_after_release_no_held_reference_io_claim','retained':[{'job_id':j,'retained':'retained','mount_absent':True} for j in request['jobs'].values()]}
+        self.assertTrue(h.quarantine_proof(proof,identity,request))
+        for field,value in [('recordsCount',False),('recordsCount',0.0),('refsLostTrue',1),('error_type','RuntimeError'),('scope','global'),('retained',[])]:
+            bad=copy.deepcopy(proof);bad[field]=value
+            with self.assertRaises(PermissionError):h.quarantine_proof(bad,identity,request)
+
+    def test_native_log_probe_rejects_wrong_job_offset_and_unavailable(self):
+        message='synthetic namespace qualification; no credential values\n'
+        answer={'id':'a'*32,'offset':len(message.encode()),'output':message,'available':True}
+        backend=SimpleNamespace(logs=mock.Mock(return_value=answer))
+        proof=h.log_probe({'backend':backend},{'job_id':'a'*32})
+        self.assertIs(proof['verified'],True);self.assertNotIn('output',proof)
+        for field,value in [('available',1),('available',False),('id','b'*32),('offset',True),('output','other')]:
+            backend.logs.return_value={**answer,field:value}
+            with self.assertRaises(PermissionError):h.log_probe({'backend':backend},{'job_id':'a'*32})
+
     def test_saved_result_requires_exact_scope(self):
         for r in ({},{'state':'NATIVE_BROKER_A_PASS','scope':'global','global_qualified':True}):
             with self.assertRaises(PermissionError):h.validate_saved({}, {},None,r)

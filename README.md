@@ -10,6 +10,7 @@ Infra é o coordenador. Infra fornece cliente, Gate e instalador; Apoio fornece 
 
 - Código público root: `/opt/peticao-dev-worker-broker-qual-20261115-attempt1`.
 - Estado sintético privado: `/mnt/apps/peticao-final/.runtime/civo-worker-broker-qual-20261115-attempt1`.
+- Metadata de intenção da instalação, root0600, decidido pela Infra e obrigatório no TEST/Gate: `/opt/.peticao-dev-worker-broker-qual-20261115-attempt1.install-intent.json`.
 - Socket privado: `/run/peticao-dev-worker-broker-qual-20261115-attempt1/worker.sock`.
 
 O instalador deve criar somente o destino exclusivo ausente. O pacote tem 23 arquivos: 10 módulos congelados em `runtime/`, 5 módulos congelados em `broker/`, 6 módulos de harness na raiz, `RUN-REQUEST.json` e `readonly-marker`. A marca pública contém exatamente `synthetic public readonly marker\n`. Código e marca devem ser root0644, diretórios públicos root0755. Estado e socketparent são root0700; socket root0600. Nenhum chown/chmod de ancestral compartilhado, serviço global ou unidade persistente é instalado pela fase A.
@@ -29,7 +30,7 @@ Preflight verifica versão exata do systemd255, namespace/montagens do PID1, aus
 5. Quarto job preparado e cancelado antes de start: sem unidade, binding, backing, bundle ou retirement.
 6. Encerrar normalmente a primeira encarnação somente após três refs released; startup real da segunda reconcilia quatro receipts sem rearmar refs antigas.
 7. Startup negativo usa uma cópia nova do journal sintético, alterando apenas uma linha para running. Abre um keeper nativo de prova separado, sem listener e sem Ref. Não restaura/rebaixa o floor real ou sintético.
-8. Fechar a conexão nativa da segunda encarnação somente quando não há refs held e todos os três backings/receipts estão retained. Provar loss/quarentena reais, duas recusas precisas RetirementUncertain e retirement somente leitura. **Não qualifica recuperação de I/O com referências held.**
+8. Fechar a conexão nativa da segunda encarnação somente quando não há refs held e todos os três backings/receipts estão retained. Provar loss/quarentena reais, duas recusas precisas RetirementUncertain, retirement e bundles selados somente leitura. Logs sintéticos são conferidos antes da retenção, exercitando as nove ações congeladas sem exportar seu texto. **Não qualifica recuperação de I/O com referências held.**
 9. Kernel EACCES para UID65534 no socket root-privado; nenhuma permissão é afrouxada para testar isso. Inotify do tmp do PID1 permanece sem arquivos/eventos da tentativa; serviços de baseline mantêm os mesmos PIDs/invocations.
 
 Após quarentena sem refs, o runner pode matar somente seu próprio PID2 vinculado por PID/start_ticks/boot e remover somente seu socket device/inode original. Se qualquer prova estiver ausente ou incerta, preserva processos/estado para reconciliação separada. Não mata unidades desconhecidas, não repete mount/unmount/retire e não reassume referências de processo morto.

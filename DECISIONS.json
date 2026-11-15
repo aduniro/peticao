@@ -1,16 +1,38 @@
 {
   "coordinator": "infra-admin-recuperacao",
-  "support_actor": "apoio",
   "decisions": [
-    {"question":"A pode instalar entry global usando primary ou qualificação sintética?","decision":"Não. A usa caminhos isolados e classes congeladas diretamente. B é separada e exige floor real autorizado."},
-    {"question":"Quarentena exige fechar bus com refs held?","decision":"Não nesta fase. Fechar somente após retained e zero refs da segunda encarnação; declarar explicitamente que não qualifica I/O com refs held."},
-    {"question":"Como tratar resposta de retire perdida?","decision":"Enviar uma única vez; depois somente retirement de leitura, com binding/boot/receipt/bundle/custody exatos."},
-    {"question":"Como testar startup negativo?","decision":"Cópia exclusiva do journal sintético, sem modificar floor e sem listener ou rearmar Ref."},
-    {"question":"Qual fronteira entre as frentes?","decision":"Infra cliente/Gate/instalador; Apoio contrato/core/helper/server. Contrato congelado primeiro; nenhum host no preparo."},
-    {"question":"Ausência de receipt permite cleanup?","decision":"Não se há intent de processo. Preservar como incerto e exigir reconciliação separada."}
+    {
+      "decision": "N\u00e3o. A usa caminhos isolados e classes congeladas diretamente. B \u00e9 separada e exige floor real autorizado.",
+      "question": "A pode instalar entry global usando primary ou qualifica\u00e7\u00e3o sint\u00e9tica?"
+    },
+    {
+      "decision": "N\u00e3o nesta fase. Fechar somente ap\u00f3s retained e zero refs da segunda encarna\u00e7\u00e3o; declarar explicitamente que n\u00e3o qualifica I/O com refs held.",
+      "question": "Quarentena exige fechar bus com refs held?"
+    },
+    {
+      "decision": "Enviar uma \u00fanica vez; depois somente retirement de leitura, com binding/boot/receipt/bundle/custody exatos.",
+      "question": "Como tratar resposta de retire perdida?"
+    },
+    {
+      "decision": "C\u00f3pia exclusiva do journal sint\u00e9tico, sem modificar floor e sem listener ou rearmar Ref.",
+      "question": "Como testar startup negativo?"
+    },
+    {
+      "decision": "Infra cliente/Gate/instalador; Apoio contrato/core/helper/server. Contrato congelado primeiro; nenhum host no preparo.",
+      "question": "Qual fronteira entre as frentes?"
+    },
+    {
+      "decision": "N\u00e3o se h\u00e1 intent de processo. Preservar como incerto e exigir reconcilia\u00e7\u00e3o separada.",
+      "question": "Aus\u00eancia de receipt permite cleanup?"
+    },
+    {
+      "decision": "Infra manteve /opt/.peticao-dev-worker-broker-qual-20261115-attempt1.install-intent.json root0600, exigindo esse caminho exato na opera\u00e7\u00e3o TEST e no Gate; dentro do \u00fanico recurso l\u00f3gico da qualifica\u00e7\u00e3o A. Nenhuma outra escrita em /opt \u00e9 abrangida.",
+      "question": "Onde persistir intent remoto antes da instala\u00e7\u00e3o exclusiva?"
+    }
   ],
+  "global_phase_b_authorized": false,
+  "host_execution_authorized_by_this_file": false,
   "owner_questions_required": false,
   "preparation_only": true,
-  "host_execution_authorized_by_this_file": false,
-  "global_phase_b_authorized": false
+  "support_actor": "apoio"
 }
