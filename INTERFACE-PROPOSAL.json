@@ -1,0 +1,178 @@
+{
+  "artifact_enforcement": {
+    "driver": "produce and validate only fixed sanitized receipts in artifacts/; no DB/source/browser profile/env dumps",
+    "runner_report_max_bytes": 1048576,
+    "runtime_identity_stop_custody_retirement": "driver never fabricates those proofs",
+    "runtime_successor_infra": "revalidate allowlist/regular-only/nlink/bytes and policy digest AFTER bound stop/cgroup drain, before bundle; reject all unexpected files"
+  },
+  "driver_cli": {
+    "allowed_names": [
+      "admin-build-v1",
+      "admin-qa-v1",
+      "admin-typecheck-v1"
+    ],
+    "arguments": [
+      "name enum only"
+    ],
+    "bootstrap": "driver source freezes a root policy SHA before importing verified helper closure; policy contains no program self hash",
+    "default_execute": false,
+    "env": "fresh fixed per-phase mapping; no inherited HOME/config/dotenv/secrets/cron/WA/real email",
+    "fixed_program": "/opt/peticao-dev-profile-tools-v1/driver.py",
+    "network": "offline except per-job loopback fixture PG/HTTP",
+    "proposed_interpreter_flags": [
+      "-I",
+      "-S",
+      "-B"
+    ],
+    "public_toolchain_root": "/opt/peticao-dev-profile-tools-v1",
+    "working_root": "current trusted StateDirectory namespace alias; all mutable descendants relative"
+  },
+  "installs_or_runs_host": false,
+  "operationalReady": false,
+  "pins_already_verified_static": {
+    "no_binary_executed": true,
+    "node_binary_sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+    "node_version": "20.19.2",
+    "original_cache_integrity_verified": false,
+    "postgres_bin_sha256": {
+      "initdb": "515186eed81a1f2741bdcbfeb080af093a59a27fb2896237b04dd6c48bae349d",
+      "pg_ctl": "6beab6014ea28dcc78b8c6a43ec9e3e20536e13a175d75151107410ac866c481",
+      "postgres": "de0a4a7646c51f032e0088ae6fe9d0833fa280b78d4455681574a32937b32838"
+    }
+  },
+  "qualified": false,
+  "remaining_gates": [
+    "exact Civo Python executable/stdlib or approved closure",
+    "Chromium exact executable+runtime closure",
+    "PG18 clients if required and dynamic libraries",
+    "dependency cache full integrity, not only6version labels",
+    "new driver/helper/bootstrap closure and input inventory",
+    "node capacity/pressure and budget acceptance",
+    "separate native profile qualification before qualified true"
+  ],
+  "resource_mapper_output": {
+    "CPUQuota": "cpu*100 percent",
+    "MemoryMax": "memory_bytes decimal",
+    "MemorySwapMax": "0",
+    "RuntimeMaxSec": "runtime_seconds decimal",
+    "TasksMax": "tasks_max decimal",
+    "TimeoutStopSec": "stop_seconds decimal",
+    "fixed_isolation_properties": "preserve approved V4 systemd sandbox; successor Infra owns validation",
+    "heavy_candidate_note": "Root observed MemTotal about29.9GiB;24GiB+8GiB target cannot be assumed available; deny admission if measured headroom insufficient",
+    "no_disk_quota_claim": "disk budget needs separate root capacity/enforcement assessment; no invented systemd DiskMax"
+  },
+  "resource_plans": {
+    "balanced-v1": {
+      "admission": {
+        "control_cpu_target": 2,
+        "control_memory_target_bytes": 8589934592,
+        "headroom_guaranteed": false,
+        "requires_fresh_host_pressure_and_capacity": true,
+        "rounded_marketing_ram_not_authoritative": true
+      },
+      "cpu": 4,
+      "disk_budget_bytes": 32212254720,
+      "disk_budget_is_hard_quota": false,
+      "measured_minimum": false,
+      "memory_bytes": 8589934592,
+      "node_heap_mib": 3072,
+      "runtime_seconds": 2700,
+      "stop_seconds": 30,
+      "tasks_max": 512,
+      "version": 1,
+      "workers": 2
+    },
+    "heavy-candidate-v1": {
+      "admission": {
+        "control_cpu_target": 2,
+        "control_memory_target_bytes": 8589934592,
+        "headroom_guaranteed": false,
+        "requires_fresh_host_pressure_and_capacity": true,
+        "rounded_marketing_ram_not_authoritative": true
+      },
+      "cpu": 14,
+      "disk_budget_bytes": 32212254720,
+      "disk_budget_is_hard_quota": false,
+      "measured_minimum": false,
+      "memory_bytes": 25769803776,
+      "node_heap_mib": 6144,
+      "runtime_seconds": 2700,
+      "stop_seconds": 30,
+      "tasks_max": 512,
+      "version": 1,
+      "workers": 2
+    }
+  },
+  "rpc_manifest_keys_unchanged": true,
+  "source_inputs": {
+    "app_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
+    "harness_commit": "09d1d66d0e821e92d96bd83de70afdb832a31bc6",
+    "not_latest_production_claim": true,
+    "site_tree": "14409ebfce08daa337f6b2dfc392fe38b54ee86d"
+  },
+  "state": "PROPOSED_INTERFACE_SOURCE_ONLY",
+  "version": 1,
+  "worker_descriptor_v2": {
+    "artifact_policy": {
+      "allowlist": [
+        "profile-result.json",
+        "integrity-proof.json",
+        "phase-results.json",
+        "sanitized-build.log",
+        "sanitized-qa-summary.json",
+        "process-drain-proof.json",
+        "network-denial-summary.json"
+      ],
+      "forbidden": [
+        "credentials",
+        "dotfiles",
+        "mail",
+        "whatsapp",
+        "cron",
+        "production_data",
+        "database_state",
+        "signer_exports",
+        "raw_browser_storage"
+      ],
+      "max_file_bytes": 16777216,
+      "max_files": 7,
+      "max_total_bytes": 33554432,
+      "regular_files_only": true,
+      "reject_symlinks_and_hardlinks": true,
+      "root": "artifacts",
+      "root_relative_to": "trusted_job_state_directory",
+      "sanitize_before_export": true,
+      "version": 1
+    },
+    "artifact_policy_sha256": "sha256(canonical artifact_policy below)",
+    "dependencies_sha256": "sha256(canonical sealed input/toolchain/provider document), never cache version labels",
+    "name_enum": [
+      "admin-build-v1",
+      "admin-qa-v1",
+      "admin-typecheck-v1"
+    ],
+    "plan_sha256": "sha256(canonical new profile PLAN), distinct from worker descriptor digest",
+    "profile_sha256_semantics": "sha256(canonical COMPLETE WorkerDescriptorV2), including resources and artifact_policy; unchanged existing manifest field",
+    "program": "/opt/peticao-dev-profile-tools-v1/driver.py",
+    "program_sha256": "sha256 of frozen generated driver bootstrap",
+    "python_path": "/opt/peticao-dev-profile-tools-v1/python312/bin/python3.12",
+    "python_sha256": "pending exact regular-file Civo executable pin; no local substitution",
+    "required_exact_keys": [
+      "version",
+      "name",
+      "program",
+      "program_sha256",
+      "python_path",
+      "python_sha256",
+      "source_sha256",
+      "dependencies_sha256",
+      "artifact_policy_sha256",
+      "plan_sha256",
+      "resources",
+      "artifact_policy"
+    ],
+    "resources_ref": "fixed plan chosen by root profile descriptor only; no job CPU/env/argv inputs",
+    "source_sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5",
+    "version": 2
+  }
+}
