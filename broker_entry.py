@@ -75,6 +75,9 @@ def validate(kind):
             or policy['status'] != 'QUALIFIED_BROKER' or policy['boot_id'] != boot
             or policy['host'] != socket.gethostname().split('.')[0]
             or evidence.get('status') != 'PASS' or evidence.get('boot_id') != boot
+            or type(evidence.get('qualification_manifest_event')) is not int
+            or evidence['qualification_manifest_event'] < 1
+            or evidence.get('real_broker_socket_ref_lifetime_test') is not True
             or evidence.get('host') != policy['host']
             or hashlib.sha256(evidence_raw).hexdigest() != policy['evidence_sha256']
             or evidence.get('broker_code_sha256') != policy['code_sha256']

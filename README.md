@@ -1,4 +1,4 @@
-# Persistent worker broker - source candidate
+# Persistent worker broker V2 - source candidate
 
 No host installation, socket activation, unit, mount or cloud action was
 performed for this packet. Both policy/evidence templates reject execution.
@@ -96,3 +96,20 @@ Apoio owns the independent profiles/CatalogV2/same-queue consumer/pairedguard
 source. Guard must serialize local and remote admission in the SAME existing DB
 transaction per node. No public API, new queue/voter, production app/database,
 credential copy, GPU or new cloud purchase is introduced by this packet.
+
+## V2 correction after independent review
+
+Parent3213/5e94f6 is preserved and was NOT ACKed/deployed. Apoio independently
+passed its58 tests1.485s, then found that PASS status did not explicitly require
+qualification_manifest_event as exact int>0 and real_broker_socket_ref_lifetime_test
+as True. V2 adds those mandatory checks before runtime imports.18 entry tests
+PASS0.075s include two new negative-test methods with missing/null/false/0/bool,
+float/string and invalid-flag cases. Current positive fixtures explicitly name a
+SYNTHETIC event4242 and flagTrue; they do not assert actual broker qualification.
+
+42 unaffected tests are adopted from the parent's independent58 after byte
+identity verification; with18 current guards the distinct coverage is60. No full
+60-test execution is claimed by that sum. Runtime16 blobs and lifecycle/wire/
+proxy/server/units are unchanged. Candidate code policy pins were regenerated.
+The previous test logs and wrong-cwd recovery remain in the parent's private
+state, not copied or overwritten. New tests created no host/SystemBus/service.

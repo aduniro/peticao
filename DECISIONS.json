@@ -24,6 +24,10 @@
     {
       "question": "How to avoid conflict with Apoio consumer/perfil work?",
       "decision": "691 covers broker packet only. Apoio692 owns profile/CatalogV2/consumer/pairedguard in distinct source; current source is contract only until reviewed."
+    },
+    {
+      "question": "Independent review found PASS evidence lacking explicit real-broker qualification requirements",
+      "decision": "Preserve3213, create V2/own697; enforce positive integer event and explicit True host-ref/socket flag before imports. No ACK or host effect under oldsource."
     }
   ]
 }

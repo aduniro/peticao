@@ -12,12 +12,17 @@
   "automatic_retry": false,
   "platform_credentials_used": false,
   "new_worker_or_service_installed": false,
-  "lease_fence": 691,
+  "lease_fence": 697,
   "required_before_host_effects": [
     "Frozen source review and independent ACK",
     "New exact manifest operation with Root window and own valid capability",
     "Actual socket activation/root peer/namespace/singleton/native persistent references qualification",
     "Stop/retire/quarantine/restart/lost reply and baseline proofs",
     "Canonical pairedguard and qualified profile integration before rollout"
-  ]
+  ],
+  "parent_notice_blocked": 3213,
+  "required_real_broker_evidence": {
+    "qualification_manifest_event": "exact int > 0; bool rejected",
+    "real_broker_socket_ref_lifetime_test": "must be singleton True"
+  }
 }

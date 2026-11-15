@@ -1,0 +1,23 @@
+{
+  "parent_notice": 3213,
+  "parent_commit": "5e94f608038c39da4a6790090e2bc95458d4a084",
+  "parent_preserved": true,
+  "parent_ack_withheld": true,
+  "finding": "Broker evidence.statusPASS alone lacked mandatory positive integer qualification_manifest_event and explicit real_broker_socket_ref_lifetime_test isTrue",
+  "correction": "Both fields mandatory before own/runtime imports; booleans/floats/strings/null/missing/nonpositive events and nonTrue flag refused",
+  "current_entry_tests": 18,
+  "current_entry_seconds": 0.075,
+  "new_test_methods": 2,
+  "adopted_independent_parent_tests": 58,
+  "adopted_independent_parent_seconds": 1.485,
+  "unchanged_other_source_sha256": {
+    "broker_lifecycle.py": "0f86442e46f196d2257f34c11b16d267d2f9d487076eea20411b30369152f19d",
+    "broker_server.py": "86c9cd940b6e186f53e55cfd54067786df61d85d98d7d35cc5b0800b56d12e0a",
+    "broker_wire.py": "9d647440a4d45f44d44c6520830a4565b7bfccb8939e6b61a1f2895b42ff2e47",
+    "broker_proxy.py": "526ab0eb2687e6046109211ffc7a8249544d635c68d13cb4c752aee0b628b767",
+    "test_broker_lifecycle.py": "b8c9dc9d41fc1cc6cbc1bcd2bf37098342fde0c145a0bf4bc3e595eee5277952",
+    "test_broker_integration.py": "6d1e54a5eb4440c8332ce332904ef26ee108d7a1221d2bfce0e0cb7c6231dfca",
+    "test_broker_wire.py": "a66ab97023735fe87ce3465f564a61dcba24abf5ead733ded505d4794b291f1a"
+  },
+  "host_effects": false
+}

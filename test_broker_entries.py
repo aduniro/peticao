@@ -26,7 +26,9 @@ class Entries(unittest.TestCase):
         self.runtime_pins = {k:hashlib.sha256(v).hexdigest() for k,v in self.runtime.items()}
         self.broker_evidence = {'status':'PASS', 'host':'peticao-civo', 'boot_id':self.boot,
                                 'broker_code_sha256':self.broker_pins,
-                                'runtime_code_sha256':dict(self.runtime_pins)}
+                                'runtime_code_sha256':dict(self.runtime_pins),
+                                'qualification_manifest_event':4242,
+                                'real_broker_socket_ref_lifetime_test':True}
         self.worker_profiles = {'fixture-pass':{'name':'fixture-pass'}}
         self.worker_evidence = {'status':'PASS', 'worker_id':'civo', 'boot_id':self.boot,
                                'runtime_code_sha256':dict(self.runtime_pins),
@@ -70,6 +72,20 @@ class Entries(unittest.TestCase):
     def test_missing_code_pin_refused(self):
         del self.broker_pins['broker_lifecycle.py']
         with self.assertRaises(PermissionError): self.validate()
+
+    def test_real_broker_qualification_requires_positive_integer_event(self):
+        for value in (None, False, True, 0, -1, 1.0, '4242'):
+            self.broker_evidence['qualification_manifest_event'] = value
+            with self.subTest(value=repr(value)), self.assertRaises(PermissionError): self.validate()
+        self.broker_evidence.pop('qualification_manifest_event')
+        with self.assertRaises(PermissionError):self.validate()
+
+    def test_pass_status_without_explicit_true_real_broker_test_refused(self):
+        for value in (None, False, 0, 1, 'true'):
+            self.broker_evidence['real_broker_socket_ref_lifetime_test'] = value
+            with self.subTest(value=repr(value)), self.assertRaises(PermissionError): self.validate()
+        self.broker_evidence.pop('real_broker_socket_ref_lifetime_test')
+        with self.assertRaises(PermissionError):self.validate()
 
     def test_reboot_unqualified_host_or_evidence_change_refused(self):
         for key, value in [('boot_id','another-boot'), ('status','NOT_QUALIFIED'), ('host','other-node'), ('evidence_sha256','f'*64)]:
