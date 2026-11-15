@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "status": "SOURCE_SUCCESSOR_DELTA_PASS_NOT_NATIVE",
+  "base": {
+    "commit": "32cce868127cb586cf5d314e429f0c3abbf0b6a5",
+    "notice": 3303,
+    "local_tests_passed": 198,
+    "seconds": 4.121,
+    "not_repeated": true
+  },
+  "delta": {
+    "command": "/usr/bin/python3 -B -m unittest test_namespace_alias test_driver_integration",
+    "cwd": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source",
+    "passed": 13,
+    "seconds": 0.102,
+    "new_unique_tests": 4,
+    "repeated_composition_tests": 9,
+    "scope": "fixed-path admission and static IPC arithmetic, real env-validator composition; no mounts/children/workload"
+  },
+  "unique_cases_base_plus_delta": 202,
+  "python_ast_pass": 27,
+  "qualified": false,
+  "operationalReady": false,
+  "runtime_v5_unchanged": true,
+  "native_alias_binding_required": true
+}

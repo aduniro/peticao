@@ -22,6 +22,7 @@ POLICY = TOOLS / 'driver-policy.json'
 SEALED_POLICY_SHA256 = '0' * 64
 POLICY_SHA256 = '0' * 64
 KINDS = frozenset({'admin-typecheck-v1', 'admin-build-v1', 'admin-qa-v1'})
+NAMESPACE_WORK_ALIAS = Path('/run/peticao-dev-work')
 LOAD_ORDER = ('artifact_policy', 'resource_plan', 'input_provider', 'process_runner',
               'qa_adapter', 'driver_contract', 'runtime_steps')
 
@@ -111,12 +112,24 @@ def _unique_pairs(rows):
     return value
 
 
+def approved_workdir(root):
+    """Fixed paths only; this is NOT proof of the runtime's backing mount.
+
+    The namespace-only short alias is usable solely with Infra's separately
+    qualified successor proving it binds the same own StateDirectory/project
+    inode inside a private /run. The driver never creates/chowns/mounts it.
+    """
+    root = Path(root)
+    if root == NAMESPACE_WORK_ALIAS:
+        return True
+    return root.parent in {Path('/var/lib'), Path('/var/lib/private')} and bool(
+        re.fullmatch('peticao-dev-job-[a-f0-9]{32}-g[1-9][0-9]*', root.name))
+
+
 def job_root():
     root = Path.cwd()
-    if os.geteuid() == 0 or root.parent not in {Path('/var/lib'), Path('/var/lib/private')}:
+    if os.geteuid() == 0 or not approved_workdir(root):
         raise PermissionError('dynamic_user_state_directory_required')
-    if not re.fullmatch('peticao-dev-job-[a-f0-9]{32}-g[1-9][0-9]*', root.name):
-        raise PermissionError('fixed_job_state_directory_required')
     info = root.lstat()
     if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700:
         raise PermissionError('private_owned_job_directory_required')

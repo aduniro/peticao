@@ -38,6 +38,10 @@
     {
       "question": "Should raw child logs be exported after pattern redaction?",
       "decision": "Export only constructed phase status lines. Raw private logs remain outside artifact allowlist."
+    },
+    {
+      "question": "How to resolve static Chromium IPC overflow without changing V5?",
+      "decision": "Infra selected successor-only fixed namespace alias /run/peticao-dev-work, private /run and SAME StateDirectory project backing. Driver V2 only admits that exact path and preserves relative environment. No mount/host/native qualification by this source delta."
     }
   ],
   "owner_questions_added": 0,

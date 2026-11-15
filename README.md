@@ -1,7 +1,7 @@
 # Perfis reais — preparação isolada, não qualificada
 
 Fonte de apoio do coordenador Infra, em:
-`/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-20261115/source`.
+`/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source`.
 
 Não modifica aplicação, produção, banco de assinaturas, autoridade/fila, autenticação,
 serviços ou infraestrutura contratada. Não instala o driver nem executa a aplicação.
@@ -85,7 +85,8 @@ Python/Chrome observados por RO719 não qualificam suas árvores ou o cache de o
 
 A previsão estática dos caminhos atuais do StateDirectory excede 108 bytes para o
 caminho conservador de IPC do Chromium. O gate recusa QA antes de lançar filhos.
-Nenhum alias ou bind foi adicionado; a decisão e qualificação pertencem à Infra.
+Nenhum alias ou bind foi instalado ou executado; a qualificação pertence à Infra.
+A aceitação em fonte do alias candidato está descrita na seção Sucessor V2.
 A evidência está em
 `/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-20261115/IPC-PATH-FORECAST.json`.
 
@@ -97,3 +98,21 @@ Somente testes do Supervisor usam processos Python triviais locais; helpers Node
 são verificados quanto a sintaxe/importação sem iniciar cargas. Não houve execução
 real de app, PostgreSQL, Chromium, systemd, Node de produção ou instalação de pacotes.
 Consulte `TEST-RESULT.json` e o manifesto final para contagem e versão exatas.
+
+## Sucessor V2: alias de trabalho aprovado pela Infra
+
+A fonte V1, commit `32cce868127cb586cf5d314e429f0c3abbf0b6a5` / aviso 3303,
+permanece intacta. Esta variante admite também o caminho fixo
+`/run/peticao-dev-work`, além dos StateDirectory legados. O driver não cria,
+monta, altera owner ou escolhe livremente esse caminho. A Infra decidiu fornecer
+um `/run` privado da unidade e vincular o MESMO inode/backing do StateDirectory
+físico no projeto. Essa implementação e sua prova nativa pertencem a um sucessor
+do runtime; V5 e seus resultados anteriores não são alterados ou promovidos.
+
+A previsão estática com o alias é 94 bytes para TMP e 67 para HOME, abaixo de 108.
+Isso comprova somente o cálculo de tamanho, não o comportamento nativo do Chromium,
+a ordem/idmap de mounts, a privacidade de `/run`, a identidade do backing, a custódia
+ou uma qualificação. Os paths de ambiente continuam relativos; os mesmos gates de
+integridade e execução desabilitada permanecem. O driver não aceita um caminho de
+trabalho via argumentos ou ambiente do job. A revisão e os testes específicos
+estão em `NAMESPACE-ALIAS-REVIEW.md` e `TEST-RESULT-V2.json` neste diretório absoluto.

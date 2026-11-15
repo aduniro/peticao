@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "status": "STATIC_FORECAST_ONLY_NOT_NATIVE_IPC",
+  "namespace_alias": "/run/peticao-dev-work",
+  "tmp": {
+    "relative_bytes": 72,
+    "absolute_bytes": 94,
+    "limit": 108
+  },
+  "home": {
+    "relative_bytes": 45,
+    "absolute_bytes": 67,
+    "limit": 108
+  },
+  "native_qualified": false,
+  "alias_installed": false,
+  "runtime_successor_required": true,
+  "same_project_backing_and_private_run_must_be_proven_by_infra": true
+}
