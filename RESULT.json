@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-15T10:51:55.522749+00:00",
+  "state": "FOUR_PUBLIC_DATA_FAMILIES_INDEPENDENTLY_VERIFIED_NOT_INSTALLED",
+  "files": 2270,
+  "bytes": 695528180,
+  "data_inventory_sha256": "a2833a245a42691a6e64afd8f006540b118ed9dafd24bb80ab4926070d9be59d",
+  "actual_seconds": 3.122,
+  "fixtures": 3,
+  "fixture_seconds": 0.095,
+  "candidate_execution": false,
+  "host_writes": false,
+  "RootFullClosure": false,
+  "full_bundle_ready": false,
+  "Root_installer_implemented": false
+}
