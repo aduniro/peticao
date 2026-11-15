@@ -1,0 +1,13 @@
+{
+  "state": "LOCAL_CLIENT_COMPONENT_TESTS_PASS",
+  "tests": 21,
+  "seconds": 0.031,
+  "python_ast": 3,
+  "embedded_installer_ast": true,
+  "ledger_and_ssh": "simulated",
+  "actual_private_file_intents": true,
+  "actual_ssh_or_host_operation": false,
+  "log_sha256": "3fbb08a8abdd89d699e432251885ed58d54909a9cc7bd28f0c4ef75ba3b3c1f7",
+  "contract_git_blob": "ef8e0784830283d3595c9c2caa25f1e151eefc9d:qualification_contract.py",
+  "contract_sha256": "eb7879867b122e5a439b77fed4eab94c54788a50dac34607e322132b739b5ff0"
+}

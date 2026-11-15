@@ -1,0 +1,24 @@
+{
+  "scope": "SOURCE_COMPONENT_ONLY",
+  "host_changes": false,
+  "deployable": false,
+  "copy_into_sourceA": [
+    "qualification_client.py",
+    "review_gate.py"
+  ],
+  "do_not_copy_tests": true,
+  "resource": "deploy:civo-worker-broker-qualification",
+  "required_runtime_notice": 3178,
+  "required_broker_notice": 3237,
+  "host_alias": "212.2.241.70",
+  "default_transport": "denied",
+  "start_budget_seconds": 600,
+  "extra_margin_seconds": 120,
+  "mutations_never_replayed": [
+    "install",
+    "bootstrap",
+    "start",
+    "cleanup"
+  ],
+  "private_credentials_packaged": false
+}

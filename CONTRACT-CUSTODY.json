@@ -1,0 +1,7 @@
+{
+  "source": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-broker-qualification-a-20261115/source",
+  "commit": "ef8e0784830283d3595c9c2caa25f1e151eefc9d",
+  "file": "qualification_contract.py",
+  "sha256": "eb7879867b122e5a439b77fed4eab94c54788a50dac34607e322132b739b5ff0",
+  "scope": "preliminary exact contract for client composition; not complete SourceA review or execution"
+}

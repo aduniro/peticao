@@ -1,0 +1,6 @@
+state/
+__pycache__/
+NORMAL-MANIFEST.json
+NOTICE-RECEIPT.json
+client-fixture-*/
+*.log
