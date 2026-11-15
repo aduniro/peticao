@@ -308,5 +308,33 @@ class Contracts(unittest.TestCase):
             with mock.patch.object(gate,"central",side_effect=[{},status,acquisition]):
                 with self.assertRaises(PermissionError):gate.validate_lease(path,99)
 
+    def test_cgroup_counter_requires_complete_kernel_evidence_not_unknown_zero(self):
+        relative="/system.slice/"+q.unit("1"*32)
+        with tempfile.TemporaryDirectory(dir=HERE,prefix="fixture-") as tmp:
+            fake=Path(tmp);root=fake/relative.lstrip("/");root.mkdir(parents=True)
+            def paths(value):return fake if str(value)=="/sys/fs/cgroup" else Path(value)
+            (root/"cgroup.events").write_text("populated 1\nfrozen 0\n")
+            with mock.patch.object(helper,"Path",side_effect=paths):
+                with self.assertRaises(RuntimeError):helper.cgroup_pids(relative)
+            (root/"cgroup.procs").write_text("101\n102\n")
+            with mock.patch.object(helper,"Path",side_effect=paths):self.assertEqual(helper.cgroup_pids(relative),2)
+            (root/"cgroup.procs").write_text("")
+            with mock.patch.object(helper,"Path",side_effect=paths):
+                with self.assertRaises(RuntimeError):helper.cgroup_pids(relative)
+            (root/"cgroup.events").write_text("populated 0\nfrozen 0\n")
+            with mock.patch.object(helper,"Path",side_effect=paths):self.assertEqual(helper.cgroup_pids(relative),0)
+
+    def test_cgroup_walk_error_propagates(self):
+        relative="/system.slice/"+q.unit("1"*32)
+        with tempfile.TemporaryDirectory(dir=HERE,prefix="fixture-") as tmp:
+            fake=Path(tmp);root=fake/relative.lstrip("/");root.mkdir(parents=True)
+            (root/"cgroup.events").write_text("populated 0\n")
+            def paths(value):return fake if str(value)=="/sys/fs/cgroup" else Path(value)
+            def bad_walk(*args,**kwargs):
+                kwargs["onerror"](PermissionError("synthetic denied cgroup"))
+                yield
+            with mock.patch.object(helper,"Path",side_effect=paths),mock.patch.object(helper.os,"walk",side_effect=bad_walk):
+                with self.assertRaises(PermissionError):helper.cgroup_pids(relative)
+
 
 if __name__=="__main__":unittest.main()

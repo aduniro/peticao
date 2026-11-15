@@ -253,13 +253,42 @@ def cgroup_pids(path):
     if not re.fullmatch(r"/system.slice/admin-dev-[a-f0-9]{32}-g1\.service", path):
         raise ValueError("own_fixture_cgroup_required")
     root = Path("/sys/fs/cgroup") / path.lstrip("/")
+    if root.is_symlink() or not root.is_dir():
+        raise RuntimeError("own_running_cgroup_absent_or_unknown")
+    def failed(error):
+        raise error
+    def read_small(path, budget):
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        try:
+            raw = os.read(fd, budget + 1)
+        finally:
+            os.close(fd)
+        if len(raw) > budget:
+            raise ValueError("bounded_cgroup_evidence_required")
+        return raw.decode()
+    events = {}
+    for line in read_small(root / "cgroup.events", 1024).splitlines():
+        parts = line.split()
+        if len(parts) != 2 or parts[0] in events:
+            raise ValueError("exact_kernel_cgroup_events_required")
+        events[parts[0]] = parts[1]
+    if events.get("populated") not in {"0", "1"}:
+        raise RuntimeError("cgroup_population_unknown")
     count = 0
-    for directory, dirs, files in os.walk(root, followlinks=False):
+    seen_root = False
+    for directory, dirs, files in os.walk(root, followlinks=False, onerror=failed):
+        seen_root |= Path(directory) == root
         for name in dirs:
             if (Path(directory) / name).is_symlink():
                 raise ValueError("cgroup_link_forbidden")
-        if "cgroup.procs" in files:
-            count += len((Path(directory) / "cgroup.procs").read_text().split())
+        if "cgroup.procs" not in files:
+            raise RuntimeError("cgroup_process_evidence_missing")
+        pids = read_small(Path(directory) / "cgroup.procs", 16384).split()
+        if any(not pid.isdecimal() or int(pid) < 1 for pid in pids):
+            raise ValueError("kernel_pid_list_required")
+        count += len(pids)
+    if not seen_root or bool(count) != (events["populated"] == "1"):
+        raise RuntimeError("cgroup_observation_incomplete_or_changed")
     return count
 
 
