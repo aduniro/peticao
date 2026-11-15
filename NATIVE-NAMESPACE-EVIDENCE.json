@@ -1,0 +1,21 @@
+{
+  "event": 3401,
+  "execution": 3384,
+  "source": 3370,
+  "summary_sha256": "3117d0987f6b8335d0f7b2d809920cbfddc61d8d80442a29084591e609ad2ba6",
+  "scope": "isolatedV4 adapter namespace only",
+  "real_root_namespace_proven": true,
+  "V6_real_profiles_qualified": false,
+  "global_B_qualified": false,
+  "proven_properties": {
+    "WorkingDirectory": "/run/peticao-dev-work",
+    "TemporaryFileSystem": "/run:rw",
+    "BindPaths": "own StateDirectory:/run/peticao-dev-work",
+    "HOME": "/run/peticao-dev-work/h",
+    "TMPDIR": "/run/peticao-dev-work/t"
+  },
+  "sockets_synthetic": [
+    89,
+    79
+  ]
+}

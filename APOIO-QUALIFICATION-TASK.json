@@ -1,0 +1,57 @@
+{
+  "authority": "Owner autonomous infra plan; delegated by Infra. PREPARE ONLY, no actual SSH/unit/install until frozen source+Root/Infra review+own normal manifest reservation.",
+  "task": "Prepare bounded actual Civo systemd worker qualification harness and client; NOT execute now. Separate Apoio source/workspace, never edit runtime642.",
+  "dependencies": {
+    "runtime_source": "Infra distributed/civo-worker-runtime-20261114 is being edited; wait frozen commit/hash before publish harness manifest",
+    "facade_source": "Your3080/2c1491a7; already Root39test prepACK",
+    "transport_for_test": "Owner existing pinned SSH to Civo, not new keys, no sudoers/global RPC install or auth copy. root direct only per validated exception/own scope."
+  },
+  "targets": {
+    "host": "peticao-civo",
+    "public_code_candidate": "/opt/peticao-dev-worker-qual-20261114-attempt1 (new root755 dir/files644; needed for DynamicUser readability)",
+    "private_state_candidate": "/srv/peticao-dev-prep/civo-worker-runtime-qual-20261114-attempt1 (new root700; refuse occupied/link/foreign)",
+    "units": "EXACT generated admin-dev-<32hex>-g1.service own fixture IDs, persist IDs before execution; max3 own units; no wildcard stop",
+    "global_control": "DO NOT create or alter /etc/peticao-dev-authority, actual queue /srv/admin-v2-coordinator, systemd existing units, SSH/auth/firewall, K3s/SP/NomeCPF. No production admission/globalfloor or promotion."
+  },
+  "harness_design": [
+    "Use root-owned fixture epoch/admission/journal/queue under PRIVATE_STATE, explicit constructor injection only in root-qualified helper, not public RPC config. Actual /proc boot and hostname. This is a synthetic queue fixture, NOT a second operational scheduler.",
+    "Use runtime WorkerRPC/Backend/SystemdAdapter/ArtifactStore with SAME frozen code; profiles only fixture-pass/fail. No global rpc.make_service or public listener. Root helper obtains real interpreter path/hash, descriptors/manifest hashes and perjob fixture tokens privately. No token/path to secret in tool stdout.",
+    "Use a root-controlled qualification_job.py at PUBLIC_CODE with exact fixture profile names; artifact protocol matches fixture_job.py. Verify actual DynamicUser UID nonroot/capEff0; /home and /root masked, fake root-private marker in PRIVATE_STATE unreadable, public readonly marker cannot be modified, Docker socket inaccessible, no credential envs. Do not read any real credential values.",
+    "Verify PrivateNetwork with loopback private socket allowed + connect denied to tailnet peer (no real production service request); no host network/firewall edits. Report only booleans/counts.",
+    "Root unit show confirms actual limits/isolation and InvocationID. Kernel cgroup count/noPIDs after stop. Binding/description/namespace verified; no foreign PID/unit can be targeted.",
+    "Success path: actual fixture subprocess\u2192observe\u2192stop ownunit\u2192artifact export/import custody\u2192fixture queue completed. Failure path exit7 preserved. Cancellation path fixture-fail bounded sleep10\u201315s so cancel while running; preserve canceled outcome with missing exit status permitted only if stop+owncgroup proven.",
+    "Use admission SH/EX genuine locks; demonstrate EX cannot fence in-flight mutation and persistent closed blocks newprepare/start after draining. Root-owned fixture control only, not global.",
+    "Simulate LOST SSH RESPONSE without rerunning start: receipt observe sameID; genuine helper continuation if observation timeout. Never restart process/unit/prepare/extraction on uncertain transport. Persist intents and receipts before each effect.",
+    "Parent/root library ancestors: /srv/peticao-dev-prep0700 makes code unreadable to DynamicUser, hence separate /opt public code needed. Exact-root file pins before imports, no Python user site/env, -B/sys.dontwrite; do not silently change existing parent modes.",
+    "Preserve all source/intent/failure evidence. No new helper runtime/sudoers keys or cloud services. Cleanup only owned units after fresh binding/cgroup proof; leave verified exports/private evidence and all installed unrelated services unchanged. Reboot/PVE/Azure auth not part of this task."
+  ],
+  "phases": [
+    "prepare source+manifest+tests locally",
+    "request technical review from Infra+Root",
+    "ONLY AFTER reviewed new own test/critical scope: preflight remote, single prepare, qualify, observe/cleanup, report"
+  ],
+  "acceptance": [
+    "Actual unit namespace/process behavior, not just argv/mocks",
+    "Full controller-worker-artifact fixture path on Civo with 0 production data/realqueue changes",
+    "Baseline unit/process/app data unchanged outside own scope",
+    "No unexpected root paths/chmod/symlink follow/free commands; fail closed occupied attempt",
+    "No claim of live promotion, distributed worker readiness or full DR from this qualification"
+  ],
+  "report_to": [
+    "Infra",
+    "Root"
+  ],
+  "estimation": "35\u201360min preparation, refine for dependencies; never wait owner for already authorized scope",
+  "status": "NEW_ATTEMPT3_PREPARATION_REQUIRED_AFTER_V4_REVIEW",
+  "runtime_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115",
+  "runtime_revision": "V4",
+  "held_harness_notice": 3108,
+  "physical_runtime_root": "/mnt/apps/peticao-final/.runtime",
+  "required_new_module": "unit_refs.py",
+  "execution_authorized": false,
+  "old_attempt3151": "FAILED_PRESERVED; exact mount64 reconciliation3169 completed/released3175; never replay",
+  "runtime_modules_required": 10,
+  "unit_reference_lifetime": "Instantiate real UnitReferences once in root runner and inject into adapter; acquire/held through stop+cleanup, release only retained. Observe-only contexts may lack provider; no fake provider in host test.",
+  "next_host_attempt": "attempt3 with new IDs and own TEST manifest after source review",
+  "broker_scope": "Persistent node broker still not implemented/qualified; never activate one-shot RPC as worker"
+}

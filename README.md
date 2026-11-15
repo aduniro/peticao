@@ -1,0 +1,27 @@
+# Runtime V6 - namespace alias integration, SOURCE ONLY
+
+Parent V5 notice3291/commit33fcce1bd0206e9d03baf3c696bb692ab0336f0a ACK3301 preserved. Only runtime implementation changed is systemd_adapter.py. Both fixture and real profiles use /run/peticao-dev-work as namespace-only alias of their own StateDirectory, with private /run tmpfs. Per-job/generation source stays distinct; physical backing stays in project. HOME=/run/peticao-dev-work/h and TMPDIR=/run/peticao-dev-work/t. Real driver initializes its own fresh relative child environment. No host alias is created by the adapter. Flags/one fixed argument/program/resource limits/private network/tmp/hidden project/capabilities and RefUnit lifecycle remain unchanged.
+
+Actual isolated native proof3401/EXEC3384 establishes the namespace mechanism with a V4 fixture derivative. It does not qualify V6, its real Python/driver/toolchain, real app build/PG/Chromium or normal global worker/B. V6 must receive separate native current-boot/profile/catalog evidence before entry gates can allow it. No source preparation can set those proofs true. Bootstrap code17modules and its compiled pins are unchanged; future evidence must pin the new adapter SHA. All template unqualified fields remain unchanged. Current canonical queue/floor/migration/recovery/Dell-off remain pending.
+
+Local validation:51affected tests PASS8.846s ResourceWarningerror (22realprofile contracts/export +24runtime/transport+5newalias cases).157unchanged parent tests adopted by code/fixture byteidentity and parent203PASS;208distinct covered, NOT208fullrun. No SSH/manager called by these local tests. Initial cwd/missing-module failure preserved privately before corrected run. New5cases cover3realprofiles x2plans, fixture fixed arguments, distinct per-job/generation binds, rejected path/boolean identity and pure planning without manager call.
+
+Previous README below is historical parent material; V6 qualifications above control current state.
+
+# Runtime V5 - real profiles and persistent broker transport
+
+SOURCE ONLY. Not installed, not natively qualified and not a completed migration. The real A3269 result belongs to its original source/fixture scope and is not reused as qualification of changed V5 code. Production, credentials, services, authority and the actual queue are unchanged.
+
+This successor preserves the durable journal, actual held RefUnit lifecycle, stop/cgroup binding, retirement/custody protocol and no-retry behavior of V4/broker V3. The bootstrap closure grows from16 to17 exact modules. Both entry shims and the broker compile the new pinned bootstrap before runtime imports. Real profiles also require current-boot per-descriptor native execution evidence; merely adding a descriptor cannot enable it.
+
+The descriptor contract has exactly12 fields, seals the entire object in the existing profile_sha256, and leaves MANIFEST_KEYS unchanged. Only the fixed driver/interpreter and typecheck/build/QA names are accepted. Reviewed resources are4CPU/8GiB or14CPU/20GiB, with2700seconds,512tasks and zero swap. Fresh numeric capacity/pressure/free-disk observations preserve2CPUs/8GiB of headroom and32GiB of available disk including reserve. These checks do not create an enduring reservation or disk quota; paired scheduling and cgroup enforcement remain necessary.
+
+Real jobs keep the approved DynamicUser/private-network/private-tmp/systemd sandbox. They run the fixed driver with -I -S -B and only the allowlisted name. No free argv, environment or root path is accepted from requests. No new short IPC alias/bind mount is introduced; the actual browser/PG IPC layout still needs native qualification.
+
+After an authenticated bound stop proof/cgroup drain, the root exporter copies only the fixed flat7-name allowlist. Single files are limited to16MiB and their sum32MiB. Hardlinks, symlinks, nested directories and unexpected files are rejected. The root-authored result/identity/stop proof is separate; driver artifacts never supply retirement or unit stop evidence. Rejection preserves the durable export intent and does not publish success or free the slot.
+
+The controller root helper now uses the same persistent broker proxy for local Civo and remote nodes. The old one-request worker service remains forbidden without a process-long reference provider. Secrets remain on bounded stdin, never argv. Endpoint/code/boot qualification is still required and unavailable nodes remain blocked. All generated catalog entries for real profiles are false.
+
+203 local tests passed in10.422seconds: original163 with one incomplete sandbox-test fixture completed to its actual8-field schema,22 new descriptor/resource/export/capacity/transport/SQLite-custody tests, and18 broker entry tests ported to the exact17-module closure. Real local fixture children and private SQLite/files/custody were exercised; systemd identities/cgroups in those local pipeline tests are synthetic. No claim of native systemd/broker/profile/namespace/Dell-off qualification follows from these tests. Historical TEST-RESULT-V4.json and upstream files are retained as parent evidence, not current results.
+
+Next: independent source review; bind the actual driver and verified offline inputs/toolchain; qualify this exact successor natively; compose with facade3233, paired guard and the genuine current-topology/bootstrap/fencing transaction. Any actual deployment still requires a fresh Root window and own valid global-code/deploy lease.

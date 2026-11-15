@@ -1,0 +1,22 @@
+{
+  "decisions": [
+    {
+      "question": "Can the local root helper call make_service per request?",
+      "decision": "No. It loses persistent native RefUnit ownership. Route both local and remote calls through the fixed persistent broker proxy."
+    },
+    {
+      "question": "Can real jobs inherit the old512MiB/1CPU/120s fixture plan?",
+      "decision": "No. Validate the root-sealed12-field descriptor and explicit reviewed numeric resource plan; fixture behavior remains separate."
+    },
+    {
+      "question": "Does a new descriptor or local green test enable real execution?",
+      "decision": "No. Require native current-boot evidence bound to every real descriptor and complete code closure."
+    },
+    {
+      "question": "Can arbitrary output below artifacts be exported?",
+      "decision": "No. Root revalidates the fixed flat7-name16/32MiB policy after bound stop/cgroup drain; preserve intents and uncertainty on failure."
+    }
+  ],
+  "questions_for_owner": [],
+  "additional_costs_or_new_services": false
+}

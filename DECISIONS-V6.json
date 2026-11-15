@@ -1,0 +1,15 @@
+{
+  "question": "How to eliminate long IPC path limit while keeping project-backed DUID isolation?",
+  "evidence": "Actual isolated3384/PASS3401 proved manager-private /run tmpfs+StateDirectory bind alias through real RefUnit/custody/cleanup",
+  "decision": "Use same fixed namespace alias for fixtures and3realprofiles in V6, with separate per-job/generation backing and fresh HOMEh/TMPt; no direct host alias",
+  "unchanged": [
+    "same17codeclosure/bootstraphash",
+    "fixedprogram/argument contracts",
+    "12field descriptor/manifest",
+    "allrealprofile/resource/export/RefUnit/retirement gates",
+    "production and canonicalqueue",
+    "no normalB enable or genuinefloor creation"
+  ],
+  "qualification": "Native3401 is a V4fixture derivative, NOT V6/current realprofile qualification. All templates stay unqualified and fresh currentboot real descriptor evidence still mandatory.",
+  "initial_local_error": "First test file creation used incorrect cwd-relative path; failed before write/host action. Parent suites ran but missing newmodule failed. Private log kept; corrected target and51affected passed."
+}

@@ -1,0 +1,401 @@
+{
+  "parents": [
+    3178,
+    3237
+  ],
+  "files": [
+    {
+      "file": ".gitignore",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/.gitignore",
+      "sha256": "b346f4d4e4ee19265280a6155d2a99e9552a7f7cb6f7ca1d49a5de553d7b52d4",
+      "current_sha256": "7324de3099ac170d9319aa748e54a5031281307c419302ebc52e88eb5aed0a77",
+      "unchanged": false
+    },
+    {
+      "file": "APOIO-NEXT-TASK.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/APOIO-NEXT-TASK.json",
+      "sha256": "f165f8c487ec311057f439dba7fda76d72e12ae40eb2316ba15003cd818b53ad",
+      "current_sha256": "f165f8c487ec311057f439dba7fda76d72e12ae40eb2316ba15003cd818b53ad",
+      "unchanged": true
+    },
+    {
+      "file": "APOIO-QUALIFICATION-TASK.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/APOIO-QUALIFICATION-TASK.json",
+      "sha256": "e0182bcbb31daa119fed6d6a1e3dc03e04c1d76c7ddb957c1701d47b9b310f6f",
+      "current_sha256": "e0182bcbb31daa119fed6d6a1e3dc03e04c1d76c7ddb957c1701d47b9b310f6f",
+      "unchanged": true
+    },
+    {
+      "file": "DECISIONS-V3.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/DECISIONS-V3.json",
+      "sha256": "7c34b6db5992e6d22d7801f1bcd857372764ad9b7c7dc4a968596a242de98596",
+      "current_sha256": "7c34b6db5992e6d22d7801f1bcd857372764ad9b7c7dc4a968596a242de98596",
+      "unchanged": true
+    },
+    {
+      "file": "DECISIONS-V4.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/DECISIONS-V4.json",
+      "sha256": "403fe4886546d19f39b8fdd69aeac4e155a5c73ac9dddbce0390a3b08664db3b",
+      "current_sha256": "403fe4886546d19f39b8fdd69aeac4e155a5c73ac9dddbce0390a3b08664db3b",
+      "unchanged": true
+    },
+    {
+      "file": "NODE-CATALOG.template.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/NODE-CATALOG.template.json",
+      "sha256": "20e498233184f4b030f7225fa65ed24ab9c92602f305c56fc3d606047de6b5f3",
+      "current_sha256": "dee81ef1e2f6e96c28ff0a12baa78663d76503dd44445182e6dd0964a12a2841",
+      "unchanged": false
+    },
+    {
+      "file": "PREFLIGHT-FACTS.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/PREFLIGHT-FACTS.json",
+      "sha256": "811dab04658c8dc47ca115072ca4a1003cb57e650368fe4b11b110bacb774781",
+      "current_sha256": "811dab04658c8dc47ca115072ca4a1003cb57e650368fe4b11b110bacb774781",
+      "unchanged": true
+    },
+    {
+      "file": "TEST-RESULT-V4.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/TEST-RESULT-V4.json",
+      "sha256": "c56113b6944dba77c314d9ebc55ab282b5106b1e483779783801b3877481b91d",
+      "current_sha256": "c56113b6944dba77c314d9ebc55ab282b5106b1e483779783801b3877481b91d",
+      "unchanged": true
+    },
+    {
+      "file": "admission.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/admission.py",
+      "sha256": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+      "current_sha256": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+      "unchanged": true
+    },
+    {
+      "file": "artifacts.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/artifacts.py",
+      "sha256": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+      "current_sha256": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+      "unchanged": true
+    },
+    {
+      "file": "cgroups.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/cgroups.py",
+      "sha256": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce",
+      "current_sha256": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce",
+      "unchanged": true
+    },
+    {
+      "file": "client_entry.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/client_entry.py",
+      "sha256": "3e2faaf2b4703e2c2e4e02a1fcc17dcb6116d26415473379bb081b2f70375b46",
+      "current_sha256": "d924d5b44fd1a7745e9ca40631fa4781b54a08c8f4d77115008da646ebbf5187",
+      "unchanged": false
+    },
+    {
+      "file": "controller.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/controller.py",
+      "sha256": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+      "current_sha256": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+      "unchanged": true
+    },
+    {
+      "file": "entry_bootstrap.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/entry_bootstrap.py",
+      "sha256": "995a9fb23b2fd35fa804599d5995d3ab804ab0a6a771a637a0f9290274e139a0",
+      "current_sha256": "e9c1f89ab77cce41df6435779bddf5cab0bceeebc22de700ab6410c72cc9b1cd",
+      "unchanged": false
+    },
+    {
+      "file": "fixture_job.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/fixture_job.py",
+      "sha256": "1fd2318496e53dc2ada4a4ebcba13ec1d110f4c529e05a11e4623180c0740078",
+      "current_sha256": "1fd2318496e53dc2ada4a4ebcba13ec1d110f4c529e05a11e4623180c0740078",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/.gitignore",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/.gitignore",
+      "sha256": "2de25238e5e5e106b00c24c9dc1e82805ee4e6562115a0c1f97d23837be1f3f6",
+      "current_sha256": "2de25238e5e5e106b00c24c9dc1e82805ee4e6562115a0c1f97d23837be1f3f6",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/DECISIONS.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/DECISIONS.json",
+      "sha256": "b2fc72e09a5a7bf4558ee97a911d7576e9bd1a1d61627e980f2c914e68dd6c9b",
+      "current_sha256": "b2fc72e09a5a7bf4558ee97a911d7576e9bd1a1d61627e980f2c914e68dd6c9b",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/POLICY.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/POLICY.json",
+      "sha256": "73057d32be4543be5b60f6ecd4d4e707e7b73a18a2d33f59246379e56c0f7005",
+      "current_sha256": "73057d32be4543be5b60f6ecd4d4e707e7b73a18a2d33f59246379e56c0f7005",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/README.md",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/README.md",
+      "sha256": "e3e35725264b6ab610030818a62a16fe65381575c2be7ee23ab92f0ea5f6a914",
+      "current_sha256": "e3e35725264b6ab610030818a62a16fe65381575c2be7ee23ab92f0ea5f6a914",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/SOURCE-CUSTODY.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/SOURCE-CUSTODY.json",
+      "sha256": "5a445ef6f14a5fece03b20a71a5a596451e03823bcce71da4e7cb97e1ac7323a",
+      "current_sha256": "5a445ef6f14a5fece03b20a71a5a596451e03823bcce71da4e7cb97e1ac7323a",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/authority_guard.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/authority_guard.py",
+      "sha256": "d6170f6ad3e6ce100d1cd263f541e313f8261b5378d7be2329c7eecbe21162e1",
+      "current_sha256": "d6170f6ad3e6ce100d1cd263f541e313f8261b5378d7be2329c7eecbe21162e1",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/catalog.template.json",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/catalog.template.json",
+      "sha256": "c78a2600746d8a28c0f7daf405a9b95112ca6e5d728db5242fee7c298af10d63",
+      "current_sha256": "c78a2600746d8a28c0f7daf405a9b95112ca6e5d728db5242fee7c298af10d63",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/coordinator.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/coordinator.py",
+      "sha256": "4d3d5175c386821b801569683cb65fc1f713370fcda4af388169243474e7faaa",
+      "current_sha256": "4d3d5175c386821b801569683cb65fc1f713370fcda4af388169243474e7faaa",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/log_access.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/log_access.py",
+      "sha256": "ed9100cb92e2320bfbd44ea7eb130b8465bdc05e38a78477f66d7413ea316995",
+      "current_sha256": "ed9100cb92e2320bfbd44ea7eb130b8465bdc05e38a78477f66d7413ea316995",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/log_redaction.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/log_redaction.py",
+      "sha256": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+      "current_sha256": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/remote_contract.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/remote_contract.py",
+      "sha256": "e2c9a865a7a39a64fd6c68f607ba5e999e4dd7f526ed078aa1feb2cf2a0ec87c",
+      "current_sha256": "e2c9a865a7a39a64fd6c68f607ba5e999e4dd7f526ed078aa1feb2cf2a0ec87c",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/rpc_facade.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/rpc_facade.py",
+      "sha256": "888da42b07d80b3e7cd12ffb2ef7a5952715b96ce3c6bcb13addb97c6439fcad",
+      "current_sha256": "888da42b07d80b3e7cd12ffb2ef7a5952715b96ce3c6bcb13addb97c6439fcad",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/runtime_profile.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/runtime_profile.py",
+      "sha256": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8",
+      "current_sha256": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/test_facade.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/test_facade.py",
+      "sha256": "ca57e4e5e02eb00c77e08e5fdcf07e6442a76feb9541d0e244adff591c13d5e3",
+      "current_sha256": "ca57e4e5e02eb00c77e08e5fdcf07e6442a76feb9541d0e244adff591c13d5e3",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/upstream/authority_guard.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/upstream/authority_guard.py",
+      "sha256": "d6170f6ad3e6ce100d1cd263f541e313f8261b5378d7be2329c7eecbe21162e1",
+      "current_sha256": "d6170f6ad3e6ce100d1cd263f541e313f8261b5378d7be2329c7eecbe21162e1",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/upstream/coordinator.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/upstream/coordinator.py",
+      "sha256": "c44a6ff2a03f6a8700ba29b91a4fcdc30f3acc01c7ab517aea048a5e8659b28f",
+      "current_sha256": "c44a6ff2a03f6a8700ba29b91a4fcdc30f3acc01c7ab517aea048a5e8659b28f",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/upstream/remote_contract.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/upstream/remote_contract.py",
+      "sha256": "e2c9a865a7a39a64fd6c68f607ba5e999e4dd7f526ed078aa1feb2cf2a0ec87c",
+      "current_sha256": "e2c9a865a7a39a64fd6c68f607ba5e999e4dd7f526ed078aa1feb2cf2a0ec87c",
+      "unchanged": true
+    },
+    {
+      "file": "integration/facade3080/upstream/runtime_profile.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/integration/facade3080/upstream/runtime_profile.py",
+      "sha256": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8",
+      "current_sha256": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8",
+      "unchanged": true
+    },
+    {
+      "file": "log_redaction.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/log_redaction.py",
+      "sha256": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+      "current_sha256": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+      "unchanged": true
+    },
+    {
+      "file": "node_catalog.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/node_catalog.py",
+      "sha256": "b3c1c849d189876c7592edda166de05dee56bbc5b1ec90b394467e6a434a53c7",
+      "current_sha256": "9695ac72756538ae56bb31c4a80da6c0dbb1cb2abe0d2648825365e68c631f95",
+      "unchanged": false
+    },
+    {
+      "file": "project_storage.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/project_storage.py",
+      "sha256": "c8d9f98a4d62cf8d0567be318c11c8e3c7952abcc1ab9ed9da452b0c4f82e769",
+      "current_sha256": "c8d9f98a4d62cf8d0567be318c11c8e3c7952abcc1ab9ed9da452b0c4f82e769",
+      "unchanged": true
+    },
+    {
+      "file": "remote_contract.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/remote_contract.py",
+      "sha256": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+      "current_sha256": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+      "unchanged": true
+    },
+    {
+      "file": "rpc.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/rpc.py",
+      "sha256": "293583bf62b5f8864e51aadd702e22dbb69e1a707da46066037eaf20134178e2",
+      "current_sha256": "94f934c4e596898d9e945a6e1e32017aac14116644954e023fe2ee31234b0d90",
+      "unchanged": false
+    },
+    {
+      "file": "systemd_adapter.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/systemd_adapter.py",
+      "sha256": "1e85587ed1b41a877eb0e5383b68de3e4e12e9f66b4c3bae5dd66aad3a423346",
+      "current_sha256": "a2ebaeddd9dd7baa510e069eaad32cdc8e13d3b12d6adad2feaa0a7e74bf2be4",
+      "unchanged": false
+    },
+    {
+      "file": "test_artifacts.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/test_artifacts.py",
+      "sha256": "7c4dce69bf40c4edfc83fbf2e2a9d593a4e289770232d0cb2ca0818c5ebb1c59",
+      "current_sha256": "7c4dce69bf40c4edfc83fbf2e2a9d593a4e289770232d0cb2ca0818c5ebb1c59",
+      "unchanged": true
+    },
+    {
+      "file": "test_cgroups_and_entries.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/test_cgroups_and_entries.py",
+      "sha256": "bfbe9e27f37e8b28bee005d85d63542a689c6687ee6a866ddd1b819893ca814c",
+      "current_sha256": "bfbe9e27f37e8b28bee005d85d63542a689c6687ee6a866ddd1b819893ca814c",
+      "unchanged": true
+    },
+    {
+      "file": "test_core_regressions.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/test_core_regressions.py",
+      "sha256": "da6f966ed0b7d5d06b4d2b6935c8563e4798f6b86a554750670fdc8eac186237",
+      "current_sha256": "da6f966ed0b7d5d06b4d2b6935c8563e4798f6b86a554750670fdc8eac186237",
+      "unchanged": true
+    },
+    {
+      "file": "test_project_storage.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/test_project_storage.py",
+      "sha256": "a3ec62eed8cb1f13e8b36794bf48f0ba9557c57fc9fd4560c91f21b5a97da2b5",
+      "current_sha256": "4bcee52a5970997334722e3a4ba964557fe7c70abea6eaa7b48e3125f42e9ff8",
+      "unchanged": false
+    },
+    {
+      "file": "test_runtime.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/test_runtime.py",
+      "sha256": "5ca657a40eb1fe2f50aa6ccc7a2f81fee1d70fd2cd454296d506de625228b5c2",
+      "current_sha256": "5ca657a40eb1fe2f50aa6ccc7a2f81fee1d70fd2cd454296d506de625228b5c2",
+      "unchanged": true
+    },
+    {
+      "file": "test_sd_bus_abi.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/test_sd_bus_abi.py",
+      "sha256": "fd49e902c55286be6027c738dfec425131985f1e8960d480c0d6800211eaf435",
+      "current_sha256": "fd49e902c55286be6027c738dfec425131985f1e8960d480c0d6800211eaf435",
+      "unchanged": true
+    },
+    {
+      "file": "test_transport_and_integration.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/test_transport_and_integration.py",
+      "sha256": "d582dfaad9aae15d19869c9534c66376b3af63022cd1e0e398d04680c1155b7d",
+      "current_sha256": "d582dfaad9aae15d19869c9534c66376b3af63022cd1e0e398d04680c1155b7d",
+      "unchanged": true
+    },
+    {
+      "file": "test_unit_refs.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/test_unit_refs.py",
+      "sha256": "c5ae09357f1910e2df4910bdbc46476aa0c5f7f6331e6dd71a7c3d3421c46467",
+      "current_sha256": "c5ae09357f1910e2df4910bdbc46476aa0c5f7f6331e6dd71a7c3d3421c46467",
+      "unchanged": true
+    },
+    {
+      "file": "transport.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/transport.py",
+      "sha256": "2785878bbe1a499cc74d8a24dd4109195e04f5d170925b16e8915986f15dd337",
+      "current_sha256": "0f1080372e6dd3554f5a2c563448d31c9819c49b3dc8e4e1daa7b34789a5ad94",
+      "unchanged": false
+    },
+    {
+      "file": "unit_refs.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/unit_refs.py",
+      "sha256": "ee4a9145f0443a56ab769b709facc6a7fcc3e029bf9c778a92a7e1cb1ab02b1f",
+      "current_sha256": "ee4a9145f0443a56ab769b709facc6a7fcc3e029bf9c778a92a7e1cb1ab02b1f",
+      "unchanged": true
+    },
+    {
+      "file": "upstream/remote_contract.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/upstream/remote_contract.py",
+      "sha256": "e2c9a865a7a39a64fd6c68f607ba5e999e4dd7f526ed078aa1feb2cf2a0ec87c",
+      "current_sha256": "e2c9a865a7a39a64fd6c68f607ba5e999e4dd7f526ed078aa1feb2cf2a0ec87c",
+      "unchanged": true
+    },
+    {
+      "file": "worker.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115/worker.py",
+      "sha256": "a16bef2e64fe514caa3065f1d18faee26c2263a6e18d95d543e237d667b5618c",
+      "current_sha256": "0e039274a39c040964f3bdbd4b1afa7c2aa305b95daa92c450023a82fd7b7a4c",
+      "unchanged": false
+    },
+    {
+      "file": "broker/broker_entry.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-broker-v3-20261115/broker_entry.py",
+      "sha256": "c6394ac6b4f5f7d07a6bd5bdbf9c375c5ed09df6e1a037cb584860b898763ebd",
+      "current_sha256": "f22e6d93e0183c4fa51e0080a59c8554a2e5725c759445f3854976207c6604a6",
+      "unchanged": false
+    },
+    {
+      "file": "broker/broker_lifecycle.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-broker-v3-20261115/broker_lifecycle.py",
+      "sha256": "f98f5f8a84d2f3f2ca849f8ea86f838a82e0776e539e528225651612f80d8b4f",
+      "current_sha256": "f98f5f8a84d2f3f2ca849f8ea86f838a82e0776e539e528225651612f80d8b4f",
+      "unchanged": true
+    },
+    {
+      "file": "broker/broker_server.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-broker-v3-20261115/broker_server.py",
+      "sha256": "86c9cd940b6e186f53e55cfd54067786df61d85d98d7d35cc5b0800b56d12e0a",
+      "current_sha256": "86c9cd940b6e186f53e55cfd54067786df61d85d98d7d35cc5b0800b56d12e0a",
+      "unchanged": true
+    },
+    {
+      "file": "broker/broker_wire.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-broker-v3-20261115/broker_wire.py",
+      "sha256": "9d647440a4d45f44d44c6520830a4565b7bfccb8939e6b61a1f2895b42ff2e47",
+      "current_sha256": "9d647440a4d45f44d44c6520830a4565b7bfccb8939e6b61a1f2895b42ff2e47",
+      "unchanged": true
+    },
+    {
+      "file": "broker/broker_proxy.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-broker-v3-20261115/broker_proxy.py",
+      "sha256": "526ab0eb2687e6046109211ffc7a8249544d635c68d13cb4c752aee0b628b767",
+      "current_sha256": "526ab0eb2687e6046109211ffc7a8249544d635c68d13cb4c752aee0b628b767",
+      "unchanged": true
+    }
+  ],
+  "host_changes": false
+}

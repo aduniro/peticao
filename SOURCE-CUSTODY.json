@@ -1,0 +1,118 @@
+{
+  "parent_notice": 3291,
+  "parent_ack": 3301,
+  "parent_commit": "33fcce1bd0206e9d03baf3c696bb692ab0336f0a",
+  "native_namespace_reference": 3401,
+  "runtime_code_changes": [
+    "systemd_adapter.py"
+  ],
+  "runtime_files": [
+    {
+      "file": "entry_bootstrap.py",
+      "parent_sha256": "e9c1f89ab77cce41df6435779bddf5cab0bceeebc22de700ab6410c72cc9b1cd",
+      "current_sha256": "e9c1f89ab77cce41df6435779bddf5cab0bceeebc22de700ab6410c72cc9b1cd",
+      "unchanged": true
+    },
+    {
+      "file": "remote_contract.py",
+      "parent_sha256": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+      "current_sha256": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+      "unchanged": true
+    },
+    {
+      "file": "worker.py",
+      "parent_sha256": "0e039274a39c040964f3bdbd4b1afa7c2aa305b95daa92c450023a82fd7b7a4c",
+      "current_sha256": "0e039274a39c040964f3bdbd4b1afa7c2aa305b95daa92c450023a82fd7b7a4c",
+      "unchanged": true
+    },
+    {
+      "file": "artifacts.py",
+      "parent_sha256": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+      "current_sha256": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+      "unchanged": true
+    },
+    {
+      "file": "admission.py",
+      "parent_sha256": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+      "current_sha256": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+      "unchanged": true
+    },
+    {
+      "file": "systemd_adapter.py",
+      "parent_sha256": "a2ebaeddd9dd7baa510e069eaad32cdc8e13d3b12d6adad2feaa0a7e74bf2be4",
+      "current_sha256": "65ebbea77fffa2607acfe0cc6a0261ffe7e565e9e5decdf1168a7f8389864762",
+      "unchanged": false
+    },
+    {
+      "file": "cgroups.py",
+      "parent_sha256": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce",
+      "current_sha256": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce",
+      "unchanged": true
+    },
+    {
+      "file": "log_redaction.py",
+      "parent_sha256": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+      "current_sha256": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+      "unchanged": true
+    },
+    {
+      "file": "rpc.py",
+      "parent_sha256": "94f934c4e596898d9e945a6e1e32017aac14116644954e023fe2ee31234b0d90",
+      "current_sha256": "94f934c4e596898d9e945a6e1e32017aac14116644954e023fe2ee31234b0d90",
+      "unchanged": true
+    },
+    {
+      "file": "fixture_job.py",
+      "parent_sha256": "1fd2318496e53dc2ada4a4ebcba13ec1d110f4c529e05a11e4623180c0740078",
+      "current_sha256": "1fd2318496e53dc2ada4a4ebcba13ec1d110f4c529e05a11e4623180c0740078",
+      "unchanged": true
+    },
+    {
+      "file": "transport.py",
+      "parent_sha256": "0f1080372e6dd3554f5a2c563448d31c9819c49b3dc8e4e1daa7b34789a5ad94",
+      "current_sha256": "0f1080372e6dd3554f5a2c563448d31c9819c49b3dc8e4e1daa7b34789a5ad94",
+      "unchanged": true
+    },
+    {
+      "file": "client_entry.py",
+      "parent_sha256": "d924d5b44fd1a7745e9ca40631fa4781b54a08c8f4d77115008da646ebbf5187",
+      "current_sha256": "d924d5b44fd1a7745e9ca40631fa4781b54a08c8f4d77115008da646ebbf5187",
+      "unchanged": true
+    },
+    {
+      "file": "controller.py",
+      "parent_sha256": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+      "current_sha256": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+      "unchanged": true
+    },
+    {
+      "file": "node_catalog.py",
+      "parent_sha256": "9695ac72756538ae56bb31c4a80da6c0dbb1cb2abe0d2648825365e68c631f95",
+      "current_sha256": "9695ac72756538ae56bb31c4a80da6c0dbb1cb2abe0d2648825365e68c631f95",
+      "unchanged": true
+    },
+    {
+      "file": "project_storage.py",
+      "parent_sha256": "c8d9f98a4d62cf8d0567be318c11c8e3c7952abcc1ab9ed9da452b0c4f82e769",
+      "current_sha256": "c8d9f98a4d62cf8d0567be318c11c8e3c7952abcc1ab9ed9da452b0c4f82e769",
+      "unchanged": true
+    },
+    {
+      "file": "unit_refs.py",
+      "parent_sha256": "ee4a9145f0443a56ab769b709facc6a7fcc3e029bf9c778a92a7e1cb1ab02b1f",
+      "current_sha256": "ee4a9145f0443a56ab769b709facc6a7fcc3e029bf9c778a92a7e1cb1ab02b1f",
+      "unchanged": true
+    },
+    {
+      "file": "profile_contract.py",
+      "parent_sha256": "da36792ef1efb1d346c72cb9c95f4fbd44ae2dfb69e60ecf1cc731757f666056",
+      "current_sha256": "da36792ef1efb1d346c72cb9c95f4fbd44ae2dfb69e60ecf1cc731757f666056",
+      "unchanged": true
+    }
+  ],
+  "bootstrap_same": true,
+  "code_closure": 17,
+  "native_V6": false,
+  "global_ready": false,
+  "qualified_by_source_only": false
+}

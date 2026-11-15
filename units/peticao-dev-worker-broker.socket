@@ -1,0 +1,15 @@
+[Unit]
+Description=Peticao development worker root-only local socket
+
+[Socket]
+ListenStream=/run/peticao-dev-worker-broker/worker.sock
+SocketUser=root
+SocketGroup=root
+SocketMode=0600
+DirectoryMode=0700
+Accept=no
+RemoveOnStop=yes
+Service=peticao-dev-worker-broker.service
+
+[Install]
+WantedBy=sockets.target

@@ -1,0 +1,19 @@
+{
+  "status": "SOURCE_AFFECTED_LOCAL_PASS_NOT_NATIVE",
+  "executed": 51,
+  "seconds": 8.846,
+  "parent203_adopted_unchanged": 157,
+  "distinct_coverage": 208,
+  "full208rerun": false,
+  "new_alias_tests": 5,
+  "ast": 46,
+  "runtime_code": 17,
+  "runtime_changed": [
+    "systemd_adapter.py"
+  ],
+  "bootstrap_sha256": "e9c1f89ab77cce41df6435779bddf5cab0bceeebc22de700ab6410c72cc9b1cd",
+  "bootstrap_unchanged": true,
+  "actual_namespace_evidence_only": 3401,
+  "native_V6_profiles": false,
+  "log": "namespace-v6-final.private.log"
+}

@@ -1,0 +1,47 @@
+{
+  "status": "SOURCE_ONLY_NOT_DEPLOYED_OR_NATIVELY_QUALIFIED",
+  "runtime_parent_notice": 3178,
+  "broker_parent_notice": 3237,
+  "fixture_broker_actual_test": 3269,
+  "fixture_broker_test_qualifies_this_successor": false,
+  "actual_profile_qualification": false,
+  "global_b_qualification": false,
+  "code_closure_files": 17,
+  "descriptor_keys": 12,
+  "manifest_schema_changed": false,
+  "profiles": [
+    "fixture-pass",
+    "fixture-fail",
+    "admin-typecheck-v1",
+    "admin-build-v1",
+    "admin-qa-v1"
+  ],
+  "resource_plans": [
+    {
+      "cpu": 4,
+      "memory_GiB": 8
+    },
+    {
+      "cpu": 14,
+      "memory_GiB": 20
+    }
+  ],
+  "real_artifact_policy": {
+    "files": 7,
+    "per_file_MiB": 16,
+    "total_MiB": 32,
+    "flat_allowlist": true,
+    "no_links": true,
+    "copied_only_after_bound_stop": true
+  },
+  "new_os_users_or_auth_changes": false,
+  "host_mutations": false,
+  "remaining": [
+    "Independent review of complete current source",
+    "Exact real driver/app/dependency/toolchain closure from Apoio",
+    "Native source-exact workload qualification with actual broker refs and project-backed mounts",
+    "Current topology/bootstrap/fencing/globalcode-deploy window and normalB qualification",
+    "Canonical samequeue/pairedlegacyguard actual integration and realbuildQA",
+    "Recovery/restart/failback/Dell-off acceptance"
+  ]
+}
