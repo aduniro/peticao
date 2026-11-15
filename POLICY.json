@@ -1,0 +1,52 @@
+{
+  "state": "SOURCE_ONLY_COMPONENT_NOT_OPERATIONALLY_QUALIFIED",
+  "scope": "Santiago legacy dispatcher and its bound admin-v2-job units only",
+  "root_entry_installed": false,
+  "canonical_controller_wrapper_implemented": false,
+  "native_service_reference_test": false,
+  "all_node_fencing_complete": false,
+  "floor_installed": false,
+  "queue_snapshot_captured": false,
+  "queue_promoted": false,
+  "actual_legacy_source_readonly_preflight": true,
+  "root_source_layout": {
+    "directory": [
+      999,
+      989,
+      "2770"
+    ],
+    "authority": [
+      0,
+      989,
+      "0644"
+    ]
+  },
+  "civo_target_layout_is_distinct": {
+    "directory": [
+      999,
+      987,
+      "0700"
+    ],
+    "authority": [
+      999,
+      987,
+      "0600"
+    ]
+  },
+  "new_public_code_root": "/opt/peticao-dev-bootstrap-v1",
+  "future_private_state": "/mnt/apps/peticao-final/.runtime/peticao-dev-migration/<operation-id>",
+  "future_exact_metadata_publications": [
+    "/srv/admin-v2-coordinator/authority.json",
+    "/srv/admin-v2-coordinator/.authority-<random32hex>"
+  ],
+  "remaining": [
+    "Independent source review and canonical operator wrapper binding live own lease/manifest/code window before each call",
+    "Root-only install packet and operation-specific private journal directory",
+    "Native source-exact reference/stop/cgroup qualification; preserve production/e-digger",
+    "Prequalified admission and launcher closure on every possible writer",
+    "Fresh consistent terminal queue snapshot and reconciliation before/after fencing",
+    "All-node monotonic genuine epoch distribution and target promotion with actual owner preservation",
+    "Complete native runtime/driver/IPC alias qualification and normal broker B",
+    "Queue integration, restart, recovery/failback and Dell-off"
+  ]
+}

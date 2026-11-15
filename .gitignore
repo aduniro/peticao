@@ -1,0 +1,11 @@
+.lease.private.json
+*.private.*
+*.log
+__pycache__/
+metadata-fixture-*/
+journal-fixture-*/
+legacy-cgroup-*/
+LEGACY-PREFLIGHT-RO.json
+NORMAL-MANIFEST.json
+NOTICE-RECEIPT.json
+RELEASE.json

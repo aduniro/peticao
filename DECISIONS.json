@@ -1,0 +1,22 @@
+{
+  "decisions": [
+    {
+      "question": "Copiar ownerfix privado da Civo para a autoridade Santiago?",
+      "answer": "Não. Layouts reais são distintos; preservar source0:989/0644 sob999:989/2770, mantendo Civo999:987/0600 separado."
+    },
+    {
+      "question": "Failed/MainPID0 ou ControlGroup vazio provam parada?",
+      "answer": "Não. Reter InvocationID e referência; verificar caminho cgroup original explícito no kernel e rejeitar órfão."
+    },
+    {
+      "question": "Repetir stop/Unref após resposta perdida?",
+      "answer": "Não. Intenção e fase permanecem para observação/reconciliação."
+    },
+    {
+      "question": "O componente autoriza migração ou cria piso primário fictício?",
+      "answer": "Não. Nenhuma escrita de piso, primary ou SQL pela entrada; controlador/qualificação/instalação ainda pendentes."
+    }
+  ],
+  "questions_for_owner": [],
+  "host_mutation_authorized_by_artifact": false
+}

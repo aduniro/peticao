@@ -1,0 +1,19 @@
+{
+  "upstream_notice": 3291,
+  "upstream_ack": 3301,
+  "reference_files": [
+    {
+      "file": "unit_refs.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v5-20261115/unit_refs.py",
+      "sha256": "ee4a9145f0443a56ab769b709facc6a7fcc3e029bf9c778a92a7e1cb1ab02b1f",
+      "parent_identical": true
+    },
+    {
+      "file": "cgroups.py",
+      "parent": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v5-20261115/cgroups.py",
+      "sha256": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce",
+      "parent_identical": true
+    }
+  ],
+  "legacy_cgroups": "separate strict legacy regex, empty binding refused; worker module untouched"
+}

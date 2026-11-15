@@ -1,0 +1,20 @@
+{
+  "state": "LOCAL_ONLY_PASS",
+  "tests": 31,
+  "seconds": 0.118,
+  "ast_files": [
+    "unit_refs.py",
+    "test_bootstrap_fencing.py",
+    "service_metadata.py",
+    "legacy_preflight_ro.py",
+    "legacy_cgroups.py",
+    "legacy_fence.py",
+    "operator_journal.py",
+    "cgroups.py"
+  ],
+  "actual_file_tests": true,
+  "metadata_fixture_uid": 1000,
+  "services_and_bus_mocked": true,
+  "native_fencing_qualified": false,
+  "test_log_sha256": "b5c0da7fd4fa2d88d2e4b9df2a92ad3a69319fc76d183de4b7e90c4cc1794abd"
+}

@@ -1,0 +1,15 @@
+{
+  "status": "TEMPLATE_NOT_AUTHORIZED",
+  "operation_id": null,
+  "source_boot_id": null,
+  "authority_sha256": null,
+  "manifest_event": null,
+  "peer_ack_event": null,
+  "code_sha256": {
+    "legacy_fence.py": null,
+    "service_metadata.py": null,
+    "operator_journal.py": null,
+    "legacy_cgroups.py": null,
+    "unit_refs.py": null
+  }
+}
