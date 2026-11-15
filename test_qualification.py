@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import types
 import unittest
 from unittest import mock
 
@@ -11,6 +12,7 @@ import qualification_contract as q
 import qualification_helper as helper
 import qualification_client as client
 import review_gate as gate
+from runtime import cgroups as shared_cgroups
 
 HERE = Path(__file__).resolve().parent
 
@@ -101,6 +103,30 @@ class Contracts(unittest.TestCase):
     def test_uninstalled_helper_path_refused_before_reads(self):
         with mock.patch.object(helper.os,"geteuid",return_value=0),mock.patch.object(helper.socket,"gethostname",return_value="peticao-civo"):
             with self.assertRaises(PermissionError):helper.load()
+
+    def fake_public(self, root, execute):
+        request=operation(execute)
+        for name in q.RUNTIME | q.HARNESS:
+            (root/name).write_text("# synthetic code bytes, never executed\n")
+        request["runtime_sha256"]={name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in q.RUNTIME}
+        request["harness_sha256"]={name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in q.HARNESS}
+        (root/"RUN-REQUEST.json").write_text(json.dumps(request))
+        (root/"readonly-marker").write_bytes(b"synthetic public readonly marker\n")
+        return request
+
+    def test_bad_pin_refused_before_any_dynamic_import(self):
+        with tempfile.TemporaryDirectory(dir=HERE,prefix="fixture-") as tmp:
+            root=Path(tmp);request=self.fake_public(root,True);request["runtime_sha256"]["worker.py"]="0"*64
+            with mock.patch.object(helper,"PUBLIC",root),mock.patch.object(helper,"__file__",str(root/"qualification_helper.py")),mock.patch.object(helper.os,"geteuid",return_value=0),mock.patch.object(helper.socket,"gethostname",return_value="peticao-civo"),mock.patch.object(helper,"root_file",side_effect=lambda p,*a,**k:p),mock.patch.object(helper,"read_json",return_value=request),mock.patch.object(helper.importlib,"import_module") as imports:
+                with self.assertRaises(PermissionError):helper.load()
+            imports.assert_not_called()
+
+    def test_prepare_flag_refused_before_runtime_imports(self):
+        with tempfile.TemporaryDirectory(dir=HERE,prefix="fixture-") as tmp:
+            root=Path(tmp);request=self.fake_public(root,False)
+            with mock.patch.object(helper,"PUBLIC",root),mock.patch.object(helper,"__file__",str(root/"qualification_helper.py")),mock.patch.object(helper.os,"geteuid",return_value=0),mock.patch.object(helper.socket,"gethostname",return_value="peticao-civo"),mock.patch.object(helper,"root_file",side_effect=lambda p,*a,**k:p),mock.patch.object(helper,"read_json",return_value=request),mock.patch.object(helper.importlib,"import_module",return_value=q) as imports:
+                with self.assertRaises(PermissionError):helper.load()
+            self.assertEqual([c.args[0] for c in imports.call_args_list],["qualification_contract"])
 
     def test_bounded_control_json_and_symlinks_refused(self):
         with tempfile.TemporaryDirectory(dir=HERE,prefix="fixture-") as tmp:
@@ -313,29 +339,29 @@ class Contracts(unittest.TestCase):
         relative="/system.slice/"+q.unit("1"*32)
         with tempfile.TemporaryDirectory(dir=HERE,prefix="fixture-") as tmp:
             fake=Path(tmp);root=fake/relative.lstrip("/");root.mkdir(parents=True)
-            def paths(value):return fake if str(value)=="/sys/fs/cgroup" else Path(value)
+            (fake/"cgroup.controllers").write_text("cpu memory pids")
+            reader=types.SimpleNamespace(snapshot=lambda group:shared_cgroups.snapshot(group,base=fake))
             (root/"cgroup.events").write_text("populated 1\nfrozen 0\n")
-            with mock.patch.object(helper,"Path",side_effect=paths):
-                with self.assertRaises(RuntimeError):helper.cgroup_pids(relative)
+            with self.assertRaises((ValueError,RuntimeError)):helper.cgroup_pids(relative,reader)
             (root/"cgroup.procs").write_text("101\n102\n")
-            with mock.patch.object(helper,"Path",side_effect=paths):self.assertEqual(helper.cgroup_pids(relative),2)
+            self.assertEqual(helper.cgroup_pids(relative,reader),2)
             (root/"cgroup.procs").write_text("")
-            with mock.patch.object(helper,"Path",side_effect=paths):
-                with self.assertRaises(RuntimeError):helper.cgroup_pids(relative)
+            with self.assertRaises(RuntimeError):helper.cgroup_pids(relative,reader)
             (root/"cgroup.events").write_text("populated 0\nfrozen 0\n")
-            with mock.patch.object(helper,"Path",side_effect=paths):self.assertEqual(helper.cgroup_pids(relative),0)
+            self.assertEqual(helper.cgroup_pids(relative,reader),0)
 
     def test_cgroup_walk_error_propagates(self):
         relative="/system.slice/"+q.unit("1"*32)
         with tempfile.TemporaryDirectory(dir=HERE,prefix="fixture-") as tmp:
             fake=Path(tmp);root=fake/relative.lstrip("/");root.mkdir(parents=True)
+            (fake/"cgroup.controllers").write_text("cpu memory pids")
             (root/"cgroup.events").write_text("populated 0\n")
-            def paths(value):return fake if str(value)=="/sys/fs/cgroup" else Path(value)
+            reader=types.SimpleNamespace(snapshot=lambda group:shared_cgroups.snapshot(group,base=fake))
             def bad_walk(*args,**kwargs):
                 kwargs["onerror"](PermissionError("synthetic denied cgroup"))
                 yield
-            with mock.patch.object(helper,"Path",side_effect=paths),mock.patch.object(helper.os,"walk",side_effect=bad_walk):
-                with self.assertRaises(PermissionError):helper.cgroup_pids(relative)
+            with mock.patch.object(shared_cgroups.os,"walk",side_effect=bad_walk):
+                with self.assertRaises(PermissionError):helper.cgroup_pids(relative,reader)
 
 
 if __name__=="__main__":unittest.main()

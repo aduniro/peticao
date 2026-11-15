@@ -8,7 +8,7 @@ PUBLIC = Path("/opt/peticao-dev-worker-qual-20261114-attempt1")
 PRIVATE = Path("/srv/peticao-dev-prep/civo-worker-runtime-qual-20261114-attempt1")
 HOST = "peticao-civo"
 EXPECTED = {"version", "operation_id", "jobs", "runtime_commit", "runtime_sha256", "harness_sha256", "execute"}
-RUNTIME = {"remote_contract.py", "admission.py", "artifacts.py", "worker.py", "controller.py", "systemd_adapter.py", "log_redaction.py"}
+RUNTIME = {"remote_contract.py", "admission.py", "artifacts.py", "worker.py", "controller.py", "systemd_adapter.py", "log_redaction.py", "cgroups.py"}
 HARNESS = {"qualification_contract.py", "qualification_job.py", "qualification_helper.py"}
 CHECKS = {"nonroot_uid", "zero_capabilities", "no_new_privileges", "home_masked", "root_masked", "private_marker_unreadable",
           "public_marker_readonly", "docker_socket_inaccessible", "environment_allowlisted", "private_loopback_works", "tailnet_no_route"}

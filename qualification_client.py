@@ -50,7 +50,7 @@ for parent in [*reversed(base.parents),base]:
 raw=sys.stdin.buffer.read(2*1024*1024+1)
 if len(raw)>2*1024*1024:raise ValueError('bounded_public_package_required')
 data=json.loads(raw)
-names={'qualification_contract.py','qualification_helper.py','qualification_job.py','remote_contract.py','worker.py','controller.py','systemd_adapter.py','artifacts.py','admission.py','log_redaction.py','RUN-REQUEST.json','readonly-marker'}
+names={'qualification_contract.py','qualification_helper.py','qualification_job.py','remote_contract.py','worker.py','controller.py','systemd_adapter.py','artifacts.py','admission.py','log_redaction.py','cgroups.py','RUN-REQUEST.json','readonly-marker'}
 if type(data)is not dict or set(data)!=names:raise ValueError('exact_public_package_required')
 for name,item in data.items():
  if type(item)is not dict or set(item)!={'text','sha256'} or type(item['text'])is not str or hashlib.sha256(item['text'].encode()).hexdigest()!=item['sha256']:raise ValueError('public_member_digest_required')

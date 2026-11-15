@@ -1,7 +1,13 @@
 {
   "status": "PREPARATION_ONLY_NOT_EXECUTED",
   "operation": "prepare source and mocked local tests only",
-  "runtime_freeze": "PENDING Infra642",
+  "runtime_freeze": {
+    "notice": 3099,
+    "commit": "df721fce5aa3a372c323c60e5bcf13be28338bbf",
+    "independent_tests": 114,
+    "independent_ack": 3104,
+    "modules": 8
+  },
   "remote_calls": 0,
   "real_units_started": 0,
   "code_destination": "/opt/peticao-dev-worker-qual-20261114-attempt1",

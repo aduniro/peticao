@@ -24,7 +24,7 @@ sys.dont_write_bytecode = True
 PUBLIC = Path("/opt/peticao-dev-worker-qual-20261114-attempt1")
 PRIVATE = Path("/srv/peticao-dev-prep/civo-worker-runtime-qual-20261114-attempt1")
 REQUEST = PUBLIC / "RUN-REQUEST.json"
-MODULES = ("qualification_contract", "remote_contract", "artifacts", "admission", "systemd_adapter", "worker", "controller")
+MODULES = ("qualification_contract", "remote_contract", "artifacts", "admission", "systemd_adapter", "worker", "controller", "cgroups")
 
 
 def root_file(path, directory=False, mode=None):
@@ -62,7 +62,7 @@ def load():
     root_file(PUBLIC, True, 0o755)
     request = read_json(REQUEST)
     # Validate names BEFORE using request keys as paths or importing any code.
-    runtime_names = {"remote_contract.py", "admission.py", "artifacts.py", "worker.py", "controller.py", "systemd_adapter.py", "log_redaction.py"}
+    runtime_names = {"remote_contract.py", "admission.py", "artifacts.py", "worker.py", "controller.py", "systemd_adapter.py", "log_redaction.py", "cgroups.py"}
     harness_names = {"qualification_contract.py", "qualification_job.py", "qualification_helper.py"}
     if type(request) is not dict or type(request.get("runtime_sha256")) is not dict or type(request.get("harness_sha256")) is not dict:
         raise ValueError("pinned_operation_required")
@@ -81,8 +81,10 @@ def load():
     if (PUBLIC / "readonly-marker").read_bytes() != b"synthetic public readonly marker\n":
         raise ValueError("public_marker_mismatch")
     sys.path.insert(0, str(PUBLIC))
-    modules = {name: importlib.import_module(name) for name in MODULES}
-    modules["qualification_contract"].operation(request, execution=True)
+    contract = importlib.import_module("qualification_contract")
+    contract.operation(request, execution=True)
+    modules = {"qualification_contract": contract}
+    modules.update({name: importlib.import_module(name) for name in MODULES if name != "qualification_contract"})
     return request, modules
 
 
@@ -193,7 +195,7 @@ def build(request, modules, install=False):
     transport = Transport()
     backend = modules["controller"].Backend(claims, transport, finalizer)
     return {"profiles": profiles, "claims": claims, "journal": journal, "admission": admission, "adapter": adapter,
-            "worker": worker, "store": store, "transport": transport, "backend": backend}
+            "worker": worker, "store": store, "transport": transport, "backend": backend, "cgroups": modules["cgroups"]}
 
 
 def enqueue(request, modules, context, path):
@@ -242,54 +244,23 @@ def wait_for(context, manifest, cancellation=False):
                 root = context["adapter"].output_root(manifest, receipt, context["profiles"][manifest["profile"]])
                 if not (root / "artifacts/isolation.json").is_file():
                     time.sleep(0.1); continue
-                if not (root / "artifacts/child-started.json").is_file() or cgroup_pids(state["cgroup_path"]) < 2:
+                if not (root / "artifacts/child-started.json").is_file() or cgroup_pids(state["cgroup_path"], context["cgroups"]) < 2:
                     time.sleep(0.1); continue
             return state
         time.sleep(0.1)
     raise TimeoutError("observe_same_id_only_no_restart")
 
 
-def cgroup_pids(path):
+def cgroup_pids(path, reader):
     if not re.fullmatch(r"/system.slice/admin-dev-[a-f0-9]{32}-g1\.service", path):
         raise ValueError("own_fixture_cgroup_required")
-    root = Path("/sys/fs/cgroup") / path.lstrip("/")
-    if root.is_symlink() or not root.is_dir():
-        raise RuntimeError("own_running_cgroup_absent_or_unknown")
-    def failed(error):
-        raise error
-    def read_small(path, budget):
-        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
-        try:
-            raw = os.read(fd, budget + 1)
-        finally:
-            os.close(fd)
-        if len(raw) > budget:
-            raise ValueError("bounded_cgroup_evidence_required")
-        return raw.decode()
-    events = {}
-    for line in read_small(root / "cgroup.events", 1024).splitlines():
-        parts = line.split()
-        if len(parts) != 2 or parts[0] in events:
-            raise ValueError("exact_kernel_cgroup_events_required")
-        events[parts[0]] = parts[1]
-    if events.get("populated") not in {"0", "1"}:
-        raise RuntimeError("cgroup_population_unknown")
-    count = 0
-    seen_root = False
-    for directory, dirs, files in os.walk(root, followlinks=False, onerror=failed):
-        seen_root |= Path(directory) == root
-        for name in dirs:
-            if (Path(directory) / name).is_symlink():
-                raise ValueError("cgroup_link_forbidden")
-        if "cgroup.procs" not in files:
-            raise RuntimeError("cgroup_process_evidence_missing")
-        pids = read_small(Path(directory) / "cgroup.procs", 16384).split()
-        if any(not pid.isdecimal() or int(pid) < 1 for pid in pids):
-            raise ValueError("kernel_pid_list_required")
-        count += len(pids)
-    if not seen_root or bool(count) != (events["populated"] == "1"):
-        raise RuntimeError("cgroup_observation_incomplete_or_changed")
-    return count
+    value = reader.snapshot(path)
+    if (set(value) != {"empty", "absent", "pids_count", "populated"} or value["absent"] is not False
+            or type(value["pids_count"]) is not int or value["pids_count"] < 0
+            or value["populated"] not in {0, 1} or bool(value["pids_count"]) != bool(value["populated"])
+            or value["empty"] != (value["pids_count"] == 0)):
+        raise RuntimeError("own_cgroup_observation_incomplete_or_changed")
+    return value["pids_count"]
 
 
 def outcome(modules, context, manifest, expected):
@@ -410,7 +381,7 @@ def run_locked(request, modules):
                 # Deliberate response loss AFTER actual start: observe SAME ID.
                 durable(modules, "lost-response-observation.json", {"simulated": True, "dispatch_retried": False})
             observed_before_stop = wait_for(context, manifest, cancellation=path == "cancellation")
-            before_stop = cgroup_pids(observed_before_stop["cgroup_path"]) if path == "cancellation" else 0
+            before_stop = cgroup_pids(observed_before_stop["cgroup_path"], context["cgroups"]) if path == "cancellation" else 0
             assert_unit(modules, context, manifest)
             durable(modules, path + "-finish-intent.json", {"cancel": path == "cancellation"})
             context["backend"].finish(manifest, cancel=path == "cancellation")

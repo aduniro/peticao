@@ -4,8 +4,9 @@ No SSH connection, host installation, service/unit, production data, global
 admission/epoch, actual coordinator queue, promotion, firewall, key or cloud
 resource was touched in preparing this source. Current local tests use fake
 contracts, mocked processes/network and private temporary fixture files only.
-They do NOT prove actual systemd isolation. Runtime642 freeze/pins are required
-before the preparation notice; actual execution needs a DIFFERENT canonical
+They do NOT prove actual systemd isolation. RuntimeV2 notice3099/df721fce is now independently reviewed and its eight
+transitive library modules are copied byte-for-byte under runtime/. Held3089 is
+normally superseded. These pins are required before the preparation notice; actual execution needs a DIFFERENT canonical
 manifest/lease and independent review as delegated by Infra.
 
 ## Exact future scope
@@ -65,7 +66,8 @@ start, observe and cleanup only. It has a CLI with required --manifest-event and
 absolute --lease-file. Local private evidence/intents go to
 /mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-systemd-qualification/execution-state
 only AFTER canonical validation. No actual command invocation is provided here
-because the execution notice and own capability do not exist yet.
+because the execution notice and own capability do not exist yet. The example
+operation remains execute=false; no preparation ACK can enable it.
 
 The root helper verifies host, root ownership/ancestors, exact code package and
 all pins before importing frozen runtime modules. Python runs -I/-B and disables

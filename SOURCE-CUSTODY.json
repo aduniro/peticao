@@ -1,9 +1,25 @@
 {
-  "runtime": "PENDING freeze642 and independent review; no manifest until then",
-  "runtime_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-20261114",
+  "runtime": {
+    "notice": 3099,
+    "commit": "df721fce5aa3a372c323c60e5bcf13be28338bbf",
+    "ack_event": 3104,
+    "file_sha256": {
+      "remote_contract.py": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+      "admission.py": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+      "artifacts.py": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+      "worker.py": "a16bef2e64fe514caa3065f1d18faee26c2263a6e18d95d543e237d667b5618c",
+      "controller.py": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+      "systemd_adapter.py": "a7a127f693a2c3ed1f44de1fef7c8aeeb46df9a9819864502daf5dc9c9d84ae5",
+      "log_redaction.py": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+      "cgroups.py": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce"
+    },
+    "scope": "8transitive library modules only; no global root entry/helper installation qualification"
+  },
+  "runtime_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v2-20261114",
   "facade_notice": 3080,
   "facade_commit": "2c1491a7597f66977b6e1fb37b8ae36938297af9",
   "gate_reference": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-passive-restore-retry1-20261114/client.py",
   "gate_reference_commit": "142d5ac57cc5ecd3e4694d60e950485a4a283906",
-  "new_authorization_actor": false
+  "new_authorization_actor": false,
+  "held3089_superseded_confirmation": 3105
 }
