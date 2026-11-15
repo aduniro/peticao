@@ -2,7 +2,7 @@
 
 No loop, admission API, host adapter, subprocess or second queue. install_schema
 is an explicit future migration draft and is never called by construction.
-The retirement wire/ACK below is a PENDING contract, not a qualified broker.
+The retirement wire matches source3222; its live provider/host remain unqualified.
 Every uncertain mutation retains the same node slot; operator reconciliation is
 required, never a retry of prepare/dispatch/finish/retire. Launch secrets remain
 in TokenStore and internal calls only. No public action accepts these methods.
@@ -166,7 +166,7 @@ class Consumer:
                 "manifest_sha256": contract.digest(manifest), "job_state": job["state"],
                 "slot_state": slot["state"] if slot else "unreserved",
                 "slot_retained": bool(slot and slot["active"]),
-                "retirement_contract": "pending_infra_freeze"}
+                "retirement_contract": "broker3222_source_matched_host_pending"}
 
     def _metadata_now(self, job_id):
         with self._db() as db:
@@ -241,6 +241,11 @@ class Consumer:
         try:
             self._effect_guard(job_id)
             self.backend.finish(manifest, cancel=cancel)
+            with self._db() as db:
+                _, _, current_claim, _ = self._bound(db, job_id)
+                result = json.loads(current_claim["result_json"]) if current_claim and current_claim["result_json"] else None
+            if type(result) is dict and result.get("state") == "canceled_before_start":
+                return self.reconcile_prestart_cancel(job_id)
             self._attest(job_id)
         except Exception:
             raise ConsumerPending("finish_or_custody_pending_slot_retained_no_replay") from None
@@ -345,12 +350,14 @@ class Consumer:
         return self._metadata_now(job_id)
 
     def _accept_retirement_ack(self, job_id, request, attestation, ack):
-        expected = {"state": "retired", **attestation["identity"],
-                    "bundle_sha256": request.bundle_sha256,
-                    "custody_receipt_sha256": request.custody_receipt_sha256,
-                    "storage_retained": True, "mount_absent": True, "reference_released": True}
-        if (type(ack) is not dict or set(ack) != set(expected)
-                or any(type(ack[k]) is not type(v) or ack[k] != v for k, v in expected.items())):
+        identity = {**attestation["identity"], "bundle_sha256": request.bundle_sha256,
+                    "custody_receipt_sha256": request.custody_receipt_sha256}
+        expected = {"state": "retained", "identity": identity, "unit_reference_released": True}
+        if (type(ack) is not dict or set(ack) != set(expected) or type(ack.get("state")) is not str
+                or ack.get("state") != "retained"
+                or ack.get("unit_reference_released") is not True or type(ack.get("identity")) is not dict
+                or set(ack["identity"]) != set(identity)
+                or any(type(ack["identity"][k]) is not type(v) or ack["identity"][k] != v for k, v in identity.items())):
             raise ConsumerPending("exact_verified_storage_retained_retirement_ack_required")
         with self._db(True) as db:
             _, _, _, slot = self._bound(db, job_id)
@@ -395,6 +402,60 @@ class Consumer:
             self._accept_retirement_ack(job_id, request, attestation, ack)
         except Exception:
             raise ConsumerPending("retirement_observation_uncertain_slot_retained_no_cleanup_replay") from None
+        return self._metadata_now(job_id)
+
+    def _prestart_proof(self, db, job_id):
+        job, manifest, claim, slot = self._bound(db, job_id)
+        if (not slot or not slot["active"] or not claim or job["state"] != "canceled"
+                or claim["phase"] != "canceled" or claim["invocation_id"] is not None
+                or slot["retire_intent"] or slot["custody_json"] or slot["custody_sha256"]):
+            raise ConsumerPending("exact_unstarted_cancellation_requires_separate_reconciliation")
+        receipt = json.loads(claim["receipt_json"])
+        contract.validate_receipt(receipt, manifest, contract.digest(manifest))
+        receipt_sha = contract.digest(receipt)
+        expected = {"state": "canceled_before_start", "no_unit_created": True,
+                    "receipt_sha256": receipt_sha, "worker_boot_id": receipt["boot_id"]}
+        proof = json.loads(claim["result_json"])
+        if (claim["receipt_sha256"] != receipt_sha or type(proof) is not dict or set(proof) != set(expected)
+                or proof.get("no_unit_created") is not True or proof != expected
+                or claim["result_json"] != _json(expected)):
+            raise PermissionError("persisted_exact_authenticated_prestart_cancellation_required")
+        if db.execute("SELECT 1 FROM events WHERE job_id=? AND kind='remote_running' LIMIT 1", (job_id,)).fetchone():
+            raise PermissionError("running_history_forbids_prestart_shortcut")
+        events = db.execute("SELECT data FROM events WHERE job_id=? AND kind='remote_canceled_before_start' ORDER BY seq DESC", (job_id,)).fetchall()
+        if not any(json.loads(row["data"]) == {"receipt_sha256": receipt_sha} for row in events):
+            raise PermissionError("canonical_prestart_cancellation_commit_event_required")
+        return job, manifest, claim, slot, expected
+
+    def reconcile_prestart_cancel(self, job_id):
+        """Release ONLY V4's committed authenticated no-unit-created path.
+
+        This neither creates artifact custody nor invokes retirement/Unref. A
+        lost finish reply can reconcile the existing exact proof, never rerun
+        finish. Any invocation/running history or incomplete proof stays held.
+        """
+        try:
+            with self._db() as db:
+                job, manifest, _, slot = self._bound(db, job_id)
+                if slot and not slot["active"]:
+                    if slot["state"] != "prestart_canceled":
+                        raise ConsumerPending("different_release_path_observe_only")
+                    return self._metadata(job, manifest, slot)
+                _, manifest, claim, _, proof = self._prestart_proof(db, job_id)
+            self._effect_guard(job_id)
+            secret = self.tokens.load(manifest)
+            if secret.sha256() != claim["token_sha256"]:
+                raise PermissionError("same_manifest_launch_secret_binding_required")
+            with self._db(True) as db:
+                _, _, current_claim, _, current_proof = self._prestart_proof(db, job_id)
+                if current_proof != proof or current_claim["token_sha256"] != secret.sha256():
+                    raise PermissionError("prestart_cancellation_binding_changed")
+                db.execute(f"UPDATE {TABLE} SET active=0,state='prestart_canceled',ack_json=?,updated_at=? WHERE job_id=?",
+                           (_json(proof), contract.now(), job_id))
+                self._event(db, job_id, "consumer_slot_prestart_canceled", {
+                    "receipt_sha256": proof["receipt_sha256"], "result_sha256": contract.digest(proof)})
+        except Exception:
+            raise ConsumerPending("prestart_cancellation_proof_uncertain_slot_retained") from None
         return self._metadata_now(job_id)
 
     def _metadata_now_after_transaction(self, job_id, db):

@@ -62,10 +62,12 @@ class PairedGuard:
         columns={row[1] for row in db.execute(f'PRAGMA table_info({TABLE})')}
         if columns!=COLUMNS:
             raise GuardPending('explicit_reviewed_slot_schema_required')
-        row=db.execute("SELECT sql FROM sqlite_master WHERE type='index' AND name='canonical_consumer_one_slot'").fetchone()
+        row=db.execute("SELECT sql,tbl_name FROM sqlite_master WHERE type='index' AND name='canonical_consumer_one_slot'").fetchone()
+        attached=[item for item in db.execute(f'PRAGMA index_list({TABLE})') if item[1]=='canonical_consumer_one_slot']
         names=[v[2] for v in db.execute('PRAGMA index_info(canonical_consumer_one_slot)')]
         sql=re.sub(r'\s+','',row[0].lower()) if row else ''
-        if names!=['worker_id'] or 'createuniqueindex' not in sql or not sql.endswith('whereactive=1'):
+        if (not row or row[1]!=TABLE or len(attached)!=1 or attached[0][2]!=1 or attached[0][4]!=1
+                or names!=['worker_id'] or 'createuniqueindex' not in sql or not sql.endswith('whereactive=1')):
             raise GuardPending('unique_active_slot_per_node_required')
 
     def reserve_legacy(self, db, row, worker, generation, now):

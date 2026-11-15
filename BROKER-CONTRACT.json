@@ -1,0 +1,39 @@
+{
+  "source_notice": 3222,
+  "source_commit": "63f829d90340019e6eb0a5cf38230ab82a233a41",
+  "source_only_ack": 3228,
+  "broker_host_qualified": false,
+  "wire_actions_pending_implementation_in_live_transport": [
+    "retire",
+    "retirement"
+  ],
+  "request_fields": [
+    "action",
+    "manifest",
+    "token",
+    "receipt_sha256",
+    "bundle_sha256",
+    "custody_receipt_sha256"
+  ],
+  "reply": {
+    "state": "retained",
+    "identity_fields": [
+      "job_id",
+      "generation",
+      "manifest_sha256",
+      "receipt_sha256",
+      "bundle_sha256",
+      "custody_receipt_sha256",
+      "invocation_id",
+      "worker_boot_id"
+    ],
+    "unit_reference_released": true
+  },
+  "retirement_observation": "No mutation/intent/unmount/Unref; exact saved receipt or uncertain/no_replay",
+  "prestart_cancellation": "Separate V4 authenticated no_unit_created proof/finalizer commit, no bundle or retirement",
+  "file_sha256": {
+    "broker_lifecycle.py": "0f86442e46f196d2257f34c11b16d267d2f9d487076eea20411b30369152f19d",
+    "broker_wire.py": "9d647440a4d45f44d44c6520830a4565b7bfccb8939e6b61a1f2895b42ff2e47",
+    "broker_proxy.py": "526ab0eb2687e6046109211ffc7a8249544d635c68d13cb4c752aee0b628b767"
+  }
+}

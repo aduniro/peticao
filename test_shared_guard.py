@@ -135,5 +135,12 @@ class SharedSlotTests(unittest.TestCase):
         with self.assertRaises(ValueError):self.dispatcher.dispatch_once()
         self.launch.assert_not_called();self.assertEqual(list((self.worker/'jobs').iterdir()),[])
 
+    def test_matching_index_name_on_another_table_never_qualifies_guard(self):
+        with contract.transaction(self.f.queue,True) as db:
+            db.execute('DROP INDEX canonical_consumer_one_slot')
+            db.execute('CREATE TABLE other_slots(worker_id TEXT,active INTEGER)')
+            db.execute('CREATE UNIQUE INDEX canonical_consumer_one_slot ON other_slots(worker_id) WHERE active=1')
+            with self.assertRaises(GuardPending):self.guard.check(db,'civo')
+
 
 if __name__=='__main__':unittest.main()

@@ -16,6 +16,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "upstream" / "runtime"))
 import remote_contract as contract
 import artifacts
+from controller import Finalizer
 spec = importlib.util.spec_from_file_location("launch_tokens", HERE / "upstream" / "launch_tokens.py")
 launch_tokens = importlib.util.module_from_spec(spec)
 sys.modules["launch_tokens"] = launch_tokens
@@ -90,18 +91,26 @@ class Backend:
         self.dispatches = self.finishes = self.observes = 0
         self.lose_dispatch = self.lose_finish = False
         self.before_dispatch = None
+        self.prestart_cancel = False
         self.results = {}
         self.finalizer = types.SimpleNamespace(store=types.SimpleNamespace(observe=self.custody))
+
+    @staticmethod
+    def receipt(manifest):
+        return {"job_id": manifest["job_id"], "generation": manifest["generation"],
+                "worker_id": manifest["worker_id"], "manifest_sha256": contract.digest(manifest),
+                "boot_id": "worker-boot", "unit": "admin-dev-" + manifest["job_id"] + "-g1.service",
+                "prepared_at": "2026-11-15T00:00:00+00:00"}
 
     def dispatch(self, manifest, token):
         self.dispatches += 1
         if self.before_dispatch:
             self.before_dispatch()
         assert self.claims.reserve(manifest, token)
-        receipt = {"boot_id": "worker-boot", "unit": "fake-local-unit"}
+        receipt = self.receipt(manifest)
         with contract.transaction(self.claims.path, True) as db:
             db.execute("UPDATE remote_execution_claims SET receipt_json=?,receipt_sha256=?,invocation_id=?,phase='permit_committed' WHERE job_id=?",
-                       (contract.canonical(receipt), contract.digest(receipt), "f" * 32, manifest["job_id"]))
+                       (contract.canonical(receipt), contract.digest(receipt), None if self.prestart_cancel else "f" * 32, manifest["job_id"]))
         if self.lose_dispatch:
             raise RuntimeError(token)
         return {"token": token}  # must never escape consumer metadata
@@ -131,6 +140,15 @@ class Backend:
             identity = {"job_id": manifest["job_id"], "generation": manifest["generation"],
                         "manifest_sha256": contract.digest(manifest), "receipt_sha256": claim["receipt_sha256"],
                         "invocation_id": claim["invocation_id"], "worker_boot_id": receipt["boot_id"]}
+        if self.prestart_cancel:
+            assert cancel
+            self.claims.cancel_intent(manifest)
+            proof = {"state": "canceled_before_start", "no_unit_created": True,
+                     "receipt_sha256": contract.digest(receipt), "worker_boot_id": receipt["boot_id"]}
+            answer = Finalizer(self.claims, None).canceled_before_start(manifest, receipt, proof)
+            if self.lose_finish:
+                raise RuntimeError("lost prestart finish reply")
+            return answer
         result = self.result(manifest, receipt, identity, cancel)
         self.results[manifest["job_id"]] = result
         custody = self.finalizer.store.observe(identity)
@@ -219,9 +237,8 @@ class ConsumerTests(unittest.TestCase):
         self.assertIsInstance(request.token, launch_tokens.LaunchSecret)
         self.assertNotIn("a" * 64, repr(request))
         value = json.loads(self.slot()["custody_json"])
-        return {"state": "retired", **value["identity"], "bundle_sha256": request.bundle_sha256,
-                "custody_receipt_sha256": request.custody_receipt_sha256,
-                "storage_retained": True, "mount_absent": True, "reference_released": True}
+        return {"state": "retained", "identity": {**value["identity"], "bundle_sha256": request.bundle_sha256,
+                "custody_receipt_sha256": request.custody_receipt_sha256}, "unit_reference_released": True}
 
     def test_explicit_migration_preserves_legacy(self):
         with self.assertRaises(ConsumerPending):
@@ -329,7 +346,7 @@ class ConsumerTests(unittest.TestCase):
                     if mode == "lost_ack":
                         raise RuntimeError("lost ACK")
                     ack = self.ack(request)
-                    ack["bundle_sha256"] = "0" * 64
+                    ack["identity"]["bundle_sha256"] = "0" * 64
                     return ack
                 self.consumer.retire_provider = provider
                 with self.assertRaises(ConsumerPending):
@@ -378,7 +395,7 @@ class ConsumerTests(unittest.TestCase):
                         "worker_boot_id": "worker-boot"}
         source = self.root / "fixture-bundle"
         source.mkdir(mode=0o700)
-        receipt = {"boot_id": "worker-boot", "unit": "fake-local-unit"}
+        receipt = self.backend.receipt(manifest)
         result = self.backend.result(manifest, receipt, identity)
         (source / "result.json").write_text(contract.canonical(result))
         (source / "artifacts").mkdir(mode=0o700)
@@ -538,9 +555,9 @@ class ConsumerTests(unittest.TestCase):
     def test_paired_guard_default_blocks_effects_but_explicit_migration_allowed(self):
         consumer = Consumer(self.queue, self.facade, self.tokens, self.backend)
         consumer.install_schema(1)
-        for operation in (consumer.start, consumer.observe, consumer.finish, consumer.retire, consumer.retirement):
+        for operation in (consumer.start, consumer.observe, consumer.finish, consumer.retire, consumer.retirement, consumer.reconcile_prestart_cancel):
             with self.subTest(operation=operation.__name__):
-                with self.assertRaisesRegex(ConsumerPending, "paired_legacy_successor_guard_required"):
+                with self.assertRaises(ConsumerPending):
                     operation(self.job)
         self.assertEqual((self.backend.dispatches, self.backend.observes, self.backend.finishes, self.generations), (0, 0, 0, 0))
         self.assertEqual(self.paired_guard.calls, [])
@@ -641,9 +658,9 @@ class ConsumerTests(unittest.TestCase):
                         return {"state": "uncertain", "no_replay": True}
                     ack = self.ack(request)
                     if case == "wrong_binding":
-                        ack["invocation_id"] = "0" * 32
+                        ack["identity"]["invocation_id"] = "0" * 32
                     else:
-                        ack["reference_released"] = 1
+                        ack["unit_reference_released"] = 1
                     return ack
                 self.consumer.retirement_observer = observe
                 with self.assertRaises(ConsumerPending):
@@ -673,6 +690,121 @@ class ConsumerTests(unittest.TestCase):
         with self.assertRaisesRegex(ConsumerPending, "observer_pending_infra"):
             self.consumer.retirement(self.job)
         self.assertEqual(self.slot()["active"], 1)
+
+    def test_retirement_rejects_flattened_or_incomplete_retained_wire(self):
+        self.install()
+        self.consumer.start(self.job)
+        self.consumer.finish(self.job)
+        self.consumer.retire_provider = lambda request: {"state": "uncertain", "no_replay": True}
+        with self.assertRaises(ConsumerPending):
+            self.consumer.retire(self.job)
+        for wire in ({"state": "retained"}, {"state": "retained", "identity": {}, "unit_reference_released": True},
+                     {"state": "retained", "storage_retained": True, "mount_absent": True, "reference_released": True}):
+            with self.subTest(wire=wire):
+                self.consumer.retirement_observer = lambda request: wire
+                with self.assertRaises(ConsumerPending):
+                    self.consumer.retirement(self.job)
+                self.assertEqual(self.slot()["active"], 1)
+
+    def test_exact_prestart_cancel_releases_without_bundle_or_retirement(self):
+        self.install()
+        self.backend.prestart_cancel = True
+        self.consumer.start(self.job)
+        forbidden = lambda *args: self.fail("prestart path called bundle/retirement/custody")
+        self.consumer.retire_provider = self.consumer.retirement_observer = forbidden
+        self.backend.finalizer.store.observe = forbidden
+        with contract.transaction(self.queue) as db:
+            legacy_before = [tuple(row) for row in db.execute("SELECT * FROM events WHERE kind='legacy'")]
+        output = self.consumer.finish(self.job, cancel=True)
+        self.assertFalse(output["slot_retained"])
+        slot = self.slot()
+        self.assertEqual(slot["state"], "prestart_canceled")
+        self.assertIsNone(slot["custody_json"])
+        self.assertIsNone(slot["custody_sha256"])
+        self.assertIsNone(slot["retire_intent"])
+        self.assertEqual(json.loads(slot["ack_json"])["state"], "canceled_before_start")
+        self.consumer.reconcile_prestart_cancel(self.job)
+        self.assertEqual(self.backend.finishes, 1)
+        with contract.transaction(self.queue) as db:
+            self.assertEqual(legacy_before, [tuple(row) for row in db.execute("SELECT * FROM events WHERE kind='legacy'")])
+            self.assertEqual(db.execute("SELECT count(*) FROM events WHERE job_id=? AND kind='consumer_slot_prestart_canceled'", (self.job,)).fetchone()[0], 1)
+        self.assertTrue(self.consumer.start(self.other)["slot_retained"])
+
+    def prepare_lost_prestart_cancel(self):
+        self.install()
+        self.backend.prestart_cancel = True
+        self.consumer.start(self.job)
+        self.backend.lose_finish = True
+        with self.assertRaises(ConsumerPending):
+            self.consumer.finish(self.job, cancel=True)
+        self.assertEqual(self.slot()["active"], 1)
+
+    def test_lost_prestart_reply_reconciles_same_proof_without_finish_replay(self):
+        self.prepare_lost_prestart_cancel()
+        self.consumer.finish(self.job, cancel=True)
+        self.assertEqual(self.backend.finishes, 1)
+        self.assertFalse(self.consumer.reconcile_prestart_cancel(self.job)["slot_retained"])
+        self.assertEqual(self.backend.finishes, 1)
+        self.assertIsNone(self.slot()["retire_intent"])
+
+    def test_prestart_incomplete_uncertain_running_or_wrong_bindings_retain_slot(self):
+        cases = ("null", "empty", "invalid_json", "missing_field", "false_proof", "integer_proof", "wrong_boot",
+                 "wrong_receipt", "missing_event", "wrong_event", "running_event", "invocation",
+                 "starting_job", "running_job", "uncertain_claim", "wrong_token", "wrong_receipt_manifest")
+        for index, case in enumerate(cases):
+            with self.subTest(case=case):
+                if index:
+                    self.tearDown()
+                    self.setUp()
+                self.prepare_lost_prestart_cancel()
+                with contract.transaction(self.queue, True) as db:
+                    claim = db.execute("SELECT * FROM remote_execution_claims WHERE job_id=?", (self.job,)).fetchone()
+                    proof = json.loads(claim["result_json"])
+                    if case == "missing_field":
+                        del proof["worker_boot_id"]
+                    elif case == "false_proof":
+                        proof["no_unit_created"] = False
+                    elif case == "integer_proof":
+                        proof["no_unit_created"] = 1
+                    elif case == "wrong_boot":
+                        proof["worker_boot_id"] = "different-boot"
+                    elif case == "wrong_receipt":
+                        proof["receipt_sha256"] = "0" * 64
+                    encoded = contract.canonical(proof)
+                    if case == "null":
+                        encoded = None
+                    elif case == "empty":
+                        encoded = ""
+                    elif case == "invalid_json":
+                        encoded = "not-json"
+                    db.execute("UPDATE remote_execution_claims SET result_json=? WHERE job_id=?", (encoded, self.job))
+                    if case in {"missing_event", "wrong_event"}:
+                        db.execute("DELETE FROM events WHERE job_id=? AND kind='remote_canceled_before_start'", (self.job,))
+                        if case == "wrong_event":
+                            db.execute("INSERT INTO events(at,job_id,kind,data) VALUES('test',?,'remote_canceled_before_start',?)",
+                                       (self.job, contract.canonical({"receipt_sha256": "0" * 64})))
+                    elif case == "running_event":
+                        db.execute("INSERT INTO events(at,job_id,kind,data) VALUES('test',?,'remote_running','{}')", (self.job,))
+                    elif case == "invocation":
+                        db.execute("UPDATE remote_execution_claims SET invocation_id=? WHERE job_id=?", ("f" * 32, self.job))
+                    elif case in {"starting_job", "running_job"}:
+                        db.execute("UPDATE jobs SET state=? WHERE id=?", (case.split('_')[0], self.job))
+                    elif case == "uncertain_claim":
+                        db.execute("UPDATE remote_execution_claims SET phase='permit_committed' WHERE job_id=?", (self.job,))
+                    elif case == "wrong_token":
+                        db.execute("UPDATE remote_execution_claims SET token_sha256=? WHERE job_id=?", ("0" * 64, self.job))
+                    elif case == "wrong_receipt_manifest":
+                        receipt = json.loads(claim["receipt_json"])
+                        receipt["manifest_sha256"] = "0" * 64
+                        db.execute("UPDATE remote_execution_claims SET receipt_json=? WHERE job_id=?", (contract.canonical(receipt), self.job))
+                with self.assertRaises(ConsumerPending):
+                    self.consumer.reconcile_prestart_cancel(self.job)
+                self.assertEqual(self.slot()["active"], 1)
+                self.assertIsNone(self.slot()["retire_intent"])
+                self.assertIsNone(self.slot()["custody_json"])
+                self.assertEqual(self.backend.finishes, 1)
+                with self.assertRaises(ConsumerPending):
+                    self.consumer.start(self.other)
 
     def test_current_profile_and_floor_checked_before_effect(self):
         self.install()

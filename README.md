@@ -10,8 +10,8 @@ unchanged and accepts only its existing fixture profiles/actions.
 ## Division of ownership
 
 Infra owns the persistent worker broker/root entry/retirement lifecycle. Apoio
-owns this separate profile/catalog/consumer candidate. Retirement is an agreed
-PENDING interface until Infra freezes it and cross-review passes. Neither this
+owns this separate profile/catalog/consumer candidate. Retirement source ABI now matches frozen brokerV2 notice3222; its live
+transport/provider and host qualification remain PENDING. Neither this
 source nor the local wire library3205 proves broker readiness or installation.
 Civo is the intended central development/integration node; Akamai is a future
 worker with its own OS/native-tool qualification. Azure is not reactivated here.
@@ -72,6 +72,8 @@ retire{manifest,token,receipt_sha256,bundle_sha256,custody_receipt_sha256}.
 Consumer passes a typed RetirementRequest with LaunchSecret hidden from repr;
 only a future reviewed private adapter may unwrap it for authenticated wire.
 It is not a public facade action or a new action added to frozen V4 here.
+The exact broker ACK is state=retained, nested identity and
+unit_reference_released=true, rather than synthesized flat proof flags.
 
 The consumer verifies actual ArtifactStore identity/wire/index and, when the
 Finalizer result exists, binds the matching terminal result event. It persists
@@ -80,10 +82,11 @@ before requesting retirement. This is an authenticated controller attestation,
 not magical remote proof of another machine's disk. Worker must independently
 validate token hash, receipt/manifest/invocation/bundle, persist its own exclusive
 intent, retain storage and Unref, and return the exact bound receipt. Only exact
-ACK with storage_retained/mount_absent/reference_released clears the slot. Lost
+ACK matching the frozen nested broker receipt clears the slot. The broker
+checks retained storage/mount absence before that durable worker attestation. Lost
 ACK or bad binding does not call cleanup again. Default missing provider stays
-pending; no backend readiness is claimed. Concrete protocol interoperability
-will be checked against Infra's frozen source before use.
+pending; no backend readiness is claimed. The source wire schema is matched to3222; concrete transport/provider and
+native broker interoperability still need qualification before use.
 
 ## Reference QA and remaining gates
 
@@ -149,3 +152,20 @@ after a durable original retire intent; exact retained ACK may clear the slot,
 while uncertain/no_replay/bad binding keeps it. It never repeats retire, creates
 a worker intent or calls cleanup/Unref. Concrete broker wire/ACK compatibility
 remains pending its freeze and independent review.
+
+### Exact prestart cancellation exception
+
+A canceled-before-start worker proof is NOT a retained-storage ACK. Existing V4
+Finalizer validates and commits the exact authenticated no_unit_created/receipt/
+boot response. The candidate consumer has a SEPARATE reconciliation path requiring
+canceled job/claim, no InvocationID or remote_running history, complete manifest/
+receipt/boot/generation/token binding and matching canonical cancellation event.
+It frees the slot in its own guarded transaction without custody, bundle,
+retire or Unref. Incomplete/uncertain/start-intent or running evidence cannot use
+this shortcut. A lost finish reply is reconciled from committed proof, never
+by replaying finish. No retained storage is invented.
+
+The future coordinator/worker bootstrap closure must explicitly include these
+new modules and paired dispatch adapter after independent review. Frozen V4's
+16-file entry and its two-kind catalog/fixture allowlist are not changed here.
+Importing this candidate is not a live integration or schema rollout.

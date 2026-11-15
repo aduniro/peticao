@@ -4,7 +4,7 @@
   "default_qualified": false,
   "runtimeV4_modified": false,
   "existing_actions_modified": false,
-  "retirement_contract": "PENDING_INFRA_FREEZE_AND_CROSS_REVIEW",
+  "retirement_contract": "SOURCE_ABI_MATCHED_BROKER3222_PROVIDER_AND_HOST_PENDING",
   "canonical_queue_only": true,
   "second_scheduler": false,
   "terminal_without_retirement_frees_slot": false,
@@ -20,5 +20,8 @@
   "paired_review_provider_default": "ABSENT_FAIL_CLOSED",
   "legacy_successor_installed": false,
   "legacy_terminal_custody_provider": "PENDING",
-  "retirement_observer_contract": "PENDING_INFRA_FREEZE_READ_ONLY_NO_REPLAY"
+  "retirement_observer_contract": "SOURCE_ABI_MATCHED_READ_ONLY_NO_REPLAY",
+  "broker_source_notice": 3222,
+  "broker_host_qualified": false,
+  "prestart_cancel": "SEPARATE_EXACT_V4_COMMITTED_NO_UNIT_PROOF_NO_BUNDLE_OR_UNREF"
 }
