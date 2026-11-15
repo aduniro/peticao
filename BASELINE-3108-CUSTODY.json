@@ -1,0 +1,21 @@
+{
+  "source": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-systemd-qualification/source",
+  "notice": 3108,
+  "commit": "bfbaee3300a6349d5041cc2b376e2943022fde48",
+  "original_file_sha256": {
+    ".gitignore": "2de25238e5e5e106b00c24c9dc1e82805ee4e6562115a0c1f97d23837be1f3f6",
+    "DECISIONS.json": "e5a8b5e39389c75fb1cab7cf94b109795f8f1eb80615a020042a0c7e83ff892a",
+    "OPERATION.template.json": "8b4a495f07a16a26884c3fc71ddb61b42e7246f20fb6165ae3bc7baf68c25edd",
+    "POLICY.json": "3ff0caa0cd592ffa8efbfcc4f23f1e7211c263924507e24f2dcf5ed31e33b68f",
+    "README.md": "d075d9e557e10ebab2a68d07e76cc6c323674ed4ded0869a1ab6d30afe255a37",
+    "SOURCE-CUSTODY.json": "e169a939bd72fc6306c7ca25de6a5648bf090f5a1525cfeaf58fb46b152e733c",
+    "qualification_client.py": "75a694f356649d7764383cb22fbdbccecf13559f4f6b39829f6b79be6eff2ea4",
+    "qualification_contract.py": "974e4e1e03e2c76665174e67ae55dff1a2fd7f5ac4118a796d991eaafc97d5a7",
+    "qualification_helper.py": "8ec6ba18803e08b8837df7d3e61f24d0ea17abd5efc2301eec5579b7de633a2e",
+    "qualification_job.py": "732e918544fe3f2ab2499909b214d6f22888f335096468cace351c2c9e15adbd",
+    "review_gate.py": "3f2d22ab2c213595ba2c002722ad803016c7b48ab4bbed2f74e01a97cef9c58b",
+    "test_qualification.py": "40a75d5d710960c4c53bc8fe909fabcd58ef3e593337fd688fbcb985e12b0600"
+  },
+  "baseline_modified": false,
+  "reason": "HOLD physical temp storage outside project; V3 is a separate source"
+}

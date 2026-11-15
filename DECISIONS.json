@@ -1,0 +1,19 @@
+[
+  {
+    "question": "How prevent transient unit GC after stop before storage cleanup?",
+    "decided_by": "Infra coordinator, based on failed3151 and reviewed runtimeV4",
+    "decision": "One real process-bound IPC keeper in persistent runner, reference held until retained cleanup; never weaken missing-unit guard."
+  },
+  {
+    "question": "Can a new helper reconstruct lost reference lifetime?",
+    "decision": "No. Observer never creates keeper; mounted cleanup from new process refuses and requires separate exact reviewed reconciliation."
+  },
+  {
+    "question": "Does successful old mount64 reconciliation qualify3151?",
+    "decision": "No. Old execution remains failed/preserved; attempt3 gets new source/IDs/notice and own future execution lease."
+  },
+  {
+    "question": "What evidence is required in addition to prior physical isolation checks?",
+    "decision": "Per-job actual libsystemd backend, held-before-cleanup/released-after-retained and same PID/boot/invocation; all3exact units released/session closed before final pass."
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "operation_id": "0130e248b57745599104105e5bbefb5b",
+  "jobs": {
+    "success": "c7e9a02fdd7b4fbd9a4f68d7a867fc97",
+    "failure": "33ad2d6e967c4aafbb0f9ba3627a0d7b",
+    "cancellation": "fa9b4a9417494ab8ba409568e2082a7e"
+  },
+  "runtime_commit": "4e15b7e5d069272a82aaf15bdb192e400e891f95",
+  "runtime_sha256": {
+    "admission.py": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+    "artifacts.py": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+    "cgroups.py": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce",
+    "controller.py": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+    "log_redaction.py": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+    "project_storage.py": "c8d9f98a4d62cf8d0567be318c11c8e3c7952abcc1ab9ed9da452b0c4f82e769",
+    "remote_contract.py": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+    "systemd_adapter.py": "1e85587ed1b41a877eb0e5383b68de3e4e12e9f66b4c3bae5dd66aad3a423346",
+    "unit_refs.py": "ee4a9145f0443a56ab769b709facc6a7fcc3e029bf9c778a92a7e1cb1ab02b1f",
+    "worker.py": "a16bef2e64fe514caa3065f1d18faee26c2263a6e18d95d543e237d667b5618c"
+  },
+  "harness_sha256": {
+    "qualification_contract.py": "1a6ba092fb04bbc5050bae9492854e7534cfaba1c182f4abe62b72a54b592353",
+    "qualification_job.py": "c8cc6f7e785a3918f95d77e38c69f64fd4641c530b7e86af300a487739dcafea",
+    "qualification_helper.py": "9b52013db7f9d5bbeda181121e3f335ebaacfc15fc0aa9b2defea64387896625",
+    "storage_probe.py": "b4b158bd57ab6d171037346b1926d5409ae4d2f04546ad56eeff17cb8c81117d"
+  },
+  "execute": false,
+  "systemd_major": 255,
+  "systemd_version_sha256": "cf7dc29fdb4b56cfd2f816bef4e11c0ac1834630ce29aa4b75b00ae9ac1b1a76"
+}

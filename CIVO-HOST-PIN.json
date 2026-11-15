@@ -1,0 +1,9 @@
+{
+  "known_hosts": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-owner-bundle-20261114/known_hosts",
+  "known_hosts_sha256": "011704a32b8bb573f75b6d67e8ce46421350584988394303a3e7fe365e6f013f",
+  "host_key_alias": "212.2.241.70",
+  "destination": "100.122.224.82",
+  "ed25519_fingerprint": "SHA256:BQFN7L+4wDK7i4lt5aoIcnSIt7m7eVa1IIK07Ji2ZcE",
+  "private_key_read": false,
+  "scope": "Civo IPv4 only; no trust added for other nodes/routes"
+}
