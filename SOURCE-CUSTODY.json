@@ -1,0 +1,12 @@
+{
+  "origin": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-legacy-standby-20261114/runtime",
+  "sha256": {
+    "recovery.py": "9c2b54de92a175822fc973912e25cd4450186d89a66e23ff61a94f150fadaa18",
+    "fence_primary.py": "d4407bce9a4a69ce3e1a25fcae4c460feb088b4ba58f3d92cbb796b99a1bad55",
+    "coordinator.py": "a8e93ff093555241d2eeead49d418dc4d5bb4dacecf4aa460c329e8e7cd7adef",
+    "gateway.py": "24a938ef8f69d7ee670699221e6be086241cceb3f709fc6300ca2c6396796849",
+    "runtime_profile.py": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8",
+    "standby_guard.py": "731e2ccec8e05e45f5287d66017b4aacdfecf630cd6ca366d93717d855c6a997"
+  },
+  "use": "Public original source only; AST/static contracts. Never imported or invoked by this preparation tests."
+}

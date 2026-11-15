@@ -1,0 +1,40 @@
+{
+  "status": "TEMPLATE_NOT_DEPLOYABLE",
+  "operation_id": null,
+  "source_host": "sonda-verifica3",
+  "target_host": "peticao-civo",
+  "source_address": "100.80.18.81",
+  "source_dns": "sonda-verifica3.tail1a6d71.ts.net",
+  "source_port": 2224,
+  "previous_generation": 1,
+  "new_generation": 2,
+  "snapshot_id": null,
+  "checkpoint_sha256": null,
+  "queue_facts": null,
+  "source_authority_uid": null,
+  "source_authority_gid": null,
+  "source_code_pins": {
+    "recovery.py": "9c2b54de92a175822fc973912e25cd4450186d89a66e23ff61a94f150fadaa18",
+    "fence_primary.py": "d4407bce9a4a69ce3e1a25fcae4c460feb088b4ba58f3d92cbb796b99a1bad55",
+    "coordinator.py": "a8e93ff093555241d2eeead49d418dc4d5bb4dacecf4aa460c329e8e7cd7adef",
+    "runtime_profile.py": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8",
+    "standby_guard.py": "731e2ccec8e05e45f5287d66017b4aacdfecf630cd6ca366d93717d855c6a997"
+  },
+  "runtime_qualifications": {
+    "source_rearm_guard": null,
+    "gateway_topology": null,
+    "launcher_identity": null,
+    "worker_runtime": null,
+    "job_admission": null,
+    "canonical_executor": null,
+    "bootstrap_authority": null
+  },
+  "cutover_authorized": false,
+  "source_boot_id": null,
+  "target_boot_id": null,
+  "checkpoint_archive": null,
+  "canonical_manifest_event": null,
+  "source_node": "santiago",
+  "target_node": "civo",
+  "epoch_guard_path": "/etc/peticao-dev-authority/epoch.json"
+}

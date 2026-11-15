@@ -1,0 +1,23 @@
+{
+  "origin_result": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-passive-restore-retry1-20261114/state/RESULT.json",
+  "origin_sha256": "cfb4323c836c2141cbb2b875a2e86daa8adf1d655fd057222fc7f2cacfc18786",
+  "origin_status": "REAL_PASSIVE_DATA_RESTORE_VERIFIED",
+  "origin_manifest": 3032,
+  "origin_fence": 630,
+  "full_disaster_recovery_proven": false,
+  "operational_ready": false,
+  "infra_reported_point_in_time": {
+    "target_host": "peticao-civo",
+    "role": "standby",
+    "armed_boot_id": null,
+    "generation": 1,
+    "jobs": 10,
+    "events": 37,
+    "hashes_verified": 3253,
+    "executables_preserved": 88,
+    "readable_files_as_uid999": 3257,
+    "primary_operations_rejected": 5
+  },
+  "not_a_fresh_cutover_baseline": true,
+  "does_not_authorize_fence_or_promotion": true
+}

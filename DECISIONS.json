@@ -1,0 +1,17 @@
+{
+  "coordinator": "Infra thread01a1d130-2948-7140-bcfb-34696b20ab8d",
+  "scope": "SOURCE/REVIEW PREREQUISITE ONLY, no installation or promotion",
+  "decisions": [
+    {
+      "question": "How to prevent old source rearm after generation2 target promotion, since current runtime ignores global floor/owner?",
+      "decision": "Root-owned persistent guard outside queue on both nodes, carrying epoch,primary_host,operation_id,coordinator_boot_id. Bind worker claims/manifests to host/boot/opID/epoch digest; read guard before every mutation. Reboot invalidates rearm until new approved operation.",
+      "authority": "Infra explicit native reply during this preparation",
+      "limitations": "Materialized execution guard, not consensus/election; qualified distribution and fencing old source required before promotion."
+    },
+    {
+      "question": "One exact shared guard path and schema, compatible with Infra worker contract633?",
+      "decision": "/etc/peticao-dev-authority/epoch.json; parentroot0755/file root0644. Exact generation(integer),primary_host(logical node civo),coordinator_boot_id(actual Civo boot UUID),operation_id(32hex canonical operation). Same SHA256 canonical sorted compact JSON as633; no extra epoch/schema/status fields in guard. Node ID civo is distinct from OS hostname peticao-civo. Root-owned nonwritable ancestry and singlelink; service read-only.",
+      "authority": "Infra explicit native candidate accepted by Apoio for Root review; not installation authorization"
+    }
+  ]
+}
