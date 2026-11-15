@@ -1,0 +1,17 @@
+{
+  "source_only": true,
+  "tests": {
+    "distinct": 21,
+    "seconds": 1.043,
+    "result": "PASS",
+    "custody_cases": 18,
+    "backend_cross_fixtures": 3
+  },
+  "local_child_real": true,
+  "systemd_cgroup_ssh_simulated": true,
+  "live_platform_credentials_read": 0,
+  "remote_effects": false,
+  "ast_modules": 14,
+  "canonical_daemon_integrated": false,
+  "snapshot_promotion_custody_integrated": false
+}

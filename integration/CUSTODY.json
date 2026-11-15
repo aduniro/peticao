@@ -1,0 +1,20 @@
+{
+  "notice": 3116,
+  "commit": "7f5144749bd423b89649d77c6307b40774a125c1",
+  "copy": "runtime3116",
+  "source_only": true,
+  "execution_authorized": false,
+  "file_sha256": {
+    "test_runtime.py": "5ca657a40eb1fe2f50aa6ccc7a2f81fee1d70fd2cd454296d506de625228b5c2",
+    "fixture_job.py": "1fd2318496e53dc2ada4a4ebcba13ec1d110f4c529e05a11e4623180c0740078",
+    "remote_contract.py": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+    "artifacts.py": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+    "worker.py": "a16bef2e64fe514caa3065f1d18faee26c2263a6e18d95d543e237d667b5618c",
+    "admission.py": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+    "controller.py": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+    "log_redaction.py": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+    "systemd_adapter.py": "a1df3a27875668311b34ead3a1c0245ba824d7b57150cd7007bc03f9547043b8",
+    "project_storage.py": "c8d9f98a4d62cf8d0567be318c11c8e3c7952abcc1ab9ed9da452b0c4f82e769",
+    "cgroups.py": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce"
+  }
+}
