@@ -1,0 +1,18 @@
+# Auditor offline de vendor NPM — desenho/API
+
+Fonte apenas; nenhuma instalação ou execução de pacotes. Nenhum download real foi autorizado nesta implementação. Root revisará fonte/testes antes de invocar a API de rede. O auditor não altera guards dos drivers congelados nem wrappers de normalização.
+
+O staging de tarballs exige explicitamente EUID1000 e diretório próprio0700. Não troca usuário, não executa sudo e recusa operador privilegiado antes de criar arquivos ou abrir transporte. Essa permissão de DADO não altera guards Root do runtime.
+
+`vendor_audit.py` é stdlib-only. Seu parser deriva do `_BoundedTarInfo` já aprovado: limites de headers ocultos/PAX/GNU/sparse, nomes, membros, arquivo e bytes descomprimidos. Nenhum tar é extraído, link seguido no filesystem ou código importado do conteúdo.
+
+API:
+
+- `inspect_fixed_inputs()`: abre source/deps nos caminhos e SHA/bytes congelados, por dirfds sem symlinks, como DADO UID1000 (sem invocar guard de ancestralidade Root). Mantém o mesmo fd para SHA antes/depois, parsing e stat/named identity; confere os dois locks ao SHA aprovado. Retorna metadados públicos e hashes por arquivo dos pacotes instalados.
+- `plan_packages(snapshot)`: seleciona apenas raízes com package.json instalado e valida o resolved/SRI do lock. URL é exclusivamente HTTPS, netloc literal registry.npmjs.org, sem porta/userinfo/query/fragmento; redirects de qualquer tipo são recusados. SRI deve ser UM sha512 base64 canônico de64bytes. Ausência de resolved/SRI vira gap, nunca autorização para outro registry.
+- `download_tarball(root, package_root, row, transport=None)`: cria arquivo novo0600 por dirfd privado0700. Nome é digest de dados públicos, não caminho do pacote. Stream64KiB, máximo64MiB por arquivo e512MiB agregados incluindo parciais já preservados, no máximo200 entries de staging, deadline60s por stream com timeout20s por operação de rede. Um read bloqueado pode acrescentar até o timeout20s ao prazo. SRI é calculado sobre os bytes recebidos, com fsync do arquivo/diretório e identidade final. Sem proxies do ambiente, autenticação ou redirect. Arquivo parcial/inválido é preservado e jamais reutilizado automaticamente. `transport` é injeção de fixture, não opção de CLI/job.
+- `inspect_vendor_tar(fp)`: inventário bounded package/→paths relativos, hashes dos arquivos, sem extração. Special files/sparse/traversal são recusados; links permanecem metadados/gaps.
+- `compare_package(root, installed, vendor, all_roots)`: atribui cada arquivo instalado ao maior prefixo que termine na fronteira de pacote; impede que o pacote pai capture node_modules aninhado. Lista ausente/extra/tipo/hash/mode divergente. Esbuild ELF no destino de stub é somente candidato de pós-instalação sujeito a revisão, nunca exceção aprovada.
+- `run_vendor_audit(snapshot, root, allow_public_download=False, transport=None)`: orquestrador offline de operador. Default recusa rede; a autorização explícita só pode vir do coordenador, após review. Falha de um pacote é registrada com código seguro e não dispara retry. Relatório não contém locks crus, scripts, URLs ou headers.
+
+Sempre `cacheOriginalIntegral=False`, `fullVendorIntegrity=False`, `qualified=False` e `root_review_required=True`. Mesmo comparação sem gaps exige Root avaliar cobertura, tarballs SRI, links globais .bin e mudanças de pós-instalação. SHA/SRI verificam bytes contra o lock aprovado; não provam confiança do publisher nem tornam código seguro para executar. Limites excedidos são recusados, sem ampliar automaticamente64MiB. Árvore de download é apenas staging de DADOS, sem instalação ou mutação de caches originais.

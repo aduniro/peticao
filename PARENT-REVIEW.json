@@ -1,0 +1,17 @@
+{
+  "status": "SOURCE_REVIEW_PASS_FOR_PUBLIC_DATA_AUDIT",
+  "code_sha256": "1e84b2b1509dddafac6ce8d7f1b9865a6c27b0a4414c4b098e6af1ade07419e0",
+  "independent_fictitious_tests": 22,
+  "seconds": 0.049,
+  "review": [
+    "fixed source/deps SHA+sameFD before/after and no extraction",
+    "exact HTTPS registry.npmjs.org tar URLs; no credentials/query/redirect/proxy",
+    "canonical SHA512 SRI verified before accepting download; sameFD SHA256 revalidation before parsing",
+    "64MiB per tar,512MiB aggregate including partials,60s streamdeadline+20s readtimeout",
+    "private UID1000 output files600/dirfds/O_EXCL, no auto-retry/overwrite",
+    "package longest boundary/type/content/execmode comparison; esbuild exception not autoaccepted",
+    "no package imports/scripts/install; fullVendorIntegrity/cacheOriginalIntegral/qualified alwaysfalse"
+  ],
+  "root_review_required": true,
+  "actual_network_not_tested_by_fixtures": true
+}

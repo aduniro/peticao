@@ -1,0 +1,20 @@
+{
+  "classification": "SOURCE_AND_FICTITIOUS_FIXTURES_ONLY_NOT_QUALIFIED",
+  "command": "TMPDIR=/mnt/apps/peticao-final/infra-public-inputs-20261115/vendor-audit-source/test-state/tmp /usr/bin/python3 -B -m unittest -q test_vendor_audit",
+  "cwd": "/mnt/apps/peticao-final/infra-public-inputs-20261115/vendor-audit-source",
+  "tests": 22,
+  "passed": 22,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration_seconds": 0.047,
+  "real_downloads": false,
+  "real_input_audit_executed": false,
+  "archive_extraction": false,
+  "package_scripts_or_install": false,
+  "app_pg_browser_host_execution": false,
+  "cacheOriginalIntegral": false,
+  "fullVendorIntegrity": false,
+  "qualified": false,
+  "root_review_required": true
+}
