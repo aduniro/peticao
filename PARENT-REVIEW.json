@@ -1,0 +1,30 @@
+{
+  "status": "SOURCE_REVIEW_PASS_REAL_PROOF_NOT_RUN",
+  "producer_closure_sha256": "66bc592b65cf3447de9c0b68e55d94fba8410f40823d86476b168885667027fb",
+  "files_sha256_verified": 5,
+  "AST": 3,
+  "independent_fixtures": 30,
+  "seconds": 5.845751,
+  "ResourceWarning": "error",
+  "FD_before_after": [
+    4,
+    4
+  ],
+  "unexpected_attempts": 0,
+  "template_execute": false,
+  "initial_delivery_preserved": "/mnt/apps/peticao-final/infra-sri-proof-20261115/source-first-delivery-exact",
+  "reviewed_fixes": [
+    "Closed structural directory provenance, no arbitrary empty directories",
+    "All input context EXIT rehash/stat checks finish and FDs close before proof/receipt publication"
+  ],
+  "coverage_policy_sha256": "4145fbb2b1e57c21b79ab90a6bba7f8fcf683eba48c63b7701370f150c3bdb66",
+  "no_candidate_or_package_execution": true,
+  "fullVendorIntegrity": false,
+  "RootFullClosure": false,
+  "qualified": false,
+  "limits": [
+    "Content proof of derived archive under closed approved mappings, not pristine cache/GPG/vendor signature/NPM history",
+    "Root/same UID external writers remain TCB; no atomic pathname CAS claimed",
+    "Public original archive alone may have writable ancestor; exact fixed DADO path/pin only, no code loaded"
+  ]
+}

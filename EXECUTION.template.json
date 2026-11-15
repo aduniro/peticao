@@ -1,0 +1,10 @@
+{
+  "coverage_sha256": "4145fbb2b1e57c21b79ab90a6bba7f8fcf683eba48c63b7701370f150c3bdb66",
+  "execute": false,
+  "normalized_sha256": "4b2c828ffdd182a8eef3e7fab1dcc8e3a6784318cc2f0c727efd8f978933605f",
+  "output": "/mnt/apps/peticao-final/infra-sri-proof-20261115/proof-data-1",
+  "producer_sha256": "66bc592b65cf3447de9c0b68e55d94fba8410f40823d86476b168885667027fb",
+  "role": "offline-complete-sri-proof",
+  "uid": 1000,
+  "version": 1
+}

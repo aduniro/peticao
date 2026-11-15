@@ -1,0 +1,77 @@
+{
+  "RootFullClosure": false,
+  "cacheOriginalIntegral": false,
+  "checked_without_real_proof": {
+    "literal_policy_schema": true,
+    "nine_metadata_literal": true,
+    "python_ast": 3,
+    "real_load_policy_execute": false,
+    "spec102_roots_and_exception_literals": true
+  },
+  "coverage_policy": {
+    "bytes": 34646,
+    "path": "/mnt/apps/peticao-final/infra-sri-proof-20261115/policy/COVERAGE-POLICY.json",
+    "sha256": "4145fbb2b1e57c21b79ab90a6bba7f8fcf683eba48c63b7701370f150c3bdb66"
+  },
+  "execution_template_false": true,
+  "external_execution_policy_created": false,
+  "files": {
+    "DESIGN-API.md": {
+      "bytes": 7541,
+      "sha256": "913b9e0f1a63a74b5710909d109c46b97f83493765152ce89a7a07a6d90541b1"
+    },
+    "EXECUTION.template.json": {
+      "bytes": 440,
+      "sha256": "fb214c0af679a9c7a3990100c2eb9dbfdd7e99808fa5362bbd88bca86d6483df"
+    },
+    "proof_io.py": {
+      "bytes": 7327,
+      "sha256": "09f3d8a52ebde695833201e5c8389f72cdea9ea366cf446708c77caeac60ae6e"
+    },
+    "sri_proof.py": {
+      "bytes": 41575,
+      "sha256": "29c9cb894b57cd3c803bf68ef8571542b83d763212eade172d554e171c931f55"
+    },
+    "test_sri_proof.py": {
+      "bytes": 27384,
+      "sha256": "617f40cca1295953b85dd6d763afde550a6a98ca21deec71ddb6b6167e80a273"
+    }
+  },
+  "fullVendorIntegrity": false,
+  "historical_NPM_generation_observed": false,
+  "limits": [
+    "Source/fixtures are not the actual all102+103 proof. First real offline DATA proof requires Parent review and a separate live execution manifest/policy.",
+    "Pure filemap comparison leaves fullVendorIntegrity false; only the closed operational proof may set it true after all provenance and same-FD checks.",
+    "SRI/hash/checksum/HTTPS evidence does not assert vendor digital signatures, historical npm execution or runtime/native/Root qualification.",
+    "All failures preserve exclusive intent/partial output and refuse implicit replay; only the completed three-file packet is a complete attestation."
+  ],
+  "output_reserved_exactly": "/mnt/apps/peticao-final/infra-sri-proof-20261115/proof-data-1",
+  "producer_sha256": "66bc592b65cf3447de9c0b68e55d94fba8410f40823d86476b168885667027fb",
+  "qualified": false,
+  "real_output_created": false,
+  "real_proof_run": false,
+  "revision": {
+    "corrections": [
+      "Closed structural-directory provenance from covered ancestry and explicit vendor-owned directories.",
+      "All input exit-time checks and descriptor closure complete before any proof/receipt publication."
+    ],
+    "parent_exact_backup": "/mnt/apps/peticao-final/infra-sri-proof-20261115/source-first-delivery-exact",
+    "prior_manifest_sha256": "5139e25227e7907041331bd14145e9b8cdfeb87b6b9314bc482d1b688329d149",
+    "real_proof_run": false
+  },
+  "root_or_runtime_provider_changed": false,
+  "source": "/mnt/apps/peticao-final/infra-sri-proof-20261115/source",
+  "state": "SOURCE_AND_FICTITIOUS_TESTS_ONLY_PENDING_PARENT_REVIEW",
+  "tests": {
+    "ResourceWarning": "error",
+    "candidate_or_package_execution": false,
+    "command": "/usr/bin/env TMPDIR=/mnt/apps/peticao-final/infra-sri-proof-20261115/source/test-state/tmp /usr/bin/python3 -B -W error::ResourceWarning -m unittest discover -s /mnt/apps/peticao-final/infra-sri-proof-20261115/source -p 'test_sri_proof.py'",
+    "failed": 0,
+    "passed": 30,
+    "reported_seconds": 5.804,
+    "scope": "Fictitious102-package complete filemaps, exact exceptions, complete original/normalized hardlink+symlink join, deterministic hiddenlock/bin metadata, fresh fake SHA512/SHA256 custody, Node official-member/PDFjs103 metadata+SRI fixtures, no output overwrite/replay and alias retention. Directory provenance rejects unowned empty directories; input exit-time mutation leaves only intent, no published proof or receipt.",
+    "subprocess_or_network": false
+  },
+  "vendorSignatureVerified": false,
+  "version": 2
+}
