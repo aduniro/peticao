@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "root_entry_code_status": "DRAFT_NO_HOST_EXECUTION",
+  "header_keys": [
+    "version",
+    "operation_id",
+    "operator_session",
+    "scope",
+    "source_notice",
+    "execution_notice",
+    "root_window_event",
+    "qualification_release_event",
+    "full_integrity_event",
+    "expected_boot_id",
+    "payload_sha256",
+    "payload_bytes",
+    "unpacked_bytes",
+    "files",
+    "deadline_unix"
+  ],
+  "header_types": {
+    "version": "exactint1",
+    "operation_id": "32lowerhex",
+    "operator_session": "fixedInfra01a1d130-2948-7140-bcfb-34696b20ab8d",
+    "scope": "new-civo-sealed-toolchain-no-dispatch",
+    "events": "exact positive int/source_notice/execution_notice/root_window_event/qualification_release_event/full_integrity_event",
+    "expected_boot_id": "current exact Boot UUID string",
+    "payload_sha256": "64lowerhex",
+    "payload_bytes": "exactint1..1536MiB",
+    "unpacked_bytes": "exactint1..2GiB",
+    "files": "dict relativepath->{sha256:64hex,bytes:exactint0..512MiB,mode:exactint0644or0755};<=50000",
+    "deadline_unix": "finite numeric; install current<deadline<=current+900; observing allows original expired deadline"
+  },
+  "deadline_runtime_field": {
+    "exec_manifest_template": "All stable fields pinned; deadline_unix is ONLY runtime field generated deterministically from fresh Root window/owncap",
+    "formula": "min(local_now+900, ownlease.expires-120, rootwindow.closes_at-120)",
+    "persist": "Persist exact concrete canonical header bytes BEFORE exclusive local install-intent/SSH, fsync file+parent. Observe MUST resend SAME concrete bytes (including originaldeadline) to match remote intent headerSHA. Never regenerate after uncertain install.",
+    "max_margin": "Require min lease/window remaining >=1020s before install; remote rejects deadline beyond rootclock+900."
+  },
+  "rootwindow_scope": "new-civo-toolchain-publication",
+  "actions": [
+    "install",
+    "observe"
+  ],
+  "remote_code": "Create types.ModuleType materializer/root_entry, __name__ their names, compile pinned bytes only, insert sys.modules; call root_entry.dispatch(action,sys.stdin.buffer) explicitly so __main__ install block is not run during observe. Catch error only public type/state.",
+  "reply_variants": {
+    "SEALED_PUBLIC_TOOLCHAIN_CANDIDATE_PUBLISHED": [
+      "state",
+      "operation_id",
+      "prefix",
+      "files",
+      "bytes",
+      "source_notice",
+      "execution_notice",
+      "candidate_programs_executed",
+      "operational_ready",
+      "native_profiles_qualified",
+      "queue_cutover"
+    ],
+    "NOT_STARTED": [
+      "state",
+      "no_retry",
+      "operational_ready"
+    ],
+    "FOREIGN_PATH_WITHOUT_INTENT_UNCERTAIN": [
+      "state",
+      "no_retry",
+      "operational_ready"
+    ],
+    "WRITER_ACTIVE_OBSERVE_ONLY": [
+      "state",
+      "writer",
+      "writer_alive",
+      "prefix_exists",
+      "no_retry",
+      "operational_ready"
+    ],
+    "PARTIAL_OR_VISIBLE_WITHOUT_RECEIPT_RECONCILIATION_REQUIRED": [
+      "state",
+      "writer",
+      "writer_alive",
+      "prefix_exists",
+      "no_retry",
+      "operational_ready"
+    ],
+    "PUBLISHED_CANDIDATE_RECEIPT_AND_TREE_VERIFIED": [
+      "state",
+      "writer",
+      "writer_alive",
+      "files",
+      "operational_ready",
+      "native_profiles_qualified",
+      "queue_cutover"
+    ],
+    "INSTALL_UNCERTAIN_PRESERVE_ALL_NO_RETRY": [
+      "state",
+      "error_type"
+    ]
+  },
+  "writer_fields": [
+    "pid",
+    "start_ticks",
+    "boot_id"
+  ],
+  "fixed_prefix": "/opt/peticao-dev-profile-tools-v1",
+  "always_false": [
+    "operational_ready",
+    "native_profiles_qualified",
+    "queue_cutover",
+    "candidate_programs_executed"
+  ],
+  "no_retry_always_true": true,
+  "owner_authority": "Install normal Root publication uses DEPLOY and code:, never TEST workaround; scope is new code/tools only, no real queue/floor/app production mutation."
+}
