@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "state": "SOURCE_AND_FICTITIOUS_FIXTURES_ONLY_PARENT_REVIEW_REQUIRED_BEFORE_REAL_DERIVATION",
+  "API": "browser_copy.derive(archive_abs, inventory_abs, output_abs) -> receipt dict",
+  "CLI": [
+    "/usr/bin/python3",
+    "-B",
+    "/mnt/apps/peticao-final/infra-public-inputs-20261115/browser-copy-source/browser_copy.py",
+    "derive",
+    "--archive",
+    "ABSOLUTE_APPROVED_PROJECT_BROWSER_ZIP",
+    "--inventory",
+    "/mnt/apps/peticao-final/infra-public-inputs-20261115/metadata/browser/BROWSER-INPUTS.json",
+    "--output",
+    "ABSOLUTE_NEW_PROJECT/browser-data-1"
+  ],
+  "local_uid": 1000,
+  "root_or_owner_override_seam": false,
+  "literal_default_pins": {
+    "FUTURE_CHROMIUM_ROOT": "/opt/peticao-dev-profile-tools-v1/chromium",
+    "ARCHIVE_SHA256": "ae8736ac28bc69278551500f219fc749575648263c43ec5990749eff43b9fcf8",
+    "ARCHIVE_BYTES": 193282658,
+    "INPUTS_SHA256": "5cf33c21f88fdfd207f37dc70d51750fbe277ffd99a320d006b20c16f947297a",
+    "INPUTS_BYTES": 141601,
+    "CHROME_SHA256": "0b20b130e7edd9dd51873be867761295fe0cfad490c2b9a64f95bd3cfc08fa71",
+    "CHROME_BYTES": 290614600,
+    "EXPECTED_COUNTS": {
+      "members": 308,
+      "regular_files": 303,
+      "directories": 5,
+      "unpacked_bytes": 406847046
+    }
+  },
+  "input_contract": [
+    "Literal source metadata hash+bytes and ZIP hash+bytes, no CLI pin/version override",
+    "Both input fds held from initial hash through inventory/copy/exit stat; no reopen by pathname",
+    "ZIP CRC/full per-member SHA/size/mode/create_system/expected pathname and counts match the pinned source inventory",
+    "Bound compressed/member/total bytes and member count; no encryption, duplicates, traversal, privileged modes, links or special files"
+  ],
+  "layout": {
+    "local_output_basename": "browser-data-1",
+    "local_data_subtree": "chromium/chrome-linux64",
+    "future_root": "/opt/peticao-dev-profile-tools-v1/chromium",
+    "directory_mode": "0700",
+    "regular_file_mode": "0600"
+  },
+  "data_retention": [
+    "All303 regular source files retained byte-for-byte; no vendor content projection or exclusion",
+    "All5 explicit ZIP directories retained; necessary implicit parent directories are listed in candidate manifest",
+    "No library aliases/symlinks created; no vendor Python/JS/native imports or execution"
+  ],
+  "output_contract": [
+    "Exclusive new root+INTENT; all copy writes via ORIGINAL held ChromeRootfd, never a lexical replacement",
+    "Complete post-copy file/dir inventory, hashes, nlink1/UID1000/modes; fsync every file/directory",
+    "Reopen lexical parent/root/chromium/chrome-linux64 through NOFOLLOW/no022; compare device+inode+mode+owner before manifest, before receipt and after final fsync",
+    "Manifest/receipt only after both input fd EXIT stat checks",
+    "No overwrite/replay/reinitialization; preserve any partial output and leave replacements untouched"
+  ],
+  "late_rename_limit": "Not an atomic pathname transaction. A rename after receipt bytes were written can leave candidate bytes in the preserved original directory; final lineage check fails and no completion is acknowledged. Future adoption must freshly validate agreed lexical lineage.",
+  "metadata_projection": {
+    "mode0600_is_not_absolute_execution_denial": true,
+    "bytes_can_be_copied_or_loaded_by_other_means": true,
+    "timestamps_not_preserved": true,
+    "no_Root_installation": true,
+    "no_Chrome_Native_qualification": true,
+    "no_variable_or_QA_modification": true
+  },
+  "future_gates": [
+    "Parent source/manifest review before any real derivation",
+    "Separately reviewed Root installer/library inventory and native Chrome/QA proof; data-copy receipts do not grant installation or compatibility",
+    "Frozen driver/QA and wheel sources remain unchanged"
+  ],
+  "default_metadata_only_binding_check": {
+    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/metadata/browser/BROWSER-INPUTS.json",
+    "sha256": "5cf33c21f88fdfd207f37dc70d51750fbe277ffd99a320d006b20c16f947297a",
+    "all_literal_pins_and_counts_match": true,
+    "real_ZIP_not_processed_by_this_source_task": true
+  },
+  "real_derivation_performed": false,
+  "qualified": false,
+  "operationalReady": false
+}

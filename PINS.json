@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "source_manifest": {
+    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/browser-copy-source/SOURCE-MANIFEST.json",
+    "sha256": "fbbc11e2e68f7840159b0af9a26c9e00aaeff5ff5cbaa12f243829271e902e07"
+  },
+  "code_closure_sha256": "46cd430acaa28a65d0c13c8c8ce57453fa2e1acb4e4ed00c0644dd4baeba530f",
+  "producer": {
+    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/browser-copy-source/browser_copy.py",
+    "sha256": "d065254145d333057c70586e00b2263d07f1dd09485b46520cfaec07fa654376",
+    "bytes": 21392
+  },
+  "parent_review_required_before_real_run": true,
+  "real_browser_tree_derived": false,
+  "qualified": false
+}

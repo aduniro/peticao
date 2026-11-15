@@ -1,0 +1,15 @@
+{
+  "status": "SOURCE_REVIEW_PASS",
+  "files_verified": 3,
+  "tests_independent": 18,
+  "tests_seconds": 0.195,
+  "ResourceWarning": "error",
+  "real_zip_derived": false,
+  "candidate_browser_executed": false,
+  "source_reference_closure": "46cd430acaa28a65d0c13c8c8ce57453fa2e1acb4e4ed00c0644dd4baeba530f",
+  "limitations": [
+    "UID1000 DATA only",
+    "mode600 not absolute execution denial",
+    "Root installation and native proof require separate authority"
+  ]
+}

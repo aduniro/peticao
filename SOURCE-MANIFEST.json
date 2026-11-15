@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "state": "PUBLIC_BROWSER_DATA_PRODUCER_SOURCE_READY_FOR_PARENT_REVIEW",
+  "files": {
+    "browser_copy.py": {
+      "sha256": "d065254145d333057c70586e00b2263d07f1dd09485b46520cfaec07fa654376",
+      "bytes": 21392
+    },
+    "test_browser_copy.py": {
+      "sha256": "5dc0fad8c4d719ffe65d90fcc61a44cd7b7d9d10b3f0426e4c7218ab4b53bec8",
+      "bytes": 15330
+    },
+    "DESIGN.json": {
+      "sha256": "2f794930e1c22e43f8208b7ed65ca58b2ac59ffe387b6e5bc112b1b7af391c49",
+      "bytes": 4224
+    }
+  },
+  "closure_sha256": "46cd430acaa28a65d0c13c8c8ce57453fa2e1acb4e4ed00c0644dd4baeba530f",
+  "closure_algorithm": "SHA256 UTF8 canonical JSON files map, sorted keys, compact separators; no recursive self hash",
+  "fixture_tests": {
+    "count": 18,
+    "wall_seconds": 0.364774,
+    "log": "/mnt/apps/peticao-final/infra-public-inputs-20261115/browser-copy-source/FIXTURE-TESTS.log",
+    "log_sha256": "2a2d44ddb862ea90fd34388487130d423300d3d039a11948aa5daab52806ca6c"
+  },
+  "default_metadata_pin_check": {
+    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/metadata/browser/BROWSER-INPUTS.json",
+    "sha256": "5cf33c21f88fdfd207f37dc70d51750fbe277ffd99a320d006b20c16f947297a"
+  },
+  "real_ZIP_processed": false,
+  "real_browser_tree_derived": false,
+  "root_installation_or_candidate_execution": false,
+  "frozen_QA_wheels_or_other_sources_changed": false,
+  "qualified": false
+}
