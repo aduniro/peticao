@@ -9,3 +9,5 @@ contract-*/
 state/
 NORMAL-MANIFEST.json
 NOTICE-RECEIPT.json
+cgroup-*/
+entry-*/

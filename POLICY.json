@@ -28,5 +28,12 @@
     "distributed_jobs_and_dell_off": false,
     "promotion_preserves_service_file_ownership": false
   },
-  "known_promotion_blocker": "Unmodified legacy recovery.atomic_json replaces vigia-coord metadata as root0600 during root promote. Requires separate reviewed ownership-preserving fix and actual UID boundary test before cutover; no promotion performed."
+  "known_promotion_blocker": "Unmodified legacy recovery.atomic_json replaces vigia-coord metadata as root0600 during root promote. Requires separate reviewed ownership-preserving fix and actual UID boundary test before cutover; no promotion performed.",
+  "source_revision": "V2",
+  "held_parent_notice": 3089,
+  "held_parent_commit": "27bff1946d058119182a2c589740cbac050a0799",
+  "v2_fixes": [
+    "cgroupv2 controllers/procs/events mandatory; read/walk errors fail closed; populated checked twice; no incomplete existing tree treated empty",
+    "Root shim verifies compiled-in stdlib bootstrap hash then complete14file/currentboot/evidence closure BEFORE runtime imports"
+  ]
 }

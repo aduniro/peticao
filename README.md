@@ -1,4 +1,4 @@
-# Worker runtime candidate — source only
+# Worker runtime V2 candidate — source only
 
 **NOT DEPLOYABLE. No host installation, sudoers, SSH, actual systemd unit,
 canonical queue or cloud resource was changed by this preparation.** The target
@@ -10,6 +10,17 @@ fixed RPC, artifact custody and terminal queue state. It also tests the public
 facade3080 against the new backend. It is more than a schema/model, but its tests
 use real local fixture subprocesses and **synthetic** unit/cgroup identities.
 An actual isolated Civo qualification is being prepared separately by Apoio.
+Parent notice3089/27bff is HELD and cannot be executed: its cgroup observer could
+return empty for an existing incomplete/unwalkable tree, and its entries imported
+runtime modules before final pin checks. Parent source/review evidence are retained.
+
+V2 makes cgroup v2 controller/procs/events reads mandatory, propagates traversal
+and read failures, refuses incomplete/linked trees, checks populated before/after
+and accepts absence only under a validated v2 mount. A compiled-in hash first
+validates the stdlib-only entry_bootstrap.py; that bootstrap validates root-owned
+current-boot metadata and ALL14 code files before any runtime module import.
+The entry shims, OS/stdlib and root operator remain the trusted computing base.
+This is not protection from hostile root or an installer that violates its manifest.
 
 ## Implemented flow
 
@@ -98,6 +109,15 @@ live DB. A real crashed-process hot-journal fixture verifies reads refuse requir
 recovery without modifying main/journal bytes. This does not promise zero physical
 SHM/locking effects in every WAL state. Canceled is terminal for idempotent result
 delivery. The exact facade3080 and shared log module are pinned/copied unchanged.
+
+## V2 regression evidence
+
+New tests reproduce existing-cgroup/no-procs, no-events, denied-read, walk error,
+empty traversal, populated child, malformed PID/events, symlink and changing
+population cases. None can become an empty-process proof. Pin-order tests verify
+compiled bootstrap hashes, absence of top-level runtime imports, complete closure,
+current boot and rejection before runtime loading. Only local fixtures are used;
+real Civo qualification remains blocked until this V2 has independent review.
 
 ## Validation and remaining scope
 

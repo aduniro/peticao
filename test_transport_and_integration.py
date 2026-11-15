@@ -100,7 +100,7 @@ class IntegrationTests(unittest.TestCase):
 
 class TransportTests(unittest.TestCase):
     def test_unprivileged_entries_fail_before_loading_qualification_or_keys(self):
-        with mock.patch.object(rpc.os,'geteuid',return_value=1000),mock.patch.object(rpc.contract,'root_control_file',side_effect=AssertionError('no privileged read')):
+        with mock.patch.object(rpc.os,'geteuid',return_value=1000),mock.patch.object(Path,'lstat',side_effect=AssertionError('no privileged read')):
             with self.assertRaises(PermissionError):rpc.make_service()
         with mock.patch.object(client_entry.os,'geteuid',return_value=1000),mock.patch.object(sys,'argv',['client','civo']):
             with self.assertRaises(PermissionError):client_entry.main()

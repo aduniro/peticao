@@ -5,11 +5,12 @@ import re
 import subprocess
 
 import remote_contract as contract
+import cgroups
 
 
 class SystemdAdapter:
-    def __init__(self,boot_id=lambda:Path('/proc/sys/kernel/random/boot_id').read_text().strip()):
-        self.boot_id=boot_id
+    def __init__(self,boot_id=lambda:Path('/proc/sys/kernel/random/boot_id').read_text().strip(),cgroup_root=cgroups.MOUNT):
+        self.boot_id,self.cgroup_root=boot_id,Path(cgroup_root)
 
     def command(self,argv):
         return subprocess.run(argv,check=True,capture_output=True,text=True,timeout=30,
@@ -35,17 +36,10 @@ class SystemdAdapter:
         return data
 
     def cgroup_empty(self,path):
-        if not path:return True
-        if not re.fullmatch(r'/system.slice/admin-dev-[a-f0-9]{32}-g[1-9][0-9]*\.service',path):raise ValueError('own_cgroup_required')
-        root=Path('/sys/fs/cgroup')/path.lstrip('/')
-        if not root.exists():return True
-        for directory,dirs,files in os.walk(root,followlinks=False):
-            for name in dirs:
-                if (Path(directory)/name).is_symlink():raise ValueError('cgroup_directory_link')
-            if 'cgroup.procs' in files and (Path(directory)/'cgroup.procs').read_text().strip():return False
-        return True
+        return cgroups.snapshot(path,self.cgroup_root)['empty']
 
     def preflight(self,manifest,descriptor):
+        cgroups.validate_mount(self.cgroup_root)
         unit='admin-dev-'+manifest['job_id']+'-g'+str(manifest['generation'])+'.service'
         state=self.properties(unit)
         if state['LoadState']!='not-found':raise PermissionError('preexisting_unit_refused')

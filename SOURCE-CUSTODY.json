@@ -32,5 +32,13 @@
     "cancel_intent treats canceled phase as terminal for finalizer idempotence.",
     "Caller-visible constructor bytes unchanged only healthy DELETE fixture; no promise of physical WAL/SHM invariance."
   ],
-  "local_readonly_systemd_check": "20261115: local Dell systemctlshow nonexistent admin-dev unit exit0,11 requested properties. No service created/started; does not qualify actual Civo systemd isolation."
+  "local_readonly_systemd_check": "20261115: local Dell systemctlshow nonexistent admin-dev unit exit0,11 requested properties. No service created/started; does not qualify actual Civo systemd isolation.",
+  "runtime_parent": {
+    "notice": 3089,
+    "commit": "27bff1946d058119182a2c589740cbac050a0799",
+    "held_unexecuted": true,
+    "fixes": "fail-closed cgroup observation and bootstrap-before-runtime-imports",
+    "original_path": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-20261114",
+    "baseline_modified": false
+  }
 }
