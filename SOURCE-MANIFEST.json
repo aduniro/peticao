@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "state": "SOURCE_OUTPUT_ANCHOR_FIX_AND_FICTITIOUS_FIXTURES_READY_FOR_PARENT_REVIEW",
+  "supersedes": {
+    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source/SOURCE-MANIFEST.before-output-anchor.json",
+    "sha256": "3ec776b2918fa5f3fd6a99d8a4ce84a1f5aa983287ffc5290c80b4159c4a5259"
+  },
+  "files": {
+    "wheel_site.py": {
+      "sha256": "aa92149020f96120b0d5b791097f9d7d97c04d5e4ba7e424fe949fc5fbeba2e1",
+      "bytes": 22996
+    },
+    "test_wheel_site.py": {
+      "sha256": "c83b16f7f44a724ef9c8195c7c4f79a36c0644267a0d81f4a925d152f61a9ff9",
+      "bytes": 18836
+    },
+    "DESIGN.json": {
+      "sha256": "86b4dc6ac7ac04569d893875a5fba434195cf93530e12ebcbe7a891f7fa72d6f",
+      "bytes": 4363
+    }
+  },
+  "closure_sha256": "d2acfed03143e195982754a39f724e31b7015e2aff52d7b28431c25ab638a49a",
+  "closure_hash_algorithm": "SHA256 UTF8 canonical JSON files map; sorted keys, compact separators, no self hash",
+  "fixture_tests": {
+    "tests": 23,
+    "wall_seconds": 0.865632,
+    "log": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source/FIXTURE-TESTS-OUTPUT-ANCHOR.log",
+    "log_sha256": "16c5ca5260d485d507ba8c5b333c3df1ae4414cd465da73099f2a3f795e46526"
+  },
+  "real_public_wheels_derived": false,
+  "root_stage_or_package_execution": false,
+  "qualified": false
+}

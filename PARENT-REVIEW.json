@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "status": "PARENT_SOURCE_REVIEW_PASS_FOR_DATA_DERIVATION",
+  "producer_sha256": "aa92149020f96120b0d5b791097f9d7d97c04d5e4ba7e424fe949fc5fbeba2e1",
+  "independent_fictitious_tests": 23,
+  "seconds": 0.763,
+  "resource_warning_as_error": true,
+  "review": [
+    "four fixed wheelSHA/bytes, sameFD hash/ZIP/RECORD until source exit checks",
+    "paths/duplicate/links/pth/pyc/special/size/RECORD refused",
+    "fresh private UID1000 output dirs700/files600 viahelddirfds; no overwrite/replay",
+    "parent/root/sites devino/lexical identity validated before manifest/receipt and after fsync, rename cases fail and preserve partial",
+    "all vendor/RECORD bytes preserved; no package imports, pip, entrypoints or bundledELF execution",
+    "chmod600 not absolute execution prevention; native sealed Node20 launcher/exeSHA proof remains required"
+  ],
+  "qualified": false,
+  "root_install_performed": false
+}

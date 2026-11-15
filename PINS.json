@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "source_manifest": {
+    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source/SOURCE-MANIFEST.json",
+    "sha256": "b02bba8a790aef9e4d3e7b0ea9b89b2fdb3d97990c8a9c398f47519267670e17"
+  },
+  "code_closure_sha256": "d2acfed03143e195982754a39f724e31b7015e2aff52d7b28431c25ab638a49a",
+  "producer": {
+    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source/wheel_site.py",
+    "sha256": "aa92149020f96120b0d5b791097f9d7d97c04d5e4ba7e424fe949fc5fbeba2e1",
+    "bytes": 22996
+  },
+  "tests": 23,
+  "real_public_wheels_derived": false,
+  "qualified": false
+}

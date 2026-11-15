@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "scope": "SOURCE_AND_FICTITIOUS_FIXTURES_ONLY_BEFORE_PARENT_REVIEW_AND_REAL_DERIVE",
+  "api": "wheel_site.derive(wheels_dir_absolute, output_absolute) -> receipt dict",
+  "cli": [
+    "/usr/bin/python3",
+    "-B",
+    "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source/wheel_site.py",
+    "derive",
+    "--wheels-dir",
+    "ABSOLUTE_APPROVED_PROJECT_INPUT",
+    "--output",
+    "ABSOLUTE_NEW_PROJECT/python-wheel-site-1"
+  ],
+  "local_uid": 1000,
+  "root_fixture_or_owner_override_seam": false,
+  "source_pins_reference": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source/qa/python-runtime.json",
+  "input_policy": [
+    "Exactly four literal approved wheel names/SHA256/sizes; no CLI pin/version/owner/network/install override",
+    "Held nofollow fds with UID1000/mode0600/nlink1, full hash before ZIP parsing and same inode/stat through copy and exit",
+    "Root-or-UID1000 controlled no022 ancestor traversal; project namespace only"
+  ],
+  "zip_policy": [
+    "Bounded central inventory/member bytes/total bytes/compression/path lengths; CRC and complete RECORD SHA256/size validation",
+    "Reject paths/duplicates/traversal/.pth/.pyc/__pycache__/dotenv/credential directories/links/special/encryption/.data scheme",
+    "Reject duplicates and parent-file collisions across all four archives before output creation",
+    "Read metadata and payload only through zipfile streams; no package import or entrypoint/pip execution"
+  ],
+  "outputs": {
+    "root_basename": "python-wheel-site-1",
+    "data_tree": "sites",
+    "intent": "INTENT.json",
+    "manifest": "python-runtime.json",
+    "receipt": "DERIVATION-RECEIPT.json",
+    "directory_mode": "0700",
+    "regular_file_mode": "0600",
+    "file_content_projection_or_exclusions": []
+  },
+  "publication": [
+    "Exclusive new output+intent; O_EXCL/NOFOLLOW data files and parent directory fd writes",
+    "Preserve originals and any partial output; never overwrite, delete, resume or replay a prior attempt",
+    "Fsync data and complete inventory; exit-stat all input fds; only then write manifest and receipt",
+    "Runtime manifest exact keys version/site_root/source_wheels/files; every regular file has relative SHA256/bytes"
+  ],
+  "future_site_root": "/opt/peticao-dev-profile-tools-v1/python-wheels/site",
+  "vendor_node_policy": {
+    "preserve_original_vendor_and_RECORD_bytes": true,
+    "all_local_files_mode0600": true,
+    "mode0600_is_not_absolute_execution_denial": true,
+    "bytes_can_be_copied_or_loaded_by_other_means": true,
+    "no_hardening_V5_claim": true,
+    "required_future_launcher": "sealed PLAYWRIGHT_NODEJS_PATH=/opt/peticao-dev-profile-tools-v1/node20",
+    "required_future_native_evidence": "Actual executable path+SHA256 used by Playwright; not a chmod assertion"
+  },
+  "not_an_installation": [
+    "Data tree only, not pip-installed or root-staged; wheel content paths/bytes retained, file/dir modes and timestamps explicitly transformed",
+    "Frozen qa/python-runtime.json remains untouched; generated manifest is a future review candidate only",
+    "Root installer must separately revalidate closure, normalize approved public ownership/modes while preserving vendor Node without execute bits, and bind sealed launcher/env"
+  ],
+  "real_derivation_performed_by_this_task": false,
+  "qualified": false,
+  "operationalReady": false,
+  "cache_integrity_verified": false,
+  "output_identity_anchoring": {
+    "held_fds": [
+      "parent",
+      "root",
+      "sites"
+    ],
+    "identity_fields": [
+      "device",
+      "inode",
+      "uid",
+      "gid",
+      "mode"
+    ],
+    "lexical_reopen": "_parent NOFOLLOW/no022 then original root/sites entries; no writes through reopened replacements",
+    "checkpoints": [
+      "immediately after initial directory creation",
+      "before python-runtime.json",
+      "before DERIVATION-RECEIPT.json",
+      "after final fsync before successful return"
+    ],
+    "on_mismatch": "fail; preserve original partial; never initialize/write replacement",
+    "not_an_atomic_path_namespace_transaction": true,
+    "late_rename_after_receipt_write": "Original fd may retain candidate receipt bytes, but final check fails and no success is acknowledged; future adoption must revalidate the agreed lexical path and identities"
+  }
+}

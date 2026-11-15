@@ -1,0 +1,23 @@
+test_cli_has_no_pin_owner_or_execute_override_and_requires_action (test_wheel_site.WheelSiteTests.test_cli_has_no_pin_owner_or_execute_override_and_requires_action) ... ok
+test_complete_data_tree_manifest_and_source_records_preserved (test_wheel_site.WheelSiteTests.test_complete_data_tree_manifest_and_source_records_preserved) ... ok
+test_complete_site_verifier_rejects_injected_unknown_or_executable_data (test_wheel_site.WheelSiteTests.test_complete_site_verifier_rejects_injected_unknown_or_executable_data) ... ok
+test_duplicate_paths_between_four_wheels_refused (test_wheel_site.WheelSiteTests.test_duplicate_paths_between_four_wheels_refused) ... ok
+test_duplicate_zip_entries_refused (test_wheel_site.WheelSiteTests.test_duplicate_zip_entries_refused) ... ok
+test_global_budgets_are_bounded_before_output (test_wheel_site.WheelSiteTests.test_global_budgets_are_bounded_before_output) ... ok
+test_hash_size_and_group_writable_inputs_refused (test_wheel_site.WheelSiteTests.test_hash_size_and_group_writable_inputs_refused) ... ok
+test_io_failure_preserves_intent_and_partial_no_reinitialization (test_wheel_site.WheelSiteTests.test_io_failure_preserves_intent_and_partial_no_reinitialization) ... ok
+test_malformed_record_refused_before_output (test_wheel_site.WheelSiteTests.test_malformed_record_refused_before_output) ... ok
+test_manifest_and_receipt_pin_exact_output_and_umask_restored (test_wheel_site.WheelSiteTests.test_manifest_and_receipt_pin_exact_output_and_umask_restored) ... ok
+test_missing_record_refused_before_output (test_wheel_site.WheelSiteTests.test_missing_record_refused_before_output) ... ok
+test_no_replay_and_prior_files_unchanged (test_wheel_site.WheelSiteTests.test_no_replay_and_prior_files_unchanged) ... ok
+test_parent_file_collision_refused_before_output (test_wheel_site.WheelSiteTests.test_parent_file_collision_refused_before_output) ... ok
+test_paths_pth_pyc_cache_dotenv_and_data_scheme_refused (test_wheel_site.WheelSiteTests.test_paths_pth_pyc_cache_dotenv_and_data_scheme_refused) ... ok
+test_same_fd_exit_stat_change_keeps_partial_without_completed_manifest (test_wheel_site.WheelSiteTests.test_same_fd_exit_stat_change_keeps_partial_without_completed_manifest) ... ok
+test_source_symlink_and_output_alias_rejected (test_wheel_site.WheelSiteTests.test_source_symlink_and_output_alias_rejected) ... ok
+test_symlink_and_special_metadata_refused (test_wheel_site.WheelSiteTests.test_symlink_and_special_metadata_refused) ... ok
+test_vendor_node_kept_as_data_without_absolute_denial_claim (test_wheel_site.WheelSiteTests.test_vendor_node_kept_as_data_without_absolute_denial_claim) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.555s
+
+OK

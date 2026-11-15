@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "state": "SOURCE_AND_FICTITIOUS_FIXTURES_READY_FOR_PARENT_REVIEW",
+  "files": {
+    "wheel_site.py": {
+      "sha256": "bb232bc71c9ef10c00e14cfb6ffeae203f7940c7d86c5116d34b0b937ded1cb3",
+      "bytes": 20243
+    },
+    "test_wheel_site.py": {
+      "sha256": "80fe9c6a9ee5f47fb660e8f30529c06751f5512569d5f4d9bb251e1b847418ab",
+      "bytes": 13489
+    },
+    "DESIGN.json": {
+      "sha256": "1e8dd3717584f8905ed7eeca5b3177f62f47dbec41fcc6f0e13fd7a1e8e3ead0",
+      "bytes": 3465
+    }
+  },
+  "closure_sha256": "9ef69614789e300097502be935620b65ca5fa9ba39f40ab5de29dba860b25368",
+  "closure_hash_algorithm": "SHA256 UTF8 canonical JSON files map; sorted keys, compact separators, no self hash",
+  "fixture_tests": {
+    "tests": 18,
+    "wall_seconds": 0.76601,
+    "log": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source/FIXTURE-TESTS.log",
+    "log_sha256": "8ab076375ac91ac939c95a4fff99c442bb9543295145aac976c2061fbfaeca4d"
+  },
+  "real_public_wheels_derived": false,
+  "root_stage_or_package_execution": false,
+  "qualified": false
+}
