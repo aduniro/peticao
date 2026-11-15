@@ -1,0 +1,15 @@
+{
+  "source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-authority-guard-overlay-20261114",
+  "commit": "87c11977f5eb46312d121a08dd037fb486fbb7bf",
+  "runtime_sha256": {
+    "coordinator.py": "c44a6ff2a03f6a8700ba29b91a4fcdc30f3acc01c7ab517aea048a5e8659b28f",
+    "authority_guard.py": "d6170f6ad3e6ce100d1cd263f541e313f8261b5378d7be2329c7eecbe21162e1",
+    "remote_contract.py": "e2c9a865a7a39a64fd6c68f607ba5e999e4dd7f526ed078aa1feb2cf2a0ec87c",
+    "runtime_profile.py": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8"
+  },
+  "shared_log_redaction": {
+    "source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-20261114/log_redaction.py",
+    "sha256": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+    "commit": "Infra642 in progress; byte hash pins this exact read, pending Infra final freeze"
+  }
+}

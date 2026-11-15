@@ -1,0 +1,53 @@
+{
+  "status": "SOURCE_ONLY_NOT_DEPLOYABLE",
+  "controller": "civo",
+  "existing_queue_owner": "vigia-coord",
+  "worker_owner": "root",
+  "root_keys_copied_to_queue_user": false,
+  "production_access": false,
+  "live_runtime_mutations": 0,
+  "queue_cutover": false,
+  "real_build_profiles_qualified": false,
+  "allowed_profiles_in_candidate": [
+    "fixture-pass",
+    "fixture-fail"
+  ],
+  "new_cloud_services": 0,
+  "gpus": false,
+  "code_history_auth_migration": false,
+  "runtime_gates": {
+    "independent_source_review": false,
+    "actual_civo_systemd_namespace_and_stop": false,
+    "other_worker_qualification": false,
+    "fixed_sudo_helper_and_ssh_transport_installation": false,
+    "canonical_dispatcher_and_private_token_custody": false,
+    "capacity_parallelism_and_real_development_profiles": false,
+    "all_worker_admission_barriers_and_fencing": false,
+    "root_epoch_bootstrap_and_gateway": false,
+    "fresh_checkpoint_and_live_promotion_restart_failback": false,
+    "distributed_jobs_and_dell_off": false,
+    "promotion_preserves_service_file_ownership": false
+  },
+  "known_promotion_blocker": "Owner-preservation source3097 independently passed Root19tests/ACK3101; not installed or actual promotion-qualified. Old unpatched3051 must not promote.",
+  "source_revision": "V3",
+  "held_parent_notice": 3089,
+  "held_parent_commit": "27bff1946d058119182a2c589740cbac050a0799",
+  "v2_fixes": [
+    "cgroupv2 controllers/procs/events mandatory; read/walk errors fail closed; populated checked twice; no incomplete existing tree treated empty",
+    "Root shim verifies compiled-in stdlib bootstrap hash then complete14file/currentboot/evidence closure BEFORE runtime imports"
+  ],
+  "parent_notice": 3099,
+  "parent_commit": "df721fce5aa3a372c323c60e5bcf13be28338bbf",
+  "execution_authorized": false,
+  "host_qualification_required": true,
+  "physical_runtime_root": "/mnt/apps/peticao-final/.runtime",
+  "tmp_host_absence_proven": false,
+  "root_mount_effects_performed": false,
+  "v3_fixes": [
+    "Per-job project-backed StateDirectory bind with exclusive durable intent, current boot/manifest/receipt and mount ID+dev/inode verification",
+    "DynamicUser/PrivateTmp preserved; /tmp,/var/tmp and direct project runtime path inaccessible; host behavior still requires exact255 qualification",
+    "Private export root in project; receiving custody root selected by new harness; no shared parent chown",
+    "Fresh own inactive unit/empty cgroup before nonforced unmount; final receipt+mountabsence required for retained status; intents remain uncertain",
+    "Complete15file pre-import pin closure includes project_storage; shims re-pinned"
+  ]
+}
