@@ -1,0 +1,9 @@
+{
+  "state": "LOCAL_WIRE_TESTS_PASS",
+  "tests": 12,
+  "elapsed_seconds": 0.005,
+  "host_qualification": false,
+  "deployable": false,
+  "first_run_warning": "Discarded second socketpair endpoint in fixture; fixed both endpoints context-managed. Original log preserved.",
+  "corrected_log_sha256": "8717bd7412cf32fc5296ae7bffdad51c200859cb5d2be727ae727f50ec3780e6"
+}

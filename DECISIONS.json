@@ -1,0 +1,22 @@
+{
+  "owner_scope": "Continue authorized distributed development implementation; Civo central/Akamai worker",
+  "questions": [
+    {
+      "question": "Can a one-request worker retain systemd references across later calls?",
+      "decision": "Use a persistent root worker broker; never claim the wire library is deployment."
+    },
+    {
+      "question": "Can local socket tests replace actual runtime3195?",
+      "decision": "No.3195 real host pass is separate and does not qualify broker."
+    }
+  ],
+  "excluded": [
+    "new queue",
+    "new voter",
+    "GPU",
+    "cloud purchase",
+    "platform credentials",
+    "host service/socket installation",
+    "app/production/database mutation"
+  ]
+}
