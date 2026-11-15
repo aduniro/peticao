@@ -1,0 +1,16 @@
+{
+  "archive_bytes": 211388662,
+  "archive_sha256": "4b2c828ffdd182a8eef3e7fab1dcc8e3a6784318cc2f0c727efd8f978933605f",
+  "execute": false,
+  "inventory_bytes": 212816,
+  "inventory_sha256": "75772887b76a6b992c4694b1297461ddbdc7cb30e276d4267a8c9552fd3dc7cd",
+  "output": "/mnt/apps/peticao-final/infra-public-inputs-20261115/pg-native-data-2",
+  "provider_bytes": 18047,
+  "provider_sha256": "6e92cc0585365fc45e04344934bb2088a7d92dea57733601b7903453c36b17d4",
+  "receipt_bytes": 4697851,
+  "receipt_sha256": "37b9cc44ecf3a5d822a1d498ceb953b9abc2e51ea0a64714690d8b3c2ebff14b",
+  "role": "offline-public-pg-native-data",
+  "source_sha256": "8782d0e8750463f53cb83f8381eb8c54b25492f61c0fb2a7757769093dba991c",
+  "uid": 1000,
+  "version": 1
+}

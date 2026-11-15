@@ -1,0 +1,68 @@
+{
+  "baseline": {
+    "edited_v1_restored": false,
+    "exact_5_hash_match": true,
+    "files_sha256": {
+      "DESIGN-API.md": "7b7c22ed552e6060ed0b6385eb34c7e31b3fc1f353c3d893fada27fd9143edf3",
+      "INPUT-INVENTORY.json": "75772887b76a6b992c4694b1297461ddbdc7cb30e276d4267a8c9552fd3dc7cd",
+      "PG-POLICY.json": "6a1e02dd8ffd930bcaad0c79d512860503392511969ae2d50c504cfc62f4e1b6",
+      "pg_native_data.py": "90d4708a0896565cb8cbff72546ec7a73248a8e58734fc9e88cc9581e7342d2f",
+      "test_pg_native_data.py": "3343d039700c38ce89b00a74abee0e3255f2f3c799382903fe625f2c75c6981d"
+    },
+    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/pg-copy-source-v1-exact-baseline",
+    "recovered_only_after_inplace_edit": true,
+    "verified_against": "/mnt/apps/peticao-final/infra-public-inputs-20261115/metadata/pg-review/PREPOST-HASHES.json"
+  },
+  "external_policy": "/mnt/apps/peticao-final/infra-public-inputs-20261115/PG-EXECUTION-POLICY-V2.json",
+  "files": {
+    "DESIGN-API.md": {
+      "bytes": 6438,
+      "sha256": "ab2c74d5da337fbece6b6aa05947a359db873427ea0449f479be372af1115208"
+    },
+    "INPUT-INVENTORY.json": {
+      "bytes": 212816,
+      "sha256": "75772887b76a6b992c4694b1297461ddbdc7cb30e276d4267a8c9552fd3dc7cd"
+    },
+    "PG-POLICY.json": {
+      "bytes": 738,
+      "sha256": "17b286d3e1b92c370dabe47fb3eddd7d0f1df7653ced3eadb210caa23d561d6e"
+    },
+    "pg_native_data.py": {
+      "bytes": 24559,
+      "sha256": "8782d0e8750463f53cb83f8381eb8c54b25492f61c0fb2a7757769093dba991c"
+    },
+    "test_pg_native_data.py": {
+      "bytes": 19650,
+      "sha256": "5494c61f018c89ced615e8edd34c9ec3fac402a92fc299de2edbfc8b8a5a0c66"
+    }
+  },
+  "fix": "Original FDs and dev/inode/uid/gid/mode anchors for every created output directory; verify all before writes/receipt; never reopen a substituted parent for writing.",
+  "output": "/mnt/apps/peticao-final/infra-public-inputs-20261115/pg-native-data-2",
+  "qualified": false,
+  "real_projection_performed": false,
+  "regressions": [
+    "original nested-directory replacement before first write",
+    "replacement after output manifest before receipt",
+    "replacement after parent validation writes only via detached original FD, fails receipt"
+  ],
+  "repro": {
+    "edited": false,
+    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/metadata/pg-review/NESTED-DIRECTORY-REPRO.json",
+    "sha256": "864a055d1de9677b10136094f64916072a819bd644c2716bd3c5bde74ba0f808"
+  },
+  "root_integrity_approved": false,
+  "root_provider_changed": false,
+  "source": "/mnt/apps/peticao-final/infra-public-inputs-20261115/pg-copy-source-v2",
+  "state": "SOURCE_FIXTURES_REVIEW_ONLY_PENDING_PARENT_FREEZE",
+  "template_execute": false,
+  "tests": {
+    "ResourceWarning": "error",
+    "count": 26,
+    "native_execution": false,
+    "passed": 26,
+    "seconds": 0.6,
+    "subprocesses": false,
+    "tempdir": "/mnt/apps/peticao-final/infra-public-inputs-20261115/pg-copy-source-v2/test-state/tmp"
+  },
+  "version": 2
+}

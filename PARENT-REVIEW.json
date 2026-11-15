@@ -1,0 +1,15 @@
+{
+  "status": "SOURCE_DELTA_REVIEW_PASS",
+  "base_review": "/mnt/apps/peticao-final/infra-public-inputs-20261115/metadata/pg-review/RESULT.json",
+  "independent_delta_tests": 6,
+  "seconds": 0.208,
+  "new_tests": 3,
+  "base_23_adopted_not_repeated": true,
+  "exact_baseline_recovery": "/mnt/apps/peticao-final/infra-public-inputs-20261115/metadata/pg-review/EXACT-BASELINE-RECOVERY-PARENT-VERIFICATION.json",
+  "source_manifest_sha256": "0fa81cc4cefa95cbe60b11a674ae43eda82d143a5fca6facf6b8162642751a61",
+  "directory_identity_fix_reviewed": true,
+  "specific_14_aliases_only": true,
+  "default_execute_false": true,
+  "actual_projection_or_candidate_execution": false,
+  "qualified": false
+}
