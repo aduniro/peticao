@@ -1,0 +1,9 @@
+{
+  "runtime": "PENDING freeze642 and independent review; no manifest until then",
+  "runtime_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-20261114",
+  "facade_notice": 3080,
+  "facade_commit": "2c1491a7597f66977b6e1fb37b8ae36938297af9",
+  "gate_reference": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-passive-restore-retry1-20261114/client.py",
+  "gate_reference_commit": "142d5ac57cc5ecd3e4694d60e950485a4a283906",
+  "new_authorization_actor": false
+}

@@ -1,0 +1,27 @@
+{
+  "status": "PREPARATION_ONLY_NOT_EXECUTED",
+  "operation": "prepare source and mocked local tests only",
+  "runtime_freeze": "PENDING Infra642",
+  "remote_calls": 0,
+  "real_units_started": 0,
+  "code_destination": "/opt/peticao-dev-worker-qual-20261114-attempt1",
+  "private_destination": "/srv/peticao-dev-prep/civo-worker-runtime-qual-20261114-attempt1",
+  "global_control_access": false,
+  "actual_queue_access": false,
+  "queue_cutover": false,
+  "production_access": false,
+  "future_execution_resource": "deploy:civo-worker-runtime-qualification",
+  "future_operation": "test",
+  "future_manifest_author": "admin-recuperacao / Infra session",
+  "future_independent_ack": "apoio",
+  "own_capability_session": "01a1d130-2948-7140-bcfb-34696b20ab8d",
+  "future_execution_requires": [
+    "fresh frozen source closure and reviewed runtime",
+    "NEW explicit execution notice with operation/test, preparation_only=false, queue_cutover=false, production_access=false",
+    "independent Apoio ACK of runtime and execution notice; source preparation Root ACK",
+    "active own Infra lease bound to NEW notice/exact resource/budget; status/history before every effect",
+    "Root notified of execution window",
+    "only3 generated fixture units; no production/scheduler/global epoch/promotion"
+  ],
+  "future_work_excluded": "recovery.atomic_json owner preservation separate task; worker root fixture does not qualify UID999 coordinator ownership"
+}

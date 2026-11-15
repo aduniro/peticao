@@ -1,0 +1,24 @@
+[
+  {
+    "question": "How obtain real DynamicUser evidence when private parent is root0700?",
+    "decision": "Separate public root755 code/644files under exact /opt attempt from private fixturestate under exact /srv attempt; do not chmod existing parents."
+  },
+  {
+    "question": "How continue after SSH response loss?",
+    "decision": "Persist local/remote exclusive intents, detached bounded root helper; observe same IDs only, never reinstall/bootstrap/start again. Cleanup only after runner dead plus fresh same binding/cgroup proof."
+  },
+  {
+    "question": "Who authorizes/execut es the future test?",
+    "decided_by": "Infra coordinator",
+    "decision": "Existing canonical reviewed/validate_lease flow: Apoio preparation\u2192Root ACK; NEW Infra execution notice\u2192Apoio ACK, own Infra session capability. No new approval mechanism or borrowed lease."
+  },
+  {
+    "question": "How prove admission denial for the right reason?",
+    "decision": "Positive SH mutation, independent exec EXbusy, persist closed under EX, valid fixture credentials, exact closed-admission cause on prepare/start. Invalid-token errors never count."
+  },
+  {
+    "question": "Does killing MainPID prove descendants stopped?",
+    "decided_by": "Infra coordinator",
+    "decision": "Fixed14s child in fixture-fail same cgroup, cancellation requires>=2PIDs before stop and owncgroupempty after stop."
+  }
+]
