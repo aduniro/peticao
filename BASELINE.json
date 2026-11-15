@@ -1,0 +1,162 @@
+{
+  "source_commit": "897ebff92bfc18004d4af860ce3a719ad2809b5f",
+  "source_policy_sha256": "7ea83a7ebfa147cc95bec296051d2f0253a56305407b3c15b43816af3745a140",
+  "nodes": [
+    {
+      "name": "akamai",
+      "hostname": "peticao-build-a1",
+      "dns": "peticao-build-a1.tail1a6d71.ts.net",
+      "ipv4": "100.74.19.123",
+      "ipv6": "fd7a:115c:a1e0::4c2f:137c",
+      "port": 2224,
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJ5x6CmHtVIkb4KfiE/9oTG9/vOnFnyXesXCeE/Sd5Dz root@localhost",
+      "user": "builder",
+      "accounts": [
+        {
+          "user": "builder",
+          "home": "/home/builder",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMeQZ/saxVFwThpl+aZt0LB9W9MmWGXZGAVw64kvs9oO peticao-tailnet-v2:akamai:builder",
+          "client_identity": "/home/builder/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/home/builder/.ssh/authorized_keys_peticao_tailnet_v2"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII4M3/awBcTAS12WZ3brzrFmjbASR12YBnZarr0/jYqc peticao-tailnet-v2:akamai:root",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2"
+        }
+      ]
+    },
+    {
+      "name": "sp",
+      "hostname": "peticao-sp",
+      "dns": "peticao-sp.tail1a6d71.ts.net",
+      "ipv4": "100.109.6.122",
+      "ipv6": "fd7a:115c:a1e0::8e2f:67b",
+      "port": 2224,
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILbP+WkEx8pJBhlvnoaGVIKQzFOPZYlNsnLfWhvuq0aI root@peticao-sp",
+      "user": "adunir",
+      "accounts": [
+        {
+          "user": "adunir",
+          "home": "/home/adunir",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINb3uJEatZpztkdN27acuwhxaoSwMd0lg7/m1pdcVHcP peticao-tailnet-v2:sp:adunir",
+          "client_identity": "/home/adunir/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/home/adunir/.ssh/authorized_keys_peticao_tailnet_v2"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF/NdoU0DMcQLRWOwkQnTGCxd/3g5nExWpaxwcva2YNB peticao-tailnet-v2:sp:root",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2"
+        }
+      ]
+    },
+    {
+      "name": "santiago",
+      "hostname": "sonda-verifica3",
+      "dns": "sonda-verifica3.tail1a6d71.ts.net",
+      "ipv4": "100.80.18.81",
+      "ipv6": "fd7a:115c:a1e0::3e2f:1252",
+      "port": 2224,
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJecEkOdtMPMB/kSqL68QPsV2VI/gA4h/A5bot8I8J4o root@sonda-verifica3",
+      "user": "sonda",
+      "accounts": [
+        {
+          "user": "sonda",
+          "home": "/home/sonda",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM9d1O0MsPf38QtpnJb5Ls84HorqMt2egK8CmL1tvaNH peticao-tailnet-v2:santiago:sonda",
+          "client_identity": "/home/sonda/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/home/sonda/.ssh/authorized_keys_peticao_tailnet_v2"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILauQ0HeIq6Vdj1ZH9bXsDc+6TOyjroAjRFIL/dUPUQF peticao-tailnet-v2:santiago:root",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2"
+        }
+      ]
+    },
+    {
+      "name": "waha",
+      "hostname": "sanciona-integral",
+      "dns": "sanciona-integral.tail1a6d71.ts.net",
+      "ipv4": "100.115.154.25",
+      "ipv6": "fd7a:115c:a1e0::972f:9a1a",
+      "port": 2224,
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPiFPUbmzxy2WR3DKySgN9wLhPHTpJ05FMw0ok2TOSff root@sanciona-integral",
+      "user": "wa",
+      "accounts": [
+        {
+          "user": "wa",
+          "home": "/home/wa",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDz8izBX5KoAxbTi6N7POJfWNUWAlivktDZnGpBJjfET peticao-tailnet-v2:waha:wa",
+          "client_identity": "/home/wa/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/home/wa/.ssh/authorized_keys_peticao_tailnet_v2"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINLaAP2wdj52wgZ3HtsAEc1NLhet7uDCkZ+F7G6gYKAL peticao-tailnet-v2:waha:root",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2"
+        }
+      ]
+    },
+    {
+      "name": "local",
+      "hostname": "dell3576-zorin",
+      "dns": "dell3576-zorin.tail1a6d71.ts.net",
+      "ipv4": "100.105.193.63",
+      "ipv6": "fd7a:115c:a1e0::e33b:c13f",
+      "port": 2224,
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIABxB+nPTPMdOXYCHIgZSQRf9Qs74s6K/eo5ApRr6Yw root@dell3576-zorin",
+      "user": "barre",
+      "accounts": [
+        {
+          "user": "barre",
+          "home": "/home/barre",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINt+h3nKCP/IuiGbMppI4MdG34YBmUgm7DKPfUhnAY2O peticao-tailnet-v2:local:barre",
+          "client_identity": "/home/barre/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/home/barre/.ssh/authorized_keys_peticao_tailnet_v2"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGYLpPKANy0HVy8TCC1DiTJD/dHNM5Yxtnfm8v3JYsh7 peticao-tailnet-v2:local:root",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+          "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2"
+        }
+      ]
+    },
+    {
+      "name": "civo",
+      "hostname": "peticao-civo",
+      "dns": "peticao-civo.tail1a6d71.ts.net",
+      "ipv4": "100.122.224.82",
+      "ipv6": "fd7a:115c:a1e0::322f:e053",
+      "port": 22,
+      "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEh2JQ+Zietnaw0eqyUpc7P4WO+nWf0X6gqQg8XXRg7G",
+      "user": "civo",
+      "accounts": [
+        {
+          "user": "civo",
+          "home": "/home/civo",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIdwm7cuTLhS7TVVabfs1Z6zdu7/JgnJJusaGKGfnxgv peticao-civo-user",
+          "client_identity": "/home/civo/.ssh/id_ed25519_peticao_civo_node",
+          "auth_file": "/home/civo/.ssh/authorized_keys"
+        },
+        {
+          "user": "root",
+          "home": "/root",
+          "client_public": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJe+WYbYwDCiA7uW7AY2PwfkXyaVLsKFx3OfEfDZd5iu peticao-civo-root",
+          "client_identity": "/root/.ssh/id_ed25519_peticao_civo_node",
+          "auth_file": "/root/.ssh/authorized_keys"
+        }
+      ]
+    }
+  ]
+}

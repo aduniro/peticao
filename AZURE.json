@@ -1,0 +1,30 @@
+{
+  "name": "azure",
+  "hostname": "peticao-azure-dev-01",
+  "dns": "peticao-azure-dev-01.tail1a6d71.ts.net",
+  "ipv4": "100.76.178.21",
+  "ipv6": "fd7a:115c:a1e0::d02f:b216",
+  "port": 2224,
+  "user": "builder",
+  "host_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKt2YZSXJwlgAfuVQDQIkBtDy98nDSfc6tNd2EMukQvV",
+  "host_key_provenance": "Existing pinned Azure public host key from successful builder SSH qualification; verify again after authorized wake.",
+  "accounts": [
+    {
+      "user": "builder",
+      "home": "/home/builder",
+      "client_identity": "/home/builder/.ssh/id_ed25519_peticao_tailnet_v2",
+      "auth_file": "/home/builder/.ssh/authorized_keys_peticao_tailnet_v2",
+      "client_public": null
+    },
+    {
+      "user": "root",
+      "home": "/root",
+      "client_identity": "/root/.ssh/id_ed25519_peticao_tailnet_v2",
+      "auth_file": "/root/.ssh/authorized_keys_peticao_tailnet_v2",
+      "client_public": null
+    }
+  ],
+  "outbound_keys_status": "NOT_DISCOVERED_VM_OFF; no generated key/placeholder accepted for rollout",
+  "preserve_public_ssh_port": 22,
+  "preserve_default_authorized_keys": true
+}

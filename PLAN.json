@@ -1,0 +1,53 @@
+{
+  "status": "PREPARATION_ONLY_NOT_APPLIED",
+  "coordinator_thread": "01a1d130-2948-7140-bcfb-34696b20ab8d",
+  "decisions": [
+    {
+      "question": "Which outbound identities should Azure use?",
+      "decision": "Future read-only discovery, reuse valid Azure-specific pairs. If absent, generate two exclusive root/builder pairs remotely only after reviewed manifest, own lease and Infra global release; never redistribute Owner private key. Freeze14public keys and host pin afterward for separate rollout review.",
+      "authority": "Infra explicit native message during this task"
+    },
+    {
+      "question": "Root access without broadening public SSH?",
+      "decision": "Dedicated2224 listener bound only Azure TailnetIPv4/IPv6; separate authorized_keys file. Preserve public22/cloud-init/root forced-command authorized_keys unchanged.",
+      "authority": "Infra explicit task"
+    },
+    {
+      "question": "Remmina protocol?",
+      "decision": "Six SSH terminal profiles root/builder x IPv4/IPv6/MagicDNS, key authentication only; no RDP/desktop/password.",
+      "authority": "Infra explicit task"
+    }
+  ],
+  "dependencies": [
+    "Azure control-plane read currently blocked AADSTS530035/securitydefaults. No logout/relogin/bypass; legitimate authentication resolution belongs Root/Infra.",
+    "Last verified VMdeallocated from completed615/2997; no new start. Future live identity/Tailnet/hostkey/keys/config snapshot required.",
+    "No wake/install/remote key generation/network/profile installation before Root review, own exact lease and Infra global release."
+  ],
+  "future_acceptance": {
+    "old_mesh_rows": 360,
+    "new_azure_edge_rows": 144,
+    "full_7node_rows": 504,
+    "all_routes": [
+      "ipv4",
+      "ipv6",
+      "dns"
+    ],
+    "source_and_target_accounts": [
+      "normal",
+      "root"
+    ],
+    "single_fresh_batch_required": true,
+    "no_historical_results_counted": true,
+    "gui_validation": "NOT_TESTED; only later actual Remmina connection can prove GUI operation"
+  },
+  "no_actions_performed": [
+    "VMstart",
+    "VMdeallocate_again",
+    "keygeneration",
+    "SSHservicechange",
+    "NSG/firewallchange",
+    "profileinstallation",
+    "privatekeyread",
+    "productionchange"
+  ]
+}
