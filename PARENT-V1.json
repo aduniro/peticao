@@ -1,0 +1,23 @@
+{
+  "classification": "SOURCE_ONLY_V2_PREPARATION_AWAITING_INFRA_DECISION",
+  "copied_sources": {
+    ".gitignore": {
+      "bytes": 66,
+      "sha256": "b3775f71e2d52cbe8238992e92ad97f1038e32977234bcf0b93d35cbb5fdb694"
+    },
+    "browser_copy.py": {
+      "bytes": 21392,
+      "sha256": "d065254145d333057c70586e00b2263d07f1dd09485b46520cfaec07fa654376"
+    },
+    "test_browser_copy.py": {
+      "bytes": 15330,
+      "sha256": "5dc0fad8c4d719ffe65d90fcc61a44cd7b7d9d10b3f0426e4c7218ab4b53bec8"
+    }
+  },
+  "git_teststate_logs_or_old_release_manifests_copied": false,
+  "qualified": false,
+  "real_derive_authorized": false,
+  "source_notice": 3372,
+  "source_preserved": "/mnt/apps/peticao-final/infra-public-inputs-20261115/browser-copy-source",
+  "version": 1
+}

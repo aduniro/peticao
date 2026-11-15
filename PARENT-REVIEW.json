@@ -1,0 +1,17 @@
+{
+  "exit_code": 0,
+  "wall_seconds": 0.19053704499674495,
+  "new_tests": 4,
+  "affected_base_test": 1,
+  "unchanged_base_adopted_not_repeated": 17,
+  "log": "/mnt/apps/peticao-final/infra-public-inputs-20261115/metadata/browser/PARENT-V2-DELTA-TESTS.log",
+  "real_zip_or_browser_execution": false,
+  "status": "SOURCE_DELTA_REVIEW_PASS",
+  "seconds": 0.062,
+  "parent_source_notice": 3372,
+  "parent_exec_refusal": 3380,
+  "closed_directory_change": "None or exact SHA256 empty; bytes/compressed/CRC zero only",
+  "Infra_technical_approval": true,
+  "new_destination": "/mnt/apps/peticao-final/infra-public-inputs-20261115/browser-data-v2/browser-data-1",
+  "qualified": false
+}

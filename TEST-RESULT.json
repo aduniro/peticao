@@ -1,0 +1,28 @@
+{
+  "classification": "SOURCE_V2_AND_FIXTURES_ONLY_BEFORE_NEW_REAL_DERIVATION",
+  "command": "TMPDIR=/mnt/apps/peticao-final/infra-public-inputs-20261115/browser-copy-source-v2/test-state/tmp /usr/bin/python3 -B -W error::ResourceWarning -m unittest -q test_browser_copy",
+  "cwd": "/mnt/apps/peticao-final/infra-public-inputs-20261115/browser-copy-source-v2",
+  "tests": 22,
+  "passed": 22,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration_seconds": 0.231,
+  "resource_warning_observed": false,
+  "real_metadata_read_only": true,
+  "real_zip_opened_or_derived": false,
+  "browser_candidate_elf_or_vendor_code_executed": false,
+  "pins_or_lineage_modified": false,
+  "original_source_preserved": true,
+  "infra_exact_delta_approved_parent_reported": true,
+  "parent_independent_review_before_real_derive_required": true,
+  "Root_installation": false,
+  "Chrome_Native": false,
+  "qualified": false,
+  "earlier_fixture_run": {
+    "tests": 22,
+    "errors": 3,
+    "reason": "new_tests_assumed_dict_instead_of_existing_tuple_return_from_load_inventory",
+    "disposition": "new_tests_corrected_no_production_change_for_this_test_error"
+  }
+}

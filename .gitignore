@@ -1,0 +1,5 @@
+.git/
+test-state/
+__pycache__/
+NORMAL-MANIFEST.json
+NOTICE-*.json
