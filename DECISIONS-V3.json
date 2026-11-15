@@ -1,0 +1,28 @@
+{
+  "owner_requirement": "Physical temporary storage under project root; Civo central development, Akamai support, Codex on Dell",
+  "new_scope": "Source-only bind storage lifecycle and adapter integration; new harness required",
+  "questions_and_decisions": [
+    {
+      "question": "Can changing TMPDIR alone satisfy policy?",
+      "decision": "No. StateDirectory backing, private tmp creation and artifact staging also require proof."
+    },
+    {
+      "question": "May isolation be disabled to relocate work?",
+      "decision": "No. DynamicUser/PrivateTmp/no privileges/network protections retained."
+    },
+    {
+      "question": "What if mount/unmount reply is lost?",
+      "decision": "Persist exclusive intent; do not replay; report uncertain and reconcile."
+    },
+    {
+      "question": "Can systemd255 branch prove runtime behavior?",
+      "decision": "No. Pin actual package and observe real unit, tmp events, mountinfo, dev/inode, ownership lifecycle."
+    }
+  ],
+  "effect_scope": {
+    "local_source": true,
+    "remote": false,
+    "credentials": false,
+    "production": false
+  }
+}

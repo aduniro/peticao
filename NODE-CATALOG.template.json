@@ -1,0 +1,80 @@
+{
+  "version": 2,
+  "nodes": {
+    "civo": {
+      "qualified": false,
+      "profiles": {
+        "fixture-pass": {
+          "profile": "fixture-pass",
+          "qualified": false,
+          "profile_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "dependencies_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "artifact_policy_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "qualification_manifest_event": null,
+          "qualification_evidence_sha256": null
+        },
+        "fixture-fail": {
+          "profile": "fixture-fail",
+          "qualified": false,
+          "profile_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "dependencies_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "artifact_policy_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "qualification_manifest_event": null,
+          "qualification_evidence_sha256": null
+        }
+      }
+    },
+    "akamai": {
+      "qualified": false,
+      "profiles": {
+        "fixture-pass": {
+          "profile": "fixture-pass",
+          "qualified": false,
+          "profile_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "dependencies_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "artifact_policy_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "qualification_manifest_event": null,
+          "qualification_evidence_sha256": null
+        },
+        "fixture-fail": {
+          "profile": "fixture-fail",
+          "qualified": false,
+          "profile_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "dependencies_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "artifact_policy_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "qualification_manifest_event": null,
+          "qualification_evidence_sha256": null
+        }
+      }
+    },
+    "azure": {
+      "qualified": false,
+      "profiles": {
+        "fixture-pass": {
+          "profile": "fixture-pass",
+          "qualified": false,
+          "profile_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "dependencies_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "artifact_policy_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "qualification_manifest_event": null,
+          "qualification_evidence_sha256": null
+        },
+        "fixture-fail": {
+          "profile": "fixture-fail",
+          "qualified": false,
+          "profile_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "dependencies_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "artifact_policy_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "qualification_manifest_event": null,
+          "qualification_evidence_sha256": null
+        }
+      }
+    }
+  }
+}
