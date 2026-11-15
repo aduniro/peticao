@@ -1,0 +1,11 @@
+{
+  "tests": 33,
+  "passed": true,
+  "suite_summary": "Ran 33 tests in 0.074s\n\nOK",
+  "ast": 5,
+  "real_host_calls": 0,
+  "real_mounts": 0,
+  "real_systemd_actions": 0,
+  "test_scope": "project-local synthetic pins/ports, real local SQLite RO fixture and mocked transport only",
+  "static_review": "No remaining concrete technical blocker; documentation fixed; concurrency assumes no competing administrative writers"
+}

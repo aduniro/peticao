@@ -1,0 +1,23 @@
+{
+  "original_execution_event": 3151,
+  "original_request_sha256": "4278a7ef955ad22e7fab66aa95f1ab7f94acf46c129d8031dc4da846ab4f4b97",
+  "original_operation_id": "d071f0d87a954a519b8d0e07233ca370",
+  "old_public": "/opt/peticao-dev-worker-qual-20261114-attempt2",
+  "old_private": "/mnt/apps/peticao-final/.runtime/civo-worker-runtime-qual-20261114-attempt2",
+  "members": {
+    "admission.py": "d830704c06077110d5775fdf4f25db23c8f17d54911f117d2e434b026ffb8682",
+    "artifacts.py": "c3bb0e50376d6b81ae0b66ecfd28952b9823a2e59844fdb81cfb7f217afa354d",
+    "cgroups.py": "b039c4192308d6d89b8fc01f2721c408dc7e6bee4908093d510125e12a4dfdce",
+    "controller.py": "0138215ba5feb91220e50b418d80674972f92db6696ff4139b9a4fced48e7615",
+    "log_redaction.py": "a6658cb772c6cddd2ecc010c9474fcb09a2a19b75756fa8921fc4e1d65e51c08",
+    "project_storage.py": "c8d9f98a4d62cf8d0567be318c11c8e3c7952abcc1ab9ed9da452b0c4f82e769",
+    "remote_contract.py": "e2c7098c0c8b6d05a878f47a3ac19de53d4409a7226c8aab3dd8a3b2587facfb",
+    "systemd_adapter.py": "a1df3a27875668311b34ead3a1c0245ba824d7b57150cd7007bc03f9547043b8",
+    "worker.py": "a16bef2e64fe514caa3065f1d18faee26c2263a6e18d95d543e237d667b5618c",
+    "qualification_contract.py": "84d451f17d6350876422a2c720acfc2631537cada1e9ac7261ec255df02d6d24",
+    "qualification_job.py": "039fa2ac263fe3376656e8aba0079753e87712e891479a7f83815d6dd9d84993",
+    "qualification_helper.py": "c4255f94994b00aeab2007282bc06a6e1335d49067eabac29bd6fa58ab10e175",
+    "storage_probe.py": "b4b158bd57ab6d171037346b1926d5409ae4d2f04546ad56eeff17cb8c81117d"
+  },
+  "source_commit": "d7c80a0a908a1d3df1c571eaeb3fd2d9228f8b20"
+}

@@ -1,0 +1,93 @@
+{
+  "binding": {
+    "receipt_sha256": "7e867461b17490d82b8ec3dd13c490a76eca64348a0b684b4787bd44052476c3",
+    "invocation_id": "267d6c39c47d4ec19c0a611f1271f592",
+    "cgroup_path": "/system.slice/admin-dev-8b01b1fa889647a184fbe2424263b588-g1.service",
+    "stop_proof": {
+      "canceled": false,
+      "cgroup_empty": true,
+      "exit_code": 0,
+      "invocation_id": "267d6c39c47d4ec19c0a611f1271f592",
+      "main_pid": 0,
+      "receipt_sha256": "7e867461b17490d82b8ec3dd13c490a76eca64348a0b684b4787bd44052476c3",
+      "unit": "admin-dev-8b01b1fa889647a184fbe2424263b588-g1.service",
+      "unit_stopped": true,
+      "worker_boot_id": "c1626328-a278-4baf-a73e-a08803c08678"
+    },
+    "bundle_sha256": "071bbc6f7b756df18847798000c0b8d76cfa69ccb278cbe7f43b17b72031d933"
+  },
+  "unit_show": {
+    "exit": 0,
+    "stdout": "MainPID=0\nControlGroup=\nDescription=admin-dev-8b01b1fa889647a184fbe2424263b588-g1.service\nLoadState=not-found\nActiveState=inactive\nSubState=dead\nInvocationID=\n",
+    "stderr": ""
+  },
+  "cgroup": {
+    "exists": false,
+    "controllers": [
+      "cpuset",
+      "cpu",
+      "io",
+      "memory",
+      "hugetlb",
+      "pids",
+      "rdma",
+      "misc"
+    ]
+  },
+  "storage_binding": {
+    "device": 64769,
+    "inode": 2105518,
+    "manifest_sha256": "06b00cf3f2f89f4d89c72d213b9f2dd3a1b7d1b9f61b5d64c7b81f64fa6fdfc7",
+    "mount_id": 64,
+    "receipt_sha256": "7e867461b17490d82b8ec3dd13c490a76eca64348a0b684b4787bd44052476c3",
+    "source": "/mnt/apps/peticao-final/.runtime/civo-worker-runtime-qual-20261114-attempt2/job-backing/peticao-dev-job-8b01b1fa889647a184fbe2424263b588-g1/work",
+    "state": "mounted",
+    "target": "/var/lib/private/peticao-dev-job-8b01b1fa889647a184fbe2424263b588-g1",
+    "underlay_device": 64769,
+    "underlay_inode": 2105519,
+    "unit": "admin-dev-8b01b1fa889647a184fbe2424263b588-g1.service",
+    "version": 1,
+    "worker_boot_id": "c1626328-a278-4baf-a73e-a08803c08678"
+  },
+  "paths": {
+    "/mnt/apps/peticao-final/.runtime/civo-worker-runtime-qual-20261114-attempt2/job-backing/peticao-dev-job-8b01b1fa889647a184fbe2424263b588-g1/work": {
+      "exists": true,
+      "uid": 65469,
+      "gid": 65469,
+      "mode": "0o700",
+      "symlink": false,
+      "device": 64769,
+      "inode": 2105518
+    },
+    "/mnt/apps/peticao-final/.runtime/civo-worker-runtime-qual-20261114-attempt2/job-backing/peticao-dev-job-8b01b1fa889647a184fbe2424263b588-g1": {
+      "exists": true,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o700",
+      "symlink": false,
+      "device": 64769,
+      "inode": 2105517
+    },
+    "/var/lib/private/peticao-dev-job-8b01b1fa889647a184fbe2424263b588-g1": {
+      "exists": true,
+      "uid": 65469,
+      "gid": 65469,
+      "mode": "0o700",
+      "symlink": false,
+      "device": 64769,
+      "inode": 2105518
+    },
+    "/var/lib/peticao-dev-job-8b01b1fa889647a184fbe2424263b588-g1": {
+      "exists": true,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0o777",
+      "symlink": true,
+      "device": 64769,
+      "inode": 41971
+    }
+  },
+  "matching_mountinfo": [
+    "64 29 253:1 /mnt/apps/peticao-final/.runtime/civo-worker-runtime-qual-20261114-attempt2/job-backing/peticao-dev-job-8b01b1fa889647a184fbe2424263b588-g1/work /var/lib/private/peticao-dev-job-8b01b1fa889647a184fbe2424263b588-g1 rw,relatime shared:1 - ext4 /dev/vda1 rw,discard,errors=remount-ro,commit=30"
+  ]
+}

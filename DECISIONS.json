@@ -1,0 +1,20 @@
+[
+  {
+    "question": "May the normal adapter accept a missing unit after stop?",
+    "decided_by": "Infra coordinator",
+    "decision": "No. Keep normal guard; prospective V4 keeps an IPC reference. Exact old attempt recovery is a separate operation."
+  },
+  {
+    "question": "How recover mount64 without replaying the old cleanup?",
+    "decision": "New reviewed operation, own lease, separate exclusive entry/storage intents, full durable stop chain plus fresh same-boot not-found/cgroup/mount proof under EX and persistent closed admission."
+  },
+  {
+    "question": "Is a core-only model sufficient?",
+    "decided_by": "Infra coordinator",
+    "decision": "Deliver core, fixed host wrapper, Gate and SSH transport in one frozen review packet; no host effects while preparing."
+  },
+  {
+    "question": "What if a mutation response or final receipt is lost?",
+    "decision": "Preserve uncertain state and evidence. Never automatically retry umount/chown/remove or relabel the old attempt as passed."
+  }
+]

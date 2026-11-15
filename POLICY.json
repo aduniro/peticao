@@ -1,0 +1,22 @@
+{
+  "status": "PREPARATION_ONLY_NOT_EXECUTED",
+  "original_execution_event": 3151,
+  "old_source_notice": 3136,
+  "old_source_unchanged": true,
+  "new_execution_resource": "deploy:civo-attempt2-storage-reconciliation",
+  "operation": "test",
+  "operator_session": "01a1d130-2948-7140-bcfb-34696b20ab8d",
+  "phases": [
+    "install",
+    "preflight",
+    "cleanup"
+  ],
+  "ssh_calls": 0,
+  "host_effects": 0,
+  "queue_cutover": false,
+  "production_access": false,
+  "old_attempt_retry": false,
+  "normal_collected_unit_cleanup_allowed": false,
+  "future_new_notice_and_apoio_ack_required": true,
+  "private_key_read": false
+}
