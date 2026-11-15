@@ -1,0 +1,7 @@
+.*private*
+__pycache__/
+*.pyc
+state/
+test-work/
+NORMAL-MANIFEST.json
+NOTICE-RECEIPT.json

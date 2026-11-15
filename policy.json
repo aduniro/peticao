@@ -1,0 +1,60 @@
+{
+  "baseline": {
+    "at": "2026-11-14T23:25:50.460251+00:00",
+    "facts": {
+      "schema_sha256": "525fa8b6984eba4e9e63373e41fa8ace5187f2eaff76c6aadd80e581824836ea",
+      "tables": {
+        "events": {
+          "rows": 37,
+          "sha256": "677332c21890f41528de846e4672d9c84370c59a98d5fe898e267c4709c4535d"
+        },
+        "jobs": {
+          "rows": 10,
+          "sha256": "0e33ee15a24e02d2a2ef3bfa376161c28a018a7d0c9e857db392597c326c2316"
+        },
+        "sqlite_sequence": {
+          "rows": 1,
+          "sha256": "9a35b32d1ff1904199802e09b2029ac8e33888379d2c366bfb3556d23bd4748d"
+        }
+      },
+      "jobs_by_state": {
+        "canceled": 1,
+        "completed": 8,
+        "failed": 1
+      },
+      "nonterminal_jobs": 0
+    },
+    "file_sha256": {
+      "authority.json": "828f484c7277b2e174291366b1aaa65f5b189d842d6f8cdb293f5d4db4cd38c9",
+      "config.json": "31d8f9081e5780028c688cdb5429f3d1d502bd88f5c130019fd846e977926806",
+      "version.json": "b750121255b50f948d208acebdf51f5e184d8835f1a7173100a123605ae5c7cf"
+    },
+    "authority": {
+      "role": "primary",
+      "generation": 1
+    },
+    "free_bytes": 149032501248
+  },
+  "recovery_sha256": "9c2b54de92a175822fc973912e25cd4450186d89a66e23ff61a94f150fadaa18",
+  "helper_sha256": "6b5f0b82d6588de0796ee9115196e04fcc5f6e483e9178d150ea2a0560ebe937",
+  "probe_sha256": "427e90bd4a976f37b4b6f94aea60c30c27ff2ec2bcd620638710c93816332253",
+  "service_uid": 999,
+  "service_gid": 987,
+  "target": "Civo passive only; no start/promotion/RPC",
+  "source_state": "legacy Santiago primary remains active",
+  "excluded": [
+    "Codex/OAuth/session histories",
+    "A1",
+    "real application database",
+    "Nome-CPF validation queue",
+    "SSH/bootstrap tokens (separate design)",
+    "Kubernetes state migration"
+  ],
+  "max_cipher_bytes": 537919488,
+  "installed_probe_sha256": {
+    "runtime_profile.py": "afcb73273b0f35835012ec9a5a523114afc2da2566d20a30f8c05c47647aa3b8",
+    "standby_guard.py": "731e2ccec8e05e45f5287d66017b4aacdfecf630cd6ca366d93717d855c6a997",
+    "coordinator.py": "a8e93ff093555241d2eeead49d418dc4d5bb4dacecf4aa460c329e8e7cd7adef",
+    "recovery.py": "9c2b54de92a175822fc973912e25cd4450186d89a66e23ff61a94f150fadaa18"
+  }
+}

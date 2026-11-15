@@ -1,0 +1,11 @@
+{
+  "prior_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-passive-restore-20261114",
+  "prior_commit": "0bcf38a8a7bf0454cca0006ddfb24bbc07f8790d",
+  "prior_notice": 3015,
+  "prior_operation_fence": 624,
+  "prior_release": "aborted",
+  "cause_evidence": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-passive-restore-20261114/state/FAILURE-CAUSE.json",
+  "original_source_and_intents_preserved": true,
+  "new_attempt_paths": "attempt2",
+  "scope_change": "Only fixed project source parent created if absent with trusted root-owned ancestors; missing-parent regression before new review; no replay of attempt1"
+}
