@@ -1,0 +1,19 @@
+{
+  "status": "SOURCE_LOCAL_DELTA_PASS_NOT_NATIVE",
+  "executed_current": 32,
+  "seconds": 0.2,
+  "resource_warning_as_error": true,
+  "adopted_unchanged_parent_tests": 73,
+  "parent_current_tests": 103,
+  "distinct_covered_tests": 105,
+  "full_105_rerun": false,
+  "public_blobs_unchanged": 23,
+  "ast": 33,
+  "new_tests": [
+    "CLI two source packets have independent0700 state/intents/receipts",
+    "Denied CLI authority creates no local state or transport"
+  ],
+  "ssh_calls": 0,
+  "native": false,
+  "log": "delta-run.private.log"
+}

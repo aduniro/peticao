@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "before_any_Git_freeze_or_host_execution": true,
+  "issues": [
+    "Fixture-only import/count/author expectations updated for new source scope",
+    "Whole-closure AST caught invalid newline introduced into payload inline child command; corrected before freeze",
+    "Whole-source review found old private A basename not covered by public basename replacement; replaced consistently before freeze"
+  ],
+  "new_regression": "test_all_python_sources_parse_and_original_A_paths_are_absent",
+  "failed_private_logs_preserved": true,
+  "host_actions": false
+}

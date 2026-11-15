@@ -1,0 +1,14 @@
+{
+  "parent_notice": 3357,
+  "parent_commit": "94cef562b2fc5a8f3b8b2644ea5ac51823735ba6",
+  "parent_preserved": true,
+  "parent_executed": false,
+  "issue": "Local CLI state resolved outside new packet and could collide with sibling packets",
+  "correction": "state inside own source packet; private0700 and Gitignored",
+  "changed_operator_files": [
+    "qualification_client.py"
+  ],
+  "public_code_changed": false,
+  "runtime_changed": false,
+  "native_qualified": false
+}
