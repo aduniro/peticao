@@ -1,0 +1,21 @@
+{
+  "state": "SOURCE_ONLY_NOT_DEPLOYABLE",
+  "cutover": false,
+  "real_runtime_calls": 0,
+  "catalog_qualified": false,
+  "nodes_qualified": false,
+  "public_dispatch": false,
+  "secret_generation": false,
+  "remote_logs_interface": "Backend.logs(manifest,offset=0)",
+  "gates": [
+    "root-owned catalog and queue permission qualification",
+    "source-only RPC facade integration into canonical scheduler, not parallel daemon",
+    "all executors/admin-dev and admin-v2-job fencing",
+    "durable private secret custody BEFORE dispatch",
+    "authenticated transport and node/profile qualification",
+    "real cancellation/artifact finalization and reconciliation",
+    "shared admission lock: mutating RPC SH, fencing EX drain and persistent closed bound to epoch on ALL workers before inventory/stop/epoch switch; facade admission integration still unqualified",
+    "log exposure qualification: whole-log known-pattern byte masking now fixes arbitrary-offset/chunk prefix weakness; arbitrary secrets still not detectable, never include live logs in tool context/reports"
+  ],
+  "remote_historical_logs": "fail closed after authority epoch or catalog identity changes; separate historical observation protocol not implemented"
+}

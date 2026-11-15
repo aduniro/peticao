@@ -1,0 +1,35 @@
+{
+  "status": "PASS_LOCAL_ONLY",
+  "tests": 203,
+  "seconds": 10.422,
+  "breakdown": {
+    "parent_runtime_regressions": 163,
+    "new_real_profile_tests": 22,
+    "ported_broker_entry_tests": 18
+  },
+  "ast_files": 45,
+  "runtime_code_files": [
+    "entry_bootstrap.py",
+    "remote_contract.py",
+    "worker.py",
+    "artifacts.py",
+    "admission.py",
+    "systemd_adapter.py",
+    "cgroups.py",
+    "log_redaction.py",
+    "rpc.py",
+    "fixture_job.py",
+    "transport.py",
+    "client_entry.py",
+    "controller.py",
+    "node_catalog.py",
+    "project_storage.py",
+    "unit_refs.py",
+    "profile_contract.py"
+  ],
+  "bootstrap_sha256": "e9c1f89ab77cce41df6435779bddf5cab0bceeebc22de700ab6410c72cc9b1cd",
+  "native_profile_qualified": false,
+  "global_b_qualified": false,
+  "host_calls_in_this_packet": 0,
+  "test_log_sha256": "f8b7bbad73ec39fbbfa57dad3f2ae14656a98f8bf4409b5e9d5099be327783e0"
+}
