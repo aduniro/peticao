@@ -1,0 +1,10 @@
+{
+  "status": "LOCAL_SOURCE_PASS_NOT_INPUT_EXECUTION",
+  "passed": 15,
+  "seconds": 0.156,
+  "command": "/usr/bin/python3 -B -W error::ResourceWarning -m unittest test_offline_normalize",
+  "cwd": "/mnt/apps/peticao-final/infra-public-inputs-20261115/producer-source",
+  "python_ast_pass": 4,
+  "scope": "fictitious private files/FDs only; no real ingress normalization yet",
+  "qualified": false
+}

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "status": "PARENT_SOURCE_REVIEW_PASS",
+  "role": "fixed non-root UID1000 public DATA only",
+  "source_default_execute": false,
+  "live_policy_outside_git": "/mnt/apps/peticao-final/infra-public-inputs-20261115/PRODUCER-EXECUTION-POLICY.json",
+  "review": [
+    "fixed ingressSHA/size/path, zero arbitraryCLI args",
+    "code/staging controlled ownerUID1000/0700; data-only775 ingress exception with full SHA/fdstat",
+    "sameFD ingress copy/hash then sameFD staged inventory/normalize/output validation",
+    "held directories/dirfd O_EXCL output writes and identity checks, failure preserves partial",
+    "frozen Rootprovider/normalizer bytes untouched; no operational fixture ownership seam",
+    "live policy malformed/present cannot fallback; templateTrue cannot bypass; revalidateclosure/policy before receipt"
+  ],
+  "tests": {
+    "passed": 15,
+    "seconds": 0.156,
+    "resource_warning_as_error": true,
+    "scope": "fictitious private fixtures only; ingressreal notopened"
+  },
+  "code_sha256": "f7b70d83a9b5bf05b35c21f03b94bab2fd3dbfdff7f1a16bb52268062fb6194e",
+  "native_root_installed": false,
+  "qualified": false
+}

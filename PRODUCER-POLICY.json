@@ -1,0 +1,29 @@
+{
+  "base_commit": "32cce868127cb586cf5d314e429f0c3abbf0b6a5",
+  "execute": false,
+  "ingress": {
+    "bytes": 207013889,
+    "path": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-qualification-20261114/dependencies-node20-pdfjs.public.tar.gz",
+    "sha256": "3009712141b019777b6395e36a628f4e1c0b8720fb617e4ffe5c814d91670698"
+  },
+  "qualified": false,
+  "role": "offline-public-dependency-producer",
+  "root_install_performed": false,
+  "source_files": {
+    "input_provider.py": {
+      "bytes": 18047,
+      "sha256": "6e92cc0585365fc45e04344934bb2088a7d92dea57733601b7903453c36b17d4"
+    },
+    "normalize_dependencies.py": {
+      "bytes": 16155,
+      "sha256": "a940d266afabedd96ac22efa011fb54849a805f1fd6838d4d2a8e7963038f31c"
+    },
+    "offline_normalize.py": {
+      "bytes": 19249,
+      "sha256": "f7b70d83a9b5bf05b35c21f03b94bab2fd3dbfdff7f1a16bb52268062fb6194e"
+    }
+  },
+  "staging": "/mnt/apps/peticao-final/infra-public-inputs-20261115/staging-1",
+  "uid": 1000,
+  "version": 1
+}
