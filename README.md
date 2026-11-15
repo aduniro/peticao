@@ -50,3 +50,7 @@ Os testes locais exercitam contratos, guardas, intents, traces e interfaces com 
 O cliente/Gate V2 foi adotado byte a byte do commit `bc53f83a2ff02b777c49e97f93b7a708c92588b8`, aviso3248/ACK3251. A versão3244 anterior não foi adotada: seu instalador escrevia os arquivos na raiz sem os dois subdiretórios. O sucessor corrige o layout e vincula o pin de systemd ao template rastreado, além de exigir o install-intent exato na execução.
 
 Validação local: 53 casos do harness PASS em0,197s, 29 casos independentes de cliente/Gate PASS em0,172s e composição adicional do pacote REAL desta fonte através do instalador exato em filesystem temporário do projeto (23 arquivos/21 pins/modos e fsync reais; somente UID/hostname/metadata dos ancestrais modelados). Não foi executada uma suíte única82 nem qualquer teste nativo na VPS. Os testes do componente cliente permanecem em sua cópia de revisão, não no pacote A.
+
+### Microfix de confidencialidade do Gate
+
+A fonte3252/acf01e8 e seu ACK Root3254 permanecem preservados. Somente o Gate local foi substituído pela versão do commit `dc96091d97a5846e4022f776652b9ecc792aa046`, componente3256/ACK3260: TimeoutExpired/OSError do ledger se tornam erro fixo com contexto suprimido, impedindo que argv com capability apareça no traceback. A nova regressão passou em0,001s e os dois tracebacks renderizados foram conferidos com valor sintético. Os29 casos anteriores e os53 do harness foram adotados sem nova execução; nenhum dos23 arquivos instaláveis, template, helper ou contrato mudou. Não houve execução de host.

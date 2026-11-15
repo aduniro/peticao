@@ -15,7 +15,15 @@
     "seconds": 0.172,
     "tests": 29
   },
-  "full82_suite_not_claimed": true,
+  "full83_suite_not_claimed": true,
+  "gate_confidentiality_delta": {
+    "rendered_traceback_variants": 2,
+    "report_path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-broker-a-client-v3-review/REVIEW.json",
+    "seconds": 0.001,
+    "tests": 1,
+    "unchanged29_not_rerun": true,
+    "unchanged53_not_rerun": true
+  },
   "global_qualified": false,
   "host_executed": false,
   "independent_review_blockers": 0,
@@ -31,7 +39,7 @@
   "seconds": 0.197,
   "state": "LOCAL_HARNESS_REGRESSIONS_PASS",
   "tests": 53,
-  "total_distinct_local_cases": 82,
+  "total_distinct_local_cases": 83,
   "upstream_broker_v3_independent_log_path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-broker-v3-review/LIFECYCLE-INTEGRATION-TESTS.log",
   "upstream_broker_v3_review_notice": 3237,
   "upstream_broker_v3_review_seconds": 2.629,

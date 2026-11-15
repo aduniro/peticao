@@ -21,7 +21,12 @@ INSTALL_INTENT = '/opt/.peticao-dev-worker-broker-qual-20261115-attempt1.install
 
 
 def central(args):
-    r = subprocess.run(['/usr/bin/python3', COORD, *args], capture_output=True, text=True, timeout=30)
+    try:
+        r = subprocess.run(['/usr/bin/python3', COORD, *args], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        # check carries a private capability in argv. Never propagate the
+        # TimeoutExpired repr/command (or chained context) into a traceback.
+        raise PermissionError('canonical_ledger_unavailable_no_authority') from None
     if r.returncode:
         raise PermissionError('canonical_ledger_rejected_operation')
     value = json.loads(r.stdout)
