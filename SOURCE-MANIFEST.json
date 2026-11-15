@@ -1,0 +1,55 @@
+{
+  "classification": "SOURCE_COMPONENT_ONLY_NO_HOST_AUTHORITY",
+  "destination": "fixed Civo new Root prefix after integrated SOURCE+EXEC+fresh Root window+ownDEPLOY review",
+  "files": {
+    ".gitignore": {
+      "bytes": 100,
+      "sha256": "e47e157408b1868d13735090a8b9b5360d13857369c952868dbb236fed9828e2"
+    },
+    "DECISIONS-OPERATOR.json": {
+      "bytes": 3256,
+      "sha256": "0c9edf470e7e51c4a675e384df30b73a734273d0bbd52f782271b11048508231"
+    },
+    "OPERATOR-INTERFACE.json": {
+      "bytes": 2505,
+      "sha256": "9345cef30e93c5e097a549d3d8bca59d44685737ee444a98e0304b221c907063"
+    },
+    "README.md": {
+      "bytes": 2724,
+      "sha256": "3c43b37eb80c6b549ac03a9a62e2dfefebdaa85e204a4a0c1db2ee976fd34bc0"
+    },
+    "WIRE-SCHEMA.json": {
+      "bytes": 3963,
+      "sha256": "f39319d922afdfaa20ebd9246044e04055f8d1d340a1fd5d57c3f828b80464f2"
+    },
+    "materializer.py": {
+      "bytes": 9648,
+      "sha256": "cf52937d9e6a960f7fdc276cab4f9933eaf3580c76a3067a2742841b2f8a6be3"
+    },
+    "root_entry.py": {
+      "bytes": 11654,
+      "sha256": "a7fdfecb361fb6236883ee86a0ef297677b83fd0a09f0b36c457fe921748571b"
+    },
+    "test_header.py": {
+      "bytes": 2972,
+      "sha256": "b65c5af6df0f54e58b6166f1a32eadb06b572beba6b081510336a4245a6a86c2"
+    },
+    "test_materializer.py": {
+      "bytes": 5662,
+      "sha256": "984823bbfdba15ac48fdffdc824385ddb2273df554c63dbbcce8d34bd4fe86e0"
+    },
+    "test_root_pipeline.py": {
+      "bytes": 4712,
+      "sha256": "8477b815eecff693dd3d2b019d70039d09dfda2c00123628fbea21c8af8715f7"
+    }
+  },
+  "installation_performed": false,
+  "operationalReady": false,
+  "qualified": false,
+  "tests": {
+    "command": "python3 -s -E -B -W error::ResourceWarning -m unittest test_materializer test_root_pipeline test_header",
+    "evidence": "full-core-tests.private.log",
+    "root_native_execution": false
+  },
+  "version": 1
+}

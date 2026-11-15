@@ -1,0 +1,6 @@
+*.private.*
+.lease.private.json
+__pycache__/
+execution-state/
+installer-fixture-*/
+root-pipeline-*/
