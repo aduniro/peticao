@@ -1,0 +1,20 @@
+{
+  "state": "SOURCE_ONLY_NOT_DEPLOYABLE",
+  "live_mutations": 0,
+  "cutover": false,
+  "shared_guard_notice": 3046,
+  "epoch_path": "/etc/peticao-dev-authority/epoch.json",
+  "epoch_schema": ["generation", "primary_host", "coordinator_boot_id", "operation_id"],
+  "gateway_candidate_enabled": false,
+  "replication_candidate_enabled": false,
+  "runtime_gates": {
+    "review_and_install_transaction": false,
+    "root_control_distribution_and_permissions": false,
+    "all_launchers_fenced_and_guarded": false,
+    "bootstrap_and_rearm": false,
+    "authenticated_rpc_and_gateway_topology": false,
+    "replication_destination": false,
+    "distributed_backend_and_finalization": false,
+    "live_promotion_restart_failback": false
+  }
+}

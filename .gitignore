@@ -1,0 +1,9 @@
+.lease.private.json
+*.log
+__pycache__/
+runtime/__pycache__/
+upstream/__pycache__/
+overlay-*/
+state/
+NORMAL-MANIFEST.json
+NOTICE-RECEIPT.json
