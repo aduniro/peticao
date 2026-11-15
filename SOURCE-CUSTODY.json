@@ -1,0 +1,11 @@
+{
+  "source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/distributed/civo-authority-guard-overlay-20261114",
+  "notice": 3051,
+  "commit": "87c11977f5eb46312d121a08dd037fb486fbb7bf",
+  "runtime_sha256": {
+    "recovery.py": "f3b51a9510ec17b56c671b9015ce28978a6fa6b1b1704b33df818ee1e6f83960",
+    "authority_guard.py": "d6170f6ad3e6ce100d1cd263f541e313f8261b5378d7be2329c7eecbe21162e1",
+    "remote_contract.py": "e2c9a865a7a39a64fd6c68f607ba5e999e4dd7f526ed078aa1feb2cf2a0ec87c"
+  },
+  "baseline_modified": false
+}

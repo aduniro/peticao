@@ -1,0 +1,29 @@
+{
+  "status": "SOURCE_ONLY_NOT_DEPLOYABLE",
+  "baseline_notice": 3051,
+  "service_owner": [
+    999,
+    987
+  ],
+  "service_file_mode": "0600",
+  "service_directory_mode": "0700",
+  "service_write_allowlist": [
+    "authority.json",
+    "generation-floor.json",
+    "promotion.json"
+  ],
+  "installed_global_guard_changed": false,
+  "ssh_calls": 0,
+  "real_promotion": false,
+  "local_root_fixture_tests": true,
+  "real_numeric_uid_reader": 999,
+  "real_numeric_gid_reader": 987,
+  "new_users_created": false,
+  "remaining_gates": [
+    "independent source review and install transaction",
+    "actual service state ownership/preimages/permissions read-only qualification",
+    "fencing and quiescence of service-owned writers before operator writes",
+    "real promotion/restart/failback execution qualification",
+    "three publications remain separate; partial visible state requires observe/reconciliation, never floor rollback"
+  ]
+}
