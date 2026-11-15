@@ -33,6 +33,21 @@ FIXED_WHEELS = (
 )
 
 
+# Retain only this pinned greenlet wheel's original header scheme as OPAQUE
+# DATA. No relocation to include/, no installer scheme or include-path setup.
+OPAQUE_GREENLET_WHEEL = 'greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl'
+OPAQUE_GREENLET_PATHS = {
+    'greenlet-3.5.6.data': 'directory',
+    'greenlet-3.5.6.data/headers': 'directory',
+    'greenlet-3.5.6.data/headers/greenlet.h': 'file',
+}
+OPAQUE_GREENLET_HEADER_BYTES = 4755
+
+
+def _opaque_wheel(pin):
+    return any(row == pin and row['name'] == OPAQUE_GREENLET_WHEEL for row in FIXED_WHEELS)
+
+
 class DerivationRejected(ValueError):
     pass
 
@@ -101,7 +116,7 @@ def _wheel(path, pin):
         os.close(parent)
 
 
-def _name(value, directory=False):
+def _name(value, directory=False, *, opaque_data=False):
     if type(value) is not str:
         raise DerivationRejected('canonical_zip_path_required')
     value = value[:-1] if directory and value.endswith('/') else value
@@ -115,7 +130,9 @@ def _name(value, directory=False):
             or path.suffix.lower() in {'.pth','.pyc'}):
         raise DerivationRejected('pth_bytecode_cache_dotenv_or_credentials_forbidden')
     if any(part.endswith('.data') for part in lower):
-        raise DerivationRejected('wheel_data_scheme_needs_separate_review')
+        expected = 'directory' if directory else 'file'
+        if not opaque_data or OPAQUE_GREENLET_PATHS.get(value) != expected:
+            raise DerivationRejected('wheel_data_scheme_needs_separate_review')
     return value
 
 
@@ -143,7 +160,9 @@ def inventory(stream, pin):
             if len(archive.infolist()) > MAX_FILES:
                 raise DerivationRejected('zip_member_count_exceeded')
             for item in archive.infolist():
-                name = _name(item.filename,item.is_dir())
+                name = _name(item.filename,item.is_dir(),opaque_data=_opaque_wheel(pin))
+                if name == 'greenlet-3.5.6.data/headers/greenlet.h' and item.file_size != OPAQUE_GREENLET_HEADER_BYTES:
+                    raise DerivationRejected('fixed_opaque_greenlet_header_size_required')
                 if name in seen:
                     raise DerivationRejected('duplicate_zip_path')
                 seen.add(name)
@@ -185,7 +204,7 @@ def inventory(stream, pin):
         for columns in csv.reader(io.StringIO(record_raw.decode('utf-8'))):
             if len(columns)!=3:
                 raise DerivationRejected('three_column_record_required')
-            name,digest,size=columns;_name(name)
+            name,digest,size=columns;_name(name,opaque_data=_opaque_wheel(pin))
             if name in listed or name not in files:
                 raise DerivationRejected('unique_complete_record_paths_required')
             listed.add(name);row=files[name]
@@ -201,7 +220,11 @@ def inventory(stream, pin):
         raise DerivationRejected('invalid_record_encoding') from error
     if listed!=set(files):
         raise DerivationRejected('complete_record_required')
-    return {'name':pin['name'],'entries':rows,'total_bytes':total,'files':len(files)}
+    opaque={row['name'] for row in rows if any(part.endswith('.data') for part in PurePosixPath(row['name']).parts)}
+    if opaque and (not _opaque_wheel(pin) or opaque != set(OPAQUE_GREENLET_PATHS)):
+        raise DerivationRejected('complete_closed_opaque_greenlet_header_scheme_required')
+    return {'name':pin['name'],'entries':rows,'total_bytes':total,'files':len(files),
+            'opaque_data_retained_paths':sorted(opaque)}
 
 
 def _new_json(fd,name,value):
@@ -226,8 +249,8 @@ def _directory(parent,name,create=False):
     return fd
 
 
-def _member_parent(root,name):
-    parts=_name(name).split('/');fd=os.dup(root)
+def _member_parent(root,name,directory=False):
+    parts=_name(name,directory,opaque_data=True).split('/');fd=os.dup(root)
     try:
         for part in parts[:-1]:
             next_fd=_directory(fd,part,True);os.close(fd);fd=next_fd
@@ -247,7 +270,7 @@ def _copy(stream,rows,site):
             if (item.file_size!=row['bytes'] or item.CRC!=row['zip_crc32'] or item.compress_type!=row['compression']
                     or item.external_attr>>16!=row['source_mode']):
                 raise DerivationRejected('zip_inventory_changed')
-            parent,leaf=_member_parent(site,row['name'])
+            parent,leaf=_member_parent(site,row['name'],row['directory'])
             try:
                 if row['directory']:
                     child=_directory(parent,leaf,True);os.fsync(child);os.close(child)
@@ -271,7 +294,8 @@ def _copy(stream,rows,site):
 def _verify_site(fd,expected,prefix=''):
     actual={}
     for name in sorted(os.listdir(fd)):
-        relative=_name(prefix+name);info=os.stat(name,dir_fd=fd,follow_symlinks=False)
+        info=os.stat(name,dir_fd=fd,follow_symlinks=False)
+        relative=_name(prefix+name,stat.S_ISDIR(info.st_mode),opaque_data=True)
         if stat.S_ISDIR(info.st_mode):
             child=_directory(fd,name)
             try:actual.update(_verify_site(child,expected,relative+'/'));os.fsync(child)
@@ -389,6 +413,15 @@ def derive(wheels_dir,output):
                  'directory_mode':'0o700','file_mode':'0o600','bundled_node':bundled,
                  'mode0600_is_not_absolute_execution_denial':True,
                  'source_wheel_and_RECORD_bytes_preserved':True,'projection_or_exclusions':[],
+                 'opaque_data_retention':{
+                     'source_wheel':OPAQUE_GREENLET_WHEEL,
+                     'paths':[{'path':row['name'],'zip_path':row['zip_name'],
+                               'type':'directory' if row['directory'] else 'file','bytes':row['bytes'],
+                               'sha256':row['sha256']} for inv in inventories if inv['name']==OPAQUE_GREENLET_WHEEL
+                              for row in inv['entries'] if row['name'] in OPAQUE_GREENLET_PATHS],
+                     'scheme':'original wheel member paths retained as opaque DATA only',
+                     'relocated':False,'installed':False,'include_paths_configured':False,
+                     'all_other_data_schemes_rejected':True},
                  'tree_is_derived_data_not_an_installed_wheel_environment':True,
                  'metadata_transforms':{'directories':'0o700','regular_files':'0o600','owner':'local UID1000','timestamps':'new local data creation; not preserved'},
                  'future_site_root':FUTURE_SITE_ROOT,'actual_local_site':str(output/'sites'),

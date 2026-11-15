@@ -22,7 +22,7 @@ import zipfile
 
 import wheel_site as producer
 
-TMP=producer.PROJECT/'wheel-site-source/test-state/tmp'
+TMP=producer.PROJECT/'wheel-site-source-v2/test-state/tmp'
 
 
 def make_wheel(pin,additional=(),bad_record=False,duplicate=False,omit_record=False):
@@ -35,6 +35,7 @@ def make_wheel(pin,additional=(),bad_record=False,duplicate=False,omit_record=Fa
     data.extend(additional)
     rows=[]
     for name,value,mode in data:
+        if stat.S_ISDIR(mode):continue
         value_hash=base64.urlsafe_b64encode(hashlib.sha256(value).digest()).rstrip(b'=').decode()
         rows.append([name,'sha256='+('wrong' if bad_record else value_hash),str(len(value))])
     if not omit_record:
@@ -286,6 +287,50 @@ class WheelSiteTests(unittest.TestCase):
         self.assertEqual({item.name for item in self.output.iterdir()},{'foreign'})
         self.assertFalse((self.output/'DERIVATION-RECEIPT.json').exists())
         self.assertEqual((self.output/'foreign').read_bytes(),b'untouched')
+
+    def opaque_header_rows(self,size=4755):
+        return [('greenlet-3.5.6.data/',b'',stat.S_IFDIR|0o755),
+                ('greenlet-3.5.6.data/headers/',b'',stat.S_IFDIR|0o755),
+                ('greenlet-3.5.6.data/headers/greenlet.h',b'H'*size,stat.S_IFREG|0o644)]
+
+    def test_fixed_greenlet_header_scheme_is_opaque_data_without_relocation(self):
+        rows=self.opaque_header_rows()
+        self.write_fixtures(lambda i:{'additional':rows} if i==0 else {})
+        receipt=self.derive();site=self.output/'sites';path='greenlet-3.5.6.data/headers/greenlet.h'
+        self.assertEqual((site/path).read_bytes(),b'H'*4755)
+        manifest=json.loads((self.output/'python-runtime.json').read_text())
+        self.assertEqual(manifest['files'][path],{'sha256':hashlib.sha256(b'H'*4755).hexdigest(),'bytes':4755})
+        retained=receipt['opaque_data_retention']
+        self.assertEqual({row['path'] for row in retained['paths']},set(producer.OPAQUE_GREENLET_PATHS))
+        self.assertIs(retained['relocated'],False);self.assertIs(retained['installed'],False)
+        self.assertIs(retained['include_paths_configured'],False)
+        for outside in (self.root/'headers',self.root/'include',self.output/'include',site/'include'):
+            self.assertFalse(outside.exists())
+        pin=self.pins[0]
+        with zipfile.ZipFile(self.inputs/pin['name']) as archive:
+            record='greenlet-3.5.6.dist-info/RECORD'
+            self.assertEqual((site/record).read_bytes(),archive.read(record))
+        self.assertEqual(stat.S_IMODE((site/path).stat().st_mode),0o600)
+        self.assertEqual(stat.S_IMODE((site/'greenlet-3.5.6.data').stat().st_mode),0o700)
+
+    def test_other_data_paths_or_header_traversal_still_rejected(self):
+        for path in ('greenlet-3.5.6.data/extra','greenlet-3.5.6.data/headers/extra.h',
+                     'other-1.0.data/header.h','greenlet-3.5.6.data/headers/../../outside'):
+            rows=self.opaque_header_rows()+[(path,b'unknown',stat.S_IFREG|0o644)]
+            self.write_fixtures(lambda i:{'additional':rows} if i==0 else {})
+            with self.assertRaises(producer.DerivationRejected):self.derive()
+            self.assertFalse(self.output.exists());self.assertFalse((self.root/'outside').exists())
+
+    def test_closed_greenlet_data_paths_not_accepted_from_other_wheel(self):
+        self.write_fixtures(lambda i:{'additional':self.opaque_header_rows()} if i==2 else {})
+        with self.assertRaisesRegex(producer.DerivationRejected,'data_scheme_needs_separate_review'):self.derive()
+        self.assertFalse(self.output.exists())
+
+    def test_incomplete_or_wrong_size_greenlet_header_scheme_refused(self):
+        for rows in (self.opaque_header_rows()[1:],self.opaque_header_rows(4754)):
+            self.write_fixtures(lambda i:{'additional':rows} if i==0 else {})
+            with self.assertRaises(producer.DerivationRejected):self.derive()
+            self.assertFalse(self.output.exists())
 
     def test_cli_has_no_pin_owner_or_execute_override_and_requires_action(self):
         base=['wheel_site','derive','--wheels-dir',str(self.inputs),'--output',str(self.output)]

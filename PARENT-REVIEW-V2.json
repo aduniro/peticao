@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "status": "PARENT_SOURCE_DELTA_REVIEW_PASS",
+  "base_commit": "7f51dad0f1497d89cb65328a0b5c81753b2cfac3",
+  "base_tests_adopted": 23,
+  "affected_tests_passed": 5,
+  "seconds": 0.152,
+  "new_unique_tests": 4,
+  "base_full_suite_not_repeated": true,
+  "program_sha256": "4fd7090e4fda1083fdc9e2afa98a6cd98cde9e3d3e749a9bf8687675e5f27fb1",
+  "review": [
+    "only exact pinned greenlet wheel gets closed opaque3paths allowance",
+    "header4755 bytes+complete3member subtree+RECORD verified; all other data schemes rejected",
+    "same paths rejected when injected into other pinned distributions",
+    "opaque data not relocated/compiled/installed or put on include paths",
+    "all anchored sameFD/identity/budget/noReplay restrictions inherited",
+    "prior3343 preflight/outnone preserved; new output and intent required"
+  ],
+  "infra_approval": "Explicit coordinator approval for opaque preserved known members only; no new authorization awaited.",
+  "qualified": false
+}

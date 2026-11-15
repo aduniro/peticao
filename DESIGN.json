@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "scope": "SOURCE_AND_FICTITIOUS_FIXTURES_ONLY_BEFORE_PARENT_REVIEW_AND_REAL_DERIVE",
+  "scope": "V2_SOURCE_AND_FICTITIOUS_OPAQUE_HEADER_FIXTURES_ONLY_PARENT_REVIEW_REQUIRED_BEFORE_REAL_RUN",
   "api": "wheel_site.derive(wheels_dir_absolute, output_absolute) -> receipt dict",
   "cli": [
     "/usr/bin/python3",
     "-B",
-    "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source/wheel_site.py",
+    "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source-v2/wheel_site.py",
     "derive",
     "--wheels-dir",
     "ABSOLUTE_APPROVED_PROJECT_INPUT",
@@ -22,7 +22,7 @@
   ],
   "zip_policy": [
     "Bounded central inventory/member bytes/total bytes/compression/path lengths; CRC and complete RECORD SHA256/size validation",
-    "Reject paths/duplicates/traversal/.pth/.pyc/__pycache__/dotenv/credential directories/links/special/encryption/.data scheme",
+    "Reject paths/duplicates/traversal/.pth/.pyc/__pycache__/dotenv/credential directories/links/special/encryption; .data is denied except the exact opaque greenlet header group below",
     "Reject duplicates and parent-file collisions across all four archives before output creation",
     "Read metadata and payload only through zipfile streams; no package import or entrypoint/pip execution"
   ],
@@ -84,5 +84,25 @@
     "on_mismatch": "fail; preserve original partial; never initialize/write replacement",
     "not_an_atomic_path_namespace_transaction": true,
     "late_rename_after_receipt_write": "Original fd may retain candidate receipt bytes, but final check fails and no success is acknowledged; future adoption must revalidate the agreed lexical path and identities"
+  },
+  "opaque_greenlet_header": {
+    "approved_by_current_Infra_parent_instruction": true,
+    "source_wheel": "greenlet-3.5.6-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+    "source_wheel_pin_unchanged": true,
+    "closed_zip_paths": [
+      "greenlet-3.5.6.data/",
+      "greenlet-3.5.6.data/headers/",
+      "greenlet-3.5.6.data/headers/greenlet.h"
+    ],
+    "header_bytes": 4755,
+    "retention": "original bytes and RECORD at original member paths as opaque DATA; included in future manifest.files",
+    "relocation": false,
+    "include_configuration": false,
+    "install_or_execute": false,
+    "all_other_data_schemes_or_paths_denied": true,
+    "future_local_output": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-data-v2/python-wheel-site-1",
+    "real_derivation_performed_by_this_source_preparation": false,
+    "parent_review_required": true,
+    "prior_copied_v1_review_does_not_approve_v2": true
   }
 }

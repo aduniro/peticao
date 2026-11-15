@@ -1,33 +1,51 @@
 {
   "version": 1,
-  "state": "SOURCE_OUTPUT_ANCHOR_FIX_AND_FICTITIOUS_FIXTURES_READY_FOR_PARENT_REVIEW",
-  "supersedes": {
-    "path": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source/SOURCE-MANIFEST.before-output-anchor.json",
-    "sha256": "3ec776b2918fa5f3fd6a99d8a4ce84a1f5aa983287ffc5290c80b4159c4a5259"
-  },
+  "state": "V2_OPAQUE_GREENLET_HEADER_SOURCE_READY_FOR_PARENT_REVIEW_NOT_REAL_DERIVED",
   "files": {
     "wheel_site.py": {
-      "sha256": "aa92149020f96120b0d5b791097f9d7d97c04d5e4ba7e424fe949fc5fbeba2e1",
-      "bytes": 22996
+      "sha256": "4fd7090e4fda1083fdc9e2afa98a6cd98cde9e3d3e749a9bf8687675e5f27fb1",
+      "bytes": 25210
     },
     "test_wheel_site.py": {
-      "sha256": "c83b16f7f44a724ef9c8195c7c4f79a36c0644267a0d81f4a925d152f61a9ff9",
-      "bytes": 18836
+      "sha256": "67e02e6162a2f90e203bbc6a6273fb4be6aee3ceb0130e8b4024e4617ef0e3d9",
+      "bytes": 21842
     },
     "DESIGN.json": {
-      "sha256": "86b4dc6ac7ac04569d893875a5fba434195cf93530e12ebcbe7a891f7fa72d6f",
-      "bytes": 4363
+      "sha256": "909bfca64848ed9f415c4d2eb30919d1a5b0029c03e616aa0c3ea06589102a74",
+      "bytes": 5388
     }
   },
-  "closure_sha256": "d2acfed03143e195982754a39f724e31b7015e2aff52d7b28431c25ab638a49a",
-  "closure_hash_algorithm": "SHA256 UTF8 canonical JSON files map; sorted keys, compact separators, no self hash",
-  "fixture_tests": {
-    "tests": 23,
-    "wall_seconds": 0.865632,
-    "log": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source/FIXTURE-TESTS-OUTPUT-ANCHOR.log",
-    "log_sha256": "16c5ca5260d485d507ba8c5b333c3df1ae4414cd465da73099f2a3f795e46526"
+  "closure_sha256": "007a02bf1c5e78892fc2a93cf115c6f360a709bf46cefa497e543704db5dd21e",
+  "closure_hash_algorithm": "SHA256 UTF8 canonical JSON files map; sorted keys, compact separators; no self hash",
+  "baseline": {
+    "source_root": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source",
+    "source_commit": "7f51dad0f1497d89cb65328a0b5c81753b2cfac3",
+    "source_manifest_sha256": "b02bba8a790aef9e4d3e7b0ea9b89b2fdb3d97990c8a9c398f47519267670e17",
+    "adopted_original_test_methods": 23,
+    "all_original_test_method_AST_bodies_unchanged": true,
+    "original_fixed_wheel_pins_unchanged": true,
+    "baseline_suite_not_rerun": true
   },
+  "current_fixture_run": {
+    "tests": 5,
+    "new_regressions": 4,
+    "original_affected_test_rerun": 1,
+    "wall_seconds": 0.314944,
+    "log": "/mnt/apps/peticao-final/infra-public-inputs-20261115/wheel-site-source-v2/OPAQUE-HEADER-FIXTURE-TESTS.log",
+    "log_sha256": "9473d22a510a60d057d778bbb5fa957d5255c8f9cf8cff2ffdc56b4b2da49047",
+    "names": [
+      "test_fixed_greenlet_header_scheme_is_opaque_data_without_relocation",
+      "test_other_data_paths_or_header_traversal_still_rejected",
+      "test_closed_greenlet_data_paths_not_accepted_from_other_wheel",
+      "test_incomplete_or_wrong_size_greenlet_header_scheme_refused",
+      "test_paths_pth_pyc_cache_dotenv_and_data_scheme_refused"
+    ]
+  },
+  "distinct_coverage": 27,
+  "full27_run_claimed": false,
   "real_public_wheels_derived": false,
-  "root_stage_or_package_execution": false,
+  "root_staging_or_package_execution": false,
+  "Infra_closed_opaque_retention_authorized": true,
+  "parent_review_before_real_run_required": true,
   "qualified": false
 }
