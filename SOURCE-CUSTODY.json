@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "support_actor": "apoio",
+  "own_source_fence": 714,
+  "branch": "apoio/civo-real-profile-driver-v1",
+  "source_path": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-20261115/source",
+  "source_only": true,
+  "upstream_runtime_v5_commit": "33fcce1bd0206e9d03baf3c696bb692ab0336f0a",
+  "approved_app_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
+  "approved_site_tree": "14409ebfce08daa337f6b2dfc392fe38b54ee86d",
+  "approved_harness_commit": "09d1d66d0e821e92d96bd83de70afdb832a31bc6",
+  "original_source_archive_sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5",
+  "original_dependencies_archive_sha256": "3009712141b019777b6395e36a628f4e1c0b8720fb617e4ffe5c814d91670698",
+  "original_inputs_modified": false,
+  "production_modified": false,
+  "host_modified": false,
+  "cloud_purchases": false,
+  "qualified": false,
+  "operationalReady": false
+}

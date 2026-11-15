@@ -58,7 +58,7 @@
     "TasksMax": "tasks_max decimal",
     "TimeoutStopSec": "stop_seconds decimal",
     "fixed_isolation_properties": "preserve approved V4 systemd sandbox; successor Infra owns validation",
-    "heavy_candidate_note": "Root observed MemTotal about29.9GiB;24GiB+8GiB target cannot be assumed available; deny admission if measured headroom insufficient",
+    "heavy_candidate_note": "Root RO716 measured MemTotal32083320832/MemAvailable31107411968/16CPU/swap0/PSI0;14CPU20GiB is a candidate, not a future headroom guarantee. Reassess before every admission.",
     "no_disk_quota_claim": "disk budget needs separate root capacity/enforcement assessment; no invented systemd DiskMax"
   },
   "resource_plans": {
@@ -94,7 +94,7 @@
       "disk_budget_bytes": 32212254720,
       "disk_budget_is_hard_quota": false,
       "measured_minimum": false,
-      "memory_bytes": 25769803776,
+      "memory_bytes": 21474836480,
       "node_heap_mib": 6144,
       "runtime_seconds": 2700,
       "stop_seconds": 30,
@@ -110,7 +110,7 @@
     "not_latest_production_claim": true,
     "site_tree": "14409ebfce08daa337f6b2dfc392fe38b54ee86d"
   },
-  "state": "PROPOSED_INTERFACE_SOURCE_ONLY",
+  "state": "ACCEPTED_INTERFACE_SOURCE_ONLY_PENDING_SOURCE_REVIEW",
   "version": 1,
   "worker_descriptor_v2": {
     "artifact_policy": {

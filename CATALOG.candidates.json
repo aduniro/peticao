@@ -1,0 +1,77 @@
+{
+  "admin-build-v1": {
+    "kind": "admin-build-v1",
+    "missing_pins": [
+      "normalized_archive.sha256",
+      "normalized_archive.bytes",
+      "normalization_receipt_sha256",
+      "toolchain_inventory_sha256",
+      "toolchain.python.sha256",
+      "toolchain.python.bytes",
+      "toolchain.chromium.sha256",
+      "toolchain.chromium.bytes",
+      "full_integrity_attestation.manifest_event",
+      "full_integrity_attestation.inventory_sha256",
+      "full_integrity_attestation.evidence_sha256",
+      "driver.program_sha256"
+    ],
+    "operationalReady": false,
+    "plan_sha256": "c9394c16e597b705bba86d0d20317b5401d9ec6330823965405368c3402b921b",
+    "profile_sha256": null,
+    "qualified": false,
+    "requires_native_profile_qualification": true,
+    "requires_runtime_successor": true,
+    "version": 2,
+    "worker_descriptor": null
+  },
+  "admin-qa-v1": {
+    "kind": "admin-qa-v1",
+    "missing_pins": [
+      "normalized_archive.sha256",
+      "normalized_archive.bytes",
+      "normalization_receipt_sha256",
+      "toolchain_inventory_sha256",
+      "toolchain.python.sha256",
+      "toolchain.python.bytes",
+      "toolchain.chromium.sha256",
+      "toolchain.chromium.bytes",
+      "full_integrity_attestation.manifest_event",
+      "full_integrity_attestation.inventory_sha256",
+      "full_integrity_attestation.evidence_sha256",
+      "driver.program_sha256"
+    ],
+    "operationalReady": false,
+    "plan_sha256": "2b7f7e295cd90ca95d6d8dc337f455ffb79493c8feb959a5457f72e668ad0bef",
+    "profile_sha256": null,
+    "qualified": false,
+    "requires_native_profile_qualification": true,
+    "requires_runtime_successor": true,
+    "version": 2,
+    "worker_descriptor": null
+  },
+  "admin-typecheck-v1": {
+    "kind": "admin-typecheck-v1",
+    "missing_pins": [
+      "normalized_archive.sha256",
+      "normalized_archive.bytes",
+      "normalization_receipt_sha256",
+      "toolchain_inventory_sha256",
+      "toolchain.python.sha256",
+      "toolchain.python.bytes",
+      "toolchain.chromium.sha256",
+      "toolchain.chromium.bytes",
+      "full_integrity_attestation.manifest_event",
+      "full_integrity_attestation.inventory_sha256",
+      "full_integrity_attestation.evidence_sha256",
+      "driver.program_sha256"
+    ],
+    "operationalReady": false,
+    "plan_sha256": "2f5d7e5a95e0d1eb8c6b985a84826c2e2496bc820358cbc0a601615b3e2d8f0e",
+    "profile_sha256": null,
+    "qualified": false,
+    "requires_native_profile_qualification": true,
+    "requires_runtime_successor": true,
+    "version": 2,
+    "worker_descriptor": null
+  }
+}

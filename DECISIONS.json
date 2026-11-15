@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "coordinator": "Infra/admin-recuperacao",
+  "support_actor": "apoio",
+  "decisions": [
+    {
+      "question": "How to help without conflicting with coordinator?",
+      "decision": "Own standalone source714; Infra owns runtime/fencing/global/bootstrap; no parallel queue/voter."
+    },
+    {
+      "question": "Plan vs WorkerRPC profile hash?",
+      "decision": "Keep exact12-key descriptorV2; seal whole descriptor; plan_sha256 separate, no MANIFEST wire change."
+    },
+    {
+      "question": "24GiB job plus8GiB control on actual29.9GiB host?",
+      "decision": "Use candidate14CPU20GiB, fresh2CPU8GiB reserve target; no measured-minimum or guaranteed-reservation claim."
+    },
+    {
+      "question": "Original deps tar hardlink?",
+      "decision": "Offline producer materializes only exact known hardlink to verified regular bytes; retains parent/new hashes. Original untouched; real producer not run."
+    },
+    {
+      "question": "Missing toolchain/cache/wheel integrity?",
+      "decision": "Deny execution until complete root-controlled inventories/attestation; known binary hashes alone do not qualify closure."
+    },
+    {
+      "question": "Chromium predicted UNIX108 path exceeds StateDirectory budget?",
+      "decision": "Fail before child; forecast sent Infra for scoped alias decision/native qualification; no alias/bind added."
+    },
+    {
+      "question": "WorkerRPC root report separate from7artifacts?",
+      "decision": "Emit private exclusive durable result.json with protocol/profile/exit_code, after artifact validation."
+    },
+    {
+      "question": "Offline producer output swap race?",
+      "decision": "Hold parent/output fds; open fixed child names by dirfd; verify owner/mode/identity and fsync; preserve partial on replacement."
+    },
+    {
+      "question": "Should raw child logs be exported after pattern redaction?",
+      "decision": "Export only constructed phase status lines. Raw private logs remain outside artifact allowlist."
+    }
+  ],
+  "owner_questions_added": 0,
+  "qualified": false,
+  "operationalReady": false
+}

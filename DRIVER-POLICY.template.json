@@ -1,0 +1,708 @@
+{
+  "dependencies_ref": {
+    "full_integrity_attestation": {
+      "evidence_sha256": null,
+      "inventory_sha256": null,
+      "manifest_event": null
+    },
+    "normalization_receipt_sha256": null,
+    "normalized_archive": {
+      "bytes": null,
+      "path": "/opt/peticao-dev-profile-tools-v1/inputs/dependencies.normalized.tar.gz",
+      "sha256": null
+    },
+    "original_cache_full_integrity_verified": false,
+    "parent_archive": {
+      "bytes": 207013889,
+      "sha256": "3009712141b019777b6395e36a628f4e1c0b8720fb617e4ffe5c814d91670698"
+    },
+    "qa_closure_sha256": "9fc1c6a4be2b1d23de5436737136076fa2b8bc719b60dcb984a70344f1c19c16",
+    "toolchain": {
+      "chromium": {
+        "bytes": null,
+        "path": "/opt/peticao-dev-profile-tools-v1/chromium/chrome-linux64/chrome",
+        "sha256": null,
+        "version": "151.0.7922.34"
+      },
+      "initdb": {
+        "bytes": 191688,
+        "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/initdb",
+        "sha256": "515186eed81a1f2741bdcbfeb080af093a59a27fb2896237b04dd6c48bae349d",
+        "version": "18.4"
+      },
+      "node": {
+        "bytes": 99836400,
+        "path": "/opt/peticao-dev-profile-tools-v1/node20",
+        "sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+        "version": "20.19.2"
+      },
+      "pg_ctl": {
+        "bytes": 77832,
+        "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/pg_ctl",
+        "sha256": "6beab6014ea28dcc78b8c6a43ec9e3e20536e13a175d75151107410ac866c481",
+        "version": "18.4"
+      },
+      "postgres": {
+        "bytes": 9788000,
+        "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/postgres",
+        "sha256": "de0a4a7646c51f032e0088ae6fe9d0833fa280b78d4455681574a32937b32838",
+        "version": "18.4"
+      },
+      "python": {
+        "bytes": null,
+        "path": "/opt/peticao-dev-profile-tools-v1/python312/bin/python3.12",
+        "sha256": null,
+        "version": "3.12.3"
+      }
+    },
+    "toolchain_inventory_sha256": null,
+    "version": 1
+  },
+  "execution_enabled": false,
+  "helpers": {
+    "artifact_policy.py": {
+      "bytes": 18232,
+      "sha256": "d6cc8eadd3e49150eca9f435888cc293f27725ca00acb9fb424eaaef8599bb5b"
+    },
+    "driver_contract.py": {
+      "bytes": 10230,
+      "sha256": "789e2d6c54593eac06a22843c3adc8c84b84372a1debaadb0d0c68c438245265"
+    },
+    "input_provider.py": {
+      "bytes": 18047,
+      "sha256": "6e92cc0585365fc45e04344934bb2088a7d92dea57733601b7903453c36b17d4"
+    },
+    "process_runner.py": {
+      "bytes": 20073,
+      "sha256": "1f4cf7bdad73b214cca0f65c11cff52fc380e3f26ff5ac89d8e0d589a02ebe8b"
+    },
+    "qa_adapter.py": {
+      "bytes": 14382,
+      "sha256": "385af22e263c1aaa89579e5eff130f5ed6da60e9340be75cfcdfa5f237b7019b"
+    },
+    "resource_plan.py": {
+      "bytes": 6399,
+      "sha256": "aae44fc783bf6a7d07da171e241c8d1aa3ab8c214aec695ed3c0bd18f88cc71c"
+    },
+    "runtime_steps.py": {
+      "bytes": 23223,
+      "sha256": "b7ba071ecfbe8925ab910199fc1daf290d53bf3a28944b708300dfe8104d372b"
+    },
+    "sealed_policy.py": {
+      "bytes": 26724,
+      "sha256": "2756e71fb0cb0cc9ee6e640e56210ade1ab94cbe9febf8cd0329242a6ac0db5e"
+    }
+  },
+  "operationalReady": false,
+  "plans": {
+    "admin-build-v1": {
+      "artifact_policy": {
+        "allowlist": [
+          "profile-result.json",
+          "integrity-proof.json",
+          "phase-results.json",
+          "sanitized-build.log",
+          "sanitized-qa-summary.json",
+          "process-drain-proof.json",
+          "network-denial-summary.json"
+        ],
+        "forbidden": [
+          "credentials",
+          "dotfiles",
+          "mail",
+          "whatsapp",
+          "cron",
+          "production_data",
+          "database_state",
+          "signer_exports",
+          "raw_browser_storage"
+        ],
+        "max_file_bytes": 16777216,
+        "max_files": 7,
+        "max_total_bytes": 33554432,
+        "regular_files_only": true,
+        "reject_symlinks_and_hardlinks": true,
+        "root": "artifacts",
+        "root_relative_to": "trusted_job_state_directory",
+        "sanitize_before_export": true,
+        "version": 1
+      },
+      "dependencies": {
+        "full_integrity_attestation": {
+          "evidence_sha256": null,
+          "inventory_sha256": null,
+          "manifest_event": null
+        },
+        "normalization_receipt_sha256": null,
+        "normalized_archive": {
+          "bytes": null,
+          "path": "/opt/peticao-dev-profile-tools-v1/inputs/dependencies.normalized.tar.gz",
+          "sha256": null
+        },
+        "original_cache_full_integrity_verified": false,
+        "parent_archive": {
+          "bytes": 207013889,
+          "sha256": "3009712141b019777b6395e36a628f4e1c0b8720fb617e4ffe5c814d91670698"
+        },
+        "qa_closure_sha256": "9fc1c6a4be2b1d23de5436737136076fa2b8bc719b60dcb984a70344f1c19c16",
+        "toolchain": {
+          "chromium": {
+            "bytes": null,
+            "path": "/opt/peticao-dev-profile-tools-v1/chromium/chrome-linux64/chrome",
+            "sha256": null,
+            "version": "151.0.7922.34"
+          },
+          "initdb": {
+            "bytes": 191688,
+            "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/initdb",
+            "sha256": "515186eed81a1f2741bdcbfeb080af093a59a27fb2896237b04dd6c48bae349d",
+            "version": "18.4"
+          },
+          "node": {
+            "bytes": 99836400,
+            "path": "/opt/peticao-dev-profile-tools-v1/node20",
+            "sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+            "version": "20.19.2"
+          },
+          "pg_ctl": {
+            "bytes": 77832,
+            "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/pg_ctl",
+            "sha256": "6beab6014ea28dcc78b8c6a43ec9e3e20536e13a175d75151107410ac866c481",
+            "version": "18.4"
+          },
+          "postgres": {
+            "bytes": 9788000,
+            "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/postgres",
+            "sha256": "de0a4a7646c51f032e0088ae6fe9d0833fa280b78d4455681574a32937b32838",
+            "version": "18.4"
+          },
+          "python": {
+            "bytes": null,
+            "path": "/opt/peticao-dev-profile-tools-v1/python312/bin/python3.12",
+            "sha256": null,
+            "version": "3.12.3"
+          }
+        },
+        "toolchain_inventory_sha256": null,
+        "version": 1
+      },
+      "environment_policy": {
+        "credentials_allowed": false,
+        "cron": false,
+        "dotenv_allowed": false,
+        "external_network": false,
+        "inherit": false,
+        "loopback_fixtures_only": true,
+        "mail": "development_fixture_only",
+        "whatsapp": false
+      },
+      "historical_budget_is_measured_minimum": false,
+      "layout": {
+        "artifacts": "artifacts",
+        "compiled": "compiled",
+        "empty_config": "e",
+        "fresh_job_root_required": true,
+        "old_paths_or_units_reused": false,
+        "postgres": "p",
+        "relative_to": "trusted_StateDirectory_namespace_alias",
+        "site": "source/site",
+        "source": "source",
+        "tmp": "t"
+      },
+      "name": "admin-build-v1",
+      "pending_pins": [
+        "normalized_archive.sha256",
+        "normalized_archive.bytes",
+        "normalization_receipt_sha256",
+        "toolchain_inventory_sha256",
+        "toolchain.python.sha256",
+        "toolchain.python.bytes",
+        "toolchain.chromium.sha256",
+        "toolchain.chromium.bytes",
+        "full_integrity_attestation.manifest_event",
+        "full_integrity_attestation.inventory_sha256",
+        "full_integrity_attestation.evidence_sha256"
+      ],
+      "phases": [
+        "verify-inputs",
+        "prepare-offline-assets",
+        "typecheck",
+        "build",
+        "export-runtime",
+        "drain"
+      ],
+      "qa_counts": null,
+      "qa_steps": null,
+      "qualification": {
+        "operationalReady": false,
+        "qualification_manifest_event": null,
+        "qualified": false
+      },
+      "resources": {
+        "admission": {
+          "control_cpu_target": 2,
+          "control_memory_target_bytes": 8589934592,
+          "headroom_guaranteed": false,
+          "requires_fresh_host_pressure_and_capacity": true,
+          "rounded_marketing_ram_not_authoritative": true
+        },
+        "cpu": 14,
+        "disk_budget_bytes": 32212254720,
+        "disk_budget_is_hard_quota": false,
+        "measured_minimum": false,
+        "memory_bytes": 21474836480,
+        "node_heap_mib": 6144,
+        "runtime_seconds": 2700,
+        "stop_seconds": 30,
+        "tasks_max": 512,
+        "version": 1,
+        "workers": 2
+      },
+      "source": {
+        "app_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
+        "bytes": 11959902,
+        "harness_commit": "09d1d66d0e821e92d96bd83de70afdb832a31bc6",
+        "path": "/opt/peticao-dev-profile-tools-v1/inputs/source.tar.gz",
+        "sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5",
+        "site_tree": "14409ebfce08daa337f6b2dfc392fe38b54ee86d"
+      },
+      "version": 1
+    },
+    "admin-qa-v1": {
+      "artifact_policy": {
+        "allowlist": [
+          "profile-result.json",
+          "integrity-proof.json",
+          "phase-results.json",
+          "sanitized-build.log",
+          "sanitized-qa-summary.json",
+          "process-drain-proof.json",
+          "network-denial-summary.json"
+        ],
+        "forbidden": [
+          "credentials",
+          "dotfiles",
+          "mail",
+          "whatsapp",
+          "cron",
+          "production_data",
+          "database_state",
+          "signer_exports",
+          "raw_browser_storage"
+        ],
+        "max_file_bytes": 16777216,
+        "max_files": 7,
+        "max_total_bytes": 33554432,
+        "regular_files_only": true,
+        "reject_symlinks_and_hardlinks": true,
+        "root": "artifacts",
+        "root_relative_to": "trusted_job_state_directory",
+        "sanitize_before_export": true,
+        "version": 1
+      },
+      "dependencies": {
+        "full_integrity_attestation": {
+          "evidence_sha256": null,
+          "inventory_sha256": null,
+          "manifest_event": null
+        },
+        "normalization_receipt_sha256": null,
+        "normalized_archive": {
+          "bytes": null,
+          "path": "/opt/peticao-dev-profile-tools-v1/inputs/dependencies.normalized.tar.gz",
+          "sha256": null
+        },
+        "original_cache_full_integrity_verified": false,
+        "parent_archive": {
+          "bytes": 207013889,
+          "sha256": "3009712141b019777b6395e36a628f4e1c0b8720fb617e4ffe5c814d91670698"
+        },
+        "qa_closure_sha256": "9fc1c6a4be2b1d23de5436737136076fa2b8bc719b60dcb984a70344f1c19c16",
+        "toolchain": {
+          "chromium": {
+            "bytes": null,
+            "path": "/opt/peticao-dev-profile-tools-v1/chromium/chrome-linux64/chrome",
+            "sha256": null,
+            "version": "151.0.7922.34"
+          },
+          "initdb": {
+            "bytes": 191688,
+            "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/initdb",
+            "sha256": "515186eed81a1f2741bdcbfeb080af093a59a27fb2896237b04dd6c48bae349d",
+            "version": "18.4"
+          },
+          "node": {
+            "bytes": 99836400,
+            "path": "/opt/peticao-dev-profile-tools-v1/node20",
+            "sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+            "version": "20.19.2"
+          },
+          "pg_ctl": {
+            "bytes": 77832,
+            "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/pg_ctl",
+            "sha256": "6beab6014ea28dcc78b8c6a43ec9e3e20536e13a175d75151107410ac866c481",
+            "version": "18.4"
+          },
+          "postgres": {
+            "bytes": 9788000,
+            "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/postgres",
+            "sha256": "de0a4a7646c51f032e0088ae6fe9d0833fa280b78d4455681574a32937b32838",
+            "version": "18.4"
+          },
+          "python": {
+            "bytes": null,
+            "path": "/opt/peticao-dev-profile-tools-v1/python312/bin/python3.12",
+            "sha256": null,
+            "version": "3.12.3"
+          }
+        },
+        "toolchain_inventory_sha256": null,
+        "version": 1
+      },
+      "environment_policy": {
+        "credentials_allowed": false,
+        "cron": false,
+        "dotenv_allowed": false,
+        "external_network": false,
+        "inherit": false,
+        "loopback_fixtures_only": true,
+        "mail": "development_fixture_only",
+        "whatsapp": false
+      },
+      "historical_budget_is_measured_minimum": false,
+      "layout": {
+        "artifacts": "artifacts",
+        "compiled": "compiled",
+        "empty_config": "e",
+        "fresh_job_root_required": true,
+        "old_paths_or_units_reused": false,
+        "postgres": "p",
+        "relative_to": "trusted_StateDirectory_namespace_alias",
+        "site": "source/site",
+        "source": "source",
+        "tmp": "t"
+      },
+      "name": "admin-qa-v1",
+      "pending_pins": [
+        "normalized_archive.sha256",
+        "normalized_archive.bytes",
+        "normalization_receipt_sha256",
+        "toolchain_inventory_sha256",
+        "toolchain.python.sha256",
+        "toolchain.python.bytes",
+        "toolchain.chromium.sha256",
+        "toolchain.chromium.bytes",
+        "full_integrity_attestation.manifest_event",
+        "full_integrity_attestation.inventory_sha256",
+        "full_integrity_attestation.evidence_sha256"
+      ],
+      "phases": [
+        "verify-inputs",
+        "prepare-offline-assets",
+        "typecheck",
+        "build",
+        "export-runtime",
+        "qa100",
+        "drain"
+      ],
+      "qa_counts": {
+        "backend": 43,
+        "browser": 40,
+        "http": 7,
+        "http_reset": 8,
+        "maps": 2
+      },
+      "qa_steps": [
+        "postgres-init",
+        "backend43",
+        "fixture-seed",
+        "runtime-start",
+        "http7",
+        "browser40",
+        "maps2",
+        "http-reset8",
+        "fixture-refresh"
+      ],
+      "qualification": {
+        "operationalReady": false,
+        "qualification_manifest_event": null,
+        "qualified": false
+      },
+      "resources": {
+        "admission": {
+          "control_cpu_target": 2,
+          "control_memory_target_bytes": 8589934592,
+          "headroom_guaranteed": false,
+          "requires_fresh_host_pressure_and_capacity": true,
+          "rounded_marketing_ram_not_authoritative": true
+        },
+        "cpu": 14,
+        "disk_budget_bytes": 32212254720,
+        "disk_budget_is_hard_quota": false,
+        "measured_minimum": false,
+        "memory_bytes": 21474836480,
+        "node_heap_mib": 6144,
+        "runtime_seconds": 2700,
+        "stop_seconds": 30,
+        "tasks_max": 512,
+        "version": 1,
+        "workers": 2
+      },
+      "source": {
+        "app_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
+        "bytes": 11959902,
+        "harness_commit": "09d1d66d0e821e92d96bd83de70afdb832a31bc6",
+        "path": "/opt/peticao-dev-profile-tools-v1/inputs/source.tar.gz",
+        "sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5",
+        "site_tree": "14409ebfce08daa337f6b2dfc392fe38b54ee86d"
+      },
+      "version": 1
+    },
+    "admin-typecheck-v1": {
+      "artifact_policy": {
+        "allowlist": [
+          "profile-result.json",
+          "integrity-proof.json",
+          "phase-results.json",
+          "sanitized-build.log",
+          "sanitized-qa-summary.json",
+          "process-drain-proof.json",
+          "network-denial-summary.json"
+        ],
+        "forbidden": [
+          "credentials",
+          "dotfiles",
+          "mail",
+          "whatsapp",
+          "cron",
+          "production_data",
+          "database_state",
+          "signer_exports",
+          "raw_browser_storage"
+        ],
+        "max_file_bytes": 16777216,
+        "max_files": 7,
+        "max_total_bytes": 33554432,
+        "regular_files_only": true,
+        "reject_symlinks_and_hardlinks": true,
+        "root": "artifacts",
+        "root_relative_to": "trusted_job_state_directory",
+        "sanitize_before_export": true,
+        "version": 1
+      },
+      "dependencies": {
+        "full_integrity_attestation": {
+          "evidence_sha256": null,
+          "inventory_sha256": null,
+          "manifest_event": null
+        },
+        "normalization_receipt_sha256": null,
+        "normalized_archive": {
+          "bytes": null,
+          "path": "/opt/peticao-dev-profile-tools-v1/inputs/dependencies.normalized.tar.gz",
+          "sha256": null
+        },
+        "original_cache_full_integrity_verified": false,
+        "parent_archive": {
+          "bytes": 207013889,
+          "sha256": "3009712141b019777b6395e36a628f4e1c0b8720fb617e4ffe5c814d91670698"
+        },
+        "qa_closure_sha256": "9fc1c6a4be2b1d23de5436737136076fa2b8bc719b60dcb984a70344f1c19c16",
+        "toolchain": {
+          "chromium": {
+            "bytes": null,
+            "path": "/opt/peticao-dev-profile-tools-v1/chromium/chrome-linux64/chrome",
+            "sha256": null,
+            "version": "151.0.7922.34"
+          },
+          "initdb": {
+            "bytes": 191688,
+            "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/initdb",
+            "sha256": "515186eed81a1f2741bdcbfeb080af093a59a27fb2896237b04dd6c48bae349d",
+            "version": "18.4"
+          },
+          "node": {
+            "bytes": 99836400,
+            "path": "/opt/peticao-dev-profile-tools-v1/node20",
+            "sha256": "b9640779a1fffec1b6beeb90cb05019637457df2bd3e459034216b260a9ad0ac",
+            "version": "20.19.2"
+          },
+          "pg_ctl": {
+            "bytes": 77832,
+            "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/pg_ctl",
+            "sha256": "6beab6014ea28dcc78b8c6a43ec9e3e20536e13a175d75151107410ac866c481",
+            "version": "18.4"
+          },
+          "postgres": {
+            "bytes": 9788000,
+            "path": "/opt/peticao-dev-profile-tools-v1/postgres/bin/postgres",
+            "sha256": "de0a4a7646c51f032e0088ae6fe9d0833fa280b78d4455681574a32937b32838",
+            "version": "18.4"
+          },
+          "python": {
+            "bytes": null,
+            "path": "/opt/peticao-dev-profile-tools-v1/python312/bin/python3.12",
+            "sha256": null,
+            "version": "3.12.3"
+          }
+        },
+        "toolchain_inventory_sha256": null,
+        "version": 1
+      },
+      "environment_policy": {
+        "credentials_allowed": false,
+        "cron": false,
+        "dotenv_allowed": false,
+        "external_network": false,
+        "inherit": false,
+        "loopback_fixtures_only": true,
+        "mail": "development_fixture_only",
+        "whatsapp": false
+      },
+      "historical_budget_is_measured_minimum": false,
+      "layout": {
+        "artifacts": "artifacts",
+        "compiled": "compiled",
+        "empty_config": "e",
+        "fresh_job_root_required": true,
+        "old_paths_or_units_reused": false,
+        "postgres": "p",
+        "relative_to": "trusted_StateDirectory_namespace_alias",
+        "site": "source/site",
+        "source": "source",
+        "tmp": "t"
+      },
+      "name": "admin-typecheck-v1",
+      "pending_pins": [
+        "normalized_archive.sha256",
+        "normalized_archive.bytes",
+        "normalization_receipt_sha256",
+        "toolchain_inventory_sha256",
+        "toolchain.python.sha256",
+        "toolchain.python.bytes",
+        "toolchain.chromium.sha256",
+        "toolchain.chromium.bytes",
+        "full_integrity_attestation.manifest_event",
+        "full_integrity_attestation.inventory_sha256",
+        "full_integrity_attestation.evidence_sha256"
+      ],
+      "phases": [
+        "verify-inputs",
+        "prepare-offline-assets",
+        "typecheck",
+        "drain"
+      ],
+      "qa_counts": null,
+      "qa_steps": null,
+      "qualification": {
+        "operationalReady": false,
+        "qualification_manifest_event": null,
+        "qualified": false
+      },
+      "resources": {
+        "admission": {
+          "control_cpu_target": 2,
+          "control_memory_target_bytes": 8589934592,
+          "headroom_guaranteed": false,
+          "requires_fresh_host_pressure_and_capacity": true,
+          "rounded_marketing_ram_not_authoritative": true
+        },
+        "cpu": 4,
+        "disk_budget_bytes": 32212254720,
+        "disk_budget_is_hard_quota": false,
+        "measured_minimum": false,
+        "memory_bytes": 8589934592,
+        "node_heap_mib": 3072,
+        "runtime_seconds": 2700,
+        "stop_seconds": 30,
+        "tasks_max": 512,
+        "version": 1,
+        "workers": 2
+      },
+      "source": {
+        "app_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
+        "bytes": 11959902,
+        "harness_commit": "09d1d66d0e821e92d96bd83de70afdb832a31bc6",
+        "path": "/opt/peticao-dev-profile-tools-v1/inputs/source.tar.gz",
+        "sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5",
+        "site_tree": "14409ebfce08daa337f6b2dfc392fe38b54ee86d"
+      },
+      "version": 1
+    }
+  },
+  "qa_inventory": {
+    "qa/backend-smoke.mjs": {
+      "bytes": 3035,
+      "sha256": "4e31a6e4b8e8e7286a91146318e1ea1bbc177567e43084f3e8574b2cb2814ce3"
+    },
+    "qa/browser-bootstrap.py": {
+      "bytes": 4700,
+      "sha256": "1dcf0903809786b58d997a0e35900704d339d4171a3ca96a2316c4302cd77672"
+    },
+    "qa/browser40.py": {
+      "bytes": 17534,
+      "sha256": "d812b7d90bf5e27de64f1b42726d1bf78243ff272810442eeb164edaa73dbc5d"
+    },
+    "qa/build-guard.mjs": {
+      "bytes": 3004,
+      "sha256": "8df35d6aab602037cd2e53e6141b1a8cce4b29730a75b174de527bc79f14e00c"
+    },
+    "qa/common.mjs": {
+      "bytes": 3077,
+      "sha256": "cfcdf13607a1a5dce0254b634a2111ca19ee1ac1654f24448f7aefeb0fc333eb"
+    },
+    "qa/fixture.ts": {
+      "bytes": 4408,
+      "sha256": "66d9b22c5c1a2ce23fa4138d97fb8464076411087e56b103ad7e783894ab73dc"
+    },
+    "qa/http-regression.mjs": {
+      "bytes": 3963,
+      "sha256": "0691dcb5f1b2623bd1e66e035a61f6602dec7d7490a0830739b193994692c435"
+    },
+    "qa/maps2.py": {
+      "bytes": 3806,
+      "sha256": "52bc4d65b1e0a35d6dea15bef6757fff233b0bf98a04815fe6b9621f64250b74"
+    },
+    "qa/network-guard.cjs": {
+      "bytes": 2733,
+      "sha256": "c6b80797e33e4e9ee018759c4d75aa4813c351f211a644ba2ea21cbfa876a1b0"
+    },
+    "qa/node-owned.mjs": {
+      "bytes": 2154,
+      "sha256": "83091bae465846ef19e09e0082d4bf196effd01c0aa7666b35e513ddc5e80342"
+    },
+    "qa/python-runtime.json": {
+      "bytes": 869,
+      "sha256": "7699b1d779aab3cd2e93afd294f208ad73dca33c2f65a12fb6c78b4d7841bb06"
+    },
+    "qa/qa-driver.mjs": {
+      "bytes": 5395,
+      "sha256": "e252c5cc39bd55b5924d7abb6ef35726bff3c183bf631784fc49600fb66db442"
+    },
+    "qa/qa-runtime.mjs": {
+      "bytes": 4575,
+      "sha256": "3f7d4a21e681a3508686ed4035115a961afb90a27834bdb09e4b29505ef9707c"
+    },
+    "qa/refresh-fixture-session.mjs": {
+      "bytes": 1395,
+      "sha256": "659c8ac97b1b6edad69ef1da38333cbf2391836e781f19337b04397711bbde4e"
+    }
+  },
+  "qualification_release_event": null,
+  "qualified": false,
+  "toolchain_inventory": {
+    "files": {},
+    "roots": [
+      "node20",
+      "python312",
+      "postgres",
+      "chromium",
+      "python-wheels",
+      "pdfjs",
+      "empty-config"
+    ],
+    "version": 1
+  },
+  "tools_root": "/opt/peticao-dev-profile-tools-v1",
+  "version": 1
+}

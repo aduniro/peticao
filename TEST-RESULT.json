@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "status": "LOCAL_SOURCE_TEST_PASS_NOT_NATIVE_QUALIFIED",
+  "command": "/usr/bin/python3 -B -m unittest discover -p test_*.py",
+  "cwd": "/mnt/apps/peticao-final/_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-20261115/source",
+  "passed": 198,
+  "seconds": 4.121,
+  "python_ast_pass": 26,
+  "scope": [
+    "source-only unit/composition tests",
+    "private fictitious filesystem fixtures",
+    "trivial local Python child ownership tests",
+    "Node QA helper syntax/import checks with workload spawn refused"
+  ],
+  "excluded": [
+    "application execution",
+    "PostgreSQL runtime",
+    "Chromium runtime",
+    "native systemd/unit/cgroup qualification",
+    "host installs",
+    "cloud purchases",
+    "production/signature data"
+  ],
+  "readiness": {
+    "qualified": false,
+    "operationalReady": false
+  },
+  "review_parent": {
+    "infra_runtime_commit": "33fcce1bd0206e9d03baf3c696bb692ab0336f0a",
+    "notice": 3291,
+    "ack": 3301,
+    "affected_tests_passed": 40,
+    "seconds": 0.989,
+    "parent_163_not_repeated": true
+  }
+}
