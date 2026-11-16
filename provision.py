@@ -35,7 +35,13 @@ def step(label,operation):
  except Exception as e:
   state['resources'][label].update({'state':'uncertain','error_type':type(e).__name__,'http_status':getattr(e,'status',None),'code':getattr(e,'code',None)})
   save('PROVISION-STATE.json',state);print(json.dumps({'step':label,'status':'uncertain','error_type':type(e).__name__,'http_status':getattr(e,'status',None),'code':getattr(e,'code',None)}),flush=True);raise
- data=oci.util.to_dict(r);state['resources'][label]={'state':'created','data':data};save('PROVISION-STATE.json',state);print(json.dumps({'step':label,'status':'created','lifecycle_state':data.get('lifecycle_state')}),flush=True);return data
+ data=oci.util.to_dict(r);state['resources'][label]={'state':'created','data':data};save('PROVISION-STATE.json',state)
+ getters={'vcn':'get_vcn','security_list':'get_security_list','internet_gateway':'get_internet_gateway','route_table':'get_route_table','subnet':'get_subnet'}
+ if label in getters and data.get('lifecycle_state')!='AVAILABLE':
+  response=getattr(net,getters[label])(data['id'])
+  response=oci.wait_until(net,response,'lifecycle_state','AVAILABLE',max_wait_seconds=180,max_interval_seconds=5)
+  data=oci.util.to_dict(response.data);state['resources'][label]['data']=data;save('PROVISION-STATE.json',state)
+ print(json.dumps({'step':label,'status':'created','lifecycle_state':data.get('lifecycle_state')}),flush=True);return data
 vcn=step('vcn',lambda t:net.create_vcn(oci.core.models.CreateVcnDetails(compartment_id=tenant,display_name=name+'-vcn',cidr_blocks=['10.44.0.0/16'],dns_label='peticaooracle',freeform_tags=tags),opc_retry_token=t))
 # Dedicated subnet will use ONLY this custom security list, never the default VCN list.
 sec=step('security_list',lambda t:net.create_security_list(oci.core.models.CreateSecurityListDetails(compartment_id=tenant,vcn_id=vcn['id'],display_name=name+'-security',freeform_tags=tags,ingress_security_rules=[oci.core.models.IngressSecurityRule(protocol='6',source=str(owner_ip)+'/32',tcp_options=oci.core.models.TcpOptions(destination_port_range=oci.core.models.PortRange(min=22,max=22)),description='SSH bootstrap only owner workstation'),oci.core.models.IngressSecurityRule(protocol='17',source='0.0.0.0/0',udp_options=oci.core.models.UdpOptions(destination_port_range=oci.core.models.PortRange(min=41641,max=41641)),description='Tailscale encrypted mesh transport'),oci.core.models.IngressSecurityRule(protocol='1',source='0.0.0.0/0',icmp_options=oci.core.models.IcmpOptions(type=3,code=4),description='Path MTU discovery')],egress_security_rules=[oci.core.models.EgressSecurityRule(protocol='all',destination='0.0.0.0/0')]),opc_retry_token=t))
