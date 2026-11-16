@@ -44,6 +44,7 @@ def fence():
  decision_path=P/'ROOT-SCOPE-DECISION.json'
  if hashlib.sha256(decision_path.read_bytes()).hexdigest()!=manifest['root_scope_decision_sha256']:raise RuntimeError('Root scope decision pin mismatch')
  decision=json.load(open(decision_path))
+ if hashlib.sha256(pathlib.Path(decision['canonical_document']).read_bytes()).hexdigest()!=decision['canonical_document_sha256']:raise RuntimeError('Canonical Root scope decision changed')
  if decision['from']!='01a1cad7-4a65-7d43-b8c2-f0b50a90a580' or decision['operation']!=EXPECTED_OPERATION or set(decision['resources'])!=EXPECTED_RESOURCES or decision['technical_ack']is not False:raise RuntimeError('Root scope decision mismatch')
  head=subprocess.check_output(['git','-C',str(SOURCE),'rev-parse','HEAD'],text=True).strip()
  dirty=subprocess.check_output(['git','-C',str(SOURCE),'status','--porcelain'],text=True)
