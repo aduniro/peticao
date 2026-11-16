@@ -47,3 +47,7 @@ Cada agente usa clone/worktree e branch próprios. Publicar commits pequenos, ex
 ## Baseline Civo V1 congelada
 
 O manifesto e contrato imutaveis estao em `docs/versioning/host-baseline-civo-v1/`. V1 libera cinco perfis: Node22.23.5/npm10.9.9, Python PBS3.12.3, dependencias npm do app, ativos PDF do navegador e coordenacao Databases. Quatro perfis permanecem pendentes nessa fotografia: A1/oscrypto, QA JS, QA Python e K3s Civo. Nao interpretar este freeze parcial como qualificacao completa do app ou de todos os hosts. Revisoes posteriores devem ser publicadas com nova versao, sem substituir V1 silenciosamente.
+
+## Delta imutavel Civo V2
+
+`docs/versioning/host-baseline-civo-v2/` preserva a V2, os sete recipes/locks e o patch minimo oscrypto com guardas de hashes. Soma A1 DEV com overlay explicito (nao wheel original sem patch) e QA JS1.62.1/Python1.62.0/Chromium151 revision1234. V1 permanece intacta. Aplicar apenas o delta em prefixo isolado e repetir smoke por host; nao copiar venvs, credenciais ou certificados para o Git. Validacao sintetica DEV nao comprova assinatura ICP/producao. K3s Civo mantem escopo pendente na fotografia V2 e nao impede a disponibilidade do codigo do app.

@@ -1,5 +1,5 @@
 {
-  "state": "MANIFESTS_FROZEN_HOST_CORE_BASELINE_V1_PARTIAL",
+  "state": "MANIFESTS_FROZEN_HOST_BASELINE_V2_WITH_EXPLICIT_PENDING_SCOPE",
   "node_host_baseline_owner": "Infra/Civo",
   "no_framework_upgrades": true,
   "canonical_source_ref": "fix/admin-query-r1-20261114",
@@ -129,5 +129,25 @@
       "k3s-dev"
     ],
     "overall_goal_complete": false
+  },
+  "host_baseline_v2": {
+    "source_sha256": "390707a964045443a1b5f2fcbdcf82f01c75b702910cadef70fad730666cd378",
+    "public_path": "docs/versioning/host-baseline-civo-v2/BASELINE-FROZEN-v2.json",
+    "ready_profiles": [
+      "node-runtime",
+      "python-runtime",
+      "node-app-dependencies",
+      "pdf-browser-assets",
+      "coordination-databases",
+      "signing-a1",
+      "qa-js",
+      "qa-python"
+    ],
+    "pending_profiles": [
+      "k3s-dev"
+    ],
+    "overall_goal_complete": false,
+    "immutable_v1_preserved": true,
+    "per_host_smoke_required": true
   }
 }
