@@ -308,3 +308,52 @@ button.v2-reg-seta { flex: none; width: 48px; display: grid; place-items: center
 .v2-chave input:checked + span { background: #009c3b; } .v2-chave input:checked + span::after { transform: translateX(22px); } .v2-chave input:focus-visible + span { outline: 3px solid #ffdf00; outline-offset: 2px; } .v2-chave input:disabled + span { opacity: .5; } .v2-chave b { min-width: 86px; }
 @media (max-width: 640px) { .v2-cfg { flex-direction: column; align-items: flex-start; } }
 .v2-escuro label.v2-chave { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 10px; }
+
+/* R3: lista compacta e ações únicas por lote; isolado no painel. */
+.v2 .v2-lotes { overflow-wrap: anywhere; }
+.v2 .v2-lotes-previa { margin: 12px 0; }
+.v2 .v2-lotes-globais, .v2 .v2-lotes-links { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.v2 .v2-lotes-globais { margin: 16px 0; }
+.v2 .v2-lotes-globais form { margin: 0; }
+.v2 .v2-lotes-lista { margin: 24px 0; scroll-margin-top: calc(var(--topo) + 16px); }
+.v2 .v2-lotes-lista h2 { margin-bottom: 6px; }
+.v2 .v2-lotes-tabela { width: 100%; min-width: 720px; }
+.v2 .v2-lotes-tabela td, .v2 .v2-lotes-tabela th { vertical-align: middle; }
+.v2 .v2-lotes-tabela td:last-child { width: 160px; }
+.v2 .v2-lotes-links a, .v2 .v2-lotes-links button { max-width: 100%; white-space: normal; }
+.v2 .v2-lotes-abrir { min-height: 44px; text-align: center; }
+.v2 .v2-lotes-cartoes { display: none; }
+.v2 .v2-lotes-status { display: inline-block; padding: 3px 9px; border: 1px solid #a4bfae; border-radius: 8px; background: #173c29; color: #eaf5ee; font-weight: 700; }
+.v2 .v2-lotes-status[data-status="prepared"] { background: #4b3b05; color: #fff0b1; border-color: #dbbc53; }
+.v2 .v2-lotes-status[data-status="failed"] { background: #511f27; color: #ffe0e5; border-color: #e69aa9; }
+.v2 .v2-lotes-status[data-status="sent"] { background: #075332; color: #fff; border-color: #84c5a1; }
+.v2 .v2-lotes-tabela tr[data-selected="true"] { outline: 2px solid var(--amarelo); outline-offset: -2px; }
+.v2 .v2-lotes-painel { margin: 26px 0; padding: clamp(12px, 2vw, 22px); border: 2px solid #8caa99; border-radius: 14px; background: #103624; color: #eaf5ee; scroll-margin-top: calc(var(--topo) + 16px); }
+.v2 .v2-lotes-painel-topo, .v2 .v2-lotes-cartao-topo { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.v2 .v2-lotes-painel-topo h2, .v2 .v2-lotes-painel-topo p, .v2 .v2-lotes-cartao-topo h3 { margin: 0; }
+.v2 .v2-lotes-acao { display: grid; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #718d7d; }
+.v2 .v2-lotes-acao h3 { margin: 0; font-size: 1.1rem; }
+.v2 .v2-lotes-acao form { display: grid; gap: 8px; justify-items: start; margin: 0; }
+.v2 .v2-lotes-acao > input[type="file"] { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.v2 .v2-lotes-acao button { max-width: 100%; min-height: 44px; white-space: normal; }
+.v2 .v2-lotes-codigo { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
+.v2 .v2-lotes-codigo input { min-width: 0; width: 180px; max-width: 100%; box-sizing: border-box; }
+.v2 .v2-lotes :is(a, button, input):focus-visible { outline: 3px solid var(--amarelo); outline-offset: 2px; }
+.v2 .v2-lotes-feedback { border-left: 4px solid var(--amarelo); }
+.v2 .v2-lotes-so-leitor { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+@media (max-width: 992px) {
+  .v2 .v2-lotes-desktop { display: none; }
+  .v2 .v2-lotes-cartoes { display: grid; gap: 14px; list-style: none; padding: 0; margin: 12px 0; }
+  .v2 .v2-lotes-cartao { padding: 16px; border: 1px solid #8caa99; border-radius: 12px; background: #103624; color: #eaf5ee; min-width: 0; }
+  .v2 .v2-lotes-cartao[data-selected="true"] { border: 2px solid var(--amarelo); }
+  .v2 .v2-lotes-cartao dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px 16px; margin: 16px 0; }
+  .v2 .v2-lotes-cartao dl > div { min-width: 0; }
+  .v2 .v2-lotes-cartao dt { color: #c1d7c9; font-size: .88rem; }
+  .v2 .v2-lotes-cartao dd { margin: 2px 0 0; font-weight: 700; }
+  .v2 .v2-lotes-painel-topo > a { min-height: 44px; }
+  .v2 .v2-lotes-globais form, .v2 .v2-lotes-globais button { width: 100%; }
+}
+
+/* R3 primary actions: white text needs AA contrast on the green surface. */
+.v2 .v2-lotes button:not(.v2-btn-sec):not(.adm-btn) { background: #006b2e; color: #fff; }
+.v2 .v2-lotes button:not(.v2-btn-sec):not(.adm-btn):hover { background: #005a27; }
