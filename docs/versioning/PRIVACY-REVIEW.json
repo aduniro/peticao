@@ -1,0 +1,23 @@
+{
+  "reviewed_gitleaks_candidates": 59,
+  "review_categories": {
+    "cryptographic_provenance_digest_not_credential": 37,
+    "reviewed_isolated_authentication_test_fixture": 18,
+    "common_password_denylist_not_credential": 4
+  },
+  "exact_values_checked": 31,
+  "objects_checked": 10715,
+  "reachable_blobs_checked": 5442,
+  "binary_blobs": 54,
+  "clearance_pass": true,
+  "scope": "all reachable public refs, blobs and commit messages; structured source/privacy review plus known-credential and private-key checks",
+  "limitations": [
+    "Author metadata intentionally preserved.",
+    "Reviewed synthetic test secrets/provenance digests remain in source; raw scanner finding count is not zero.",
+    "No claim of functional runtime qualification of archived prototypes."
+  ],
+  "private_internal_checkpoint_refs_omitted": 3,
+  "synthetic_header_only_negative_test_fixtures": 1,
+  "scanner": "gitleaks8.30.1 plus complete reachable-object exact-value/private-key checks",
+  "no_actual_key_material_or_known_credential_match": true
+}
