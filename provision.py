@@ -19,7 +19,9 @@ def coord(args):
  return d['result']
 def fence():
  x=json.load(open(P/'.provision-lease.private.json'))['result']
- event_id=json.load(open(P/'MANIFEST-EVENT-FINAL.json'))['result']['seq']
+ authorization=json.load(open(P/'MANIFEST-EVENT-FINAL.json'))
+ event_id=authorization['result']['seq']
+ review_ack_event=authorization['review_ack_event']
  coord(['check','--actor','admin-recuperacao','--lease',x['lease'],'--token',x['token'],'--fence',str(x['fence'])])
  status=coord(['status'])
  lease=next((l for l in status['leases'] if l['id']==x['lease']),None)
@@ -33,7 +35,16 @@ def fence():
  events=coord(['history','--after-seq',str(event_id-1),'--limit','1'])
  if len(events)!=1 or events[0]['seq']!=event_id or events[0]['kind']!='notice' or events[0]['actor']!='admin-recuperacao' or set(events[0]['resources'])!=EXPECTED_RESOURCES:
   raise RuntimeError('Manifest event identity mismatch')
+ if events[0]['requires_ack']!=1:raise RuntimeError('Manifest must require independent review')
+ if any(d['target_event']==event_id for d in status['notice_dispositions']):raise RuntimeError('Manifest was disposed')
+ if any(d['event']==event_id for d in status['pending_ack']):raise RuntimeError('Manifest review still pending')
+ ack=coord(['history','--after-seq',str(review_ack_event-1),'--limit','1'])
+ if len(ack)!=1 or ack[0]['seq']!=review_ack_event or ack[0]['kind']!='ack' or ack[0]['actor']!='apoio' or ack[0]['data']['event_seq']!=event_id:raise RuntimeError('Independent reviewer ACK missing or mismatched')
  manifest=events[0]['data']['manifest']
+ decision_path=P/'ROOT-SCOPE-DECISION.json'
+ if hashlib.sha256(decision_path.read_bytes()).hexdigest()!=manifest['root_scope_decision_sha256']:raise RuntimeError('Root scope decision pin mismatch')
+ decision=json.load(open(decision_path))
+ if decision['from']!='01a1cad7-4a65-7d43-b8c2-f0b50a90a580' or decision['operation']!=EXPECTED_OPERATION or set(decision['resources'])!=EXPECTED_RESOURCES or decision['technical_ack']is not False:raise RuntimeError('Root scope decision mismatch')
  head=subprocess.check_output(['git','-C',str(SOURCE),'rev-parse','HEAD'],text=True).strip()
  dirty=subprocess.check_output(['git','-C',str(SOURCE),'status','--porcelain'],text=True)
  if dirty or head!=manifest['commit']:raise RuntimeError('Source HEAD or cleanliness mismatch')
