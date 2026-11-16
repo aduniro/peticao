@@ -1,0 +1,17 @@
+{
+  "source_relative_path": "_ops/r0001-govbr-recovery-20261110",
+  "original_base": "0d68c021b5c45ac71d28a1af0ed4adeba65933bd",
+  "public_base": "d05d9779557975903c7c7601f6d0a6992ee70d98",
+  "source_files": [
+    {
+      "path": ".qa/node18-file-polyfill.cjs",
+      "original_sha256": "71c1677678a6b93405fdfd951fb649fe54449fc4c9881fb9f8b81979c113334e",
+      "public_sha256": "71c1677678a6b93405fdfd951fb649fe54449fc4c9881fb9f8b81979c113334e",
+      "source_capture": "pending-files.tar"
+    }
+  ],
+  "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED",
+  "original_author": "unconfirmed; packaging by migration automation",
+  "source_original_untouched": true,
+  "never_reactivate_from_archive_implicitly": true
+}
