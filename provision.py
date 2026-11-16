@@ -1,5 +1,5 @@
 """Owner-authorized single OCI development VM. No app, DB, GPU or production changes."""
-import base64,datetime,ipaddress,json,os,pathlib,subprocess,uuid
+import base64,datetime,hashlib,ipaddress,json,os,pathlib,subprocess,uuid
 import oci
 P=pathlib.Path(__file__).resolve().parent.parent
 SOURCE=pathlib.Path(__file__).resolve().parent
@@ -9,10 +9,41 @@ def save(name,data):
  fd=os.open(t,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
  with os.fdopen(fd,'w')as f:json.dump(data,f,indent=2,default=str)
  os.replace(t,p)
+EXPECTED_OPERATION='edit' # New infrastructure only, not app publication/migration.
+EXPECTED_RESOURCES={'deploy:oracle-dev-sp','path:'+str(SOURCE)}
+def coord(args):
+ r=subprocess.run(['python3',COORD]+args,capture_output=True,text=True)
+ if r.returncode:raise RuntimeError('Coordinator rejected ownership check')
+ d=json.loads(r.stdout)
+ if not d.get('ok'):raise RuntimeError('Coordinator ownership response invalid')
+ return d['result']
 def fence():
- x=json.load(open(P/'.deploy-lease.private.json'))['result']
- r=subprocess.run(['python3',COORD,'check','--actor','admin-recuperacao','--lease',x['lease'],'--token',x['token'],'--fence',str(x['fence'])],capture_output=True,text=True)
- if r.returncode or not json.loads(r.stdout).get('ok'):raise RuntimeError('Owned deployment lease invalid')
+ x=json.load(open(P/'.provision-lease.private.json'))['result']
+ event_id=json.load(open(P/'MANIFEST-EVENT-FINAL.json'))['result']['seq']
+ coord(['check','--actor','admin-recuperacao','--lease',x['lease'],'--token',x['token'],'--fence',str(x['fence'])])
+ status=coord(['status'])
+ lease=next((l for l in status['leases'] if l['id']==x['lease']),None)
+ if not lease or lease['actor']!='admin-recuperacao' or lease['operation']!=EXPECTED_OPERATION or lease['state']!='active' or lease['fence']!=x['fence'] or set(lease['resources'])!=EXPECTED_RESOURCES:
+  raise RuntimeError('Lease operation, scope or identity mismatch')
+ acquired=coord(['history','--after-seq',str(x['seq']-1),'--limit','1'])
+ if len(acquired)!=1:raise RuntimeError('Acquisition event unavailable')
+ e=acquired[0];d=e['data']
+ if e['seq']!=x['seq'] or e['kind']!='lease_acquired' or e['actor']!='admin-recuperacao' or d['lease']!=x['lease'] or d['fence']!=x['fence'] or d['operation']!=EXPECTED_OPERATION or d['manifest_event']!=event_id or set(e['resources'])!=EXPECTED_RESOURCES:
+  raise RuntimeError('Acquisition event scope or manifest mismatch')
+ events=coord(['history','--after-seq',str(event_id-1),'--limit','1'])
+ if len(events)!=1 or events[0]['seq']!=event_id or events[0]['kind']!='notice' or events[0]['actor']!='admin-recuperacao' or set(events[0]['resources'])!=EXPECTED_RESOURCES:
+  raise RuntimeError('Manifest event identity mismatch')
+ manifest=events[0]['data']['manifest']
+ head=subprocess.check_output(['git','-C',str(SOURCE),'rev-parse','HEAD'],text=True).strip()
+ dirty=subprocess.check_output(['git','-C',str(SOURCE),'status','--porcelain'],text=True)
+ if dirty or head!=manifest['commit']:raise RuntimeError('Source HEAD or cleanliness mismatch')
+ pins=manifest['file_hashes_sha256']
+ expected={str(SOURCE/n)for n in ['provision.py','PLAN.json','cloud-init.yaml','.gitignore']}
+ if set(pins)!=expected or set(manifest['files'])!=expected:raise RuntimeError('Manifest file list mismatch')
+ for name,digest in pins.items():
+  if hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()!=digest:raise RuntimeError('Frozen source hash mismatch')
+ if hashlib.sha256((P/'PREFLIGHT.json').read_bytes()).hexdigest()!=manifest['preflight_sha256']:raise RuntimeError('Preflight pin mismatch')
+
 fence()
 pre=json.load(open(P/'PREFLIGHT.json'));plan=json.load(open(SOURCE/'PLAN.json'))
 assert pre['quota']['standard-e5-core-count']['available']>=12
