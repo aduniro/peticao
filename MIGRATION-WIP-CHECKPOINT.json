@@ -1,0 +1,59 @@
+{
+  "source_relative_path": "_ops/coordenacao-dupla",
+  "original_base": "2aba94849fd09f819e4bb961e4b2419151220782",
+  "public_base": "29949a78eed551d76841ed57f4ddcdeb36c39f2d",
+  "source_files": [
+    {
+      "path": "PROTOCOLO.md",
+      "original_sha256": "472d7ea3268e7efd3402beee00fbe218dca0f1d9fbb3feeda44f4e30675c90cc",
+      "public_sha256": "75746d869f36e66bd94d0d8cfcb858795ddf77f7cf27d8600b884a0748c81053",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "policy.json",
+      "original_sha256": "162f8150f2f366016da4254d95e49d36513498155b3b467a82229fac70d72cae",
+      "public_sha256": "ad7927b039a72c6bcf08a22128312fab5df73c6d44dda3367faaad31576db891",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "tools/coord.py",
+      "original_sha256": "350c047df1d7266b8c3e574d509d73e81d214433603295b18950ff6a902277d7",
+      "public_sha256": "350c047df1d7266b8c3e574d509d73e81d214433603295b18950ff6a902277d7",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "versioned-report/collect.py",
+      "original_sha256": "4ef8142feaede8f096c5ec6774b14dbeaa957859202a41187d60543d30ef12ef",
+      "public_sha256": "4ef8142feaede8f096c5ec6774b14dbeaa957859202a41187d60543d30ef12ef",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "versioned-report/report.mjs",
+      "original_sha256": "0da0f4b71fdbb879089f75aca8d56a30d417ba1ba2b3a0e6bbe076fb2312e13e",
+      "public_sha256": "d7b7ace6ba57ed91c2ce60ef663966337def6e505c2401b9e3682455957d849e",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "versioned-report/tree-render.mjs",
+      "original_sha256": "4ee734e7932060bf4256b65b03878352abe7824bdd73e2c53584e7b83157ee4e",
+      "public_sha256": "4ee734e7932060bf4256b65b03878352abe7824bdd73e2c53584e7b83157ee4e",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "POLITICA-CENTRAL-AUTORIZACOES.md",
+      "original_sha256": "f4e606272afc1fe08847dfeb3f73a5ac4c3e8976ef8d631435d53f7277eb25d0",
+      "public_sha256": "f4e606272afc1fe08847dfeb3f73a5ac4c3e8976ef8d631435d53f7277eb25d0",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "tools/test_review_roles.py",
+      "original_sha256": "cb3e2382627b5eff22c52fa56a0cbc0e394c556caf719ad6a3bc512d218c2776",
+      "public_sha256": "cb3e2382627b5eff22c52fa56a0cbc0e394c556caf719ad6a3bc512d218c2776",
+      "source_capture": "pending-files.tar"
+    }
+  ],
+  "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED",
+  "original_author": "unconfirmed; packaging by migration automation",
+  "source_original_untouched": true,
+  "never_reactivate_from_archive_implicitly": true
+}

@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Read operational metadata only. Never initialize the application or its DB."""
 import collections
+import re
 import datetime as dt
 import json
 import sqlite3
@@ -21,13 +22,51 @@ def query_monitor(path):
         conn.execute("PRAGMA query_only=ON")
         conn.execute("BEGIN")
         tasks = [dict(x) for x in conn.execute("SELECT id,title,state,cwd,environment,scope,stage,eta,created_at,updated_at FROM tasks ORDER BY created_at")]
-        steps = [dict(x) for x in conn.execute("SELECT task_id,id,parent,title,state,weight,started_at,finished_at,updated_at,eta FROM steps ORDER BY task_id,rowid")]
+        steps = [dict(x) for x in conn.execute("SELECT task_id,id,parent,title,state,weight,started_at,finished_at,updated_at,eta,CASE WHEN task_id='admin-v2-progresso-arvore' THEN substr(detail,1,8192) ELSE NULL END AS detail FROM steps ORDER BY task_id,rowid")]
+        for step in steps:
+            step['detail'] = operational_detail(step.get('detail'))
         tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         workflow = [dict(x) for x in conn.execute("SELECT task_id,id,title,state FROM workflow_steps ORDER BY task_id,position")] if "workflow_steps" in tables else []
         conn.rollback()
         return tasks, steps, workflow
     finally:
         conn.close()
+
+
+DETAIL_LIMIT = 1500
+EVIDENCE_LIMIT = 4
+EVIDENCE_PATH_LIMIT = 512
+DEFAULT_NOTE = "Calculado dos marcos e pesos atuais do Vigia."
+
+
+def operational_detail(value):
+    """Bounded operational step metadata only; never fetch files, links or contents."""
+    if not isinstance(value, str):
+        return ""
+    text = value[:8192]
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
+    text = re.sub(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", "[e-mail omitido]", text, flags=re.I)
+    text = re.sub(r"(?<!\d)(?:\d{3}\.\d{3}\.\d{3}-\d{2}|\d{11})(?!\d)", "[identificador omitido]", text)
+    text = re.sub(r"((?:token|password|senha|secret|authorization|api[_-]?key)\s*[:=]\s*)\S+", r"\1[omitido]", text, flags=re.I)
+    return text[:DETAIL_LIMIT].strip()
+
+
+def operational_evidence(detail):
+    """Return literal allowlisted technical paths, never read/resolve/link them."""
+    evidence = []
+    for match in re.finditer(r"/(?:mnt/apps/peticao-final/|mnt/dev/\.peticao-)[^\s<>\"']+", detail):
+        if match.end() == len(detail) and len(detail) >= DETAIL_LIMIT:
+            continue  # Never turn a volume-truncated suffix into a purported complete path.
+        path = match.group(0).rstrip(".,;)]}")
+        if len(path) > EVIDENCE_PATH_LIMIT or any(part in {".", ".."} for part in path.split("/")):
+            continue
+        if any(part.startswith('.env') or part in {'secrets','credentials','pgpass','initdb-password','browser-config.json','active-lease.json'} for part in path.split('/')):
+            continue
+        if path not in evidence:
+            evidence.append(path)
+        if len(evidence) == EVIDENCE_LIMIT:
+            break
+    return evidence
 
 
 def percentage(steps):
@@ -182,7 +221,7 @@ def live_tree(tasks, steps):
             done, total = totals[row["id"]]
             percent = 100 if done == total else 100 * done / total
             state = "concluído localmente" if percent == 100 else "em execução registrada" if row["state"] == "running" else "planejado sem implementação iniciada" if percent == 0 and row["state"] == "queued" else "aguardando" if row["state"] == "waiting" else "parado"
-            return {"id": row["id"][len(prefix):], "title": row["title"], "percent": percent, "state": state, "recorded_state": row["state"], "updated_at": row.get("updated_at"), "note": "Calculado dos marcos e pesos atuais do Vigia.", "evidence": []}
+            return {"id": row["id"][len(prefix):], "title": row["title"], "percent": percent, "state": state, "recorded_state": row["state"], "updated_at": row.get("updated_at"), "note": operational_detail(row.get("detail")) or DEFAULT_NOTE, "evidence": operational_evidence(operational_detail(row.get("detail")))}
         sections, seen = [], set()
         for root in roots:
             section = item(root, "s-"); section["modules"] = []; seen.add(root["id"])

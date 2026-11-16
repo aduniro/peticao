@@ -47,7 +47,7 @@ export function renderReport(data) {
     paragraph(`Marcos atuais: ${percent(tree.percent)}. Captura SQLite somente leitura de ${time(tree.snapshot_at)}. Fonte: ${tree.path}.`);
     paragraph(tree.method); paragraph(tree.state_policy);
     paragraph(`Registro da tarefa no Vigia: ${time(tree.recorded_at)}${tree.recorded_stale ? " — SEM ATUALIZAÇÃO RECENTE" : ""}.`);
-    const add = (level, item) => { csvRows.push([level,item.id,item.title,item.percent.toFixed(4),item.state,item.note??"","","Vigia atual",tree.snapshot_at]); text.push(`${level} ${item.id} ${safeText(item.title)} — ${percent(item.percent)} [${safeText(item.state)}]`); };
+    const add = (level, item) => { csvRows.push([level,item.id,item.title,item.percent.toFixed(4),item.state,item.note??"",(item.evidence??[]).join(" | "),"Vigia atual",tree.snapshot_at]); text.push(`${level} ${item.id} ${safeText(item.title)} — ${percent(item.percent)} [${safeText(item.state)}]${item.note && item.note !== "Calculado dos marcos e pesos atuais do Vigia." ? " · " + safeText(item.note) : ""}${item.evidence?.length ? " · Evidências: " + item.evidence.map(safeText).join(" | ") : ""}`); };
     for(const section of tree.sections){add("Seção",section);for(const module of section.modules){add("Módulo",module);for(const f of module.functions)add("Funcionalidade",f);}}
   }
   else {

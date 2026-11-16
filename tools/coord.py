@@ -74,6 +74,17 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
   if d.execute('SELECT 1 FROM actor_handoffs WHERE prior=?',(a,)).fetchone():raise PermissionError('Participante sucedido; usar identidade atual: '+a)
  def active_actors(self,d):
   return [r['id'] for r in d.execute('SELECT id FROM actors WHERE id NOT IN (SELECT prior FROM actor_handoffs)')]
+ def required_reviewers(self,d):
+  """Registered actors stay visible; owner-designated optional channels do not veto."""
+  optional=set()
+  for row in d.execute("SELECT data FROM events WHERE kind='reviewer_policy_changed' ORDER BY seq"):
+   policy=json.loads(row['data'])
+   if (policy.get('version')!=1 or policy.get('optional_actors')!=['executor61'] or
+       not isinstance(policy.get('owner_reference'),str) or not policy['owner_reference'].strip() or
+       not re.fullmatch('[a-f0-9]{64}',str(policy.get('owner_evidence_sha256','')))):
+    raise RuntimeError('invalid_owner_reviewer_policy')
+   optional=set(policy['optional_actors'])
+  return [actor for actor in self.active_actors(d) if actor not in optional]
  def handoff(self,actor,prior,notice_seq):
   """Successao com autorizacao explicita e ACK externo; nao transfere leases."""
   with self.db(True) as d:
@@ -84,7 +95,7 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
    payload=json.loads(e['data']).get('actor_handoff',{})
    session=d.execute('SELECT session FROM actors WHERE id=?',(actor,)).fetchone()[0]
    if payload.get('prior')!=prior or payload.get('replacement')!=actor or payload.get('session')!=session or not isinstance(payload.get('owner_reference'),str) or not payload['owner_reference'].strip():raise ValueError('Manifesto de sucessao incompleto')
-   peers=set(self.active_actors(d))-{actor,prior}
+   peers=set(self.required_reviewers(d))-{actor,prior}
    if not peers:raise RuntimeError('ACK de coordenador independente exigido')
    ack={r['actor'] for r in d.execute('SELECT actor FROM acks WHERE seq=?',(notice_seq,))}
    if not peers.issubset(ack):raise RuntimeError('handoff_pending_peer_ack:'+encode(sorted(peers-ack)))
@@ -157,7 +168,7 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
   with self.db(True) as d:self.expire(d)
   with self.db(True) as d:
    self.actor(d,actor)
-   if len(self.active_actors(d))<2:raise RuntimeError('independent_coordinator_required')
+   if len(self.required_reviewers(d))<2:raise RuntimeError('independent_coordinator_required')
    row,actual=self._notice_fingerprint(d,seq)
    if actual!=digest:raise ValueError('notice_digest_mismatch')
    disposed=self._notice_dispositions(d)
@@ -179,7 +190,7 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
    if actor==event['actor']:raise PermissionError('independent_confirmation_required')
    body=json.loads(event['data']);target=body['target_event'];row,actual=self._notice_fingerprint(d,target)
    if actual!=digest or body['target_sha256']!=digest:raise ValueError('notice_digest_mismatch')
-   active=set(self.active_actors(d))
+   active=set(self.required_reviewers(d))
    if event['actor'] not in active:raise RuntimeError('proposal_actor_retired_requires_new_proposal')
    disposed=self._notice_dispositions(d)
    if target in disposed:raise RuntimeError('notice_already_disposed')
@@ -223,7 +234,7 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
      if not isinstance(manifest.get(key),str) or not manifest[key].strip():raise ValueError('manifest_'+key+'_required')
     for key in ('files','tests'):
      if not isinstance(manifest.get(key),list) or not manifest[key] or any(not isinstance(x,str) or not x.strip() for x in manifest[key]):raise ValueError('manifest_'+key+'_required')
-   actors=self.active_actors(d)
+   actors=self.required_reviewers(d)
    if operation in ('deploy','migration','merge') and len(actors)<2:raise RuntimeError('two_coordinators_required')
    pending=[]
    for e in d.execute('SELECT * FROM events WHERE requires_ack=1'):
@@ -270,7 +281,7 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
    lease=d.execute('SELECT * FROM leases WHERE id=?',(r['lease_id'],)).fetchone()
    if lease['state']!='uncertain':raise ValueError('Lease ja reconciliado')
    d.execute('INSERT OR IGNORE INTO resolution_acks VALUES(?,?,?)',(ident,actor,stamp()))
-   actors=self.active_actors(d);ack={x['actor'] for x in d.execute('SELECT actor FROM resolution_acks WHERE resolution_id=?',(ident,))}
+   actors=self.required_reviewers(d);ack={x['actor'] for x in d.execute('SELECT actor FROM resolution_acks WHERE resolution_id=?',(ident,))}
    complete=len(actors)>=2 and set(actors).issubset(ack)
    if complete:d.execute("UPDATE resolutions SET state='confirmed' WHERE id=?",(ident,));d.execute("UPDATE leases SET state='reconciled' WHERE id=?",(r['lease_id'],))
    seq=self.event(d,actor,'reconciliation_confirmed' if complete else 'reconciliation_ack','Reconciliacao conferida pelo participante',{'resolution':ident,'lease':r['lease_id'],'confirmed':complete},json.loads(lease['resources']));return {'resolution':ident,'confirmed':complete,'seq':seq}
@@ -314,14 +325,15 @@ CREATE TABLE IF NOT EXISTS resolution_acks(resolution_id TEXT NOT NULL,actor TEX
   with self.db() as d:
    actors=[dict(r) for r in d.execute('SELECT * FROM actors')]
    active=set(self.active_actors(d))
-   for a in actors:a['repos']=json.loads(a['repos']);a['active']=a['id'] in active
+   required=set(self.required_reviewers(d))
+   for a in actors:a['repos']=json.loads(a['repos']);a['active']=a['id'] in active;a['review_required']=a['id'] in required
    leases=[{k:r[k] for k in r.keys() if k!='token'} for r in d.execute("SELECT * FROM leases WHERE state IN ('active','uncertain')")]
    for r in leases:r['resources']=json.loads(r['resources'])
    pending=[]
    disposed=self._notice_dispositions(d)
    for e in d.execute('SELECT seq,actor,summary,resources FROM events WHERE requires_ack=1'):
     if e['seq'] in disposed:continue
-    missing=[a['id'] for a in actors if a['active'] and a['id']!=e['actor'] and not d.execute('SELECT 1 FROM acks WHERE actor=? AND seq=?',(a['id'],e['seq'])).fetchone()]
+    missing=[a['id'] for a in actors if a['id'] in required and a['id']!=e['actor'] and not d.execute('SELECT 1 FROM acks WHERE actor=? AND seq=?',(a['id'],e['seq'])).fetchone()]
     if missing:pending.append({'event':e['seq'],'author':e['actor'],'summary':e['summary'],'resources':json.loads(e['resources']),'missing_ack':missing})
    return {'at':stamp(),'actors':actors,'leases':leases,'pending_ack':pending,'notice_dispositions':list(disposed.values()),'last_seq':d.execute('SELECT COALESCE(MAX(seq),0) FROM events').fetchone()[0]}
 def parser():
