@@ -158,6 +158,7 @@ with sync_playwright() as pw:
             expect(full_popup_button).to_be_focused();full_popup_button.click(trial=True)
             full.set_viewport_size({'width':390 if width>992 else 1024,'height':900})
             full_popup_button.click(trial=True)
+            expect(full_popup_button).to_be_focused()
             full.screenshot(path=str(a.output_dir/f'fullscreen-filters-popup-resize-{width}.png'),full_page=True,animations='disabled')
             full.locator('.leaflet-popup-close-button').click()
             full.set_viewport_size({'width':width,'height':900})

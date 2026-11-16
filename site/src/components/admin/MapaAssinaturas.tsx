@@ -17,11 +17,13 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
   const marcas = useRef<Record<string, L.CircleMarker>>({});
   const cb = useRef(onEscolher); cb.current = onEscolher;
   function posicionarPopup(popup: L.Popup) {
+    const active = popup.getElement()?.contains(document.activeElement) ? document.activeElement as HTMLElement : null;
     const command = el.current?.closest(".v2-mapa-cheio")?.querySelector(".v2-mapa-comando");
     const top = command && el.current ? Math.max(12, command.getBoundingClientRect().bottom - el.current.getBoundingClientRect().top + 12) : 12;
     popup.options.autoPanPaddingTopLeft = L.point(12, top);
     popup.options.autoPanPaddingBottomRight = L.point(12, window.matchMedia("(max-width: 992px)").matches ? 76 : 12);
     popup.update();
+    if (active?.isConnected) active.focus({ preventScroll: true });
   }
 
   useEffect(() => {
