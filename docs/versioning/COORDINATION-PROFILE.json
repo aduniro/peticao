@@ -22,5 +22,13 @@
     "Python3.13/Linux/x86_64",
     "Python3.13/Linux/aarch64"
   ],
-  "private_configuration_not_included": true
+  "private_configuration_not_included": true,
+  "operational_use_approved": false,
+  "revision1_guard_findings_pending_revision2": [
+    "Outbox SQLite identity guard",
+    "Concurrent enqueue SHA recheck",
+    "Import snapshot SHA recheck"
+  ],
+  "revision2_owner_work_in_progress": true,
+  "not_reported_as_fixed_in_revision1": true
 }

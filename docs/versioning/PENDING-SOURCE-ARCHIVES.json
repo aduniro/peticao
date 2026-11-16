@@ -1,0 +1,48 @@
+{
+  "status": "captured_wip_not_merged_or_resumed",
+  "archives": [
+    {
+      "branch": "archive/wip-01-20261116",
+      "commit": "0dabfc290cb12ab23b093bc65e566715cc7621bf",
+      "files": 1,
+      "source_relative_path": "_ops/r0002-govbr-gates-recovery-20261110",
+      "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED"
+    },
+    {
+      "branch": "archive/wip-02-20261116",
+      "commit": "fa7b07fea5bf6082805f91d5be03f7999013277d",
+      "files": 1,
+      "source_relative_path": "_ops/r0001-govbr-recovery-20261110",
+      "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED"
+    },
+    {
+      "branch": "archive/wip-03-20261116",
+      "commit": "67f710365a74490a3b3b5731e859603d14a86abd",
+      "files": 6,
+      "source_relative_path": "_ops/drafts/materials-export-20261111",
+      "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED"
+    },
+    {
+      "branch": "archive/wip-04-20261116",
+      "commit": "4da1af31df078013e31e1b9b9fc14484ca21c497",
+      "files": 7,
+      "source_relative_path": "_ops/controle-operacional",
+      "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED"
+    },
+    {
+      "branch": "archive/wip-05-20261116",
+      "commit": "ff5d50364aeaf4f0d73639decaada6392db26649",
+      "files": 8,
+      "source_relative_path": "_ops/coordenacao-dupla",
+      "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED"
+    },
+    {
+      "branch": "archive/wip-06-20261116",
+      "commit": "ccaa916f08bcf624c8c9ad45647e3ebc32b3e1fe",
+      "files": 1,
+      "source_relative_path": "peticao/.cache/consolidacao-pagina-principal-20261109",
+      "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED"
+    }
+  ],
+  "remaining_pending_files": "Private data, PostgreSQL QA runtime files, generated previews and internal handoffs remain in protected preservation snapshots, not Git."
+}

@@ -1,3 +1,5 @@
 # Coordination checkpoint
 
 Stable schema, adapter and tests packaged from the Databases agent checkpoint. Keep its dependency profile separate from application/A1 dependencies. Install using `python -m pip install --require-hashes -r requirements.lock` in an isolated venv. Private connection configuration is external. This code is not an authorization to switch the active queue or the production signatures database. Deployment/admin installers and reports were still in progress at this checkpoint and are not represented as delivered here. See `docs/versioning/COORDINATION-PROFILE.json` from the repository root for exact source hashes and the owner-reported validation scope.
+
+Revision1 is an identified source checkpoint, not approved for operational queue adoption. A subsequent independent review found missing SQLite identity and concurrent SHA rechecks; the Databases owner is preparing revision2 and new tests. Do not treat the preserved revision1 as containing those fixes or switch authority/queues using it.
