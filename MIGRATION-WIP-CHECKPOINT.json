@@ -1,0 +1,47 @@
+{
+  "source_relative_path": "_ops/drafts/materials-export-20261111",
+  "original_base": "140ce6b98af23045849335693a82b426fdc9c826",
+  "public_base": "f9eca512ac2920f7bb5fb13b91eb060bb4a3504f",
+  "source_files": [
+    {
+      "path": "site/src/lib/materials-export.test.ts",
+      "original_sha256": "167f31a803a8a3c67c9854cf070f97097d4156130cbd80e4d613903702469f38",
+      "public_sha256": "167f31a803a8a3c67c9854cf070f97097d4156130cbd80e4d613903702469f38",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "site/src/lib/materials-export.ts",
+      "original_sha256": "efc7f5db8d14c8174745f24ac756c236620883fae213819c1783202b55843222",
+      "public_sha256": "efc7f5db8d14c8174745f24ac756c236620883fae213819c1783202b55843222",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "tools/materials-export/policy.cjs",
+      "original_sha256": "ba69145e712cdcfcf7bf40601e2ce0373869aa0247d13a0544898ffddfb6de93",
+      "public_sha256": "ba69145e712cdcfcf7bf40601e2ce0373869aa0247d13a0544898ffddfb6de93",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "tools/materials-export/policy.test.cjs",
+      "original_sha256": "8c623d4349954419f97ae75096901fcc5447b738d6a36232662df984f213c84d",
+      "public_sha256": "8c623d4349954419f97ae75096901fcc5447b738d6a36232662df984f213c84d",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "tools/materials-export/prepare.cjs",
+      "original_sha256": "64fa134acd562f41f08f3f611979e738cde31f505d2646049dd0e93d615df947",
+      "public_sha256": "64fa134acd562f41f08f3f611979e738cde31f505d2646049dd0e93d615df947",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "tools/materials-export/run.cjs",
+      "original_sha256": "510998ab886f8e130afc533e6a47feb38289ca7961b9126a2508fafcd9e9e508",
+      "public_sha256": "510998ab886f8e130afc533e6a47feb38289ca7961b9126a2508fafcd9e9e508",
+      "source_capture": "pending-files.tar"
+    }
+  ],
+  "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED",
+  "original_author": "unconfirmed; packaging by migration automation",
+  "source_original_untouched": true,
+  "never_reactivate_from_archive_implicitly": true
+}

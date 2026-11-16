@@ -1,0 +1,6 @@
+"use strict";
+const test=require("node:test"),assert=require("node:assert/strict"),{classifyResource}=require("./policy.cjs");
+const assets=["/logos/adunir.png"];
+test("exact document and selected fixed logo can only be fulfilled locally",()=>{assert.equal(classifyResource("GET","http://materials-export.invalid/document",assets),"document");assert.equal(classifyResource("GET","http://materials-export.invalid/logos/adunir.png",assets),"asset");});
+test("other origin, method, query, fragment and user-info are never allowed",()=>{for(const[m,u]of[["POST","http://materials-export.invalid/document"],["GET","https://materials-export.invalid/document"],["GET","http://outside.invalid/document"],["GET","http://materials-export.invalid/document?x=1"],["GET","http://materials-export.invalid/document#x"],["GET","http://user:pass@materials-export.invalid/document"]])assert.equal(classifyResource(m,u,assets),"deny");});
+test("unselected or arbitrary assets and invalid URLs stay denied",()=>{for(const u of["http://materials-export.invalid/logos/andes.png","http://materials-export.invalid/secret","file:///etc/passwd","bad"])assert.equal(classifyResource("GET",u,assets),"deny");assert.equal(classifyResource("GET","http://materials-export.invalid/secret",["/secret"]),"deny");});
