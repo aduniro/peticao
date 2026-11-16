@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "baseline_revision": 1,
+  "delivery": "Ready public runtimes: HTTPSorigins+SHA below; SSH Civo artifact files atartifact_root. Fullgenericbundle/installer followswith revisionedreceipt; ownersmayimplementtheirprefixinstallernow fromfixedcontracts.",
+  "artifact_root": "/srv/peticao-work/toolchains/sancionaintegral-20261116/artifacts",
+  "required_native_host": "Linuxamd64; hostglibc compatibility validatedbydestinationowner,no Ubuntuvenvcopies",
+  "profiles": {
+    "node-runtime": {
+      "actions": [
+        "verifytarSHA",
+        "extractnewprefixonly",
+        "useexplicitbin/node+npm",
+        "versionchecksandartifactbinarySHA"
+      ],
+      "native_OS_global_changes": false
+    },
+    "python-runtime": {
+      "actions": [
+        "verifyPBS20240415tarSHA",
+        "extractnewprefixonly",
+        "useexplicitPython3.12.3",
+        "createfreshvenvlocally,nevercopyUbuntuvenv"
+      ],
+      "native_OS_global_changes": false
+    },
+    "node-app-dependencies": {
+      "actions": [
+        "copycanonicalmanifest/lockbySHAintonewprefix",
+        "npmci--ignore-scripts--no-audit--no-fund publicregistry",
+        "validate102materializedpackages/50platformN_A",
+        "runlibrary/version/syntheticPDFsmoke"
+      ],
+      "main_app_build_or_start": false
+    },
+    "pdf-browser-assets": {
+      "actions": [
+        "verifytransporttarSHA",
+        "extractnewprefixpdf-assets",
+        "check201canonicalSHA+size"
+      ],
+      "never_import_in_node_SSR": true
+    },
+    "coordination-databases": {
+      "actions": [
+        "UseDatabasesownerprivateinstaller/profileandlatestlockb347",
+        "Noapp/A1/globalpipchanges"
+      ],
+      "owner": "01a1e313-ac26-7f40-854c-ab475c3845e3"
+    }
+  },
+  "destination_scope": {
+    "full_dev_hosts": [
+      "Dell",
+      "Civo",
+      "Oracle",
+      "Akamai",
+      "Santiago",
+      "Azure"
+    ],
+    "SP_WAHA": "ProjectCLIonly;preserveproduction/nativeconsumers;WAHA>=3GiBfree",
+    "OS_daemons": "NativeDocker/SSH/Tailnet/git/OpenSSL/libc consumerspreserved; any nativeexceptionmustbeexplicitandvalidated,no falseequalversions"
+  },
+  "prohibited": [
+    "OSPython/libc/OpenSSLreplacement",
+    "globalpip",
+    "overwritecanonicalsource/symlinks",
+    "appdeploy/DBprod",
+    "productionPDFsigningoffload",
+    "real/unknowncertcopy"
+  ]
+}

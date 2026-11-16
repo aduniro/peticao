@@ -1,5 +1,5 @@
 {
-  "state": "MANIFESTS_FROZEN_HOST_BASELINE_PENDING",
+  "state": "MANIFESTS_FROZEN_HOST_CORE_BASELINE_V1_PARTIAL",
   "node_host_baseline_owner": "Infra/Civo",
   "no_framework_upgrades": true,
   "canonical_source_ref": "fix/admin-query-r1-20261114",
@@ -109,5 +109,25 @@
     "Host baseline is separately validated by Infra, not inferred from installed folders.",
     "Migration does not start services or switch production DATABASE_URL.",
     "Historic branches keep their own dependency manifests."
-  ]
+  ],
+  "host_baseline": {
+    "revision": "v1",
+    "source_sha256": "382f2797f05403484a88e50f0c276c3db1ba4c66056ec89aeeb97cf7373af49e",
+    "install_contract_sha256": "8568197122793b8c4609f7005bf4d7d60e41343f2a89973e9de6eaab3f711c19",
+    "public_path": "docs/versioning/host-baseline-civo-v1/BASELINE-FROZEN-v1.json",
+    "ready_profiles": [
+      "node-runtime",
+      "python-runtime",
+      "node-app-dependencies",
+      "pdf-browser-assets",
+      "coordination-databases"
+    ],
+    "pending_profiles": [
+      "signing-a1",
+      "qa-js",
+      "qa-python",
+      "k3s-dev"
+    ],
+    "overall_goal_complete": false
+  }
 }

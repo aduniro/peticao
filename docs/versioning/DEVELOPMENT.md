@@ -43,3 +43,7 @@ Cada agente usa clone/worktree e branch próprios. Publicar commits pequenos, ex
 ## Perfil adicional de coordenacao
 
 `requirements/coordination.txt` referencia o lock com hashes do adaptador PostgreSQL/Neon: psycopg/psycopg-binary 3.2.13 e typing_extensions 4.16.0. Instalar com `pip install --require-hashes -r requirements/coordination.txt` em venv separado. O lock inclui wheels Linux x86_64/aarch64 para Python 3.11/3.12/3.13; nao altera os locks do app ou do A1. Credenciais de owner/reader/writer ficam em configuracao privada. Esta publicacao nao troca a fila ativa nem migra o banco de assinaturas.
+
+## Baseline Civo V1 congelada
+
+O manifesto e contrato imutaveis estao em `docs/versioning/host-baseline-civo-v1/`. V1 libera cinco perfis: Node22.23.5/npm10.9.9, Python PBS3.12.3, dependencias npm do app, ativos PDF do navegador e coordenacao Databases. Quatro perfis permanecem pendentes nessa fotografia: A1/oscrypto, QA JS, QA Python e K3s Civo. Nao interpretar este freeze parcial como qualificacao completa do app ou de todos os hosts. Revisoes posteriores devem ser publicadas com nova versao, sem substituir V1 silenciosamente.
