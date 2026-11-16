@@ -1,0 +1,16 @@
+{
+  "name": "peticao-oracle-dev-01",
+  "region": "sa-saopaulo-1",
+  "shape": "VM.Standard.E5.Flex",
+  "ocpus": 12,
+  "ram_gb": 64,
+  "boot_volume_gb": 100,
+  "os": "Canonical Ubuntu24.04 x86_64",
+  "gpu": false,
+  "purpose": "Development build/QA worker; no production/app/database/session migration",
+  "network": "Dedicated VCN10.44.0.0/16 subnet10.44.1.0/24; IPv4 public bootstrap; explicit securitylist SSH22 only owner workstation publicIPv4/32,UDP41641 for tailnet,ICMP PMTUD,egressall",
+  "bootstrap": "Existing project publickey, defaultUbuntu andbuilder, lockedpasswords; console-key pinning before SSH; existingTailscale reusablekey via protectedSSHchannel only, notmetadata",
+  "tailscale": "Preserve existingkey tags; tag:peticao-ssh ifauthkeypermits,elseadminRootassign; noACLchanges",
+  "billing": "Estimated R$2.5550216/h compute;100GBboot subject existing200GBfree aggregate; balance1500BRL expires13Dec2026. Idlecompute stop when notqueued after integration; not establishing new paid contract.",
+  "rollback": "On failure inspect owned resource state; do not terminate pre-existing resources. No auto-delete on ambiguous APIresult."
+}

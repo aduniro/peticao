@@ -1,0 +1,51 @@
+"""Owner-authorized single OCI development VM. No app, DB, GPU or production changes."""
+import base64,datetime,ipaddress,json,os,pathlib,subprocess,uuid
+import oci
+P=pathlib.Path(__file__).resolve().parent.parent
+SOURCE=pathlib.Path(__file__).resolve().parent
+COORD='/mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/coord.py'
+def save(name,data):
+ p=P/name;t=p.with_suffix(p.suffix+'.tmp')
+ fd=os.open(t,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
+ with os.fdopen(fd,'w')as f:json.dump(data,f,indent=2,default=str)
+ os.replace(t,p)
+def fence():
+ x=json.load(open(P/'.deploy-lease.private.json'))['result']
+ r=subprocess.run(['python3',COORD,'check','--actor','admin-recuperacao','--lease',x['lease'],'--token',x['token'],'--fence',str(x['fence'])],capture_output=True,text=True)
+ if r.returncode or not json.loads(r.stdout).get('ok'):raise RuntimeError('Owned deployment lease invalid')
+fence()
+pre=json.load(open(P/'PREFLIGHT.json'));plan=json.load(open(SOURCE/'PLAN.json'))
+assert pre['quota']['standard-e5-core-count']['available']>=12
+assert pre['quota']['standard-e5-memory-count']['available']>=64
+assert pre['capacity']['shape_availabilities'][0]['availability_status']=='AVAILABLE'
+assert not pre['instances'] and not pre['vcns'],'Preflight unexpected existing resources; review required'
+owner_ip=ipaddress.ip_address(pre['local_public_ipv4']);assert owner_ip.version==4
+c=oci.config.from_file(str(pathlib.Path.home()/'.oci/peticao-oracle/config'),'peticao-oracle-dell3576');c['region']=plan['region'];tenant=c['tenancy']
+kw=dict(timeout=(10,60),retry_strategy=oci.retry.NoneRetryStrategy())
+compute=oci.core.ComputeClient(c,**kw);net=oci.core.VirtualNetworkClient(c,**kw)
+name=plan['name'];tags={'project':'peticao','managed-by':'peticao-infra','purpose':'development','operation':'oracle-vm-create-20261115'}
+state=json.load(open(P/'PROVISION-STATE.json'))if(P/'PROVISION-STATE.json').exists()else{'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'resources':{}}
+def step(label,operation):
+ item=state['resources'].get(label)
+ if item:
+  if item.get('state')=='created':return item['data']
+  raise RuntimeError('Prior '+label+' operation is uncertain; reconcile before another write')
+ fence();token=str(uuid.uuid4());state['resources'][label]={'state':'pending','request_token':token};save('PROVISION-STATE.json',state)
+ try:r=operation(token).data
+ except Exception as e:
+  state['resources'][label].update({'state':'uncertain','error_type':type(e).__name__,'http_status':getattr(e,'status',None),'code':getattr(e,'code',None)})
+  save('PROVISION-STATE.json',state);print(json.dumps({'step':label,'status':'uncertain','error_type':type(e).__name__,'http_status':getattr(e,'status',None),'code':getattr(e,'code',None)}),flush=True);raise
+ data=oci.util.to_dict(r);state['resources'][label]={'state':'created','data':data};save('PROVISION-STATE.json',state);print(json.dumps({'step':label,'status':'created','lifecycle_state':data.get('lifecycle_state')}),flush=True);return data
+vcn=step('vcn',lambda t:net.create_vcn(oci.core.models.CreateVcnDetails(compartment_id=tenant,display_name=name+'-vcn',cidr_blocks=['10.44.0.0/16'],dns_label='peticaooracle',freeform_tags=tags),opc_retry_token=t))
+# Dedicated subnet will use ONLY this custom security list, never the default VCN list.
+sec=step('security_list',lambda t:net.create_security_list(oci.core.models.CreateSecurityListDetails(compartment_id=tenant,vcn_id=vcn['id'],display_name=name+'-security',freeform_tags=tags,ingress_security_rules=[oci.core.models.IngressSecurityRule(protocol='6',source=str(owner_ip)+'/32',tcp_options=oci.core.models.TcpOptions(destination_port_range=oci.core.models.PortRange(min=22,max=22)),description='SSH bootstrap only owner workstation'),oci.core.models.IngressSecurityRule(protocol='17',source='0.0.0.0/0',udp_options=oci.core.models.UdpOptions(destination_port_range=oci.core.models.PortRange(min=41641,max=41641)),description='Tailscale encrypted mesh transport'),oci.core.models.IngressSecurityRule(protocol='1',source='0.0.0.0/0',icmp_options=oci.core.models.IcmpOptions(type=3,code=4),description='Path MTU discovery')],egress_security_rules=[oci.core.models.EgressSecurityRule(protocol='all',destination='0.0.0.0/0')]),opc_retry_token=t))
+igw=step('internet_gateway',lambda t:net.create_internet_gateway(oci.core.models.CreateInternetGatewayDetails(compartment_id=tenant,vcn_id=vcn['id'],display_name=name+'-igw',is_enabled=True,freeform_tags=tags),opc_retry_token=t))
+route=step('route_table',lambda t:net.create_route_table(oci.core.models.CreateRouteTableDetails(compartment_id=tenant,vcn_id=vcn['id'],display_name=name+'-route',freeform_tags=tags,route_rules=[oci.core.models.RouteRule(destination='0.0.0.0/0',destination_type='CIDR_BLOCK',network_entity_id=igw['id'])]),opc_retry_token=t))
+subnet=step('subnet',lambda t:net.create_subnet(oci.core.models.CreateSubnetDetails(compartment_id=tenant,vcn_id=vcn['id'],display_name=name+'-subnet',cidr_block='10.44.1.0/24',dns_label='dev',route_table_id=route['id'],security_list_ids=[sec['id']],prohibit_public_ip_on_vnic=False,freeform_tags=tags),opc_retry_token=t))
+# Public SSH key only. Reusable tailnet/cloud tokens are never included in instance metadata.
+public_key=pathlib.Path(pre['ssh_public_key_file']).read_text().strip()
+user_data=base64.b64encode((SOURCE/'cloud-init.yaml').read_bytes()).decode()
+image=next(x for x in pre['images'] if 'aarch64'not in x['display_name'].lower() and 'minimal'not in x['display_name'].lower())
+instance=step('instance',lambda t:compute.launch_instance(oci.core.models.LaunchInstanceDetails(compartment_id=tenant,availability_domain=pre['ads'][0],display_name=name,shape='VM.Standard.E5.Flex',shape_config=oci.core.models.LaunchInstanceShapeConfigDetails(ocpus=12,memory_in_gbs=64),source_details=oci.core.models.InstanceSourceViaImageDetails(image_id=image['id'],boot_volume_size_in_gbs=100),create_vnic_details=oci.core.models.CreateVnicDetails(subnet_id=subnet['id'],assign_public_ip=True,hostname_label=name,display_name=name+'-vnic'),metadata={'ssh_authorized_keys':public_key,'user_data':user_data},instance_options=oci.core.models.InstanceOptions(are_legacy_imds_endpoints_disabled=True),freeform_tags=tags),opc_retry_token=t))
+save('INSTANCE-CREATED.json',{'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'instance_id':instance['id'],'name':name,'region':plan['region'],'shape':instance['shape'],'shape_config':instance.get('shape_config'),'state':instance['lifecycle_state'],'image_name':image['display_name'],'gpu':False,'next':'waitRUNNING,attesthostkey,bootstrapSSH,tailnet'})
+print('VM launch accepted; next validate RUNNING, host key and tailnet.',flush=True)

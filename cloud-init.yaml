@@ -1,0 +1,44 @@
+#cloud-config
+{
+  "hostname": "peticao-oracle-dev-01",
+  "manage_etc_hosts": true,
+  "ssh_pwauth": false,
+  "users": [
+    "default",
+    {
+      "name": "builder",
+      "groups": [
+        "adm",
+        "sudo"
+      ],
+      "shell": "/bin/bash",
+      "lock_passwd": true,
+      "sudo": [
+        "ALL=(ALL) NOPASSWD:ALL"
+      ],
+      "ssh_authorized_keys": [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINt+h3nKCP/IuiGbMppI4MdG34YBmUgm7DKPfUhnAY2O peticao-tailnet-v2:local:barre"
+      ]
+    }
+  ],
+  "package_update": true,
+  "packages": [
+    "ca-certificates",
+    "curl",
+    "git",
+    "jq",
+    "unzip"
+  ],
+  "runcmd": [
+    [
+      "bash",
+      "-c",
+      "printf \"PETICAO_HOSTKEY_ED25519: \" > /dev/console; cat /etc/ssh/ssh_host_ed25519_key.pub > /dev/console"
+    ],
+    [
+      "bash",
+      "-c",
+      "printf \"PETICAO_BOOTSTRAP_READY\\n\" > /dev/console"
+    ]
+  ]
+}
