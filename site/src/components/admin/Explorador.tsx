@@ -118,7 +118,7 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
         </div>
         <div className="v2-mapa-comando">
           <div className="v2-mapa-barra">
-            <button ref={filtersToggle} type="button" className="v2-btn v2-btn-primario" hidden={mobile} aria-controls={filtersId} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Fechar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
+            <button ref={filtersToggle} type="button" className="v2-btn v2-btn-primario" hidden={mobile && !tela} aria-controls={filtersId} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Fechar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
             {!tela && <button ref={tableToggle} type="button" className="v2-btn v2-btn-sec" aria-controls={tableId} aria-expanded={folha} onClick={() => setFolha(!folha)}>{folha ? "Fechar tabela" : "Tabela"}</button>}
       <div className="adm-seg" role="group" aria-label="Camada do mapa">
         <button type="button" aria-pressed={camada === "assinaturas"} className={camada === "assinaturas" ? "on" : ""} onClick={() => setCamada("assinaturas")}>Assinaturas (local declarado)</button>
@@ -138,7 +138,7 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
       {r && <p className="adm-sub">Consulta: {brasilia(r.asOf,true)}. Cada página possui seu próprio horário.</p>}
       {r && !r.capabilities.contacts && <p className="adm-sub">{COPY.contacts}</p>}
 
-          {(aberto || mobile) && <div id={filtersId} className={mobile ? undefined : "v2-mapa-filtros"} onKeyDown={(event) => { if (!mobile && event.key === "Escape") { event.stopPropagation(); setAberto(false); filtersToggle.current?.focus(); } }}><FiltrosShell><div className="adm-filters" role="search" >
+          {(aberto || (mobile && !tela)) && <div id={filtersId} className={mobile && !tela ? undefined : "v2-mapa-filtros"} onKeyDown={(event) => { if ((!mobile || tela) && event.key === "Escape") { event.stopPropagation(); setAberto(false); filtersToggle.current?.focus(); } }}><FiltrosShell><div className="adm-filters" role="search" >
         <input type="search" maxLength={80} placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
         {CHAVES.map((k) => <MultiBase key={k} rotulo={ROTULOS[k]} opcoes={FIXAS[k] ?? r?.facetas[k] ?? []} valor={f[k]} onChange={(v) => mudar(k, v)} />)}
         <label>De <input type="date" value={f.de} onChange={(e) => mudar("de", e.target.value)} /></label>

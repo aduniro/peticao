@@ -83,7 +83,7 @@ with sync_playwright() as pw:
             sheet=page.get_by_role('region',name='Tabela de assinaturas')
             close=sheet.get_by_role('button',name='Fechar ✕',exact=True)
             expect(close).to_be_focused();expect(sheet).to_contain_text('Pessoa Fictícia')
-            page.screenshot(path=str(a.output_dir/f'table-{width}.png'),full_page=True)
+            page.screenshot(path=str(a.output_dir/f'table-{width}.png'),full_page=True,animations='disabled')
             close.press('Escape');expect(sheet).to_have_count(0);expect(toggle).to_be_focused()
             passed(f'{width}: table keyboard focus, close, Escape and return')
             # All three map layers and their period selector stay legible.
@@ -103,7 +103,7 @@ with sync_playwright() as pw:
             filter_button.click(trial=True)
             for target in [page.locator('.leaflet-popup-content'),filter_button]:
                 ratio=target.evaluate(CONTRAST);assert ratio['ratio']>=4.5,ratio
-            page.screenshot(path=str(a.output_dir/f'popup-{width}.png'),full_page=True)
+            page.screenshot(path=str(a.output_dir/f'popup-{width}.png'),full_page=True,animations='disabled')
             filter_button.press('Enter')
             expect(page).to_have_url(__import__('re').compile('cidade=1100205'))
             passed(f'{width}: real Leaflet marker, keyboard popup, contrast and filter callback')
@@ -120,7 +120,7 @@ with sync_playwright() as pw:
                 next(b for b in filters.all() if b.is_visible()).click()
                 dialog=page.get_by_role('dialog',name='Filtros desta página')
                 expect(dialog).to_be_visible();expect(dialog.get_by_role('searchbox',name='Buscar por nome')).to_be_visible()
-                page.screenshot(path=str(a.output_dir/f'filters-{width}.png'),full_page=True)
+                page.screenshot(path=str(a.output_dir/f'filters-{width}.png'),full_page=True,animations='disabled')
                 dialog.get_by_role('button',name=__import__('re').compile('Fechar')).click()
                 passed(f'{width}: mobile filter drawer over map')
             if width<=992:
@@ -128,7 +128,7 @@ with sync_playwright() as pw:
                 opener.focus();opener.press('Enter')
                 close_menu=page.get_by_role('button',name='Fechar o menu',exact=True)
                 expect(close_menu).to_be_visible();close_menu.click(trial=True)
-                page.screenshot(path=str(a.output_dir/f'menu-{width}.png'),full_page=True)
+                page.screenshot(path=str(a.output_dir/f'menu-{width}.png'),full_page=True,animations='disabled')
                 close_menu.press('Escape');expect(close_menu).not_to_be_visible()
                 passed(f'{width}: shell menu reachable above map, keyboard open and Escape')
             else:
@@ -147,9 +147,16 @@ with sync_playwright() as pw:
             for control in full.locator('.v2-mapa-barra button').all():
                 if control.is_visible():
                     ratio=control.evaluate(CONTRAST);assert ratio['ratio']>=4.5,ratio
-            full.screenshot(path=str(a.output_dir/f'fullscreen-{width}.png'),full_page=True)
+            full_filters=full.locator('.v2-mapa-barra').get_by_role('button',name=__import__('re').compile('^Filtros'))
+            expect(full_filters).to_be_visible();full_filters.click()
+            full_field=full.get_by_role('searchbox',name='Buscar por nome')
+            expect(full_field).to_be_visible()
+            ratio=full_field.evaluate(CONTRAST);assert ratio['ratio']>=4.5,ratio
+            full_field.focus();full_field.press('Escape')
+            expect(full_filters).to_be_focused();expect(full_filters).to_have_attribute('aria-expanded','false')
+            full.screenshot(path=str(a.output_dir/f'fullscreen-{width}.png'),full_page=True,animations='disabled')
             full.close();passed(f'{width}: fullscreen window keeps same filters, map and contrast')
-            page.screenshot(path=str(a.output_dir/f'map-{width}.png'),full_page=True)
+            page.screenshot(path=str(a.output_dir/f'map-{width}.png'),full_page=True,animations='disabled')
             ctx.close()
         assert not result['pageErrors'],result['pageErrors']
         assert not result['blockedWrites'],result['blockedWrites']
