@@ -10,8 +10,11 @@ import shutil
 import tarfile
 
 
-def prepare(archive, expected_sha, commit, destination):
+def prepare(archive, expected_sha, commit, destination, profile="node20"):
     archive, destination = Path(archive), Path(destination)
+    profiles = {"node20": "Dockerfile", "node22": "Dockerfile.node22"}
+    if profile not in profiles:
+        raise ValueError("unsupported_runtime_profile")
     if not re.fullmatch(r"[a-f0-9]{64}", expected_sha):
         raise ValueError("sha256_required")
     if not re.fullmatch(r"[a-f0-9]{40}", commit):
@@ -74,10 +77,12 @@ def prepare(archive, expected_sha, commit, destination):
             if digest.hexdigest() != expected[relative]["sha256"]:
                 raise ValueError("runtime_file_hash_mismatch:" + relative)
             os.chmod(target, 0o755 if member.mode & 0o111 else 0o644)
-        dockerfile = Path(__file__).with_name("Dockerfile").read_text()
+        dockerfile = Path(__file__).with_name(profiles[profile]).read_text()
         (destination / "Dockerfile").write_text(dockerfile + f'\nLABEL org.opencontainers.image.revision="{commit}"\n')
         (destination / ".dockerignore").write_text("**\n!Dockerfile\n!runtime/\n!runtime/**\n")
         receipt = {"source_commit": commit, "runtime_sha256": expected_sha,
+                   "runtime_profile": profile,
+                   "dockerfile_sha256": hashlib.sha256(dockerfile.encode()).hexdigest(),
                    "verified_files": len(files), "runtime_bytes": total,
                    "context": str(destination.resolve()), "deployed": False}
         (destination / "context-receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
@@ -88,5 +93,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     for name in ("archive", "sha256", "commit", "destination"):
         parser.add_argument("--" + name, required=True)
+    parser.add_argument("--profile", choices=("node20", "node22"), default="node20")
     args = parser.parse_args()
-    print(json.dumps(prepare(args.archive, args.sha256, args.commit, args.destination)))
+    print(json.dumps(prepare(args.archive, args.sha256, args.commit, args.destination, args.profile)))

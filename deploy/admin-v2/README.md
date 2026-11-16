@@ -8,6 +8,22 @@ Produzir um runtime da composição final, verificar o manifesto e os hashes ant
 de montar o contexto `runtime/`. Nunca incluir `.env`, banco, chaves ou dados reais.
 Não reutilizar como runtime final o artefato f555 após alterar fontes.
 
+## Perfis de runtime e qualificação
+
+`prepare_context.py` mantém `--profile node20` como padrão. Para qualificar Node
+22.23.5 isoladamente, escolher explicitamente `--profile node22`; o recibo
+registra o perfil e o hash do Dockerfile. Ambos fixam a base por digest. Selecionar
+um perfil prepara arquivos e não publica nem comprova a compatibilidade do app.
+Verificar a versão efetiva de Node/npm, bibliotecas nativas, backend, PDF e UI
+na imagem resultante antes de promover o artefato exato. Preservar a imagem20,
+configuração e proveniência anteriores para rollback sem restaurar banco antigo.
+
+Em builds, executar npm a partir de `site/` com `NPM_CONFIG_CACHE` e `TMPDIR`
+apontando para diretórios criados dentro do workspace do job. Sobrescrever também
+`NPM_CONFIG_TMP` evita o caminho legado de `.npmrc`; `TMPDIR` controla os processos
+filhos. A configuração herdada será tratada separadamente, sem misturar mudanças
+da aplicação à qualificação. Instalar pelo lock com npm10.9.9, sem atualizar dependências.
+
 O container usa rede do host somente para acessar o PostgreSQL existente em
 loopback, sem reconfigurá-lo. Não há publicação de portas e o Next escuta apenas
 127.0.0.1. O processo, filesystem, imagem, limites e ciclo de release são próprios.
