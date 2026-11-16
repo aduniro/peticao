@@ -1,0 +1,478 @@
+{
+  "schema_version": 1,
+  "revision": 5,
+  "issued_at": "2026-11-16T08:29:30.639600+00:00",
+  "release_status": "FROZEN_FINAL_CIVO_SOURCE_PROFILES",
+  "overall_goal_complete": false,
+  "host": "peticao-civo",
+  "arch": "linux-amd64",
+  "profile_prefix": "/srv/peticao-work/toolchains/sancionaintegral-20261116",
+  "canonical_manifests": {
+    "package.json": {
+      "source": "/mnt/apps/peticao-final/peticao-release/site/package.json",
+      "sha256": "f6fbb28c2b5745b3b02655d8de3eda16cccbca1acaeaabc5ee17834c5ba0d6bd",
+      "bytes": 1772
+    },
+    "package-lock.json": {
+      "source": "/mnt/apps/peticao-final/peticao-release/site/package-lock.json",
+      "sha256": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
+      "bytes": 65878
+    },
+    "signing-requirements.txt": {
+      "source": "/mnt/apps/peticao-final/peticao-release/tools/signing/requirements.txt",
+      "sha256": "51ef9b54203400af99012562207a2b23671b2453482355aee8deaac620acee05",
+      "bytes": 275
+    },
+    "pdfjs-assets.lock.json": {
+      "source": "/mnt/apps/peticao-final/peticao-release/site/scripts/pdfjs-assets.lock.json",
+      "sha256": "da3a1d711714a7684e702312087c02b080acdb2bfdc1212d8543b3f455343922",
+      "bytes": 39296
+    }
+  },
+  "profiles": {
+    "node-runtime": {
+      "ready": true,
+      "node": "22.23.5",
+      "npm": "10.9.9",
+      "origin_artifact": {
+        "name": "node-v22.23.5-linux-x64.tar.xz",
+        "url": "https://nodejs.org/dist/v22.23.5/node-v22.23.5-linux-x64.tar.xz",
+        "sha256": "cdeb8670a0c81f51b4dc4ac61919f9b1ad917b304bf8221eb939570663d240f8",
+        "bytes": 31062912,
+        "path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/artifacts/node-v22.23.5-linux-x64.tar.xz",
+        "verified": true
+      },
+      "effective_path": "/opt/peticao/node-v22.23.5/bin/node",
+      "node_binary_sha256": "2f822d544601dfff107f57d945b649d15c5bf6302595735a6bd9cdc7ee9669bd",
+      "checks": "CORE-SMOKE.json"
+    },
+    "python-runtime": {
+      "ready": true,
+      "version": "3.12.3",
+      "distribution": "Astralpython-build-standalone20240415gnu-x86_64basic",
+      "origin_artifact": {
+        "name": "cpython-3.12.3+20240415-x86_64-unknown-linux-gnu-install_only.tar.gz",
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20240415/cpython-3.12.3%2B20240415-x86_64-unknown-linux-gnu-install_only.tar.gz",
+        "sha256": "a73ba777b5d55ca89edef709e6b8521e3f3d4289581f174c8699adfb608d09d6",
+        "bytes": 67368051,
+        "path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/artifacts/cpython-3.12.3+20240415-x86_64-unknown-linux-gnu-install_only.tar.gz",
+        "verified": true
+      },
+      "effective_path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/python/cpython-3.12.3-linux-x86_64-gnu/bin/python3",
+      "portable_between_compatible_linux_hosts": true,
+      "venv_recreated_each_host": true,
+      "native_python_untouched": true,
+      "checks": "CORE-SMOKE.json"
+    },
+    "node-app-dependencies": {
+      "ready": true,
+      "path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies",
+      "canonical_lock_sha256": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
+      "lock_entries": 152,
+      "installed_host_metadata": 102,
+      "nonhost_variants_n_a": 50,
+      "missing_required_on_host": 0,
+      "native_libraries_imported": true,
+      "framework_versions": {
+        "next": "14.2.35",
+        "react": "18.3.1",
+        "pg": "8.23.1",
+        "typescript": "5.9.3",
+        "tsx": "4.23.15"
+      },
+      "checks": "CORE-SMOKE.json",
+      "supplement_required": "embedded-pg18-compat when running embedded development DB; browser-only dependencies tested via browser-library-smoke",
+      "extended_checks": [
+        "EMBEDDED-PG18-PORTABLE-SMOKE.json",
+        "BROWSER-LIBRARY-SMOKE.json"
+      ]
+    },
+    "pdf-browser-assets": {
+      "ready": true,
+      "version": "6.5.438",
+      "files_verified": 201,
+      "canonical_lock_sha256": "da3a1d711714a7684e702312087c02b080acdb2bfdc1212d8543b3f455343922",
+      "origin_archive_integrity": "sha512-vg8Pw1x+AFKy4AMDvhuWl5cOYV8d698UoEANoFFhc79hqXDnZQqnOXoxw3HG907WHOg1JYOvLhP756boddFxpA==",
+      "transport_archive": "/srv/peticao-work/toolchains/sancionaintegral-20261116/artifacts/pdfjs-6.5.438-verified-files.tar.gz",
+      "transport_sha256": "7c9ce05df0c2a863ec7231d1eae1510df2b2a4c40528871cb6fe9c63a8982fc2",
+      "effective_path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/pdf-assets/6.5.438",
+      "not_npm_SSR_dependency": true
+    },
+    "coordination-databases": {
+      "ready": true,
+      "role": "Supplementalcoordinationprofile,notmainappdependency",
+      "owner_delivery": {
+        "profile": "coordination-databases",
+        "scope": "supplemental_not_app_or_A1",
+        "owner_thread": "01a1e313-ac26-7f40-854c-ab475c3845e3",
+        "requirements_lock_source": "/mnt/apps/peticao-final/_ops/databases-coordenacao-20261116/requirements.lock",
+        "requirements_lock_sha256": "b347248384fe576acbaaff6e83f202394175fe3c7c1c8ea4f5044e52daa7b6a4",
+        "requirements_txt_sha256": "03773496f39cb86eafc8e92217c5137c75815f5a2b6f16bdf33a8b436da44433",
+        "versions": {
+          "psycopg": "3.2.13",
+          "psycopg-binary": "3.2.13",
+          "typing_extensions": "4.16.0"
+        },
+        "installation": "Databasesowner reported12/12root+userhosts PASS; separateHOMEprofile,notinstalledbythisexecutor",
+        "app_A1_locks_modified": false,
+        "historical_release_id": "52edce02f7cc58a06e3e"
+      },
+      "proof_scope": "Ownerreported12/12homologation;nofurtherNeontesthere",
+      "operational_code_release": "Independent owner review/rollout may supersede historical release; this baseline freezes dependency lockb347 only, does not authorize adoption or dispatch."
+    },
+    "signing-a1": {
+      "ready": true,
+      "canonical_requirements_sha256": "51ef9b54203400af99012562207a2b23671b2453482355aee8deaac620acee05",
+      "resolved_lock": "a1-requirements.lock",
+      "resolved_lock_sha256": "42f71ad8cb6e3aaca01e177f8e002e8c74098ca962b4f7cbfb0314a92e450d2d",
+      "effective_oscrypto": "1.3.0+upstream-d5f3437ed24257895ae1edd9e503cfb352e635a8",
+      "overlay_manifest": {
+        "upstream_commit": "d5f3437ed24257895ae1edd9e503cfb352e635a8",
+        "files": {
+          "_libcrypto_cffi.py": {
+            "before": "5137e131c185f45dbe395104a6b42d12b458e4b7be039565e346fa0c7276466f",
+            "after": "4f03d6f938e3b98ff10545dec6ddc6594f45f520d1685586350d22a208ee9f70"
+          },
+          "_libcrypto_ctypes.py": {
+            "before": "5d9146415e4d521667bd6f6b54296472e344bdcbe583b24e8b992150f7f5977f",
+            "after": "89a0e05a1b03077d1468a0f6c3f49409dfbe01609c65cee94af11e395c58eee4"
+          }
+        },
+        "patch_sha256": "1fa74f9a886e21f87716d29d79d14208c8475742ea2cf975087ae22ee6473aad",
+        "scope": "three regex statements per file; exact wheel-specific diff; canonical pins and wheel preserved"
+      },
+      "overlay_recipe": "apply-oscrypto-overlay.py",
+      "overlay_recipe_sha256": "b2f36ed5b39633a9714c6baefa4eeee3bc1709e06b12f6e831199c189510a580",
+      "checks": [
+        "OSCRYPTO-OVERLAY-CHECK.json",
+        "A1-SYNTHETIC-SIGN-VERIFY.json"
+      ],
+      "synthetic_only": true,
+      "not_icp_homologation": true,
+      "destination_requirement": "Recreate venv using portable Python3.12.3; install exact hash lock; apply reviewed failclosed overlay; repeat imports/pipcheck and synthetic DEV signing on destination. No native OpenSSL/Python or application changes."
+    },
+    "qa-js": {
+      "ready": true,
+      "playwright": "1.62.1",
+      "browser": "Chromium151.0.7922.34",
+      "browser_revision": 1234,
+      "evidence": {
+        "rc": 0,
+        "out": {
+          "packageVersion": "1.62.1",
+          "browserVersion": "151.0.7922.34",
+          "executable": "/srv/peticao-work/toolchains/sancionaintegral-20261116/browsers/chromium-1234/chrome-linux64/chrome",
+          "dom": true,
+          "screenshot": true,
+          "pdf": true
+        },
+        "err": "",
+        "lock_sha256": "efbbdb9c373245714256e3acdc49d243b2e7e8ee52b40720de68b6e252dbddb7",
+        "browsers_json_sha256": "f306eed529599b1eaf2f8a85db9de2b23e1a3fe36c2b66434b7c9434fb627a99"
+      },
+      "binary_sha256": {
+        "browsers/ffmpeg-1011/ffmpeg-linux": "460d44f3416005662f528d4b92e7b94ace924e8a0288106d3803b73c56eaadc8",
+        "browsers/chromium-1234/chrome-linux64/chrome": "0b20b130e7edd9dd51873be867761295fe0cfad490c2b9a64f95bd3cfc08fa71",
+        "browsers/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell": "e11fc9ce65c96313476f7ee9844b6fb6a9220fb048693cfe9eee00acf4170a9f"
+      },
+      "checks": "QA-SMOKE.json",
+      "scope": "Synthetic DOM/screenshot/PDF; no app QA or heavy build",
+      "browser_transport": "Install chromium using pinned Playwright CLI and an isolated PLAYWRIGHT_BROWSERS_PATH; verify browsers.json and binaries against manifest; retain native libraries."
+    },
+    "qa-python": {
+      "ready": true,
+      "playwright": "1.62.0",
+      "browser": "Chromium151.0.7922.34",
+      "browser_revision": 1234,
+      "evidence": {
+        "rc": 0,
+        "out": {
+          "packageVersion": "1.62.0",
+          "browserVersion": "151.0.7922.34",
+          "executable": "/srv/peticao-work/toolchains/sancionaintegral-20261116/browsers/chromium-1234/chrome-linux64/chrome",
+          "dom": true,
+          "screenshot": true,
+          "pdf": true
+        },
+        "err": "",
+        "lock_sha256": "eb63f78476cdd0e953f7d1fdbc133849f56d92248df51ddd0264704182b0b895",
+        "browsers_json_sha256": "f306eed529599b1eaf2f8a85db9de2b23e1a3fe36c2b66434b7c9434fb627a99"
+      },
+      "binary_sha256": {
+        "browsers/ffmpeg-1011/ffmpeg-linux": "460d44f3416005662f528d4b92e7b94ace924e8a0288106d3803b73c56eaadc8",
+        "browsers/chromium-1234/chrome-linux64/chrome": "0b20b130e7edd9dd51873be867761295fe0cfad490c2b9a64f95bd3cfc08fa71",
+        "browsers/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell": "e11fc9ce65c96313476f7ee9844b6fb6a9220fb048693cfe9eee00acf4170a9f"
+      },
+      "checks": "QA-SMOKE.json",
+      "scope": "Synthetic DOM/screenshot/PDF; no app QA or heavy build",
+      "browser_transport": "Install chromium using pinned Playwright CLI and an isolated PLAYWRIGHT_BROWSERS_PATH; verify browsers.json and binaries against manifest; retain native libraries."
+    },
+    "k3s-dev": {
+      "ready": true,
+      "release": "K3S-RELEASE-v2.json",
+      "sha256": "7ec4af43141c98d16c6c4e11883a4435b21bacbe4d7bb43aeb840e04bdafad75",
+      "independent_private_cluster": true,
+      "no_extra_cluster_install_requested_on_other_hosts": true,
+      "checks": [
+        "K3S-FINAL-AUDIT-v2.json",
+        "K3S-WORKLOAD-SMOKE-v2.json",
+        "K3S-ACCESS.json"
+      ]
+    },
+    "embedded-pg18-compat": {
+      "ready": true,
+      "canonical_npm_package": "18.4.0-beta.17",
+      "actual_postgres_binary": "18.4",
+      "compatibility": {
+        "package": "libicu60",
+        "version": "60.2-3ubuntu3.2",
+        "url": "https://archive.ubuntu.com/ubuntu/pool/main/i/icu/libicu60_60.2-3ubuntu3.2_amd64.deb",
+        "sha256": "f01f61f57e63dc905e02e6441d10370fe0c79e43e70e6f5fe24b342fd2633209",
+        "bytes": 8050316,
+        "signed_repository": "bionic-updates",
+        "inrelease_gpgv_pass": true,
+        "packages_xz_sha256": "c0ad42b92b0efa5f65fb51f56b1d39e12330982a5e85304fe152db782a985eb0",
+        "prefix": "/srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60",
+        "LD_LIBRARY_PATH": "/srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu",
+        "postgres_version": "postgres (PostgreSQL) 18.4",
+        "ldd": "\tlinux-vdso.so.1 (0x00007fffb5388000)\n\tlibxml2.so.2 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/bin/../lib/libxml2.so.2 (0x0000763a54a00000)\n\tlibssl.so.1.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/bin/../lib/libssl.so.1.1 (0x0000763a54600000)\n\tlibcrypto.so.1.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/bin/../lib/libcrypto.so.1.1 (0x0000763a54000000)\n\tlibz.so.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/bin/../lib/libz.so.1 (0x0000763a53c00000)\n\tlibpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x0000763a55a3f000)\n\tlibrt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x0000763a55a3a000)\n\tlibdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x0000763a55a35000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x0000763a5594c000)\n\tlibicui18n.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicui18n.so.60 (0x0000763a53600000)\n\tlibicuuc.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicuuc.so.60 (0x0000763a53200000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x0000763a52e00000)\n\tliblzma.so.5 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/bin/../lib/liblzma.so.5 (0x0000763a52a00000)\n\t/lib64/ld-linux-x86-64.so.2 (0x0000763a55a57000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x0000763a52600000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x0000763a5591c000)\n\tlibicudata.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicudata.so.60 (0x0000763a50a00000)\n",
+        "native_os_packages_unchanged": true,
+        "dpkg_install_not_used": true
+      },
+      "smoke": {
+        "node_executable": "/srv/peticao-work/toolchains/sancionaintegral-20261116/runtimes/node-v22.23.5-linux-x64/bin/node",
+        "private_libpq": "/srv/peticao-work/toolchains/sancionaintegral-20261116/compat/embedded-pg18-sonames/libpq.so.5",
+        "private_libpq_target_sha256": "fc25b6ab756b056aba0c4df23d5504db65fa9125ea309ceafb199bc546d785ee",
+        "closure": {
+          "postgres": "\tlinux-vdso.so.1 (0x00007ffd33f89000)\n\tlibxml2.so.2 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libxml2.so.2 (0x000071c6dc400000)\n\tlibssl.so.1.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libssl.so.1.1 (0x000071c6dc000000)\n\tlibcrypto.so.1.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libcrypto.so.1.1 (0x000071c6dba00000)\n\tlibz.so.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libz.so.1 (0x000071c6db600000)\n\tlibpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x000071c6dd346000)\n\tlibrt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x000071c6dd341000)\n\tlibdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x000071c6dd33c000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x000071c6dc317000)\n\tlibicui18n.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicui18n.so.60 (0x000071c6db000000)\n\tlibicuuc.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicuuc.so.60 (0x000071c6dac00000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x000071c6da800000)\n\tliblzma.so.5 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/liblzma.so.5 (0x000071c6da400000)\n\t/lib64/ld-linux-x86-64.so.2 (0x000071c6dd35e000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x000071c6da000000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x000071c6dd30c000)\n\tlibicudata.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicudata.so.60 (0x000071c6d8400000)\n",
+          "initdb": "\tlinux-vdso.so.1 (0x00007ffc6d7d6000)\n\tlibpq.so.5 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/embedded-pg18-sonames/libpq.so.5 (0x000079077bc00000)\n\tlibicuuc.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicuuc.so.60 (0x000079077b800000)\n\tlibpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x000079077c408000)\n\tlibrt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x000079077c403000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x000079077c318000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x000079077b400000)\n\tlibssl.so.1.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libssl.so.1.1 (0x000079077b000000)\n\tlibcrypto.so.1.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libcrypto.so.1.1 (0x000079077aa00000)\n\tlibicudata.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicudata.so.60 (0x0000790778e00000)\n\tlibdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x000079077c311000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x0000790778a00000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x000079077c2e3000)\n\t/lib64/ld-linux-x86-64.so.2 (0x000079077c41e000)\n",
+          "pg_ctl": "\tlinux-vdso.so.1 (0x00007ffdc47f6000)\n\tlibpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007aa3a9415000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007aa3a8e00000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007aa3a942b000)\n"
+        },
+        "native_libpq_masking_excluded": true,
+        "version": "postgres (PostgreSQL) 18.4",
+        "sql": {
+          "version": "PostgreSQL 18.4 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0, 64-bit",
+          "sql_sum": 55
+        },
+        "unix_socket_only": true,
+        "server_stopped": true,
+        "synthetic_data_removed": true
+      },
+      "recipe": "install-embedded-pg-compat-v2.py",
+      "portable_smoke": "smoke-embedded-pg18-v3.py",
+      "LD_LIBRARY_PATH_global": false,
+      "wrappers": [
+        "with-embedded-pg18",
+        "postgres18",
+        "initdb18",
+        "pg_ctl18"
+      ],
+      "no_OS_OpenSSL_libc_replacement": true,
+      "proof_scope": "Isolated synthetic DEV SQL only; not app DB or backup workflow qualification",
+      "private_install_receipt": {
+        "revision": 5,
+        "canonical_npm_package": "18.4.0-beta.17",
+        "private_libpq_path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/compat/embedded-pg18-sonames/libpq.so.5",
+        "private_libpq_target": "/srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libpq.so.5.18",
+        "bundled_library_pins": {
+          "libpq.so.5.18": "fc25b6ab756b056aba0c4df23d5504db65fa9125ea309ceafb199bc546d785ee",
+          "libssl.so.1.1": "85582cf361e8942ea6602a633d6fe33ebfd404edebaa907d060d9c705e86c3d4",
+          "libcrypto.so.1.1": "89a2227a7731df9a95135e5d43d0c1b73af01c45842e482eb4a1e16121b1b6aa"
+        },
+        "icu_pins": {
+          "libicui18n.so.60.2": "0e0e144ee7e0251725cb736e600b05ba16cff8fd7e63b6b18fe0a3d57b09de7f",
+          "libicuuc.so.60.2": "608238deca39ccd769b87b6835d353c017dc5f01a79c7e8bb753000bb8c08a9a",
+          "libicudata.so.60.2": "e03e645c9a71a5c173b356f1183e38f70001d417597f3459851a1c1d3c38bd5e"
+        },
+        "icu_deb_sha256": "f01f61f57e63dc905e02e6441d10370fe0c79e43e70e6f5fe24b342fd2633209",
+        "LD_LIBRARY_PATH": "/srv/peticao-work/toolchains/sancionaintegral-20261116/compat/embedded-pg18-sonames:/srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu:/srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib",
+        "scope": "Only PG command and descendants; never global/OS/A1",
+        "closure": {
+          "postgres": "\tlinux-vdso.so.1 (0x00007fffd4f9b000)\n\tlibxml2.so.2 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libxml2.so.2 (0x000078f55c800000)\n\tlibssl.so.1.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libssl.so.1.1 (0x000078f55c400000)\n\tlibcrypto.so.1.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libcrypto.so.1.1 (0x000078f55be00000)\n\tlibz.so.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libz.so.1 (0x000078f55ba00000)\n\tlibpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x000078f55d77b000)\n\tlibrt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x000078f55d776000)\n\tlibdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x000078f55d771000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x000078f55c717000)\n\tlibicui18n.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicui18n.so.60 (0x000078f55b400000)\n\tlibicuuc.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicuuc.so.60 (0x000078f55b000000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x000078f55ac00000)\n\tliblzma.so.5 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/liblzma.so.5 (0x000078f55a800000)\n\t/lib64/ld-linux-x86-64.so.2 (0x000078f55d793000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x000078f55a400000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x000078f55d741000)\n\tlibicudata.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicudata.so.60 (0x000078f558800000)\n",
+          "initdb": "\tlinux-vdso.so.1 (0x00007fff85f03000)\n\tlibpq.so.5 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/embedded-pg18-sonames/libpq.so.5 (0x000074cfc5000000)\n\tlibicuuc.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicuuc.so.60 (0x000074cfc4c00000)\n\tlibpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x000074cfc5726000)\n\tlibrt.so.1 => /lib/x86_64-linux-gnu/librt.so.1 (0x000074cfc5721000)\n\tlibm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x000074cfc5636000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x000074cfc4800000)\n\tlibssl.so.1.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libssl.so.1.1 (0x000074cfc4400000)\n\tlibcrypto.so.1.1 => /srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies/node_modules/@embedded-postgres/linux-x64/native/lib/libcrypto.so.1.1 (0x000074cfc3e00000)\n\tlibicudata.so.60 => /srv/peticao-work/toolchains/sancionaintegral-20261116/compat/icu60/usr/lib/x86_64-linux-gnu/libicudata.so.60 (0x000074cfc2200000)\n\tlibdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x000074cfc562f000)\n\tlibstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x000074cfc1e00000)\n\tlibgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x000074cfc53d2000)\n\t/lib64/ld-linux-x86-64.so.2 (0x000074cfc573c000)\n",
+          "pg_ctl": "\tlinux-vdso.so.1 (0x00007fff94d64000)\n\tlibpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007c4dfdb83000)\n\tlibc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007c4dfd400000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007c4dfdb99000)\n"
+        },
+        "native_libpq_masking_excluded": true,
+        "no_node_modules_or_OS_changes": true,
+        "full_local_sql_start_stop_smoke_required": true
+      },
+      "native_libpq_required": false,
+      "only_private_PQ_accepted": true,
+      "negative_native_mask_test": "PG18-NATIVE-MASK-NEGATIVE-v5.json",
+      "canonical_NPM_artifact": {
+        "version": "18.4.0-beta.17",
+        "resolved": "https://registry.npmjs.org/@embedded-postgres/linux-x64/-/linux-x64-18.4.0-beta.17.tgz",
+        "integrity": "sha512-jVw/MdDtIX/vICH/DKIe6/mHpiCggdx6QVyza4vt/NbcZFsL0KhwglF6F1Koqx3gRBZ9XtN+vi63EsqSyqOSxA==",
+        "cpu": [
+          "x64"
+        ],
+        "dev": true,
+        "hasInstallScript": true,
+        "optional": true,
+        "os": [
+          "linux"
+        ],
+        "engines": {
+          "node": ">=16"
+        }
+      }
+    },
+    "docker-native": {
+      "ready": true,
+      "scope": "Civo native client/plugins/engine metadata and isolated synthetic container test; other hosts preserve native daemon and record explicit exceptions",
+      "checks": {
+        "versions": {
+          "docker_client": "29.9.3",
+          "docker_server": "29.9.3",
+          "compose": "5.7.1",
+          "buildx": "github.com/docker/buildx v0.39.0 360040a78d6113dc84e5d4dcdf0f438e1be7a41f"
+        },
+        "synthetic_container_pass": true,
+        "synthetic_image": "docker.io/library/busybox@sha256:66a6306db78bf2dbf3487f293aa8d6990d8e506fdffab9cc43fe422becf886e4",
+        "containers_before_after_equal": true,
+        "civo_administrative_access": "existing sudo -n docker",
+        "civo_server_version": "29.9.3",
+        "daemon_restart": false
+      },
+      "provenance": "NATIVE-PROVENANCE.json",
+      "daemon_not_restarted": true,
+      "engine_upgrade_not_authorized_on_other_hosts": true
+    },
+    "pg17-backup-supplement": {
+      "ready": true,
+      "checks": {
+        "profile": "pg17-backup-supplement",
+        "image": "docker.io/library/postgres@sha256:99d1a998c76487d3abb48b141505bda5dcf8089c0c4cd7be40f75de314fa32f0",
+        "origin": "https://hub.docker.com/_/postgres",
+        "resolved_tag": "17-bookworm",
+        "versions": {
+          "pg_dump": "pg_dump (PostgreSQL) 17.12 (Debian 17.12-1.pgdg12+1)",
+          "pg_restore": "pg_restore (PostgreSQL) 17.12 (Debian 17.12-1.pgdg12+1)",
+          "psql": "psql (PostgreSQL) 17.12 (Debian 17.12-1.pgdg12+1)"
+        },
+        "native_pg16_preserved": true,
+        "no_server_started": true,
+        "no_real_database_access": true,
+        "compatibility_scope": "PG17 backup supplement; stdout/stdin only; clients cannot dump a newer major server. Production credentials and workflow unchanged.",
+        "wrappers": [
+          "/srv/peticao-work/toolchains/sancionaintegral-20261116/bin/pg_dump17",
+          "/srv/peticao-work/toolchains/sancionaintegral-20261116/bin/pg_restore17"
+        ],
+        "containers_before_after_equal": true
+      },
+      "wrappers": [
+        "pg_dump17",
+        "pg_restore17"
+      ],
+      "root_and_user_wrapper_checks": "SUPPLEMENT-WRAPPERS.json",
+      "real_backup_restore_not_tested": true,
+      "native_pg16_preserved": true
+    }
+  },
+  "ready_profiles": [
+    "node-runtime",
+    "python-runtime",
+    "node-app-dependencies",
+    "pdf-browser-assets",
+    "coordination-databases",
+    "signing-a1",
+    "qa-js",
+    "qa-python",
+    "embedded-pg18-compat",
+    "docker-native",
+    "pg17-backup-supplement",
+    "k3s-dev"
+  ],
+  "pending_profiles": [],
+  "strict_consumer_rule": "Apply relevant ready profiles only within destination scope, delta from prior immutable revision; require destination functional smoke. V3 Civo source qualification includes explicit ICU60 and oscrypto compatibility, not literal nativeOS/engine equality; SP/WAHA CLIonly; no extra K3s installs.",
+  "install_contract_path": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/agents/node-infra-20261116/civo/work/STANDARDIZATION-20261116/PROFILE-INSTALL-CONTRACT-v5.json",
+  "install_contract_sha256": "7c07037f28c32fcd12d0756a2500f61077cf341821ab23ba301da766aec561a2",
+  "before_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/agents/node-infra-20261116/civo/work/STANDARDIZATION-20261116/LIVE-ROOT.json",
+  "core_smoke_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/agents/node-infra-20261116/civo/work/STANDARDIZATION-20261116/CORE-SMOKE.json",
+  "core_smoke_sha256": "83df87d4b5876f518acc6426ef5969bb3ebad811d4874814b42689338d9bc91b",
+  "frozen_sources_are_public_manifests_artifacts_only": true,
+  "production_legacy_profile": "PubliclegacyNode20.19.2/PG17backup and sourcelegacyhashes remainseparate; donotoverwriteSPsource/runtime/DATABASE_URL",
+  "production_pdf_signing_stays_inside_SP_app": true,
+  "root_credentials_certificates_not_in_bundle": true,
+  "own_host_fence": 873,
+  "own_work_fence": 844,
+  "supersedes_ready_scope_revision": 4,
+  "transport_recipe_files": {
+    "apply-oscrypto-overlay.py": "b2f36ed5b39633a9714c6baefa4eeee3bc1709e06b12f6e831199c189510a580",
+    "OSCRYPTO-OVERLAY-MANIFEST.json": "052f3a64d5f12994e490c0fe215a2dac5fd73a546fab1719e652fda25436ec40",
+    "oscrypto-1.3.0-to-upstream-d5f3437.patch": "1fa74f9a886e21f87716d29d79d14208c8475742ea2cf975087ae22ee6473aad",
+    "a1-requirements.lock": "42f71ad8cb6e3aaca01e177f8e002e8c74098ca962b4f7cbfb0314a92e450d2d",
+    "qa-python.lock": "eb63f78476cdd0e953f7d1fdbc133849f56d92248df51ddd0264704182b0b895",
+    "qa-js-package.json": "c847718a3112a2f379cd7c83dd8ec6c69413b6c0915a08f4eb2adb44dd0f4c0d",
+    "qa-js-package-lock.json": "efbbdb9c373245714256e3acdc49d243b2e7e8ee52b40720de68b6e252dbddb7"
+  },
+  "source_host_qualification": "Civo source passes private-PQ closure plus functional PG tests; all destinations must repeat; V1\u2013V4hostlocal PG proofs did not prove library independence.",
+  "distributed_goal_complete": false,
+  "host_preparation_evidence_complete": true,
+  "overall_goal_scope_note": "Distributed rollout remains owned by Infra; this manifest qualifies the Civo source host. Thread completion audited separately.",
+  "comparison_matrix": {
+    "path": "BEFORE-AFTER-CIVO-v5.json",
+    "sha256": "6a7faf482cabae475ef42a3bbf05bed9407b9eb91a0dcd040e7d8a73dddaec60",
+    "rows": 210
+  },
+  "immutable_predecessors": {
+    "BASELINE-FROZEN-v1.json": "382f2797f05403484a88e50f0c276c3db1ba4c66056ec89aeeb97cf7373af49e",
+    "BASELINE-FROZEN-v2.json": "390707a964045443a1b5f2fcbdcf82f01c75b702910cadef70fad730666cd378",
+    "BASELINE-FROZEN-v3.json": "037c2a8f3ede32904ef576185b5542cb6d08f7c9a73685dded32e10e1d31fddd",
+    "BASELINE-FROZEN-v4.json": "4bf8e8780e49b333985c18b73b3d29be5147b2a99329b63a305f5a9c208cc9b6"
+  },
+  "native_exceptions": [
+    {
+      "component": "OS Python/libc/OpenSSL",
+      "decision": "Retain native distribution/versions/consumers; project Python PBS3.12.3 isolated; no globalpip or loader change"
+    },
+    {
+      "component": "Dockerengine",
+      "decision": "Civo29.9.3observed and preserved; other hosts record existing engine and compatibility; no restart/upgrade implied by baseline"
+    },
+    {
+      "component": "PGclients",
+      "decision": "Civo native16.15 retained; supplementary17.12 client image for PG17 consumers; embedded18.4 private runtime with ICU60; no production DB connection/change"
+    },
+    {
+      "component": "productionpubliclegacy",
+      "decision": "SP Node20.19.2/PG17backup and legacy source remain independent profile; application/PDF/signing staySP"
+    },
+    {
+      "component": "DatabasesCLI",
+      "decision": "Separate owner HOMEprofile; dependency lockb347 pinned, operational CLIrelease owner-controlled"
+    }
+  ],
+  "recipe_files": {
+    "apply-oscrypto-overlay.py": "b2f36ed5b39633a9714c6baefa4eeee3bc1709e06b12f6e831199c189510a580",
+    "OSCRYPTO-OVERLAY-MANIFEST.json": "052f3a64d5f12994e490c0fe215a2dac5fd73a546fab1719e652fda25436ec40",
+    "oscrypto-1.3.0-to-upstream-d5f3437.patch": "1fa74f9a886e21f87716d29d79d14208c8475742ea2cf975087ae22ee6473aad",
+    "a1-requirements.lock": "42f71ad8cb6e3aaca01e177f8e002e8c74098ca962b4f7cbfb0314a92e450d2d",
+    "qa-python.lock": "eb63f78476cdd0e953f7d1fdbc133849f56d92248df51ddd0264704182b0b895",
+    "qa-js-package.json": "c847718a3112a2f379cd7c83dd8ec6c69413b6c0915a08f4eb2adb44dd0f4c0d",
+    "qa-js-package-lock.json": "efbbdb9c373245714256e3acdc49d243b2e7e8ee52b40720de68b6e252dbddb7",
+    "install-embedded-pg-compat-v2.py": "d3e3bdd08b354b216b12e406a712b857b4936f6f1f552162928e135c4752a95f",
+    "smoke-embedded-pg18-v3.py": "4e23713cedd1e4e67511b3031f15176024a0f25bba18d1733fee39c724bee23c"
+  },
+  "evidence_sha256": {
+    "CORE-SMOKE.json": "83df87d4b5876f518acc6426ef5969bb3ebad811d4874814b42689338d9bc91b",
+    "A1-SYNTHETIC-SIGN-VERIFY.json": "a7a5ae8e067853b6f0e1786324c96ec6ef8d973f6443c5307242775cd4a9f489",
+    "OSCRYPTO-OVERLAY-CHECK.json": "e42e3af0dafdc5f0d618e2ff0f67d28ee1ca63fe4dfbcfc9fae4f9e67761d8a0",
+    "OVERLAY-FAILCLOSED.json": "71b33231c4a671266be24f54f82bf7bf38ffb1dbff38d22fe06948e6fa796a48",
+    "QA-SMOKE.json": "d768d04dfd923c2598c380bc17001df97b0082d63e09161c31d77ade45a65329",
+    "BROWSER-LIBRARY-SMOKE.json": "d5c57c140eb329a768a15b7dbd908a129d5d368d17d4c5dd34a174879d09aa6d",
+    "EMBEDDED-PG-ICU60.json": "37c3dedfbf9e2e985772b18a6fe12e8858d589956fc87f1aca767a74eb3ec6b1",
+    "EMBEDDED-PG18-PORTABLE-SMOKE.json": "e3cf77f185e66e2caba67dfbd1e58215ed6b380e359e64d6bb66a45130454667",
+    "DOCKER-SMOKE.json": "43560bed49913777c3a6f8f1ddfef7380dc170dec85a2a676178e9fee78c4a56",
+    "PG17-BACKUP-SMOKE.json": "a95fdf821a30d183d7b09330031733cee132d0f1315e73b625317141f96dbc9f",
+    "SUPPLEMENT-WRAPPERS.json": "3391e1023edeb82b1a44b75aaef81914817655cb4002089f54cdb98e9205ed46",
+    "EFFECTIVE-PROFILES.json": "7dd36f5f0753cefdbdae456e1c5c07956fb5930ff1e0547920e26dd7f77526fb",
+    "CANONICAL-MANIFESTS-AFTER.json": "2616c5fe5e5052ddddcb666f60ce392aac218e6c17a133205fb55919b4533a9f",
+    "NATIVE-PROVENANCE.json": "4e6b5c5fae749b41f416d410c47dd892a769248f9c4235e3e31aeb08b825c26e",
+    "EMBEDDED-PG18-PORTABLE-SMOKE-v2.json": "e3cf77f185e66e2caba67dfbd1e58215ed6b380e359e64d6bb66a45130454667",
+    "EMBEDDED-PG18-PRIVATE-INSTALL-v5.json": "21c154d63d5ba2dcd2a495c574438c1f998ba43a576e8c5a705cc6e2a8d3a649",
+    "EMBEDDED-PG18-PRIVATE-SMOKE-v5.json": "0583b99e77824f278b73b68c351be47b9db27b6313c046694f4bedd2ccbb4500",
+    "PG18-NATIVE-MASK-NEGATIVE-v5.json": "70f9c2913f4738fdc84b564c2b5dfa8c55668f58df5b495665671f4f8112d87b"
+  },
+  "portability_erratum": "V1\u2013V4 Civo/other hostlocal PG tests could use native libpq16. V5 requires explicit private SONAME alias to canonical bundled libpq5.18 and private loader pool; checks all3ELFs and refuses native masking. No OS/npm changes or library download."
+}

@@ -1,0 +1,15 @@
+{
+  "upstream_commit": "d5f3437ed24257895ae1edd9e503cfb352e635a8",
+  "files": {
+    "_libcrypto_cffi.py": {
+      "before": "5137e131c185f45dbe395104a6b42d12b458e4b7be039565e346fa0c7276466f",
+      "after": "4f03d6f938e3b98ff10545dec6ddc6594f45f520d1685586350d22a208ee9f70"
+    },
+    "_libcrypto_ctypes.py": {
+      "before": "5d9146415e4d521667bd6f6b54296472e344bdcbe583b24e8b992150f7f5977f",
+      "after": "89a0e05a1b03077d1468a0f6c3f49409dfbe01609c65cee94af11e395c58eee4"
+    }
+  },
+  "patch_sha256": "1fa74f9a886e21f87716d29d79d14208c8475742ea2cf975087ae22ee6473aad",
+  "scope": "three regex statements per file; exact wheel-specific diff; canonical pins and wheel preserved"
+}
