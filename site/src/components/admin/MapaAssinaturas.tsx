@@ -16,6 +16,13 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
   const layer = useRef<L.LayerGroup | null>(null);
   const marcas = useRef<Record<string, L.CircleMarker>>({});
   const cb = useRef(onEscolher); cb.current = onEscolher;
+  function posicionarPopup(popup: L.Popup) {
+    const command = el.current?.closest(".v2-mapa-cheio")?.querySelector(".v2-mapa-comando");
+    const top = command && el.current ? Math.max(12, command.getBoundingClientRect().bottom - el.current.getBoundingClientRect().top + 12) : 12;
+    popup.options.autoPanPaddingTopLeft = L.point(12, top);
+    popup.options.autoPanPaddingBottomRight = L.point(12, window.matchMedia("(max-width: 992px)").matches ? 76 : 12);
+    popup.update();
+  }
 
   useEffect(() => {
     if (!el.current || map.current) return;
@@ -23,7 +30,12 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
     L.control.zoom({ position: "bottomleft" }).addTo(map.current);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map.current);
     layer.current = L.layerGroup().addTo(map.current);
-    const ro = new ResizeObserver(() => map.current?.invalidateSize()); ro.observe(el.current);
+    const ro = new ResizeObserver(() => {
+      map.current?.invalidateSize();
+      map.current?.eachLayer((item) => { if (item instanceof L.Popup) posicionarPopup(item); });
+    }); ro.observe(el.current);
+    const command = el.current.closest(".v2-mapa-cheio")?.querySelector(".v2-mapa-comando");
+    if (command) ro.observe(command);
     return () => { ro.disconnect(); map.current?.remove(); map.current = null; };
   }, []);
 
@@ -33,9 +45,7 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
     const lim: L.LatLngTuple[] = [];
     const adicionar = (marker: L.CircleMarker, box: HTMLElement, label: string) => {
       let teclado = false;
-      const command = el.current?.closest(".v2-mapa-cheio")?.querySelector(".v2-mapa-comando");
-      const top = command && el.current ? Math.max(12, command.getBoundingClientRect().bottom - el.current.getBoundingClientRect().top + 12) : 12;
-      marker.bindPopup(box, { autoPanPaddingTopLeft: [12, top], autoPanPaddingBottomRight: [12, window.matchMedia("(max-width: 992px)").matches ? 76 : 12] }).on("add", () => {
+      marker.bindPopup(box).on("add", () => {
         const element = marker.getElement();
         if (!element) return;
         element.setAttribute("tabindex", "0"); element.setAttribute("role", "button"); element.setAttribute("aria-label", label);
@@ -45,6 +55,7 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
           event.preventDefault(); event.stopPropagation(); teclado = true; marker.openPopup();
         });
       }).on("popupopen", () => {
+        const opened = marker.getPopup(); if (opened) posicionarPopup(opened);
         if (!teclado) return;
         const popup = marker.getPopup()?.getElement();
         const target = popup?.querySelector<HTMLElement>("button, a");

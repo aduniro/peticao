@@ -152,6 +152,16 @@ with sync_playwright() as pw:
             full_field=full.get_by_role('searchbox',name='Buscar por nome')
             expect(full_field).to_be_visible()
             ratio=full_field.evaluate(CONTRAST);assert ratio['ratio']>=4.5,ratio
+            full_marker=full.locator('.leaflet-interactive[role=button]').first
+            full_marker.focus();full_marker.press('Enter')
+            full_popup_button=full.locator('.leaflet-popup').get_by_role('button',name='Filtrar a tabela por este local')
+            expect(full_popup_button).to_be_focused();full_popup_button.click(trial=True)
+            full.set_viewport_size({'width':390 if width>992 else 1024,'height':900})
+            full_popup_button.click(trial=True)
+            full.screenshot(path=str(a.output_dir/f'fullscreen-filters-popup-resize-{width}.png'),full_page=True,animations='disabled')
+            full.locator('.leaflet-popup-close-button').click()
+            full.set_viewport_size({'width':width,'height':900})
+            passed(f'{width}: popup avoids filters opened after markers and resizes with toolbar')
             full_field.focus();full_field.press('Escape')
             expect(full_filters).to_be_focused();expect(full_filters).to_have_attribute('aria-expanded','false')
             full.screenshot(path=str(a.output_dir/f'fullscreen-{width}.png'),full_page=True,animations='disabled')
