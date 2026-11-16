@@ -1,0 +1,61 @@
+[Unit]
+Description=Private Owner console, durable operations queue and authorized mail transport
+Wants=network-online.target
+After=network-online.target tailscaled.service
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=ops-control
+Group=ops-control
+SupplementaryGroups=ops-mail
+WorkingDirectory=/opt/peticao-ops
+ExecCondition=/usr/bin/test -s /srv/ops-console/config.json
+ExecCondition=/usr/bin/test -s /srv/ops-console/auth-pepper
+ExecCondition=/usr/bin/test -s /etc/peticao-ops/control/executor.json
+ExecCondition=/usr/bin/test -s /etc/peticao-ops/control/mailersend-api-token
+ExecCondition=/usr/bin/test -s /etc/peticao-ops/control/ingress.json
+ExecStart=/usr/bin/python3 -B /opt/peticao-ops/infra/ops_service.py --console-root /srv/ops-console --executor-config /etc/peticao-ops/control/executor.json --database /srv/ops-executor/queue.sqlite --mail-token-file /etc/peticao-ops/control/mailersend-api-token --ingress-config /etc/peticao-ops/control/ingress.json --port 8767
+Environment=PYTHONUNBUFFERED=1
+UMask=0077
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+TimeoutStopSec=45
+KillMode=control-group
+CPUQuota=25%
+MemoryHigh=192M
+MemoryMax=256M
+MemorySwapMax=0
+TasksMax=32
+LimitNOFILE=256
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectProc=invisible
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+ReadWritePaths=/srv/ops-console /srv/ops-executor
+ReadOnlyPaths=/opt/peticao-ops /etc/peticao-ops/control /srv/ops-ingress /srv/ops-console/config.json /srv/ops-console/auth-pepper
+InaccessiblePaths=/etc/peticao-ops/ingress -/run/docker.sock -/var/run/docker.sock
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ops-control
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "self_event_binding": {
+    "execution_notice": "Wire actual value is the canonical execution notice sequence already looked up by Gate. In execution manifest header_template require literal execution_notice=0 placeholder and explicit runtime_bindings.execution_notice=canonical_self_event. Do not predict next seq. This is the second and only non-byte-stable template field besides deadline.",
+    "deadline_unix": "Manifest pins literal 0 placeholder plus deterministic min(now+900,leaseexpires-120,windowcloses-120), concrete header durably saved before install intent; observation exact bytes.",
+    "concrete_header_ACK": "Not required; source+execution independent review authorizes ONLY these two deterministic field bindings. Informational hash record permissible but not new approval gate. All other header fields and payload files/size/SHA exact manifest match."
+  },
+  "qualification_release": {
+    "actor": "admin-recuperacao",
+    "kind": "notice",
+    "data": {
+      "issuer_thread": "01a1cad7-4a65-7d43-b8c2-f0b50a90a580",
+      "operator_session": "01a1d130-2948-7140-bcfb-34696b20ab8d",
+      "scope": "prepare-frozen-r1-sealed-qualification-candidates",
+      "tools_prefix": "/opt/peticao-dev-profile-tools-v1",
+      "app_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
+      "source_sha256": "19db95b7c0628dac9fbcec961adbdf3a01bfa00b1519f28a376427e80707a4d5",
+      "normalized_sha256": "4b2c828ffdd182a8eef3e7fab1dcc8e3a6784318cc2f0c727efd8f978933605f",
+      "driver_source_notice": 3307,
+      "runtime_source_notice": 3416,
+      "full_integrity_event": 3429,
+      "full_integrity_proof_sha256": "49128ee64078b800019646faff38252d28af1fbd7b6708e6055a0e68221d14a7",
+      "production_access": false,
+      "queue_cutover": false,
+      "host_execution_authorized": false
+    },
+    "required_ack": "apoio real independent ACK; active/notdisposed. Root will be asked to issue only this local-candidate-preparation notice, NOT publication/SSH window."
+  },
+  "observe_after_expiry": "V1 deliberately supports observation ONLY with original current Root window and own live DEPLOY cap. If expired/uncertain report authority blocked; no auto new window, no header rewrite, no mutation retry. Separate explicit readonly recovery scope/source will handle exceptions when concrete. Remote observing permits original expired deadline but local authority is still current.",
+  "writer": {
+    "keys": [
+      "pid",
+      "start_ticks",
+      "boot_id"
+    ],
+    "pid": "exact positive int",
+    "start_ticks": "positive canonical ASCII decimal STRING as /proc/stat, not int",
+    "boot_id": "UUID string equal original header expected_boot_id; writer_alive false allowed; across reboot original saved identity remains data, no current-runtime qualification"
+  },
+  "reply_matrix": {
+    "install": [
+      "SEALED_PUBLIC_TOOLCHAIN_CANDIDATE_PUBLISHED",
+      "INSTALL_UNCERTAIN_PRESERVE_ALL_NO_RETRY"
+    ],
+    "observe": [
+      "NOT_STARTED",
+      "FOREIGN_PATH_WITHOUT_INTENT_UNCERTAIN",
+      "WRITER_ACTIVE_OBSERVE_ONLY",
+      "PARTIAL_OR_VISIBLE_WITHOUT_RECEIPT_RECONCILIATION_REQUIRED",
+      "PUBLISHED_CANDIDATE_RECEIPT_AND_TREE_VERIFIED",
+      "INSTALL_UNCERTAIN_PRESERVE_ALL_NO_RETRY"
+    ]
+  }
+}

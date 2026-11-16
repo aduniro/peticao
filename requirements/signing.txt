@@ -1,0 +1,2 @@
+# Canonical existing signing lock, preserved without dependency upgrades.
+-r ../tools/signing/requirements.txt

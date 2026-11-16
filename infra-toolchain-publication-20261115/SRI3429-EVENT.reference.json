@@ -1,0 +1,68 @@
+{
+  "actor": "apoio",
+  "at": "2026-11-15T11:01:01.554827+00:00",
+  "data": {
+    "PDF_members": 570,
+    "RootFullClosure": false,
+    "additional_PDF_artifacts": 1,
+    "at_utc": "2026-11-15T11:01:01.481666+00:00",
+    "cacheOriginalIntegral": false,
+    "exact_PG_links": 14,
+    "exact_esbuild_replacement": 1,
+    "execution_notice": 3427,
+    "fullVendorIntegrity": true,
+    "generated_metadata_exact": 9,
+    "historical_NPM_generation_observed": false,
+    "independent_artifact_review": "/mnt/apps/peticao-final/infra-sri-proof-20261115/independent-review/REAL-PROOF-REVIEW.json",
+    "independent_artifact_review_sha256": "802132410c03bd4c6b83635e46070a8c9fb09e500e79154e1e52c7da422d820a",
+    "installed_package_roots": 102,
+    "manifest": {
+      "api_contracts": "Fixed UID1000 offline complete normalized dependency content proof only. Exact normalized4b2c/original300971/receipt37b9/SPEC503c/COVERAGE4145 and102 pinned local SRI tarballs plus official Node/PDF103. No npm/pip/scripts/SSH/network/candidates/Root runtime. executefalse template, fixed new proof-data-1, exclusive no replay/partial preservation. All inputEXIT checks before proof publication. fullVendorIntegrity can mean full derived content mapping only after actual successful proof; pristine cache/vendor signature/NPM history/Root/native/qualified remain false.",
+      "commit": "bce107ebed14af7fe1cb333f39f951c0e48c7d28",
+      "database": "No database, application or operational queue changes; public dependency DATA only.",
+      "destination": "/mnt/apps/peticao-final/infra-sri-proof-20261115/source; future local DATA output /mnt/apps/peticao-final/infra-sri-proof-20261115/proof-data-1",
+      "files": [
+        ".gitignore",
+        "proof_io.py",
+        "sri_proof.py",
+        "test_sri_proof.py",
+        "DESIGN-API.md",
+        "EXECUTION.template.json",
+        "SOURCE-MANIFEST.json",
+        "COVERAGE-POLICY.reference.json",
+        "PARENT-REVIEW.json"
+      ],
+      "tests": [
+        "30 independent fictitious fixtures PASS5.846s ResourceWarningerror,FD4\u21924,no unexpected process/network/candidate actions",
+        "Original-to-normalized full member join, all102 package filemaps,11prefixes/14PG/esbuild/9metadata/topNode+lock+PDF103",
+        "Failure on inputEXIT leaves intent only; arbitrary empty dir rejected"
+      ]
+    },
+    "meaning": "Complete derived archive content mapping to pinned SRI/lock/official inputs and closed authorized transformations; not pristine cache, publisher signature, historical NPM execution, Root or native qualification",
+    "members": 13567,
+    "native_execution_performed": false,
+    "nonstandard_prefixes": 11,
+    "operator_result": "/mnt/apps/peticao-final/infra-sri-proof-20261115/OPERATOR-RESULT.json",
+    "proof_bytes": 10789822,
+    "proof_path": "/mnt/apps/peticao-final/infra-sri-proof-20261115/proof-data-1/SRI-PROOF.json",
+    "proof_sha256": "49128ee64078b800019646faff38252d28af1fbd7b6708e6055a0e68221d14a7",
+    "qualified": false,
+    "receipt_path": "/mnt/apps/peticao-final/infra-sri-proof-20261115/proof-data-1/PROOF-RECEIPT.json",
+    "receipt_sha256": "3a9d3fe3da8ef665805058c734f5d14ed0621ad090a4d71fa21401ac03c59f98",
+    "root_install_performed": false,
+    "root_review_required_before_installation": true,
+    "seconds": 91.54294289200334,
+    "source_commit": "bce107ebed14af7fe1cb333f39f951c0e48c7d28",
+    "source_notice": 3424,
+    "state": "ACTUAL_COMPLETE_DERIVED_CONTENT_PROOF_PARENT_VERIFIED",
+    "top_level_artifacts": 3,
+    "vendorSignatureVerified": false
+  },
+  "kind": "notice",
+  "requires_ack": 0,
+  "resources": [
+    "path:/mnt/apps/peticao-final/infra-sri-proof-20261115/proof-data-1"
+  ],
+  "seq": 3429,
+  "summary": "RESULT3427 COMPLETE offline derived SRI proof:all13567 members/102packages/PDF103,closed transforms; Parent+independent artifact review; no Root/native qualification"
+}

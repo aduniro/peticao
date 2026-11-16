@@ -1,0 +1,12 @@
+evidence/
+__pycache__/
+*.py[cod]
+*.sqlite*
+*.db
+.env*
+secrets/
+state/
+spool/
+*.pem
+*.key
+config.json

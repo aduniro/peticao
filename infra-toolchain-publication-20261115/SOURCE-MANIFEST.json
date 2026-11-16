@@ -1,0 +1,130 @@
+{
+  "classification": "INTEGRATED_SOURCE_NO_HOST_AUTHORITY",
+  "files": {
+    ".gitignore": {
+      "bytes": 80,
+      "sha256": "cb5199631dd4e0cf91811b1f018e96c79b74fd5416ef2a3e903c6834ca07c3e5"
+    },
+    "CORE-README.md": {
+      "bytes": 2724,
+      "sha256": "3c43b37eb80c6b549ac03a9a62e2dfefebdaa85e204a4a0c1db2ee976fd34bc0"
+    },
+    "CORE-SOURCE-MANIFEST.json": {
+      "bytes": 1892,
+      "sha256": "17d75919357eecc80d2bb4cbea970b4f6ed9e03f465c48e6ef6fd063c577fee1"
+    },
+    "DECISIONS-OPERATOR.json": {
+      "bytes": 3256,
+      "sha256": "0c9edf470e7e51c4a675e384df30b73a734273d0bbd52f782271b11048508231"
+    },
+    "DECISIONS-OPERATOR.reference.json": {
+      "bytes": 3256,
+      "sha256": "0c9edf470e7e51c4a675e384df30b73a734273d0bbd52f782271b11048508231"
+    },
+    "DERIVATION.json": {
+      "bytes": 1096,
+      "sha256": "6d3aa0cf770da2d189056be5dce299b5c53bdc3157667fd50eb9214635a6cd4f"
+    },
+    "DESIGN-CLIENT.md": {
+      "bytes": 7513,
+      "sha256": "9669452821da780d798066309adbba9e779921091be51e5de10d64fd6bbf990d"
+    },
+    "DESIGN-GATE.md": {
+      "bytes": 6453,
+      "sha256": "f98c876d4fc68df4da37770d93bd2394e1eb6387c6bbad3c182256a2137914cb"
+    },
+    "OPERATOR-INTERFACE.json": {
+      "bytes": 2505,
+      "sha256": "9345cef30e93c5e097a549d3d8bca59d44685737ee444a98e0304b221c907063"
+    },
+    "OPERATOR-INTERFACE.reference.json": {
+      "bytes": 2505,
+      "sha256": "9345cef30e93c5e097a549d3d8bca59d44685737ee444a98e0304b221c907063"
+    },
+    "PARENT-REVIEW.json": {
+      "bytes": 1548,
+      "sha256": "bd35fac453ee53e1072c8e00129797f1e068ee39af9a6e8a6cbf5c895fcbcaef"
+    },
+    "QUALIFICATION-RELEASE3435.reference.json": {
+      "bytes": 1230,
+      "sha256": "a86e357f5a1cebfad7936b0e34c430dbfbc05442a859cbcb239a23a6c92c1c5e"
+    },
+    "README.md": {
+      "bytes": 4081,
+      "sha256": "b056599e9f717ee3566ddc271a355c9bf87282c626e3b094ac877a1d9d3c529d"
+    },
+    "SRI3429-EVENT.reference.json": {
+      "bytes": 3895,
+      "sha256": "69b2ee637125c6add22ea5201b5fd7309faa82b7227ad0e5f5e65bb2298db723"
+    },
+    "WIRE-SCHEMA.json": {
+      "bytes": 3963,
+      "sha256": "f39319d922afdfaa20ebd9246044e04055f8d1d340a1fd5d57c3f828b80464f2"
+    },
+    "WIRE-SCHEMA.reference.json": {
+      "bytes": 3914,
+      "sha256": "da85ba434599d7fff14c513c5a70005e61233cdc67c084036e70141a932a8b61"
+    },
+    "client.py": {
+      "bytes": 31848,
+      "sha256": "89601d685bd71aef2227fcd5e7c44979cf8ea3f6b1d65651eafce9f62a34ef45"
+    },
+    "gate.py": {
+      "bytes": 19457,
+      "sha256": "164a0b3382ce7dd3e703fdcfec6bc5d2af12b5dd869561c721ad49e43f1f99cd"
+    },
+    "materializer.py": {
+      "bytes": 9648,
+      "sha256": "cf52937d9e6a960f7fdc276cab4f9933eaf3580c76a3067a2742841b2f8a6be3"
+    },
+    "publish_toolchain.py": {
+      "bytes": 2023,
+      "sha256": "e1737ba8483b26ca34399816e17cd6209e6f7dbd1cf08b372469e6d2588a6eb0"
+    },
+    "root_entry.py": {
+      "bytes": 11654,
+      "sha256": "a7fdfecb361fb6236883ee86a0ef297677b83fd0a09f0b36c457fe921748571b"
+    },
+    "test_client.py": {
+      "bytes": 23373,
+      "sha256": "dffbe7fc8663f26f4381bf018a767426dc9442a9ff976afc9dc2afcee3474491"
+    },
+    "test_gate.py": {
+      "bytes": 20526,
+      "sha256": "4c044f898ba6695b0de5eb31e331d94a070367de33d88dd32a36406f8e1d9d00"
+    },
+    "test_header.py": {
+      "bytes": 2972,
+      "sha256": "b65c5af6df0f54e58b6166f1a32eadb06b572beba6b081510336a4245a6a86c2"
+    },
+    "test_materializer.py": {
+      "bytes": 5662,
+      "sha256": "984823bbfdba15ac48fdffdc824385ddb2273df554c63dbbcce8d34bd4fe86e0"
+    },
+    "test_operator.py": {
+      "bytes": 4256,
+      "sha256": "efd191d255bf78976ad108b76766994a7711d9c4b3b26bece9797a70d0acafb0"
+    },
+    "test_root_pipeline.py": {
+      "bytes": 4712,
+      "sha256": "8477b815eecff693dd3d2b019d70039d09dfda2c00123628fbea21c8af8715f7"
+    }
+  },
+  "operationalReady": false,
+  "payload": {
+    "bytes": 629848576,
+    "files": 2306,
+    "path": "execution-state/payload.tar.gz",
+    "sha256": "56e97448b141b42641719886c16d32e91ac095c9c4bdc65eb04f7967295e6d0e",
+    "unpacked_bytes": 1095117350
+  },
+  "qualified": false,
+  "root_install_performed": false,
+  "tests": {
+    "candidate_programs_executed": false,
+    "count": 83,
+    "evidence": "integrated-canonical-tests.private.log",
+    "native_root_execution": false
+  },
+  "version": 1
+}

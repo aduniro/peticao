@@ -1,0 +1,42 @@
+# FUTURE OPTION ONLY. This is a complete standalone configuration, not an
+# unconditional import into an existing Caddyfile. No service is activated here.
+{
+	# The ingress service identities must not reconfigure a loopback admin API.
+	admin off
+	log default {
+		output stderr
+		level INFO
+		format filter {
+			wrap json
+			fields {
+				request delete
+				headers delete
+				resp_headers delete
+				body delete
+			}
+		}
+	}
+}
+
+exec.sancionaintegral.org {
+	header Cache-Control "no-store"
+	@provider_inbound {
+		method POST
+		path /mailersend/inbound
+	}
+	handle @provider_inbound {
+		request_body {
+			max_size 262144
+		}
+		reverse_proxy 127.0.0.1:8768 {
+			lb_retries 0
+			transport http {
+				dial_timeout 2s
+				response_header_timeout 10s
+			}
+		}
+	}
+	handle {
+		respond "" 404
+	}
+}

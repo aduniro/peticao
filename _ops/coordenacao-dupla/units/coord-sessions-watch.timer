@@ -1,0 +1,11 @@
+[Unit]
+Description=Observe authorized session metadata every 30 seconds
+
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=30s
+AccuracySec=2s
+Unit=coord-sessions-watch.service
+
+[Install]
+WantedBy=timers.target

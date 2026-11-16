@@ -1,0 +1,10 @@
+[Unit]
+Description=Observe authorized Codex session metadata and tracked application code
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /mnt/apps/peticao-final/_ops/coordenacao-dupla/tools/watch_sessions.py
+WorkingDirectory=/mnt/apps/peticao-final/_ops/coordenacao-dupla
+UMask=0077
+TimeoutStartSec=180
+NoNewPrivileges=true

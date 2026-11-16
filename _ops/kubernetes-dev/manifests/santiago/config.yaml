@@ -1,0 +1,47 @@
+{
+  "data-dir": "/var/lib/peticao-k3s",
+  "node-name": "peticao-santiago",
+  "node-ip": "100.80.18.81",
+  "flannel-iface": "tailscale0",
+  "node-label": [
+    "peticao.dev/worker=santiago"
+  ],
+  "node-taint": [
+    "peticao.dev/admission=pending:NoSchedule"
+  ],
+  "kubelet-arg": [
+    "address=100.80.18.81",
+    "read-only-port=0",
+    "fail-swap-on=false",
+    "system-reserved=cpu=750m,memory=1792Mi",
+    "eviction-hard=memory.available<512Mi,nodefs.available<15%,imagefs.available<15%",
+    "max-pods=24"
+  ],
+  "cluster-init": true,
+  "cluster-cidr": "10.240.0.0/16",
+  "service-cidr": "10.241.0.0/16",
+  "cluster-dns": "10.241.0.10",
+  "bind-address": "100.80.18.81",
+  "advertise-address": "100.80.18.81",
+  "tls-san": [
+    "100.80.18.81",
+    "peticao-santiago"
+  ],
+  "tls-san-security": true,
+  "write-kubeconfig-mode": "0600",
+  "token-file": "/etc/rancher/peticao-k3s/server-token",
+  "agent-token-file": "/etc/rancher/peticao-k3s/agent-token",
+  "disable": [
+    "traefik",
+    "servicelb",
+    "local-storage"
+  ],
+  "flannel-backend": "vxlan",
+  "secrets-encryption": true,
+  "etcd-snapshot-schedule-cron": "*/15 * * * *",
+  "etcd-snapshot-retention": 96,
+  "kube-apiserver-arg": [
+    "anonymous-auth=false",
+    "service-node-port-range=32000-32010"
+  ]
+}

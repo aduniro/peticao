@@ -1,0 +1,20 @@
+{
+  "status": "evaluation_only_not_queued",
+  "candidate_reference_observed": "735ff36762a39eca6ab1b2f859c835f25705f592",
+  "candidate_path": "/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109",
+  "public_form_ancestor": "1e656d76467d8a86cc7de24b53b015f406769d27",
+  "integration_and_build_host": "santiago",
+  "logical_coordinator": "local",
+  "production_sao_paulo": "read_only_initially",
+  "requires": [
+    "active_application_cohort_finished",
+    "final_frozen_commit_selected",
+    "real_source_bundle_and_manifests",
+    "infra_READY_bound_to_machine_and_config",
+    "explicit_local_activation_configuration"
+  ],
+  "bundle_transferred": false,
+  "worker_started": false,
+  "application_merged": false,
+  "note": "qualification-job.json uses fictitious source/hash identities; schema validation is not provenance acceptance"
+}

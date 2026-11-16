@@ -1,0 +1,16 @@
+[Unit]
+Description=Peticao - relatorio HTML de andamento ao responsavel
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/mnt/apps/peticao-final/peticao/.cache/relatorios-periodicos-20261109
+Environment=VIGIA_STATE=/mnt/apps/peticao-final/_externos/home/barre/.local/state/peticao-monitor
+ExecStart=/home/barre/.cache/peticao-qa-node20-20.19.2/node-v20.19.2-linux-x64/bin/node /mnt/apps/peticao-final/peticao/.cache/relatorios-periodicos-20261109/report.mjs --send
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+TimeoutStartSec=90
+Restart=no
+StandardOutput=journal
+StandardError=journal

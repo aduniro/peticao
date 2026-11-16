@@ -1,0 +1,13 @@
+# Civo toolchain installer - SOURCE component only
+
+Fixed new publication prefix /opt/peticao-dev-profile-tools-v1. No SSH or installation has been performed by this component. The complete integrated frozen operator package, execution manifest/independent review, fresh Root publication window and own DEPLOY lease (code: plus deploy:civo-profile-toolchain) are required separately. Root local-preparation notice3435 is not host authority.
+
+Only reviewed materializer/root_entry bytes run under the fixed Root SSH transport. Incoming archives/helpers are public DATA, never imported or executed by this installer. Inputs are fixed R1 and Node hashes with five mandatory provenance inputs and an exact bounded complete file/directory plan. Every archive member is prescanned; no links, sparse entries, PAX metadata, traversal, duplicates or unplanned paths. Root current namespace/host/ancestry guards precede effects. Paths outside the fixed prefix and own operation state cannot be selected by wire fields.
+
+Global exclusive durable intent precedes payload handling. Partial data is preserved, never replayed. Stage and destination must share a filesystem; renameat2 NOREPLACE is mandatory. File/dir permissions, ownership, descriptor identity, same-FD content hashes and whole tree are checked. Publication receipt is fsynced after rename. Lost receipt or transport is uncertain, not success; observation only accepts exact original header and verifies existing tree. It does not repair, retry, erase, dispatch, qualify profiles or activate a queue.
+
+Administrative concurrent same-UID Root writers are within the trusted computing base; this is not a lock against malicious Root. The ledger is cooperative, checked locally by the separately reviewed operator. Remote code trusts that authorized operator; no capability or credential is copied remotely.
+
+Tests: python3 -s -E -B -W error::ResourceWarning -m unittest test_materializer test_root_pipeline test_header. Real local descriptor/stream/tar/filesystem/rename exercises use the current UID in newly created fixture directories. Pipeline tests model Root authority/header; separate header tests use real validation and the real nonroot guard test denies entry. No test executes candidates, SSH, package managers or cloud actions. These tests do not prove native Root installation or tool compatibility.
+
+Runtime binding: only execution_notice and deadline_unix template zero fields are bound deterministically. Original concrete canonical header persisted before install intent; observe sends exact original bytes. DECISIONS-OPERATOR and WIRE-SCHEMA define the closed contract. No observation after authority expiry without a separately scoped recovery procedure.

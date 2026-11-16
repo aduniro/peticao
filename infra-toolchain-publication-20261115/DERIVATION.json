@@ -1,0 +1,14 @@
+{
+  "client_source_commit": "c73df054c27ceaf22c5c877526ef871f49c09a8b",
+  "client_source_notice": 3447,
+  "code_delta": "client.py only WIRE_SCHEMA_SHA metadata pin updated from da85 to actual owner frozen f393. No behavioral schema change; both agree15keys/2runtimebindings. publish_toolchain.py is new concrete composition reviewed separately. Gate qualification release resource binds exact actual canonical3435 original oldcore path, not relocated integrated ROOT. All SOURCE/EXEC/window/owncap bindings stay at integrated ROOT. Gate fixture release resources updated only for exact canonical binding.",
+  "core_source_commit": "62a9ccc9e61be05c992b6adff289553d551cb765",
+  "core_source_notice": 3436,
+  "operationalReady": false,
+  "preserved_original_component": true,
+  "qualified": false,
+  "root_install_performed": false,
+  "source_scope": "Integrated SOURCE only; no Root/SSH/deployment yet",
+  "version": 1,
+  "withheld_initial_integrated_commit": "c901fbffaf750be40707e07eb155cf7e0519002c never announced/executed; wrong qualification resource at relocated ROOT found before PREP"
+}
