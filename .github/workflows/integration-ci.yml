@@ -16,8 +16,6 @@ jobs:
     name: Typecheck (Node ${{ matrix.node }})
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    env:
-      npm_config_cache: ${{ runner.temp }}/peticao-npm-cache
     strategy:
       fail-fast: false
       matrix:
@@ -27,6 +25,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+      - name: Isolated npm cache
+        run: echo "npm_config_cache=$RUNNER_TEMP/peticao-npm-cache" >> "$GITHUB_ENV"
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: ${{ matrix.node }}
