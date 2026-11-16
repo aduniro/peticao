@@ -1,0 +1,53 @@
+{
+  "source_relative_path": "_ops/controle-operacional",
+  "original_base": "8c1987eb4599d9fcb334a927131186b79cd9a4ee",
+  "public_base": "cbcf19e18036ecd75da31b1ae7de574d2e1c3915",
+  "source_files": [
+    {
+      "path": "infra/readonly_refresh.py",
+      "original_sha256": "c99607de12914ed515741b8c079d03097b810c822e6fea9f40c7c84b248f40b4",
+      "public_sha256": "c99607de12914ed515741b8c079d03097b810c822e6fea9f40c7c84b248f40b4",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "infra/reporting_draft/CONTRATO-E-CUTOVER.md",
+      "original_sha256": "e8d9cb9a317d4b957d552dbbd007878036ec0589aa505ff4d73eaef03aa8d8e5",
+      "public_sha256": "eec0e68146b953b1df2974693bc033154ec96123eee41cace67221bc42d73ed6",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "infra/reporting_draft/cutover-core.mjs",
+      "original_sha256": "f96bda6fab72470441f8db4a6581b4b559297ef800ea4fc77c4d08214a5367c3",
+      "public_sha256": "1152f24d9c09d448838396f6fcb653139810847f3df0a0328b702d2703ef9bab",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "infra/reporting_draft/cutover-core.test.mjs",
+      "original_sha256": "5aaa7c1117d464a28d3846e432addc7091a3365fcb42574345e1202d627835a7",
+      "public_sha256": "79ab224883109827177d0ab9e01940cab024fe742ced9782a74347b330e1884e",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "infra/reporting_draft/renderer.mjs",
+      "original_sha256": "d119cac6f874945797628c954e71f887d9d90ceebd67f3fe2118ba9d479da7bb",
+      "public_sha256": "f688b1d2f4866aa37f0e64d025b086bdb5eac1d8d18d22c09309992c115525b6",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "infra/reporting_draft/tree-render.mjs",
+      "original_sha256": "c114be0bae8deabd5562cf93cefc9f92736c9d47ee9663ab503dc8c13e2e56a5",
+      "public_sha256": "c114be0bae8deabd5562cf93cefc9f92736c9d47ee9663ab503dc8c13e2e56a5",
+      "source_capture": "pending-files.tar"
+    },
+    {
+      "path": "tests/test_readonly_refresh.py",
+      "original_sha256": "8a130b96e732bff9d873a8032db36dea6100439597839620ba9c5890b2e41fdf",
+      "public_sha256": "8a130b96e732bff9d873a8032db36dea6100439597839620ba9c5890b2e41fdf",
+      "source_capture": "pending-files.tar"
+    }
+  ],
+  "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED",
+  "original_author": "unconfirmed; packaging by migration automation",
+  "source_original_untouched": true,
+  "never_reactivate_from_archive_implicitly": true
+}
