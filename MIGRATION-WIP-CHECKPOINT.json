@@ -1,0 +1,17 @@
+{
+  "source_relative_path": "peticao/.cache/consolidacao-pagina-principal-20261109",
+  "original_base": "b9e8ae2574125df90d80fc18ef24832f5d646ce0",
+  "public_base": "4022a9edc2a06cd692c033328bd4b8ba650bb92b",
+  "source_files": [
+    {
+      "path": "docs/POLITICA-CENTRAL-EXECUCAO.md",
+      "original_sha256": "c41fe6d4398805a13213d799a31d850f8f1013c41245962daac3ad603d40f545",
+      "public_sha256": "251370ef322e2ca9899d89ba5289261a5556b309f55e26b5d33ca93dca9f56ae",
+      "source_capture": "pending-files.tar"
+    }
+  ],
+  "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED",
+  "original_author": "unconfirmed; packaging by migration automation",
+  "source_original_untouched": true,
+  "never_reactivate_from_archive_implicitly": true
+}
