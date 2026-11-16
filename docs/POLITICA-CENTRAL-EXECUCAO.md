@@ -34,7 +34,35 @@ Testes demorados podem continuar em processo persistente, com logs e resultado v
 
 Interrupções externas (queda, limite de uso ou encerramento da sessão) e impedimentos técnicos não podem ser ocultados. Registrar o último estado verificável, o motivo e a próxima ação; notificar quando o canal estiver disponível e retomar no primeiro momento em que a execução for possível. Enquanto um passo depender de autorização ou recurso indisponível, continuar os passos independentes já autorizados. Não alegar que existe um agente ou processo autônomo sem verificar sua execução.
 
+## Estimativa obrigatória de execução e conclusão
+
+Ordem direta do responsável em 13/11/2026: **sempre que solicitar uma tarefa, informar a estimativa de tempo para executá-la e finalizá-la, antes de iniciar o trabalho operacional**. Aplica-se também a solicitações recebidas por outros agentes, pelo Vigia/Executor, a subtarefas e a retomadas com escopo novo.
+
+- Informar uma duração aproximada ou faixa realista. Quando houver fila ou trabalho paralelo, distinguir o tempo da nova solicitação do tempo restante da tarefa principal e incluir a espera prevista.
+- Explicitar dependências que afetem o prazo. Se for necessária uma inspeção inicial, fornecer uma estimativa preliminar e refiná-la depois, sem inventar precisão.
+- Atualizar a estimativa quando o escopo, os impedimentos ou os resultados mudarem a previsão; não esperar cobrança do responsável.
+- A estimativa não é garantia de prazo, não substitui autorização e não exige nova aprovação para trabalho já autorizado. Preservar a tarefa principal ao atender esclarecimentos ou ajustes breves.
+
+Manter esta regra alinhada à seção **“Estimativa obrigatória de execução e conclusão”** de `/mnt/apps/peticao-final/_ops/coordenacao-dupla/PROTOCOLO.md`.
+
+## Leitura e resposta obrigatórias entre agentes
+
+Determinação expressa do responsável em 13/11/2026, reiterada para esta sessão: toda comunicação recebida de outro agente deve ser lida e respondida. Aplica-se ao coordenador, aos pares, aos subagentes e às demais sessões que enviarem mensagens neste projeto.
+
+- Tratar a mensagem assim que for entregue à sessão, no primeiro ponto de controle disponível. Conferir mensagens ao retomar o trabalho, ao retornar de uma ferramenta e antes de iniciar a próxima etapa; não esperar que o responsável cobre a leitura.
+- Ler o conteúdo, identificar pedido ou confirmação e confrontá-lo com a atividade atual, o planejamento e as prioridades. Ajustar a fila quando necessário e preservar o checkpoint do trabalho em curso.
+- Responder ao remetente, sempre informando: **recebimento**, **o que está fazendo agora** e **o que está na fila/próxima ação**. Quando estiver sem execução, declarar que está aguardando; não inventar atividade.
+- Responder também às confirmações e aos avisos de conclusão, não somente às delegações de tarefas. Enviar uma resposta por mensagem recebida, sem repetir o mesmo reconhecimento por consultas sucessivas.
+- Distinguir reconhecimento de recebimento, revisão técnica, ACK do ledger e autorização do responsável. Uma resposta de recebimento não concede aprovação técnica, merge ou deploy.
+- Registrar impedimento de entrega/resposta e retomar a comunicação quando o canal voltar. A reação depende de a mensagem ser disponibilizada ao executor; não declarar vigilância contínua enquanto a sessão estiver desligada ou sem execução.
+
+Formato mínimo: **“Recebi [mensagem/resultado]. Agora: [atividade real ou aguardando]. Na fila/próximo passo: [ação ou nenhuma pendência].”**
+
+O contrato compartilhado permanece em `/mnt/apps/peticao-final/_ops/coordenacao-dupla/PROTOCOLO.md`; não criar uma coordenação paralela.
+
 ## Aprovações e comunicação
+
+Aplicar a política multicanal determinada pelo responsável em 13/11/2026: `/mnt/apps/peticao-final/_ops/coordenacao-dupla/POLITICA-CENTRAL-AUTORIZACOES.md`. Pedidos necessários de autorização devem aparecer no chat principal e no Vigia, com notificação ao Executor quando operacional. O responsável pode decidir por qualquer desses canais; registrar uma única decisão e impedir execução duplicada. Uma autorização já concedida mantém seu escopo e não deve ser solicitada novamente por troca de canal.
 
 A prioridade não autoriza deploy ou merge: **nenhuma publicação, merge ou integração/sincronização de código com a VPS, em qualquer direção, sem permissão explícita do responsável**. Inspeções somente leitura não autorizam incorporar as fontes inspecionadas. Enquanto uma publicação aguarda autorização, continuar as partes independentes do plano em ambiente isolado, preservando o candidato em avaliação. Manter as demais regras de aprovação de avisos e informações ao usuário.
 
