@@ -1,0 +1,17 @@
+{
+  "source_relative_path": "_ops/r0002-govbr-gates-recovery-20261110",
+  "original_base": "755c2c7ef3f8f25b4bfbc81704e5ac8507e3fea6",
+  "public_base": "49cf8c8b2a3122507bfff5a53b91e0db7ca53a3f",
+  "source_files": [
+    {
+      "path": ".qa/no-network.cjs",
+      "original_sha256": "296204bf48a23b63f1b71c4c192ccc1b8a2e77a91f19f1ee6dc298236f4aaf40",
+      "public_sha256": "296204bf48a23b63f1b71c4c192ccc1b8a2e77a91f19f1ee6dc298236f4aaf40",
+      "source_capture": "pending-files.tar"
+    }
+  ],
+  "status": "ARCHIVED_UNFINISHED_NOT_INTEGRATED",
+  "original_author": "unconfirmed; packaging by migration automation",
+  "source_original_untouched": true,
+  "never_reactivate_from_archive_implicitly": true
+}
