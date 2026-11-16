@@ -125,6 +125,33 @@
 .v2-mapa-folha-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--adm-line); } .v2-pequeno { min-height: 34px !important; padding: 4px 12px !important; }
 .v2-mapa-cheio .adm-seg { background: #fff; } .v2-mapa-cheio .adm-sub { margin: 0; }
 @media (max-width: 992px) { .v2-mapa-comando { top: 8px; left: 8px; right: 8px; } .v2-mapa-folha { height: 60dvh; } }
+/* Superfícies opacas: controles do tema escuro não podem ficar sobre branco/tiles. */
+.v2 .v2-mapa-barra, .v2 .v2-mapa-filtros, .v2 .v2-mapa-folha {
+  background: #0c2a1c; color: #eaf5ee; --adm-ink: #eaf5ee; --adm-muted: #c1d7c9;
+  --adm-line: #718d7d; --adm-surface: #173c29;
+}
+.v2 .v2-mapa-barra { border: 1px solid #718d7d; }
+.v2 .v2-mapa-barra [hidden] { display: none !important; }
+.v2 .v2-mapa-barra .adm-seg { background: #173c29; border-color: #718d7d; flex-wrap: wrap; max-width: 100%; overflow: visible; }
+.v2 .v2-mapa-barra .adm-seg button { color: #eaf5ee; overflow-wrap: anywhere; }
+.v2 .v2-mapa-barra .adm-seg button.on { background: #00602a; color: #fff; box-shadow: inset 0 -3px #ffdf00; }
+.v2 .v2-mapa-barra .v2-btn-sec, .v2 .v2-mapa-folha .v2-btn-sec { background: #173c29; color: #fff; border-color: #718d7d; }
+.v2 .v2-mapa-comando { max-height: min(45dvh, 420px); overflow-y: auto; padding: 3px; scrollbar-gutter: stable; }
+.v2 .v2-mapa-comando > .adm-sub:not(.v2-mapa-resumo), .v2 .v2-mapa-comando > .err {
+  background: #0c2a1c; color: #eaf5ee; padding: 8px 12px; border-radius: 10px; overflow-wrap: anywhere;
+}
+.v2 .v2-mapa-comando > .err { border: 2px solid #ff9b9b; }
+.v2 .v2-mapa-folha .adm-table th button { color: #fff; }
+.v2 .v2-mapa-cheio :is(button, a, summary, input, select):focus-visible,
+.v2 .leaflet-popup :is(button, a):focus-visible { outline: 3px solid #ffdf00; outline-offset: -3px; }
+.v2 .leaflet-popup-content-wrapper, .v2 .leaflet-popup-tip { background: #0c2a1c; color: #eaf5ee; }
+.v2 .leaflet-popup-content { overflow-wrap: anywhere; }
+.v2 .leaflet-popup-content .adm-btn { white-space: normal; text-align: left; }
+.v2 .leaflet-container a.leaflet-popup-close-button { color: #fff; background: #173c29; width: 32px; height: 32px; }
+.v2 .leaflet-bar a { background: #fff; color: #14231d; }
+.v2 .leaflet-bar a:focus-visible, .v2 .leaflet-interactive:focus-visible { outline: 3px solid #00602a; outline-offset: -3px; }
+.v2 .leaflet-control-attribution { background: #fff; color: #14231d; }
+.v2 .leaflet-control-attribution a { color: #075c3c; }
 .v2-sanduiche { background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.35); } .v2-sanduiche svg { width: 26px; height: 26px; display: block; stroke-width: 2.6; }
 /* Quem está logado (nome e nível): no topo (computador) e no pé da gaveta (celular) */
 .adm.v2 .v2-quem-topo{font-size:12.5px;font-weight:700;opacity:.85;white-space:nowrap}
