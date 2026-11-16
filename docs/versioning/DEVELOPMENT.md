@@ -39,3 +39,7 @@ Alguns harnesses históricos usam caminhos absolutos ou caches externos da máqu
 ## Integração distribuída
 
 Cada agente usa clone/worktree e branch próprios. Publicar commits pequenos, executar os testes pertinentes e integrar pelo fluxo coordenado. GitHub guarda código/versões; a integração Neon/fila é uma frente separada, sem transferir o banco de assinaturas. Deploy continua uma operação explícita com artefato exato, healthcheck e rollback.
+
+## Perfil adicional de coordenacao
+
+`requirements/coordination.txt` referencia o lock com hashes do adaptador PostgreSQL/Neon: psycopg/psycopg-binary 3.2.13 e typing_extensions 4.16.0. Instalar com `pip install --require-hashes -r requirements/coordination.txt` em venv separado. O lock inclui wheels Linux x86_64/aarch64 para Python 3.11/3.12/3.13; nao altera os locks do app ou do A1. Credenciais de owner/reader/writer ficam em configuracao privada. Esta publicacao nao troca a fila ativa nem migra o banco de assinaturas.

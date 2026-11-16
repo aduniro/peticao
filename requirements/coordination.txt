@@ -1,0 +1,2 @@
+# Additional coordination profile. Install with pip --require-hashes.
+-r ../_ops/databases-coordenacao-20261116/requirements.lock
