@@ -3,6 +3,8 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import threading
+import time
 import unittest
 import uuid
 import psycopg
@@ -90,7 +92,8 @@ class CoordinationTests(unittest.TestCase):
         self.assertNotIn(c['token'],json.dumps(rest,default=str))
 
     def test_snapshot_replay_and_corruption(self):
-        summary={'watermark':1,'events':1};s={'source_id':self.store.namespace,'watermark':1,'summary':summary,'sha256':digest(summary)}
+        summary={'watermark':1,'events':1,'actors':1,'lease_states':{}}
+        data={'source_id':self.store.namespace,'watermark':1,'summary':summary};s=dict(data,sha256=digest(data))
         self.assertFalse(import_snapshot(self.store,s)['replayed'])
         self.assertTrue(import_snapshot(self.store,s)['replayed'])
         s['summary']['events']=2
@@ -98,20 +101,21 @@ class CoordinationTests(unittest.TestCase):
 
     def test_outbox_crash_replay(self):
         with tempfile.TemporaryDirectory() as p:
-            o=Outbox(Path(p)/'outbox.sqlite');payload={'title':'Synthetic outbox task'}
+            o=Outbox(Path(p)/'outbox.sqlite',self.store.namespace,allowed_root=p);payload={'title':'Synthetic outbox task'}
             o.enqueue('intent',payload)
             # Simulate commit on server followed by lost acknowledgement.
             original=self.store.create('intent',**payload)['id']
-            fresh=Outbox(Path(p)/'outbox.sqlite');self.assertEqual(fresh.flush(self.store)['delivered'],1)
+            fresh=Outbox(Path(p)/'outbox.sqlite',self.store.namespace,allowed_root=p);self.assertEqual(fresh.flush(self.store)['delivered'],1)
             self.assertEqual(len(self.store.list()['items']),1)
             self.assertEqual(str(self.store.list()['items'][0]['id']),original)
             self.assertEqual(fresh.flush(self.store)['delivered'],0)
 
     def test_offline_fails_closed_and_preserves_intents(self):
         class Offline:
+            namespace=self.store.namespace
             def create(self,*args,**kwargs):raise psycopg.OperationalError('offline')
         with tempfile.TemporaryDirectory() as p:
-            o=Outbox(Path(p)/'outbox.sqlite');o.enqueue('x',{'title':'Synthetic offline task'})
+            o=Outbox(Path(p)/'outbox.sqlite',self.store.namespace,allowed_root=p);o.enqueue('x',{'title':'Synthetic offline task'})
             self.assertEqual(o.flush(Offline())['delivered'],0)
             self.assertEqual(o.flush(self.store)['delivered'],1)
         with self.assertRaisesRegex(PermissionError,'authority_remains'):self.store.live_dispatch()
@@ -153,6 +157,89 @@ class CoordinationTests(unittest.TestCase):
                 db.execute('INSERT INTO events VALUES(7)')
             before=path.read_bytes();snap=export(path,'test')
             self.assertNotIn('PRIVATE_FIXTURE',json.dumps(snap));self.assertEqual(path.read_bytes(),before)
+
+    def test_unknown_sqlite_and_parent_symlink_rejected_before_write(self):
+        import sqlite3
+        with tempfile.TemporaryDirectory() as p,tempfile.TemporaryDirectory() as other:
+            root=Path(p);path=root/'native-fixture.sqlite'
+            with sqlite3.connect(path) as db:db.execute('CREATE TABLE native_state(value)')
+            path.chmod(0o600);before=path.read_bytes()
+            with self.assertRaisesRegex(PermissionError,'unrecognized_outbox_database'):Outbox(path,allowed_root=p)
+            self.assertEqual(path.read_bytes(),before)
+            (root/'link').symlink_to(other,target_is_directory=True)
+            with self.assertRaisesRegex(PermissionError,'outside_dedicated_root'):Outbox(root/'link/outbox.sqlite',allowed_root=p)
+            self.assertFalse((Path(other)/'outbox.sqlite').exists())
+
+    def test_outbox_concurrent_conflicting_payloads(self):
+        with tempfile.TemporaryDirectory() as p:
+            o=Outbox(Path(p)/'outbox.sqlite',self.store.namespace,allowed_root=p)
+            barrier=threading.Barrier(2)
+            def enqueue(i):
+                barrier.wait()
+                try:o.enqueue('same',{'title':'Synthetic '+str(i)});return 'ok'
+                except ValueError:return 'conflict'
+            with concurrent.futures.ThreadPoolExecutor(2) as pool:r=list(pool.map(enqueue,[1,2]))
+            self.assertEqual(sorted(r),['conflict','ok'])
+
+    def test_outbox_namespace_and_corruption_guards(self):
+        import sqlite3
+        with tempfile.TemporaryDirectory() as p:
+            path=Path(p)/'outbox.sqlite';o=Outbox(path,self.store.namespace,allowed_root=p)
+            o.enqueue('same',{'title':'Synthetic'})
+            other=Store(self.store.config,'other-'+uuid.uuid4().hex)
+            with self.assertRaisesRegex(ValueError,'namespace_mismatch'):o.flush(other)
+            with sqlite3.connect(path) as db:db.execute("UPDATE intents SET payload=?",(json.dumps({'title':'Corrupted'}),))
+            with self.assertRaisesRegex(ValueError,'payload_checksum'):o.flush(self.store)
+            self.assertEqual(self.store.list()['items'],[])
+
+    def test_concurrent_conflicting_ledger_snapshots_and_wrapper(self):
+        def snapshot(actors):
+            data={'source_id':self.store.namespace,'watermark':8,'summary':{'watermark':8,'actors':actors,'events':8,'lease_states':{}}}
+            return dict(data,sha256=digest(data))
+        barrier=threading.Barrier(2)
+        def ingest(i):
+            barrier.wait()
+            try:import_snapshot(self.store,snapshot(i));return 'ok'
+            except ValueError as e:return str(e)
+        with concurrent.futures.ThreadPoolExecutor(2) as pool:r=list(pool.map(ingest,[1,2]))
+        self.assertEqual(sorted(r),['ok','source_watermark_conflict'])
+        changed=snapshot(1);changed['watermark']=9
+        with self.assertRaisesRegex(ValueError,'watermark_mismatch'):import_snapshot(self.store,changed)
+
+    def test_queue_full_snapshot_omitted_row_not_current(self):
+        row={'id':'old','state':'completed','generation':1,'digest':'b'*64,'created_at':'now','updated_at':'now'}
+        first={'source_id':self.store.namespace,'watermark':1,'jobs':[row]};import_queue(self.store,dict(first,sha256=digest(first)))
+        second={'source_id':self.store.namespace,'watermark':2,'jobs':[]};import_queue(self.store,dict(second,sha256=digest(second)))
+        self.assertEqual(self.store.external_jobs(self.store.namespace)['items'],[])
+        with self.store.connect() as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) AS n FROM peticao_coord.queue_projection WHERE source_id=%s',(self.store.namespace,)).fetchone()['n'],1)
+
+    def test_expiry_checked_after_row_lock_wait(self):
+        task=self.task();claim=self.store.claim('a')
+        locked=threading.Event();deadline=[]
+        def hold():
+            with self.store.connect() as db:
+                r=db.execute("UPDATE peticao_coord.tasks SET expires_at=clock_timestamp()+interval '3 seconds' WHERE id=%s RETURNING expires_at",(task,)).fetchone()
+                deadline.append(r['expires_at']);locked.set();time.sleep(4)
+        with concurrent.futures.ThreadPoolExecutor(1) as pool:
+            future=pool.submit(hold);self.assertTrue(locked.wait(timeout=10))
+            original=self.store.connect
+            def measured(*args,**kwargs):
+                db=original(*args,**kwargs)
+                self.assertTrue(db.execute('SELECT transaction_timestamp()<%s AS before_deadline',(deadline[0],)).fetchone()['before_deadline'])
+                return db
+            self.store.connect=measured
+            with self.assertRaises(PermissionError):self.store.complete(task,'a',claim['token'],claim['fence'],['evidence/test'])
+            future.result()
+
+    def test_real_backlog_progress_is_not_completion_or_dispatch(self):
+        task=self.task(assigned_to='infra',context=['docs/baseline'])
+        with concurrent.futures.ThreadPoolExecutor(2) as pool:
+            r=list(pool.map(lambda a:self.store.progress(task,a,['evidence/'+a]),['infra','root']))
+        ctx=self.store.context(task)
+        self.assertEqual(ctx['status'],'pending');self.assertEqual(set(ctx['evidence_refs']),{'evidence/infra','evidence/root'})
+        self.assertEqual(ctx['version'],3)
+        self.assertEqual(len([e for e in self.store.events() if e['kind']=='progress']),2)
 
 
 if __name__=='__main__':unittest.main(verbosity=2)

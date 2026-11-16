@@ -129,7 +129,7 @@ class Store:
 
     def context(self, task):
         with self.connect() as db:
-            row=db.execute('SELECT id,title,context_refs,evidence_refs FROM peticao_coord.tasks WHERE id=%s AND namespace=%s', (task,self.namespace)).fetchone()
+            row=db.execute('SELECT id,title,status,version,context_refs,evidence_refs FROM peticao_coord.tasks WHERE id=%s AND namespace=%s', (task,self.namespace)).fetchone()
             if row is None: raise ValueError('task_not_found')
             return row
 
@@ -153,7 +153,7 @@ class Store:
               ORDER BY priority DESC,created_at,id FOR UPDATE SKIP LOCKED LIMIT 1''', (self.namespace,agent)).fetchone()
             if row is None:return None
             result=db.execute('''UPDATE peticao_coord.tasks SET status='running',owner=%s,token_hash=%s,
-              fence=nextval('peticao_coord.fences'),expires_at=now()+%s*interval '1 second',version=version+1,updated_at=now()
+              fence=nextval('peticao_coord.fences'),expires_at=clock_timestamp()+%s*interval '1 second',version=version+1,updated_at=now()
               WHERE id=%s RETURNING id,fence,expires_at''', (agent,digest(token),ttl,row['id'])).fetchone()
             self.event(db,agent,'claimed',row['id'],fence=result['fence'])
             result['token']=token  # caller must save to a private file, never logs
@@ -163,9 +163,10 @@ class Store:
         if not evidence: raise ValueError('evidence_required')
         evidence=refs(evidence)
         with self.connect() as db:
+            db.execute('SELECT id FROM peticao_coord.tasks WHERE id=%s AND namespace=%s FOR UPDATE',(task,self.namespace))
             row=db.execute('''UPDATE peticao_coord.tasks SET status='completed',evidence_refs=%s,
               token_hash=NULL,version=version+1,updated_at=now() WHERE id=%s AND namespace=%s AND status='running'
-              AND owner=%s AND token_hash=%s AND fence=%s AND expires_at>now() RETURNING id,version''',
+              AND owner=%s AND token_hash=%s AND fence=%s AND expires_at>clock_timestamp() RETURNING id,version''',
               (Jsonb(evidence),task,self.namespace,agent,digest(token),fence)).fetchone()
             if row is None:raise PermissionError('stale_or_wrong_lease')
             self.event(db,agent,'completed',task,evidence,fence)
@@ -174,7 +175,7 @@ class Store:
     def expire(self):
         with self.connect() as db:
             rows=db.execute('''UPDATE peticao_coord.tasks SET status='uncertain',version=version+1,updated_at=now()
-              WHERE namespace=%s AND status='running' AND expires_at<=now() RETURNING id,fence,owner''', (self.namespace,)).fetchall()
+              WHERE namespace=%s AND status='running' AND expires_at<=clock_timestamp() RETURNING id,fence,owner''', (self.namespace,)).fetchall()
             for r in rows:self.event(db,'coordinator','expired_uncertain',r['id'],fence=r['fence'])
             return rows
 
@@ -203,6 +204,29 @@ class Store:
             return db.execute('''SELECT seq,task_id,actor,kind,refs,fence,at FROM peticao_coord.events
               WHERE namespace=%s AND seq>%s ORDER BY seq LIMIT %s''', (self.namespace,after,limit)).fetchall()
 
+    def progress(self,task,actor,evidence):
+        evidence=refs(evidence)
+        if not evidence:raise ValueError('progress_evidence_required')
+        with self.connect() as db:
+            row=db.execute('SELECT evidence_refs,status FROM peticao_coord.tasks WHERE id=%s AND namespace=%s FOR UPDATE',
+                           (task,self.namespace)).fetchone()
+            if row is None:raise ValueError('task_not_found')
+            combined=refs(list(dict.fromkeys(row['evidence_refs']+evidence)))
+            result=db.execute('UPDATE peticao_coord.tasks SET evidence_refs=%s,version=version+1,updated_at=now() WHERE id=%s RETURNING id,status,version',
+                              (Jsonb(combined),task)).fetchone()
+            self.event(db,actor,'progress',task,evidence)
+            return result
+
+    def external_jobs(self,source_id='santiago-admin',limit=20,after=''):
+        if not 1<=limit<=100:raise ValueError('limit_1_to_100')
+        with self.connect() as db:
+            rows=db.execute('''SELECT external_id,state,source_generation,p.watermark FROM peticao_coord.queue_projection p
+              WHERE p.source_id=%s AND external_id>%s AND p.watermark=(SELECT MAX(watermark)
+                FROM peticao_coord.queue_snapshots s WHERE s.source_id=p.source_id)
+              ORDER BY external_id LIMIT %s''',(source_id,after,limit+1)).fetchall()
+        return {'items':rows[:limit],'next':rows[limit-1]['external_id'] if len(rows)>limit else None,
+                'authority':'santiago_only','snapshot_projection':True}
+
     def live_dispatch(self, *args, **kwargs):
         raise PermissionError('authority_remains_existing_ledger_and_queue')
 
@@ -216,19 +240,33 @@ def ledger_snapshot(source):
         summary={'watermark':watermark,'actors':db.execute('SELECT COUNT(*) FROM actors').fetchone()[0],
                  'events':db.execute('SELECT COUNT(*) FROM events').fetchone()[0],
                  'lease_states':dict(db.execute('SELECT state,COUNT(*) FROM leases GROUP BY state'))}
-        return {'source_id':'cooperative-ledger-dell','watermark':watermark,'summary':summary,'sha256':digest(summary)}
+        data={'source_id':'cooperative-ledger-dell','watermark':watermark,'summary':summary}
+        return dict(data,sha256=digest(data))
 
 
 def import_snapshot(store, snapshot):
-    if snapshot['sha256']!=digest(snapshot['summary']):raise ValueError('snapshot_checksum')
+    if set(snapshot)!={'source_id','watermark','summary','sha256'}:raise ValueError('invalid_snapshot_fields')
+    data={k:v for k,v in snapshot.items() if k!='sha256'};summary=snapshot['summary']
+    if not isinstance(snapshot['source_id'],str) or not snapshot['source_id'] or len(snapshot['source_id'])>160:raise ValueError('invalid_source_id')
+    if type(snapshot['watermark']) is not int or snapshot['watermark']<0:raise ValueError('invalid_watermark')
+    if not isinstance(summary,dict) or set(summary)!={'watermark','actors','events','lease_states'}:raise ValueError('invalid_ledger_summary')
+    if summary['watermark']!=snapshot['watermark']:raise ValueError('watermark_mismatch')
+    if any(type(summary[k]) is not int or summary[k]<0 for k in ['watermark','actors','events']):raise ValueError('invalid_ledger_counts')
+    if not isinstance(summary['lease_states'],dict) or any(not isinstance(k,str) or type(v) is not int or v<0 for k,v in summary['lease_states'].items()):raise ValueError('invalid_lease_states')
+    if snapshot['sha256']!=digest(data):raise ValueError('snapshot_checksum')
     with store.connect() as db:
-        old=db.execute('SELECT sha256 FROM peticao_coord.ledger_snapshots WHERE source_id=%s AND watermark=%s',
-                       (snapshot['source_id'],snapshot['watermark'])).fetchone()
-        if old and old['sha256']!=snapshot['sha256']:raise ValueError('source_watermark_conflict')
-        db.execute('''INSERT INTO peticao_coord.ledger_snapshots(source_id,watermark,sha256,summary)
-          VALUES(%s,%s,%s,%s) ON CONFLICT DO NOTHING''',
-          (snapshot['source_id'],snapshot['watermark'],snapshot['sha256'],Jsonb(snapshot['summary'])))
-    return {'watermark':snapshot['watermark'],'replayed':bool(old),'authority':'existing_ledger_only'}
+        db.execute('SELECT pg_advisory_xact_lock(hashtext(%s))',('ledger:'+snapshot['source_id'],))
+        latest=db.execute('SELECT watermark,sha256 FROM peticao_coord.ledger_snapshots WHERE source_id=%s ORDER BY watermark DESC LIMIT 1',
+                          (snapshot['source_id'],)).fetchone()
+        if latest and latest['watermark']>snapshot['watermark']:raise ValueError('stale_snapshot')
+        inserted=db.execute('''INSERT INTO peticao_coord.ledger_snapshots(source_id,watermark,sha256,summary)
+          VALUES(%s,%s,%s,%s) ON CONFLICT DO NOTHING RETURNING sha256''',
+          (snapshot['source_id'],snapshot['watermark'],snapshot['sha256'],Jsonb(summary))).fetchone()
+        if not inserted:
+            old=db.execute('SELECT sha256 FROM peticao_coord.ledger_snapshots WHERE source_id=%s AND watermark=%s',
+                           (snapshot['source_id'],snapshot['watermark'])).fetchone()
+            if old['sha256']!=snapshot['sha256']:raise ValueError('source_watermark_conflict')
+    return {'watermark':snapshot['watermark'],'replayed':not bool(inserted),'authority':'existing_ledger_only'}
 
 
 def queue_snapshot(source, source_id='santiago-admin'):
@@ -272,16 +310,35 @@ def import_queue(store, snapshot):
 
 class Outbox:
     """Durable create intents only. Offline is never an execution authority."""
-    def __init__(self, path):
-        self.path=Path(path)
+    APPLICATION_ID=0x50435451
+
+    def __init__(self, path, namespace='validation', allowed_root=None):
+        root=Path(allowed_root or Path.home()/'.local/state/peticao/databases/outbox').expanduser()
+        self.namespace=namespace
+        self.path=Path(path).expanduser()
+        if not self.path.is_absolute():self.path=root/self.path
         if self.path.is_symlink():raise PermissionError('symlink_outbox')
+        if not self.path.resolve().is_relative_to(root.resolve()):raise PermissionError('outbox_outside_dedicated_root')
+        root.mkdir(mode=0o700,parents=True,exist_ok=True)
+        if root.stat().st_mode & 0o077:raise PermissionError('private_outbox_root_required')
         self.path.parent.mkdir(mode=0o700,parents=True,exist_ok=True)
         if self.path.parent.stat().st_mode & 0o077:raise PermissionError('private_outbox_directory_required')
-        fd=os.open(self.path,os.O_RDWR|os.O_CREAT,0o600);os.close(fd)
+        try:fd=os.open(self.path,os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+        except FileExistsError:fd=None
         if self.path.stat().st_mode & 0o077:raise PermissionError('private_outbox_required')
-        with sqlite3.connect(self.path) as db:
-            db.execute('''CREATE TABLE IF NOT EXISTS intents(key TEXT PRIMARY KEY,payload TEXT NOT NULL,
-              sha256 TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'pending',task_id TEXT,last_error TEXT)''')
+        if fd is not None:
+            os.close(fd)
+            with sqlite3.connect(self.path) as db:
+                db.execute(f'PRAGMA application_id={self.APPLICATION_ID}');db.execute('PRAGMA user_version=2')
+                db.execute('''CREATE TABLE intents(namespace TEXT NOT NULL,key TEXT NOT NULL,payload TEXT NOT NULL,
+                  sha256 TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'pending',task_id TEXT,last_error TEXT,PRIMARY KEY(namespace,key))''')
+        else:
+            # The first opening of an existing file is strictly RO, before CREATE/PRAGMA writes.
+            with sqlite3.connect(self.path.resolve().as_uri()+'?mode=ro',uri=True) as db:
+                if db.execute('PRAGMA application_id').fetchone()[0]!=self.APPLICATION_ID or db.execute('PRAGMA user_version').fetchone()[0]!=2:
+                    raise PermissionError('unrecognized_outbox_database')
+                if [r[1] for r in db.execute('PRAGMA table_info(intents)')]!=['namespace','key','payload','sha256','state','task_id','last_error']:
+                    raise PermissionError('unrecognized_outbox_schema')
 
     def enqueue(self, key, payload):
         allowed={'title','priority','assigned_to','context','depends_on','actor'}
@@ -289,23 +346,26 @@ class Outbox:
         refs(payload.get('context',[]))
         sha=digest(payload)
         with sqlite3.connect(self.path) as db:
-            row=db.execute('SELECT sha256 FROM intents WHERE key=?',(key,)).fetchone()
-            if row and row[0]!=sha:raise ValueError('outbox_idempotency_conflict')
-            db.execute('INSERT OR IGNORE INTO intents(key,payload,sha256) VALUES(?,?,?)',(key,canonical(payload),sha))
-        return {'key':key,'state':'intent_only','replayed':bool(row)}
+            db.execute('BEGIN IMMEDIATE')
+            inserted=db.execute('INSERT OR IGNORE INTO intents(namespace,key,payload,sha256) VALUES(?,?,?,?)',(self.namespace,key,canonical(payload),sha)).rowcount
+            stored=db.execute('SELECT sha256 FROM intents WHERE namespace=? AND key=?',(self.namespace,key)).fetchone()[0]
+            if stored!=sha:raise ValueError('outbox_idempotency_conflict')
+        return {'key':key,'state':'intent_only','replayed':not bool(inserted)}
 
     def flush(self, store, limit=20):
         if not 1<=limit<=100:raise ValueError('limit_1_to_100')
+        if getattr(store,'namespace',None)!=self.namespace:raise ValueError('outbox_namespace_mismatch')
         done=0
         with sqlite3.connect(self.path) as db:
-            rows=db.execute("SELECT key,payload FROM intents WHERE state='pending' ORDER BY key LIMIT ?",(limit,)).fetchall()
-            for key,raw in rows:
+            rows=db.execute("SELECT key,payload,sha256 FROM intents WHERE namespace=? AND state='pending' ORDER BY key LIMIT ?",(self.namespace,limit)).fetchall()
+            for key,raw,sha in rows:
+                if digest(json.loads(raw))!=sha:raise ValueError('outbox_payload_checksum')
                 try:
                     result=store.create(key,**json.loads(raw))
                 except psycopg.OperationalError as e:
-                    db.execute('UPDATE intents SET last_error=? WHERE key=?',(type(e).__name__,key))
+                    db.execute('UPDATE intents SET last_error=? WHERE namespace=? AND key=?',(type(e).__name__,self.namespace,key))
                     break  # no busy retry, no lease or dispatch while offline
-                db.execute("UPDATE intents SET state='delivered',task_id=?,last_error=NULL WHERE key=?",(result['id'],key))
+                db.execute("UPDATE intents SET state='delivered',task_id=?,last_error=NULL WHERE namespace=? AND key=?",(result['id'],self.namespace,key))
                 done+=1
         return {'delivered':done,'pending':len(rows)-done,'authority':'none_intents_only'}
 
@@ -319,6 +379,7 @@ def main():
     c=sub.add_parser('list');c.add_argument('--agent');c.add_argument('--status',action='append');c.add_argument('--limit',type=int,default=20);c.add_argument('--after');c.add_argument('--min-priority',type=int,default=0);c.add_argument('--ready-only',action='store_true')
     c=sub.add_parser('create');c.add_argument('--key',required=True);c.add_argument('--title',required=True);c.add_argument('--priority',type=int,default=50);c.add_argument('--agent');c.add_argument('--ref',action='append',default=[]);c.add_argument('--depends-on',action='append',default=[])
     c=sub.add_parser('context');c.add_argument('task')
+    c=sub.add_parser('progress');c.add_argument('task');c.add_argument('--actor',required=True);c.add_argument('--ref',action='append',required=True)
     c=sub.add_parser('events');c.add_argument('--after',type=int,default=0);c.add_argument('--limit',type=int,default=20)
     c=sub.add_parser('external-jobs');c.add_argument('--source-id',default='santiago-admin');c.add_argument('--limit',type=int,default=20);c.add_argument('--after',default='')
     c=sub.add_parser('update');c.add_argument('task');c.add_argument('--version',type=int,required=True);c.add_argument('--title',required=True);c.add_argument('--priority',type=int,required=True);c.add_argument('--agent')
@@ -335,20 +396,16 @@ def main():
     elif a.command=='list':out=s.list(a.agent,a.status,a.limit,a.after,a.min_priority,a.ready_only)
     elif a.command=='create':out=s.create(a.key,a.title,a.priority,a.agent,a.ref,a.depends_on)
     elif a.command=='context':out=s.context(a.task)
+    elif a.command=='progress':out=s.progress(a.task,a.actor,a.ref)
     elif a.command=='events':out=s.events(a.after,a.limit)
     elif a.command=='external-jobs':
-        if not 1<=a.limit<=100:raise ValueError('limit_1_to_100')
-        with s.connect() as db:
-            rows=db.execute('''SELECT external_id,state,source_generation,watermark FROM peticao_coord.queue_projection
-              WHERE source_id=%s AND external_id>%s ORDER BY external_id LIMIT %s''',(a.source_id,a.after,a.limit+1)).fetchall()
-        out={'items':rows[:a.limit],'next':rows[a.limit-1]['external_id'] if len(rows)>a.limit else None,
-             'authority':'santiago_only','snapshot_projection':True}
+        out=s.external_jobs(a.source_id,a.limit,a.after)
     elif a.command=='update':out=s.update(a.task,a.version,a.title,a.priority,a.agent)
     elif a.command=='expire':out=s.expire()
     elif a.command=='reconcile':out=s.reconcile(a.task,a.fence,a.result,a.ref)
     elif a.command=='decision':out=s.decision(a.question,a.choice,a.ref)
-    elif a.command=='outbox-enqueue':out=Outbox(a.outbox).enqueue(a.key,{'title':a.title})
-    elif a.command=='outbox-flush':out=Outbox(a.outbox).flush(s,a.limit)
+    elif a.command=='outbox-enqueue':out=Outbox(a.outbox,a.namespace).enqueue(a.key,{'title':a.title})
+    elif a.command=='outbox-flush':out=Outbox(a.outbox,a.namespace).flush(s,a.limit)
     elif a.command=='snapshot-ledger':out=import_snapshot(s,ledger_snapshot(a.source))
     elif a.command=='claim':
         a.lease_file.parent.mkdir(mode=0o700,parents=True,exist_ok=True)

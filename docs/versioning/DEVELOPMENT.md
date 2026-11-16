@@ -51,3 +51,7 @@ O manifesto e contrato imutaveis estao em `docs/versioning/host-baseline-civo-v1
 ## Delta imutavel Civo V2
 
 `docs/versioning/host-baseline-civo-v2/` preserva a V2, os sete recipes/locks e o patch minimo oscrypto com guardas de hashes. Soma A1 DEV com overlay explicito (nao wheel original sem patch) e QA JS1.62.1/Python1.62.0/Chromium151 revision1234. V1 permanece intacta. Aplicar apenas o delta em prefixo isolado e repetir smoke por host; nao copiar venvs, credenciais ou certificados para o Git. Validacao sintetica DEV nao comprova assinatura ICP/producao. K3s Civo mantem escopo pendente na fotografia V2 e nao impede a disponibilidade do codigo do app.
+
+## Coordenacao revisao 2
+
+`COORDINATION-PROFILE-v2.json` identifica a revisao 2 das fontes Databases, acrescentada em commit incremental preservando V1. O owner reportou 25 testes PostgreSQL reais e uma regressao focada de TTL apos rowlock. A revisao inclui guardas de identidade SQLite e concorrencia SHA. A homologacao dos hosts e a adocao operacional continuam sob Databases/Root/Infra; o codigo publicado nao muda a fila ativa ou o banco de assinaturas. O lock de dependencias b347 permanece o mesmo.
