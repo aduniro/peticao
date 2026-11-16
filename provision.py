@@ -58,7 +58,7 @@ def fence():
 
 fence()
 pre=json.load(open(P/'PREFLIGHT.json'));plan=json.load(open(SOURCE/'PLAN.json'))
-assert pre['quota']['standard-e5-core-count']['available']>=12
+assert pre['quota']['standard-e5-core-count']['available']>=8
 assert pre['quota']['standard-e5-memory-count']['available']>=64
 assert pre['capacity']['shape_availabilities'][0]['availability_status']=='AVAILABLE'
 assert not pre['instances'] and not pre['vcns'],'Preflight unexpected existing resources; review required'
@@ -95,6 +95,6 @@ subnet=step('subnet',lambda t:net.create_subnet(oci.core.models.CreateSubnetDeta
 public_key=pathlib.Path(pre['ssh_public_key_file']).read_text().strip()
 user_data=base64.b64encode((SOURCE/'cloud-init.yaml').read_bytes()).decode()
 image=next(x for x in pre['images'] if 'aarch64'not in x['display_name'].lower() and 'minimal'not in x['display_name'].lower())
-instance=step('instance',lambda t:compute.launch_instance(oci.core.models.LaunchInstanceDetails(compartment_id=tenant,availability_domain=pre['ads'][0],display_name=name,shape='VM.Standard.E5.Flex',shape_config=oci.core.models.LaunchInstanceShapeConfigDetails(ocpus=12,memory_in_gbs=64),source_details=oci.core.models.InstanceSourceViaImageDetails(image_id=image['id'],boot_volume_size_in_gbs=100),create_vnic_details=oci.core.models.CreateVnicDetails(subnet_id=subnet['id'],assign_public_ip=True,hostname_label=name,display_name=name+'-vnic'),metadata={'ssh_authorized_keys':public_key,'user_data':user_data},instance_options=oci.core.models.InstanceOptions(are_legacy_imds_endpoints_disabled=True),freeform_tags=tags),opc_retry_token=t))
+instance=step('instance',lambda t:compute.launch_instance(oci.core.models.LaunchInstanceDetails(compartment_id=tenant,availability_domain=pre['ads'][0],display_name=name,shape='VM.Standard.E5.Flex',shape_config=oci.core.models.LaunchInstanceShapeConfigDetails(ocpus=8,memory_in_gbs=64),source_details=oci.core.models.InstanceSourceViaImageDetails(image_id=image['id'],boot_volume_size_in_gbs=100),create_vnic_details=oci.core.models.CreateVnicDetails(subnet_id=subnet['id'],assign_public_ip=True,hostname_label=name,display_name=name+'-vnic'),metadata={'ssh_authorized_keys':public_key,'user_data':user_data},instance_options=oci.core.models.InstanceOptions(are_legacy_imds_endpoints_disabled=True),freeform_tags=tags),opc_retry_token=t))
 save('INSTANCE-CREATED.json',{'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'instance_id':instance['id'],'name':name,'region':plan['region'],'shape':instance['shape'],'shape_config':instance.get('shape_config'),'state':instance['lifecycle_state'],'image_name':image['display_name'],'gpu':False,'next':'waitRUNNING,attesthostkey,bootstrapSSH,tailnet'})
 print('VM launch accepted; next validate RUNNING, host key and tailnet.',flush=True)
