@@ -1,0 +1,66 @@
+name: Integration CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-ci-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    name: Typecheck (Node ${{ matrix.node }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20.19.2', '22.23.5']
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - name: Exact checkout and runtime
+        run: |
+          git rev-parse HEAD
+          node --version
+          npm --version
+      - run: npm ci
+        working-directory: site
+      - run: npm run typecheck
+        working-directory: site
+
+  publication:
+    name: Publication safety
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Security guard regression tests
+        run: python3 -m unittest discover -s tools/git-integration/tests -v
+      - name: Full reachable history and privacy audit
+        run: python3 tools/git-integration/audit_publication.py
+      - name: Verified scanner
+        run: python3 tools/git-integration/install_gitleaks.py --directory "$RUNNER_TEMP/peticao-tools"
+      - name: Exact historical false-positive entries
+        run: python3 tools/git-integration/validate_waivers.py
+      - name: All reachable refs, redacted output
+        run: >-
+          "$RUNNER_TEMP/peticao-tools/gitleaks" git .
+          --log-opts=--all --redact=100 --ignore-gitleaks-allow --no-banner --no-color
+          --log-level=error --report-format=json
+          --report-path="$RUNNER_TEMP/peticao-gitleaks-redacted.json"

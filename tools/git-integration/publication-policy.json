@@ -1,0 +1,1794 @@
+{
+  "schema": 1,
+  "baseline": "reviewed sanitized public refs before integration bootstrap, 2026-11-16",
+  "gitleaks_version": "8.30.1",
+  "gitleaks_waivers": [
+    {
+      "fingerprint": "05afca3008a0058146c839f5ee0626f265a60dbf:UPSTREAM-CUSTODY.json:generic-api-key:32",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "05afca3008a0058146c839f5ee0626f265a60dbf:UPSTREAM-CUSTODY.json:generic-api-key:74",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "05afca3008a0058146c839f5ee0626f265a60dbf:UPSTREAM-CUSTODY.json:generic-api-key:92",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "05afca3008a0058146c839f5ee0626f265a60dbf:upstream/runtime/SOURCE-CUSTODY.json:generic-api-key:18",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "0a62a18172590907c6b9975b9bd07cc54398b6f7:site/src/lib/admin-settings-domains.test.ts:generic-api-key:8",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "11529a161f0c5327ef667ab8c93a48c547ec4fca:site/src/lib/admin-reset-login-limit.test.ts:generic-api-key:33",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "27bff1946d058119182a2c589740cbac050a0799:SOURCE-CUSTODY.json:generic-api-key:18",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "40a9545bb20b8f45c1f0c9318a8508a0563ffa45:site/src/lib/admin-password-policy.mjs:generic-api-key:5",
+      "rule": "generic-api-key",
+      "classification": "common_password_denylist_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "48a914dec791d0bd2d8f2dd02b1c3b190ee17771:tools/admin-qa/mail-webhook-events.mjs:generic-api-key:42",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "48a914dec791d0bd2d8f2dd02b1c3b190ee17771:tools/admin-qa/mail-webhook-events.mjs:generic-api-key:43",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "4e15b7e5d069272a82aaf15bdb192e400e891f95:SOURCE-CUSTODY.json:generic-api-key:18",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "623f9da3dfc4664fadaeeee84f540b5ca3f14146:site/src/lib/admin-users.test.ts:generic-api-key:114",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "623f9da3dfc4664fadaeeee84f540b5ca3f14146:site/src/lib/admin-users.test.ts:generic-api-key:115",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "623f9da3dfc4664fadaeeee84f540b5ca3f14146:site/src/lib/admin-users.test.ts:generic-api-key:8",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "623f9da3dfc4664fadaeeee84f540b5ca3f14146:site/src/lib/senha.ts:generic-api-key:27",
+      "rule": "generic-api-key",
+      "classification": "common_password_denylist_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "7139ee00f493b259749bdb90b97dac810191d637:site/src/lib/admin-reset-requests.test.ts:generic-api-key:9",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "7266a4b56353f593f8379b8a2b92233f92988262:site/src/lib/admin-users.test.ts:generic-api-key:114",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "7266a4b56353f593f8379b8a2b92233f92988262:site/src/lib/admin-users.test.ts:generic-api-key:115",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "7266a4b56353f593f8379b8a2b92233f92988262:site/src/lib/admin-users.test.ts:generic-api-key:8",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "7266a4b56353f593f8379b8a2b92233f92988262:site/src/lib/senha.ts:generic-api-key:27",
+      "rule": "generic-api-key",
+      "classification": "common_password_denylist_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "7f5144749bd423b89649d77c6307b40774a125c1:SOURCE-CUSTODY.json:generic-api-key:18",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "9049c3fda67c3237d27f579e891e8133b62a5b89:POLICY.json:generic-api-key:172",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "9049c3fda67c3237d27f579e891e8133b62a5b89:POLICY.json:generic-api-key:173",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "9049c3fda67c3237d27f579e891e8133b62a5b89:POLICY.json:generic-api-key:181",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "9049c3fda67c3237d27f579e891e8133b62a5b89:POLICY.json:generic-api-key:182",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:107",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:109",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:117",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:119",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:147",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:149",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:157",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:159",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:172",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:173",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:181",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:182",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:218",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:221",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:229",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:232",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:27",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:29",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:37",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:39",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:67",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:69",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:77",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a2a91518d4dab65b63de5b420d69a7e1f19ae046:POLICY.json:generic-api-key:79",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "a5149bf9142f06adadfbbfddcf58c367be3ee6f6:site/src/lib/mail-preview.test.ts:generic-api-key:8",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "c8ea0c2cfe3dc0e082f858b136e53096624d4f12:SOURCE-MANIFEST.json:generic-api-key:6",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "d1856994f9507cc1b343cdcafb1576fde53d4615:site/src/lib/admin-users.test.ts:generic-api-key:114",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "d1856994f9507cc1b343cdcafb1576fde53d4615:site/src/lib/admin-users.test.ts:generic-api-key:115",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "d1856994f9507cc1b343cdcafb1576fde53d4615:site/src/lib/admin-users.test.ts:generic-api-key:8",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "d1856994f9507cc1b343cdcafb1576fde53d4615:site/src/lib/senha.ts:generic-api-key:27",
+      "rule": "generic-api-key",
+      "classification": "common_password_denylist_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "e742efd95c24fb9fbf4844615965355ca598e19c:site/src/lib/admin-users.test.ts:generic-api-key:239",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 2
+    },
+    {
+      "fingerprint": "ec0f6b56cb1310c99f81e062e6b5d3810bbe2abd:site/src/lib/admin-user-actions.test.ts:generic-api-key:8",
+      "rule": "generic-api-key",
+      "classification": "reviewed_isolated_authentication_test_fixture",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "f9eca512ac2920f7bb5fb13b91eb060bb4a3504f:docs/MATERIALS-PREVIEW-API-PREPARATION-20261111.json:generic-api-key:8",
+      "rule": "generic-api-key",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
+      "reviewed_occurrences": 1
+    }
+  ],
+  "reviewed_cpf_fixture_blobs": [
+    {
+      "blob": "e373baecc84094dddb0b26d74cc895f8c248ec87",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "75fdc51a494f85fb027b883033da0c1c14f84582",
+      "cpf_sha256": [
+        "3063d153fa20d07a4a2671bbec38df27444dff886539a1f4d5d21cafd15d22bb"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "1eb526d931b2fded52476463b4ee73d37980b886",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "083c1e024c4cd1fdb67cac7932c536785137d54a",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "3c08252636e5b077c39b10571877a473e7c171b6",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "d981119cf2e760b5a983db5f003f40fed4f4612a",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "33dc773c5e34e58dda66e6b3ce30c06ed45b552e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "c28092a0562d096dd61728c05caab6b5a4e1db67",
+      "cpf_sha256": [
+        "3063d153fa20d07a4a2671bbec38df27444dff886539a1f4d5d21cafd15d22bb",
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "4523cb89c62741c33bd6b523f91848d9bfea1ec6",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "2d6222e88fe3436853aa5c7cc07b88d5ac58d0e5",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "94d6c3e0f19738c25f723edeee12f62a1e935efc",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "2977c658fcb3520ba82c0278c0446bbfb875b236",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "6fa61594379a541f19e12d7d3918f1a9f0f10084",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ae02bc9063ab47c6d93a6675d8be39d70a7e27b7",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "6624345035b602ccc70aa57a147194dfb954b8f4",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c",
+        "a90a3cd8acbd00721d4e3d8ab5adea53fa4bf70d0e2b924eec3f09f9315d3f0d"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "2668b995a79baaf608360515eca462faca809ed8",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "f44e84cc6909db5c374897c4c58c04f245738eb5",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "819020c12af1ec48577dec9d135291ee05b130ed",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "a5f2d2b5fc3d4205eb7a63822cd109be3e395064",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "665a836fd2e8a29c3139ad34b41d075254e19788",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "2b9e3d38eef2d42e978ea1479806b050406aa171",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "cdcb3ec9652f16a21cd251e87127d868df51388a",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "e82dca10090cd5614d1489f497e8bce1b92b3f40",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "fd3db5d1ace58415ed91868503e0f30fda34aa31",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "b87e935d69453e6f76b765745ff07ad293e9cf7e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "5687be39db387b0a01aba7c6da75202191107de4",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "38702d915aea66369928a1ea1856e0ef6ec275bc",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "57d1dcd64ade7c72a30c45dd0a418027d5f3fdc3",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "10853299beddd5db304fc38b70442d03fd86c12f",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "c7bfce8146d30daced7c43201f07c9d0bf65c64e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "695b905cf4070a67548941db743e09d194a7c550",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "769bd0eb0a91f2de3867fb4eef8a0a20f7bea42c",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "25bdac65eb50572c2fc3b362e1152acc5d4fed5e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "28ee77d9380e6c935f15c8b49463dd979ccd106e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "1c6afc0abdf185e92b9749afdf9fa330143f73bf",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "6948baec227c81e9794c2d0cfaacfbb74ee7ae2b",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c",
+        "a90a3cd8acbd00721d4e3d8ab5adea53fa4bf70d0e2b924eec3f09f9315d3f0d"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "f8b59270d228777a6a7f590306dae6c63d46c6f0",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "acef2ae7905c90a440a86e7a8cc82783811e7e41",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ee7e476248938ca696b8adb230de27567cdc82da",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "a9e80c7cb13df2fbd8badd53f1e02ee91da07f51",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ba4beac880939b63fb0277d2544cfa84e6e2f562",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "d788e57b97eb587e477cd1e2a6bcae0e9f21e58e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "c00eb6c5c0150bac010ef46b835936095928628e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "8b849fcf357a45384cbd6424fd1bb2844f8aab0e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "869ea636d6939dd2652ca2a9cf67d76f4f40ef29",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "9cbc6c6a90a68ea4e15cc3899cf209db799c31ab",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "645522f7d20c61ee8885e25d9a736fa5d08bf889",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "5e500abab6977fd4abf538a45cb5b4f8c4dc9d56",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "274032b2c463d34c3f823cc5e5210395ce3312b5",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "89d1544cfba4d83b5996727450ffeb816fd10b3a",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "f84c2d362313e5313147be5f101cf97ecded59fe",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "dc6a61d293320d9318f09db89c8b72cf68bdb4f9",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "e5e373ae7bd1b88aaa2b4c058ece69fc1a506948",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "4c1483843814d9aa884b8e3c7f17f03a81e992dc",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "b37700dd15e5bc394b7f5dc660f7686bf51a4f98",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "7635dbed8f069cff34c229457f9fabeeee9c8052",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "74b57627113e2a46d165a6d0240a22ec836a972c",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "7db42c33094943c6afb4621f001d21156f686d42",
+      "cpf_sha256": [
+        "3063d153fa20d07a4a2671bbec38df27444dff886539a1f4d5d21cafd15d22bb",
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "0c6e8d96f3e61fd3ba5b4f2d983a798859f59e55",
+      "cpf_sha256": [
+        "3063d153fa20d07a4a2671bbec38df27444dff886539a1f4d5d21cafd15d22bb"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "e45848eee645f2de5cfa09060aa05f696183d5d1",
+      "cpf_sha256": [
+        "3063d153fa20d07a4a2671bbec38df27444dff886539a1f4d5d21cafd15d22bb",
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "94bfffcb92364f7804d7d3bb17c0b8b7aba989b3",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "113a01804e93281fe50eb1eb3b8e06a8bad61f7c",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "62e6a0886239b2cfa218c281924a0eb99ff81a04",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "17359bbcb0fcccf6dff2a2b62a69a1257aec23b2",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "4a80ce307755b4dd182c375ecd1f313cfb1acefb",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "4f3f66baeffad953e33fad9da668f8ac06136db8",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c",
+        "a90a3cd8acbd00721d4e3d8ab5adea53fa4bf70d0e2b924eec3f09f9315d3f0d"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "938ca32a4b32118e1b7bf415c45334035bcf7bae",
+      "cpf_sha256": [
+        "8723df350c60f8c6da57f987822451cd19cf56c4774a205e1e46ced7acbaf3ba",
+        "8d264e5eb84eddf757101a0007964f596653127f6bf5f1982e2bab5b5fc07b44"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "be30f8553202b0c842dfd1217735b0403e514af4",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "3a67e15b4760b696a47eb191dac61f601c072108",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "4c068d6ddfc173e64541d4bf4987695d08177565",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "3bf3359eba51ec6637a27f36c155eb36323ec0e4",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "7b7831aca6f9d03b04401559b88979d762778d31",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "6fa47a442886c1a0a9b18ca776a0c0125fefba94",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "bf5c2bbdb470a387f9b4f77a3417bba8a1de0b57",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "1bfc918e103612b1ad0c1a23ddf9ab285096fffc",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "30bbfa9c4df785b027bbcc5cc0375650cb4c4971",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "b15d7f316fefefaa21cce60cea82b61566710d4b",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "af6f61fbb2e2d7a68467b788d6d9367f429e1160",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c",
+        "a90a3cd8acbd00721d4e3d8ab5adea53fa4bf70d0e2b924eec3f09f9315d3f0d"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "25a8f649f31cbe9644143b7c8b075c8075ac44fe",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "cc4cd38c2b6b572166f2d5026848328ec81295c8",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "098404c14109ef6a2c45576e6a5ad2f4e467b5cc",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "6e3aaecba1995c508ba5433b0c8d60e3804d851c",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "18e042bb94796475dbac36820c047d453b5f91f5",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "8cfab36b6187a66e67b6d5409a5dd990be099810",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "b5616b6b3f1b2ec54a1ec34895fa071f8a1fea18",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "641b9d6d03caefbc29197e91a88686a9659284d1",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "23fb3494613c70c700161b46cc1939140de07fd7",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "bfef167812d4d6f449086e5bd03f125e1d347cef",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "fbdc92786cc6ddfc631885d2a2fec117da56e9ce",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "857402074718fe8d0399d0b8fc17a6fb381141c6",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "084f5bf4273d9c6e573839d848c6b0f570c8a589",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "df8e7867963f4329461475d78806c1abd2524631",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "938e6134de81727a9c68cc4ae3017bb96aab6ac7",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "a628fe09098a55a5bce863cdf3a99d44f97bb355",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "86a7ff280ae77661f283423d408141e668c09ea0",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "d9d992a29cf37848441fcd3765e92fdb659be817",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "d86130963249110549b9945dab409e546974632c",
+      "cpf_sha256": [
+        "3063d153fa20d07a4a2671bbec38df27444dff886539a1f4d5d21cafd15d22bb",
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "b196bd98d2d8ec13ec894ce1b626edfc6a1e354c",
+      "cpf_sha256": [
+        "70b4717f1d05d2ad9daa1ca47e821fc8938c9c90bf17babd3627f4580489d1c5",
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "47de6669420920f7168028d6948af5c21d0df513",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "40d9a524f6524a65a9d2b08af7fb30f1953194a1",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "55de2a7bb385ea94d25276626636ba4e15f47ba6",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "119086512e667f9e175b30626fe68e03810516d3",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "f1428155289189cc8a59d0427c80a108bccf0a36",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "749459aa2347f094edc4460d65332d5c00d042cd",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ddef21e8b698b0b550ecb41ee7aa2ac3c94f277c",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ed15a1e36963f9b8c337dc8bee298d17ccb1621a",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "dc6cbc7c60e2dcf6d57f0a8c9a50a16884ba67df",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "e837ca1bf51d0982e20b35e5ba8a424b168982da",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "427cc31cfecb63c55267dd15f3228c5a867890f2",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "49c45a60f156ae9d04ea5fb749f5dae523978de3",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "8be164e8c52470301642725fcc0a0da2d6025705",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "c234cf08ce7a3d2adf864c2a5f9736ab3fd1d29e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "76472585087293a50bac2c081f8b8911a4715fcd",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "e527d215b50c991bfd214d05eb2d7917571d6bda",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "9754f50c69e04b42156f78373c17e1f27fcad52d",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ab90c22a2902c6f62120399a9ccbb335ec8fd3d2",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "8b8340cd2ca1ae11e2a3097b17b091992de4d986",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "85368e3dfef08b7f7a91a8508963cf33995053b2",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "c5dc6757e9f788d09169ad85fff801152602aed8",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "3916ad61f018dbd5bf51bedd416b8993b5b931cb",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "616ece347c07c02d3c04a0dd9efe41e419ce913c",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "0a30346f37bb037cb5db6c916c6bdc72a1da4463",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "2717de1bd443fc2f2410174180cf02d46ac9aba0",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ce97094b39f4f49b1577fd0d6964553a1dc87402",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "b15d3cf9329b1e1676c5709592fbbd7c36bad121",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "5908354fa4dfaa2a944008f67912d527047e3c9d",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "f889c5e264faeba8515923084b594f2b37d64a3c",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "64c7ef6b8be00eafbf316f2e3d67c5250ecc87f4",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "436bcd6586eac86092abfd1afd732c39dee139fa",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ff5088e042e6eb7ec6619391d1f4a8bc6384263e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "e84f99b2bb606b279e4c55073806ff136b0f6fe3",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "cc1308f76c740b8c36eba5a8a71bb33e496aea83",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "f2099fdb2a0e64cccb3768a31d72d19dd1567aa1",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "5facb59917609f30147a1f285e575cef996cbc04",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "96306cb41661a32994d5c04c79f3ae55f99cb1b5",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "27a211457ce0e6b2bfc89bbf7b28fa9cf3574028",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "1fd6b061ec5b66106f9e34c37bd6649855067d6c",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "f29808fcdec006157772bf501868ea01e16597e0",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "a71c443390617851be16fa110518c3e76c3590b6",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "734aca986cfe2a15a0aada9665a0f2c36a6eb7a0",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ffdef87e4b7ba29665b38712b58108a47c3944c4",
+      "cpf_sha256": [
+        "3063d153fa20d07a4a2671bbec38df27444dff886539a1f4d5d21cafd15d22bb",
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "865758a818445cc1cdfc4c80371046607fe3a9eb",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c",
+        "a90a3cd8acbd00721d4e3d8ab5adea53fa4bf70d0e2b924eec3f09f9315d3f0d"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "8017050dae0c99d8f4b6a6b6bba2b6bed2271141",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "750f88ac14e0403d6f9b15e0f207502f95ad998a",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "0128d369386c8a19107b7e5921876d12ad933f0f",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "5849cac766cf58d660fa0797c9003749f1705158",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "7e95a0b2b1000e5ffd2383a9cc67416ec6826156",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "463876b57cfce3962b12fdb4ab34bf69d31999b8",
+      "cpf_sha256": [
+        "70b4717f1d05d2ad9daa1ca47e821fc8938c9c90bf17babd3627f4580489d1c5",
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "73a222b22558a8aea124aefb8fe558105f932958",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "bc0a2c749a05ccf0e65a377f972b35724cf82b9a",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c",
+        "a90a3cd8acbd00721d4e3d8ab5adea53fa4bf70d0e2b924eec3f09f9315d3f0d"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "fcdae124a9216c32049bb3a215b7e5a680beefd3",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "b197334325d85a628af50ba3cb45e35202d49c0e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "cd889bc3b7b6f1251dc1da8cda87458885637eb7",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ade4a818a8f8886a6997149018c19b79d562042e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "032a59b90239a2c804899da5ed42c065c853939e",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "a3e252cea05e53d088e38227dabcc0c980aad865",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "fc88ba7176f62cb2ce1f54b62e9fdcb95b484d5b",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "330f292a446168073490feeb07265c79a332a659",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "0c78ad5ad5857238176081917c15a2e7325076d9",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "02f6b1af0f1b752d64103048a0a1282422c9bd19",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "6f783576c2bf5459a35b18449b7210e3a69b0044",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "33e9c9c1bae0052038a1ee73c0d55731bdbdf2ae",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "fb1f21b1f224d7d0e209b91f1c49cd5d7433bf47",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "82b22f7b3b481084a4cea2ac39686cb8b7ecba98",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "63d398891d72e461ffe5955efba3f487b8025279",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "ac92845b4ba1ea3af6010c9e41e84aef4048ed2a",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "c3a36c64b3c93ea33aeffd6e2e5842d544ac4300",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "387882db564bd180861fcb97a07fa413e7653d1a",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "bd89161b6201a322aac34b82d8f8abade2678d23",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "38637b4853e90cf4edaf0f2f2ca6d8ec59b370f3",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "72f20cb102c6b2511dbb2bb9e150c628018603a4",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "713f47d3fd2da1f9e6b076c4c9d5c3d4deb93759",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "b227397485bd7223903ef4a887cac707680c7f18",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "f1fe1689bd245724782e23686781b0b4650ebdee",
+      "cpf_sha256": [
+        "7ec94663084bd506d4f0c3e21042df233681fd7426e93f397c921b1d3e397bba"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "11a9af4e1069ba15fa8929684d821d6663c2427a",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "b4142b4700ab55505dbb3375701c2f6e715b68ad",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "243a6b7f0954257303a6fbc19846389c494e5c8f",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "2b6567a7f360c20c9a39c1b5c4bc309abcc0af65",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231",
+        "8c2d3a751f9c73934441d16f9578d566e7dd7a2996a042f2ef047b5be926534c"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "b55fa8df7db5ee7d1c026c65b62380eb2954f5b2",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "d5c785dc2c024a82342977be4828fedf5097e62f",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "e2f928a9833a47357a21856b8881b78a209fa48e",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "40c365c8bf60ef039407b3a6af89fb234b7cccd7",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "4d08f004f4a88ef0994a86ced25137fc30163cbd",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "f7a05ec6d00d59a6125389aafa0d2a6f35854b1f",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "c9a1fb141a5aac29926ff7924003793f53a466f1",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "cd9e51585f74d0188e060d0580fe919f672464f6",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "41b0afa15ec0c5e22976c4bd4073f8ff0e1fa4a6",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "72b7fbb88559dd84f686e8f85b4330a6b8c98843",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    },
+    {
+      "blob": "77d64f190cf9c545a5ba7ed1b1ca90935b434feb",
+      "cpf_sha256": [
+        "7281dfb5e8becca0a1c5e77c1268baacb0f983572b8c204fd8df72b24175b231"
+      ],
+      "reason": "Exact existing fixture blob in the independently reviewed sanitized public baseline; any edited blob requires a new explicit review."
+    }
+  ],
+  "new_findings_fail_closed": true,
+  "raw_or_private_source_hashes_included": false,
+  "reviewed_gitleaks_occurrences": 59
+}
