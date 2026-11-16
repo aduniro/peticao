@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { filtrosParaQuery, filtrosVazios, parseFiltros, type Filtros } from "@/lib/assinaturas-filtros";
 import type { SignatureExplorerFacet as Faceta, SignatureExplorerPoint as Ponto, SignatureExplorerResult } from "@/lib/signature-explorer-admin-contract";
 import { brasilia } from "@/lib/time";
@@ -105,6 +105,11 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
 
   const modoCheio = cheio || tela;
   const [folha, setFolha] = useState(false);
+  const tableId = useId(), filtersId = useId();
+  const tableToggle = useRef<HTMLButtonElement>(null), tableClose = useRef<HTMLButtonElement>(null);
+  const filtersToggle = useRef<HTMLButtonElement>(null);
+  useEffect(() => { if (modoCheio && folha) tableClose.current?.focus(); }, [modoCheio, folha]);
+  const fecharTabela = () => { setFolha(false); tableToggle.current?.focus(); };
   if (modoCheio) {
     return (
       <div className="adm-explorador v2-mapa-cheio" role="region" aria-label="Explorador de assinaturas" aria-busy={buscando}>
@@ -113,8 +118,8 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
         </div>
         <div className="v2-mapa-comando">
           <div className="v2-mapa-barra">
-            <button type="button" className="v2-btn v2-btn-primario" hidden={mobile} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Fechar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
-            {!tela && <button type="button" className="v2-btn v2-btn-sec" aria-expanded={folha} onClick={() => setFolha(!folha)}>{folha ? "Fechar tabela" : "Tabela"}</button>}
+            <button ref={filtersToggle} type="button" className="v2-btn v2-btn-primario" hidden={mobile} aria-controls={filtersId} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Fechar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
+            {!tela && <button ref={tableToggle} type="button" className="v2-btn v2-btn-sec" aria-controls={tableId} aria-expanded={folha} onClick={() => setFolha(!folha)}>{folha ? "Fechar tabela" : "Tabela"}</button>}
       <div className="adm-seg" role="group" aria-label="Camada do mapa">
         <button type="button" aria-pressed={camada === "assinaturas"} className={camada === "assinaturas" ? "on" : ""} onClick={() => setCamada("assinaturas")}>Assinaturas (local declarado)</button>
         <button type="button" aria-pressed={camada === "visitas"} className={camada === "visitas" ? "on" : ""} onClick={() => setCamada("visitas")}>Visitas (por IP)</button>
@@ -133,7 +138,7 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
       {r && <p className="adm-sub">Consulta: {brasilia(r.asOf,true)}. Cada página possui seu próprio horário.</p>}
       {r && !r.capabilities.contacts && <p className="adm-sub">{COPY.contacts}</p>}
 
-          {(aberto || mobile) && <div className={mobile ? undefined : "v2-mapa-filtros"}><FiltrosShell><div className="adm-filters" role="search" >
+          {(aberto || mobile) && <div id={filtersId} className={mobile ? undefined : "v2-mapa-filtros"} onKeyDown={(event) => { if (!mobile && event.key === "Escape") { event.stopPropagation(); setAberto(false); filtersToggle.current?.focus(); } }}><FiltrosShell><div className="adm-filters" role="search" >
         <input type="search" maxLength={80} placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
         {CHAVES.map((k) => <MultiBase key={k} rotulo={ROTULOS[k]} opcoes={FIXAS[k] ?? r?.facetas[k] ?? []} valor={f[k]} onChange={(v) => mudar(k, v)} />)}
         <label>De <input type="date" value={f.de} onChange={(e) => mudar("de", e.target.value)} /></label>
@@ -142,8 +147,8 @@ function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
       </div></FiltrosShell></div>}
         </div>
         {!tela && folha && (
-          <div className="v2-mapa-folha" role="region" aria-label="Tabela de assinaturas">
-            <div className="v2-mapa-folha-topo"><b>Assinaturas deste filtro</b><button type="button" className="v2-btn v2-btn-sec v2-pequeno" onClick={() => setFolha(false)}>Fechar ✕</button></div>
+          <div id={tableId} className="v2-mapa-folha" role="region" aria-label="Tabela de assinaturas" onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); fecharTabela(); } }}>
+            <div className="v2-mapa-folha-topo"><b>Assinaturas deste filtro</b><button ref={tableClose} type="button" className="v2-btn v2-btn-sec v2-pequeno" onClick={fecharTabela}>Fechar ✕</button></div>
       {r ? (
         <>
           <div className="adm-tablewrap">

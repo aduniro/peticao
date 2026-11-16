@@ -19,7 +19,8 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
 
   useEffect(() => {
     if (!el.current || map.current) return;
-    map.current = L.map(el.current, { center: [-14.2, -51.9], zoom: 4, worldCopyJump: true });
+    map.current = L.map(el.current, { center: [-14.2, -51.9], zoom: 4, worldCopyJump: true, zoomControl: false });
+    L.control.zoom({ position: "bottomleft" }).addTo(map.current);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map.current);
     layer.current = L.layerGroup().addTo(map.current);
     const ro = new ResizeObserver(() => map.current?.invalidateSize()); ro.observe(el.current);
@@ -30,6 +31,29 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
     if (!map.current || !layer.current) return;
     layer.current.clearLayers(); marcas.current = {};
     const lim: L.LatLngTuple[] = [];
+    const adicionar = (marker: L.CircleMarker, box: HTMLElement, label: string) => {
+      let teclado = false;
+      const command = el.current?.closest(".v2-mapa-cheio")?.querySelector(".v2-mapa-comando");
+      const top = command && el.current ? Math.max(12, command.getBoundingClientRect().bottom - el.current.getBoundingClientRect().top + 12) : 12;
+      marker.bindPopup(box, { autoPanPaddingTopLeft: [12, top], autoPanPaddingBottomRight: [12, window.matchMedia("(max-width: 992px)").matches ? 76 : 12] }).on("add", () => {
+        const element = marker.getElement();
+        if (!element) return;
+        element.setAttribute("tabindex", "0"); element.setAttribute("role", "button"); element.setAttribute("aria-label", label);
+        element.addEventListener("keydown", (event) => {
+          const key = (event as KeyboardEvent).key;
+          if (key !== "Enter" && key !== " ") return;
+          event.preventDefault(); event.stopPropagation(); teclado = true; marker.openPopup();
+        });
+      }).on("popupopen", () => {
+        if (!teclado) return;
+        const popup = marker.getPopup()?.getElement();
+        const target = popup?.querySelector<HTMLElement>("button, a");
+        target?.focus();
+      }).on("popupclose", () => {
+        if (teclado) (marker.getElement() as SVGElement | undefined)?.focus();
+        teclado = false;
+      }).addTo(layer.current!);
+    };
     if (acessos) {
       const ROT = { confirmed: "assinaturas confirmadas", pending: "aguardando confirmação do e-mail", invalid: "e-mails inexistentes", blocked: "e-mails bloqueados", queued: "e-mails na fila" } as const;
       for (const a of acessos) {
@@ -37,7 +61,7 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
         const m = L.circleMarker([a.lat, a.lon], { radius: 5 + Math.min(22, Math.sqrt(tot) * 3), color: REQ_COLORS[dom], fillColor: REQ_COLORS[dom], fillOpacity: 0.55, weight: 1.5 });
         const box = document.createElement("div"); const h = document.createElement("strong"); h.textContent = [a.city, a.region, a.country].filter(Boolean).join(", ") || "Local desconhecido"; box.appendChild(h);
         for (const k of Object.keys(ROT) as (keyof typeof ROT)[]) if (a[k]) { const d = document.createElement("div"); d.textContent = `${a[k]} ${ROT[k]}`; box.appendChild(d); }
-        m.bindPopup(box); m.addTo(layer.current); lim.push([a.lat, a.lon]);
+        adicionar(m, box, `${h.textContent}: ${tot} acesso(s) e pedido(s). Abrir detalhes`); lim.push([a.lat, a.lon]);
       }
       if (lim.length) map.current.fitBounds(L.latLngBounds(lim).pad(0.2), { maxZoom: 8 });
       return;
@@ -48,7 +72,7 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
         const box = document.createElement("div");
         const h = document.createElement("strong"); h.textContent = v.local; box.appendChild(h);
         for (const t of [`${v.visitas} visita(s)`, `${v.confirmadas} assinatura(s) confirmada(s)`, `${v.pendentes} aguardando confirmação`, `${v.devolvidos} e-mail(s) inexistente(s)/devolvido(s)`, v.bloqueios ? `${v.bloqueios} bloqueio(s)` : ""]) if (t) { const d = document.createElement("div"); d.textContent = t; box.appendChild(d); }
-        m.bindPopup(box); m.addTo(layer.current); lim.push([v.lat, v.lon]);
+        adicionar(m, box, `${v.local}: ${v.visitas} visita(s). Abrir detalhes`); lim.push([v.lat, v.lon]);
       }
       if (lim.length) map.current.fitBounds(L.latLngBounds(lim).pad(0.2), { maxZoom: 8 });
       return;
@@ -62,7 +86,7 @@ export default function MapaAssinaturas({ pontos, altura, onEscolher, foco, visi
       add(`${p.conf} confirmada(s) · ${p.pend} aguardando confirmação`);
       for (const [c, v] of Object.entries(p.por)) add(`${CAT[c] ?? c}: ${v.conf} conf. / ${v.pend} pend.`);
       const b = document.createElement("button"); b.type = "button"; b.className = "adm-btn"; b.textContent = "Filtrar a tabela por este local"; b.onclick = () => cb.current(p); box.appendChild(b);
-      m.bindPopup(box); m.addTo(layer.current); marcas.current[p.chave] = m; lim.push([p.lat, p.lon]);
+      adicionar(m, box, `${h.textContent}: ${p.conf} confirmada(s), ${p.pend} aguardando confirmação. Abrir detalhes`); marcas.current[p.chave] = m; lim.push([p.lat, p.lon]);
     }
     if (lim.length) map.current.fitBounds(L.latLngBounds(lim).pad(0.2), { maxZoom: 8 });
   }, [pontos, visitas, acessos]);
