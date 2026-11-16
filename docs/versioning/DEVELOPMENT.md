@@ -55,3 +55,7 @@ O manifesto e contrato imutaveis estao em `docs/versioning/host-baseline-civo-v1
 ## Coordenacao revisao 2
 
 `COORDINATION-PROFILE-v2.json` identifica a revisao 2 das fontes Databases, acrescentada em commit incremental preservando V1. O owner reportou 25 testes PostgreSQL reais e uma regressao focada de TTL apos rowlock. A revisao inclui guardas de identidade SQLite e concorrencia SHA. A homologacao dos hosts e a adocao operacional continuam sob Databases/Root/Infra; o codigo publicado nao muda a fila ativa ou o banco de assinaturas. O lock de dependencias b347 permanece o mesmo.
+
+## Qualificacao de execucao
+
+Consulte `RUNTIME-ADVISORIES.json`: a instalacao do pacote embedded-postgres18 nao comprovou o servidor no runtime observado (libicui18n.so.60 ausente). Testes de banco precisam de perfil isolado comprovado, nunca do banco de producao. Defaults de contatos privados foram removidos da copia publica; preencher configuracao privada apropriada antes de operacao ou deploy e conferir efeitos da sanitizacao. GitHub pronto significa fontes/ref/clone verificados, nao qualificacao funcional de todos os ambientes.
