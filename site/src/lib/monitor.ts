@@ -6,6 +6,12 @@ export const sinceOf = (w: Window): string => {
   return ms ? new Date(Date.now() - ms).toISOString() : "1970-01-01T00:00:00.000Z";
 };
 
+/** Intervalo de datas (AAAA-MM-DD, inclusivo nas duas pontas, em UTC como o filtro de assinaturas) para os limites ISO que o resumo usa. */
+export const intervaloIso = (de: string, ate: string): { since: string; until?: string } => ({
+  since: de ? `${de}T00:00:00.000Z` : "1970-01-01T00:00:00.000Z",
+  until: ate ? new Date(new Date(`${ate}T00:00:00.000Z`).getTime() + 86400e3).toISOString() : undefined,
+});
+
 export type Summary = { visitors: number; pageviews: number; clicks: number; formStarts: number; signedVisitors: number; confirmedVisitors: number };
 export type Point = { lat: number; lon: number; city: string | null; region: string | null; country: string | null; visitors: number; signed: number };
 export type VisitorRow = {
@@ -15,16 +21,18 @@ export type VisitorRow = {
 };
 export type EventRow = { ts: string; type: string; path: string | null; target: string | null; label: string | null; ref_code: string | null };
 
-export async function monitorSummary(since: string): Promise<Summary> {
+/** Resumo de visitas. `until` (opcional, exclusivo, ISO) limita o fim do intervalo; sem ele vai até agora. */
+export async function monitorSummary(since: string, until?: string): Promise<Summary> {
+  const lim = until ? [since, until] : [since];
   const r = (await query<any>(
     `SELECT COUNT(DISTINCT visitor_id)::int visitors,
        COUNT(*) FILTER (WHERE type='pageview')::int pageviews,
        COUNT(*) FILTER (WHERE type='click')::int clicks,
        COUNT(DISTINCT visitor_id) FILTER (WHERE type='form_start')::int form_starts
-     FROM events WHERE ts >= $1 AND is_bot=false`, [since])).rows[0];
+     FROM events WHERE ts >= $1${until ? " AND ts < $2" : ""} AND is_bot=false`, lim)).rows[0];
   const s = (await query<any>(
     `SELECT COUNT(DISTINCT e.visitor_id)::int signed, COUNT(DISTINCT e.visitor_id) FILTER (WHERE s.status='confirmed')::int confirmed
-     FROM events e JOIN signatures s ON s.visitor_id = e.visitor_id WHERE e.ts >= $1 AND e.is_bot=false`, [since])).rows[0];
+     FROM events e JOIN signatures s ON s.visitor_id = e.visitor_id WHERE e.ts >= $1${until ? " AND e.ts < $2" : ""} AND e.is_bot=false`, lim)).rows[0];
   return { visitors: r.visitors, pageviews: r.pageviews, clicks: r.clicks, formStarts: r.form_starts, signedVisitors: s.signed, confirmedVisitors: s.confirmed };
 }
 

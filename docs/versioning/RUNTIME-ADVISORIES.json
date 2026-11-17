@@ -1,0 +1,32 @@
+{
+  "recorded_at": "2026-11-16T07:55:13.730830+00:00",
+  "scope": "Code publication readiness is separate from runtime and production qualification",
+  "items": [
+    {
+      "id": "embedded-postgres-icu60",
+      "status": "pending_independent_profile_revision",
+      "observed_by": "Infra/Civo, confirmed Root",
+      "component": "embedded-postgres18.4.0-beta.17",
+      "issue": "Server binary requires libicui18n.so.60 not available in the observed native runtime",
+      "action": "Use a separately validated isolated database profile; do not infer server readiness from package presence or imports. Future Infra revision must pin compatibility libraries and repeat local smoke."
+    },
+    {
+      "id": "private-operator-defaults",
+      "status": "explicit_private_configuration_required",
+      "issue": "Private operator contacts in source defaults were replaced for publication",
+      "action": "Restore intended authorized recipients/owner settings through private configuration before operational use or deployment; preserve production settings and review sanitization impact. Never merge raw private history back into the public repository."
+    },
+    {
+      "id": "coordination-revision2",
+      "status": "versioned_source_checkpoint",
+      "issue": "Revision1 remains in history and does not contain later guard fixes",
+      "action": "Use identified revision2 code and owner homologation evidence; no active queue or production database cutover is implied."
+    },
+    {
+      "id": "historical-wip",
+      "status": "archived_not_integrated",
+      "issue": "Captured pending sources include unfinished modules and operational drafts",
+      "action": "Do not activate or integrate from archive merely because they were versioned."
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "revision": 2,
+  "source_session": "01a1e313-ac26-7f40-854c-ab475c3845e3",
+  "source_checkpoint_at": "2026-11-16T07:38:51.127054+00:00",
+  "files": [
+    {
+      "path": "coordination.py",
+      "source_sha256": "e82b52088b67f536757d0ee9fa5ec659bf23a0e635c4cca52428baf59db436a7",
+      "public_sha256": "e82b52088b67f536757d0ee9fa5ec659bf23a0e635c4cca52428baf59db436a7"
+    },
+    {
+      "path": "schema.sql",
+      "source_sha256": "a407bfef9f1b4bb379c1a521c71d253c764f358558da36ca25435171b5fac481",
+      "public_sha256": "a407bfef9f1b4bb379c1a521c71d253c764f358558da36ca25435171b5fac481"
+    },
+    {
+      "path": "schema002.sql",
+      "source_sha256": "7a287a4558c7a5fe579642ae3ecf287fb6c2991a8fcf514817da247d2410165e",
+      "public_sha256": "7a287a4558c7a5fe579642ae3ecf287fb6c2991a8fcf514817da247d2410165e"
+    },
+    {
+      "path": "queue_export.py",
+      "source_sha256": "094328f86c62f4dc33b5f2d2a3bf9d67f8534a389976f0ec5560897d084315ee",
+      "public_sha256": "094328f86c62f4dc33b5f2d2a3bf9d67f8534a389976f0ec5560897d084315ee"
+    },
+    {
+      "path": "test_coordination.py",
+      "source_sha256": "ca8ceb8ced41a634226cc9bf182288e8337877ca63dd6d12513e5280e2298834",
+      "public_sha256": "ca8ceb8ced41a634226cc9bf182288e8337877ca63dd6d12513e5280e2298834"
+    },
+    {
+      "path": "requirements.txt",
+      "source_sha256": "03773496f39cb86eafc8e92217c5137c75815f5a2b6f16bdf33a8b436da44433",
+      "public_sha256": "03773496f39cb86eafc8e92217c5137c75815f5a2b6f16bdf33a8b436da44433"
+    },
+    {
+      "path": "requirements.lock",
+      "source_sha256": "b347248384fe576acbaaff6e83f202394175fe3c7c1c8ea4f5044e52daa7b6a4",
+      "public_sha256": "b347248384fe576acbaaff6e83f202394175fe3c7c1c8ea4f5044e52daa7b6a4"
+    },
+    {
+      "path": "neon_admin.py",
+      "source_sha256": "ea0aadb7f9d0409b222c26495626426f215ff753cf11479e50bad537bf7fda4c",
+      "public_sha256": "ea0aadb7f9d0409b222c26495626426f215ff753cf11479e50bad537bf7fda4c"
+    },
+    {
+      "path": "access_profiles.py",
+      "source_sha256": "7035f1c18215dacd44337ed6a567d76ba46d966e3fcc8419b14b066f53038236",
+      "public_sha256": "7035f1c18215dacd44337ed6a567d76ba46d966e3fcc8419b14b066f53038236"
+    },
+    {
+      "path": "recovery.py",
+      "source_sha256": "a7b1c6060783cc934f66850801918df2d67b5c2c5e32633091de140de333ab70",
+      "public_sha256": "a7b1c6060783cc934f66850801918df2d67b5c2c5e32633091de140de333ab70"
+    },
+    {
+      "path": "install_profile.py",
+      "source_sha256": "49acc9557d91222791464bd7bf89c3d3858b1bf8116c1594ad81140f515770b9",
+      "public_sha256": "49acc9557d91222791464bd7bf89c3d3858b1bf8116c1594ad81140f515770b9"
+    },
+    {
+      "path": "deployment.py",
+      "source_sha256": "60fcab85ff57f1a0d4793c37c74bb85b6f5db3be9a7190a6f21834e3c295a796",
+      "public_sha256": "60fcab85ff57f1a0d4793c37c74bb85b6f5db3be9a7190a6f21834e3c295a796"
+    },
+    {
+      "path": "verify_hosts.py",
+      "source_sha256": "fb53c23f4261218c28790537b37f32ca1b0707871e279706c595072e703faed5",
+      "public_sha256": "fb53c23f4261218c28790537b37f32ca1b0707871e279706c595072e703faed5"
+    },
+    {
+      "path": "runtime_audit.py",
+      "source_sha256": "157ab3e73a4e63c263dbeb143cdfcc3450ef162d6b2762fd367a4355ad247502",
+      "public_sha256": "157ab3e73a4e63c263dbeb143cdfcc3450ef162d6b2762fd367a4355ad247502"
+    },
+    {
+      "path": "README.md",
+      "source_sha256": "16c02b7f7007f54c2ba4ccb168af7cb85418fff029d673e347c41ef2751b3b78",
+      "public_sha256": "16c02b7f7007f54c2ba4ccb168af7cb85418fff029d673e347c41ef2751b3b78"
+    },
+    {
+      "path": "ADOPTION-CONTRACT.md",
+      "source_sha256": "21b60edf497f662c720aee8c633a3e36e1e63d34ef79a5816b5669020e3c5138",
+      "public_sha256": "21b60edf497f662c720aee8c633a3e36e1e63d34ef79a5816b5669020e3c5138"
+    }
+  ],
+  "source_owner_validation": "25 PG tests PASS plus focused wall-clock regression; operational pilot authorized but not yet activated",
+  "source_owner_guard_tests_reported": 25,
+  "separate_ttl_after_rowlock_regression_reported": true,
+  "migration_reran_external_tests": false,
+  "private_configuration_not_included": true,
+  "production_database_migrated": false,
+  "active_queue_cutover": false,
+  "runtime_rollout_homologation_owned_by_databases": true,
+  "v1_preserved_in_prior_commit": true
+}

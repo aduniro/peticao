@@ -6,13 +6,13 @@ import { newToken, sha256 } from "./security";
 /** Sem 0, 1, I, L, O para evitar confusão ao digitar ou ler o código. */
 const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 export const CODE_RE = /^[2-9A-HJKMNP-Z]{7}$/;
-const newCode = () => Array.from({ length: 7 }, () => ALPHABET[randomInt(ALPHABET.length)]).join("");
+export const newReferrerCode = () => Array.from({ length: 7 }, () => ALPHABET[randomInt(ALPHABET.length)]).join("");
 
 export type Referrer = { id: number; code: string; label: string | null; display_name: string | null; signature_id: number | null; created_at: string };
 
 async function insert(run: (sql: string, p: unknown[]) => Promise<{ rows: any[] }>, label: string | null, displayName: string | null, sigId: number | null) {
   for (let i = 0; i < 5; i++) {
-    const code = newCode(), token = newToken();
+    const code = newReferrerCode(), token = newToken();
     try {
       await run(
         "INSERT INTO referrers(code,manage_token_hash,label,display_name,signature_id) VALUES($1,$2,$3,$4,$5)",

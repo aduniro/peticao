@@ -1,0 +1,17 @@
+# TEMPLATE: merge into the existing Caddy configuration only after DNS/TLS,
+# upstream readiness and coexistence qualification. Do not replace apex blocks.
+admin.sancionaintegral.org {
+    header X-Robots-Tag "noindex, nofollow"
+    @root path /
+    redir @root /admin 302
+    # Existing production timers keep using the original host/instance.
+    @cron path /api/cron /api/cron/*
+    respond @cron 404
+    @internal path /api/internal /api/internal/*
+    respond @internal 404
+    reverse_proxy 127.0.0.1:3001 {
+        header_up Host admin.sancionaintegral.org
+        header_up X-Forwarded-Host admin.sancionaintegral.org
+        header_up X-Forwarded-Proto https
+    }
+}

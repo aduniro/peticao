@@ -1,0 +1,54 @@
+# Regressão cumulativa do candidato
+
+## Rodada preservada
+
+Commit c306185d558cad953b7ce179b682544fef937b04: 784 testes, 775 aprovados e 9 falhas, sem mudança das fontes durante a execução. Evidência local: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/full-1794267303974002012/result.json`.
+
+## Correções em validação
+
+- QA passa explicitamente as bases GeoIP existentes e registra seus SHA-256; teste de recuperação respeita o diretório configurado.
+- Referências administrativas históricas usam o catálogo integral. Isso não concede elegibilidade ao formulário Servidor(a), que continua restrito pelo vínculo MEC. AMAN, ITA e IME cobrem essa separação.
+- Índice de campi regenerado a partir das oito fontes atuais, preservando os aliases históricos e os dados originais do CSV. Não há pesquisa ao vivo nem publicação automática de campus.
+- Histórico de PDFs verifica proteção contra TRUNCATE CASCADE, além de UPDATE e DELETE. A FK nova pode impedir TRUNCATE simples antes do gatilho.
+- Expectativa do menu atualizada para o Inbox já integrado, mantendo restrições por nível.
+- Instruções livres da IA não estão integradas. Seu teste de implementação permanece explicitamente pulado com justificativa; o contrato ativo recusa o parâmetro desconhecido e conserva o limite de 4 KiB. A expansão Unicode/16 KiB continua pendente. Não declarar esta etapa completa nem contar o teste pulado como aprovação.
+
+Nenhuma dessas correções altera fontes, layout ou publica o admin-v2 na VPS.
+
+## Reteste dirigido
+
+Commit 46e32cc: 44 testes, 43 aprovados, zero falhas e um teste explicitamente pendente de integração IA. Fontes estáveis. Evidência: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/regression-1794268383738532689/result.json`. Esse reteste não substitui a rodada cumulativa final.
+
+## Incrementos independentes
+
+Contrato puro de pacote v2 adicionado em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/site/src/lib/batch-package-contract.ts`: vincula os dois PDFs distintos, versões, hashes, tamanho e chave idempotente do pacote. Cinco testes offline. Não implementa armazenamento, validação gov.br, UI ou envio; integração ainda pendente. Nenhum anexo é descartado silenciosamente.
+
+## Rodada cumulativa corrigida
+
+Commit 6c5e0cdfc89e1c4f934a921900e4a806bd36959e: 790 testes, 789 aprovados, zero falhas e um teste IA explicitamente pendente. Fontes estáveis durante toda a execução. Evidência: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/full-1794268522351081756/result.json`.
+
+## Incremento documental posterior (validação própria obrigatória)
+
+Referências QR reservadas antes do render, snapshot v2 compatível com v1, vínculo imutável ao binário final e resolução pública reaplicando o controle existente de publicação. Dois gates desligados por padrão; nenhuma publicação automática ou binário público.
+
+Aprovação explícita recebida nesta sessão: retirar “NAO ASSINADO (teste)” somente de novos PDFs preparados para A1. O render target depende da política A1 protegida e do gate servidor; ele não assina nem aprova. PDFs antigos/mode teste continuam inalterados; jobs A1 agora exigem snapshot v2 A1 auditado e histórico de origem preparada.
+
+Rascunhos receberam 11 testes de referência, 4 de snapshot e 9 de jobs/finish; esses números não substituem a validação da integração final. Prévia fictícia A1 inspecionada e texto extraído: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/qr-draft/previa-qr-documental-a1.pdf`. Nenhuma alteração posterior à assinatura e nenhuma alegação de validação criptográfica na prévia.
+
+## Validação do incremento a64e2aa
+
+139 testes documentais aprovados, zero falhas/pulos; tipos e build aprovados com fontes estáveis. Evidências em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/documents-1794269579707948249/result.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794269579719440813/result.json` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/build-1794269667237571193/result.json`.
+
+Cinco testes adicionais de geração real dos quatro modos e rollback de configuração inválida passaram em runner separado sem destinatários. Extração dos quatro PDFs confirmou retirada do rodapé somente para A1/A1+QR, preservação no modo legado/QR, três páginas por arquivo e ausência de alegação de assinatura ICP. Hashes em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/qr-draft/flow-pdfs/verification.json`. O novo teste entra no candidato para as próximas rodadas; a rota QR ganhou asserts HTTP diretos e precisa de reteste específico.
+
+## Checkpoint documental 023d8b3
+
+144 testes documentais aprovados sem falhas/pulos; tipos e SQL28 aprovados com fontes estáveis. Evidência em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/documents-1794269817051177648/result.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794270174879127244/result.json` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/schema-1794269790201802947/result.json`. Build anterior a64e2aa usa o mesmo código runtime; 023d8b3 acrescenta somente testes e evidências.
+
+Incremento seguinte: staging privado da petição-base, sem validação/promoção/envio, com provas e pendências em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/docs/ETAPA-06-PETICAO-BASE-STAGING-20261109.md`.
+
+## Perfil técnico A1 no commit 2539740
+
+155 testes documentais aprovados, tipos e build com fontes estáveis. Python integrado: 7 testes de política, 11 de worker com criptografia sintética e 6 de broker aprovados. Evidências: `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/documents-1794271384977566933/result.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/types-1794271385152891929/result.json`, `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/integrated/build-1794271902819809651/result.json` e `/mnt/apps/peticao-final/peticao/.cache/admin-v2-retomada-20261109/a1-policy-research/integrated-python-result.json`.
+
+Ensaio técnico completo API/SQL/Unix/worker/adapter/finish passou com credencial sintética, replay, política divergente e nenhum envio. O adapter verifica criptografia real, mas simula os campos de confiança/revogação ICP; isso não é homologação real. Detalhes em `/mnt/apps/peticao-final/peticao/.cache/admin-v2-final-20261109/docs/ETAPA-06-A1-E2E-SINTETICO-20261109.md`.

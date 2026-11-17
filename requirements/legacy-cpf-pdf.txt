@@ -1,0 +1,6 @@
+# Observed pins for isolated Python 3.12 on Linux; no host packages upgraded.
+charset-normalizer==3.5.1
+fonttools==4.46.0
+pillow==10.2.0
+pypdf==4.0.2
+reportlab==5.0.1

@@ -43,7 +43,8 @@ test("depois de confirmar: dois e-mails (cartão da assinatura com a data ORIGIN
   assert.ok(!/Maria/.test(share.html.split("Mensagem pronta")[1].split("</table>")[0].replace(/Olá, <strong>Maria<\/strong>/, "")) , "a mensagem/cartaz não leva o nome");
   // repetir o link: nada é reenviado e a data original não muda
   const r2 = await (await POST(req())).json();
-  assert.notEqual(r2.result, "ok");
+  assert.equal(r2.result, "ok"); // recover a lost confirmation response without new messages
+  assert.equal(r2.panel,null); // never reissue the privileged panel token
   assert.equal(mails().length, 3);
   assert.equal((await dbmod.query<any>("SELECT confirmed_at FROM signatures WHERE email='maria@unir.br'")).rows[0].confirmed_at, sig.confirmed_at);
 });

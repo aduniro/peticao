@@ -57,3 +57,42 @@ test("painel: corrigir e-mail, aceitar sugestão e reenviar confirmação (datas
     assert.ok(aud.includes("email_corrigido") && aud.includes("confirmacao_reenviada"), aud.join(","));
   } finally { _setMxResolverForTests(null); }
 });
+
+test("rotas de correção e reenvio registram o usuário autenticado e preservam evidências da assinatura", async () => {
+  const db = await import("./db"); await db._openForTests("t_assinaturas_email_actor");
+  const { NextRequest } = await import("next/server");
+  const U = await import("./admin-users");
+  const { ADMIN_COOKIE } = await import("./admin");
+  const { _setMxResolverForTests } = await import("./email-check");
+  const { hmac } = await import("./security");
+  const { dedupEmail } = await import("./email-check");
+  const { PATCH } = await import("../app/api/admin/assinaturas/[id]/email/route");
+  const { POST: resend } = await import("../app/api/admin/assinaturas/[id]/reenviar/route");
+  const { POST: bulk } = await import("../app/api/admin/assinaturas/lote/route");
+  delete process.env.PREVIEW_MODE; delete process.env.ADMIN_NO_PASSWORD;
+  process.env.MAIL_OUTBOX_DIR = mkdtempSync(join(tmpdir(), "actor-email-"));
+  _setMxResolverForTests(async domain => domain === "unir.bf" ? "none" : "ok");
+  try {
+    const user = await U.criarUsuario({ email:"operator@example.org", nome:"Operadora Teste", nivel:"edicao", senha:"Uma-Senha-Forte-2026" });
+    assert.ok(user.ok);
+    const { token } = await U.abrirSessao(user.usuario.id,"127.0.0.1");
+    const request = (path:string,method:string,body:unknown,authenticated=true) => new NextRequest(`http://localhost${path}`,{method,headers:{host:"localhost",origin:"http://localhost",cookie:authenticated?`${ADMIN_COOKIE}=${token}`:"","content-type":"application/json","x-forwarded-for":"127.0.0.1"},body:JSON.stringify(body)});
+    const make = async (email:string,n:number) => (await db.query<{id:number}>("INSERT INTO signatures(name,email,email_hash,cpf_hash,category,text_version,consent_at,created_at,seq,verify_code) VALUES('Pessoa Fictícia',$1,$2,$3,'servidor','fixture','2026-10-01T10:00:00Z','2026-10-01T10:00:00Z',$4,$5) RETURNING id",[email,hmac(dedupEmail(email)),`hash-cpf-${n}`,100+n,`code-${n}`])).rows[0].id;
+    const id=await make("teste-actor@unir.bf",1);
+    const proof=async()=> (await db.query("SELECT id,name,cpf_hash,consent_at,created_at,confirmed_at,seq,verify_code FROM signatures WHERE id=$1",[id])).rows[0];
+    const before=await proof();
+    const version=(await db.query("SELECT xmin::text version FROM signatures WHERE id=$1",[id])).rows[0].version;
+    assert.equal((await PATCH(request(`/api/admin/assinaturas/${id}/email`,"PATCH",{email:"teste-actor@unir.br",version}),{params:{id:String(id)}})).status,200);
+    assert.equal((await resend(request(`/api/admin/assinaturas/${id}/reenviar`,"POST",{}),{params:{id:String(id)}})).status,200);
+    const suggested=await make("teste-suggestion@unir.bf",2);
+    const suggestedVersion=(await db.query("SELECT xmin::text version FROM signatures WHERE id=$1",[suggested])).rows[0].version;
+    assert.equal((await bulk(request("/api/admin/assinaturas/lote","POST",{acao:"sugestoes",ids:[suggested],versions:{[suggested]:suggestedVersion}}))).status,200);
+    const batch=await make("teste-bulk@unir.br",3);
+    assert.equal((await bulk(request("/api/admin/assinaturas/lote","POST",{acao:"reenviar",ids:[batch]}))).status,200);
+    const audit=(await db.query<{data:string}>("SELECT data FROM audit_log WHERE event IN ('email_corrigido','confirmacao_reenviada') ORDER BY id")).rows;
+    assert.equal(audit.length,4);assert.ok(audit.every(row=>JSON.parse(row.data).por===user.usuario.email));
+    assert.deepEqual(await proof(),before);
+    assert.equal((await PATCH(request(`/api/admin/assinaturas/${id}/email`,"PATCH",{email:"outra@unir.br"},false),{params:{id:String(id)}})).status,401);
+    assert.equal((await db.query("SELECT email FROM signatures WHERE id=$1",[id])).rows[0].email,"teste-actor@unir.br");
+  } finally { _setMxResolverForTests(null); await db._closeDbForTests(); }
+});

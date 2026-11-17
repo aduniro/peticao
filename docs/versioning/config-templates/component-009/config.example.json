@@ -1,0 +1,10 @@
+{
+  "node_path": "SET_PRIVATE_VALUE",
+  "node_sha256": "SET_PRIVATE_VALUE",
+  "expected_cgroup": "SET_PRIVATE_VALUE",
+  "schema_source_dir": "SET_PRIVATE_VALUE",
+  "runtime_dir": "SET_PRIVATE_VALUE",
+  "release_manifest": "SET_PRIVATE_VALUE",
+  "local_only": false,
+  "workerJob": false
+}

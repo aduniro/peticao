@@ -1,0 +1,51 @@
+# Dedicated broker; credentials are registered through the protected panel.
+[Unit]
+Description=Peticao private A1 signing broker
+After=local-fs.target peticao-a1-credentials.service
+Requires=peticao-a1-credentials.service
+ConditionPathExists=/etc/peticao-signing/service.json
+ConditionPathExists=/var/lib/peticao-signing/worker.json
+
+[Service]
+Type=simple
+User=peticao-signing
+Group=peticao-a1-web
+UMask=0077
+Environment=A1_SERVICE_CONFIG=/etc/peticao-signing/service.json
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/peticao-signing/venv/bin/python /opt/peticao-signing/service.py
+ExecStartPre=/opt/peticao-signing/venv/bin/python -c "from credential_service import cleanup_stale_socket; cleanup_stale_socket('/run/peticao-signing/worker.sock')"
+WorkingDirectory=/opt/peticao-signing
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=70
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/run/peticao-signing
+ReadOnlyPaths=/etc/peticao-signing /opt/peticao-signing /var/lib/peticao-signing
+RestrictAddressFamilies=AF_UNIX
+IPAddressDeny=any
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectKernelLogs=yes
+ProtectClock=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+LimitCORE=0
+LimitNOFILE=128
+MemoryMax=2G
+TasksMax=32
+CPUQuota=200%
+StandardOutput=null
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target

@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
-import { audit } from "@/lib/db";
-import { dispersionRows } from "@/lib/dispersion";
-import { esc } from "@/lib/csv";
-import { brasilia } from "@/lib/time";
-
+import { exigirNivel, quemAge } from "@/lib/admin-api";
+import { auditDispersionExport, readDispersionExport } from "@/lib/dispersion-admin-store";
+import { buildDispersionCsv } from "@/lib/dispersion-csv";
 export const dynamic = "force-dynamic";
-
-/** Base interna completa (INCLUI e-mail): nunca enviar às autoridades. A lista para as autoridades é /api/admin/export. */
-export async function GET(_req: NextRequest) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
-  const rows = await dispersionRows(50000);
-  const names = new Map(rows.map((r) => [r.id, r.name]));
-  await audit("export_internal_base", null, { rows: rows.length });
-  const head = ["id", "nome", "email", "categoria", "instituicao_declarada", "dominio_do_email", "instituicao_pelo_email", "selo_email", "verificacao_identidade", "situacao",
-    "assinou_em_brasilia", "confirmou_em_brasilia", "origem", "codigo_de_origem", "quem_indicou", "geracao", "convidou", "convidou_e_confirmaram", "confirmou_no_mesmo_aparelho"];
-  const lines = rows.map((r) => [
-    r.id, r.name, r.email, r.category, r.institution, r.email_domain, r.email_institution, r.email_domain_kind, r.identity_method, r.status === "confirmed" ? "confirmada" : "aguardando confirmação",
-    brasilia(r.consent_at), brasilia(r.confirmed_at), r.origin === "pessoal" ? "indicacao_pessoal" : r.origin, r.ref_code,
-    r.origin === "pessoal" ? names.get(r.owner_id!) : r.org_label, r.generation, r.invited, r.invited_confirmed,
-    r.confirm_same_visitor === null ? "" : r.confirm_same_visitor ? "sim" : "nao",
-  ].map(esc).join(","));
-  return new NextResponse("﻿" + [head.join(",")].concat(lines).join("\n"), {
-    headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": 'attachment; filename="base-interna-assinaturas.csv"', "cache-control": "no-store" },
-  });
+const headers = { "cache-control": "private, no-store, max-age=0", "referrer-policy": "no-referrer", "x-content-type-options": "nosniff" };
+const json = (data: unknown, status: number) => NextResponse.json(data, { status, headers });
+/** Internal CSV with email. Audit proves file preparation, not delivery. */
+export async function GET(req: NextRequest) {
+  try {
+    const denied = await exigirNivel(req, "edicao");
+    if (denied) { for (const [key, value] of Object.entries(headers)) denied.headers.set(key, value); return denied; }
+    const actor = await quemAge(req); if (!actor) return json({ ok: false, error: "forbidden" }, 401);
+    if ([...req.nextUrl.searchParams].length) return json({ ok: false, error: "invalid" }, 400);
+    const source = await readDispersionExport(actor);
+    if (!source.ok) return json(source, source.error === "forbidden" ? 403 : 503);
+    const file = buildDispersionCsv(source.rows, source.total);
+    if (!await auditDispersionExport(actor, { rows: file.rows, bytes: file.bytes, sha256: file.sha256, asOf: source.asOf })) return json({ ok: false, error: "unavailable" }, 503);
+    return new NextResponse(new Uint8Array(file.body), { headers: { ...headers, "content-type": "text/csv; charset=utf-8", "content-disposition": 'attachment; filename="base-interna-assinaturas.csv"', "content-length": String(file.bytes), "x-content-sha256": file.sha256 } });
+  } catch { return json({ ok: false, error: "unavailable" }, 503); }
 }

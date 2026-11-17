@@ -7,7 +7,13 @@ import { assertSendAllowed } from "./guard";
 import { isSuppressed, MailSuppressedError } from "./suppression";
 import { readCredentialText, readSmtpCredential, sesSmtpOptions } from "./smtp-credential";
 import { drainOutbox, enqueueMail } from "./outbox";
-import { attemptLogger, logQueued, type Attempt } from "./log";
+import { logQueued, type Attempt } from "./log";
+import { withReplyTo } from "./payload";
+import { journalFor, prepareRecorded, recordedQueueMail, type DeliveryJournal } from "./recorded";
+import { messageMetadata } from "./archive";
+import { receiptId, receiptJson, objectReceiptId, smtpInfoReceipt, mailersendReceipt, mailrelayReceipt, type TransportReceipt } from "./receipt";
+import { credentialScope, snsScope, validAccountScope, sendpulseScope, mailrelayScope } from "./event-scope";
+export { withReplyTo } from "./payload";
 import { ordemRodizio, parsePesos, registrar } from "./rodizio";
 
 export { MailSuppressedError };
@@ -25,13 +31,17 @@ async function sendDev(m: Mail) {
   writeFileSync(join(outboxDir(), name), JSON.stringify({ ...m, attachments, at: new Date().toISOString() }, null, 2));
 }
 
-async function sendSmtp(m: Mail, from: string) {
+async function sendSmtp(m: Mail, from: string, provider = "smtp") {
   // Prioridade: SMTP_URL explícita; senão a credencial criptografada do SES entregue pelo systemd.
   const url = process.env.SMTP_URL;
   const cred = url ? null : readSmtpCredential();
   if (!url && !cred) throw new Error("SMTP não configurado (SMTP_URL ou credencial ses-smtp)");
   const transport = url ? nodemailer.createTransport(url) : nodemailer.createTransport(sesSmtpOptions(cred!));
-  await transport.sendMail({ from, ...m });
+  const notificationTopic=process.env.SES_SNS_TOPIC_ARN, sendingAccount=process.env.SES_SENDING_ACCOUNT_ID;
+  const result = await transport.sendMail({ from, ...m });
+  let awsHost = !url;
+  if (url) { try { awsHost = /^email-smtp\.[a-z0-9-]+\.amazonaws\.com(?:\.cn)?$/.test(new URL(url).hostname); } catch { awsHost = false; } }
+  return provider === "ses" && awsHost ? { providerId: smtpInfoReceipt(result), accountScope: snsScope(notificationTopic,sendingAccount) } : undefined;
 }
 
 async function sendBrevo(m: Mail, fromHeader: string) {
@@ -54,6 +64,7 @@ async function sendBrevo(m: Mail, fromHeader: string) {
     }),
   });
   if (!res.ok) throw new Error(`Brevo respondeu ${res.status}`);
+  return { providerId: objectReceiptId(await receiptJson(res), "messageId"), accountScope: credentialScope("brevo",key) };
 }
 
 /** Mailrelay (API v1, POST /send_emails). A conta tem endereço próprio (MAILRELAY_HOST = algo.ipzmarketing.com) e o remetente precisa estar confirmado lá. */
@@ -61,9 +72,9 @@ async function sendBrevo(m: Mail, fromHeader: string) {
 const mailrelayAccount = (which: "integral" | "presidente") => which === "presidente"
   ? { key: process.env.MAILRELAY_PRESIDENTE_API_KEY ?? readCredentialText("mailrelay-presidente-api"), host: process.env.MAILRELAY_PRESIDENTE_HOST, nome: "mailrelaypresidente" }
   : { key: process.env.MAILRELAY_API_KEY ?? readCredentialText("mailrelay-api"), host: process.env.MAILRELAY_HOST, nome: "mailrelay" };
-const sendMailrelay = (m: Mail, from: string) => sendMailrelayOf("integral", m, from);
-const sendMailrelayPresidente = (m: Mail, from: string) => sendMailrelayOf("presidente", m, from);
-async function sendMailrelayOf(which: "integral" | "presidente", m: Mail, fromHeader: string) {
+const sendMailrelay = (m: Mail, from: string, onReceipt?: (receipt: TransportReceipt) => void) => sendMailrelayOf("integral", m, from, onReceipt);
+const sendMailrelayPresidente = (m: Mail, from: string, onReceipt?: (receipt: TransportReceipt) => void) => sendMailrelayOf("presidente", m, from, onReceipt);
+async function sendMailrelayOf(which: "integral" | "presidente", m: Mail, fromHeader: string, onReceipt?: (receipt: TransportReceipt) => void) {
   const { key, host, nome } = mailrelayAccount(which);
   if (!key || !host || !/^[a-z0-9-]+\.ipzmarketing\.com$/.test(host)) throw new Error(`Mailrelay não configurado para "${nome}" (host e chave da API)`);
   if (m.attachments?.length) throw new Error("Mailrelay: anexos não suportados neste provedor");
@@ -79,9 +90,12 @@ async function sendMailrelayOf(which: "integral" | "presidente", m: Mail, fromHe
       const body = await res.text().catch(() => "");
       throw new Error(`Mailrelay respondeu ${res.status}${body ? `: ${body.replace(/\s+/g, " ").slice(0, 140)}` : ""}`);
     }
+    return { providerId: mailrelayReceipt(await receiptJson(res), to), accountScope: mailrelayScope(nome,host,key) };
   };
-  await post(m.to);
+  const primary = await post(m.to);
+  onReceipt?.(primary);
   for (const b of m.bcc ?? []) await post(b); // cópia oculta como envio separado: o campo bcc da API não é documentado
+  return primary;
 }
 
 /**
@@ -89,19 +103,20 @@ async function sendMailrelayOf(which: "integral" | "presidente", m: Mail, fromHe
  * O corpo HTML vai em Base64, como a API exige. O remetente precisa estar ativo no SendPulse e no mesmo domínio do domínio de envio autenticado.
  */
 type SpCreds = { id: string; secret: string };
-const spToken = { value: "", exp: 0 };
+const spToken = { value: "", exp: 0, scope: "" };
 export function sendpulseCreds(): SpCreds | null {
   const id = process.env.SENDPULSE_CLIENT_ID ?? readCredentialText("sendpulse-id");
   const secret = process.env.SENDPULSE_CLIENT_SECRET ?? readCredentialText("sendpulse-secret");
   return id && secret ? { id, secret } : null;
 }
-export const _clearSendpulseToken = () => { spToken.value = ""; spToken.exp = 0; };
+export const _clearSendpulseToken = () => { spToken.value = ""; spToken.exp = 0; spToken.scope = ""; };
 export async function sendSendpulseWith(fetchImpl: typeof fetch, creds: SpCreds, m: Mail, fromHeader: string) {
-  if (!spToken.value || spToken.exp < Date.now() + 60_000) {
+  const accountScope=sendpulseScope(creds.id,creds.secret);
+  if (!spToken.value || spToken.exp < Date.now() + 60_000 || !accountScope || spToken.scope!==accountScope) {
     const r = await fetchImpl("https://api.sendpulse.com/oauth/access_token", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ grant_type: "client_credentials", client_id: creds.id, client_secret: creds.secret }), signal: AbortSignal.timeout(15_000) });
     const j = (await r.json().catch(() => ({}))) as { access_token?: string; expires_in?: number };
     if (!r.ok || !j.access_token) throw new Error(`SendPulse: autenticação recusada (HTTP ${r.status})`);
-    spToken.value = j.access_token; spToken.exp = Date.now() + (j.expires_in ?? 3600) * 1000;
+    spToken.value = j.access_token; spToken.exp = Date.now() + (j.expires_in ?? 3600) * 1000; spToken.scope=accountScope??"";
   }
   const parsed = /^(.*)<(.+)>$/.exec(fromHeader);
   const from = parsed ? { name: parsed[1].trim().replace(/^"|"$/g, ""), email: parsed[2] } : { name: "", email: fromHeader };
@@ -117,11 +132,12 @@ export async function sendSendpulseWith(fetchImpl: typeof fetch, creds: SpCreds,
   if (!res.ok) { const body = await res.text().catch(() => ""); throw new Error(`SendPulse respondeu ${res.status}${body ? `: ${body.replace(/\s+/g, " ").slice(0, 140)}` : ""}`); }
   const j = (await res.json().catch(() => ({}))) as { result?: boolean; id?: string };
   if (j.result === false) throw new Error("SendPulse recusou o envio (result=false)");
+  return { providerId: objectReceiptId(j,"id"), accountScope };
 }
 async function sendSendpulse(m: Mail, from: string) {
   const c = sendpulseCreds();
   if (!c) throw new Error("SendPulse não configurado (SENDPULSE_CLIENT_ID/SECRET ou credenciais sendpulse-id e sendpulse-secret)");
-  await sendSendpulseWith(fetch, c, m, from);
+  return sendSendpulseWith(fetch, c, m, from);
 }
 
 /**
@@ -140,86 +156,106 @@ export async function sendMailersendWith(fetchImpl: typeof fetch, token: string,
   };
   const res = await fetchImpl("https://api.mailersend.com/v1/email", { method: "POST", headers: { Authorization: `Bearer ${token}`, "content-type": "application/json", "x-requested-with": "XMLHttpRequest" }, body: JSON.stringify(body), signal: AbortSignal.timeout(30_000) });
   if (!res.ok) { const t = await res.text().catch(() => ""); throw new Error(`MailerSend respondeu ${res.status}${t ? `: ${t.replace(/\s+/g, " ").slice(0, 140)}` : ""}`); }
+  return { providerId: mailersendReceipt(res), accountScope: credentialScope("mailersend",token) };
 }
 async function sendMailersend(m: Mail, from: string) {
   const token = process.env.MAILERSEND_API_TOKEN ?? readCredentialText("mailersend-api");
   if (!token) throw new Error("MailerSend não configurado (MAILERSEND_API_TOKEN ou credencial mailersend-api)");
-  await sendMailersendWith(fetch, token, m, from);
+  return sendMailersendWith(fetch, token, m, from);
 }
 
-export type Sender = (m: Mail, from: string) => Promise<void>;
+export type Sender = (m: Mail, from: string, onReceipt?: (receipt: TransportReceipt) => void) => Promise<void | TransportReceipt>;
 /** Provedores conhecidos. "ses" e "smtp" usam SMTP (a credencial do SES vem do systemd); "brevo" e "mailrelay" usam API HTTPS. */
-const SENDERS: Record<string, Sender> = { dev: async (m) => sendDev(m), smtp: sendSmtp, ses: sendSmtp, brevo: sendBrevo, mailrelay: sendMailrelay, mailrelaypresidente: sendMailrelayPresidente, sendpulse: sendSendpulse, mailersend: sendMailersend };
+const SENDERS: Record<string, Sender> = { dev: async (m) => sendDev(m), smtp: (m, from) => sendSmtp(m, from), ses: (m, from) => sendSmtp(m, from, "ses"), brevo: sendBrevo, mailrelay: sendMailrelay, mailrelaypresidente: sendMailrelayPresidente, sendpulse: sendSendpulse, mailersend: sendMailersend };
 
 /**
  * Tenta cada provedor da cadeia, na ordem; se um falhar (credencial ausente, sandbox, fora do ar), passa ao próximo,
  * cada um com o seu remetente (subdomínio próprio). Só lança erro se todos falharem. Nunca registra segredos.
  */
-export async function deliver(m: Mail, providers: string[], senders: Record<string, Sender> = SENDERS, fromFor: (p: string, kind?: string) => string = config.mailFromFor, kind?: string, onAttempt?: (a: Attempt) => void): Promise<string> {
+export async function deliver(m: Mail, providers: string[], senders: Record<string, Sender> = SENDERS, fromFor: (p: string, kind?: string) => string = config.mailFromFor, kind?: string, onAttempt?: (a: Attempt) => void, opts: { singleAttempt?: boolean; journal?: DeliveryJournal } = {}): Promise<string> {
   const errors: string[] = [];
+  const notify = (attempt: Attempt) => { try { onAttempt?.(attempt); } catch { console.error("mail_attempt_callback_failed"); } };
   for (const p of providers) {
     const send = senders[p];
     if (!send) { errors.push(`${p}: provedor desconhecido`); continue; }
     let from = "";
-    try {
-      from = fromFor(p, kind);
-      await send(m, from);
-      onAttempt?.({ provider: p, from, ok: true });
-      if (errors.length) console.warn(`e-mail enviado por "${p}" depois de falha em: ${errors.join(" | ")}`);
-      return p;
-    } catch (e) {
-      errors.push(`${p}: ${(e as Error).message.slice(0, 160)}`);
-      onAttempt?.({ provider: p, from, ok: false, error: (e as Error).message });
+    try { from = fromFor(p,kind); }
+    catch(error) { errors.push(`${p}: ${(error as Error).message.slice(0,160)}`); notify({provider:p,from,ok:false,error:(error as Error).message}); if(opts.singleAttempt)throw error; continue; }
+    // Admission failures are not transport failures and never cause an unrecorded provider call.
+    const admission = await opts.journal?.begin(p,from);
+    if (admission?.alreadyAccepted) return p;
+    let failure: unknown,accepted=false,providerReceipt: string | undefined, providerScope: string | undefined, conflictingReceipt=false;
+    const capture = (raw: unknown) => {
+      const id=receiptId(raw); if (!id) return;
+      let scope: unknown; try { scope=(raw as TransportReceipt).accountScope; } catch { /* Missing scope must not change acceptance. */ }
+      if (providerReceipt && providerReceipt!==id || validAccountScope(scope) && providerScope && providerScope!==scope) conflictingReceipt=true;
+      providerReceipt=id; if(validAccountScope(scope))providerScope=scope;
+    };
+    try { const result=await send(m,from,capture); accepted=true; capture(result); } catch(error) { failure=error; }
+    if(admission?.id) {
+      try { await opts.journal!.finish(admission.id,accepted,failure,providerReceipt&&!conflictingReceipt?{providerId:providerReceipt,accountScope:providerScope}:undefined); }
+      catch { console.error("mail_attempt_result_unconfirmed"); }
     }
+    if(accepted) {
+      notify({provider:p,from,ok:true});
+      if(errors.length)console.warn(`e-mail enviado por "${p}" depois de falha em: ${errors.join(" | ")}`);
+      return p;
+    }
+    const error=failure instanceof Error ? failure : new Error("mail_transport_error");
+    errors.push(`${p}: ${error.message.slice(0,160)}`);notify({provider:p,from,ok:false,error:error.message});
+    if(opts.singleAttempt)throw error;
   }
   throw new Error(`Nenhum provedor de e-mail conseguiu enviar (${errors.join(" | ")})`);
 }
 
 export type SendOutcome = "sent" | "queued";
 
-/** Reply-To padrão (MAIL_REPLY_TO) quando a mensagem não traz o próprio (o formulário de contato responde a quem escreveu). */
-export const withReplyTo = (m: Mail): Mail => (m.replyTo ? m : config.mailReplyTo() ? { ...m, replyTo: config.mailReplyTo() } : m);
-
 /**
  * Único ponto de saída de e-mail: sempre passa pela trava antes dos provedores.
  * Se NENHUM provedor conseguir enviar, a mensagem vai para a fila de reenvio (tentada de novo automaticamente, em intervalos crescentes,
  * até 48 h) em vez de se perder. Endereços bloqueados continuam sendo recusados na hora.
  */
-export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean; channel?: "transactional" | "marketing"; avoid?: string[] } = {}): Promise<SendOutcome> {
-  // Canal de marketing: cadeia e remetentes PRÓPRIOS (subdomínios de campanha), nunca a cadeia transacional; sem fila de reenvio (quem dispara acompanha o resultado).
-  if (opts.channel === "marketing") {
-    const mk = config.marketingProviders();
-    if (mk.length === 0) throw new Error("Canal de marketing não configurado (MAIL_PROVIDERS_MARKETING)");
-    assertSendAllowed(m.to);
-    for (const b of m.bcc ?? []) assertSendAllowed(b);
-    if (mk.some((p) => p !== "dev") && (await isSuppressed(m.to))) throw new MailSuppressedError(`Endereço na lista de supressão: ${m.to}`);
-    const logM = attemptLogger(m, kind, "marketing");
-    await deliver(withReplyTo(m), ordemRodizio("marketing", mk, parsePesos(config.mailRotationMarketing()), { evitar: opts.avoid }), SENDERS, config.mailFromMarketing, kind, (a) => { registrar("marketing", a.provider, a.ok); logM(a); });
-    return "sent";
-  }
-  assertSendAllowed(m.to);
-  for (const b of m.bcc ?? []) assertSendAllowed(b);
-  const providers = config.mailProviders();
-  const real = providers.some((p) => p !== "dev");
-  if (process.env.PREVIEW_MODE === "1" && real) {
-    throw new Error("PREVIEW_MODE só permite MAIL_PROVIDER=dev (caixa de saída local).");
-  }
-  // Endereços que já deram bounce permanente, reclamação ou e-mail inexistente nunca recebem de novo (protege a reputação do domínio).
-  if (real && (await isSuppressed(m.to))) throw new MailSuppressedError(`Endereço na lista de supressão: ${m.to}`);
+async function checkEnvelope(m: Mail,providers:string[]) {
+  assertSendAllowed(m.to);for(const recipient of m.bcc??[])assertSendAllowed(recipient);
+  const real=providers.some(provider=>provider!=="dev");
+  if(process.env.PREVIEW_MODE==="1"&&real)throw new Error("PREVIEW_MODE só permite MAIL_PROVIDER=dev (caixa de saída local).");
+  if(real&&await isSuppressed(m.to))throw new MailSuppressedError(`Endereço na lista de supressão: ${m.to}`);
+}
+
+const backgroundMail = new Set<Promise<unknown>>();
+function scheduleDrain() {
+  const work=new Promise<void>(resolve=>setImmediate(resolve)).then(()=>drainMailOutbox(3)).catch(()=>{});
+  backgroundMail.add(work);void work.finally(()=>backgroundMail.delete(work));
+}
+/** Allows a controlled shutdown/test to wait for the existing opportunistic drains. */
+export async function waitForBackgroundMail() { while(backgroundMail.size)await Promise.all([...backgroundMail]); }
+
+export async function sendMail(m: Mail, kind = "geral", opts: { queue?: boolean; channel?: "transactional" | "marketing"; avoid?: string[]; singleAttempt?: boolean; messageKey?:string; frozenReplyTo?: boolean } = {}): Promise<SendOutcome> {
+  const channel=opts.channel??"transactional",providers=channel==="marketing"?config.marketingProviders():config.mailProviders();
+  if(channel==="marketing"&&!providers.length)throw new Error("Canal de marketing não configurado (MAIL_PROVIDERS_MARKETING)");
+  await checkEnvelope(m,providers);
+  // Internal callers replaying an observed envelope must retain even an absent Reply-To.
+  const effective=opts.frozenReplyTo?m:withReplyTo(m),record=await prepareRecorded(effective,kind,channel,opts.messageKey);
+  const rotationChannel=channel==="marketing"?"marketing":"transacional";
+  const order=ordemRodizio(rotationChannel,providers,parsePesos(channel==="marketing"?config.mailRotationMarketing():config.mailRotation()),{evitar:opts.avoid});
   try {
-    const log = attemptLogger(m, kind);
-    await deliver(withReplyTo(m), ordemRodizio("transacional", providers, parsePesos(config.mailRotation()), { evitar: opts.avoid }), SENDERS, config.mailFromFor, kind, (a) => { registrar("transacional", a.provider, a.ok); log(a); });
-  } catch (e) {
-    if (!real || opts.queue === false) throw e; // "dev" não tem o que reenviar; envios que o admin acompanha (lotes) mostram o erro na hora
-    const id = await enqueueMail(m, kind, (e as Error).message);
-    logQueued(m, kind, (e as Error).message);
-    console.warn(`e-mail #${id} (${kind}) para a fila de reenvio: ${(e as Error).message.slice(0, 160)}`);
+    await deliver(effective,order,SENDERS,channel==="marketing"?config.mailFromMarketing:config.mailFromFor,kind,a=>registrar(rotationChannel,a.provider,a.ok),{singleAttempt:opts.singleAttempt,journal:journalFor(record.id,!opts.singleAttempt)});
+  } catch(error) {
+    if(channel==="marketing"||!providers.some(p=>p!=="dev")||opts.queue===false)throw error;
+    const id=await enqueueMail(effective,kind,(error as Error).message,record.id);
+    await logQueued(effective,kind,(error as Error).message,record.id);
+    console.warn(`e-mail #${id} (${kind}) para a fila de reenvio: ${(error as Error).message.slice(0,160)}`);
     return "queued";
   }
-  // Serviço saudável: aproveita para esvaziar a fila (sem atrasar a resposta).
-  setImmediate(() => { drainMailOutbox(3).catch(() => {}); });
+  if(channel!=="marketing")scheduleDrain();
   return "sent";
 }
 
-/** Reenvia o que está na fila, direto pela cadeia de provedores (sem enfileirar de novo). */
-export const drainMailOutbox = (limit = 20) => drainOutbox((m, kind) => deliver(withReplyTo(m), config.mailProviders(), SENDERS, config.mailFromFor, kind, attemptLogger(m, kind)), limit);
+/** Queue retries retain identity and the observed envelope, including previously missing Reply-To defaults. */
+export const drainMailOutbox = (limit = 20) => drainOutbox(async (raw,kind,context) => {
+  if(!context)throw new Error("mail_queue_context_missing");
+  const record=await recordedQueueMail(raw,kind,context),metadata=await messageMetadata(record.id);
+  if(metadata?.status==="accepted")return;
+  const providers=config.mailProviders();await checkEnvelope(record.mail,providers);
+  return deliver(record.mail,providers,SENDERS,config.mailFromFor,kind,undefined,{journal:journalFor(record.id,true)});
+},limit);

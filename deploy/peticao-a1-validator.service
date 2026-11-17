@@ -1,0 +1,42 @@
+[Unit]
+Description=Validador criptografico ICP-Brasil da ADUNIR
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=peticao-validation
+Group=peticao-validation
+UMask=0077
+Environment=A1_VALIDATOR_CONFIG=/etc/peticao-validation/service.json
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+LoadCredential=api-token:/etc/peticao-validation/api-token
+ExecStart=/opt/peticao-signing/venv/bin/python /opt/peticao-signing/validator_service.py
+WorkingDirectory=/
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/cache/peticao-validation
+InaccessiblePaths=/var/lib/peticao-signing /etc/peticao-signing
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ProtectKernelLogs=true
+RestrictSUIDSGID=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+LimitCORE=0
+MemoryMax=1536M
+TasksMax=32
+CPUQuota=200%
+StandardOutput=null
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target

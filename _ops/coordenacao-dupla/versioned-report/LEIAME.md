@@ -1,0 +1,1 @@
+Cópia versionada do único emissor instalado. Esta pasta não possui timer ativo nem deve criar outro. Execução real: /mnt/apps/peticao-final/peticao/.cache/relatorios-periodicos-20261109/report.mjs . O timer instalado está em /home/barre/.config/systemd/user/peticao-relatorio-andamento.timer . Destinatário e guardas por slot preservados. Dados, slots e tokens não são versionados.

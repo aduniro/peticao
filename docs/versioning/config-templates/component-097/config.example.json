@@ -1,0 +1,17 @@
+{
+  "infra_reviewed": false,
+  "local_only": false,
+  "workerJob": false,
+  "source_commit": "SET_PRIVATE_VALUE",
+  "runtime_manifest_sha256": "SET_PRIVATE_VALUE",
+  "runtime_manifest_path": "SET_PRIVATE_VALUE",
+  "runtime_dir": "SET_PRIVATE_VALUE",
+  "node_path": "SET_PRIVATE_VALUE",
+  "node_sha256": "SET_PRIVATE_VALUE",
+  "expected_cgroup": "SET_PRIVATE_VALUE",
+  "db_port": 0,
+  "http_port": 0,
+  "deadlineSeconds": 0,
+  "newRuntimeRequired": false,
+  "requiresIndependentRetainedUnitExitZero": false
+}

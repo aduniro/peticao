@@ -1,0 +1,2 @@
+# Optional WAHA speech tooling, isolated from the app and signing venv.
+-r ../_ops/whatsapp-executor/requirements-speech.txt

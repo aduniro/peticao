@@ -1,0 +1,9 @@
+[Unit]
+Description=Check authorized A1 signing queue
+[Timer]
+OnBootSec=45
+OnUnitInactiveSec=30
+AccuracySec=2
+Unit=peticao-a1-dispatch.service
+[Install]
+WantedBy=timers.target

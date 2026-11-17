@@ -38,48 +38,46 @@ Interrupções externas (queda, limite de uso ou encerramento da sessão) e impe
 
 A prioridade não autoriza deploy ou merge: **nenhuma publicação, merge ou integração/sincronização de código com a VPS, em qualquer direção, sem permissão explícita do responsável**. Inspeções somente leitura não autorizam incorporar as fontes inspecionadas. Enquanto uma publicação aguarda autorização, continuar as partes independentes do plano em ambiente isolado, preservando o candidato em avaliação. Manter as demais regras de aprovação de avisos e informações ao usuário.
 
-Informar início, retomada, interrupção e conclusão, além de atualizações de andamento. Registrar evidências e estimativas condicionadas aos resultados. Enviar notificações e relatórios somente a operator-78ffa47eeb@example.invalid`, em HTML; consolidar andamento a cada30 minutos durante trabalho ativo. Aceite do provedor não comprova entrega.
+Informar início, retomada, interrupção e conclusão, além de atualizações de andamento. Registrar evidências e estimativas condicionadas aos resultados. Enviar notificações e relatórios somente a operator-78ffa47eeb@example.invalid`, em HTML; enviar a árvore de progresso do admin-v2 a cada uma hora, identificando o snapshot de evidências e a atividade atual separadamente. Aceite do provedor não comprova entrega.
 
 ## Referências operacionais
-
-Decisão de 08/11/2026: o dono respondeu “Aprovo os textos e escolho 30 dias” às perguntas específicas sobre AV-15 (arquivados, restauração e aviso de conflito de remetentes) e retenção do conteúdo de e-mails, anexos e rascunhos administrativos. Aprovação restrita a esses itens; não se estende aos demais avisos ou ao deploy. Política de conteúdo em `docs/POLITICA-RETENCAO-CONTEUDO-ADMIN.md`. Preservar metadados de auditoria, assinaturas, hashes, datas, decisões e documentos originais.
 
 - Plano integral: `docs/PLANO-INTEGRACAO-ADMIN-VPS.md`.
 - Checkpoints e resultados: `docs/ADMIN-V2-PROGRESSO-20261106.md`.
 - Contexto dos agentes do Vigia: `tools/monitor/CONTEXTO.md`.
 - `AGENTS.md`, aprovações existentes e as demais políticas continuam aplicáveis. Preservar assinaturas, hashes, datas, decisões locais, segredos e versões anteriores.
-# Supervisão de continuidade — autorização de 08/11/2026
 
-Aplicar [VIGIA-CONTINUIDADE.md](VIGIA-CONTINUIDADE.md): fila persistente, detector
-independente, alertas em HTML, retomada limitada e conclusão por evidências.
-Nunca registrar o pulso do monitor como progresso do agente. Uma interrupção deve
-ficar explícita, com checkpoint e aviso; não apresentar um teste encerrado como
-desenvolvimento ativo. A supervisão não concede autorização de deploy/merge VPS.
+## Ampliação de IA e Configurações somente após a base concluída
 
-## Continuidade após limites de uso — reforço de 09/11/2026
+Decisão do responsável em 09/11/2026: manter OpenAI como motor atual. Não implementar agora o seletor multiprovedor/modelo/esforço, catálogo dinâmico, credenciais/login, modelos próprios, roteamento por módulo ou reorganização completa de Configurações. Essa ampliação fica por último, após concluir e validar a base funcional integral da plataforma. Requisitos registrados em `docs/POS-100-CONFIGURACOES-IA-MULTIPROVEDOR.md`. Perguntas sobre essa ampliação não substituem a prioridade atual.
 
-O responsável reiterou a prioridade integral do admin-v2: concluir uma tarefa
-intermediária exige selecionar a próxima etapa independente do plano, sem
-aguardar novo pedido de continuação. Vigia e APOIO devem registrar interrupções
-por falta de créditos e preparar a retomada a partir do checkpoint, quando a
-disponibilidade voltar a ser comprovada pela interface suportada do executor.
+## Perguntas paralelas e agente de apoio — 10/11/2026
 
-Essa retomada deve preservar a identidade da tarefa/conversa, evitar execuções
-duplicadas e respeitar pausas explícitas, aprovações pendentes, bloqueios de
-segurança e limites do serviço. Não trocar conta/modelo para contornar limites,
-consumir créditos de reinício ou efetuar compras por essa autorização.
+Determinação expressa do responsável: perguntas durante a execução não suspendem
+nem substituem a prioridade do admin-v2 completo. Encaminhar essas perguntas a
+um subagente de apoio, quando houver capacidade disponível e execução permitida,
+e manter o agente principal no desenvolvimento, integração local e validação do
+escopo aprovado. Incorporar as respostas do apoio sem encerrar o trabalho principal.
 
-Separar no monitor: coletor ativo, agente executando ferramentas, execução
-aguardando créditos, retomada agendada e objetivo nativo bloqueado. Não fabricar
-atividade ou conclusão pelo simples pulso do monitor. O fim de uma subtarefa
-não conclui o admin-v2. A retomada automática só será declarada operacional
-depois de implementada e testada; manter o diagnóstico explícito até lá.
+Ao terminar uma etapa, selecionar e executar a próxima etapa independente já
+autorizada. Não encerrar o turno apenas para responder uma pergunta ou apresentar
+um status intermediário. Pedidos explícitos de pausa ou mudança de prioridade
+continuam prevalecendo. Aprovações pendentes bloqueiam somente o trabalho que
+depende delas.
 
-O objetivo nativo foi encontrado como `blocked` nesta inspeção, e o responsável
-solicitou sua retomada pelo controle suportado, passando a `active`. Não editar
-registros internos para substituir esse controle do usuário/sistema. As frentes
-independentes autorizadas continuam durante diagnósticos de continuidade.
+A delegação não autoriza contornar limites de créditos, bloqueios de segurança ou
+permissões, nem duplicar alterações concorrentes nos mesmos arquivos. Se o apoio
+não puder executar, informar a indisponibilidade, responder brevemente quando
+possível e prosseguir na etapa independente autorizada. Nunca declarar agentes
+ativos ou continuidade em segundo plano sem evidência verificável.
 
-## Domínios e instituições
+Manter no Vigia a atividade real, etapas, subtarefas, agentes efetivamente ativos,
+testes, commits, percentuais sustentados por critérios e estimativas condicionadas.
+Nenhum deploy, merge ou sincronização de código com a VPS sem autorização expressa.
 
-Aplicar a política central de titularidade comprovada e elegibilidade MEC em `docs/POLITICA-CENTRAL-DOMINIOS-INSTITUICOES.md`, determinada pelo responsável em 09/11/2026. Não confundir identificação do órgão titular com autorização no formulário.
+## Notificações de madrugada — 10/11/2026
+
+Até07h de10/11/2026 no fuso America/Porto_Velho, manter somente o email horário da
+árvore admin-v2. Suprimir os demais emails genéricos e de incidentes, preservando
+os eventos no Vigia e sem drenar a fila noturna em rajada depois. Essa exceção não
+suspende execução, coleta, testes nem atualizações visíveis no terminal.

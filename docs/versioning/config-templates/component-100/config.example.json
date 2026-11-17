@@ -1,0 +1,11 @@
+{
+  "infra_reviewed": false,
+  "source_root": "SET_PRIVATE_VALUE",
+  "source_commit": "SET_PRIVATE_VALUE",
+  "build_unit": "SET_PRIVATE_VALUE",
+  "http_unit": "SET_PRIVATE_VALUE",
+  "postgres_port": 0,
+  "http_port": 0,
+  "all_work_local": false,
+  "deploy": false
+}

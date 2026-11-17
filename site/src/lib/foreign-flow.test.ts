@@ -39,10 +39,10 @@ test("estrangeiro: base de universidades, país, domínio listado, fora da lista
   assert.deepEqual(row, { category: "estrangeiro", cpf_hash: null, country: "DE", university: "Universität Heidelberg", university_domain: "uni-heidelberg.de", domain_check: "list", identity_method: "universidade_estrangeira", locale: "de", email_domain_kind: null });
   // subdomínio de departamento também vale
   assert.equal((await handleSign(form({ name: "Karl Beispiel", email: "karl@math.uni-heidelberg.de" }), ctx, null)).status, 200);
-  // quem ainda não confirmou e assina de novo: o cadastro é substituído (continua 1 linha) e a confirmação é reenviada
+  // identical pending retry is acknowledged without recreating or announcing a new email
   const before = outboxCount(out);
   assert.equal((await handleSign(form({ name: "Anna Müller" }), ctx, null)).status, 200);
-  assert.equal(outboxCount(out), before + 1);
+  assert.equal(outboxCount(out), before);
   assert.equal((await dbmod.query("SELECT 1 FROM signatures WHERE email='anna@uni-heidelberg.de'")).rowCount, 1);
   // quem JÁ confirmou: resposta idêntica, nada novo (não revela quem consta na lista)
   await dbmod.query("UPDATE signatures SET status='confirmed', confirmed_at=$1 WHERE email='anna@uni-heidelberg.de'", [new Date().toISOString()]);

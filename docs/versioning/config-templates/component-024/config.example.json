@@ -1,0 +1,62 @@
+{
+  "schema_version": 0,
+  "execution_enabled": false,
+  "coordinator_host": "SET_PRIVATE_VALUE",
+  "integration_host": "SET_PRIVATE_VALUE",
+  "state_path": "SET_PRIVATE_VALUE",
+  "artifact_root": "SET_PRIVATE_VALUE",
+  "hosts": {
+    "local": {
+      "role": "SET_PRIVATE_VALUE",
+      "enabled": false,
+      "repository_root": "SET_PRIVATE_VALUE",
+      "machine_id_sha256": null
+    },
+    "santiago": {
+      "role": "SET_PRIVATE_VALUE",
+      "enabled": false,
+      "repository_root": "SET_PRIVATE_VALUE",
+      "machine_id_sha256": null
+    },
+    "sao_paulo": {
+      "role": "SET_PRIVATE_VALUE",
+      "enabled": false,
+      "repository_root": null,
+      "machine_id_sha256": null
+    }
+  },
+  "protected_paths": [
+    "SET_PRIVATE_VALUE"
+  ],
+  "allowed_branch_prefixes": [
+    "SET_PRIVATE_VALUE"
+  ],
+  "wrappers": {
+    "qualification_delivery": {
+      "relative_path": "SET_PRIVATE_VALUE",
+      "sha256": "SET_PRIVATE_VALUE"
+    },
+    "qa_history_metadata": {
+      "relative_path": "SET_PRIVATE_VALUE",
+      "sha256": "SET_PRIVATE_VALUE"
+    }
+  },
+  "required_checks": {
+    "qualification_delivery": [
+      "SET_PRIVATE_VALUE"
+    ],
+    "qa_history_metadata": [
+      "SET_PRIVATE_VALUE"
+    ]
+  },
+  "limits": {
+    "concurrent_per_worker": 0,
+    "lease_seconds": 0,
+    "ready_max_age_seconds": 0,
+    "max_cpu_cores": 0,
+    "max_memory_mib": 0,
+    "max_timeout_seconds": 0,
+    "max_artifact_bytes": 0,
+    "max_total_artifact_bytes": 0
+  }
+}

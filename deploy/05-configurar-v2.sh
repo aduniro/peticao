@@ -69,6 +69,9 @@ step "3/5 Ligando o app ao Reacher"
 set_var REACHER_URL "http://127.0.0.1:8081"; set_var REACHER_SECRET "$SECRET"
 
 step "4/5 Deploy sem senha, restrito (só este script, sem argumentos)"
+install -d -m 755 -o root -g root /usr/local/lib/peticao
+install -m 644 -o root -g root "$HERE/publication.py" /usr/local/lib/peticao/publication.py
+/usr/bin/python3 /usr/local/lib/peticao/publication.py --ensure-lock
 install -m 755 -o root -g root "$HERE/03-instalar-app.sh" /usr/local/sbin/peticao-deploy
 cat > /etc/sudoers.d/peticao-deploy <<CFG
 # Permite a $DEPLOY_USER rodar APENAS o deploy da petição como root, sem senha. O "" no fim PROÍBE qualquer argumento

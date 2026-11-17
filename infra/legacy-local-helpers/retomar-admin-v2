@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /home/barre/.local/bin/codex resume --cd /mnt/apps/peticao-final 01a1a4bd-cdf4-7253-88e7-0c9fb9265aa7 "$@"

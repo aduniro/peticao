@@ -56,3 +56,22 @@ test("Mailrelay: envia pela API do host da conta, com chave no cabeçalho, Reply
     await assert.rejects(() => deliver(mail, ["mailrelay"], undefined, () => "F <f@x.org>"), /Mailrelay não configurado/);
   } finally { globalThis.fetch = realFetch; delete process.env.MAILRELAY_HOST; delete process.env.MAILRELAY_API_KEY; }
 });
+
+
+test("envio administrativo com tentativa única não troca de provedor após resultado ambíguo", async () => {
+  const { deliver } = await import("./mail");
+  const calls: string[] = [];
+  const failure = new Error("conexão encerrada após possível aceite");
+  const senders = {
+    first: async () => { calls.push("first"); throw failure; },
+    second: async () => { calls.push("second"); },
+  };
+  await assert.rejects(
+    deliver(mail, ["first", "second"], senders, () => "F <f@example.org>", "resposta-contato", undefined, { singleAttempt: true }),
+    error => error === failure,
+  );
+  assert.deepEqual(calls, ["first"]);
+  calls.length = 0;
+  assert.equal(await deliver(mail, ["first", "second"], senders, () => "F <f@example.org>", "confirmacao"), "second");
+  assert.deepEqual(calls, ["first", "second"]);
+});

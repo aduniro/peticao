@@ -1,5 +1,6 @@
 import { query } from "../db";
 import { providerCreds, spToken } from "./events";
+import { brevoApiEvents, mailersendApiEvents, recordApiEvents, type EventPage } from "./api-message-events";
 
 /**
  * Engajamento dos e-mails (entregue / aberto / clicado) vindo das APIs dos provedores. Tabela própria (mail_engagement), sem relação com devoluções.
@@ -14,20 +15,22 @@ const jget = async (f: F, url: string, headers: Record<string, string>) => {
   return r.json() as Promise<any>;
 };
 
-export async function brevoEngagement(key: string, days: number, f: F = fetch): Promise<Engaj[]> {
+export async function brevoEngagement(key: string, days: number, f: F = fetch, onPage?: EventPage<Engaj>): Promise<Engaj[]> {
   const out: Engaj[] = [];
   for (const [ev, kind] of [["delivered", "delivered"], ["opened", "opened"], ["clicks", "clicked"]] as const) {
     for (let off = 0; off < 50_000; off += 500) {
       const j = await jget(f, `https://api.brevo.com/v3/smtp/statistics/events?event=${ev}&days=${Math.min(90, days)}&limit=500&offset=${off}`, { "api-key": key });
       const list: any[] = j.events ?? [];
+      const start = out.length;
       for (const e of list) if (e.email && e.date) out.push({ provider: "brevo", email: String(e.email).toLowerCase(), kind, ts: new Date(e.date).toISOString() });
+      if (onPage) await onPage(out.slice(start), brevoApiEvents(list, key, kind));
       if (list.length < 500) break;
     }
   }
   return out;
 }
 
-export async function mailersendEngagement(token: string, days: number, f: F = fetch): Promise<Engaj[]> {
+export async function mailersendEngagement(token: string, days: number, f: F = fetch, onPage?: EventPage<Engaj>): Promise<Engaj[]> {
   const out: Engaj[] = [];
   const H = { Authorization: `Bearer ${token}` };
   const domains: any[] = (await jget(f, "https://api.mailersend.com/v1/domains?limit=25", H)).data ?? [];
@@ -36,7 +39,9 @@ export async function mailersendEngagement(token: string, days: number, f: F = f
   for (const d of domains) for (let page = 1; page <= 50; page++) {
     const j = await jget(f, `https://api.mailersend.com/v1/activity/${d.id}?limit=100&page=${page}&date_from=${since}&date_to=${now}&event[]=delivered&event[]=opened&event[]=clicked`, H);
     const list: any[] = j.data ?? [];
+    const start = out.length;
     for (const e of list) { const email = e.email?.recipient?.email, kind = map[e.type]; if (email && kind) out.push({ provider: "mailersend", email: String(email).toLowerCase(), kind, ts: new Date(e.created_at).toISOString() }); }
+    if (onPage) await onPage(out.slice(start), mailersendApiEvents(list, token));
     if (list.length < 100) break;
   }
   return out;
@@ -74,10 +79,14 @@ export async function storeEngagement(list: Engaj[]): Promise<number> {
 export type RelEngaj = Record<string, { ok: boolean; eventos?: number; erro?: string }>;
 export async function syncEngajamento(days = 30, f: F = fetch, creds = providerCreds()): Promise<RelEngaj> {
   const rep: RelEngaj = {};
-  const run = async (nome: string, fn: () => Promise<Engaj[]>) => { try { const ev = await fn(); await storeEngagement(ev); rep[nome] = { ok: true, eventos: ev.length }; } catch (e) { rep[nome] = { ok: false, erro: e instanceof Error ? e.message : String(e) }; } };
-  if (creds.brevo) await run("brevo", () => brevoEngagement(creds.brevo!, days, f));
-  if (creds.mailersend) await run("mailersend", () => mailersendEngagement(creds.mailersend!, days, f));
-  if (creds.sendpulse) await run("sendpulse", async () => sendpulseEngagement(await spToken(creds.sendpulse!, f), days, f));
+  const run = async (nome: string, fn: (sink: EventPage<Engaj>) => Promise<Engaj[]>, paged = true) => {
+    const sink: EventPage<Engaj> = async (legacy, events) => { await storeEngagement(legacy); await recordApiEvents(events); };
+    try { const ev = await fn(sink); if (!paged) await sink(ev, []); rep[nome] = { ok: true, eventos: ev.length }; }
+    catch (e) { rep[nome] = { ok: false, erro: e instanceof Error ? e.message : String(e) }; }
+  };
+  if (creds.brevo) await run("brevo", sink => brevoEngagement(creds.brevo!, days, f, sink));
+  if (creds.mailersend) await run("mailersend", sink => mailersendEngagement(creds.mailersend!, days, f, sink));
+  if (creds.sendpulse) await run("sendpulse", async () => sendpulseEngagement(await spToken(creds.sendpulse!, f), days, f), false);
   return rep;
 }
 
@@ -104,12 +113,14 @@ const iso = (x: unknown) => { const d = typeof x === "number" ? new Date(x < 1e1
 
 /** SES (via SNS, conjunto de configuração): Delivery, Open e Click viram engajamento. */
 export function sesToEngajamento(ev: any): Engaj[] {
-  const kind = ev?.eventType; const out: Engaj[] = [];
-  const dest: string[] = (ev?.mail?.destination ?? []).map((x: unknown) => String(x).toLowerCase());
-  const mk = (k: Engaj["kind"], ts: unknown) => { for (const e of dest) out.push({ provider: "ses", email: e, kind: k, ts: iso(ts ?? ev?.mail?.timestamp) }); };
-  if (kind === "Delivery") mk("delivered", ev.delivery?.timestamp);
-  else if (kind === "Open") mk("opened", ev.open?.timestamp);
-  else if (kind === "Click") mk("clicked", ev.click?.timestamp);
+  const kind = ev?.eventType ?? ev?.notificationType; const out: Engaj[] = [];
+  const raw=Array.isArray(ev?.mail?.destination)?ev.mail.destination:[];
+  const dest:string[]=[...new Set<string>(raw.filter((x:unknown):x is string=>typeof x==="string").map((x:string)=>x.trim().toLowerCase()))];
+  const actual:string[]=kind==="Delivery" && Array.isArray(ev.delivery?.recipients)?ev.delivery.recipients.filter((x:unknown):x is string=>typeof x==="string").map((x:string)=>x.trim().toLowerCase()).filter((x:string)=>dest.includes(x)):dest;
+  const mk = (k: Engaj["kind"], ts: unknown, recipients=dest) => { for (const e of recipients) out.push({ provider: "ses", email: e, kind: k, ts: iso(ts ?? ev?.mail?.timestamp) }); };
+  if (kind === "Delivery") mk("delivered", ev.delivery?.timestamp,actual);
+  else if (kind === "Open" && dest.length===1) mk("opened", ev.open?.timestamp);
+  else if (kind === "Click" && dest.length===1) mk("clicked", ev.click?.timestamp);
   return out;
 }
 
@@ -117,14 +128,18 @@ export function sesToEngajamento(ev: any): Engaj[] {
 export function brevoWebhookToEngaj(b: any): Engaj[] {
   const email = String(b?.email ?? "").toLowerCase(); if (!email) return [];
   const m: Record<string, Engaj["kind"]> = { delivered: "delivered", opened: "opened", unique_opened: "opened", opened_proxy: "opened", click: "clicked", clicks: "clicked" };
-  const k = m[String(b?.event ?? "")]; return k ? [{ provider: "brevo", email, kind: k, ts: iso(b?.ts_event ?? b?.ts ?? b?.date) }] : [];
+  const t = String(b?.event ?? ""), k = Object.prototype.hasOwnProperty.call(m,t) ? m[t] : undefined; return k ? [{ provider: "brevo", email, kind: k, ts: iso(b?.ts_event ?? b?.ts ?? b?.date) }] : [];
 }
 
 /** MailerSend (webhook): type = activity.delivered | activity.opened | activity.clicked */
+export const mailersendWebhookEmail = (b: any): string => {
+  const raw = b?.data?.email?.recipient?.email ?? b?.data?.recipient?.email ?? b?.data?.recipient;
+  return typeof raw === "string" ? raw.toLowerCase() : "";
+};
 export function mailersendWebhookToEngaj(b: any): Engaj[] {
-  const email = String(b?.data?.email?.recipient?.email ?? b?.data?.recipient?.email ?? "").toLowerCase(); if (!email) return [];
-  const m: Record<string, Engaj["kind"]> = { "activity.delivered": "delivered", "activity.opened": "opened", "activity.clicked": "clicked" };
-  const k = m[String(b?.type ?? "")]; return k ? [{ provider: "mailersend", email, kind: k, ts: iso(b?.data?.created_at ?? b?.created_at) }] : [];
+  const email = mailersendWebhookEmail(b); if (!email) return [];
+  const m: Record<string, Engaj["kind"]> = { "activity.delivered": "delivered", "activity.opened": "opened", "activity.opened_unique": "opened", "activity.clicked": "clicked", "activity.clicked_unique": "clicked" };
+  const t = String(b?.type ?? ""), k = Object.prototype.hasOwnProperty.call(m,t) ? m[t] : undefined; return k ? [{ provider: "mailersend", email, kind: k, ts: iso(b?.data?.created_at ?? b?.created_at) }] : [];
 }
 
 /** SendPulse (webhook SMTP): nomes de evento conforme a documentação (delivered, opened, clicked, hard_bounced, soft_bounced, spam...), tolerante a variações. */

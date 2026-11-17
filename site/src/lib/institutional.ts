@@ -1,7 +1,9 @@
 import { domainToASCII } from "node:url";
-import { audit, query } from "./db";
+import { audit, query, tx } from "./db";
 import freemailList from "./freemail.json";
+import type { PoolClient } from "pg";
 import { findIfes } from "./ifes-data";
+import { hmac, safeEqual } from "./security";
 
 /**
  * Selo de "e-mail institucional confirmado". Significa que o e-mail é de um domínio de órgão/instituição pública
@@ -104,34 +106,77 @@ export async function notePendingDomain(domain: string): Promise<void> {
   );
 }
 
-export async function decideDomain(domain: string, status: "approved" | "rejected", opts: { kind?: DomainKind; institution?: string; evidenceUrl?: string; by: string }): Promise<number> {
+export class DomainDecisionDenied extends Error {}
+export class DomainDecisionConflict extends Error {}
+type DomainActor = { userId: number; email: string };
+type DecisionOptions = { kind?: DomainKind; institution?: string; evidenceUrl?: string; by: string; actor?: DomainActor };
+async function decideDomainInTransaction(client: PoolClient, domain: string, status: "approved" | "rejected", opts: DecisionOptions): Promise<number> {
   const d = domainToASCII(domain.trim().toLowerCase());
   if (!d || !d.includes(".")) throw new Error("Domínio inválido.");
   if ([...FREEMAIL].some((f) => domainMatches(d, f))) throw new Error("Provedores de e-mail gratuitos não podem ser institucionais.");
-  const institutionId = opts.institution ? findIfes(opts.institution)?.id ?? null : null;
-  await query(
+  if (opts.actor !== undefined) {
+    const actor = opts.actor;
+    if (!Number.isInteger(actor?.userId) || actor.userId <= 0 || actor.userId > 2147483647 || typeof actor.email !== "string") throw new DomainDecisionDenied("Não autorizado.");
+    await client.query("SELECT pg_advisory_xact_lock(7003)");
+    const current = await client.query("SELECT id FROM admin_users WHERE id=$1 AND email=$2 AND ativo AND nivel IN ('edicao','exclusao','total') FOR SHARE", [actor.userId, actor.email.trim().toLowerCase()]);
+    if (!current.rowCount) throw new DomainDecisionDenied("Não autorizado.");
+  }
+  const by = opts.actor ? opts.actor.email.trim().toLowerCase() : opts.by;
+  // Manual decisions overlap for parent/subdomains; serialize them before touching signer metadata.
+  await client.query("SELECT pg_advisory_xact_lock(hashtext('institutional-domain-decision'))");
+  await client.query(
     `INSERT INTO institutional_domains(domain,kind,institution,source,status,evidence_url,decided_by,updated_at)
      VALUES($1,$2,$3,'manual',$4,$5,$6,$7)
      ON CONFLICT (domain) DO UPDATE SET kind=EXCLUDED.kind, institution=COALESCE(EXCLUDED.institution, institutional_domains.institution),
        status=EXCLUDED.status, evidence_url=COALESCE(EXCLUDED.evidence_url, institutional_domains.evidence_url), decided_by=EXCLUDED.decided_by, updated_at=EXCLUDED.updated_at`,
-    [d, opts.kind ?? "outro", opts.institution ?? null, status, opts.evidenceUrl ?? null, opts.by, new Date().toISOString()]
+    [d, opts.kind ?? "outro", opts.institution ?? null, status, opts.evidenceUrl ?? null, by, new Date().toISOString()]
   );
-  _clearDomainCache();
-  if (institutionId) await query("UPDATE institutional_domains SET institution_id=$2 WHERE domain=$1", [d, institutionId]);
-  let updated = 0;
+  const institutionId = opts.institution ? findIfes(opts.institution)?.id ?? null : null;
+  if (institutionId) await client.query("UPDATE institutional_domains SET institution_id=$2 WHERE domain=$1", [d, institutionId]);
+  let count = 0;
   if (status === "approved") {
-    // Sobe retroativamente quem já assinou com esse domínio (e subdomínios), respeitando a regra de discentes.
-    const approved = await approvedDomains();
-    const sigs = (await query<{ id: number; email: string }>(
-      "SELECT id,email FROM signatures WHERE split_part(email,'@',2) = $1 OR RIGHT(split_part(email,'@',2), LENGTH($1)+1) = '.' || $1", [d])).rows;
-    for (const s of sigs) {
-      const k = await institutionalKind(s.email);
-      const info = k ? await institutionInfo(s.email) : { domain: null, institution: null };
-      await query("UPDATE signatures SET email_domain_kind=$1, email_domain=$2, email_institution=$3 WHERE id=$4", [k, info.domain, info.institution, s.id]);
-      updated++;
+    // Use the same classifier, with rules from this transaction rather than the process cache.
+    const rules = (await client.query<ApprovedDomain>("SELECT domain,kind,status,institution FROM institutional_domains WHERE status IN ('approved','rejected') AND kind <> 'universidade-estrangeira'")).rows;
+    const sigs = (await client.query<{ id: number; email: string }>("SELECT id,email FROM signatures WHERE split_part(email,'@',2) = $1 OR RIGHT(split_part(email,'@',2), LENGTH($1)+1) = '.' || $1 ORDER BY id FOR UPDATE", [d])).rows;
+    for (const signer of sigs) {
+      const domain = emailDomain(signer.email), classification = domain ? classifyDomain(domain, rules) : null;
+      const rule = classification && domain ? rules.filter(r => r.status !== "rejected" && domainMatches(domain, r.domain)).sort((a, b) => b.domain.length - a.domain.length)[0] : null;
+      await client.query("UPDATE signatures SET email_domain_kind=$1,email_domain=$2,email_institution=$3 WHERE id=$4", [classification?.kind ?? null, classification && domain ? registrableDomain(domain) ?? domain : null, rule?.institution ?? null, signer.id]);
+      count++;
     }
-    void approved;
   }
-  await audit(status === "approved" ? "domain_approved" : "domain_rejected", null, { domain: d, kind: opts.kind ?? "outro", by: opts.by, updated });
+  await audit(status === "approved" ? "domain_approved" : "domain_rejected", null, { domain: d, kind: opts.kind ?? "outro", by, updated: count, ...(opts.actor ? { userId: opts.actor.userId } : {}) }, client);
+  return count;
+}
+
+export async function decideDomain(domain: string, status: "approved" | "rejected", opts: DecisionOptions): Promise<number> {
+  const updated = await tx(client => decideDomainInTransaction(client, domain, status, opts));
+  _clearDomainCache();
   return updated;
+}
+
+export type DomainSourceRow = { domain: string; kind: string; institution: string | null; source: string; status: string; evidence_url: string | null; decided_by: string | null; updated_at: string | null };
+/** Snapshot of the displayed pending decisions, not an authorization to change them. */
+export function domainSourceVersion(source: string, rows: DomainSourceRow[], actor: DomainActor): string {
+  const pending = rows.filter(row => row.source === source && row.status === "pending").sort((a, b) => a.domain < b.domain ? -1 : a.domain > b.domain ? 1 : 0);
+  return hmac("domain-source-version:v1:" + JSON.stringify([source, actor.userId, actor.email.trim().toLowerCase(), pending.map(row => [row.domain, row.kind, row.institution, row.evidence_url, row.decided_by, row.updated_at])]));
+}
+
+/** One source approval is atomic; a stale page never approves newly discovered candidates. */
+export async function approveDomainSource(source: string, kind: DomainKind, actor: DomainActor, version: string) {
+  if (!source || source.length > 200 || !Object.prototype.hasOwnProperty.call(KIND_LABELS, kind) || typeof version !== "string" || !/^[a-f0-9]{64}$/.test(version)) throw new DomainDecisionConflict();
+  if (!actor || !Number.isInteger(actor.userId) || actor.userId <= 0 || actor.userId > 2147483647 || typeof actor.email !== "string") throw new DomainDecisionDenied("Não autorizado.");
+  const result = await tx(async client => {
+    await client.query("SET LOCAL lock_timeout='1000ms'; SET LOCAL statement_timeout='5000ms'");
+    await client.query("SELECT pg_advisory_xact_lock(7003)");
+    if (!(await client.query("SELECT 1 FROM admin_users WHERE id=$1 AND email=$2 AND ativo AND nivel IN ('edicao','exclusao','total') FOR SHARE", [actor.userId, actor.email.trim().toLowerCase()])).rowCount) throw new DomainDecisionDenied("Não autorizado.");
+    await client.query("SELECT pg_advisory_xact_lock(hashtext('institutional-domain-decision'))");
+    const rows = (await client.query<DomainSourceRow>("SELECT domain,kind,institution,source,status,evidence_url,decided_by,updated_at FROM institutional_domains WHERE status='pending' AND source=$1 ORDER BY domain FOR UPDATE", [source])).rows;
+    if (!rows.length || !safeEqual(domainSourceVersion(source, rows, actor), version)) throw new DomainDecisionConflict();
+    let updated = 0;
+    for (const row of rows) updated += await decideDomainInTransaction(client, row.domain, "approved", { kind, by: actor.email, actor });
+    return { domains: rows.length, updated };
+  });
+  _clearDomainCache();
+  return result;
 }

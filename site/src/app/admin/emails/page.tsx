@@ -1,14 +1,18 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk, stepupValido } from "@/lib/admin-users";
 import { config } from "@/lib/config";
 import { brasilia } from "@/lib/time";
 import { outboxStats } from "@/lib/mail/outbox";
 import { query } from "@/lib/db";
 import { alertasEmail } from "@/lib/mail/alertas";
-import { resumoEngajamento } from "@/lib/mail/engajamento";
-import PendentesTable, { type Linha } from "@/components/admin/PendentesTable";
-import { sugerir } from "@/lib/email-sugestao";
-import { dominiosLentos, eventosResumo, porProvedor, porSubdominio, porTipo, semEmailEntregue, sesSaude, statusProvedores, verificacoes } from "@/lib/mail/painel";
+import PendentesTable from "@/components/admin/PendentesTable";
+import { readPendingEmailPage } from "@/lib/pending-email-admin-store";
+import RecuperarFila from "@/components/admin/RecuperarFila";
+import { listMailRecovery } from "@/lib/mail/recovery";
+import PreviaEmail from "@/components/admin/PreviaEmail";
+import { readMailHistoryPage } from "@/lib/mail-history-admin-store";
+import { dominiosLentos, eventosResumo, porProvedor, porSubdominio, porTipo, sesSaude, statusProvedores, verificacoes } from "@/lib/mail/painel";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "E-mails", robots: { index: false } };
@@ -18,30 +22,32 @@ const NOME_EVENTO: Record<string, string> = { hard_bounce: "devolução permanen
 const n = (x: unknown) => (x === undefined || x === null ? "—" : Number(x).toLocaleString("pt-BR"));
 const pct = (a: number, b: number) => (b ? `${((a / b) * 100).toFixed(1)}%` : "—");
 
-/** Anexa a sugestão de correção (calculada no servidor) e o horário legível a cada linha, com no máximo 8 consultas de domínio ao mesmo tempo. */
-async function comSugestoes(sem: Awaited<ReturnType<typeof semEmailEntregue>>): Promise<Linha[]> {
-  const out: Linha[] = new Array(sem.length);
-  let i = 0;
-  await Promise.all(Array.from({ length: Math.min(8, sem.length) }, async () => {
-    while (i < sem.length) { const k = i++; const r = sem[k]; const s = await sugerir(r.email).catch(() => ({ sugestao: null, motivo: null })); out[k] = { ...r, criadaTxt: brasilia(r.criada, true), sugestao: s.sugestao, motivoSugestao: s.motivo }; }
-  }));
-  return out;
-}
-
 export default async function Emails({ searchParams }: { searchParams: { msg?: string } }) {
-  if (!isAdmin()) redirect("/admin");
-  const [prov, tipos, subs, ses, evs, sem, checks, lentos, status, outbox] = await Promise.all([porProvedor(), porTipo(), porSubdominio(), sesSaude(), eventosResumo(), semEmailEntregue(), verificacoes(), dominiosLentos(), statusProvedores(), outboxStats()]);
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
+  const podeRecuperar = nivelOk(sessao.nivel, "total") && !!sessao.userId;
+  const stepupAtRead = podeRecuperar && stepupValido(sessao);
+  const recuperacao = stepupAtRead
+    ? await listMailRecovery().catch(() => null)
+    : undefined;
+  const historico = await readMailHistoryPage(sessao, { limit: 10 });
+  const [prov, tipos, subs, ses, evs, pending, checks, lentos, status, outbox] = await Promise.all([porProvedor(), porTipo(), porSubdominio(), sesSaude(), eventosResumo(), readPendingEmailPage(sessao, { limit: 50 }), verificacoes(), dominiosLentos(), statusProvedores(), outboxStats()]);
   const blackEmails = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason='invalid'")).rows[0].n;
   const suppressed = (await query<{ n: number }>("SELECT COUNT(*)::int n FROM email_suppressions WHERE reason IN ('bounce','complaint')")).rows[0].n;
-  const alertas = await alertasEmail();
-  const eng = await resumoEngajamento();
-  const linhas: Linha[] = await comSugestoes(sem);
+  const alertas = await alertasEmail({ pendingTotal: pending.ok ? pending.summary.global.total : null });
+  const pendingCounts = pending.ok ? pending.summary.global : null;
+  const engagementUpdated = (await query<{ value: string | null }>("SELECT MAX(updated_at)::text value FROM mail_engagement")).rows[0].value;
   const status_b = status.brevo?.data, rp = status.respostas?.data; void status_b;
-  const falhasPorMotivo = sem.reduce<Record<string, number>>((a, s) => ((a[s.motivo] = (a[s.motivo] ?? 0) + 1), a), {});
+  // Recheck the whole SSR response after potentially lengthy reads, including recovery/preview permissions.
+  const current = await sessaoAdmin();
+  if (!current || current.userId !== sessao.userId || current.sessaoId !== sessao.sessaoId || !nivelOk(current.nivel, "edicao")) redirect("/admin?erro=nivel");
+  if (current.nivel !== sessao.nivel || stepupAtRead !== (nivelOk(current.nivel, "total") && !!current.userId && stepupValido(current))) redirect("/admin/emails");
+  const actorScope = `${current.userId}:${current.sessaoId ?? "legacy"}:${current.nivel}`;
 
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>E-mails</h1>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p>Cadeia transacional: <strong>{config.mailProviders().join(" → ")}</strong> · Marketing: <strong>{config.marketingProviders().join(" → ") || "não configurado"}</strong> · Reply-To: <strong>{config.mailReplyTo() || "nenhum"}</strong></p>
@@ -51,22 +57,25 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
         <button>Sincronizar agora</button> <span className="small">(o agendador faz isso sozinho a cada 10 minutos)</span>
       </form>
 
-      <h2>Os pendentes abriram os e-mails?</h2>
-      <p className="small">Situação de cada cadastro <strong>aguardando confirmação</strong>, pelo melhor sinal recebido dos provedores (Brevo, MailerSend e SendPulse). “Entregue e nunca aberto” é o sinal mais próximo de spam, mas não é prova: leitores que bloqueiam imagens não registram abertura. No SendPulse, abertura e clique só chegam depois de cadastrado o webhook no painel deles; o SES só informa devoluções. <a href="/admin/emails/entregas">Ver a lista por pessoa (nome, contato e situação)</a>.</p>
+      {/* MUDAR AQUI: estados do último sinal conhecido, na mesma consulta global da lista de pendentes. */}
+      <h2>Sinais registrados para os cadastros pendentes</h2>
+      <p className="small">{pending.ok && <>Resumo da consulta inicial de {brasilia(pending.asOf, true)}. </>}Cada cadastro aguardando confirmação aparece pelo último sinal cronológico registrado para seu endereço. O histórico pode incluir mensagens anteriores e não comprova entrega, abertura ou clique da confirmação atual. Aceite pelo provedor não equivale a entrega; ausência de abertura não comprova spam. <a href="/admin/emails/entregas">Ver cadastros e endereços com sinais registrados</a>.</p>
+      {!pendingCounts && <p className="v2-aviso erro" role="alert">Não foi possível consultar os sinais dos pendentes. Atualize a página para tentar novamente.</p>}
       <table className="adm-table"><tbody>
-        <tr><td>Aguardando confirmação</td><td><strong>{eng.pendentes}</strong></td></tr>
-        <tr><td>Clicaram no e-mail (e não confirmaram)</td><td>{eng.clicou}</td></tr>
-        <tr><td>Abriram, sem clicar</td><td>{eng.abriu}</td></tr>
-        <tr><td>Entregue e nunca aberto (possível spam)</td><td>{eng.entregueSemAbrir}</td></tr>
-        <tr><td>Devolvido (hard/soft bounce, bloqueio)</td><td>{eng.devolvido}</td></tr>
-        <tr><td>Sem registro nos provedores consultados</td><td>{eng.semRegistro}</td></tr>
+        <tr><td>Aguardando confirmação</td><td><strong>{pendingCounts?.total ?? "—"}</strong></td></tr>
+        <tr><td>Último sinal: clique registrado</td><td>{pendingCounts?.byState.clicked ?? "—"}</td></tr>
+        <tr><td>Último sinal: abertura registrada</td><td>{pendingCounts?.byState.opened ?? "—"}</td></tr>
+        <tr><td>Último sinal: entrega registrada</td><td>{pendingCounts?.byState.delivered ?? "—"}</td></tr>
+        <tr><td>Último sinal: devolução, bloqueio ou reclamação</td><td>{pendingCounts?.byState.adverse ?? "—"}</td></tr>
+        <tr><td>Último sinal: aceite pelo provedor</td><td>{pendingCounts?.byState.accepted ?? "—"}</td></tr>
+        <tr><td>Sem sinal registrado nas fontes disponíveis</td><td>{pendingCounts?.byState.unrecorded ?? "—"}</td></tr>
       </tbody></table>
       <form method="post" action="/api/admin/emails/engajamento" style={{ margin: "10px 0" }}>
         Buscar entregas, aberturas e cliques dos últimos <select name="dias" defaultValue="30"><option value="7">7 dias</option><option value="14">14 dias</option><option value="30">30 dias</option><option value="60">60 dias</option><option value="90">90 dias</option></select> <button>Atualizar engajamento</button>
-        <span className="small"> Última atualização: {eng.ultimaAtualizacao ?? "nunca"}. Pode levar alguns minutos.</span>
+        <span className="small"> Última atualização do agregado legado: {engagementUpdated ? brasilia(engagementUpdated, true) : "nunca"}. Pode levar alguns minutos.</span>
       </form>
 
-      <h2>Fila de reenvio e lista negra</h2>
+      <h2 id="fila" tabIndex={-1}>Fila de reenvio e lista negra</h2>
       <section className="box" style={{ margin: "8px 0" }}>
         <div className="adm-bar">Fila de reenvio: <strong>{outbox.pending}</strong> pendente(s){outbox.oldest ? ` (a mais antiga é de ${brasilia(outbox.oldest)})` : ""} · {outbox.failed} que desistiram depois de 48 h.
           <form method="post" action="/api/admin/seguranca/fila" style={{ display: "inline" }}><button className="adm-btn sm">Reenviar agora</button></form></div>
@@ -76,6 +85,10 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
         </form>
         <p className="small">Regra: 3 tentativas com o mesmo e-mail inexistente põem o e-mail na lista negra. Não há bloqueio de IP por erro.</p>
       </section>
+      {podeRecuperar && !stepupValido(sessao) ? <p><a href="/admin/confirmar?volta=%2Fadmin%2Femails">Concluir fila sem reenviar</a></p> : null}
+      {recuperacao?.ok ? <RecuperarFila initial={recuperacao.records} next={recuperacao.next} names={NOME_TIPO} /> : recuperacao === null || recuperacao?.ok === false ? <p className="v2-aviso erro" role="alert">Não foi possível carregar a lista. Tente novamente.</p> : null}
+      {podeRecuperar && !stepupValido(sessao) ? <p><a href="/admin/confirmar?volta=%2Fadmin%2Femails">Ver prévia protegida</a></p> : null}
+      {historico?.ok ? <PreviaEmail initial={historico.records} next={historico.next} names={NOME_TIPO} canPreview={podeRecuperar && stepupValido(sessao)} actorScope={actorScope} initialAsOf={historico.asOf} initialTotal={historico.total} /> : historico === null || historico?.ok === false ? <p className="v2-aviso erro" role="alert">Não foi possível carregar a lista. Tente novamente.</p> : null}
 
       <h2>Provedores: saldo e envios</h2>
       <div className="table-scroll"><table>
@@ -117,9 +130,10 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
         <tbody>{evs.length ? evs.map((e) => <tr key={e.provider + e.type}><td>{e.provider}</td><td>{NOME_EVENTO[e.type] ?? e.type}</td><td>{n(e.n24)}</td><td>{n(e.n7)}</td><td>{n(e.total)}</td></tr>) : <tr><td colSpan={5}><em>Nenhum evento registrado. Use “Sincronizar agora” com 14 ou 30 dias para trazer o histórico.</em></td></tr>}</tbody>
       </table></div>
 
-      <h2 id="pendentes">Cadastros pendentes sem e-mail entregue ({sem.length})</h2>
-      <p>{Object.entries(falhasPorMotivo).map(([k, v]) => `${k}: ${v}`).join(" · ") || "Nenhum."} A pessoa precisa assinar de novo com o e-mail correto (o mesmo CPF substitui o cadastro pendente). Nada é enviado a endereços que ela não digitou. Esta lista mostra o e-mail completo, só para a ADUNIR contatar por outro canal.</p>
-      {sem.length > 0 && <PendentesTable linhas={linhas} />}
+      {/* MUDAR AQUI: sinais pertencem ao histórico do endereço, sem atribuição automática à solicitação atual. */}
+      <h2 id="pendentes">Cadastros aguardando confirmação</h2>
+      <p>Consulta de todos os cadastros pendentes. Os sinais registrados pertencem ao histórico do endereço e não comprovam, por si só, a situação da mensagem atual. Endereços completos são restritos aos usuários autorizados.</p>
+      <PendentesTable actorScope={actorScope} initial={pending.ok ? pending : null} initialError={pending.ok ? undefined : pending.error} />
 
       <h2>Verificação de e-mail antes do envio (Reacher pelas sondas de cabanos.cc, e domínio)</h2>
       <p className="small">Sondas: <code>verifica1.cabanos.cc</code> (padrão) e <code>verifica2.cabanos.cc</code> (Gmail). Limites do Reacher: 30 por minuto e 5.000 por dia. Domínios institucionais que não respondem à sonda são pulados por 30 minutos.</p>
@@ -132,6 +146,7 @@ export default async function Emails({ searchParams }: { searchParams: { msg?: s
       <h2>Respostas recebidas (Cloudflare Email Routing → Proton)</h2>
       {rp?.ok ? <p>Últimos {rp.dias} dias: <strong>{n(rp.total)}</strong> mensagens recebidas nos endereços dos subdomínios · entregues ao Proton {n(rp.entregues)} · marcadas como spam {n(rp.spam)} · rejeitadas {n(rp.rejeitadas)}. As respostas em si ficam na caixa <code>operator-1608598f41@example.invalid</code>.</p>
         : <p className="box">{rp?.erro ?? "sem consulta"}. Para contar as respostas aqui, crie na Cloudflare um token só de leitura de estatísticas (Analytics Read, zona sancionaintegral.org) e grave-o com <code>chave.mjs cloudflare:analytics</code> e <code>deploy/17-credencial-cloudflare-analytics.sh</code>. Enquanto isso, as respostas chegam normalmente ao Proton.</p>}
+    </div>
     </main>
   );
 }

@@ -1,0 +1,818 @@
+{
+  "components": [
+    {
+      "component": "component-000",
+      "source_relative_path": "infra-public-inputs-20261115/wheel-site-source",
+      "namespace": "archive/component-000",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-001",
+      "source_relative_path": "infra-public-inputs-20261115/pg-copy-source-v2",
+      "namespace": "archive/component-001",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-002",
+      "source_relative_path": "infra-public-inputs-20261115/browser-copy-source",
+      "namespace": "archive/component-002",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-003",
+      "source_relative_path": "infra-public-inputs-20261115/producer-source",
+      "namespace": "archive/component-003",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-004",
+      "source_relative_path": "infra-public-inputs-20261115/wheel-site-source-v2",
+      "namespace": "archive/component-004",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-005",
+      "source_relative_path": "infra-public-inputs-20261115/python-copy-source",
+      "namespace": "archive/component-005",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-006",
+      "source_relative_path": "infra-public-inputs-20261115/browser-copy-source-v2",
+      "namespace": "archive/component-006",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-007",
+      "source_relative_path": "infra-public-inputs-20261115/vendor-audit-source",
+      "namespace": "archive/component-007",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-008",
+      "source_relative_path": "peticao",
+      "namespace": "original",
+      "role": "canonical-app",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-009",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0006-local-history-browser-qa-20261111",
+      "namespace": "archive/component-009",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-010",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0012-local-pdf-preparation-qa-20261111",
+      "namespace": "archive/component-010",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-011",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0008-local-package-approval-pg17-qa-20261111",
+      "namespace": "archive/component-011",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-012",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0010-local-package-browser-qa-20261111",
+      "namespace": "archive/component-012",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-013",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0007-local-history-core-pg17-qa-20261111",
+      "namespace": "archive/component-013",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-014",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0013-create-reconciliation-draft-20261111/profile-v2",
+      "namespace": "archive/component-014",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-015",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0009-local-package-http-qa-20261111",
+      "namespace": "archive/component-015",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-016",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0004-local-history-http-qa-20261111",
+      "namespace": "archive/component-016",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-017",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0013-local-pdf-preparation-browser-qa-20261111",
+      "namespace": "archive/component-017",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-018",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0011-local-package-http-edge-qa-20261111",
+      "namespace": "archive/component-018",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-019",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0005-auth-history-browser-qa-20261111",
+      "namespace": "archive/component-019",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-020",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0003-local-pg17-qa-20261111/attempt-2",
+      "namespace": "archive/component-020",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-021",
+      "source_relative_path": "_retomada-sessao-peticao/migracao-complementar-20261111/originais/mnt/dev/.peticao-r0002-production-profile-20261111/runs/build-1794355518539792403/clone",
+      "namespace": "archive/component-021",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-022",
+      "source_relative_path": "legacy-main-source-outside-project",
+      "namespace": "archive/component-022",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-023",
+      "source_relative_path": "_ops/civo-short-alias-probe-20261115/source",
+      "namespace": "archive/component-023",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-024",
+      "source_relative_path": "_ops/admin-v2-executors/orchestrator-draft",
+      "namespace": "archive/component-024",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-025",
+      "source_relative_path": "_ops/qa-materials-pg17-20261111",
+      "namespace": "archive/component-025",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-026",
+      "source_relative_path": "_ops/r0003-queue-adapter-20261111",
+      "namespace": "archive/component-026",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-027",
+      "source_relative_path": "_ops/r0000-cluster-runtime-profile-20261110",
+      "namespace": "archive/component-027",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-028",
+      "source_relative_path": "_ops/r0000-cluster-runtime-profile-20261110/installation-dry-run-480",
+      "namespace": "archive/component-028",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-029",
+      "source_relative_path": "_ops/qa-materials-layout-browser-20261111",
+      "namespace": "archive/component-029",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-030",
+      "source_relative_path": "_ops/kubernetes-dev",
+      "namespace": "archive/component-030",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-031",
+      "source_relative_path": "_ops/report-step-evidence-fix-20261111",
+      "namespace": "archive/component-031",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-033",
+      "source_relative_path": "_ops/r0002-native-profile-install-20261111",
+      "namespace": "archive/component-033",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-034",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-systemd-qualification/source",
+      "namespace": "archive/component-034",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-035",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/azure-canonical-qualification/source",
+      "namespace": "archive/component-035",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-036",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-systemd-qualification-v3/source",
+      "namespace": "archive/component-036",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-037",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/azure-idle/source",
+      "namespace": "archive/component-037",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-038",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/coordinator-rpc-facade/source",
+      "namespace": "archive/component-038",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-039",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/dev-fencing-design/source",
+      "namespace": "archive/component-039",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-040",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/azure-dev-toolchain/source",
+      "namespace": "archive/component-040",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-041",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-broker-qualification-a-20261115/source",
+      "namespace": "archive/component-041",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-042",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-20261115/source",
+      "namespace": "archive/component-042",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-043",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-tools-parity/source",
+      "namespace": "archive/component-043",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-044",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-real-profile-driver-v2-20261115/source",
+      "namespace": "archive/component-044",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-045",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/authority-owner-preservation/source",
+      "namespace": "archive/component-045",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-046",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/azure-mesh-plan/source",
+      "namespace": "archive/component-046",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-047",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-attempt2-reconciliation/source",
+      "namespace": "archive/component-047",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-048",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-neon-infra-verify/source",
+      "namespace": "archive/component-048",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-049",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-namespace-diagnostic/source",
+      "namespace": "archive/component-049",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-050",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-neon-infra/source",
+      "namespace": "archive/component-050",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-051",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-systemd-qualification-attempt3/source",
+      "namespace": "archive/component-051",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-052",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-complete-qa/source",
+      "namespace": "archive/component-052",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-053",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/canonical-real-profiles-integration-20261115/source",
+      "namespace": "archive/component-053",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-054",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/azure-worker/source",
+      "namespace": "archive/component-054",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-055",
+      "source_relative_path": "_ops/apoio-infra-paralela-20261114/civo-export-recovery/source",
+      "namespace": "archive/component-055",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-056",
+      "source_relative_path": "_ops/qa-r0015-a1-admission-browser-20261111",
+      "namespace": "archive/component-056",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-057",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v2-20261114",
+      "namespace": "archive/component-057",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-058",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v4-20261115",
+      "namespace": "archive/component-058",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-059",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-broker-v2-20261115",
+      "namespace": "archive/component-059",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-060",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-short-alias-native-prep-v2-20261115",
+      "namespace": "archive/component-060",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-061",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-broker-v3-20261115",
+      "namespace": "archive/component-061",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-062",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-owner-bundle-20261114",
+      "namespace": "archive/component-062",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-063",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-current-topology-v1-20261115",
+      "namespace": "archive/component-063",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-064",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-passive-restore-20261114",
+      "namespace": "archive/component-064",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-065",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-broker-A-client-v2-20261115",
+      "namespace": "archive/component-065",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-066",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-toolchain-installer-v1-20261115",
+      "namespace": "archive/component-066",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-067",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-broker-A-client-prep-20261115",
+      "namespace": "archive/component-067",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-068",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-broker-A-client-v3-20261115",
+      "namespace": "archive/component-068",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-069",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-bootstrap-fencing-v2-20261115",
+      "namespace": "archive/component-069",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-070",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-profile-toolchain-install-prep-20261115",
+      "namespace": "archive/component-070",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-071",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-20261114",
+      "namespace": "archive/component-071",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-072",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/standby-release",
+      "namespace": "archive/component-072",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-073",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-network-20261114",
+      "namespace": "archive/component-073",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-074",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-remote-worker-contract-20261114",
+      "namespace": "archive/component-074",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-075",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-short-alias-native-prep-20261115",
+      "namespace": "archive/component-075",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-076",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-qualified-harness-20261114",
+      "namespace": "archive/component-076",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-077",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-launch-token-custody-20261114",
+      "namespace": "archive/component-077",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-078",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-launch-token-custody-v2-20261114",
+      "namespace": "archive/component-078",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-079",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-broker-v1-20261115",
+      "namespace": "archive/component-079",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-080",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-20261114",
+      "namespace": "archive/component-080",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-081",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/cloud-execution-20261114",
+      "namespace": "archive/component-081",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-082",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-toolchain-bundle-prep-20261115",
+      "namespace": "archive/component-082",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-083",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v3-20261114",
+      "namespace": "archive/component-083",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-084",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v5-20261115",
+      "namespace": "archive/component-084",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-085",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-legacy-standby-20261114",
+      "namespace": "archive/component-085",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-086",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-authority-guard-overlay-20261114",
+      "namespace": "archive/component-086",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-087",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-passive-restore-retry1-20261114",
+      "namespace": "archive/component-087",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-088",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-bootstrap-fencing-v1-20261115",
+      "namespace": "archive/component-088",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-089",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-broker-protocol-20261115",
+      "namespace": "archive/component-089",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-090",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/distributed/civo-worker-runtime-v6-20261115",
+      "namespace": "archive/component-090",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-091",
+      "source_relative_path": "_ops/infra-coordenacao-20261112/evidence/oracle-vm-create-20261115/source",
+      "namespace": "archive/component-091",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-092",
+      "source_relative_path": "_ops/controle-operacional",
+      "namespace": "archive/component-092",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-093",
+      "source_relative_path": "_ops/qa-materials-layout-browser-v2-20261111",
+      "namespace": "archive/component-093",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-094",
+      "source_relative_path": "_ops/qa-r0014-own-document-browser-20261111",
+      "namespace": "archive/component-094",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-095",
+      "source_relative_path": "_ops/r0000-cluster-history-native-pg17-r4-20261110",
+      "namespace": "archive/component-095",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-096",
+      "source_relative_path": "_ops/admin-query-r1-publish-gate-20261114",
+      "namespace": "archive/component-096",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-097",
+      "source_relative_path": "_ops/qa-materials-app-http-phase-b-draft-20261111",
+      "namespace": "archive/component-097",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-098",
+      "source_relative_path": "_ops/civo-short-alias-probe-v2-20261115/source",
+      "namespace": "archive/component-098",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-099",
+      "source_relative_path": "_ops/admin-query-r1-close-493-20261114",
+      "namespace": "archive/component-099",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-100",
+      "source_relative_path": "_ops/qa-materials-app-http-20261111",
+      "namespace": "archive/component-100",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-101",
+      "source_relative_path": "_ops/coordenacao-dupla",
+      "namespace": "archive/component-101",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-102",
+      "source_relative_path": "_ops/r0003-govbr-route-nativepg-harness-20261111",
+      "namespace": "archive/component-102",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-103",
+      "source_relative_path": "_ops/r0002-native-profile-install-rev2-20261111",
+      "namespace": "archive/component-103",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-104",
+      "source_relative_path": "_ops/r0003-cleanup-term-fix-20261111",
+      "namespace": "archive/component-104",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-105",
+      "source_relative_path": "infra-toolchain-publication-20261115",
+      "namespace": "archive/component-105",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-106",
+      "source_relative_path": "cpfs",
+      "namespace": "archive/component-106",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-107",
+      "source_relative_path": "infra-sri-proof-20261115/source",
+      "namespace": "archive/component-107",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-108",
+      "source_relative_path": "backups/peticao-vps/20261108T182956Z/source-git",
+      "namespace": "archive/component-108",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-109",
+      "source_relative_path": "infra-rootinstaller-client-20261115/source",
+      "namespace": "archive/component-109",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-110",
+      "source_relative_path": "peticao-laboratorio",
+      "namespace": "archive/component-110",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-111",
+      "source_relative_path": "peticao-v1-2026-11-04",
+      "namespace": "archive/component-111",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-112",
+      "source_relative_path": "peticao/.cache/admin-v2-retomada-20261109/r0000-document-history-populated-smoke-20261110/r4-native-pg",
+      "namespace": "archive/component-112",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-113",
+      "source_relative_path": "peticao/.cache/admin-v2-retomada-20261109/r0000-build-qualification/runs/1794338540216859204/clone",
+      "namespace": "archive/component-113",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-114",
+      "source_relative_path": "peticao/.cache/admin-v2-retomada-20261109/r0000-production-profile-20261110/runs/build-1794348288170924986/clone",
+      "namespace": "archive/component-114",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-115",
+      "source_relative_path": "peticao/.cache/admin-v2-executores-20261110",
+      "namespace": "archive/component-115",
+      "role": "archived-history",
+      "requires_requalification": true
+    },
+    {
+      "component": "component-116",
+      "source_relative_path": "peticao/.cache/admin-v2-executores-20261110/evidencias/fake-project",
+      "namespace": "archive/component-116",
+      "role": "archived-history",
+      "requires_requalification": true
+    }
+  ],
+  "auxiliary_apps": "email-verifier and resolvedor-nomes have independent repositories",
+  "history_is_not_runtime_qualification": true
+}

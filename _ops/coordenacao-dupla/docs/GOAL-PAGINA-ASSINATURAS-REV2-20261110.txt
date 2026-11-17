@@ -1,0 +1,7 @@
+Concluir as alterações da página pública de assinaturas, seguindo /mnt/apps/peticao-final/_ops/coordenacao-dupla/docs/PLANO-COORDENADO-REV2-20261110.md após aprovação.
+
+Trabalhar em /mnt/apps/peticao-final/peticao/.cache/consolidacao-pagina-principal-20261109. Consolidar com o responsável os novos formulários, elementos, fluxo e categorias institucionais, incluindo a ampliação além das IFES. Não presumir quais categorias são elegíveis. Relacionar instituição, sigla, nome oficial e múltiplos domínios/subdomínios com evidências; implementar frontend, validação backend e migração como um conjunto. Preservar cadastros existentes e a aparência fora das mudanças solicitadas.
+
+Ser responsável pelas migrações desse escopo e compartilhar campos, regras, APIs, banco, commits e testes com a sessão admin01a1a4bd-cdf4-7253-88e7-0c9fb9265aa7. Usar a coordenação única; obter ACK e lease antes de integrar. Reunir funcionalidades completas e testadas na base /mnt/apps/peticao-final/peticao-integrado, sem sobrescrever backend por versões antigas.
+
+Manter infraestrutura, Central de Versões/Deploy, prévias privadas, executor autenticado e relatório único por hora em tarefas separadas, sem disputar o código dos formulários. Não repetir atividades bloqueadas nem resultados incertos. Publicar a página somente mediante pedido acompanhado de deploy; admin-v2 exige autorização específica. Aguardar aprovação desta revisão antes de reativar a execução; respeitar pausas e registrar decisões.

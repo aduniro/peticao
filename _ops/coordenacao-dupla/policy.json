@@ -1,0 +1,20 @@
+{
+  "updated_at": "2026-11-10T18:22:23.618409+00:00",
+  "authorization": "Instrucao expressa do responsavel nesta conversa: autonomia operacional, coordenacao dupla e relatorios horarios.",
+  "actors": {
+    "apoio": "01a1c0b3-f069-75a0-a2e9-e691094c9bab",
+    "admin": "01a1a4bd-cdf4-7253-88e7-0c9fb9265aa7"
+  },
+  "hourly_reports": {
+    "enabled": true,
+    "recipient": "operator-1608598f41@example.invalid",
+    "interval_seconds": 3600,
+    "mechanism": "peticao-relatorio-andamento.timer/service existente; unico emissor",
+    "past_slots": "never_replay"
+  },
+  "deploy_policy": {
+    "signature_homepage": "somente solicitacao de alteracao acompanhada de deploy, manifesto ACK e lease",
+    "admin_v2": "somente autorizacao especifica do responsavel, manifesto ACK e lease"
+  },
+  "data_policy": "Metadados operacionais; nao copiar segredos, PII, banco de assinaturas ou historico bruto."
+}

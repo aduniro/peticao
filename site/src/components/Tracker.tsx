@@ -1,13 +1,14 @@
 "use client";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { privateUiPath } from "@/lib/private-ui-path";
 
 type Ev = { type: string; path?: string; target?: string; label?: string };
 const optedOut = () => navigator.doNotTrack === "1" || (navigator as unknown as { globalPrivacyControl?: boolean }).globalPrivacyControl === true;
 const sid = () => { try { let s = sessionStorage.getItem("sid"); if (!s) { s = Math.random().toString(36).slice(2) + Date.now().toString(36); sessionStorage.setItem("sid", s); } return s; } catch { return undefined; } };
 
 function send(events: Ev[]) {
-  if (optedOut() || location.pathname.startsWith("/admin") || location.pathname.startsWith("/dev")) return;
+  if (optedOut() || privateUiPath(location.pathname)) return;
   const body = JSON.stringify({ events, path: location.pathname, sid: sid(), lang: navigator.language, screen: `${screen.width}x${screen.height}` });
   if (!navigator.sendBeacon?.("/api/evento", new Blob([body], { type: "application/json" }))) fetch("/api/evento", { method: "POST", body, keepalive: true }).catch(() => {});
 }

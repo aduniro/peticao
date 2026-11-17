@@ -1,0 +1,153 @@
+{
+  "state": "MANIFESTS_FROZEN_HOST_BASELINE_V2_WITH_EXPLICIT_PENDING_SCOPE",
+  "node_host_baseline_owner": "Infra/Civo",
+  "no_framework_upgrades": true,
+  "canonical_source_ref": "fix/admin-query-r1-20261114",
+  "original_source_commit": "09d1d66d0e821e92d96bd83de70afdb832a31bc6",
+  "app_source_commit": "c472837fb5a4584d81f34c420f4de30989084f85",
+  "production_public_legacy_commit": "5c1dcfdf49ba65b75b31e2fa6b27d1f82bf51b96",
+  "legacy_profile_must_remain_separate": true,
+  "canonical_manifests": {
+    "site/package.json": "f6fbb28c2b5745b3b02655d8de3eda16cccbca1acaeaabc5ee17834c5ba0d6bd",
+    "site/package-lock.json": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
+    "tools/signing/requirements.txt": "51ef9b54203400af99012562207a2b23671b2453482355aee8deaac620acee05"
+  },
+  "python_profiles": {
+    "assets": {
+      "path": "requirements/assets.txt",
+      "seeds": [
+        "Pillow",
+        "xlrd"
+      ],
+      "pins": [
+        {
+          "name": "pillow",
+          "version": "10.2.0",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        },
+        {
+          "name": "xlrd",
+          "version": "2.0.1",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        }
+      ],
+      "dependency_marker_target": "CPython3.12.3/Linux",
+      "runtime_tested_by_migration": false,
+      "sha256": "c5fce0db1cc46a6e0b16fbc70584aef1f7cbcb3fc61e674b6238e43a8013ff1e"
+    },
+    "legacy-cpf-pdf": {
+      "path": "requirements/legacy-cpf-pdf.txt",
+      "seeds": [
+        "fonttools",
+        "reportlab",
+        "pypdf"
+      ],
+      "pins": [
+        {
+          "name": "fonttools",
+          "version": "4.46.0",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        },
+        {
+          "name": "reportlab",
+          "version": "5.0.1",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        },
+        {
+          "name": "pypdf",
+          "version": "4.0.2",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        },
+        {
+          "name": "pillow",
+          "version": "10.2.0",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        },
+        {
+          "name": "charset-normalizer",
+          "version": "3.5.1",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        }
+      ],
+      "dependency_marker_target": "CPython3.12.3/Linux",
+      "runtime_tested_by_migration": false,
+      "sha256": "706fdd62300d573d7940dc3181760b5f9e77555c54bf80e87b78182b11c57ec9"
+    },
+    "qa-python": {
+      "path": "requirements/qa-python.txt",
+      "seeds": [
+        "pytest"
+      ],
+      "pins": [
+        {
+          "name": "pytest",
+          "version": "7.4.4",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        },
+        {
+          "name": "iniconfig",
+          "version": "1.1.1",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        },
+        {
+          "name": "packaging",
+          "version": "24.0",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        },
+        {
+          "name": "pluggy",
+          "version": "1.4.0",
+          "source": "Dell Python distribution metadata; no global pip freeze"
+        }
+      ],
+      "dependency_marker_target": "CPython3.12.3/Linux",
+      "runtime_tested_by_migration": false,
+      "sha256": "0138fc5bc1e3b889a5507ac4e0d33ac5a66b1ad74139b927677cab31e913fbd3"
+    }
+  },
+  "notes": [
+    "Host baseline is separately validated by Infra, not inferred from installed folders.",
+    "Migration does not start services or switch production DATABASE_URL.",
+    "Historic branches keep their own dependency manifests."
+  ],
+  "host_baseline": {
+    "revision": "v1",
+    "source_sha256": "382f2797f05403484a88e50f0c276c3db1ba4c66056ec89aeeb97cf7373af49e",
+    "install_contract_sha256": "8568197122793b8c4609f7005bf4d7d60e41343f2a89973e9de6eaab3f711c19",
+    "public_path": "docs/versioning/host-baseline-civo-v1/BASELINE-FROZEN-v1.json",
+    "ready_profiles": [
+      "node-runtime",
+      "python-runtime",
+      "node-app-dependencies",
+      "pdf-browser-assets",
+      "coordination-databases"
+    ],
+    "pending_profiles": [
+      "signing-a1",
+      "qa-js",
+      "qa-python",
+      "k3s-dev"
+    ],
+    "overall_goal_complete": false
+  },
+  "host_baseline_v2": {
+    "source_sha256": "390707a964045443a1b5f2fcbdcf82f01c75b702910cadef70fad730666cd378",
+    "public_path": "docs/versioning/host-baseline-civo-v2/BASELINE-FROZEN-v2.json",
+    "ready_profiles": [
+      "node-runtime",
+      "python-runtime",
+      "node-app-dependencies",
+      "pdf-browser-assets",
+      "coordination-databases",
+      "signing-a1",
+      "qa-js",
+      "qa-python"
+    ],
+    "pending_profiles": [
+      "k3s-dev"
+    ],
+    "overall_goal_complete": false,
+    "immutable_v1_preserved": true,
+    "per_host_smoke_required": true
+  }
+}

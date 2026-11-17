@@ -1,0 +1,18 @@
+{
+  "classification": "SET_PRIVATE_VALUE",
+  "local_only": false,
+  "workerJob": false,
+  "infra_reviewed": false,
+  "node_path": "SET_PRIVATE_VALUE",
+  "node_sha256": "SET_PRIVATE_VALUE",
+  "expected_cgroup": "SET_PRIVATE_VALUE",
+  "source_repo": "SET_PRIVATE_VALUE",
+  "source_commit": "SET_PRIVATE_VALUE",
+  "dependencies_root": "SET_PRIVATE_VALUE",
+  "db_port": 0,
+  "unused_reserved_port": 0,
+  "noHttpServer": false,
+  "deadlineSeconds": 0,
+  "requiresIndependentRetainedUnitExitZero": false,
+  "activationProof": "SET_PRIVATE_VALUE"
+}

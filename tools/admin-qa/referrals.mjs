@@ -1,0 +1,93 @@
+// Compiled HTTP fault injection; dedicated local fictitious database only.
+import assert from "node:assert/strict";
+import { mkdir, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+const base = new URL(process.env.QA_BASE_URL ?? "http://missing"), database = new URL(process.env.DATABASE_URL ?? "http://missing");
+assert.equal(base.hostname, "127.0.0.1"); assert.equal(base.port, "3033");
+assert.equal(database.hostname, "127.0.0.1"); assert.ok(["54346", "54349"].includes(database.port));
+assert.equal(process.env.MAIL_PROVIDER, "dev"); assert.equal(process.env.MAIL_PROVIDERS, "dev");
+assert.equal(process.env.PREVIEW_MODE, "1"); assert.equal(process.env.ADMIN_NO_PASSWORD, "0");
+const dm = await import("../../site/src/lib/db.ts"), um = await import("../../site/src/lib/admin-users.ts");
+const db = dm.default ?? dm, U = um.default ?? um;
+assert.equal((await db.query("SELECT 1 FROM signatures UNION ALL SELECT 1 FROM referrers UNION ALL SELECT 1 FROM mail_outbox")).rowCount, 0);
+const sessions = [], results = [];
+try {
+  for (const status of ["confirmed", "pending"]) await db.query("INSERT INTO signatures(name,email,email_hash,cpf_hash,category,text_version,consent_at,created_at,status,confirmed_at) VALUES($1,$2,$3,$4,'apoiador','QA','2026-10-01T10:00:00Z','2026-10-01T10:00:00Z',$5,$6)", [`QA ${status}`, `qa-${status}@example.test`, `QA-email-${status}`, `QA-cpf-${status}`, status, status === "confirmed" ? "2026-10-01T10:01:00Z" : null]);
+  const proof = async () => (await db.query("SELECT row_to_json(s)::text raw FROM signatures s ORDER BY id")).rows;
+  const before = await proof();
+  const editor = await U.criarUsuario({ email: "qa-http-referral-editor@example.test", nome: "QA Referral Editor", nivel: "edicao", senha: "QA-Referral-Compiled-2026" });
+  const reader = await U.criarUsuario({ email: "qa-http-referral-reader@example.test", nome: "QA Referral Reader", nivel: "leitura", senha: "QA-Referral-Compiled-2026" });
+  assert.ok(editor.ok && reader.ok);
+  const editToken = (await U.abrirSessao(editor.usuario.id, "127.0.0.1")).token, readToken = (await U.abrirSessao(reader.usuario.id, "127.0.0.1")).token;
+  sessions.push(editToken, readToken);
+  const post = (token, label, origin = base.origin, requestId = randomUUID()) => fetch(new URL("/api/admin/indicacoes", base), { method: "POST", redirect: "manual", headers: { cookie: `adm=${token}`, origin, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ label, requestId }) });
+  assert.equal((await post("", "QA Anonymous")).status, 401);
+  assert.equal((await post(readToken, "QA Reader")).status, 403);
+  assert.equal((await post(editToken, "QA Other Origin", "https://elsewhere.example.test")).status, 403);
+  const invalid = await post(editToken, "x"); assert.equal(invalid.status, 303);
+  assert.equal(new URL(invalid.headers.get("location")).searchParams.get("msg"), "Informe um nome para o código (ex.: Sindicato X).");
+  assert.equal((await post(editToken, "QA Missing Intent", base.origin, "")).status, 400);
+  const requestId = randomUUID();
+  const saved = await post(editToken, "QA Compiled", base.origin, requestId); assert.equal(saved.status, 303);
+  assert.match(new URL(saved.headers.get("location")).searchParams.get("msg"), /^Código criado: [2-9A-HJKMNP-Z]{7}$/);
+  assert.equal((await db.query("SELECT 1 FROM referrers")).rowCount, 1);
+  const intentBefore = (await db.query("SELECT row_to_json(q)::text raw FROM admin_referral_requests q")).rows;
+  const replays = await Promise.all(Array.from({ length: 3 }, () => post(editToken, "QA Compiled", base.origin, requestId)));
+  assert.ok(replays.every(r => r.status === 303 && r.headers.get("location") === saved.headers.get("location")));
+  assert.equal((await post(editToken, "QA Conflict", base.origin, requestId)).status, 409);
+  assert.deepEqual((await db.query("SELECT row_to_json(q)::text raw FROM admin_referral_requests q")).rows, intentBefore);
+  await db.query("CREATE FUNCTION qa_fail_referral_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='referrer_created' THEN RAISE EXCEPTION 'QA expected audit failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER qa_fail_referral_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION qa_fail_referral_audit()");
+  try {
+    const failed = await post(editToken, "QA Must Roll Back"); assert.equal(failed.status, 500);
+    assert.equal((await db.query("SELECT 1 FROM referrers")).rowCount, 1);
+    assert.equal((await db.query("SELECT 1 FROM audit_log WHERE event='referrer_created'")).rowCount, 1);
+    assert.equal((await db.query("SELECT 1 FROM admin_referral_requests")).rowCount, 1);
+  } finally { await db.query("DROP TRIGGER qa_fail_referral_audit ON audit_log; DROP FUNCTION qa_fail_referral_audit()"); }
+  assert.equal((await post(editToken, "QA Recovered")).status, 303);
+  const events = (await db.query("SELECT data FROM audit_log WHERE event='referrer_created' ORDER BY id")).rows.map(row => JSON.parse(row.data));
+  assert.equal(events.length, 2); assert.ok(events.every(row => row.userId === editor.usuario.id && row.por === editor.usuario.email));
+  assert.ok((await db.verifyAuditChain()).ok);
+  const domainPost = token => fetch(new URL("/api/admin/dominios", base), { method: "POST", redirect: "manual", headers: { cookie: `adm=${token}`, origin: base.origin, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ action: "approve", domain: "qa-http-domain.example", kind: "outro", by: "forged@example.test" }) });
+  assert.equal((await domainPost(readToken)).status, 403);
+  assert.equal((await domainPost(editToken)).status, 303);
+  const domain = (await db.query("SELECT decided_by FROM institutional_domains WHERE domain='qa-http-domain.example'")).rows[0];
+  assert.equal(domain.decided_by, editor.usuario.email);
+  const domainAudit = JSON.parse((await db.query("SELECT data FROM audit_log WHERE event='domain_approved' ORDER BY id DESC LIMIT 1")).rows[0].data);
+  assert.equal(domainAudit.by, editor.usuario.email); assert.equal(domainAudit.userId, editor.usuario.id);
+  const im = await import("../../site/src/lib/institutional.ts"), I = im.default ?? im;
+  await db.query("INSERT INTO institutional_domains(domain,kind,source,status) VALUES('qa-source-a.example','outro','QA-source-http','pending'),('qa-source-b.example','outro','QA-source-http','pending')");
+  const sourceActor = { userId: editor.usuario.id, email: editor.usuario.email };
+  const version = async () => I.domainSourceVersion("QA-source-http", (await db.query("SELECT * FROM institutional_domains WHERE source='QA-source-http' ORDER BY domain")).rows, sourceActor);
+  const sourcePost = stamp => fetch(new URL("/api/admin/dominios", base), { method: "POST", redirect: "manual", headers: { cookie: `adm=${editToken}`, origin: base.origin, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ action: "approve_source", source: "QA-source-http", kind: "ifes", version: stamp }) });
+  const firstVersion = await version();
+  const rendered = await fetch(new URL("/admin/dominios", base), { headers: { cookie: `adm=${editToken}` } }); assert.equal(rendered.status, 200);
+  const html = await rendered.text(); assert.ok(html.includes(`name="version" value="${firstVersion}"`));
+  assert.ok(html.includes("Aprovar em lote"));
+  assert.equal((await sourcePost("")).status, 409);
+  await db.query("INSERT INTO institutional_domains(domain,kind,source,status) VALUES('qa-source-c.example','outro','QA-source-http','pending')");
+  assert.equal((await sourcePost(firstVersion)).status, 409);
+  const currentVersion = await version();
+  const sourceBefore = (await db.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE source='QA-source-http' ORDER BY domain")).rows;
+  await db.query("CREATE FUNCTION qa_fail_source_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.event='domain_approved' AND NEW.data::jsonb->>'domain'='qa-source-b.example' THEN RAISE EXCEPTION 'QA expected source audit failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER qa_fail_source_audit BEFORE INSERT ON audit_log FOR EACH ROW EXECUTE FUNCTION qa_fail_source_audit()");
+  try { assert.equal((await sourcePost(currentVersion)).status, 303); assert.deepEqual((await db.query("SELECT row_to_json(d)::text raw FROM institutional_domains d WHERE source='QA-source-http' ORDER BY domain")).rows, sourceBefore); }
+  finally { await db.query("DROP TRIGGER qa_fail_source_audit ON audit_log; DROP FUNCTION qa_fail_source_audit()"); }
+  const sourceResults = await Promise.all([sourcePost(currentVersion), sourcePost(currentVersion)]);
+  assert.deepEqual(sourceResults.map(r => r.status).sort(), [303, 409]);
+  assert.equal((await db.query("SELECT 1 FROM institutional_domains WHERE source='QA-source-http' AND status='approved'")).rowCount, 3);
+  const sourceAudits = (await db.query("SELECT data FROM audit_log WHERE event='domain_approved' AND data::jsonb->>'domain' LIKE 'qa-source-%'")).rows.map(r => JSON.parse(r.data));
+  assert.equal(sourceAudits.length, 3); assert.ok(sourceAudits.every(r => r.userId === editor.usuario.id && r.by === editor.usuario.email));
+  assert.ok((await db.verifyAuditChain()).ok);
+  await db.query("UPDATE admin_users SET nivel='leitura' WHERE id=$1", [editor.usuario.id]);
+  assert.equal((await post(editToken, "QA Stale Role")).status, 403);
+  assert.equal((await domainPost(editToken)).status, 403);
+  assert.equal((await db.query("SELECT 1 FROM referrers")).rowCount, 2);
+  assert.deepEqual(await proof(), before);
+  assert.equal((await db.query("SELECT 1 FROM mail_messages UNION ALL SELECT 1 FROM mail_outbox")).rowCount, 0);
+  results.push({ compiledHttp: true, concurrentIntentReplay: true, intentConflict: true, intentRollback: true, domainActor: true, sourceVersionRendered: true, staleSourceRejected: true, atomicSourceRollback: true, concurrentSourceOnce: true, roleAndOriginGuards: true, redirectPreserved: true, namedAudit: true, auditFailureRolledBack: true, recoveryAfterFault: true, revokedRoleRejected: true, signaturesPreserved: true, noMail: true });
+} finally {
+  for (const token of sessions) await U.encerrarSessao(token);
+  await db._closeDbForTests();
+}
+assert.ok(process.env.QA_OUTPUT_DIR); await mkdir(process.env.QA_OUTPUT_DIR, { recursive: true });
+await writeFile(`${process.env.QA_OUTPUT_DIR}/referrals.json`, JSON.stringify(results, null, 2));
+console.log(JSON.stringify(results));

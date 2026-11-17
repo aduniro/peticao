@@ -1,0 +1,62 @@
+[Unit]
+Description=Isolated loopback MailerSend signature verifier and durable inbound spool
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=ops-ingress
+Group=ops-mail
+WorkingDirectory=/opt/peticao-ops
+# Administrative routing metadata only. NEVER put signing secrets/API keys here.
+# Required fields: OPS_INBOUND_ID, OPS_EXECUTOR_RECIPIENT,
+# OPS_PROVIDER_RECIPIENT, OPS_MAIL_GID (numeric local private group ID).
+EnvironmentFile=/etc/peticao-ops/ingress/route.env
+ExecStart=/usr/bin/python3 -B /opt/peticao-ops/infra/mailersend_ingress.py --listen 127.0.0.1 --port 8768 --spool-root /srv/ops-ingress --secret-file /etc/peticao-ops/ingress/provider-forward.secret --inbound-id ${OPS_INBOUND_ID} --recipient ${OPS_EXECUTOR_RECIPIENT} --recipient ${OPS_PROVIDER_RECIPIENT} --read-group ${OPS_MAIL_GID}
+Environment=PYTHONUNBUFFERED=1
+UMask=0077
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+TimeoutStopSec=20
+KillMode=control-group
+CPUQuota=25%
+MemoryHigh=192M
+MemoryMax=256M
+MemorySwapMax=0
+TasksMax=32
+LimitNOFILE=256
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectProc=invisible
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+# Ingress has no reason to contact any external service. Caddy proxies locally.
+IPAddressDeny=any
+IPAddressAllow=localhost
+ReadWritePaths=/srv/ops-ingress
+ReadOnlyPaths=/opt/peticao-ops /etc/peticao-ops/ingress
+InaccessiblePaths=/srv/ops-console /srv/ops-executor /etc/peticao-ops/control -/run/docker.sock -/var/run/docker.sock
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ops-ingress
+
+[Install]
+WantedBy=multi-user.target

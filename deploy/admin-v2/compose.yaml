@@ -1,0 +1,54 @@
+name: peticao-admin-v2
+services:
+  admin:
+    image: ${ADMIN_IMAGE:?Use a qualified image pinned by sha256 digest}
+    pull_policy: never
+    network_mode: host
+    user: "1000:1000"
+    group_add: ["60231"]
+    read_only: true
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    cpus: "1.0"
+    mem_limit: 1536m
+    pids_limit: 128
+    restart: unless-stopped
+    stop_grace_period: 45s
+    env_file: /etc/peticao-admin-v2/app.env
+    environment:
+      NODE_ENV: production
+      PETICAO_RUNTIME: admin-v2
+      MAIL_QUEUE_SCOPE: v2
+      DB_BOOTSTRAP_MODE: verify
+      APP_URL: https://sancionaintegral.org
+      ADMIN_URL: https://admin.sancionaintegral.org
+      ALLOWED_HOSTS: admin.sancionaintegral.org
+      NEXT_TELEMETRY_DISABLED: "1"
+      BATCH_A1_ENABLED: "1"
+      A1_VALIDATION_ENABLED: "1"
+      A1_WORKER_SOCKET: /run/peticao-signing/worker.sock
+      A1_CREDENTIAL_SOCKET: /run/peticao-signing/credentials.sock
+      ICP_VALIDATOR_URL: http://127.0.0.1:3081/validate
+      ICP_MANUAL_VALIDATOR_URL: http://127.0.0.1:3081/validate/manual
+      A1_VALIDATION_ACCEPTED_POLICIES: '[{"profile":"pades-ad-rb-cryptographic-v1","policyOid":"2.16.76.1.7.1.11.1.3"}]'
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m,uid=1000,gid=1000,mode=1770
+      - /app/.next/cache:rw,nosuid,size=128m,uid=1000,gid=1000,mode=0700
+    volumes:
+      - admin_data:/app/data
+      - /run/peticao-signing:/run/peticao-signing:ro
+    # Prepared schema and restricted runtime role are checked before serving data.
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3001/api/internal/ready',{signal:AbortSignal.timeout(4000)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+volumes:
+  admin_data:

@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
-import { isAdmin } from "@/lib/admin";
+import { sessaoAdmin } from "@/lib/admin";
+import { nivelOk } from "@/lib/admin-users";
 import { query } from "@/lib/db";
-import { KIND_LABELS } from "@/lib/institutional";
+import { KIND_LABELS, domainSourceVersion, type DomainSourceRow } from "@/lib/institutional";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Domínios institucionais", robots: { index: false } };
 
-type Row = { domain: string; kind: string; institution: string | null; source: string; status: string; seen_count: number; evidence_url: string | null };
+type Row = DomainSourceRow & { seen_count: number };
 
 const KindSelect = ({ def = "ifes" }: { def?: string }) => (
   <select name="kind" defaultValue={def}>
@@ -15,16 +16,18 @@ const KindSelect = ({ def = "ifes" }: { def?: string }) => (
 );
 
 export default async function Dominios({ searchParams }: { searchParams: { msg?: string } }) {
-  if (!isAdmin()) redirect("/admin");
-  const rows = (await query<Row>("SELECT domain,kind,institution,source,status,seen_count,evidence_url FROM institutional_domains ORDER BY seen_count DESC, domain LIMIT 1500")).rows;
+  const sessao = await sessaoAdmin();
+  if (!sessao) redirect("/admin");
+  if (!nivelOk(sessao.nivel, "edicao")) redirect("/admin?erro=nivel");
+  const rows = (await query<Row>("SELECT domain,kind,institution,source,status,seen_count,evidence_url,decided_by,updated_at FROM institutional_domains ORDER BY seen_count DESC, domain LIMIT 1500")).rows;
   const pend = rows.filter((r) => r.status === "pending"), appr = rows.filter((r) => r.status === "approved"), rej = rows.filter((r) => r.status === "rejected");
   const bySource = new Map<string, number>();
   for (const r of pend) bySource.set(r.source, (bySource.get(r.source) ?? 0) + 1);
   const stats = (await query<{ k: string | null; n: number }>("SELECT email_domain_kind k, COUNT(*)::int n FROM signatures WHERE status='confirmed' GROUP BY 1 ORDER BY 2 DESC")).rows;
   const checks = (await query<{ c: string | null; n: number }>("SELECT cpf_name_check c, COUNT(*)::int n FROM signatures WHERE status='confirmed' GROUP BY 1 ORDER BY 2 DESC")).rows;
   return (
-    <main>
-      <p><a href="/admin">← Painel</a></p>
+    <main className="v2-pagina">
+      <div className="v2-secao">
       <h1>Domínios institucionais</h1>
       {searchParams.msg && <p className="box ok" role="status">{searchParams.msg}</p>}
       <p className="small">O selo <strong>e-mail institucional confirmado</strong> indica domínio de órgão ou instituição pública (ou de ensino superior). Ele <strong>não</strong> prova que a pessoa é servidora: alunos, terceirizados e aposentados também têm e-mail institucional.
@@ -38,6 +41,7 @@ export default async function Dominios({ searchParams }: { searchParams: { msg?:
       {[...bySource].map(([src, n]) => (
         <form key={src} method="post" action="/api/admin/dominios" style={{ marginBottom: 8 }}>
           <input type="hidden" name="action" value="approve_source" /><input type="hidden" name="source" value={src} />
+          <input type="hidden" name="version" value={domainSourceVersion(src, pend, sessao)} />
           Aprovar <strong>todos os {n}</strong> pendentes da fonte <code>{src}</code> como <KindSelect /> <button>Aprovar em lote</button>
           <span className="small"> {src === "cnpj" || src === "visitante" ? " (confira antes: esta fonte traz muito ruído)" : ""}</span>
         </form>
@@ -71,6 +75,7 @@ export default async function Dominios({ searchParams }: { searchParams: { msg?:
       <table><tbody>{appr.map((r) => <tr key={r.domain}><td>{r.domain}</td><td>{KIND_LABELS[r.kind as keyof typeof KIND_LABELS] ?? r.kind}</td><td>{r.institution ?? "—"}</td><td>{r.source}</td></tr>)}</tbody></table>
       <h2>Rejeitados ({rej.length})</h2>
       <table><tbody>{rej.map((r) => <tr key={r.domain}><td>{r.domain}</td><td>{r.institution ?? "—"}</td><td>{r.source}</td></tr>)}</tbody></table>
+    </div>
     </main>
   );
 }

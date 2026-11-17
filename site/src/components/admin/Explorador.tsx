@@ -1,10 +1,14 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { filtrosParaQuery, filtrosVazios, parseFiltros, type Filtros } from "@/lib/assinaturas-filtros";
-import type { Faceta, Ponto, Resultado } from "@/lib/assinaturas-explorar";
+import type { SignatureExplorerFacet as Faceta, SignatureExplorerPoint as Ponto, SignatureExplorerResult } from "@/lib/signature-explorer-admin-contract";
+import { brasilia } from "@/lib/time";
+import { readSignatureExplorer } from "@/lib/signature-explorer-admin-client";
 import { Multi as MultiBase } from "./controles";
+import { FiltrosShell, useEhMobile } from "./shell/filtros";
 import type { PontoVisita } from "@/app/api/admin/assinaturas/visitas/route";
+import type { RequestPoint } from "@/lib/monitor";
 
 const Mapa = dynamic(() => import("./MapaAssinaturas"), { ssr: false, loading: () => <div className="adm-skel" style={{ height: "60dvh" }} /> });
 
@@ -20,19 +24,35 @@ const CHAVES = ["categoria", "instituicao", "cargo", "campus", "regiao", "uf", "
 const COLUNAS: [string, string][] = [["nome", "Nome"], ["categoria", "Categoria"], ["instituicao", "Instituição"], ["cargo", "Cargo"], ["regiao", "AL/Fronteira"], ["campus", "Campus"], ["cidadeUf", "Cidade/UF"], ["pais", "País"], ["status", "Status"], ["whatsapp", "WhatsApp"], ["criada", "Criada em"]];
 const ORDENAVEIS = new Set(["nome", "categoria", "instituicao", "cargo", "campus", "status", "criada"]);
 
+// MUDAR AQUI: avisos administrativos de consulta; classes/fontes/layout permanecem os existentes.
+const COPY = { failed: "Não foi possível consultar os dados. Tente novamente.", forbidden: "Sua sessão não permite consultar estes dados. Entre novamente com uma conta autorizada.", invalid: "A consulta retornou dados incompatíveis. Atualize os filtros e tente novamente.", previous: "Exibindo a consulta anterior; os filtros atuais ainda não foram confirmados. O CSV usa os filtros da consulta exibida.", failedPrevious: "Exibindo o último resultado obtido para esta consulta. O CSV usa os filtros da consulta exibida.", contacts: "Dados de contato não estão disponíveis para este nível de acesso.", retry: "Tentar consulta novamente" };
+const STATUS_LABELS: Record<string, string> = { confirmed: "Confirmada", pending: "Aguardando confirmação" };
+type Props = { inicial: string; actorScope: string; tela?: boolean; cheio?: boolean };
 /** Mapa + tabela com um só conjunto de filtros (sincronizado com a URL). `tela` = modo janela cheia, só o mapa. */
-export default function Explorador({ inicial, tela = false }: { inicial: string; tela?: boolean }) {
+export default function Explorador(props: Props) { return <ExplorerContext key={props.actorScope} {...props} />; }
+function ExplorerContext({ inicial, tela = false, cheio = false }: Props) {
   const [f, setF] = useState<Filtros>(() => parseFiltros(new URLSearchParams(inicial)));
   const [pagina, setPagina] = useState(1);
   const [ordem, setOrdem] = useState({ k: "criada", dir: "desc" });
-  const [r, setR] = useState<(Resultado & { pagina: number; limite: number }) | null>(null);
+  const [r, setR] = useState<SignatureExplorerResult | null>(null);
   const [erro, setErro] = useState("");
+  const [lastGoodQuery, setLastGoodQuery] = useState("");
+  const [readAttempt,setReadAttempt] = useState(0);
   const [foco, setFoco] = useState<string | null>(null);
-  const [buscando, setBuscando] = useState(false);
-  const [aberto, setAberto] = useState(true);
-  const [camada, setCamada] = useState<"assinaturas" | "visitas">("assinaturas");
+  const [buscando, setBuscando] = useState(true);
+  const [aberto, setAberto] = useState(!(cheio || tela));
+  const mobile = useEhMobile(); // no celular os filtros vão para a folha do botão "Filtros" da barra inferior
+  const [camada, setCamada] = useState<"assinaturas" | "visitas" | "acessos">("assinaturas");
+  const [acessos, setAcessos] = useState<RequestPoint[] | null>(null);
+  useEffect(() => { const q = new URLSearchParams(location.search); const c = q.get("camada"); if (c === "visitas" || c === "acessos") setCamada(c); const j = q.get("janela"); if (j && ["1h", "24h", "7d", "30d", "all"].includes(j)) setJanela(j); }, []);
   const [janela, setJanela] = useState("7d");
   const [visitas, setVisitas] = useState<PontoVisita[] | null>(null);
+  useEffect(() => {
+    if (camada !== "acessos") { setAcessos(null); return; }
+    let vivo = true;
+    fetch(`/api/admin/monitor?w=${janela === "all" ? "30d" : janela}`).then((r) => r.json()).then((j) => { if (vivo) setAcessos(j.requestPoints ?? []); }).catch(() => {});
+    return () => { vivo = false; };
+  }, [camada, janela]);
   useEffect(() => {
     if (camada !== "visitas") { setVisitas(null); return; }
     let vivo = true;
@@ -43,22 +63,36 @@ export default function Explorador({ inicial, tela = false }: { inicial: string;
   const seq = useRef(0);
   const qs = filtrosParaQuery(f);
 
+  const requestParams = new URLSearchParams(qs);requestParams.set("pagina",String(pagina));requestParams.set("ordem",ordem.k);requestParams.set("dir",ordem.dir);
+  const requestKey = requestParams.toString();
   useEffect(() => {
-    const id = ++seq.current; setBuscando(true);
+    const id = ++seq.current, controller = new AbortController();setBuscando(true);setErro("");
     const t = setTimeout(async () => {
-      try {
-        const p = new URLSearchParams(qs); p.set("pagina", String(pagina)); p.set("ordem", ordem.k); p.set("dir", ordem.dir);
-        const res = await fetch(`/api/admin/assinaturas/explorar?${p}`);
-        const j = await res.json();
-        if (id !== seq.current) return;
-        if (!j.ok) setErro(j.erro ?? "Falha ao carregar"); else { setR(j); setErro(""); }
-      } catch { if (id === seq.current) setErro("Falha de rede"); }
-      if (id === seq.current) setBuscando(false);
-    }, 200);
-    return () => clearTimeout(t);
-  }, [qs, pagina, ordem]);
+      const result = await readSignatureExplorer(new URLSearchParams(requestKey),controller.signal);
+      if (id !== seq.current) return;
+      if (result.ok) { setR(result.data);setLastGoodQuery(requestKey);setErro(""); }
+      else if (result.kind !== "aborted") {
+        if (result.kind === "invalid" || result.kind === "http" && [401,403].includes(result.status ?? 0)) { setR(null);setLastGoodQuery(""); }
+        setErro(result.kind === "http" && [401,403].includes(result.status ?? 0) ? COPY.forbidden : result.kind === "invalid" ? COPY.invalid : COPY.failed);
+      }
+      setBuscando(false);
+    },200);
+    return () => { clearTimeout(t);++seq.current;controller.abort(); };
+  },[requestKey,readAttempt]);
+  const previousData = !!r && lastGoodQuery !== requestKey;
+  const csvParams = new URLSearchParams(lastGoodQuery);csvParams.delete("pagina");csvParams.delete("limite");csvParams.set("formato","csv");
+  const csvHref = `/api/admin/assinaturas/explorar?${csvParams}`;
+  const displayedFilters = parseFiltros(new URLSearchParams(lastGoodQuery));
+  const displayedFilterSummary = [
+    displayedFilters.q && `Nome: ${displayedFilters.q}`,
+    ...CHAVES.flatMap(k => displayedFilters[k].length ? [`${ROTULOS[k]}: ${displayedFilters[k].map(value => FIXAS[k]?.find(option => option.v === value)?.rotulo || value).join(", ")}`] : []),
+    displayedFilters.de && `De: ${displayedFilters.de}`,
+    displayedFilters.ate && `Até: ${displayedFilters.ate}`,
+  ].filter(Boolean).join(" · ") || "Sem filtros";
+  const previousMessage = previousData ? COPY.previous : r && erro ? COPY.failedPrevious : "";
+  const resultNotice = previousMessage ? <div className="adm-sub" role="status" style={{ overflowWrap: "anywhere" }}><p>{previousMessage}</p><p><b>Filtros da consulta exibida:</b> {displayedFilterSummary}</p></div> : null;
 
-  useEffect(() => { if (!tela) history.replaceState(null, "", qs ? `?${qs}` : location.pathname); }, [qs, tela]);
+  useEffect(() => { if (tela) return; const e = new URLSearchParams(qs); if (camada !== "assinaturas") { e.set("camada", camada); e.set("janela", janela); } const t = e.toString(); history.replaceState(null, "", t ? `?${t}` : location.pathname); }, [qs, tela, camada, janela]);
 
   const mudar = useCallback((k: keyof Filtros, v: string | string[]) => { setF((a) => ({ ...a, [k]: v })); setPagina(1); }, []);
   const escolher = useCallback((p: Ponto) => {
@@ -69,28 +103,53 @@ export default function Explorador({ inicial, tela = false }: { inicial: string;
   const ativos = CHAVES.filter((k) => f[k].length).length + (f.q ? 1 : 0) + (f.de || f.ate ? 1 : 0);
   const abrirJanela = () => window.open(`/admin/mapa/tela${qs ? `?${qs}` : ""}`, "_blank", "popup,width=1400,height=900");
 
-  return (
-    <div className="adm-explorador">
-      <button type="button" className="adm-btn adm-filtros-btn" aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
-      <div className="adm-filters" role="search" hidden={!aberto}>
-        <input type="search" placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
+  const modoCheio = cheio || tela;
+  const [folha, setFolha] = useState(false);
+  const tableId = useId(), filtersId = useId();
+  const tableToggle = useRef<HTMLButtonElement>(null), tableClose = useRef<HTMLButtonElement>(null);
+  const filtersToggle = useRef<HTMLButtonElement>(null);
+  useEffect(() => { if (modoCheio && folha) tableClose.current?.focus(); }, [modoCheio, folha]);
+  const fecharTabela = () => { setFolha(false); tableToggle.current?.focus(); };
+  if (modoCheio) {
+    return (
+      <div className="adm-explorador v2-mapa-cheio" role="region" aria-label="Explorador de assinaturas" aria-busy={buscando}>
+        <div className="v2-mapa-fundo">
+      <Mapa visitas={visitas} acessos={acessos} pontos={r?.pontos ?? []} altura="100%" onEscolher={escolher} foco={foco} />
+        </div>
+        <div className="v2-mapa-comando">
+          <div className="v2-mapa-barra">
+            <button ref={filtersToggle} type="button" className="v2-btn v2-btn-primario" hidden={mobile && !tela} aria-controls={filtersId} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Fechar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
+            {!tela && <button ref={tableToggle} type="button" className="v2-btn v2-btn-sec" aria-controls={tableId} aria-expanded={folha} onClick={() => setFolha(!folha)}>{folha ? "Fechar tabela" : "Tabela"}</button>}
+      <div className="adm-seg" role="group" aria-label="Camada do mapa">
+        <button type="button" aria-pressed={camada === "assinaturas"} className={camada === "assinaturas" ? "on" : ""} onClick={() => setCamada("assinaturas")}>Assinaturas (local declarado)</button>
+        <button type="button" aria-pressed={camada === "visitas"} className={camada === "visitas" ? "on" : ""} onClick={() => setCamada("visitas")}>Visitas (por IP)</button>
+        <button type="button" aria-pressed={camada === "acessos"} className={camada === "acessos" ? "on" : ""} onClick={() => setCamada("acessos")}>Acessos e pedidos</button>
+        {camada !== "assinaturas" ? <select value={janela} onChange={(e) => setJanela(e.target.value)} aria-label="Período das visitas"><option value="1h">1 hora</option><option value="24h">24 horas</option><option value="7d">7 dias</option><option value="30d">30 dias</option><option value="all">Tudo</option></select> : null}
+      </div>
+            {!tela && <button type="button" className="v2-btn v2-btn-sec" onClick={abrirJanela}>Tela cheia ↗</button>}
+          </div>
+      <p className="adm-sub v2-mapa-resumo" aria-live="polite">
+        <span>{r ? <><b>{r.total}</b> assinatura(s) · {r.totais.confirmadas} confirmadas · {r.totais.pendentes} aguardando{r.semLocal ? ` · ${r.semLocal} sem local no mapa` : ""}</> : buscando ? "Carregando…" : "Consulta indisponível."}{buscando && r ? " …" : ""}</span>
+
+      </p>
+      {erro ? <p className="err" role="alert">{erro} <button type="button" className="adm-btn" disabled={buscando} onClick={() => setReadAttempt(n => n + 1)}>{COPY.retry}</button></p> : null}
+      {resultNotice}
+      {r && r.total === 0 && <p className="adm-sub" role="status">Nenhuma assinatura encontrada na consulta exibida.</p>}
+      {r && <p className="adm-sub">Consulta: {brasilia(r.asOf,true)}. Cada página possui seu próprio horário.</p>}
+      {r && !r.capabilities.contacts && <p className="adm-sub">{COPY.contacts}</p>}
+
+          {(aberto || (mobile && !tela)) && <div id={filtersId} className={mobile && !tela ? undefined : "v2-mapa-filtros"} onKeyDown={(event) => { if ((!mobile || tela) && event.key === "Escape") { event.stopPropagation(); setAberto(false); filtersToggle.current?.focus(); } }}><FiltrosShell><div className="adm-filters" role="search" >
+        <input type="search" maxLength={80} placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
         {CHAVES.map((k) => <MultiBase key={k} rotulo={ROTULOS[k]} opcoes={FIXAS[k] ?? r?.facetas[k] ?? []} valor={f[k]} onChange={(v) => mudar(k, v)} />)}
         <label>De <input type="date" value={f.de} onChange={(e) => mudar("de", e.target.value)} /></label>
         <label>Até <input type="date" value={f.ate} onChange={(e) => mudar("ate", e.target.value)} /></label>
         {ativos ? <button type="button" className="adm-btn" onClick={() => { setF(filtrosVazios()); setPagina(1); }}>Limpar filtros ({ativos})</button> : null}
-      </div>
-      <p className="adm-sub" aria-live="polite">
-        <span>{r ? <><b>{r.total}</b> assinatura(s) · {r.totais.confirmadas} confirmadas · {r.totais.pendentes} aguardando{r.semLocal ? ` · ${r.semLocal} sem local no mapa` : ""}</> : "Carregando…"}{buscando ? " …" : ""}</span>
-        {!tela ? <> <button type="button" className="adm-btn" onClick={abrirJanela}>Tela cheia em outra janela</button></> : null}
-      </p>
-      {erro ? <p className="err" role="alert">{erro}</p> : null}
-      <div className="adm-seg" role="group" aria-label="Camada do mapa">
-        <button type="button" aria-pressed={camada === "assinaturas"} className={camada === "assinaturas" ? "on" : ""} onClick={() => setCamada("assinaturas")}>Assinaturas (local declarado)</button>
-        <button type="button" aria-pressed={camada === "visitas"} className={camada === "visitas" ? "on" : ""} onClick={() => setCamada("visitas")}>Visitas (por IP)</button>
-        {camada === "visitas" ? <select value={janela} onChange={(e) => setJanela(e.target.value)} aria-label="Período das visitas"><option value="1h">1 hora</option><option value="24h">24 horas</option><option value="7d">7 dias</option><option value="30d">30 dias</option><option value="all">Tudo</option></select> : null}
-      </div>
-      <Mapa visitas={visitas} pontos={r?.pontos ?? []} altura={tela ? "calc(100dvh - 190px)" : "min(75dvh, 760px)"} onEscolher={escolher} foco={foco} />
-      {!tela && r ? (
+      </div></FiltrosShell></div>}
+        </div>
+        {!tela && folha && (
+          <div id={tableId} className="v2-mapa-folha" role="region" aria-label="Tabela de assinaturas" onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); fecharTabela(); } }}>
+            <div className="v2-mapa-folha-topo"><b>Assinaturas deste filtro</b><button ref={tableClose} type="button" className="v2-btn v2-btn-sec v2-pequeno" onClick={fecharTabela}>Fechar ✕</button></div>
+      {r ? (
         <>
           <div className="adm-tablewrap">
             <table className="adm-table">
@@ -102,17 +161,69 @@ export default function Explorador({ inicial, tela = false }: { inicial: string;
                 {r.linhas.map((l) => (
                   <tr key={l.id}>
                     <td data-l="Nome">{l.nome}</td><td data-l="Categoria">{l.categoria}</td><td data-l="Instituição">{l.instituicao}</td><td data-l="Cargo">{l.cargo}</td><td data-l="AL/Fronteira">{l.regiao}</td>
-                    <td data-l="Campus">{l.campus}</td><td data-l="Cidade/UF">{l.cidadeUf}</td><td data-l="País">{l.pais}</td><td data-l="Status">{l.status}</td><td data-l="WhatsApp">{l.whatsapp ? `${l.whatsapp}${l.waConfirmado ? " ✓" : ""}` : ""}</td><td data-l="Criada em">{l.criada}</td>
+                    <td data-l="Campus">{l.campus}</td><td data-l="Cidade/UF">{l.cidadeUf}</td><td data-l="País">{l.pais}</td><td data-l="Status">{STATUS_LABELS[l.status] || l.status}</td><td data-l="WhatsApp">{l.whatsapp ? `${l.whatsapp}${l.waConfirmado ? " ✓" : ""}` : ""}</td><td data-l="Criada em">{l.criada}</td>
                   </tr>))}
                 {r.linhas.length === 0 ? <tr><td colSpan={COLUNAS.length}>Nenhuma assinatura com esses filtros.</td></tr> : null}
               </tbody>
             </table>
           </div>
           <div className="adm-bar">
-            <button type="button" className="adm-btn" disabled={pagina <= 1} onClick={() => setPagina(pagina - 1)}>‹ Anterior</button>
-            <span>Página {pagina} de {paginas}</span>
-            <button type="button" className="adm-btn" disabled={pagina >= paginas} onClick={() => setPagina(pagina + 1)}>Próxima ›</button>
-            <a className="adm-btn" href={`/api/admin/assinaturas/explorar?${new URLSearchParams(qs).toString()}${qs ? "&" : ""}formato=csv&ordem=${ordem.k}&dir=${ordem.dir}`}>Baixar CSV do filtro</a>
+            <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina <= 1} onClick={() => setPagina(r.pagina - 1)}>‹ Anterior</button>
+            <span>Página {r.pagina} de {paginas}</span>
+            <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina >= paginas} onClick={() => setPagina(r.pagina + 1)}>Próxima ›</button>
+            <a className="adm-btn" href={csvHref}>Baixar CSV da consulta exibida</a>
+          </div>
+        </>
+      ) : null}
+
+          </div>
+        )}
+      </div>
+    );
+  }
+  return (
+    <div className="adm-explorador" role="region" aria-label="Explorador de assinaturas" aria-busy={buscando}>
+      <button type="button" className="adm-btn adm-filtros-btn" hidden={mobile} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>{aberto ? "Ocultar filtros" : "Filtros"}{ativos ? ` (${ativos})` : ""}</button>
+      <FiltrosShell><div className="adm-filters" role="search" hidden={!aberto && !mobile}>
+        <input type="search" maxLength={80} placeholder="Buscar nome…" value={f.q} onChange={(e) => mudar("q", e.target.value)} aria-label="Buscar por nome" />
+        {CHAVES.map((k) => <MultiBase key={k} rotulo={ROTULOS[k]} opcoes={FIXAS[k] ?? r?.facetas[k] ?? []} valor={f[k]} onChange={(v) => mudar(k, v)} />)}
+        <label>De <input type="date" value={f.de} onChange={(e) => mudar("de", e.target.value)} /></label>
+        <label>Até <input type="date" value={f.ate} onChange={(e) => mudar("ate", e.target.value)} /></label>
+        {ativos ? <button type="button" className="adm-btn" onClick={() => { setF(filtrosVazios()); setPagina(1); }}>Limpar filtros ({ativos})</button> : null}
+      </div></FiltrosShell>
+      <p className="adm-sub" aria-live="polite">
+        <span>{r ? <><b>{r.total}</b> assinatura(s) · {r.totais.confirmadas} confirmadas · {r.totais.pendentes} aguardando{r.semLocal ? ` · ${r.semLocal} sem local no mapa` : ""}</> : buscando ? "Carregando…" : "Consulta indisponível."}{buscando && r ? " …" : ""}</span>
+
+      </p>
+      {erro ? <p className="err" role="alert">{erro} <button type="button" className="adm-btn" disabled={buscando} onClick={() => setReadAttempt(n => n + 1)}>{COPY.retry}</button></p> : null}
+      {resultNotice}
+      {r && r.total === 0 && <p className="adm-sub" role="status">Nenhuma assinatura encontrada na consulta exibida.</p>}
+      {r && <p className="adm-sub">Consulta: {brasilia(r.asOf,true)}. Cada página possui seu próprio horário.</p>}
+      {r && !r.capabilities.contacts && <p className="adm-sub">{COPY.contacts}</p>}
+      <p><a className="v2-btn v2-btn-sec" href={`/admin/mapa${qs ? `?${qs}` : ""}`}>Ver estes filtros no mapa →</a></p>
+      {r ? (
+        <>
+          <div className="adm-tablewrap">
+            <table className="adm-table">
+              <thead><tr>{COLUNAS.map(([k, t]) => (
+                <th key={k} aria-sort={ordem.k === k ? (ordem.dir === "asc" ? "ascending" : "descending") : undefined}>
+                  {ORDENAVEIS.has(k) ? <button type="button" onClick={() => { setOrdem((o) => ({ k, dir: o.k === k && o.dir === "asc" ? "desc" : "asc" })); setPagina(1); }}>{t}{ordem.k === k ? (ordem.dir === "asc" ? " ▲" : " ▼") : ""}</button> : t}
+                </th>))}</tr></thead>
+              <tbody>
+                {r.linhas.map((l) => (
+                  <tr key={l.id}>
+                    <td data-l="Nome">{l.nome}</td><td data-l="Categoria">{l.categoria}</td><td data-l="Instituição">{l.instituicao}</td><td data-l="Cargo">{l.cargo}</td><td data-l="AL/Fronteira">{l.regiao}</td>
+                    <td data-l="Campus">{l.campus}</td><td data-l="Cidade/UF">{l.cidadeUf}</td><td data-l="País">{l.pais}</td><td data-l="Status">{STATUS_LABELS[l.status] || l.status}</td><td data-l="WhatsApp">{l.whatsapp ? `${l.whatsapp}${l.waConfirmado ? " ✓" : ""}` : ""}</td><td data-l="Criada em">{l.criada}</td>
+                  </tr>))}
+                {r.linhas.length === 0 ? <tr><td colSpan={COLUNAS.length}>Nenhuma assinatura com esses filtros.</td></tr> : null}
+              </tbody>
+            </table>
+          </div>
+          <div className="adm-bar">
+            <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina <= 1} onClick={() => setPagina(r.pagina - 1)}>‹ Anterior</button>
+            <span>Página {r.pagina} de {paginas}</span>
+            <button type="button" className="adm-btn" disabled={buscando || previousData || r.pagina >= paginas} onClick={() => setPagina(r.pagina + 1)}>Próxima ›</button>
+            <a className="adm-btn" href={csvHref}>Baixar CSV da consulta exibida</a>
           </div>
         </>
       ) : null}

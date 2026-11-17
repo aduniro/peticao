@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "revision": 2,
+  "issued_at": "2026-11-16T07:35:14.171828+00:00",
+  "release_status": "FROZEN_FINAL_FOR_READY_PROFILES_ONLY",
+  "overall_goal_complete": false,
+  "host": "peticao-civo",
+  "arch": "linux-amd64",
+  "profile_prefix": "/srv/peticao-work/toolchains/sancionaintegral-20261116",
+  "canonical_manifests": {
+    "package.json": {
+      "source": "/mnt/apps/peticao-final/peticao-release/site/package.json",
+      "sha256": "f6fbb28c2b5745b3b02655d8de3eda16cccbca1acaeaabc5ee17834c5ba0d6bd",
+      "bytes": 1772
+    },
+    "package-lock.json": {
+      "source": "/mnt/apps/peticao-final/peticao-release/site/package-lock.json",
+      "sha256": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
+      "bytes": 65878
+    },
+    "signing-requirements.txt": {
+      "source": "/mnt/apps/peticao-final/peticao-release/tools/signing/requirements.txt",
+      "sha256": "51ef9b54203400af99012562207a2b23671b2453482355aee8deaac620acee05",
+      "bytes": 275
+    },
+    "pdfjs-assets.lock.json": {
+      "source": "/mnt/apps/peticao-final/peticao-release/site/scripts/pdfjs-assets.lock.json",
+      "sha256": "da3a1d711714a7684e702312087c02b080acdb2bfdc1212d8543b3f455343922",
+      "bytes": 39296
+    }
+  },
+  "profiles": {
+    "node-runtime": {
+      "ready": true,
+      "node": "22.23.5",
+      "npm": "10.9.9",
+      "origin_artifact": {
+        "name": "node-v22.23.5-linux-x64.tar.xz",
+        "url": "https://nodejs.org/dist/v22.23.5/node-v22.23.5-linux-x64.tar.xz",
+        "sha256": "cdeb8670a0c81f51b4dc4ac61919f9b1ad917b304bf8221eb939570663d240f8",
+        "bytes": 31062912,
+        "path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/artifacts/node-v22.23.5-linux-x64.tar.xz",
+        "verified": true
+      },
+      "effective_path": "/opt/peticao/node-v22.23.5/bin/node",
+      "node_binary_sha256": "2f822d544601dfff107f57d945b649d15c5bf6302595735a6bd9cdc7ee9669bd",
+      "checks": "CORE-SMOKE.json"
+    },
+    "python-runtime": {
+      "ready": true,
+      "version": "3.12.3",
+      "distribution": "Astralpython-build-standalone20240415gnu-x86_64basic",
+      "origin_artifact": {
+        "name": "cpython-3.12.3+20240415-x86_64-unknown-linux-gnu-install_only.tar.gz",
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20240415/cpython-3.12.3%2B20240415-x86_64-unknown-linux-gnu-install_only.tar.gz",
+        "sha256": "a73ba777b5d55ca89edef709e6b8521e3f3d4289581f174c8699adfb608d09d6",
+        "bytes": 67368051,
+        "path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/artifacts/cpython-3.12.3+20240415-x86_64-unknown-linux-gnu-install_only.tar.gz",
+        "verified": true
+      },
+      "effective_path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/python/cpython-3.12.3-linux-x86_64-gnu/bin/python3",
+      "portable_between_compatible_linux_hosts": true,
+      "venv_recreated_each_host": true,
+      "native_python_untouched": true,
+      "checks": "CORE-SMOKE.json"
+    },
+    "node-app-dependencies": {
+      "ready": true,
+      "path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/dependencies",
+      "canonical_lock_sha256": "52963634411e4f0dcdb829d53a5c51d98eba853f87227930fae4a1c87f0abe74",
+      "lock_entries": 152,
+      "installed_host_metadata": 102,
+      "nonhost_variants_n_a": 50,
+      "missing_required_on_host": 0,
+      "native_libraries_imported": true,
+      "framework_versions": {
+        "next": "14.2.35",
+        "react": "18.3.1",
+        "pg": "8.23.1",
+        "typescript": "5.9.3",
+        "tsx": "4.23.15"
+      },
+      "checks": "CORE-SMOKE.json"
+    },
+    "pdf-browser-assets": {
+      "ready": true,
+      "version": "6.5.438",
+      "files_verified": 201,
+      "canonical_lock_sha256": "da3a1d711714a7684e702312087c02b080acdb2bfdc1212d8543b3f455343922",
+      "origin_archive_integrity": "sha512-vg8Pw1x+AFKy4AMDvhuWl5cOYV8d698UoEANoFFhc79hqXDnZQqnOXoxw3HG907WHOg1JYOvLhP756boddFxpA==",
+      "transport_archive": "/srv/peticao-work/toolchains/sancionaintegral-20261116/artifacts/pdfjs-6.5.438-verified-files.tar.gz",
+      "transport_sha256": "7c9ce05df0c2a863ec7231d1eae1510df2b2a4c40528871cb6fe9c63a8982fc2",
+      "effective_path": "/srv/peticao-work/toolchains/sancionaintegral-20261116/pdf-assets/6.5.438",
+      "not_npm_SSR_dependency": true
+    },
+    "coordination-databases": {
+      "ready": true,
+      "role": "Supplementalcoordinationprofile,notmainappdependency",
+      "owner_delivery": {
+        "profile": "coordination-databases",
+        "scope": "supplemental_not_app_or_A1",
+        "owner_thread": "01a1e313-ac26-7f40-854c-ab475c3845e3",
+        "requirements_lock_source": "/mnt/apps/peticao-final/_ops/databases-coordenacao-20261116/requirements.lock",
+        "requirements_lock_sha256": "b347248384fe576acbaaff6e83f202394175fe3c7c1c8ea4f5044e52daa7b6a4",
+        "requirements_txt_sha256": "03773496f39cb86eafc8e92217c5137c75815f5a2b6f16bdf33a8b436da44433",
+        "versions": {
+          "psycopg": "3.2.13",
+          "psycopg-binary": "3.2.13",
+          "typing_extensions": "4.16.0"
+        },
+        "installation": "Databasesowner reported12/12root+userhosts PASS; separateHOMEprofile,notinstalledbythisexecutor",
+        "app_A1_locks_modified": false,
+        "release_id": "52edce02f7cc58a06e3e"
+      },
+      "proof_scope": "Ownerreported12/12homologation;nofurtherNeontesthere"
+    },
+    "signing-a1": {
+      "ready": true,
+      "canonical_requirements_sha256": "51ef9b54203400af99012562207a2b23671b2453482355aee8deaac620acee05",
+      "resolved_lock": "a1-requirements.lock",
+      "resolved_lock_sha256": "42f71ad8cb6e3aaca01e177f8e002e8c74098ca962b4f7cbfb0314a92e450d2d",
+      "effective_oscrypto": "1.3.0+upstream-d5f3437ed24257895ae1edd9e503cfb352e635a8",
+      "overlay_manifest": {
+        "upstream_commit": "d5f3437ed24257895ae1edd9e503cfb352e635a8",
+        "files": {
+          "_libcrypto_cffi.py": {
+            "before": "5137e131c185f45dbe395104a6b42d12b458e4b7be039565e346fa0c7276466f",
+            "after": "4f03d6f938e3b98ff10545dec6ddc6594f45f520d1685586350d22a208ee9f70"
+          },
+          "_libcrypto_ctypes.py": {
+            "before": "5d9146415e4d521667bd6f6b54296472e344bdcbe583b24e8b992150f7f5977f",
+            "after": "89a0e05a1b03077d1468a0f6c3f49409dfbe01609c65cee94af11e395c58eee4"
+          }
+        },
+        "patch_sha256": "1fa74f9a886e21f87716d29d79d14208c8475742ea2cf975087ae22ee6473aad",
+        "scope": "three regex statements per file; exact wheel-specific diff; canonical pins and wheel preserved"
+      },
+      "overlay_recipe": "apply-oscrypto-overlay.py",
+      "overlay_recipe_sha256": "b2f36ed5b39633a9714c6baefa4eeee3bc1709e06b12f6e831199c189510a580",
+      "checks": [
+        "OSCRYPTO-OVERLAY-CHECK.json",
+        "A1-SYNTHETIC-SIGN-VERIFY.json"
+      ],
+      "synthetic_only": true,
+      "not_icp_homologation": true,
+      "destination_requirement": "Recreate venv using portable Python3.12.3; install exact hash lock; apply reviewed failclosed overlay; repeat imports/pipcheck and synthetic DEV signing on destination. No native OpenSSL/Python or application changes."
+    },
+    "qa-js": {
+      "ready": true,
+      "playwright": "1.62.1",
+      "browser": "Chromium151.0.7922.34",
+      "browser_revision": 1234,
+      "evidence": {
+        "rc": 0,
+        "out": {
+          "packageVersion": "1.62.1",
+          "browserVersion": "151.0.7922.34",
+          "executable": "/srv/peticao-work/toolchains/sancionaintegral-20261116/browsers/chromium-1234/chrome-linux64/chrome",
+          "dom": true,
+          "screenshot": true,
+          "pdf": true
+        },
+        "err": "",
+        "lock_sha256": "efbbdb9c373245714256e3acdc49d243b2e7e8ee52b40720de68b6e252dbddb7",
+        "browsers_json_sha256": "f306eed529599b1eaf2f8a85db9de2b23e1a3fe36c2b66434b7c9434fb627a99"
+      },
+      "binary_sha256": {
+        "browsers/ffmpeg-1011/ffmpeg-linux": "460d44f3416005662f528d4b92e7b94ace924e8a0288106d3803b73c56eaadc8",
+        "browsers/chromium-1234/chrome-linux64/chrome": "0b20b130e7edd9dd51873be867761295fe0cfad490c2b9a64f95bd3cfc08fa71",
+        "browsers/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell": "e11fc9ce65c96313476f7ee9844b6fb6a9220fb048693cfe9eee00acf4170a9f"
+      },
+      "checks": "QA-SMOKE.json",
+      "scope": "Synthetic DOM/screenshot/PDF; no app QA or heavy build",
+      "browser_transport": "Install chromium using pinned Playwright CLI and an isolated PLAYWRIGHT_BROWSERS_PATH; verify browsers.json and binaries against manifest; retain native libraries."
+    },
+    "qa-python": {
+      "ready": true,
+      "playwright": "1.62.0",
+      "browser": "Chromium151.0.7922.34",
+      "browser_revision": 1234,
+      "evidence": {
+        "rc": 0,
+        "out": {
+          "packageVersion": "1.62.0",
+          "browserVersion": "151.0.7922.34",
+          "executable": "/srv/peticao-work/toolchains/sancionaintegral-20261116/browsers/chromium-1234/chrome-linux64/chrome",
+          "dom": true,
+          "screenshot": true,
+          "pdf": true
+        },
+        "err": "",
+        "lock_sha256": "eb63f78476cdd0e953f7d1fdbc133849f56d92248df51ddd0264704182b0b895",
+        "browsers_json_sha256": "f306eed529599b1eaf2f8a85db9de2b23e1a3fe36c2b66434b7c9434fb627a99"
+      },
+      "binary_sha256": {
+        "browsers/ffmpeg-1011/ffmpeg-linux": "460d44f3416005662f528d4b92e7b94ace924e8a0288106d3803b73c56eaadc8",
+        "browsers/chromium-1234/chrome-linux64/chrome": "0b20b130e7edd9dd51873be867761295fe0cfad490c2b9a64f95bd3cfc08fa71",
+        "browsers/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell": "e11fc9ce65c96313476f7ee9844b6fb6a9220fb048693cfe9eee00acf4170a9f"
+      },
+      "checks": "QA-SMOKE.json",
+      "scope": "Synthetic DOM/screenshot/PDF; no app QA or heavy build",
+      "browser_transport": "Install chromium using pinned Playwright CLI and an isolated PLAYWRIGHT_BROWSERS_PATH; verify browsers.json and binaries against manifest; retain native libraries."
+    },
+    "k3s-dev": {
+      "ready": false,
+      "status": "INSTALLATION_IN_PROGRESS_INDEPENDENT_RELEASE",
+      "target": "v1.37.2+k3s1",
+      "kubectl": "v1.37.2",
+      "data_dir": "/srv/peticao-work/infra/k3s-civo-dev",
+      "pods": "10.214.0.0/16",
+      "services": "10.215.0.0/16",
+      "does_not_block_ready_app_profiles": true
+    }
+  },
+  "ready_profiles": [
+    "node-runtime",
+    "python-runtime",
+    "node-app-dependencies",
+    "pdf-browser-assets",
+    "coordination-databases",
+    "signing-a1",
+    "qa-js",
+    "qa-python"
+  ],
+  "pending_profiles": [
+    "k3s-dev"
+  ],
+  "strict_consumer_rule": "Apply ONLY ready_profiles within destination scope; A1 requires explicit overlay and local smoke. K3s Civo release remains independent and pending. V1 preserved.",
+  "install_contract_path": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/agents/node-infra-20261116/civo/work/STANDARDIZATION-20261116/PROFILE-INSTALL-CONTRACT-v1.json",
+  "install_contract_sha256": "8568197122793b8c4609f7005bf4d7d60e41343f2a89973e9de6eaab3f711c19",
+  "before_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/agents/node-infra-20261116/civo/work/STANDARDIZATION-20261116/LIVE-ROOT.json",
+  "core_smoke_source": "/mnt/apps/peticao-final/_ops/infra-coordenacao-20261112/agents/node-infra-20261116/civo/work/STANDARDIZATION-20261116/CORE-SMOKE.json",
+  "core_smoke_sha256": "83df87d4b5876f518acc6426ef5969bb3ebad811d4874814b42689338d9bc91b",
+  "frozen_sources_are_public_manifests_artifacts_only": true,
+  "production_legacy_profile": "PubliclegacyNode20.19.2/PG17backup and sourcelegacyhashes remainseparate; donotoverwriteSPsource/runtime/DATABASE_URL",
+  "production_pdf_signing_stays_inside_SP_app": true,
+  "root_credentials_certificates_not_in_bundle": true,
+  "own_host_fence": 873,
+  "own_work_fence": 844,
+  "supersedes_ready_scope_revision": 1,
+  "transport_recipe_files": {
+    "apply-oscrypto-overlay.py": "b2f36ed5b39633a9714c6baefa4eeee3bc1709e06b12f6e831199c189510a580",
+    "OSCRYPTO-OVERLAY-MANIFEST.json": "052f3a64d5f12994e490c0fe215a2dac5fd73a546fab1719e652fda25436ec40",
+    "oscrypto-1.3.0-to-upstream-d5f3437.patch": "1fa74f9a886e21f87716d29d79d14208c8475742ea2cf975087ae22ee6473aad",
+    "a1-requirements.lock": "42f71ad8cb6e3aaca01e177f8e002e8c74098ca962b4f7cbfb0314a92e450d2d",
+    "qa-python.lock": "eb63f78476cdd0e953f7d1fdbc133849f56d92248df51ddd0264704182b0b895",
+    "qa-js-package.json": "c847718a3112a2f379cd7c83dd8ec6c69413b6c0915a08f4eb2adb44dd0f4c0d",
+    "qa-js-package-lock.json": "efbbdb9c373245714256e3acdc49d243b2e7e8ee52b40720de68b6e252dbddb7"
+  }
+}

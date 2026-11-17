@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdmin } from "@/lib/admin";
+import { exigirNivel } from "@/lib/admin-api";
 import { isValidCpf } from "@/lib/cpf";
 import { resetIdentityAttempts } from "@/lib/identity";
 import { audit } from "@/lib/db";
@@ -9,7 +9,8 @@ import { requestOrigin } from "@/lib/net";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  if (!isAdmin()) return new NextResponse("Não autorizado", { status: 401 });
+  const bloqueio = await exigirNivel(req, "edicao");
+  if (bloqueio) return bloqueio;
   const cpf = String((await req.formData()).get("cpf") ?? "").replace(/\D/g, "");
   const url = new URL("/admin", requestOrigin(req.headers));
   if (!isValidCpf(cpf)) url.searchParams.set("msg", "CPF inválido.");

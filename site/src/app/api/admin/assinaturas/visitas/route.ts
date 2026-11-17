@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exigirAdmin } from "@/lib/admin-api";
+import { exigirNivel } from "@/lib/admin-api";
 import { monitorPoints, monitorRequestPoints, sinceOf, type Window } from "@/lib/monitor";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,7 @@ export type PontoVisita = { lat: number; lon: number; local: string; visitas: nu
 
 /** Camada "Visitas (por IP)": visitantes, confirmadas, aguardando confirmação e e-mails inexistentes/devolvidos, agrupados por local aproximado. */
 export async function GET(req: NextRequest) {
-  const bloqueio = exigirAdmin(req, 120);
+  const bloqueio = await exigirNivel(req, "leitura", 120);
   if (bloqueio) return bloqueio;
   const j = req.nextUrl.searchParams.get("janela") ?? "7d";
   const since = sinceOf((JANELAS.has(j) ? j : "7d") as Window);

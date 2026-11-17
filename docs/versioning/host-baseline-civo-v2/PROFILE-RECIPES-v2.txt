@@ -1,0 +1,12 @@
+SancionaIntegral Civo profiles V2 (public recipes only)
+Verify BASELINE-FROZEN-v2.sha256 and every transport_recipe_files SHA.
+Use a new isolated prefix owned by the destination user. Do not copy a venv.
+Node22.23.5/PBS3.12.3: official origins and SHA256 in baseline. Retain OS runtimes.
+App dependencies: package.json/package-lock.json, npm ci --ignore-scripts --no-audit --no-fund against public registry, explicit Node22 PATH and private npm cache. No app build or service.
+A1: create fresh venv with PBS Python3.12.3; install a1-requirements.lock with pip --require-hashes --no-deps from https://pypi.org/simple . The lock includes pip24.0. Run apply-oscrypto-overlay.py --venv ABSOLUTE_VENV. Verify manifest/recipe/patch SHA first. Preserve original wheel. Recipe fails closed for unexpected/mixed source hashes, is idempotent, uses patch --fuzz=0, checks imports and pip check. Effective oscrypto is 1.3.0 plus explicit upstream commit overlay, not pristine1.3.0. Use only destination's catalogued DEV fixture for synthetic sign/verify. Never transport credentials.
+QA JS: qa-js-package.json/package-lock.json renamed into own isolated directory; npm ci; exact Playwright1.62.1.
+QA Python: fresh venv, install qa-python.lock --require-hashes; exact Playwright1.62.0.
+Browser: PLAYWRIGHT_BROWSERS_PATH in own prefix, pinned JS Playwright CLI install chromium. Verify browsers.json/binary hashes per baseline. Perform synthetic DOM/screenshot/PDF smoke in both environments. Native libraries remain unchanged.
+PDFjs: separate verified-files transport SHA and201 canonical file hashes in baseline/lock. Assets are browser-only; no Node SSR import.
+Native Docker/SSH/Tailnet preserved; PG backup clients compatible with consumer/server version remain supplementary profiles. Databases CLI is separate owner-controlled profile, dependency lockb347; do not assume a particular operational CLI release from baseline.
+Civo K3s is an independent DEV cluster release, not a prerequisite for the ready app profiles. SP production PDF/signing/DB/runtime and WAHA remain outside full-app installation scope.

@@ -1,0 +1,10 @@
+{
+  "source": "third-party-primary-library-mirror-not-authenticated-ITI-origin",
+  "url": "https://api.github.com/repos/lsnepomuceno/signet-pdf/git/blobs/ef845b0cbe87bad3f6b6ef71dead7cd50c67a51c",
+  "gitBlob": "ef845b0cbe87bad3f6b6ef71dead7cd50c67a51c",
+  "sha256": "23da544aef71f7a75dc85fa6e17a83875741e4baef41ec178258a5c86ace54dd",
+  "bytes": 4716,
+  "officialAuthenticityVerified": false,
+  "description": "Public third-party-mirrored policy fixture for parser/declared-attribute tests; not authenticated ITI source and not application homologation",
+  "officialPolicyUriReportedByReference": "http://politicas.icpbrasil.gov.br/PA_PAdES_AD_RB_v1_3.der"
+}

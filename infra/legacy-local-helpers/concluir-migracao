@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+if [[ "${1:-}" == "--verificar" ]]; then
+  shift
+  exec /usr/bin/python3 /mnt/apps/peticao-final/_retomada-sessao-peticao/migracao-complementar-20261111/ativar-caminhos.py "$@"
+fi
+exec /usr/bin/python3 /mnt/apps/peticao-final/_retomada-sessao-peticao/migracao-complementar-20261111/ativar-caminhos.py --aplicar "$@"
