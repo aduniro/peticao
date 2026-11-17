@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
+import ts from "typescript";
 
 (process.env as Record<string, string>).NODE_ENV = "test";
 delete process.env.ADMIN_NO_PASSWORD; delete process.env.PREVIEW_MODE;
@@ -195,7 +196,7 @@ test("porteiro das rotas: 401 sem sessão, 403 sem nível, senha única só na t
 const arquivos = (dir: string, nome: string): string[] => readdirSync(dir).flatMap((f) => { const p = join(dir, f); return statSync(p).isDirectory() ? arquivos(p, nome) : f === nome ? [p] : []; });
 const SRC = join(process.cwd(), "src");
 const SEM_NIVEL_API = new Set(["login", "sair", "esqueci", "redefinir"]); // públicas por natureza (têm antirrobô, limites e/ou token de uso único)
-const SEM_NIVEL_PAGINA = new Set(["esqueci", "redefinir", "devolvidos"]); // devolvidos só redireciona para /admin/emails (que confere o nível); esqueci/redefinir são públicas
+const SEM_NIVEL_PAGINA = new Set(["esqueci", "redefinir"]); // recuperação pública; devolvidos também exige a sessão protegida
 
 test("varredura: toda rota de /api/admin chama exigirNivel com um nível; toda página do /admin confere a sessão", () => {
   const rotas = arquivos(join(SRC, "app/api/admin"), "route.ts");
@@ -204,8 +205,27 @@ test("varredura: toda rota de /api/admin chama exigirNivel com um nível; toda p
   assert.deepEqual(sem.map((f) => f.split("/src/")[1]), [], "rotas sem exigirNivel(req, nivel)");
   const paginas = arquivos(join(SRC, "app/admin"), "page.tsx");
   assert.ok(paginas.length >= 14, `poucas páginas encontradas: ${paginas.length}`);
-  const semPag = paginas.filter((f) => !SEM_NIVEL_PAGINA.has(f.split("/app/admin/")[1].split("/")[0]) && !/sessaoAdmin\(\)/.test(readFileSync(f, "utf8")));
-  assert.deepEqual(semPag.map((f) => f.split("/src/")[1]), [], "páginas sem sessaoAdmin()");
+  const semPag = paginas.filter((f) => {
+    const path = relative(join(SRC, "app/admin"), f);
+    if (SEM_NIVEL_PAGINA.has(path.split("/")[0])) return false;
+    const helper = path === join("conta", "page.tsx") ? "sessaoAdminDaConta" : "sessaoAdmin";
+    const source = ts.createSourceFile(f, readFileSync(f, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const importsHelper = source.statements.some(statement => ts.isImportDeclaration(statement)
+      && ts.isStringLiteral(statement.moduleSpecifier) && statement.moduleSpecifier.text === "@/lib/admin"
+      && statement.importClause?.namedBindings && ts.isNamedImports(statement.importClause.namedBindings)
+      && statement.importClause.namedBindings.elements.some(binding => binding.name.text === helper
+        && (binding.propertyName?.text ?? binding.name.text) === helper));
+    let awaitsHelper = false;
+    const visit = (node: ts.Node) => {
+      if (ts.isAwaitExpression(node) && ts.isCallExpression(node.expression)
+        && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === helper
+        && node.expression.arguments.length === 0) awaitsHelper = true;
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+    return !importsHelper || !awaitsHelper;
+  });
+  assert.deepEqual(semPag.map((f) => f.split("/src/")[1]), [], "páginas sem import/chamada aguardada do guard: conta exige sessaoAdminDaConta(); demais exigem sessaoAdmin()");
 });
 
 test("varredura: ninguém usa o isAdmin() síncrono nem o cookie assinado antigo fora de lib/admin.ts", () => {
