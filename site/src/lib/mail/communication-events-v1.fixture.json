@@ -1,0 +1,31 @@
+{
+  "input": {
+    "event_id": "fixture-event-1",
+    "provider_message_id": "fixture-message-1",
+    "contact_key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "event_type": "delivered",
+    "occurred_at": "2026-11-16T12:00:00-04:00",
+    "evidence_kind": "provider_event"
+  },
+  "binding": {
+    "provider": "ses",
+    "account_id": "fixture-ses-account",
+    "authentication_verified": true
+  },
+  "expected": {
+    "schema_version": 1,
+    "provider": "ses",
+    "account_id": "fixture-ses-account",
+    "event_id": "d7797003a3ce10cef88e48598000d8b6b13c75ac21a5fd1d8109be08c20d6384",
+    "source_event_id": "fixture-event-1",
+    "provider_message_id": "fixture-message-1",
+    "contact_key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "event_type": "delivered",
+    "occurred_at": "2026-11-16T16:00:00.000000Z",
+    "evidence_kind": "provider_event",
+    "applies_to": "all",
+    "payload_sha256": "1ea052500d7fd1e92ee3a7bce1049115a8044ac0e516593a392135c59c58ad2a",
+    "idempotency_key": "9c2dca94fbfbfa60a043724eac136192ded15c637d296584c1457d70e6b66f1d",
+    "message_key": "fdffca4b22ec70007b28bce7e6d4500cca2abd0213ac8a44ce005913c2bb9ccd"
+  }
+}
