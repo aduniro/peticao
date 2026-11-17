@@ -57,3 +57,5 @@ d1856994f9507cc1b343cdcafb1576fde53d4615:site/src/lib/senha.ts:generic-api-key:2
 e742efd95c24fb9fbf4844615965355ca598e19c:site/src/lib/admin-users.test.ts:generic-api-key:239
 ec0f6b56cb1310c99f81e062e6b5d3810bbe2abd:site/src/lib/admin-user-actions.test.ts:generic-api-key:8
 f9eca512ac2920f7bb5fb13b91eb060bb4a3504f:docs/MATERIALS-PREVIEW-API-PREPARATION-20261111.json:generic-api-key:8
+0fa0209c06c164156b2d186bee6de8a76e1aeeb0:site/src/lib/mail/communication-events-v1.fixture.json:generic-api-key:28
+0fa0209c06c164156b2d186bee6de8a76e1aeeb0:site/src/lib/mail/communication-events-v1.fixture.json:generic-api-key:29

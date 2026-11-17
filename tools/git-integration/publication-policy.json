@@ -408,6 +408,16 @@
       "classification": "cryptographic_provenance_digest_not_credential",
       "reason": "Reviewed in the final sanitized public-history audit; exact finding only, no credential-category exception.",
       "reviewed_occurrences": 1
+    },
+    {
+      "fingerprint": "0fa0209c06c164156b2d186bee6de8a76e1aeeb0:site/src/lib/mail/communication-events-v1.fixture.json:generic-api-key:28",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Independently reproduced SHA256 idempotency/message identity from synthetic public fixture inputs and communication contract namespaces; no authentication secret. Exact immutable source commit and line only."
+    },
+    {
+      "fingerprint": "0fa0209c06c164156b2d186bee6de8a76e1aeeb0:site/src/lib/mail/communication-events-v1.fixture.json:generic-api-key:29",
+      "classification": "cryptographic_provenance_digest_not_credential",
+      "reason": "Independently reproduced SHA256 idempotency/message identity from synthetic public fixture inputs and communication contract namespaces; no authentication secret. Exact immutable source commit and line only."
     }
   ],
   "reviewed_cpf_fixture_blobs": [
