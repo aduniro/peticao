@@ -3,6 +3,7 @@ import { ADMIN_COOKIE, sessaoDoCookie } from "./admin";
 import { nivelOk, stepupValido, type Nivel, type SessaoAdmin } from "./admin-users";
 import { clientIp } from "./net";
 import { rateLimit } from "./ratelimit";
+import { acaoPermitidaDuranteTrocaSenha, ADMIN_TROCA_SENHA_RESPOSTA, precisaTrocarSenhaAdmin } from "./admin-rotation-policy";
 
 /**
  * Porteiro das rotas do painel. TODA rota de /api/admin precisa chamá-lo com o nível mínimo exigido (um teste varre as rotas e falha se alguma não chamar):
@@ -15,6 +16,9 @@ import { rateLimit } from "./ratelimit";
 export async function exigirNivel(req: NextRequest, nivel: Nivel, limite = 120, opcoes: { stepup?: boolean } = {}): Promise<NextResponse | null> {
   const s = await quemAge(req);
   if (!s) return NextResponse.json({ ok: false, erro: "Não autorizado." }, { status: 401 });
+  if (precisaTrocarSenhaAdmin(s) && !acaoPermitidaDuranteTrocaSenha(req.method, req.nextUrl.pathname)) {
+    return NextResponse.json(ADMIN_TROCA_SENHA_RESPOSTA, { status: 403 });
+  }
   if (!nivelOk(s.nivel, nivel)) return NextResponse.json({ ok: false, erro: "O seu nível de acesso não permite esta ação." }, { status: 403 });
   if (opcoes.stepup && !stepupValido(s)) return NextResponse.json({ ok: false, erro: "stepup" }, { status: 403 });
   const origin = req.headers.get("origin");

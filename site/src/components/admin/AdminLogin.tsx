@@ -15,6 +15,7 @@ const ERRO: Record<string, string> = {
 const MSG: Record<string, string> = {
   "reset-enviado": "Se o e-mail estiver cadastrado, enviamos um link para redefinir a senha (vale 30 minutos).",
   "senha-redefinida": "Senha redefinida. Entre com a nova senha.",
+  "senha-alterada": "Senha alterada. Entre novamente com a nova senha.",
   saiu: "Você saiu do painel.",
 };
 

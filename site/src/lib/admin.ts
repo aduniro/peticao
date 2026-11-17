@@ -1,4 +1,6 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ADMIN_TROCA_SENHA_URL, precisaTrocarSenhaAdmin } from "./admin-rotation-policy";
 import { readFileSync, statSync } from "node:fs";
 import { verificarHash } from "./senha";
 import { sessaoPorToken, temUsuarios, type SessaoAdmin } from "./admin-users";
@@ -67,7 +69,19 @@ export async function sessaoDoCookie(c: string | undefined): Promise<SessaoAdmin
   return tokenAdminValido(c) ? SESSAO_LEGADO : null;
 }
 /** Páginas (servidor): lê o cookie do contexto da requisição. As rotas de API usam sessaoDoCookie(req.cookies.get(ADMIN_COOKIE)?.value). */
-export const sessaoAdmin = () => sessaoDoCookie(cookies().get(ADMIN_COOKIE)?.value);
+const lerSessaoAdminAtual = () => sessaoDoCookie(cookies().get(ADMIN_COOKIE)?.value);
+
+/** Protected server pages redirect before loading their data. */
+export async function sessaoAdmin(): Promise<SessaoAdmin | null> {
+  const session = await lerSessaoAdminAtual();
+  if (precisaTrocarSenhaAdmin(session)) redirect(ADMIN_TROCA_SENHA_URL);
+  return session;
+}
+
+/** Server-owned exception used only by /admin/conta; never chosen by request data. */
+export const sessaoAdminDaConta = () => lerSessaoAdminAtual();
+/** Shell reads identity but does not authorize a page or action. */
+export const sessaoAdminDaMoldura = () => lerSessaoAdminAtual();
 
 export function passwordOk(p: string) {
   const h = storedHash();

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { sessaoAdmin } from "@/lib/admin";
+import { sessaoAdminDaConta } from "@/lib/admin";
 import { ROTULO_NIVEL } from "@/lib/admin-users";
 import { ADMIN_PASSWORD_MIN_LENGTH, ADMIN_PASSWORD_MAX_LENGTH } from "@/lib/admin-password-policy.mjs";
 
@@ -9,7 +9,7 @@ export const metadata = { title: "Minha conta", robots: { index: false } };
 const ERRO: Record<string, string> = { atual: "A senha atual não confere.", diferentes: "As duas senhas novas não são iguais.", semconta: "Este acesso não tem conta de usuário para trocar a senha." };
 
 export default async function Conta({ searchParams }: { searchParams: { erro?: string; msg?: string; d?: string } }) {
-  const s = await sessaoAdmin();
+  const s = await sessaoAdminDaConta();
   if (!s) redirect("/admin");
   const erro = searchParams.erro === "fraca" ? searchParams.d || "Escolha uma senha mais forte." : searchParams.erro ? ERRO[searchParams.erro] : null;
   return (
